@@ -1,5 +1,7 @@
 package io.plady.moimyeon.core.enums
 
 enum class MemberStatus {
-    ACTIVE, RESTRICTED, WITHDRAWN
+    ACTIVE,
+    RESTRICTED,
+    WITHDRAWN,
 }

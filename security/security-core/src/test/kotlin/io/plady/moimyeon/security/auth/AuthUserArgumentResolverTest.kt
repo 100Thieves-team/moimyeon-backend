@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import java.util.UUID
 
 class AuthUserArgumentResolverTest {
     private val resolver = AuthUserArgumentResolver()
@@ -31,15 +32,16 @@ class AuthUserArgumentResolverTest {
 
     @Test
     fun `인증된_사용자의_id를_AuthUser로_변환한다`() {
+        val userId = UUID.randomUUID()
         SecurityContextHolder.getContext().authentication = UsernamePasswordAuthenticationToken(
-            "42",
+            userId.toString(),
             null,
             listOf(SimpleGrantedAuthority("ROLE_USER")),
         )
 
         val result = resolver.resolveArgument(mockk(), null, mockk(), null)
 
-        assertThat(result).isEqualTo(AuthUser(id = 42))
+        assertThat(result).isEqualTo(AuthUser(id = userId))
     }
 
     @Test
