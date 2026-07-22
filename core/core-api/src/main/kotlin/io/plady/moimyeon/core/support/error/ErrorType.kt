@@ -12,4 +12,8 @@ enum class ErrorType(val status: HttpStatus, val code: ErrorCode, val message: S
     SOCIAL_ACCOUNT_ALREADY_LINKED(HttpStatus.CONFLICT, ErrorCode.E1004, "이미 연결된 소셜 계정입니다.", LogLevel.WARN),
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST, ErrorCode.E1005, "닉네임 형식이 올바르지 않습니다.", LogLevel.WARN),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1006, "회원을 찾을 수 없습니다.", LogLevel.WARN),
+
+    OAUTH_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, ErrorCode.E1101, "소셜 계정에서 이메일을 확인할 수 없습니다.", LogLevel.WARN),
+    AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, ErrorCode.E1102, "인증이 필요합니다.", LogLevel.WARN),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, ErrorCode.E1103, "접근 권한이 없습니다.", LogLevel.WARN),
 }

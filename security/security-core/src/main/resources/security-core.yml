@@ -10,3 +10,29 @@ spring:
               - openid
               - email
               - profile
+
+# 기본값 = 운영. 로컬은 아래 local 프로파일 문서에서 오버라이드한다.
+security:
+  jwt:
+    secret: ${JWT_SECRET} # 자체 세션 JWT 서명용 HMAC 키 (32바이트 이상 랜덤)
+  auth:
+    cookie:
+      domain: moimyeon.plady.io # api. 와 apex 가 공유
+      secure: true
+      same-site: Lax
+      max-age-seconds: 3600
+    cors:
+      allowed-origins:
+        - https://moimyeon.plady.io
+
+---
+spring.config.activate.on-profile: local
+security:
+  auth:
+    cookie:
+      domain: "" # 비워서 Domain 미지정 → localhost 에서 동작
+      secure: false
+    cors:
+      allowed-origins:
+        - http://localhost:5173
+        - http://localhost:3000
