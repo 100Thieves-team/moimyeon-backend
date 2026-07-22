@@ -17,9 +17,14 @@ class SecurityConfig(
         http {
             csrf { disable() }
             authorizeHttpRequests {
+                authorize("/oauth2/**", permitAll)
+                authorize("/login/**", permitAll)
+
                 // TODO: 인증/인가 정책 확정 후 경로별 규칙 추가
                 authorize(anyRequest, permitAll)
             }
+            oauth2Login {  }
+
             if (perfAuthenticationFilter != null) {
                 addFilterBefore<UsernamePasswordAuthenticationFilter>(perfAuthenticationFilter)
             }
