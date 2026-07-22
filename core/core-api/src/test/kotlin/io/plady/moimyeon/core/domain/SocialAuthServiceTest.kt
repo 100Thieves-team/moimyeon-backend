@@ -6,7 +6,10 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.core.support.error.ErrorType
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -50,5 +53,21 @@ class SocialAuthServiceTest {
         assertThat(result).isEqualTo(newMemberId)
         verify(exactly = 1) { memberManager.append(provider, "sub-2", email) }
         verify(exactly = 0) { memberManager.recordLogin(any()) }
+    }
+
+    @Test
+    fun `탈퇴한 회원의 신원으로는 재로그인할 수 없다`() {
+        // given
+        val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+        val withdrawn = Member.register(provider, "sub-3", email, now).withdraw(now)
+        every { memberFinder.findBySocialAccount(provider, "sub-3") } returns withdrawn
+
+        // when & then
+        assertThatThrownBy { socialAuthService.authenticate(provider, "sub-3", email) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(ErrorType.MEMBER_ALREADY_WITHDRAWN)
+            }
+        verify(exactly = 0) { memberManager.recordLogin(any()) }
+        verify(exactly = 0) { memberManager.append(provider, "sub-3", email) }
     }
 }

@@ -9,7 +9,6 @@ import io.plady.moimyeon.security.auth.SocialMemberResolver
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-
 // security의 SocialMemberResolver 구현체
 @Component
 class SocialMemberResolverAdapter(
