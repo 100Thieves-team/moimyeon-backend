@@ -5,12 +5,16 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 
 @Entity
-@Table(name = "social_account")
+@Table(
+    name = "social_account",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_social_account_provider_provider_id", columnNames = ["provider", "provider_id"]),
+    ],
+)
 class SocialAccountEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", nullable = false, length = 20)
