@@ -13,7 +13,7 @@ dependencies {
     implementation(project(":security:security-core"))
     implementation(project(":support:monitoring"))
     implementation(project(":support:logging"))
-    runtimeOnly(project(":storage:db-core"))
+    implementation(project(":storage:db-core"))
     implementation(project(":clients:client-example"))
 
     testImplementation(project(":tests:api-docs"))
