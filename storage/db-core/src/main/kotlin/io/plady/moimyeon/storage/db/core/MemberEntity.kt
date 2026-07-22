@@ -28,4 +28,8 @@ class MemberEntity(
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "member_id", nullable = false)
     var socialAccounts: MutableList<SocialAccountEntity> = mutableListOf(),
-) : UuidBaseEntity(id)
+) : UuidBaseEntity(id) {
+    fun loggedIn(time: LocalDateTime) {
+        this.lastLoginAt = time
+    }
+}
