@@ -11,4 +11,5 @@ enum class ErrorType(val status: HttpStatus, val code: ErrorCode, val message: S
     MEMBER_NOT_RESTRICTED(HttpStatus.CONFLICT, ErrorCode.E1003, "이용 제한 상태의 회원만 해제할 수 있습니다.", LogLevel.WARN),
     SOCIAL_ACCOUNT_ALREADY_LINKED(HttpStatus.CONFLICT, ErrorCode.E1004, "이미 연결된 소셜 계정입니다.", LogLevel.WARN),
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST, ErrorCode.E1005, "닉네임 형식이 올바르지 않습니다.", LogLevel.WARN),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1006, "회원을 찾을 수 없습니다.", LogLevel.WARN),
 }
