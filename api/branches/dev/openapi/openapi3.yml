@@ -8,6 +8,7 @@ info:
   version: 0.0.1-SNAPSHOT
 servers:
 - url: http://localhost:8080
+- url: https://api-dev.moimyeon.plady.io
 tags: []
 paths:
   /get/{exampleValue}:
@@ -45,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T11:52:30.773713751",
+                        "datetime" : "2026-07-23T12:03:06.595000716",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T11:52:30.971265948",
+                        "datetime" : "2026-07-23T12:03:06.761900612",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -211,6 +212,6 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: http://localhost:8080/oauth2/authorization/google
-          tokenUrl: http://localhost:8080/login/oauth2/code/google
+          authorizationUrl: /oauth2/authorization/google
+          tokenUrl: /login/oauth2/code/google
           scopes: {}
