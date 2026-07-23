@@ -41,8 +41,11 @@ class SecurityConfig(
                 oauth2LoginSuccessHandler?.let { authenticationSuccessHandler = it }
             }
             oauth2ResourceServer {
-                // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용
-                bearerTokenResolver = HeaderOrCookieBearerTokenResolver()
+                // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용.
+                // refresh/logout 은 만료 AT 로 401 되면 안 되므로 이 경로에선 AT 를 해석하지 않는다.
+                bearerTokenResolver = HeaderOrCookieBearerTokenResolver(
+                    bearerFreePaths = setOf("/v1/auth/refresh", "/v1/auth/logout"),
+                )
                 apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it }
                 jwt { }
             }
