@@ -6,6 +6,7 @@
 --   DROP 은 인메모리 H2 재초기화·MySQL 최초 initdb 용이다. 데이터가 있는 영속 DB 에
 --   이 파일 전체를 수동 실행하면 파괴적이므로, 스키마 변경은 별도 절차(추후 마이그레이션)로 관리한다.
 
+DROP TABLE IF EXISTS refresh_token;
 DROP TABLE IF EXISTS social_account;
 DROP TABLE IF EXISTS member;
 DROP TABLE IF EXISTS example_entity;
@@ -34,6 +35,21 @@ CREATE TABLE social_account (
     CONSTRAINT fk_social_account_member FOREIGN KEY (member_id) REFERENCES member (id)
 );
 CREATE INDEX ix_social_account_member_id ON social_account (member_id);
+
+CREATE TABLE refresh_token (
+    id         BIGINT       NOT NULL AUTO_INCREMENT,
+    token_hash VARCHAR(64)  NOT NULL,
+    member_id  BINARY(16)   NOT NULL,
+    expires_at DATETIME     NOT NULL,
+    revoked_at DATETIME     NULL,
+    created_at DATETIME     NOT NULL,
+    updated_at DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_refresh_token_token_hash UNIQUE (token_hash),
+    CONSTRAINT fk_refresh_token_member FOREIGN KEY (member_id) REFERENCES member (id)
+);
+CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
+CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 
 CREATE TABLE example_entity (
     id             BIGINT       NOT NULL AUTO_INCREMENT,
