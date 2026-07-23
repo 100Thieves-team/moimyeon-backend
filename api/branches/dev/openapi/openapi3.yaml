@@ -1,0 +1,216 @@
+openapi: 3.0.1
+info:
+  title: Moimyeon API
+  description: "Moimyeon REST API contract generated from Spring REST Docs. 로그인은 Google\
+    \ OAuth2 리다이렉트 플로우로 시작하며(GET /oauth2/authorization/google), 성공 시 ACCESS_TOKEN·\
+    REFRESH_TOKEN 쿠키가 발급된다. API 인증은 ACCESS_TOKEN 쿠키 또는 Authorization: Bearer 헤더 둘\
+    \ 다 허용한다."
+  version: 0.0.1-SNAPSHOT
+servers:
+- url: http://localhost:8080
+tags: []
+paths:
+  /get/{exampleValue}:
+    get:
+      tags:
+      - get
+      summary: 예제 조회
+      description: 경로/쿼리 파라미터를 받아 예제 데이터를 조회한다.
+      operationId: exampleGet
+      parameters:
+      - name: exampleValue
+        in: path
+        description: ExampleValue
+        required: true
+        schema:
+          type: string
+      - name: exampleParam
+        in: query
+        description: ExampleParam
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/get-exampleValue191457252"
+              examples:
+                exampleGet:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "result" : "BYE_GET",
+                        "date" : "2026-07-23",
+                        "datetime" : "2026-07-23T11:52:30.773713751",
+                        "items" : [ {
+                          "key" : "1"
+                        }, {
+                          "key" : "2"
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /post:
+    post:
+      tags:
+      - post
+      summary: 예제 등록
+      description: 예제 데이터를 받아 처리 결과를 반환한다.
+      operationId: examplePost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/post-1780624183"
+            examples:
+              examplePost:
+                value: |-
+                  {
+                    "data" : "HELLO_BODY"
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/get-exampleValue191457252"
+              examples:
+                examplePost:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "result" : "BYE_POST",
+                        "date" : "2026-07-23",
+                        "datetime" : "2026-07-23T11:52:30.971265948",
+                        "items" : [ {
+                          "key" : "1"
+                        }, {
+                          "key" : "2"
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/auth/logout:
+    post:
+      tags:
+      - v1
+      summary: 로그아웃
+      description: REFRESH_TOKEN 쿠키의 세션을 폐기하고 ACCESS_TOKEN·REFRESH_TOKEN 쿠키를 만료(Set-Cookie)시킨다.
+        쿠키가 없어도 성공으로 응답한다.
+      operationId: authLogout
+      responses:
+        "200":
+          description: "200"
+          headers:
+            Set-Cookie:
+              description: 만료 처리된 ACCESS_TOKEN·REFRESH_TOKEN 쿠키
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-logout198252895"
+              examples:
+                authLogout:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+  /v1/auth/refresh:
+    post:
+      tags:
+      - v1
+      summary: 액세스 토큰 재발급
+      description: REFRESH_TOKEN 쿠키의 세션 크리덴셜을 검증해 새 액세스 토큰을 ACCESS_TOKEN 쿠키(Set-Cookie)로
+        재발급한다.
+      operationId: authRefresh
+      responses:
+        "200":
+          description: "200"
+          headers:
+            Set-Cookie:
+              description: 재발급된 ACCESS_TOKEN 쿠키
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-logout198252895"
+              examples:
+                authRefresh:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+components:
+  schemas:
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
+    get-exampleValue191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+    v1-auth-logout198252895:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8080/oauth2/authorization/google
+          tokenUrl: http://localhost:8080/login/oauth2/code/google
+          scopes: {}
