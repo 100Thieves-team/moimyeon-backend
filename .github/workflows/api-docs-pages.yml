@@ -1,0 +1,122 @@
+name: API Docs Pages
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - "core/core-api/src/**"
+      - "tests/api-docs/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/api-docs-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: api-docs-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish API docs to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # -x check: openapi3 가 check(전체 테스트 스위트)에 의존하지만, 문서 생성엔 restDocsTest 만 필요하다.
+      - name: Build API docs
+        run: ./gradlew :core:core-api:asciidoctor :core:core-api:openapi3 -x check
+
+      - name: Resolve branch publish path
+        id: publish_path
+        shell: bash
+        run: |
+          safe_ref="${GITHUB_REF_NAME//\//-}"
+          target_dir="api/branches/${safe_ref}"
+          echo "safe_ref=${safe_ref}" >> "$GITHUB_OUTPUT"
+          echo "target_dir=${target_dir}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare publish directory
+        shell: bash
+        run: |
+          target_dir="${{ steps.publish_path.outputs.target_dir }}"
+          mkdir -p "public/${target_dir}"
+          cp -R core/core-api/build/docs/asciidoc/. "public/${target_dir}/"
+          mkdir -p "public/${target_dir}/openapi"
+          cp core/core-api/build/api-spec/openapi3.yaml "public/${target_dir}/openapi/openapi3.yaml"
+          cp core/core-api/build/api-spec/openapi3.yml "public/${target_dir}/openapi/openapi3.yml"
+          mkdir -p "public/${target_dir}/swagger"
+          cat > "public/${target_dir}/swagger/index.html" <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Moimyeon API - Swagger UI</title>
+            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+            <script>
+              window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                  url: "../openapi/openapi3.yaml",
+                  dom_id: "#swagger-ui",
+                });
+              };
+            </script>
+          </body>
+          </html>
+          EOF
+          touch public/.nojekyll
+          cat > public/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Moimyeon API Docs</title>
+          </head>
+          <body>
+            <main>
+              <h1>Moimyeon API Docs</h1>
+              <ul>
+                <li>dev:
+                  <a href="./api/branches/dev/">REST Docs</a> ·
+                  <a href="./api/branches/dev/swagger/">Swagger UI</a> ·
+                  <a href="./api/branches/dev/openapi/openapi3.yaml">openapi3.yaml</a>
+                </li>
+                <li>main:
+                  <a href="./api/branches/main/">REST Docs</a> ·
+                  <a href="./api/branches/main/swagger/">Swagger UI</a> ·
+                  <a href="./api/branches/main/openapi/openapi3.yaml">openapi3.yaml</a>
+                </li>
+              </ul>
+            </main>
+          </body>
+          </html>
+          EOF
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./public
+          keep_files: true
+          commit_message: "docs(api): publish ${{ github.ref_name }} API docs"
