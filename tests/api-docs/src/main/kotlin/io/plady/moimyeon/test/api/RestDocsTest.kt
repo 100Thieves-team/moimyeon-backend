@@ -12,6 +12,7 @@ import org.springframework.restdocs.snippet.Snippet
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder
+import org.springframework.web.method.support.HandlerMethodArgumentResolver
 
 @Tag("restdocs")
 @ExtendWith(RestDocumentationExtension::class)
@@ -24,8 +25,9 @@ abstract class RestDocsTest {
         this.restDocumentation = restDocumentation
     }
 
-    protected fun mockController(controller: Any): MockMvc {
+    protected fun mockController(controller: Any, vararg argumentResolvers: HandlerMethodArgumentResolver): MockMvc {
         return MockMvcBuilders.standaloneSetup(controller)
+            .setCustomArgumentResolvers(*argumentResolvers)
             .apply<StandaloneMockMvcBuilder>(MockMvcRestDocumentation.documentationConfiguration(restDocumentation))
             .build()
     }

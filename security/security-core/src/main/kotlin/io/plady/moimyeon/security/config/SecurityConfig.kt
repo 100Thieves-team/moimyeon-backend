@@ -31,6 +31,7 @@ class SecurityConfig(
                 authorize("/login/**", permitAll)
                 authorize("/v1/auth/refresh", permitAll)
                 authorize("/v1/auth/logout", permitAll)
+                authorize("/v1/terms", permitAll) // 로그인 모달의 약관 링크 — 비로그인 조회 허용
 
                 // TODO: 인증/인가 정책 확정 후 경로별 규칙 추가
                 authorize(anyRequest, permitAll)
