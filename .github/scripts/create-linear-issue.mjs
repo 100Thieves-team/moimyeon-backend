@@ -1,5 +1,8 @@
-// Linear 이슈 없이 머지된 PR에 대해, PR을 미러링한 Linear 이슈를 자동 생성하고 상호 링크한다.
-// - 실행: GitHub Actions (linear-issue-from-merged-pr.yml) 가 PR 필드를 env 로 넘겨 호출.
+// Linear 이슈 없이 열린 PR에 대해, PR을 미러링한 Linear 이슈를 자동 생성하고
+// PR 타이틀/본문에 이슈 키를 써넣어 상호 링크한다.
+// - 열릴 때 생성하므로 머지 커밋/타이틀에 이슈 번호가 남고,
+//   본문의 닫힘 매직워드(Fixes)로 머지 시 Linear 네이티브 연동이 이슈를 자동 Done 처리한다.
+// - 실행: GitHub Actions (linear-issue-for-pr.yml) 가 PR 필드를 env 로 넘겨 호출.
 // - 의존성 없음(Node 20 global fetch 사용).
 //
 // env 입력: LINEAR_API_KEY, GH_TOKEN, REPO(owner/repo),
@@ -18,16 +21,7 @@ const GITHUB_TO_LINEAR_USER = {
 };
 
 const env = process.env;
-const {
-  LINEAR_API_KEY,
-  GH_TOKEN,
-  REPO,
-  PR_NUMBER,
-  PR_TITLE,
-  PR_URL,
-  PR_AUTHOR,
-  PR_BRANCH,
-} = env;
+const { LINEAR_API_KEY, GH_TOKEN, REPO, PR_NUMBER, PR_TITLE, PR_URL, PR_AUTHOR, PR_BRANCH } = env;
 const PR_BODY = env.PR_BODY ?? "";
 
 function fail(msg) {
@@ -48,18 +42,30 @@ async function linear(query, variables = {}) {
   return json.data;
 }
 
+async function github(path, method, body) {
+  return fetch(`https://api.github.com/repos/${REPO}/${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${GH_TOKEN}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 async function main() {
   if (!LINEAR_API_KEY) fail("LINEAR_API_KEY 가 없습니다 (repository secret 확인).");
 
-  // 1) 이미 Linear 이슈가 연결/참조된 PR이면 skip
+  // 1) 이미 이슈 키가 참조된 PR이면 skip (branch/title/body)
   if (ISSUE_KEY_RE.test(`${PR_BRANCH}\n${PR_TITLE}\n${PR_BODY}`)) {
-    console.log("↷ 이미 Linear 이슈 키가 참조되어 있어 건너뜁니다 (branch/title/body).");
+    console.log("↷ 이미 Linear 이슈 키가 참조되어 있어 건너뜁니다.");
     return;
   }
 
-  // 2) 멱등성: 이 PR URL 로 이미 만든 attachment 가 있으면 skip (재실행 대비)
+  // 2) 멱등성: 이 PR URL 로 만든 attachment 가 있으면 skip
   const existing = await linear(
-    `query($url: String!) { attachmentsForURL(url: $url) { nodes { id issue { identifier } } } }`,
+    `query($url: String!) { attachmentsForURL(url: $url) { nodes { issue { identifier } } } }`,
     { url: PR_URL },
   );
   const already = existing.attachmentsForURL?.nodes ?? [];
@@ -68,26 +74,23 @@ async function main() {
     return;
   }
 
-  // 3) 설정 조회: Done 상태 + 라벨(없으면 생성)
+  // 3) 설정: In Progress(started) 상태 + 라벨(없으면 생성)
   const team = await linear(
     `query($id: String!) {
-       team(id: $id) {
-         states { nodes { id name type } }
-         labels { nodes { id name } }
-       }
+       team(id: $id) { states { nodes { id name type } } labels { nodes { id name } } }
      }`,
     { id: LINEAR_TEAM_ID },
   );
-  const doneState =
-    team.team.states.nodes.find((s) => s.type === "completed") ??
-    fail("팀에 completed 타입 상태(Done)가 없습니다.");
+  const startedState =
+    team.team.states.nodes.find((s) => s.type === "started") ??
+    fail("팀에 started 타입 상태(In Progress)가 없습니다.");
 
   let label = team.team.labels.nodes.find((l) => l.name === LABEL_NAME);
   if (!label) {
     const created = await linear(
       `mutation($name: String!, $teamId: String!) {
          issueLabelCreate(input: { name: $name, teamId: $teamId, color: "#95a2b3" }) {
-           success issueLabel { id name }
+           issueLabel { id name }
          }
        }`,
       { name: LABEL_NAME, teamId: LINEAR_TEAM_ID },
@@ -98,24 +101,20 @@ async function main() {
   const assigneeId = GITHUB_TO_LINEAR_USER[PR_AUTHOR] ?? null;
   if (!assigneeId) console.log(`ℹ 매핑되지 않은 작성자(${PR_AUTHOR}) → 미할당으로 생성합니다.`);
 
-  // 4) 이슈 생성
+  // 4) 이슈 생성 (In Progress)
   const description =
     `${PR_BODY}`.trim() +
-    `\n\n---\n` +
-    `GitHub PR: ${PR_URL} (#${PR_NUMBER})\n` +
-    `Author: @${PR_AUTHOR}\n\n` +
-    `_Linear 이슈 없이 머지된 PR에 대해 자동 생성된 트래킹 이슈입니다._`;
-
+    `\n\n---\nGitHub PR: ${PR_URL} (#${PR_NUMBER}) · Author: @${PR_AUTHOR}`;
   const created = await linear(
     `mutation($input: IssueCreateInput!) {
-       issueCreate(input: $input) { success issue { id identifier url } }
+       issueCreate(input: $input) { issue { id identifier url } }
      }`,
     {
       input: {
         teamId: LINEAR_TEAM_ID,
         title: PR_TITLE,
         description,
-        stateId: doneState.id,
+        stateId: startedState.id,
         labelIds: [label.id],
         ...(assigneeId ? { assigneeId } : {}),
       },
@@ -124,26 +123,22 @@ async function main() {
   const issue = created.issueCreate.issue;
   console.log(`✔ Linear 이슈 생성: ${issue.identifier} (${issue.url})`);
 
-  // 5) 상호 링크: Linear 이슈에 PR attachment + GitHub PR 에 코멘트
+  // 5) PR 타이틀/본문에 키 써넣기
+  //    - 타이틀: 맨 뒤에 (MOI-XXX) suffix → 머지 커밋/타이틀에 번호가 남는다
+  //    - 본문: 닫힘 매직워드(Fixes) → 머지 시 Linear 네이티브 연동이 자동 Done 처리
+  const newTitle = PR_TITLE.includes(issue.identifier) ? PR_TITLE : `${PR_TITLE} (${issue.identifier})`;
+  const newBody = `${PR_BODY}`.trimEnd() + `\n\nFixes ${issue.identifier}`;
+  const patch = await github(`pulls/${PR_NUMBER}`, "PATCH", { title: newTitle, body: newBody });
+  if (!patch.ok) console.log(`ℹ PR 타이틀/본문 수정 실패(${patch.status}) — 이슈는 생성됨. 권한 확인.`);
+  else console.log("✔ PR 타이틀/본문에 이슈 키 반영 (Fixes 매직워드 포함)");
+
+  // 6) Linear 이슈에 PR attachment
   await linear(
     `mutation($issueId: String!, $url: String!, $title: String!) {
        attachmentCreate(input: { issueId: $issueId, url: $url, title: $title }) { success }
      }`,
     { issueId: issue.id, url: PR_URL, title: `GitHub PR #${PR_NUMBER}` },
   );
-
-  const commentBody = `🔗 이 PR에 대한 Linear 이슈가 자동 생성되었습니다: [${issue.identifier}](${issue.url})`;
-  const gh = await fetch(`https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${GH_TOKEN}`,
-      Accept: "application/vnd.github+json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ body: commentBody }),
-  });
-  if (!gh.ok) console.log(`ℹ PR 코멘트 실패(${gh.status}) — 이슈는 생성됨. 권한(pull-requests: write) 확인.`);
-  else console.log("✔ PR 코멘트 등록 완료");
 }
 
 main().catch((e) => fail(e?.stack ?? String(e)));
