@@ -1,0 +1,57 @@
+# Linear 이슈 없이 머지된 PR에 대해 Linear 이슈를 자동 생성하고 상호 링크한다.
+# 필요 secret: LINEAR_API_KEY (Settings → Secrets and variables → Actions → repository secret)
+# 수동 테스트: Actions 탭 → 이 워크플로 → Run workflow → 머지된 PR 번호 입력
+name: Linear issue for untracked merged PR
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "이슈를 백필할 머지된 PR 번호"
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write # PR 코멘트 등록용
+
+jobs:
+  create-linear-issue:
+    # 머지된 PR 또는 수동 실행에만 동작 (닫기만 하고 미머지면 skip)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve PR fields
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isDispatch = context.eventName === 'workflow_dispatch';
+            const number = isDispatch
+              ? Number(context.payload.inputs.pr_number)
+              : context.payload.pull_request.number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: number,
+            });
+            if (isDispatch && !pr.merged) {
+              core.setFailed(`PR #${number} 은 머지되지 않았습니다.`);
+              return;
+            }
+            core.exportVariable('PR_NUMBER', String(pr.number));
+            core.exportVariable('PR_TITLE', pr.title ?? '');
+            core.exportVariable('PR_BODY', pr.body ?? '');
+            core.exportVariable('PR_URL', pr.html_url);
+            core.exportVariable('PR_AUTHOR', pr.user.login);
+            core.exportVariable('PR_BRANCH', pr.head.ref ?? '');
+
+      - name: Checkout (스크립트 파일 사용)
+        uses: actions/checkout@v4
+
+      - name: Create Linear issue if untracked
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: node .github/scripts/create-linear-issue.mjs
