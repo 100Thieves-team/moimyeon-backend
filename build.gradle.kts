@@ -6,6 +6,7 @@ plugins {
     id("io.spring.dependency-management")
     id("org.asciidoctor.jvm.convert") apply false
     id("org.jlleitschuh.gradle.ktlint") apply false
+    id("com.epages.restdocs-api-spec") apply false
 }
 
 allprojects {
