@@ -39,6 +39,30 @@ include::{snippets}/examplePost/response-fields.adoc[]
 
 == Auth API
 
+=== Google OAuth2 로그인 (수기 문서)
+
+[NOTE]
+====
+로그인 시작·콜백 엔드포인트는 컨트롤러가 아니라 Spring Security 필터 체인이 처리하므로
+REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Security 표준 규약이라 변경 가능성이 낮다.
+====
+
+로그인 플로우:
+
+1. 프론트엔드가 브라우저를 `GET /oauth2/authorization/google` 로 보낸다 (fetch/XHR 이 아닌 전체 페이지 이동).
+2. 서버가 구글 동의 화면으로 `302` 리다이렉트한다.
+3. 사용자가 동의하면 구글이 `GET /login/oauth2/code/google?code=...` 콜백으로 리다이렉트한다.
+4. 서버가 회원을 조회/등록하고 세션을 연 뒤, 다음 두 쿠키를 `Set-Cookie` 로 내려준다:
+** `ACCESS_TOKEN` — JWT 액세스 토큰. `Path=/`, `HttpOnly`
+** `REFRESH_TOKEN` — 세션 리프레시 크리덴셜. `Path=/v1/auth`, `HttpOnly`
+5. 서버가 프론트엔드 콜백(`https://moimyeon.plady.io/auth/callback`)으로 `302` 리다이렉트한다.
+
+이후 API 인증은 `ACCESS_TOKEN` 쿠키(웹) 또는 `Authorization: Bearer {token}` 헤더(앱) 둘 다 허용한다.
+액세스 토큰이 만료되면 아래 <<_refresh_access_token,재발급 API>> 를 호출한다.
+
+'''
+
+[[_refresh_access_token]]
 === Refresh Access Token
 ==== Curl Request
 include::{snippets}/authRefresh/curl-request.adoc[]
