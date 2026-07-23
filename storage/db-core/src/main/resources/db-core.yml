@@ -12,11 +12,18 @@ spring.config.activate.on-profile: local
 spring:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
         show_sql: true
+  # local 은 인메모리 H2 전용이라 schema.sql(DROP+CREATE)을 부팅마다 실행해도 안전하다
+  # (오히려 다중 테스트 컨텍스트 재초기화에 DROP 이 필요). 영속 DB(dev/live)엔 이 블록이 없고
+  # ddl-auto=validate 로만 검증하므로 파괴적 초기화가 일어나지 않는다.
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
   h2:
     console:
       enabled: true
@@ -45,9 +52,9 @@ storage:
   datasource:
     core:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://${storage.database.core-db.url}
-      username: ${storage.database.core-db.username}
-      password: ${storage.database.core-db.password}
+      jdbc-url: jdbc:mysql://${storage.database.core-db.url:localhost:3306/core}
+      username: ${storage.database.core-db.username:moimyeon}
+      password: ${storage.database.core-db.password:moimyeon}
       maximum-pool-size: 5
       connection-timeout: 1100
       keepalive-time: 30000
