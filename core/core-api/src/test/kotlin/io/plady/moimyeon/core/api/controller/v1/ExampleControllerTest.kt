@@ -10,10 +10,8 @@ import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
-import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post
-import org.springframework.restdocs.operation.preprocess.Preprocessors
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
@@ -43,10 +41,10 @@ class ExampleControllerTest : RestDocsTest() {
         )
             .andExpect(status().isOk)
             .andDo(
-                document(
+                documentApi(
                     "exampleGet",
-                    Preprocessors.preprocessRequest(Preprocessors.prettyPrint()),
-                    Preprocessors.preprocessResponse(Preprocessors.prettyPrint()),
+                    "예제 조회",
+                    "경로/쿼리 파라미터를 받아 예제 데이터를 조회한다.",
                     RequestDocumentation.pathParameters(
                         parameterWithName("exampleValue").description("ExampleValue"),
                     ),
@@ -77,10 +75,10 @@ class ExampleControllerTest : RestDocsTest() {
         )
             .andExpect(status().isOk)
             .andDo(
-                document(
+                documentApi(
                     "examplePost",
-                    Preprocessors.preprocessRequest(Preprocessors.prettyPrint()),
-                    Preprocessors.preprocessResponse(Preprocessors.prettyPrint()),
+                    "예제 등록",
+                    "예제 데이터를 받아 처리 결과를 반환한다.",
                     requestFields(
                         fieldWithPath("data").type(JsonFieldType.STRING).description("ExampleBody Data Field"),
                     ),
