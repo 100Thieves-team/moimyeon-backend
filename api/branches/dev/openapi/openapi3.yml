@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T12:03:06.595000716",
+                        "datetime" : "2026-07-23T15:26:05.368376636",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T12:03:06.761900612",
+                        "datetime" : "2026-07-23T15:26:05.60148697",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -163,7 +163,7 @@ components:
         data:
           type: string
           description: ExampleBody Data Field
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
