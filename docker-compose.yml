@@ -1,0 +1,31 @@
+# 로컬 개발용 MySQL. schema.sql 을 컨테이너 최초 기동 시 자동 로드한다.
+#   실행:   docker compose up -d
+#   앱 실행: SPRING_PROFILES_ACTIVE=local-dev ./gradlew :core:core-api:bootRun
+#           (local-dev 프로파일 기본값이 아래 접속정보와 일치 → 환경변수 없이 바로 붙음)
+#   종료:   docker compose down       (데이터까지 초기화하려면 docker compose down -v)
+# 주의: initdb 스크립트는 볼륨 최초 생성 시 1회만 실행된다. 기존 볼륨엔 이후 schema.sql 변경이
+#       반영되지 않으므로, 반영하려면 `docker compose down -v && docker compose up -d`
+#       (로컬 데이터가 초기화된다). 운영 스키마 변경은 별도 절차로 관리한다.
+services:
+  core-db:
+    image: mysql:8.0
+    container_name: moimyeon-core-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: core
+      MYSQL_USER: moimyeon
+      MYSQL_PASSWORD: moimyeon
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      # 최초 기동 시 /docker-entrypoint-initdb.d/*.sql 이 MYSQL_DATABASE 에 실행된다.
+      - ./storage/db-core/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-umoimyeon", "-pmoimyeon"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
