@@ -3,9 +3,7 @@ package io.plady.moimyeon.core.domain
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.ErrorType
 import io.plady.moimyeon.core.support.error.requireFound
-import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
-import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -18,18 +16,7 @@ class MemberManager(
     @Transactional
     fun append(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
         val member = Member.register(provider, providerId, email, LocalDateTime.now())
-        val memberEntity = MemberEntity(
-            id = member.id,
-            email = member.email.value,
-            status = member.status,
-            lastLoginAt = member.lastLoginAt,
-            withdrawnAt = member.withdrawnAt,
-            socialAccounts = member.socialAccounts
-                .map { SocialAccountEntity(it.provider, it.providerId, it.linkedEmail?.value) }
-                .toMutableList(),
-        )
-
-        return memberRepository.save(memberEntity).id
+        return memberRepository.save(MemberMapper.toEntity(member)).id
     }
 
     @Transactional

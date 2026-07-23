@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 class OAuth2LoginSuccessHandler(
     private val socialMemberResolver: SocialMemberResolver,
     private val jwtTokenProvider: JwtTokenProvider,
+    private val sessionIssuer: SessionIssuer,
     private val authCookieFactory: AuthCookieFactory,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
@@ -31,13 +32,17 @@ class OAuth2LoginSuccessHandler(
             email = oidcUser.email,
         )
 
-        val token = jwtTokenProvider.issue(memberId)
-        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.create(token).toString())
+        // Access Token + Refresh Token 둘 다 발급
+        val accessToken = jwtTokenProvider.issue(memberId)
+        val session = sessionIssuer.open(memberId)
+        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createAccess(accessToken).toString())
+        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createRefresh(session).toString())
         response.sendRedirect(FRONTEND_CALLBACK_URL)
     }
 
     companion object {
-        // NOTE: 프론트 콜백 경로. 환경별 분기는 후속(프로파일/설정 주입).
+        // NOTE: 프론트 콜백 경로.
+        // TODO: 환경별 분기는 후속(프로파일/설정 주입).
         private const val FRONTEND_CALLBACK_URL = "https://moimyeon.plady.io/auth/callback"
     }
 }

@@ -17,9 +17,9 @@ class JwtTokenProvider(
     fun issue(memberId: UUID): String {
         val now = Instant.now()
         val claims = JwtClaimsSet.builder()
-            .subject(memberId.toString()) // sub = 내부 memberId(UUID)
+            .subject(memberId.toString())
             .issuedAt(now)
-            .expiresAt(now.plus(TOKEN_TTL_HOURS, ChronoUnit.HOURS))
+            .expiresAt(now.plus(TOKEN_TTL_MINUTES, ChronoUnit.MINUTES))
             .build()
         return jwtEncoder
             .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
@@ -27,6 +27,6 @@ class JwtTokenProvider(
     }
 
     companion object {
-        private const val TOKEN_TTL_HOURS = 1L
+        private const val TOKEN_TTL_MINUTES = 30L
     }
 }

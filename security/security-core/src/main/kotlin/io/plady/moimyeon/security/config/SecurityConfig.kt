@@ -17,9 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableConfigurationProperties(AuthProperties::class)
 class SecurityConfig(
     private val perfAuthenticationFilter: PerfAuthenticationFilter? = null,
-    // core-api 가 SocialMemberResolver 어댑터를 제공해야 이 핸들러 빈이 뜬다 → 없어도 로딩되게 옵션 주입
     private val oauth2LoginSuccessHandler: OAuth2LoginSuccessHandler? = null,
-    // 필터 레벨 401/403 을 공통 ApiResponse 포맷으로. 구현은 core-api 가 제공(AuthErrorWriter 어댑터) → 옵션 주입
     private val apiAuthenticationEntryPoint: AuthenticationEntryPoint? = null,
     private val apiAccessDeniedHandler: AccessDeniedHandler? = null,
 ) {
@@ -31,18 +29,25 @@ class SecurityConfig(
             authorizeHttpRequests {
                 authorize("/oauth2/**", permitAll)
                 authorize("/login/**", permitAll)
+                authorize("/v1/auth/refresh", permitAll)
+                authorize("/v1/auth/logout", permitAll)
 
                 // TODO: 인증/인가 정책 확정 후 경로별 규칙 추가
                 authorize(anyRequest, permitAll)
             }
+            // 자체 /v1/auth/logout 을 쓰므로 스프링 기본 /logout 필터는 비활성화(혼동 방지)
+            logout { disable() }
             oauth2Login {
                 oauth2LoginSuccessHandler?.let { authenticationSuccessHandler = it }
             }
             oauth2ResourceServer {
-                // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용
-                bearerTokenResolver = HeaderOrCookieBearerTokenResolver()
-                apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it } // 토큰 검증 실패도 공통 포맷
-                jwt { } // JwtConfig.jwtDecoder(HMAC) 사용, sub → Authentication.name(memberId UUID)
+                // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용.
+                // refresh/logout 은 만료 AT 로 401 되면 안 되므로 이 경로에선 AT 를 해석하지 않는다.
+                bearerTokenResolver = HeaderOrCookieBearerTokenResolver(
+                    bearerFreePaths = setOf("/v1/auth/refresh", "/v1/auth/logout"),
+                )
+                apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it }
+                jwt { }
             }
             exceptionHandling {
                 apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it }
