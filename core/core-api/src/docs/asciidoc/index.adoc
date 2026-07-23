@@ -36,3 +36,31 @@ include::{snippets}/examplePost/request-fields.adoc[]
 include::{snippets}/examplePost/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/examplePost/response-fields.adoc[]
+
+== Auth API
+
+=== Refresh Access Token
+==== Curl Request
+include::{snippets}/authRefresh/curl-request.adoc[]
+==== Request Cookies
+include::{snippets}/authRefresh/request-cookies.adoc[]
+==== Http Response
+include::{snippets}/authRefresh/http-response.adoc[]
+==== Response Headers
+include::{snippets}/authRefresh/response-headers.adoc[]
+==== Response Fields
+include::{snippets}/authRefresh/response-fields.adoc[]
+
+'''
+
+=== Logout
+==== Curl Request
+include::{snippets}/authLogout/curl-request.adoc[]
+==== Request Cookies
+include::{snippets}/authLogout/request-cookies.adoc[]
+==== Http Response
+include::{snippets}/authLogout/http-response.adoc[]
+==== Response Headers
+include::{snippets}/authLogout/response-headers.adoc[]
+==== Response Fields
+include::{snippets}/authLogout/response-fields.adoc[]
