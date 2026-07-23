@@ -5,6 +5,7 @@ on:
     branches: [ "main", "dev" ]
     paths:
       - "core/core-api/src/**"
+      - "core/core-api/build.gradle.kts"
       - "tests/api-docs/**"
       - "build.gradle.kts"
       - "settings.gradle.kts"
