@@ -16,4 +16,5 @@ enum class ErrorType(val status: HttpStatus, val code: ErrorCode, val message: S
     OAUTH_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, ErrorCode.E1101, "소셜 계정에서 이메일을 확인할 수 없습니다.", LogLevel.WARN),
     AUTHENTICATION_REQUIRED(HttpStatus.UNAUTHORIZED, ErrorCode.E1102, "인증이 필요합니다.", LogLevel.WARN),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, ErrorCode.E1103, "접근 권한이 없습니다.", LogLevel.WARN),
+    INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
 }

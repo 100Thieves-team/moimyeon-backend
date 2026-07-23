@@ -11,16 +11,19 @@ spring:
               - email
               - profile
 
-# 기본값 = 운영. 로컬은 아래 local 프로파일 문서에서 오버라이드한다.
+# 기본값 = 운영. 로컬은 아래 local 프로파일에서 설정
 security:
   jwt:
     secret: ${JWT_SECRET} # 자체 세션 JWT 서명용 HMAC 키 (32바이트 이상 랜덤)
+  session:
+    ttl-seconds: 1209600 # 리프레시 토큰(세션) 수명
   auth:
     cookie:
       domain: moimyeon.plady.io # api. 와 apex 가 공유
       secure: true
       same-site: Lax
-      max-age-seconds: 3600
+      access-max-age-seconds: 1800
+      refresh-max-age-seconds: 1209600
     cors:
       allowed-origins:
         - https://moimyeon.plady.io
