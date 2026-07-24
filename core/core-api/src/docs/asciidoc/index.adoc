@@ -88,3 +88,57 @@ include::{snippets}/authLogout/http-response.adoc[]
 include::{snippets}/authLogout/response-headers.adoc[]
 ==== Response Fields
 include::{snippets}/authLogout/response-fields.adoc[]
+
+== Terms API
+
+=== 현재 유효 약관 목록 조회
+==== Curl Request
+include::{snippets}/termsList/curl-request.adoc[]
+==== Http Response
+include::{snippets}/termsList/http-response.adoc[]
+==== Response Fields
+include::{snippets}/termsList/response-fields.adoc[]
+
+== Member API
+
+=== 내 상태 조회
+==== Curl Request
+include::{snippets}/memberMe/curl-request.adoc[]
+==== Http Response
+include::{snippets}/memberMe/http-response.adoc[]
+==== Response Fields
+include::{snippets}/memberMe/response-fields.adoc[]
+
+== Profile API
+
+=== 필수 프로필 작성
+==== Curl Request
+include::{snippets}/createProfile/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/createProfile/request-fields.adoc[]
+==== Http Response
+include::{snippets}/createProfile/http-response.adoc[]
+==== Response Fields
+include::{snippets}/createProfile/response-fields.adoc[]
+
+'''
+
+=== 닉네임 자동 추천
+==== Curl Request
+include::{snippets}/nicknameSuggestion/curl-request.adoc[]
+==== Http Response
+include::{snippets}/nicknameSuggestion/http-response.adoc[]
+==== Response Fields
+include::{snippets}/nicknameSuggestion/response-fields.adoc[]
+
+'''
+
+=== 닉네임 사용 가능 여부 확인
+==== Curl Request
+include::{snippets}/nicknameAvailability/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/nicknameAvailability/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/nicknameAvailability/http-response.adoc[]
+==== Response Fields
+include::{snippets}/nicknameAvailability/response-fields.adoc[]
