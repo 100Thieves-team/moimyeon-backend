@@ -1,6 +1,13 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.mockk.every
+import io.mockk.mockk
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
+import io.plady.moimyeon.core.domain.member.Email
+import io.plady.moimyeon.core.domain.member.Member
+import io.plady.moimyeon.core.domain.member.MemberService
+import io.plady.moimyeon.core.domain.profile.ProfileService
+import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,19 +17,30 @@ import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.security.Principal
+import java.time.LocalDateTime
 import java.util.UUID
 
 class MemberControllerTest : RestDocsTest() {
-    private val memberId: UUID = UUID.randomUUID()
+    private lateinit var memberService: MemberService
+    private lateinit var profileService: ProfileService
+
+    private val member: Member =
+        Member.register(SocialLoginProvider.GOOGLE, "google-sub-1", Email("user@example.com"), LocalDateTime.of(2026, 1, 1, 0, 0))
+    private val memberId: UUID = member.id
     private val principal = Principal { memberId.toString() }
 
     @BeforeEach
     fun setUp() {
-        mockMvc = mockController(MemberController(), LoginMemberArgumentResolver())
+        memberService = mockk()
+        profileService = mockk()
+        mockMvc = mockController(MemberController(memberService, profileService), LoginMemberArgumentResolver())
     }
 
     @Test
     fun memberMe() {
+        every { memberService.getMember(memberId) } returns member
+        every { profileService.hasProfile(memberId) } returns false
+
         mockMvc.perform(get("/v1/members/me").principal(principal))
             .andExpect(status().isOk)
             .andDo(
@@ -31,7 +49,7 @@ class MemberControllerTest : RestDocsTest() {
                     "내 상태 조회",
                     "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 프로필 미작성이면 profileCompleted=false, profile=null 이다. " +
                         "profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. " +
-                        "FE 는 로그인 직후 이 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. (모킹: 항상 미작성 상태로 응답)",
+                        "FE 는 로그인 직후 이 값으로 최초 프로필 작성 모달 노출 여부를 판단한다.",
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),

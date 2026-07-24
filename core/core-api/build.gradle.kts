@@ -29,6 +29,7 @@ dependencies {
     testImplementation(project(":tests:api-docs"))
 
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 }
 
 configure<OpenApi3Extension> {
