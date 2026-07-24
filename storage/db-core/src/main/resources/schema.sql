@@ -145,22 +145,26 @@ CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 CREATE TABLE member_profile (
     member_id          BINARY(16)   NOT NULL,
     nickname           VARCHAR(30)  NOT NULL,
-    job_title          VARCHAR(100) NULL,
+    job_role_id        BIGINT       NULL,
     bio                VARCHAR(500) NULL,
     meeting_preference VARCHAR(20)  NULL,
-    region             VARCHAR(50)  NULL,
+    sigungu_id         BIGINT       NULL,
     created_at         DATETIME     NOT NULL,
     updated_at         DATETIME     NOT NULL,
     PRIMARY KEY (member_id),
     CONSTRAINT uk_member_profile_nickname UNIQUE (nickname),
-    CONSTRAINT fk_member_profile_member FOREIGN KEY (member_id) REFERENCES member (id)
+    CONSTRAINT fk_member_profile_member FOREIGN KEY (member_id) REFERENCES member (id),
+    CONSTRAINT fk_member_profile_job_role FOREIGN KEY (job_role_id) REFERENCES job_role (id),
+    CONSTRAINT fk_member_profile_sigungu FOREIGN KEY (sigungu_id) REFERENCES sigungu (id)
 );
 
+-- 관심 회사(company 참조 다건). 프로필과 생명주기를 같이하는 값 컬렉션이라 별도 PK 없이 쌍 유니크만 둔다.
 CREATE TABLE member_profile_interest (
-    member_id    BINARY(16)   NOT NULL,
-    company_name VARCHAR(100) NOT NULL,
-    CONSTRAINT uk_member_profile_interest UNIQUE (member_id, company_name),
-    CONSTRAINT fk_member_profile_interest_profile FOREIGN KEY (member_id) REFERENCES member_profile (member_id)
+    member_id  BINARY(16) NOT NULL,
+    company_id BIGINT     NOT NULL,
+    CONSTRAINT uk_member_profile_interest UNIQUE (member_id, company_id),
+    CONSTRAINT fk_member_profile_interest_profile FOREIGN KEY (member_id) REFERENCES member_profile (member_id),
+    CONSTRAINT fk_member_profile_interest_company FOREIGN KEY (company_id) REFERENCES company (id)
 );
 
 CREATE TABLE terms (

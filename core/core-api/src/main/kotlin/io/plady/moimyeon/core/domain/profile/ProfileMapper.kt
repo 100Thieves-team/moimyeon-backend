@@ -6,18 +6,20 @@ object ProfileMapper {
     fun toDomain(entity: MemberProfileEntity): MemberProfile = MemberProfile(
         memberId = entity.memberId,
         nickname = Nickname(entity.nickname),
-        jobTitle = entity.jobTitle,
+        jobRoleId = entity.jobRoleId,
         bio = entity.bio,
         meetingPreference = entity.meetingPreference,
-        region = entity.region,
+        sigunguId = entity.sigunguId,
+        interestCompanyIds = entity.interestCompanyIds.toList(),
     )
 
     fun toEntity(profile: MemberProfile): MemberProfileEntity = MemberProfileEntity(
         memberId = profile.memberId,
         nickname = profile.nickname.value,
-        jobTitle = profile.jobTitle,
+        jobRoleId = profile.jobRoleId,
         bio = profile.bio,
         meetingPreference = profile.meetingPreference,
-        region = profile.region,
+        sigunguId = profile.sigunguId,
+        interestCompanyIds = profile.interestCompanyIds.toMutableList(),
     )
 }

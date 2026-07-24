@@ -6,8 +6,10 @@ import java.util.UUID
 data class MemberProfile(
     val memberId: UUID,
     val nickname: Nickname,
-    val jobTitle: String?,
+    val jobRoleId: Long?,
     val bio: String?,
     val meetingPreference: MeetingPreference?,
-    val region: String?,
+    val sigunguId: Long?,
+    // 최초 작성 모달에는 없고 마이페이지 수정에서만 입력됨
+    val interestCompanyIds: List<Long> = emptyList(),
 )
