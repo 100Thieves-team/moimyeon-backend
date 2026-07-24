@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T06:25:55.249143785",
+                        "datetime" : "2026-07-24T10:18:01.769039048",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T06:25:55.468212884",
+                        "datetime" : "2026-07-24T10:18:01.914881543",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -119,19 +119,19 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "11111111-1111-1111-1111-111111111111",
+                          "termsId" : "8f5ef6bc-fbfb-4089-b476-8ae659b55c01",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
-                          "content" : "제1조(목적) 이 약관은 모이면 서비스의 이용 조건과 절차를 규정합니다. (모킹 본문)",
+                          "content" : "제1조(목적) 이 약관은 모이면 서비스의 이용 조건과 절차를 규정합니다.",
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "22222222-2222-2222-2222-222222222222",
+                          "termsId" : "03061d49-616c-47a1-9fc7-b731c3a7b6d7",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
-                          "content" : "모이면은 회원 가입과 서비스 제공을 위해 최소한의 개인정보를 수집·이용합니다. (모킹 본문)",
+                          "content" : "모이면은 회원 가입과 서비스 제공을 위해 최소한의 개인정보를 수집·이용합니다.",
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         } ]
@@ -201,7 +201,7 @@ paths:
       summary: 내 상태 조회
       description: "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 프로필 미작성이면 profileCompleted=false,\
         \ profile=null 이다. profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. FE 는 로그인 직후 이\
-        \ 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. (모킹: 항상 미작성 상태로 응답)"
+        \ 값으로 최초 프로필 작성 모달 노출 여부를 판단한다."
       operationId: memberMe
       responses:
         "200":
@@ -216,8 +216,8 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "cc02ccd7-143b-4929-8bd8-5af1dbef32a3",
-                        "email" : "mock@moimyeon.dev",
+                        "memberId" : "18e60a2b-6f40-4a95-bc53-9e2d354eae2e",
+                        "email" : "user@example.com",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
                         "profile" : null
@@ -229,8 +229,8 @@ paths:
       tags:
       - v1
       summary: 닉네임 사용 가능 여부 확인
-      description: "닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자)은 available=false 가 아니라 400(E1005)으\
-        로 응답한다. (모킹: '집요한 수달 07' 만 false, 나머지는 항상 true)"
+      description: 닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으로
+        응답한다.
       operationId: nicknameAvailability
       parameters:
       - name: nickname
@@ -261,8 +261,7 @@ paths:
       tags:
       - v1
       summary: 닉네임 자동 추천
-      description: "중복되지 않는 닉네임을 새로 생성해 반환한다. 최초 프로필 모달의 프리필과 ↻ 새로 만들기 재생성에서 사용한다\
-        . (모킹: 항상 '명랑한 알파카 42' 고정 반환)"
+      description: 중복되지 않는 닉네임을 새로 생성해 반환한다. 최초 프로필 모달의 프리필과 ↻ 새로 만들기 재생성에서 사용한다.
       operationId: nicknameSuggestion
       responses:
         "200":
@@ -287,8 +286,7 @@ paths:
       - v1
       summary: 필수 프로필 작성
       description: "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. 닉네임 형식 위반은 400(E1005),\
-        \ 중복은 409(E1007), 이미 작성된 경우 409(E1008)로 응답한다. (모킹: 저장 없이 요청을 그대로 반환. 중복 E1007\
-        \ 은 닉네임 '집요한 수달 07' 로 재현할 수 있고, E1008 은 무상태라 재현 불가 — 실 구현에서 동작한다)"
+        \ 중복은 409(E1007), 이미 작성된 경우 409(E1008), 필수 약관 미동의는 409(E1201)로 응답한다."
       operationId: createProfile
       requestBody:
         content:
@@ -318,7 +316,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "718e9637-0c2e-4710-aba9-810a12c91b3a",
+                        "memberId" : "efd71436-9263-4b48-976c-40d0d54202b7",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobTitle" : "백엔드 개발",
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
