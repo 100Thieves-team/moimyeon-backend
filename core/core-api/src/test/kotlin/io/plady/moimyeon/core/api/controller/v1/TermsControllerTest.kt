@@ -1,5 +1,11 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.mockk.every
+import io.mockk.mockk
+import io.plady.moimyeon.core.domain.terms.Terms
+import io.plady.moimyeon.core.domain.terms.TermsService
+import io.plady.moimyeon.core.enums.TermsStatus
+import io.plady.moimyeon.core.enums.TermsType
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -8,15 +14,43 @@ import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.LocalDateTime
+import java.util.UUID
 
 class TermsControllerTest : RestDocsTest() {
+    private lateinit var termsService: TermsService
+
     @BeforeEach
     fun setUp() {
-        mockMvc = mockController(TermsController())
+        termsService = mockk()
+        mockMvc = mockController(TermsController(termsService))
     }
 
     @Test
     fun termsList() {
+        every { termsService.getActiveTerms() } returns listOf(
+            Terms(
+                id = UUID.randomUUID(),
+                type = TermsType.SERVICE,
+                version = "v1.0",
+                title = "모이면 이용약관",
+                content = "제1조(목적) 이 약관은 모이면 서비스의 이용 조건과 절차를 규정합니다.",
+                required = true,
+                effectiveFrom = LocalDateTime.of(2026, 7, 1, 0, 0),
+                status = TermsStatus.ACTIVE,
+            ),
+            Terms(
+                id = UUID.randomUUID(),
+                type = TermsType.PRIVACY,
+                version = "v1.0",
+                title = "개인정보 처리방침",
+                content = "모이면은 회원 가입과 서비스 제공을 위해 최소한의 개인정보를 수집·이용합니다.",
+                required = true,
+                effectiveFrom = LocalDateTime.of(2026, 7, 1, 0, 0),
+                status = TermsStatus.ACTIVE,
+            ),
+        )
+
         mockMvc.perform(get("/v1/terms"))
             .andExpect(status().isOk)
             .andDo(

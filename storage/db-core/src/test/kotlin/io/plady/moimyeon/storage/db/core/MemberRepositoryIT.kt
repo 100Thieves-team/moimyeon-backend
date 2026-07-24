@@ -51,18 +51,30 @@ class MemberRepositoryIT(
     }
 
     @Test
-    fun `provider 와 providerId 로 기존 회원을 찾는다`() {
+    fun `provider 와 providerId 로 살아있는 회원을 찾고, 탈퇴 회원은 걸러진다`() {
         // given
         val member = memberRepository.saveAndFlush(newMember(providerId = "google-sub-2"))
 
         // when
-        val found = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderId(
+        val found = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
             SocialLoginProvider.GOOGLE,
             "google-sub-2",
+            MemberStatus.WITHDRAWN,
         )
 
         // then
         assertThat(found?.id).isEqualTo(member.id)
+
+        // 탈퇴 처리하면 같은 신원으로 조회되지 않는다
+        found!!.status = MemberStatus.WITHDRAWN
+        memberRepository.saveAndFlush(found)
+        assertThat(
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+                SocialLoginProvider.GOOGLE,
+                "google-sub-2",
+                MemberStatus.WITHDRAWN,
+            ),
+        ).isNull()
     }
 
     @Test

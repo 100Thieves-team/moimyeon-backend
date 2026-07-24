@@ -1,7 +1,7 @@
 package io.plady.moimyeon.core.api.security
 
-import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
+import io.plady.moimyeon.core.support.error.CoreApiErrorType
+import io.plady.moimyeon.core.support.error.CoreApiException
 import org.springframework.core.MethodParameter
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.support.WebDataBinderFactory
@@ -30,13 +30,13 @@ class LoginMemberArgumentResolver : HandlerMethodArgumentResolver {
 
     private fun String?.toUuid(): UUID {
         if (this == null) {
-            throw CoreException(ErrorType.AUTHENTICATION_REQUIRED)
+            throw CoreApiException(CoreApiErrorType.AUTHENTICATION_REQUIRED)
         }
 
         return try {
             UUID.fromString(this)
         } catch (e: IllegalArgumentException) {
-            throw CoreException(ErrorType.AUTHENTICATION_REQUIRED)
+            throw CoreApiException(CoreApiErrorType.AUTHENTICATION_REQUIRED)
         }
     }
 }

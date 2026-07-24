@@ -21,6 +21,8 @@ services:
     volumes:
       # 최초 기동 시 /docker-entrypoint-initdb.d/*.sql 이 MYSQL_DATABASE 에 실행된다.
       - ./storage/db-core/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./storage/db-core/src/main/resources/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./storage/db-core/src/main/resources/data-local.sql:/docker-entrypoint-initdb.d/03-data-local.sql:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci

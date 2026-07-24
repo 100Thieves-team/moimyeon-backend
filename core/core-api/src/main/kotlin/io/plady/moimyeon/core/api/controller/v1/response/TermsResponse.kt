@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import io.plady.moimyeon.core.domain.terms.Terms
 import io.plady.moimyeon.core.enums.TermsType
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,4 +17,18 @@ data class TermsResponse(
     val content: String,
     val required: Boolean,
     val effectiveFrom: LocalDateTime,
-)
+) {
+    companion object {
+        fun from(terms: Terms): TermsResponse {
+            return TermsResponse(
+                termsId = terms.id,
+                type = terms.type,
+                version = terms.version,
+                title = terms.title,
+                content = terms.content,
+                required = terms.required,
+                effectiveFrom = terms.effectiveFrom,
+            )
+        }
+    }
+}

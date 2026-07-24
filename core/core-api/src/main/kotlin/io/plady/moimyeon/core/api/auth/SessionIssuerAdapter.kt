@@ -1,6 +1,6 @@
 package io.plady.moimyeon.core.api.auth
 
-import io.plady.moimyeon.core.domain.SessionManager
+import io.plady.moimyeon.core.domain.session.SessionManager
 import io.plady.moimyeon.security.auth.IssuedSession
 import io.plady.moimyeon.security.auth.SessionIssuer
 import org.springframework.stereotype.Component

@@ -4,7 +4,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.plady.moimyeon.core.domain.SessionService
+import io.plady.moimyeon.core.domain.session.SessionService
 import io.plady.moimyeon.security.auth.AuthCookieFactory
 import io.plady.moimyeon.security.auth.JwtTokenProvider
 import io.plady.moimyeon.test.api.RestDocsTest

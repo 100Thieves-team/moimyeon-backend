@@ -1,7 +1,7 @@
 package io.plady.moimyeon.core.api.security
 
-import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
+import io.plady.moimyeon.core.support.error.CoreApiErrorType
+import io.plady.moimyeon.core.support.error.CoreApiException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -37,9 +37,9 @@ class LoginMemberArgumentResolverTest {
         assertThatThrownBy {
             resolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(MockHttpServletRequest()), null)
         }
-            .isInstanceOf(CoreException::class.java)
+            .isInstanceOf(CoreApiException::class.java)
             .extracting("errorType")
-            .isEqualTo(ErrorType.AUTHENTICATION_REQUIRED)
+            .isEqualTo(CoreApiErrorType.AUTHENTICATION_REQUIRED)
     }
 
     @Test
@@ -51,9 +51,9 @@ class LoginMemberArgumentResolverTest {
         assertThatThrownBy {
             resolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(request), null)
         }
-            .isInstanceOf(CoreException::class.java)
+            .isInstanceOf(CoreApiException::class.java)
             .extracting("errorType")
-            .isEqualTo(ErrorType.AUTHENTICATION_REQUIRED)
+            .isEqualTo(CoreApiErrorType.AUTHENTICATION_REQUIRED)
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")

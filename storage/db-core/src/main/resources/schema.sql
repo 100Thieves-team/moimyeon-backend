@@ -7,7 +7,10 @@
 --   이 파일 전체를 수동 실행하면 파괴적이므로, 스키마 변경은 별도 절차(추후 마이그레이션)로 관리한다.
 
 DROP TABLE IF EXISTS refresh_token;
+DROP TABLE IF EXISTS terms_agreement;
+DROP TABLE IF EXISTS member_profile;
 DROP TABLE IF EXISTS social_account;
+DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS member;
 DROP TABLE IF EXISTS example_entity;
 
@@ -50,6 +53,50 @@ CREATE TABLE refresh_token (
 );
 CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
+
+CREATE TABLE member_profile (
+    member_id          BINARY(16)   NOT NULL,
+    nickname           VARCHAR(30)  NOT NULL,
+    job_title          VARCHAR(100) NULL,
+    bio                VARCHAR(500) NULL,
+    meeting_preference VARCHAR(20)  NULL,
+    region             VARCHAR(50)  NULL,
+    created_at         DATETIME     NOT NULL,
+    updated_at         DATETIME     NOT NULL,
+    PRIMARY KEY (member_id),
+    CONSTRAINT uk_member_profile_nickname UNIQUE (nickname),
+    CONSTRAINT fk_member_profile_member FOREIGN KEY (member_id) REFERENCES member (id)
+);
+
+CREATE TABLE terms (
+    id             BINARY(16)   NOT NULL,
+    type           VARCHAR(20)  NOT NULL,
+    version        VARCHAR(20)  NOT NULL,
+    title          VARCHAR(200) NOT NULL,
+    content        TEXT         NOT NULL,
+    required       BOOLEAN      NOT NULL,
+    effective_from DATETIME     NOT NULL,
+    status         VARCHAR(20)  NOT NULL,
+    created_at     DATETIME     NOT NULL,
+    updated_at     DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_terms_type_version UNIQUE (type, version)
+);
+
+-- 동의 이력은 append-only: 애플리케이션에서 UPDATE/DELETE 를 수행하지 않는다.
+CREATE TABLE terms_agreement (
+    id         BINARY(16) NOT NULL,
+    member_id  BINARY(16) NOT NULL,
+    terms_id   BINARY(16) NOT NULL,
+    agreed_at  DATETIME   NOT NULL,
+    created_at DATETIME   NOT NULL,
+    updated_at DATETIME   NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_terms_agreement_member_terms UNIQUE (member_id, terms_id),
+    CONSTRAINT fk_terms_agreement_member FOREIGN KEY (member_id) REFERENCES member (id),
+    CONSTRAINT fk_terms_agreement_terms FOREIGN KEY (terms_id) REFERENCES terms (id)
+);
+CREATE INDEX ix_terms_agreement_member_id ON terms_agreement (member_id);
 
 CREATE TABLE example_entity (
     id             BIGINT       NOT NULL AUTO_INCREMENT,

@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.support.error
 
 enum class ErrorCode {
     // 공통/HTTP 계열 (3자리 = HTTP 상태 대응)
+    E400,
     E500,
 
     // 회원 도메인 (4자리, E10xx)
@@ -13,6 +14,7 @@ enum class ErrorCode {
     E1006, // 존재하는 회원이 아님
     E1007, // 닉네임 중복
     E1008, // 이미 작성된 프로필이 존재
+    E1009, // 존재하는 프로필이 아님
 
     // 인증/소셜 로그인 (4자리, E11xx)
     E1101, // 소셜 계정에 이메일이 없음
