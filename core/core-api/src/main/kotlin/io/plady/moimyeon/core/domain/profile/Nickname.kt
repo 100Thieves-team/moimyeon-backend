@@ -8,6 +8,7 @@ value class Nickname(
     val value: String,
 ) {
     init {
+        requireBusiness(value.isNotBlank(), CoreErrorType.INVALID_NICKNAME)
         requireBusiness(value.length in LENGTH_RANGE, CoreErrorType.INVALID_NICKNAME)
         requireBusiness(PATTERN.matches(value), CoreErrorType.INVALID_NICKNAME)
         requireBusiness(FORBIDDEN_WORDS.none { value.contains(it) }, CoreErrorType.INVALID_NICKNAME)

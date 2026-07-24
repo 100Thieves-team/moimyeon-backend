@@ -114,6 +114,15 @@ class ProfileServiceTest {
     }
 
     @Test
+    fun `동시 요청이 아닌 무결성 위반은 유니크 충돌로 오인하지 않고 전파한다`() {
+        givenCreatable()
+        every { profileManager.append(profile) } throws DataIntegrityViolationException("fk_member_profile_member")
+
+        assertThatThrownBy { profileService.create(profile) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    @Test
     fun `추천은 사용 가능한 후보가 나올 때까지 재생성한다`() {
         val taken = Nickname("집요한 수달 07")
         val available = Nickname("차분한 펭귄 12")

@@ -41,7 +41,9 @@ class ApiControllerAdvice {
     // 요청 형태 오류(수송 계층): Bean Validation 실패 — 어떤 필드가 왜 틀렸는지 data 로 전달
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValid(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Any>> {
-        val fieldErrors = e.bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "invalid") }
+        val fieldErrors = e.bindingResult.fieldErrors
+            .groupBy({ it.field }, { it.defaultMessage ?: "invalid" })
+            .mapValues { (_, messages) -> messages.joinToString("; ") }
         log.warn("MethodArgumentNotValidException : {}", fieldErrors)
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, fieldErrors), CoreApiErrorType.INVALID_REQUEST.status)
     }

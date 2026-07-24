@@ -4,7 +4,9 @@ import io.plady.moimyeon.core.domain.terms.TermsAgreementRecorder
 import io.plady.moimyeon.core.domain.terms.TermsFinder
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -28,9 +30,14 @@ class SocialAuthService(
         }
 
         requireBusiness(!memberFinder.existsWithdrawnBySocialAccount(provider, providerId), CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
-        val memberId = memberManager.append(provider, providerId, email)
-        val requiredTerms = termsFinder.findRequiredActive()
-        termsAgreementRecorder.recordAll(memberId, requiredTerms.map { it.id }, LocalDateTime.now())
-        return memberId
+        return try {
+            val memberId = memberManager.append(provider, providerId, email)
+            val requiredTerms = termsFinder.findRequiredActive()
+            termsAgreementRecorder.recordAll(memberId, requiredTerms.map { it.id }, LocalDateTime.now())
+            memberId
+        } catch (e: DataIntegrityViolationException) {
+            // 확인-후-저장 사이의 동시 가입(따닥): (provider, providerId) 유니크 충돌 — 재로그인하면 기존 계정으로 연결된다
+            throw CoreException(CoreErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED)
+        }
     }
 }

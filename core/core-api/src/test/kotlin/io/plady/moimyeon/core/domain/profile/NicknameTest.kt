@@ -21,6 +21,11 @@ class NicknameTest {
     }
 
     @Test
+    fun `공백만으로는 만들 수 없다`() {
+        assertInvalid("   ")
+    }
+
+    @Test
     fun `길이 범위를 벗어나면 E1005 를 던진다`() {
         assertInvalid("한")
         assertInvalid("가".repeat(21))

@@ -27,12 +27,19 @@ class ProfileService(
         return try {
             profileManager.append(profile)
         } catch (e: DataIntegrityViolationException) {
-            // find ~ save 사이의 동시성 벙지
+            // find ~ save 사이의 동시성 방지. 기대하지 않은 무결성 위반을 유니크 충돌로 오인하지 않도록 그 외에는 전파한다.
             if (profileFinder.exists(profile.memberId)) {
                 throw CoreException(CoreErrorType.PROFILE_ALREADY_EXISTS)
             }
-            throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+            if (isNicknameConflict(e)) {
+                throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+            }
+            throw e
         }
+    }
+
+    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_profile_nickname", ignoreCase = true)
     }
 
     fun hasProfile(memberId: UUID): Boolean = profileFinder.exists(memberId)

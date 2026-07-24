@@ -16,6 +16,7 @@ import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -78,6 +79,19 @@ class SocialAuthServiceTest {
         verify(exactly = 1) { memberManager.append(provider, "sub-2", email) }
         verify(exactly = 1) { termsAgreementRecorder.recordAll(newMemberId, listOf(termsId), any()) }
         verify(exactly = 0) { memberManager.recordLogin(any()) }
+    }
+
+    @Test
+    fun `동시 가입으로 유니크 충돌이 나면 E1004 로 매핑한다`() {
+        every { memberFinder.existsBySocialAccount(provider, "sub-4") } returns false
+        every { memberFinder.existsWithdrawnBySocialAccount(provider, "sub-4") } returns false
+        every { memberManager.append(provider, "sub-4", email) } throws
+            DataIntegrityViolationException("uk_social_account_provider_provider_id")
+
+        assertThatThrownBy { socialAuthService.authenticate(provider, "sub-4", email) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED)
+            }
     }
 
     @Test

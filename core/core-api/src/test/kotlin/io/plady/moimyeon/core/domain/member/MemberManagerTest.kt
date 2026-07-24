@@ -27,7 +27,7 @@ class MemberManagerTest {
     fun `append 는 도메인 불변식을 만족한 신규 회원을 저장하고 저장된 id 를 반환한다`() {
         // given
         val saved = slot<MemberEntity>()
-        every { memberRepository.save(capture(saved)) } answers { saved.captured }
+        every { memberRepository.saveAndFlush(capture(saved)) } answers { saved.captured }
 
         // when
         val id = memberManager.append(provider, "sub-1", Email("user@example.com"))

@@ -16,7 +16,8 @@ class MemberManager(
     @Transactional
     fun append(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
         val member = Member.register(provider, providerId, email, LocalDateTime.now())
-        return memberRepository.save(MemberMapper.toEntity(member)).id
+        // 유니크 충돌(동시 가입)을 호출자 트랜잭션 안에서 잡을 수 있게 즉시 flush 한다
+        return memberRepository.saveAndFlush(MemberMapper.toEntity(member)).id
     }
 
     @Transactional
