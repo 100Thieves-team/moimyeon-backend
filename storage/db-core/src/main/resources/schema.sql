@@ -8,11 +8,99 @@
 
 DROP TABLE IF EXISTS refresh_token;
 DROP TABLE IF EXISTS terms_agreement;
+DROP TABLE IF EXISTS member_profile_interest;
 DROP TABLE IF EXISTS member_profile;
 DROP TABLE IF EXISTS social_account;
 DROP TABLE IF EXISTS terms;
 DROP TABLE IF EXISTS member;
+DROP TABLE IF EXISTS job_role;
+DROP TABLE IF EXISTS job_group;
+DROP TABLE IF EXISTS sigungu;
+DROP TABLE IF EXISTS sido;
+DROP TABLE IF EXISTS company;
 DROP TABLE IF EXISTS example_entity;
+
+-- ── 참조 데이터(크롤러 소유) ─────────────────────────────────────────────
+-- retired_at: 재크롤 미출현 시 세팅(NULL=유효). updated_at 의 ON UPDATE CURRENT_TIMESTAMP 는
+-- MySQL 전용 문법이라 제외 — 갱신 주체(크롤러)가 직접 세팅한다.
+
+-- 지역-시도 마스터(법정동 2026)
+CREATE TABLE sido (
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    sido_code  CHAR(2)     NOT NULL,
+    name       VARCHAR(20) NOT NULL,
+    short_name VARCHAR(10) NOT NULL,
+    is_metro   BOOLEAN     NOT NULL DEFAULT FALSE,
+    sort_order SMALLINT    NULL,
+    created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    retired_at DATETIME    NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_sido_sido_code UNIQUE (sido_code),
+    CONSTRAINT uk_sido_name UNIQUE (name),
+    CONSTRAINT uk_sido_short_name UNIQUE (short_name)
+);
+
+-- 지역-시군구 마스터(법정동 2026)
+CREATE TABLE sigungu (
+    id           BIGINT      NOT NULL AUTO_INCREMENT,
+    sido_id      BIGINT      NOT NULL,
+    sigungu_code CHAR(5)     NULL,
+    name         VARCHAR(40) NOT NULL,
+    level        VARCHAR(10) NOT NULL,
+    sort_order   SMALLINT    NULL,
+    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    retired_at   DATETIME    NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_sigungu_sigungu_code UNIQUE (sigungu_code),
+    CONSTRAINT uk_sigungu_sido_name UNIQUE (sido_id, name),
+    CONSTRAINT fk_sigungu_sido FOREIGN KEY (sido_id) REFERENCES sido (id)
+);
+CREATE INDEX ix_sigungu_sido_id ON sigungu (sido_id);
+
+-- 직업유형-직군
+CREATE TABLE job_group (
+    id           BIGINT      NOT NULL AUTO_INCREMENT,
+    code         VARCHAR(40) NOT NULL,
+    display_name VARCHAR(60) NOT NULL,
+    sort_order   SMALLINT    NULL,
+    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    retired_at   DATETIME    NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_job_group_code UNIQUE (code)
+);
+
+-- 직업유형-직무
+CREATE TABLE job_role (
+    id           BIGINT      NOT NULL AUTO_INCREMENT,
+    job_group_id BIGINT      NOT NULL,
+    code         VARCHAR(60) NOT NULL,
+    display_name VARCHAR(80) NOT NULL,
+    sort_order   SMALLINT    NULL,
+    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    retired_at   DATETIME    NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_job_role_code UNIQUE (code),
+    CONSTRAINT fk_job_role_job_group FOREIGN KEY (job_group_id) REFERENCES job_group (id)
+);
+CREATE INDEX ix_job_role_job_group_id ON job_role (job_group_id);
+
+-- 회사 (corp_code = DART 고유번호, 식별 앵커)
+CREATE TABLE company (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    corp_code       CHAR(8)      NULL,
+    name_kr         VARCHAR(200) NOT NULL,
+    name_normalized VARCHAR(200) NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    retired_at      DATETIME     NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_company_corp_code UNIQUE (corp_code)
+);
+CREATE INDEX ix_company_name_normalized ON company (name_normalized);
 
 CREATE TABLE member (
     id            BINARY(16)   NOT NULL,
@@ -66,6 +154,13 @@ CREATE TABLE member_profile (
     PRIMARY KEY (member_id),
     CONSTRAINT uk_member_profile_nickname UNIQUE (nickname),
     CONSTRAINT fk_member_profile_member FOREIGN KEY (member_id) REFERENCES member (id)
+);
+
+CREATE TABLE member_profile_interest (
+    member_id    BINARY(16)   NOT NULL,
+    company_name VARCHAR(100) NOT NULL,
+    CONSTRAINT uk_member_profile_interest UNIQUE (member_id, company_name),
+    CONSTRAINT fk_member_profile_interest_profile FOREIGN KEY (member_id) REFERENCES member_profile (member_id)
 );
 
 CREATE TABLE terms (
