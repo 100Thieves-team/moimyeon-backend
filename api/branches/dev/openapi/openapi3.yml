@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T15:42:11.528153269",
+                        "date" : "2026-07-24",
+                        "datetime" : "2026-07-24T06:25:55.249143785",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-23",
-                        "datetime" : "2026-07-23T15:42:11.758050293",
+                        "date" : "2026-07-24",
+                        "datetime" : "2026-07-24T06:25:55.468212884",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -216,7 +216,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "ef6be03b-cc74-409f-82ba-c750a07077d1",
+                        "memberId" : "cc02ccd7-143b-4929-8bd8-5af1dbef32a3",
                         "email" : "mock@moimyeon.dev",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
@@ -233,7 +233,7 @@ paths:
         로 응답한다. (모킹: '집요한 수달 07' 만 false, 나머지는 항상 true)"
       operationId: nicknameAvailability
       parameters:
-      - name: value
+      - name: nickname
         in: query
         description: 확인할 닉네임
         required: true
@@ -287,8 +287,8 @@ paths:
       - v1
       summary: 필수 프로필 작성
       description: "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. 닉네임 형식 위반은 400(E1005),\
-        \ 중복은 409(E1007), 이미 작성된 경우 409(E1008)로 응답한다. (모킹: 저장 없이 요청을 그대로 반환하며, 중복\
-        \ E1007 은 닉네임 '집요한 수달 07' 로 재현할 수 있다)"
+        \ 중복은 409(E1007), 이미 작성된 경우 409(E1008)로 응답한다. (모킹: 저장 없이 요청을 그대로 반환. 중복 E1007\
+        \ 은 닉네임 '집요한 수달 07' 로 재현할 수 있고, E1008 은 무상태라 재현 불가 — 실 구현에서 동작한다)"
       operationId: createProfile
       requestBody:
         content:
@@ -318,7 +318,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "be0040b7-99da-4731-ba5e-6b85ed31ebbb",
+                        "memberId" : "718e9637-0c2e-4710-aba9-810a12c91b3a",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobTitle" : "백엔드 개발",
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -494,7 +494,7 @@ components:
           type: string
           description: 선호 지역 (선택)
           nullable: true
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
