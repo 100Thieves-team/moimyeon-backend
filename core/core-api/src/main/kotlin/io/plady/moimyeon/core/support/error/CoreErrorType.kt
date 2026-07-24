@@ -17,4 +17,8 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
 
     TERMS_NOT_AGREED(HttpStatus.CONFLICT, ErrorCode.E1201, "필수 약관에 동의해야 이용할 수 있습니다.", LogLevel.WARN),
+
+    JOB_ROLE_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1301, "존재하지 않는 직무입니다.", LogLevel.WARN),
+    REGION_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1302, "존재하지 않는 지역입니다.", LogLevel.WARN),
+    COMPANY_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1303, "존재하지 않는 회사입니다.", LogLevel.WARN),
 }
