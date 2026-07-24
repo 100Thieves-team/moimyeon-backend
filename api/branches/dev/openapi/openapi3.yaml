@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T10:18:01.769039048",
+                        "datetime" : "2026-07-24T10:20:19.814880732",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,11 +88,117 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T10:18:01.914881543",
+                        "datetime" : "2026-07-24T10:20:20.002410283",
                         "items" : [ {
                           "key" : "1"
                         }, {
                           "key" : "2"
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/companies:
+    get:
+      tags:
+      - v1
+      summary: 회사 검색
+      description: 관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 유효(미폐기) 회사를 최대 20건 반환한다. 크롤러가 관리하는
+        참조 데이터다.
+      operationId: searchCompanies
+      parameters:
+      - name: query
+        in: query
+        description: "검색어 (회사명 부분 일치, 1~50자)"
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-companies1839974379"
+              examples:
+                searchCompanies:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "companies" : [ {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/job-roles:
+    get:
+      tags:
+      - v1
+      summary: 직무 카탈로그 조회
+      description: 프로필 직무 드롭다운 소스. 직군별로 그룹핑된 유효(미폐기) 직무 목록을 반환한다. 크롤러가 관리하는 참조 데이터다.
+      operationId: jobRoles
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-job-roles-1436485238"
+              examples:
+                jobRoles:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "groups" : [ {
+                          "code" : "IT_개발",
+                          "displayName" : "IT·개발",
+                          "roles" : [ {
+                            "jobRoleId" : 1,
+                            "code" : "서버_백엔드",
+                            "displayName" : "서버·백엔드"
+                          }, {
+                            "jobRoleId" : 2,
+                            "code" : "프론트엔드",
+                            "displayName" : "프론트엔드"
+                          } ]
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/regions:
+    get:
+      tags:
+      - v1
+      summary: 지역 카탈로그 조회
+      description: 프로필 선호 지역 드롭다운 소스. 시도별로 그룹핑된 유효(미폐기) 시군구 목록을 반환한다(법정동 기준). 크롤러가
+        관리하는 참조 데이터다.
+      operationId: regions
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-regions1871099627"
+              examples:
+                regions:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "sidos" : [ {
+                          "name" : "서울특별시",
+                          "shortName" : "서울",
+                          "sigungus" : [ {
+                            "sigunguId" : 1,
+                            "name" : "강남구"
+                          }, {
+                            "sigunguId" : 2,
+                            "name" : "마포구"
+                          } ]
                         } ]
                       },
                       "error" : null
@@ -119,7 +225,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "8f5ef6bc-fbfb-4089-b476-8ae659b55c01",
+                          "termsId" : "1454744c-fae8-4ed3-a300-f18d8979bfca",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -127,7 +233,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "03061d49-616c-47a1-9fc7-b731c3a7b6d7",
+                          "termsId" : "34b77b23-a15c-46cb-ba7a-e5cf91127751",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -216,7 +322,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "18e60a2b-6f40-4a95-bc53-9e2d354eae2e",
+                        "memberId" : "b98c5d9c-824b-4ef7-8bbc-f70dd9843422",
                         "email" : "user@example.com",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
@@ -316,7 +422,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "efd71436-9263-4b48-976c-40d0d54202b7",
+                        "memberId" : "50275d0f-367f-4af6-acf6-f974727780ed",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobTitle" : "백엔드 개발",
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -328,6 +434,34 @@ paths:
                     }
 components:
   schemas:
+    v1-companies1839974379:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - companies
+          type: object
+          properties:
+            companies:
+              type: array
+              description: 검색 결과 (최대 20건)
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id (관심 회사 저장에 사용)
+                  name:
+                    type: string
+                    description: 회사명
     v1-terms1673199050:
       required:
       - result
@@ -492,6 +626,54 @@ components:
           type: string
           description: 선호 지역 (선택)
           nullable: true
+    v1-job-roles-1436485238:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - groups
+          type: object
+          properties:
+            groups:
+              type: array
+              description: 직군 목록
+              items:
+                required:
+                - code
+                - displayName
+                - roles
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: 직군 코드
+                  displayName:
+                    type: string
+                    description: 직군 표시명
+                  roles:
+                    type: array
+                    description: 직군 내 직무 목록
+                    items:
+                      required:
+                      - code
+                      - displayName
+                      - jobRoleId
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          description: 직무 코드
+                        displayName:
+                          type: string
+                          description: 직무 표시명
+                        jobRoleId:
+                          type: number
+                          description: 직무 id (프로필 저장에 사용)
     post191457252:
       required:
       - result
@@ -528,6 +710,50 @@ components:
                   key:
                     type: string
                     description: Result Item
+    v1-regions1871099627:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - sidos
+          type: object
+          properties:
+            sidos:
+              type: array
+              description: 시도 목록
+              items:
+                required:
+                - name
+                - shortName
+                - sigungus
+                type: object
+                properties:
+                  sigungus:
+                    type: array
+                    description: 시군구 목록
+                    items:
+                      required:
+                      - name
+                      - sigunguId
+                      type: object
+                      properties:
+                        sigunguId:
+                          type: number
+                          description: 시군구 id (프로필 저장에 사용)
+                        name:
+                          type: string
+                          description: 시군구 명칭
+                  name:
+                    type: string
+                    description: 시도 정식명칭
+                  shortName:
+                    type: string
+                    description: "시도 축약명 (표시용, 예: 서울)"
     v1-nicknames-suggestion679533277:
       required:
       - result
