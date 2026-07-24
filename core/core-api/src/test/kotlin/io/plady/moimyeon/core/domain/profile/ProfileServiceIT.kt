@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.profile
 import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.SocialAuthService
+import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -34,13 +35,54 @@ class ProfileServiceIT(
         // when — 자동 생성 닉네임으로 프로필 저장
         val nickname = profileService.suggestNickname()
         val created = profileService.create(
-            MemberProfile(memberId, nickname, jobTitle = "백엔드 개발", bio = null, meetingPreference = null, region = null),
+            // jobRoleId=1(서버·백엔드), sigunguId=1(강남구) — seed.sql 참조 데이터
+            MemberProfile(memberId, nickname, jobRoleId = 1L, bio = null, meetingPreference = null, sigunguId = 1L),
         )
 
         // then — 완성 상태(프로필 존재)로 전환
         assertThat(created.nickname).isEqualTo(nickname)
         assertThat(profileService.getProfile(memberId).nickname).isEqualTo(nickname)
         assertThat(profileService.isNicknameAvailable(nickname.value)).isFalse()
+    }
+
+    @Test
+    fun `프로필 수정은 닉네임 유지·변경과 관심 회사·면접 단계 교체를 지원한다`() {
+        // given
+        val memberId = signUp("google-sub-p5")
+        profileService.create(MemberProfile(memberId, Nickname("수정 전 닉네임 01"), null, null, null, null))
+
+        // when — 같은 닉네임을 유지한 채 나머지 필드 교체 (자기 닉네임은 중복이 아니다)
+        // 참조 id 는 seed.sql: jobRoleId 1(서버·백엔드)·2(프론트엔드), sigunguId 2(마포구), company 1·2·3
+        profileService.update(
+            MemberProfile(
+                memberId,
+                Nickname("수정 전 닉네임 01"),
+                jobRoleId = 1L,
+                bio = "자기소개",
+                meetingPreference = MeetingPreference.BOTH,
+                sigunguId = 2L,
+                interestCompanyIds = listOf(1L, 2L),
+            ),
+        )
+        // 닉네임 변경도 가능
+        profileService.update(
+            MemberProfile(
+                memberId,
+                Nickname("수정 후 닉네임 02"),
+                jobRoleId = 2L,
+                bio = "자기소개",
+                meetingPreference = MeetingPreference.BOTH,
+                sigunguId = 2L,
+                interestCompanyIds = listOf(3L),
+            ),
+        )
+
+        // then
+        val found = profileService.getProfile(memberId)
+        assertThat(found.nickname).isEqualTo(Nickname("수정 후 닉네임 02"))
+        assertThat(found.jobRoleId).isEqualTo(2L)
+        assertThat(found.interestCompanyIds).containsExactly(3L)
+        assertThat(profileService.isNicknameAvailable("수정 전 닉네임 01")).isTrue()
     }
 
     @Test

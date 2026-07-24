@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.plady.moimyeon.core.api.controller.v1.response.MemberMeResponse
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
+import io.plady.moimyeon.core.domain.catalog.CatalogService
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.support.response.ApiResponse
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 class MemberController(
     private val memberService: MemberService,
     private val profileService: ProfileService,
+    private val catalogService: CatalogService,
 ) {
     @GetMapping("/v1/members/me")
     fun me(
@@ -21,6 +23,7 @@ class MemberController(
         val member = memberService.getMember(currentMember.id)
 
         val profile = if (profileService.hasProfile(currentMember.id)) profileService.getProfile(currentMember.id) else null
-        return ApiResponse.success(MemberMeResponse.of(member, profile))
+        val interestCompanies = profile?.let { catalogService.getCompanies(it.interestCompanyIds) }.orEmpty()
+        return ApiResponse.success(MemberMeResponse.of(member, profile, interestCompanies))
     }
 }

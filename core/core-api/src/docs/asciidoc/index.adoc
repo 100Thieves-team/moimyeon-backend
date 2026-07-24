@@ -157,6 +157,18 @@ include::{snippets}/createProfile/response-fields.adoc[]
 
 '''
 
+=== 프로필 수정
+==== Curl Request
+include::{snippets}/updateProfile/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/updateProfile/request-fields.adoc[]
+==== Http Response
+include::{snippets}/updateProfile/http-response.adoc[]
+==== Response Fields
+include::{snippets}/updateProfile/response-fields.adoc[]
+
+'''
+
 === 닉네임 자동 추천
 ==== Curl Request
 include::{snippets}/nicknameSuggestion/curl-request.adoc[]

@@ -1,5 +1,8 @@
 package io.plady.moimyeon.core.domain.profile
 
+import io.plady.moimyeon.core.domain.catalog.CompanyFinder
+import io.plady.moimyeon.core.domain.catalog.JobCatalogFinder
+import io.plady.moimyeon.core.domain.catalog.RegionFinder
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.terms.TermsAgreementFinder
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -13,13 +16,16 @@ import java.util.UUID
 class ProfileService(
     private val memberFinder: MemberFinder,
     private val termsAgreementFinder: TermsAgreementFinder,
+    private val jobCatalogFinder: JobCatalogFinder,
+    private val regionFinder: RegionFinder,
+    private val companyFinder: CompanyFinder,
     private val profileFinder: ProfileFinder,
     private val profileManager: ProfileManager,
     private val nicknameGenerator: NicknameGenerator,
 ) {
-
     fun create(profile: MemberProfile): MemberProfile {
         memberFinder.getById(profile.memberId)
+        validateCatalogRefs(profile)
         requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(profile.memberId), CoreErrorType.TERMS_NOT_AGREED)
         requireBusiness(!profileFinder.exists(profile.memberId), CoreErrorType.PROFILE_ALREADY_EXISTS)
         requireBusiness(profileFinder.isNicknameAvailable(profile.nickname), CoreErrorType.NICKNAME_DUPLICATED)
@@ -38,8 +44,21 @@ class ProfileService(
         }
     }
 
-    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_profile_nickname", ignoreCase = true)
+    fun update(profile: MemberProfile): MemberProfile {
+        memberFinder.getById(profile.memberId)
+        validateCatalogRefs(profile)
+        requireBusiness(
+            profileFinder.isNicknameAvailableFor(profile.memberId, profile.nickname),
+            CoreErrorType.NICKNAME_DUPLICATED,
+        )
+        return try {
+            profileManager.update(profile)
+        } catch (e: DataIntegrityViolationException) {
+            if (isNicknameConflict(e)) {
+                throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+            }
+            throw e
+        }
     }
 
     fun hasProfile(memberId: UUID): Boolean = profileFinder.exists(memberId)
@@ -58,6 +77,20 @@ class ProfileService(
 
     fun isNicknameAvailable(rawNickname: String): Boolean {
         return profileFinder.isNicknameAvailable(Nickname(rawNickname))
+    }
+
+    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_profile_nickname", ignoreCase = true)
+    }
+
+    private fun validateCatalogRefs(profile: MemberProfile) {
+        profile.jobRoleId?.let {
+            requireBusiness(jobCatalogFinder.existsActiveRole(it), CoreErrorType.JOB_ROLE_NOT_FOUND)
+        }
+        profile.sigunguId?.let {
+            requireBusiness(regionFinder.existsActiveSigungu(it), CoreErrorType.REGION_NOT_FOUND)
+        }
+        requireBusiness(companyFinder.allActive(profile.interestCompanyIds), CoreErrorType.COMPANY_NOT_FOUND)
     }
 
     companion object {

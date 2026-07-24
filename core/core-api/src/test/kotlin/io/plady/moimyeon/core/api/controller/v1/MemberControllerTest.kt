@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
+import io.plady.moimyeon.core.domain.catalog.CatalogService
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberService
@@ -23,6 +24,7 @@ import java.util.UUID
 class MemberControllerTest : RestDocsTest() {
     private lateinit var memberService: MemberService
     private lateinit var profileService: ProfileService
+    private lateinit var catalogService: CatalogService
 
     private val member: Member =
         Member.register(SocialLoginProvider.GOOGLE, "google-sub-1", Email("user@example.com"), LocalDateTime.of(2026, 1, 1, 0, 0))
@@ -33,7 +35,8 @@ class MemberControllerTest : RestDocsTest() {
     fun setUp() {
         memberService = mockk()
         profileService = mockk()
-        mockMvc = mockController(MemberController(memberService, profileService), LoginMemberArgumentResolver())
+        catalogService = mockk()
+        mockMvc = mockController(MemberController(memberService, profileService, catalogService), LoginMemberArgumentResolver())
     }
 
     @Test
