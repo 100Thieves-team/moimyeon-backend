@@ -109,6 +109,40 @@ include::{snippets}/memberMe/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/memberMe/response-fields.adoc[]
 
+== Catalog API
+
+프로필 폼의 드롭다운·검색 소스. 크롤러가 관리하는 참조 데이터다.
+
+=== 직무 카탈로그 조회
+==== Curl Request
+include::{snippets}/jobRoles/curl-request.adoc[]
+==== Http Response
+include::{snippets}/jobRoles/http-response.adoc[]
+==== Response Fields
+include::{snippets}/jobRoles/response-fields.adoc[]
+
+'''
+
+=== 지역 카탈로그 조회
+==== Curl Request
+include::{snippets}/regions/curl-request.adoc[]
+==== Http Response
+include::{snippets}/regions/http-response.adoc[]
+==== Response Fields
+include::{snippets}/regions/response-fields.adoc[]
+
+'''
+
+=== 회사 검색
+==== Curl Request
+include::{snippets}/searchCompanies/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/searchCompanies/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/searchCompanies/http-response.adoc[]
+==== Response Fields
+include::{snippets}/searchCompanies/response-fields.adoc[]
+
 == Profile API
 
 === 필수 프로필 작성
