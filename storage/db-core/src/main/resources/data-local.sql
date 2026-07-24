@@ -11,10 +11,16 @@ INSERT INTO social_account (provider, provider_id, linked_email, member_id, crea
 VALUES ('GOOGLE', 'local-test-sub', 'localtest@moimyeon.dev',
         X'019daf00000070008000000000000101', '2026-07-01 00:00:00', '2026-07-01 00:00:00');
 
-INSERT INTO member_profile (member_id, nickname, job_title, bio, meeting_preference, region, created_at, updated_at)
-VALUES (X'019daf00000070008000000000000101', '집요한 수달 07', '프론트엔드 개발',
-        '결제 도메인 3년 차 프론트엔드 개발자예요.', 'OFFLINE', '서울 · 강남구',
+-- job_role_id=2(프론트엔드), sigungu_id=1(서울 강남구) — seed.sql 의 참조 데이터 id
+INSERT INTO member_profile (member_id, nickname, job_role_id, bio, meeting_preference, sigungu_id, created_at, updated_at)
+VALUES (X'019daf00000070008000000000000101', '집요한 수달 07', 2,
+        '결제 도메인 3년 차 프론트엔드 개발자예요.', 'OFFLINE', 1,
         '2026-07-01 00:00:00', '2026-07-01 00:00:00');
+
+-- 관심 회사: 달빛페이(1)·한빛커머스(2)
+INSERT INTO member_profile_interest (member_id, company_id)
+VALUES (X'019daf00000070008000000000000101', 1),
+       (X'019daf00000070008000000000000101', 2);
 
 INSERT INTO terms_agreement (id, member_id, terms_id, agreed_at, created_at, updated_at)
 VALUES (X'019daf00000070008000000000000201', X'019daf00000070008000000000000101',

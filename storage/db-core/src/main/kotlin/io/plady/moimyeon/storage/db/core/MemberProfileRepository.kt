@@ -5,4 +5,6 @@ import java.util.UUID
 
 interface MemberProfileRepository : JpaRepository<MemberProfileEntity, UUID> {
     fun existsByNickname(nickname: String): Boolean
+
+    fun existsByNicknameAndMemberIdNot(nickname: String, memberId: UUID): Boolean
 }
