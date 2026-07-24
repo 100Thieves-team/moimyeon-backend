@@ -52,7 +52,8 @@ class ProfileControllerTest : RestDocsTest() {
                     "필수 프로필 작성",
                     "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. " +
                         "닉네임 형식 위반은 400(E1005), 중복은 409(E1007), 이미 작성된 경우 409(E1008)로 응답한다. " +
-                        "(모킹: 저장 없이 요청을 그대로 반환하며, 중복 E1007 은 닉네임 '집요한 수달 07' 로 재현할 수 있다)",
+                        "(모킹: 저장 없이 요청을 그대로 반환. 중복 E1007 은 닉네임 '집요한 수달 07' 로 재현할 수 있고, " +
+                        "E1008 은 무상태라 재현 불가 — 실 구현에서 동작한다)",
                     requestFields(
                         fieldWithPath("nickname").type(JsonFieldType.STRING).description("닉네임 (필수, 전체 중복 불가)"),
                         fieldWithPath("jobTitle").type(JsonFieldType.STRING).optional().description("직무 (선택)"),
