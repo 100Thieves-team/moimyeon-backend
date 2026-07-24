@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

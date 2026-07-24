@@ -1,6 +1,6 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
-import io.plady.moimyeon.core.support.error.ErrorType
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.security.auth.IssuedSession
@@ -33,9 +33,9 @@ class SessionManager(
     fun resolveMemberId(rawCredential: String): UUID {
         val entity = requireFound(
             refreshTokenRepository.findByTokenHash(RefreshTokenGenerator.hash(rawCredential)),
-            ErrorType.INVALID_SESSION,
+            CoreErrorType.INVALID_SESSION,
         )
-        requireBusiness(entity.isActive(LocalDateTime.now()), ErrorType.INVALID_SESSION)
+        requireBusiness(entity.isActive(LocalDateTime.now()), CoreErrorType.INVALID_SESSION)
         return entity.memberId
     }
 

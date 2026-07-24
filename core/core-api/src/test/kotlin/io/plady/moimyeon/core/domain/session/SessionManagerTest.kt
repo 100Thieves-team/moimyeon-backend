@@ -1,10 +1,10 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
 import io.plady.moimyeon.storage.db.core.RefreshTokenEntity
 import io.plady.moimyeon.storage.db.core.RefreshTokenRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -59,7 +59,7 @@ class SessionManagerTest {
         // when & then
         assertThatThrownBy { sessionManager.resolveMemberId("nope") }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.INVALID_SESSION)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.INVALID_SESSION)
             }
     }
 
@@ -73,7 +73,7 @@ class SessionManagerTest {
         // when & then
         assertThatThrownBy { sessionManager.resolveMemberId(raw) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.INVALID_SESSION)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.INVALID_SESSION)
             }
     }
 
@@ -88,7 +88,7 @@ class SessionManagerTest {
         // when & then
         assertThatThrownBy { sessionManager.resolveMemberId(raw) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.INVALID_SESSION)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.INVALID_SESSION)
             }
     }
 

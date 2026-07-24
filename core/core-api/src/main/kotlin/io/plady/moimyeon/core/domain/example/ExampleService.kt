@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.example
 
 import org.springframework.stereotype.Service
 

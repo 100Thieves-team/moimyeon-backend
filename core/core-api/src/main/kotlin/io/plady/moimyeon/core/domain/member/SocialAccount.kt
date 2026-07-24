@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.v1.request.DoExampleRequest
-import io.plady.moimyeon.core.domain.ExampleResult
-import io.plady.moimyeon.core.domain.ExampleService
+import io.plady.moimyeon.core.domain.example.ExampleResult
+import io.plady.moimyeon.core.domain.example.ExampleService
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

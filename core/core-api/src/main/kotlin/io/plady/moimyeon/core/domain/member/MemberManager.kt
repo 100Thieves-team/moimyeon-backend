@@ -1,7 +1,7 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.core.support.error.ErrorType
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import org.springframework.stereotype.Component
@@ -21,7 +21,7 @@ class MemberManager(
 
     @Transactional
     fun recordLogin(memberId: UUID) {
-        val entity = requireFound(memberRepository.findById(memberId).orElse(null), ErrorType.MEMBER_NOT_FOUND)
+        val entity = requireFound(memberRepository.findById(memberId).orElse(null), CoreErrorType.MEMBER_NOT_FOUND)
         entity.loggedIn(LocalDateTime.now())
     }
 }

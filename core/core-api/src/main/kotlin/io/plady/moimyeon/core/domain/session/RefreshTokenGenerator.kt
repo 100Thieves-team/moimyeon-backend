@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
 import java.security.MessageDigest
 import java.security.SecureRandom

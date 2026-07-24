@@ -1,12 +1,12 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.member
 
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
 import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
@@ -74,7 +74,7 @@ class MemberManagerTest {
         // when & then
         assertThatThrownBy { memberManager.recordLogin(UUID.randomUUID()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.MEMBER_NOT_FOUND)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
     }
 }

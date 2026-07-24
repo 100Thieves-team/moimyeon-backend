@@ -1,7 +1,7 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import io.plady.moimyeon.core.domain.SessionService
-import io.plady.moimyeon.core.support.error.ErrorType
+import io.plady.moimyeon.core.domain.session.SessionService
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.core.support.response.ApiResponse
 import io.plady.moimyeon.security.auth.AuthCookieFactory
@@ -23,7 +23,7 @@ class AuthController(
         @CookieValue(name = AuthCookieFactory.REFRESH_TOKEN, required = false) refreshToken: String?,
         response: HttpServletResponse,
     ): ApiResponse<Any> {
-        val credential = requireFound(refreshToken, ErrorType.INVALID_SESSION)
+        val credential = requireFound(refreshToken, CoreErrorType.INVALID_SESSION)
         val memberId = sessionService.refreshAccess(credential)
         response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createAccess(jwtTokenProvider.issue(memberId)).toString())
         return ApiResponse.success()

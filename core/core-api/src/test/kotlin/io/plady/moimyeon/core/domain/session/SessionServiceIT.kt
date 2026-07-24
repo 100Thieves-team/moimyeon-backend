@@ -1,9 +1,11 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
 import io.plady.moimyeon.ContextTest
+import io.plady.moimyeon.core.domain.member.Email
+import io.plady.moimyeon.core.domain.member.MemberManager
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -42,7 +44,7 @@ class SessionServiceIT(
         // then
         assertThatThrownBy { sessionService.refreshAccess(session.credential) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.INVALID_SESSION)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.INVALID_SESSION)
             }
     }
 }

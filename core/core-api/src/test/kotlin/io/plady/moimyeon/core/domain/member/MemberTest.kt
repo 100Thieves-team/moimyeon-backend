@@ -1,9 +1,9 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
@@ -72,7 +72,7 @@ class MemberTest {
             assertThatThrownBy { restricted.restrict() }
                 .isInstanceOf(CoreException::class.java)
                 .extracting("errorType")
-                .isEqualTo(ErrorType.MEMBER_NOT_ACTIVE)
+                .isEqualTo(CoreErrorType.MEMBER_NOT_ACTIVE)
         }
 
         @Test
@@ -112,7 +112,7 @@ class MemberTest {
             assertThatThrownBy { member.reactivate() }
                 .isInstanceOf(CoreException::class.java)
                 .extracting("errorType")
-                .isEqualTo(ErrorType.MEMBER_NOT_RESTRICTED)
+                .isEqualTo(CoreErrorType.MEMBER_NOT_RESTRICTED)
         }
     }
 
@@ -153,7 +153,7 @@ class MemberTest {
             assertThatThrownBy { withdrawn.recordLogin(now) }
                 .isInstanceOf(CoreException::class.java)
                 .extracting("errorType")
-                .isEqualTo(ErrorType.MEMBER_ALREADY_WITHDRAWN)
+                .isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
         }
     }
 
@@ -181,7 +181,7 @@ class MemberTest {
             assertThatThrownBy { withdrawn.withdraw(now) }
                 .isInstanceOf(CoreException::class.java)
                 .extracting("errorType")
-                .isEqualTo(ErrorType.MEMBER_ALREADY_WITHDRAWN)
+                .isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
         }
     }
 

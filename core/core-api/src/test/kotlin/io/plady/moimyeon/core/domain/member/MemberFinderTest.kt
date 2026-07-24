@@ -1,0 +1,111 @@
+package io.plady.moimyeon.core.domain.member
+
+import io.mockk.every
+import io.mockk.mockk
+import io.plady.moimyeon.core.enums.MemberStatus
+import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.MemberEntity
+import io.plady.moimyeon.storage.db.core.MemberRepository
+import io.plady.moimyeon.storage.db.core.SocialAccountEntity
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.util.UUID
+
+class MemberFinderTest {
+    private val memberRepository = mockk<MemberRepository>()
+    private val memberFinder = MemberFinder(memberRepository)
+
+    private val provider = SocialLoginProvider.GOOGLE
+    private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+
+    @Test
+    fun `살아있는 회원 조회는 WITHDRAWN 을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
+        // given — 탈퇴 회원만 존재하는 신원은 조회 결과가 없다 (persistence 경계에서 필터)
+        every {
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+                provider,
+                "withdrawn-sub",
+                MemberStatus.WITHDRAWN,
+            )
+        } returns null
+
+        // when & then
+        assertThatThrownBy { memberFinder.getBySocialAccount(provider, "withdrawn-sub") }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun `id 조회도 WITHDRAWN 을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
+        // given
+        val memberId = UUID.randomUUID()
+        every { memberRepository.findByIdAndStatusNot(memberId, MemberStatus.WITHDRAWN) } returns null
+
+        // when & then
+        assertThatThrownBy { memberFinder.getById(memberId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun `살아있는 회원 존재 여부와 탈퇴 점유 여부를 구분해 반환한다`() {
+        // given
+        every {
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+                provider,
+                "sub-1",
+                MemberStatus.WITHDRAWN,
+            )
+        } returns false
+        every {
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndStatus(
+                provider,
+                "sub-1",
+                MemberStatus.WITHDRAWN,
+            )
+        } returns true
+
+        // when & then
+        assertThat(memberFinder.existsBySocialAccount(provider, "sub-1")).isFalse()
+        assertThat(memberFinder.existsWithdrawnBySocialAccount(provider, "sub-1")).isTrue()
+    }
+
+    @Test
+    fun `엔티티를 도메인 Member 로 변환해 반환한다 (Service 로 엔티티가 새지 않는다)`() {
+        // given
+        val id = UUID.randomUUID()
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = now,
+            withdrawnAt = null,
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "social@example.com")),
+        )
+        every {
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+                provider,
+                "sub-1",
+                MemberStatus.WITHDRAWN,
+            )
+        } returns entity
+
+        // when
+        val member = memberFinder.getBySocialAccount(provider, "sub-1")
+
+        // then
+        assertThat(member.id).isEqualTo(id)
+        assertThat(member.email).isEqualTo(Email("user@example.com"))
+        assertThat(member.status).isEqualTo(MemberStatus.ACTIVE)
+        assertThat(member.socialAccounts).hasSize(1)
+        assertThat(member.socialAccounts.first().provider).isEqualTo(provider)
+        assertThat(member.socialAccounts.first().providerId).isEqualTo("sub-1")
+        assertThat(member.socialAccounts.first().linkedEmail).isEqualTo(Email("social@example.com"))
+    }
+}

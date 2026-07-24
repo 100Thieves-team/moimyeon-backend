@@ -1,13 +1,16 @@
-package io.plady.moimyeon.core.domain
+package io.plady.moimyeon.core.domain.session
 
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import io.plady.moimyeon.core.domain.member.Email
+import io.plady.moimyeon.core.domain.member.Member
+import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.core.support.error.ErrorType
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -28,7 +31,7 @@ class SessionServiceTest {
     fun `유효 세션이고 활성 회원이면 memberId 를 반환한다`() {
         // given
         every { sessionManager.resolveMemberId("raw") } returns memberId
-        every { memberFinder.findById(memberId) } returns Member.register(provider, "sub", email, now)
+        every { memberFinder.getById(memberId) } returns Member.register(provider, "sub", email, now)
 
         // when
         val result = sessionService.refreshAccess("raw")
@@ -38,28 +41,15 @@ class SessionServiceTest {
     }
 
     @Test
-    fun `탈퇴한 회원의 세션으로는 재발급할 수 없다`() {
+    fun `세션은 유효하나 회원이 없거나 탈퇴했으면 MEMBER_NOT_FOUND`() {
         // given
         every { sessionManager.resolveMemberId("raw") } returns memberId
-        every { memberFinder.findById(memberId) } returns Member.register(provider, "sub", email, now).withdraw(now)
+        every { memberFinder.getById(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         // when & then
         assertThatThrownBy { sessionService.refreshAccess("raw") }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.MEMBER_ALREADY_WITHDRAWN)
-            }
-    }
-
-    @Test
-    fun `세션은 유효하나 회원이 없으면 MEMBER_NOT_FOUND`() {
-        // given
-        every { sessionManager.resolveMemberId("raw") } returns memberId
-        every { memberFinder.findById(memberId) } returns null
-
-        // when & then
-        assertThatThrownBy { sessionService.refreshAccess("raw") }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(ErrorType.MEMBER_NOT_FOUND)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
     }
 
