@@ -43,16 +43,18 @@ class ProfileControllerTest : RestDocsTest() {
         "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. " +
             "직무·지역은 카탈로그 참조 id 를 받는다(/v1/job-roles, /v1/regions). " +
             "요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005), 존재하지 않는 직무/지역 400(E1301/E1302), " +
-            "닉네임 중복 409(E1007), 이미 작성된 경우 409(E1008), 필수 약관 미동의 409(E1201)로 응답한다."
+            "인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007), 이미 작성된 경우 409(E1008), " +
+            "필수 약관 미동의 409(E1201)로 응답한다."
     private val updateProfileSummary = "프로필 수정"
     private val updateProfileDescription =
         "마이페이지 수정 폼의 전체 교체 저장. 닉네임은 자신이 쓰던 값을 유지해도 되고, 변경 시 전체 중복을 확인한다. " +
             "직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. " +
             "요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005), 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303), " +
-            "닉네임 중복 409(E1007), 프로필 미작성 404(E1009)로 응답한다."
+            "인증 정보 없음·무효 401(E1102), 프로필 미작성 404(E1009), 닉네임 중복 409(E1007)로 응답한다."
     private val nicknameAvailabilitySummary = "닉네임 사용 가능 여부 확인"
     private val nicknameAvailabilityDescription =
-        "닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으로 응답한다."
+        "닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으로, " +
+            "필수 쿼리 파라미터(nickname) 누락은 400(E400)으로 응답한다."
 
     private val validCreateRequest = CreateProfileRequest(
         nickname = "꼼꼼한 라쿤 34",
