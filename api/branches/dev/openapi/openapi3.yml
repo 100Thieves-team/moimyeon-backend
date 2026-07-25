@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T10:22:46.695661135",
+                        "date" : "2026-07-25",
+                        "datetime" : "2026-07-25T06:04:18.16547664",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-24",
-                        "datetime" : "2026-07-24T10:22:46.883150754",
+                        "date" : "2026-07-25",
+                        "datetime" : "2026-07-25T06:04:18.34721124",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -103,7 +103,7 @@ paths:
       - v1
       summary: 회사 검색
       description: 관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 유효(미폐기) 회사를 최대 20건 반환한다. 크롤러가 관리하는
-        참조 데이터다.
+        참조 데이터다. 검색어가 없거나 1~50자를 벗어나면 400(E400)으로 응답한다.
       operationId: searchCompanies
       parameters:
       - name: query
@@ -113,6 +113,26 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-companies910352763"
+              examples:
+                searchCompanies-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "query" : "size must be between 1 and 50"
+                        }
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -225,7 +245,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "22d19c0a-ffcb-4946-9e35-dedaef0b1600",
+                          "termsId" : "b37e15f4-33c5-487b-8cc8-e670d515fe12",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -233,7 +253,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "de8ac391-0785-42a7-b7d3-79be3e1f94d5",
+                          "termsId" : "ea18129e-8689-49ea-98ab-61f932081a28",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -277,8 +297,8 @@ paths:
       tags:
       - v1
       summary: 액세스 토큰 재발급
-      description: REFRESH_TOKEN 쿠키의 세션 크리덴셜을 검증해 새 액세스 토큰을 ACCESS_TOKEN 쿠키(Set-Cookie)로
-        재발급한다.
+      description: "REFRESH_TOKEN 쿠키의 세션 크리덴셜을 검증해 새 액세스 토큰을 ACCESS_TOKEN 쿠키(Set-Cookie)로\
+        \ 재발급한다. 쿠키가 없거나 세션이 만료·폐기됐으면 401(E1104)로 응답하며, FE 는 재로그인으로 보낸다."
       operationId: authRefresh
       responses:
         "200":
@@ -300,6 +320,24 @@ paths:
                       "data" : null,
                       "error" : null
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                authRefresh-e1104:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1104",
+                        "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
+                        "data" : null
+                      }
+                    }
   /v1/members/me:
     get:
       tags:
@@ -307,7 +345,8 @@ paths:
       summary: 내 상태 조회
       description: "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 프로필 미작성이면 profileCompleted=false,\
         \ profile=null 이다. profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. FE 는 로그인 직후 이\
-        \ 값으로 최초 프로필 작성 모달 노출 여부를 판단한다."
+        \ 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. 액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만\
+        \ 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
       operationId: memberMe
       responses:
         "200":
@@ -322,7 +361,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "f3f02860-bb05-4902-b17e-b6465cf82abc",
+                        "memberId" : "cc33ca87-5e53-4dc4-b527-50afff688fbe",
                         "email" : "user@example.com",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
@@ -330,13 +369,49 @@ paths:
                       },
                       "error" : null
                     }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                memberMe-e1006:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1006",
+                        "message" : "회원을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                memberMe-e1102:
+                  value: |-
+                    {
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "data" : null,
+                        "message" : "인증이 필요합니다."
+                      },
+                      "result" : "ERROR"
+                    }
   /v1/nicknames/availability:
     get:
       tags:
       - v1
       summary: 닉네임 사용 가능 여부 확인
-      description: 닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으로
-        응답한다.
+      description: "닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으\
+        로, 필수 쿼리 파라미터(nickname) 누락은 400(E400)으로 응답한다."
       operationId: nicknameAvailability
       parameters:
       - name: nickname
@@ -346,6 +421,37 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-profile1576365945"
+              examples:
+                nicknameAvailability-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "nickname" : "required parameter is missing"
+                        }
+                      }
+                    }
+                nicknameAvailability-e1005:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1005",
+                        "message" : "닉네임 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -392,8 +498,9 @@ paths:
       - v1
       summary: 프로필 수정
       description: "마이페이지 수정 폼의 전체 교체 저장. 닉네임은 자신이 쓰던 값을 유지해도 되고, 변경 시 전체 중복을 확인한다\
-        . 직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. 형식 위반 400(E1005), 닉네임 중복 409(E1007), 프로필\
-        \ 미작성 404(E1009), 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303)로 응답한다."
+        . 직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. 요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005),\
+        \ 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303), 인증 정보 없음·무효 401(E1102), 프로필 미작성\
+        \ 404(E1009), 닉네임 중복 409(E1007)로 응답한다."
       operationId: updateProfile
       requestBody:
         content:
@@ -401,6 +508,16 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-members-me-profile-835165503"
             examples:
+              updateProfile-e1007:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
               updateProfile:
                 value: |-
                   {
@@ -411,7 +528,55 @@ paths:
                     "meetingPreference" : "OFFLINE",
                     "sigunguId" : 1
                   }
+              updateProfile-e1102:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+              updateProfile-e1009:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+              updateProfile-e1303:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
       responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                updateProfile-e1007:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1007",
+                        "message" : "이미 사용 중인 닉네임입니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -424,7 +589,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "38971b0a-21f9-4972-8ba8-861e94b77441",
+                        "memberId" : "f531fdb5-65b2-4976-b82d-dbc4e94c0f2a",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -441,14 +606,68 @@ paths:
                       },
                       "error" : null
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                updateProfile-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                updateProfile-e1009:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1009",
+                        "message" : "프로필을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                updateProfile-e1303:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1303",
+                        "message" : "존재하지 않는 회사입니다.",
+                        "data" : null
+                      }
+                    }
     post:
       tags:
       - v1
       summary: 필수 프로필 작성
       description: "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. 직무·지역은 카탈로그 참조 id\
-        \ 를 받는다(/v1/job-roles, /v1/regions). 닉네임 형식 위반 400(E1005), 중복 409(E1007),\
-        \ 이미 작성된 경우 409(E1008), 필수 약관 미동의 409(E1201), 존재하지 않는 직무/지역 400(E1301/E1302)로\
-        \ 응답한다."
+        \ 를 받는다(/v1/job-roles, /v1/regions). 요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005),\
+        \ 존재하지 않는 직무/지역 400(E1301/E1302), 인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007),\
+        \ 이미 작성된 경우 409(E1008), 필수 약관 미동의 409(E1201)로 응답한다."
       operationId: createProfile
       requestBody:
         content:
@@ -456,6 +675,33 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-members-me-profile1474390884"
             examples:
+              createProfile-e1301:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
+              createProfile-e400:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
+              createProfile-e1201:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
               createProfile:
                 value: |-
                   {
@@ -465,7 +711,125 @@ paths:
                     "meetingPreference" : "BOTH",
                     "sigunguId" : 1
                   }
+              createProfile-e1008:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
+              createProfile-e1102:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
+              createProfile-e1007:
+                value: |-
+                  {
+                    "nickname" : "꼼꼼한 라쿤 34",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
+              createProfile-e1005:
+                value: |-
+                  {
+                    "nickname" : "금지문자!@#",
+                    "jobRoleId" : 1,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "meetingPreference" : "BOTH",
+                    "sigunguId" : 1
+                  }
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-profile1576365945"
+              examples:
+                createProfile-e1301:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1301",
+                        "message" : "존재하지 않는 직무입니다.",
+                        "data" : null
+                      }
+                    }
+                createProfile-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "bio" : "size must be between 0 and 500"
+                        }
+                      }
+                    }
+                createProfile-e1005:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1005",
+                        "message" : "닉네임 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                createProfile-e1201:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1201",
+                        "message" : "필수 약관에 동의해야 이용할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+                createProfile-e1008:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1008",
+                        "message" : "이미 작성된 프로필이 있습니다.",
+                        "data" : null
+                      }
+                    }
+                createProfile-e1007:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1007",
+                        "message" : "이미 사용 중인 닉네임입니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -478,7 +842,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "21ae6779-af8f-4f52-9c99-e4e29df1b32e",
+                        "memberId" : "d3cf3223-aa52-4350-83c1-7d7190af63f4",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -488,6 +852,24 @@ paths:
                         "profileCompleted" : true
                       },
                       "error" : null
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+              examples:
+                createProfile-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
                     }
   /v1/members/{memberId}/profile:
     get:
@@ -518,7 +900,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b84461b9-291c-4d16-bdce-ba5f60df336a",
+                        "memberId" : "f9766f31-1b58-4978-af94-1141d3df8678",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -672,6 +1054,68 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
+    v1-members-me-profile1576365945:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            data:
+              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
+              nullable: true
+              oneOf:
+              - null
+              - type: object
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
     v1-regions1871099627:
       required:
       - result
@@ -716,42 +1160,6 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
-    get-exampleValue191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
     v1-auth-logout198252895:
       required:
       - result
@@ -810,6 +1218,26 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+    v1-auth-refresh-2058664485:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
     v1-terms1673199050:
       required:
       - result
@@ -1068,6 +1496,30 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-companies910352763:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            data:
+              type: object
+              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
+              nullable: true
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
     v1-nicknames-suggestion679533277:
       required:
       - result

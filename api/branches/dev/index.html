@@ -448,6 +448,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_introduce">Introduce</a></li>
+<li><a href="#_error_responses_공통_에러_규약">Error Responses (공통 에러 규약)</a>
+<ul class="sectlevel2">
+<li><a href="#_검증_에러_응답_예시_e400_필드별_사유_포함">검증 에러 응답 예시 (E400, 필드별 사유 포함)</a></li>
+<li><a href="#_인증_에러_응답_예시_e1102_무효만료_토큰">인증 에러 응답 예시 (E1102, 무효·만료 토큰)</a></li>
+</ul>
+</li>
 <li><a href="#_example_api">Example API</a>
 <ul class="sectlevel2">
 <li><a href="#_example_get_api">Example GET API</a>
@@ -479,6 +485,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_http_response_3">Http Response</a></li>
 <li><a href="#_response_headers">Response Headers</a></li>
 <li><a href="#_response_fields_3">Response Fields</a></li>
+<li><a href="#_error_responses">Error Responses</a></li>
 </ul>
 </li>
 <li><a href="#_logout">Logout</a>
@@ -510,6 +517,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_curl_request_6">Curl Request</a></li>
 <li><a href="#_http_response_6">Http Response</a></li>
 <li><a href="#_response_fields_6">Response Fields</a></li>
+<li><a href="#_error_responses_2">Error Responses</a></li>
 </ul>
 </li>
 </ul>
@@ -536,6 +544,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_query_parameters_2">Query Parameters</a></li>
 <li><a href="#_http_response_9">Http Response</a></li>
 <li><a href="#_response_fields_9">Response Fields</a></li>
+<li><a href="#_error_responses_3">Error Responses</a></li>
 </ul>
 </li>
 </ul>
@@ -548,6 +557,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_request_fields_2">Request Fields</a></li>
 <li><a href="#_http_response_10">Http Response</a></li>
 <li><a href="#_response_fields_10">Response Fields</a></li>
+<li><a href="#_error_responses_4">Error Responses</a></li>
 </ul>
 </li>
 <li><a href="#_프로필_수정">프로필 수정</a>
@@ -556,6 +566,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_request_fields_3">Request Fields</a></li>
 <li><a href="#_http_response_11">Http Response</a></li>
 <li><a href="#_response_fields_11">Response Fields</a></li>
+<li><a href="#_error_responses_5">Error Responses</a></li>
 </ul>
 </li>
 <li><a href="#_공개_프로필_조회">공개 프로필 조회</a>
@@ -579,6 +590,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_query_parameters_3">Query Parameters</a></li>
 <li><a href="#_http_response_14">Http Response</a></li>
 <li><a href="#_response_fields_14">Response Fields</a></li>
+<li><a href="#_error_responses_6">Error Responses</a></li>
 </ul>
 </li>
 </ul>
@@ -592,6 +604,118 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>This is the Core API documentation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_error_responses_공통_에러_규약"><a class="link" href="#_error_responses_공통_에러_규약">Error Responses (공통 에러 규약)</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>모든 에러 응답은 같은 봉투를 사용한다. FE 분기는 HTTP 상태 코드가 아니라 <code>error.code</code> 를 기준으로 한다.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "result": "ERROR",
+  "data": null,
+  "error": {
+    "code": "E1007",
+    "message": "이미 사용 중인 닉네임입니다.",
+    "data": null
+  }
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>error.code</code> : 분기 기준이 되는 에러 코드</p>
+</li>
+<li>
+<p><code>error.message</code> : 사용자에게 그대로 표시 가능한 한국어 메시지</p>
+</li>
+<li>
+<p><code>error.data</code> : 추가 정보. <code>E400</code> 검증 오류에서는 필드/파라미터별 사유 맵(<code>{"bio": "size must be between 0 and 500"}</code>), 그 외에는 보통 <code>null</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>각 API 가 응답하는 예외 케이스는 해당 API 섹션의 Error Responses 표에 정의한다(OpenAPI 스펙의 4xx 응답과 동일).</p>
+</div>
+<div class="paragraph">
+<p>이와 별개로 모든 API 는 공통으로 아래 두 가지를 응답할 수 있다.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형식 오류. Bean Validation 실패·필수 파라미터 누락·타입 불일치·본문 해석 실패(깨진 JSON 등). <code>error.data</code> 에 필드별 사유</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">서버 내부 오류</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>인증이 필요한 API 는 액세스 토큰이 없거나 만료·무효이면 <code>401(E1102)</code> 로 응답한다.
+FE 는 <a href="#_refresh_access_token">재발급 API</a> 호출 후 재시도한다. (권한 부족 시 <code>403(E1103)</code> 은 인가 정책 확정 후 적용 예정)</p>
+</div>
+<div class="sect2">
+<h3 id="_검증_에러_응답_예시_e400_필드별_사유_포함"><a class="link" href="#_검증_에러_응답_예시_e400_필드별_사유_포함">검증 에러 응답 예시 (E400, 필드별 사유 포함)</a></h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Content-Length: 212
+
+{
+  "result" : "ERROR",
+  "data" : null,
+  "error" : {
+    "code" : "E400",
+    "message" : "요청 형식이 올바르지 않습니다.",
+    "data" : {
+      "bio" : "size must be between 0 and 500"
+    }
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_인증_에러_응답_예시_e1102_무효만료_토큰"><a class="link" href="#_인증_에러_응답_예시_e1102_무효만료_토큰">인증 에러 응답 예시 (E1102, 무효·만료 토큰)</a></h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 401 Unauthorized
+Content-Type: application/json;charset=UTF-8
+Content-Length: 146
+
+{
+  "data" : null,
+  "error" : {
+    "code" : "E1102",
+    "data" : null,
+    "message" : "인증이 필요합니다."
+  },
+  "result" : "ERROR"
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -658,14 +782,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 236
+Content-Length: 235
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-07-24",
-    "datetime" : "2026-07-24T10:22:46.695661135",
+    "date" : "2026-07-25",
+    "datetime" : "2026-07-25T06:04:18.16547664",
     "items" : [ {
       "key" : "1"
     }, {
@@ -772,14 +896,14 @@ Content-Length: 236
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 237
+Content-Length: 236
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-07-24",
-    "datetime" : "2026-07-24T10:22:46.883150754",
+    "date" : "2026-07-25",
+    "datetime" : "2026-07-25T06:04:18.34721124",
     "items" : [ {
       "key" : "1"
     }, {
@@ -938,7 +1062,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 24 Jul 2026 10:52:45 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sat, 25 Jul 2026 06:34:17 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -991,6 +1115,30 @@ Content-Length: 61
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses"><a class="link" href="#_error_responses">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1104</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REFRESH_TOKEN 쿠키 없음, 또는 세션이 만료·폐기됨. FE 는 재로그인으로 보낸다</p></td>
 </tr>
 </tbody>
 </table>
@@ -1120,7 +1268,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "22d19c0a-ffcb-4946-9e35-dedaef0b1600",
+      "termsId" : "b37e15f4-33c5-487b-8cc8-e670d515fe12",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1128,7 +1276,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "de8ac391-0785-42a7-b7d3-79be3e1f94d5",
+      "termsId" : "ea18129e-8689-49ea-98ab-61f932081a28",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1233,7 +1381,7 @@ Content-Length: 231
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "f3f02860-bb05-4902-b17e-b6465cf82abc",
+    "memberId" : "cc33ca87-5e53-4dc4-b527-50afff688fbe",
     "email" : "user@example.com",
     "status" : "ACTIVE",
     "profileCompleted" : false,
@@ -1289,6 +1437,35 @@ Content-Length: 231
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profile</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Null</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">프로필 (미작성이면 null, 작성 완료 시 필수 프로필 작성 응답의 data 와 동일 모양)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_2"><a class="link" href="#_error_responses_2">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효 (인증 필요 API 공통)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">토큰은 유효하지만 회원이 조회되지 않음 (탈퇴 등)</p></td>
 </tr>
 </tbody>
 </table>
@@ -1588,6 +1765,30 @@ Content-Length: 145
 </tbody>
 </table>
 </div>
+<div class="sect3">
+<h4 id="_error_responses_3"><a class="link" href="#_error_responses_3">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">검색어(query) 누락 또는 1~50자 범위 위반. <code>error.data</code> 에 파라미터별 사유</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -1667,7 +1868,7 @@ Content-Length: 372
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "21ae6779-af8f-4f52-9c99-e4e29df1b32e",
+    "memberId" : "d3cf3223-aa52-4350-83c1-7d7190af63f4",
     "nickname" : "꼼꼼한 라쿤 34",
     "jobRoleId" : 1,
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -1741,6 +1942,65 @@ Content-Length: 372
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profileCompleted</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">필수 프로필 작성 완료 여부</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_4"><a class="link" href="#_error_responses_4">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형태 오류 (bio 500자 초과, 필수 필드 누락, 깨진 JSON 등)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1301</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 직무 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1302</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 지역(시군구) id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효 (인증 필요 API 공통)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이미 사용 중인 닉네임</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이미 작성된 프로필 존재</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1201</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">필수 약관 미동의</p></td>
 </tr>
 </tbody>
 </table>
@@ -1826,7 +2086,7 @@ Content-Length: 501
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "38971b0a-21f9-4972-8ba8-861e94b77441",
+    "memberId" : "f531fdb5-65b2-4976-b82d-dbc4e94c0f2a",
     "nickname" : "꼼꼼한 라쿤 34",
     "jobRoleId" : 2,
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -1919,6 +2179,65 @@ Content-Length: 501
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_5"><a class="link" href="#_error_responses_5">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형태 오류 (bio 500자 초과, 필수 필드 누락, 깨진 JSON 등)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1301</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 직무 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1302</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 지역(시군구) id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1303</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 회사 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효 (인증 필요 API 공통)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1009</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">프로필 미작성 (최초 작성은 POST 사용)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이미 사용 중인 닉네임 (자신이 쓰던 값은 허용)</p></td>
+</tr>
+</tbody>
+</table>
 <hr>
 </div>
 </div>
@@ -1928,7 +2247,7 @@ Content-Length: 501
 <h4 id="_curl_request_12"><a class="link" href="#_curl_request_12">Curl Request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/b84461b9-291c-4d16-bdce-ba5f60df336a/profile' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/f9766f31-1b58-4978-af94-1141d3df8678/profile' -i -X GET</code></pre>
 </div>
 </div>
 </div>
@@ -1965,7 +2284,7 @@ Content-Length: 1159
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "b84461b9-291c-4d16-bdce-ba5f60df336a",
+    "memberId" : "f9766f31-1b58-4978-af94-1141d3df8678",
     "nickname" : "집요한 수달 07",
     "jobTitle" : "프론트엔드 개발",
     "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -2242,6 +2561,35 @@ Content-Length: 85
 </tbody>
 </table>
 </div>
+<div class="sect3">
+<h4 id="_error_responses_6"><a class="link" href="#_error_responses_6">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">닉네임(nickname) 파라미터 누락</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어). 중복은 400 이 아니라 200 + available=false</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -2249,7 +2597,7 @@ Content-Length: 85
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-07-24 10:21:10 UTC
+Last updated 2026-07-25 06:02:59 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
