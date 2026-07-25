@@ -27,6 +27,8 @@ dependencies {
     implementation(project(":clients:client-example"))
 
     testImplementation(project(":tests:api-docs"))
+    // 인증 실패(401) 문서화 테스트에서 실제 리소스서버 필터를 조립하기 위한 테스트 전용 의존성
+    testImplementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-validation")
