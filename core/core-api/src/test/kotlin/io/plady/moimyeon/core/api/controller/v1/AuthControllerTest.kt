@@ -4,6 +4,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.domain.session.SessionService
 import io.plady.moimyeon.security.auth.AuthCookieFactory
 import io.plady.moimyeon.security.auth.JwtTokenProvider
@@ -30,12 +31,20 @@ class AuthControllerTest : RestDocsTest() {
     private lateinit var jwtTokenProvider: JwtTokenProvider
     private lateinit var authCookieFactory: AuthCookieFactory
 
+    private val authRefreshSummary = "액세스 토큰 재발급"
+    private val authRefreshDescription =
+        "REFRESH_TOKEN 쿠키의 세션 크리덴셜을 검증해 새 액세스 토큰을 ACCESS_TOKEN 쿠키(Set-Cookie)로 재발급한다. " +
+            "쿠키가 없거나 세션이 만료·폐기됐으면 401(E1104)로 응답하며, FE 는 재로그인으로 보낸다."
+
     @BeforeEach
     fun setUp() {
         sessionService = mockk()
         jwtTokenProvider = mockk()
         authCookieFactory = mockk()
-        mockMvc = mockController(AuthController(sessionService, jwtTokenProvider, authCookieFactory))
+        mockMvc = mockController(
+            AuthController(sessionService, jwtTokenProvider, authCookieFactory),
+            controllerAdvice = ApiControllerAdvice(),
+        )
     }
 
     @Test
@@ -58,8 +67,8 @@ class AuthControllerTest : RestDocsTest() {
             .andDo(
                 documentApi(
                     "authRefresh",
-                    "액세스 토큰 재발급",
-                    "REFRESH_TOKEN 쿠키의 세션 크리덴셜을 검증해 새 액세스 토큰을 ACCESS_TOKEN 쿠키(Set-Cookie)로 재발급한다.",
+                    authRefreshSummary,
+                    authRefreshDescription,
                     requestCookies(
                         cookieWithName(AuthCookieFactory.REFRESH_TOKEN).description("세션 리프레시 크리덴셜"),
                     ),
@@ -73,6 +82,13 @@ class AuthControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `authRefresh 세션 무효 E1104`() {
+        mockMvc.perform(post("/v1/auth/refresh"))
+            .andExpect(status().isUnauthorized)
+            .andDo(documentApi("authRefresh-e1104", authRefreshSummary, authRefreshDescription, errorResponseFields()))
     }
 
     @Test

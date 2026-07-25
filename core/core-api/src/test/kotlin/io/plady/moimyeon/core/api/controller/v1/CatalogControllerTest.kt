@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.api.controller.v1
 
 import io.mockk.every
 import io.mockk.mockk
+import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.domain.catalog.CatalogService
 import io.plady.moimyeon.core.domain.catalog.Company
 import io.plady.moimyeon.core.domain.catalog.JobGroup
@@ -18,14 +19,24 @@ import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 
 class CatalogControllerTest : RestDocsTest() {
     private lateinit var catalogService: CatalogService
 
+    private val searchCompaniesSummary = "회사 검색"
+    private val searchCompaniesDescription =
+        "관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 유효(미폐기) 회사를 최대 20건 반환한다. 크롤러가 관리하는 참조 데이터다. " +
+            "검색어가 없거나 1~50자를 벗어나면 400(E400)으로 응답한다."
+
     @BeforeEach
     fun setUp() {
         catalogService = mockk()
-        mockMvc = mockController(CatalogController(catalogService))
+        mockMvc = mockController(
+            CatalogController(catalogService),
+            controllerAdvice = ApiControllerAdvice(),
+            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
+        )
     }
 
     @Test
@@ -102,8 +113,8 @@ class CatalogControllerTest : RestDocsTest() {
             .andDo(
                 documentApi(
                     "searchCompanies",
-                    "회사 검색",
-                    "관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 유효(미폐기) 회사를 최대 20건 반환한다. 크롤러가 관리하는 참조 데이터다.",
+                    searchCompaniesSummary,
+                    searchCompaniesDescription,
                     queryParameters(
                         parameterWithName("query").description("검색어 (회사명 부분 일치, 1~50자)"),
                     ),
@@ -116,5 +127,12 @@ class CatalogControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `searchCompanies 검색어 길이 위반 E400`() {
+        mockMvc.perform(get("/v1/companies").param("query", "가".repeat(51)))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("searchCompanies-e400", searchCompaniesSummary, searchCompaniesDescription, errorResponseFields()))
     }
 }
