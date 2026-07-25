@@ -10,8 +10,11 @@ import org.springframework.boot.logging.LogLevel
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.HandlerMethodValidationException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 // admin-api 가 런타임에 함께 조립되므로 core 패키지의 컨트롤러에만 적용되도록 범위를 제한한다
 @RestControllerAdvice(basePackages = ["io.plady.moimyeon.core"])
@@ -46,6 +49,35 @@ class ApiControllerAdvice {
             .mapValues { (_, messages) -> messages.joinToString("; ") }
         log.warn("MethodArgumentNotValidException : {}", fieldErrors)
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, fieldErrors), CoreApiErrorType.INVALID_REQUEST.status)
+    }
+
+    // 요청 형태 오류(수송 계층): 쿼리/경로 파라미터의 제약 위반(@Size 등)
+    @ExceptionHandler(HandlerMethodValidationException::class)
+    fun handleHandlerMethodValidation(e: HandlerMethodValidationException): ResponseEntity<ApiResponse<Any>> {
+        val parameterErrors = e.parameterValidationResults
+            .groupBy(
+                { it.methodParameter.parameterName ?: "unknown" },
+                { result -> result.resolvableErrors.joinToString("; ") { it.defaultMessage ?: "invalid" } },
+            )
+            .mapValues { (_, messages) -> messages.joinToString("; ") }
+        log.warn("HandlerMethodValidationException : {}", parameterErrors)
+        return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, parameterErrors), CoreApiErrorType.INVALID_REQUEST.status)
+    }
+
+    // 요청 형태 오류(수송 계층): 필수 쿼리 파라미터 누락
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleMissingServletRequestParameter(e: MissingServletRequestParameterException): ResponseEntity<ApiResponse<Any>> {
+        log.warn("MissingServletRequestParameterException : {}", e.message)
+        val data = mapOf(e.parameterName to "required parameter is missing")
+        return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, data), CoreApiErrorType.INVALID_REQUEST.status)
+    }
+
+    // 요청 형태 오류(수송 계층): 쿼리/경로 파라미터 타입 불일치(UUID 아님, 숫자 아님 등)
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleMethodArgumentTypeMismatch(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse<Any>> {
+        log.warn("MethodArgumentTypeMismatchException : {}", e.message)
+        val data = mapOf(e.name to "type mismatch")
+        return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, data), CoreApiErrorType.INVALID_REQUEST.status)
     }
 
     // 요청 형태 오류(수송 계층): 본문 해석 실패(깨진 JSON·필수 필드 누락·타입 불일치) — 클라이언트 잘못이므로 500 이 아니라 400

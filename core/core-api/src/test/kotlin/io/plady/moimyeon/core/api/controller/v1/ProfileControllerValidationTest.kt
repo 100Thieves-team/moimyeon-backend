@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -28,7 +29,7 @@ class ProfileControllerValidationTest {
 
     @BeforeEach
     fun setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(ProfileController(profileService, catalogService))
+        mockMvc = MockMvcBuilders.standaloneSetup(ProfileController(profileService, catalogService), PublicProfileController())
             .setCustomArgumentResolvers(LoginMemberArgumentResolver())
             .setValidator(LocalValidatorFactoryBean().apply { afterPropertiesSet() })
             .setControllerAdvice(ApiControllerAdvice())
@@ -71,5 +72,25 @@ class ProfileControllerValidationTest {
             .andReturn().response.contentAsString
 
         assertThat(body).contains("\"code\":\"E400\"")
+    }
+
+    @Test
+    fun `필수 쿼리 파라미터가 없으면 400 E400 과 파라미터 정보를 반환한다`() {
+        val body = mockMvc.perform(get("/v1/nicknames/availability"))
+            .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        assertThat(body).contains("\"code\":\"E400\"")
+        assertThat(body).contains("\"nickname\"")
+    }
+
+    @Test
+    fun `경로 변수 타입이 불일치하면 400 E400 을 반환한다`() {
+        val body = mockMvc.perform(get("/v1/members/{memberId}/profile", "not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andReturn().response.contentAsString
+
+        assertThat(body).contains("\"code\":\"E400\"")
+        assertThat(body).contains("\"memberId\"")
     }
 }
