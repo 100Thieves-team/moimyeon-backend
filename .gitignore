@@ -24,6 +24,7 @@ out/
 !.env.example
 .worktrees/
 _workspace/
+.local/
 
 ### Agents ###
 .claude/settings.local.json
