@@ -19,8 +19,12 @@ out/
 .LSOverride
 
 ### Environment ###
+.env
+.env.*
+!.env.example
 .worktrees/
 _workspace/
+.local/
 
 ### Agents ###
 .claude/settings.local.json
