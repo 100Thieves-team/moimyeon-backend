@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-26",
-                        "datetime" : "2026-07-26T17:22:47.434654946",
+                        "datetime" : "2026-07-26T17:24:23.256118774",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-26",
-                        "datetime" : "2026-07-26T17:22:47.624931704",
+                        "datetime" : "2026-07-26T17:24:23.445101154",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -245,7 +245,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "03bcc375-4313-4fdf-8ae9-e10cb4189710",
+                          "termsId" : "7c3eb81a-71b5-4bcb-8f7b-d083eae42fee",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -253,7 +253,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "cdea6465-88f1-487e-ad8a-fd33e84cf243",
+                          "termsId" : "1fe9e1f2-7abd-403d-a1e7-a73660241482",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -361,7 +361,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "818d98d7-3258-43de-897b-b0e4be056e0c",
+                        "memberId" : "dec20885-26a0-4f3f-a39a-2515d67ec852",
                         "email" : "user@example.com",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
@@ -589,7 +589,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "a4a30e5a-03a9-4a45-bef6-5b520b1100e9",
+                        "memberId" : "4b1cfe17-7d3d-484d-9047-532759441025",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -842,7 +842,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "6ef5c662-8c2b-4634-b342-e7c8f44a67dd",
+                        "memberId" : "fed8ffb0-0e00-40b6-b6b6-08ad2513ae99",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -900,7 +900,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "8359d1a3-8306-43be-972d-f38250c2be2f",
+                        "memberId" : "a3156c69-67a1-41a2-8b5f-7b8f54bd816c",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -1080,7 +1080,7 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -1462,30 +1462,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-companies910352763:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            data:
-              type: object
-              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
-              nullable: true
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
     v1-members-me-profile-835165503:
       required:
       - nickname
@@ -1520,6 +1496,30 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-companies910352763:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            data:
+              type: object
+              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
+              nullable: true
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
     v1-nicknames-suggestion679533277:
       required:
       - result
