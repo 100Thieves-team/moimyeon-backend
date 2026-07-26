@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-25",
-                        "datetime" : "2026-07-25T06:04:18.16547664",
+                        "date" : "2026-07-26",
+                        "datetime" : "2026-07-26T17:22:47.434654946",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-25",
-                        "datetime" : "2026-07-25T06:04:18.34721124",
+                        "date" : "2026-07-26",
+                        "datetime" : "2026-07-26T17:22:47.624931704",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -245,7 +245,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "b37e15f4-33c5-487b-8cc8-e670d515fe12",
+                          "termsId" : "03bcc375-4313-4fdf-8ae9-e10cb4189710",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -253,7 +253,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "ea18129e-8689-49ea-98ab-61f932081a28",
+                          "termsId" : "cdea6465-88f1-487e-ad8a-fd33e84cf243",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -361,7 +361,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "cc33ca87-5e53-4dc4-b527-50afff688fbe",
+                        "memberId" : "818d98d7-3258-43de-897b-b0e4be056e0c",
                         "email" : "user@example.com",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
@@ -589,7 +589,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "f531fdb5-65b2-4976-b82d-dbc4e94c0f2a",
+                        "memberId" : "a4a30e5a-03a9-4a45-bef6-5b520b1100e9",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -842,7 +842,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "d3cf3223-aa52-4350-83c1-7d7190af63f4",
+                        "memberId" : "6ef5c662-8c2b-4634-b342-e7c8f44a67dd",
                         "nickname" : "꼼꼼한 라쿤 34",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -900,7 +900,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "f9766f31-1b58-4978-af94-1141d3df8678",
+                        "memberId" : "8359d1a3-8306-43be-972d-f38250c2be2f",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -1080,7 +1080,7 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -1218,26 +1218,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-auth-refresh-2058664485:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
     v1-terms1673199050:
       required:
       - result
@@ -1286,6 +1266,26 @@ components:
                   content:
                     type: string
                     description: 약관 본문
+    v1-auth-refresh-2058664485:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
     v1-members-memberId-profile-573351263:
       required:
       - result
@@ -1462,6 +1462,30 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+    v1-companies910352763:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            data:
+              type: object
+              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
+              nullable: true
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
     v1-members-me-profile-835165503:
       required:
       - nickname
@@ -1496,30 +1520,6 @@ components:
             - type: boolean
             - type: string
             - type: number
-    v1-companies910352763:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            data:
-              type: object
-              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
-              nullable: true
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
     v1-nicknames-suggestion679533277:
       required:
       - result
