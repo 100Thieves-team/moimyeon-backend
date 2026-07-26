@@ -1,0 +1,51 @@
+# --- Build outputs (regenerated inside the image) ---
+build/
+**/build/
+.gradle/
+**/.gradle/
+out/
+**/out/
+.kotlin/
+**/.kotlin/
+
+# --- VCS / CI ---
+.git
+.gitignore
+.gitattributes
+.github
+
+# --- IDE / editor ---
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# --- OS junk ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Local env / worktrees / agents ---
+.env
+.env.*
+.worktrees/
+.claude
+CLAUDE.local.md
+
+# --- Secrets & credentials (must never enter the image) ---
+.aws
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# --- Docker meta ---
+Dockerfile
+.dockerignore
+
+# NOTE: everything else is intentionally kept so the multi-module Gradle build
+# works inside the image. Do NOT ignore any of the following:
+#   gradlew, gradlew.bat, gradle/wrapper/, gradle.properties,
+#   settings.gradle.kts, build.gradle.kts, **/build.gradle.kts, src/

@@ -12,6 +12,9 @@ spring:
   web.resources.add-mappings: false
 
 server:
+  # Behind ALB/reverse proxy: trust X-Forwarded-* so scheme/host/client-IP and
+  # generated redirect URLs are correct. Harmless locally (no such headers sent).
+  forward-headers-strategy: framework
   tomcat:
     max-connections: 20000
     threads:

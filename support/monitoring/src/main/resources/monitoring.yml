@@ -2,4 +2,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus
+        # health -> ALB target-group health check; prometheus -> metrics scrape
+        include: health, prometheus
+  endpoint:
+    health:
+      # ALB only needs UP/DOWN; do not leak internal details on the public port
+      show-details: never
+      show-components: never
+      # also exposes /actuator/health/liveness and /actuator/health/readiness
+      probes:
+        enabled: true
