@@ -1,8 +1,18 @@
 import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
 import com.epages.restdocs.apispec.gradle.PluginOauth2Configuration
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
+import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.servers.Server
+
+buildscript {
+    dependencies {
+        // 생성된 스펙을 OpenAPI 3.0 규칙으로 파싱 검증하는 게이트 (validateOpenApiSpec)
+        classpath("io.swagger.parser.v3:swagger-parser:2.1.31")
+    }
+}
 
 plugins {
     id("com.epages.restdocs-api-spec")
@@ -40,7 +50,7 @@ configure<OpenApi3Extension> {
     setServers(
         listOf(
             closureOf<Server> { url = "http://localhost:8080" },
-            closureOf<Server> { url = "https://api-dev.moimyeon.plady.io" },
+            closureOf<Server> { url = "https://api.dev.moimyeon.plady.io" },
         ) as List<Closure<Server>>,
     )
     title = "Moimyeon API"
@@ -69,7 +79,72 @@ tasks.withType<OpenApi3Task>().configureEach {
         val ymlFile = layout.buildDirectory.file("api-spec/openapi3.yml").get().asFile
 
         if (yamlFile.exists()) {
+            patchGeneratedSchemas(yamlFile)
+            validateOpenApiSpec(yamlFile)
             yamlFile.copyTo(target = ymlFile, overwrite = true)
         }
     }
+}
+
+// 생성기가 3.0 에 유효하지 않은 스펙을 내는 회귀를 빌드에서 잡는다. swagger-parser 는 속성 누락 등
+// 구조 위반을 잡지만 oneOf 안의 bare null(실제로 샜던 형태)은 조용히 삼키므로 트리 검사로 보강한다.
+// 표현이 부족한 스키마(oneOf 만능 타입 등)까지 걸러주지는 못한다. 그건 필드 문서화 소관.
+fun validateOpenApiSpec(yamlFile: File) {
+    val text = yamlFile.readText()
+    val problems = mutableListOf<String>()
+    problems += io.swagger.parser.OpenAPIParser().readContents(text, null, null).messages.orEmpty()
+    collectNonObjectComposedSchemas(Yaml.mapper().readTree(text), "$", problems)
+    if (problems.isNotEmpty()) {
+        throw GradleException(
+            "생성된 ${yamlFile.name} 이 OpenAPI 3.0 규칙을 위반한다:\n" + problems.joinToString("\n"),
+        )
+    }
+}
+
+// oneOf/anyOf/allOf 의 원소는 항상 스키마 객체여야 한다 (OpenAPI 3.0 에는 null 타입이 없다)
+fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: MutableList<String>) {
+    if (node.isObject) {
+        node.fields().forEach { (name, value) ->
+            if (name in setOf("oneOf", "anyOf", "allOf") && value.isArray) {
+                value.forEachIndexed { i, element ->
+                    if (!element.isObject) {
+                        problems += "$path.$name[$i] 이 스키마 객체가 아니다: $element"
+                    }
+                }
+            }
+            collectNonObjectComposedSchemas(value, "$path.$name", problems)
+        }
+    } else if (node.isArray) {
+        node.forEachIndexed { i, element -> collectNonObjectComposedSchemas(element, "$path[$i]", problems) }
+    }
+}
+
+// restdocs-api-spec 필드 문서화로 표현할 수 없는 OpenAPI 3.0 계약을 생성 후 보정한다.
+// - error.data: "필드명 -> 사유" 맵이라 additionalProperties 스키마가 필요
+// - interestCompanyIds: 스칼라 배열의 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음
+fun patchGeneratedSchemas(yamlFile: File) {
+    val mapper = Yaml.mapper()
+    val root = mapper.readTree(yamlFile)
+    var errorDataPatched = 0
+    var interestCompanyIdsPatched = 0
+    root.path("components").path("schemas").forEach { schema ->
+        val errorData = schema.path("properties").path("error").path("properties").path("data")
+        if (errorData is ObjectNode) {
+            errorDataPatched++
+            errorData.remove("oneOf")
+            errorData.put("type", "object")
+            errorData.put("nullable", true)
+            errorData.set<ObjectNode>("additionalProperties", mapper.createObjectNode().put("type", "string"))
+        }
+        val interestCompanyIds = schema.path("properties").path("interestCompanyIds")
+        if (interestCompanyIds is ObjectNode && interestCompanyIds.path("type").asText() == "array") {
+            interestCompanyIdsPatched++
+            interestCompanyIds.set<ObjectNode>("items", mapper.createObjectNode().put("type", "number"))
+        }
+    }
+    // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
+    // 미보정 스펙이 나가지 않도록 빌드를 실패시킨다.
+    check(errorDataPatched > 0) { "error.data 보정 대상을 스펙에서 찾지 못했다" }
+    check(interestCompanyIdsPatched > 0) { "interestCompanyIds 보정 대상을 스펙에서 찾지 못했다" }
+    mapper.writeValue(yamlFile, root)
 }
