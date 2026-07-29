@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -103,5 +104,6 @@ class MemberManagerTest {
 
         // then
         assertThat(entity.nickname).isEqualTo("변경 후 닉네임 02")
+        verify(exactly = 1) { memberRepository.flush() }
     }
 }

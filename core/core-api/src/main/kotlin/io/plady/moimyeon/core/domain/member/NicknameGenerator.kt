@@ -12,7 +12,8 @@ class NicknameGenerator(
         return Nickname("${ADJECTIVES.random()} ${ANIMALS.random()} ${"%02d".format(Random.nextInt(1, 100))}")
     }
 
-    // ATTEMPTS 전부 충돌하면 UUID 기반 fallback
+    // ATTEMPTS 전부 충돌하면 UUID 기반 fallback. fallback 도 점유 확인을 거치고, 그래도 전부
+    // 충돌하면 마지막 후보를 그대로 반환한다(최종 방어선은 DB 유니크 제약 uk_member_nickname).
     fun generateUnique(): Nickname {
         repeat(MAX_ATTEMPTS) {
             val candidate = generate()
@@ -20,6 +21,16 @@ class NicknameGenerator(
                 return candidate
             }
         }
+        repeat(MAX_ATTEMPTS) {
+            val fallback = fallbackCandidate()
+            if (memberFinder.isNicknameAvailable(fallback)) {
+                return fallback
+            }
+        }
+        return fallbackCandidate()
+    }
+
+    private fun fallbackCandidate(): Nickname {
         return Nickname("면접자 ${UUID.randomUUID().toString().take(8)}")
     }
 

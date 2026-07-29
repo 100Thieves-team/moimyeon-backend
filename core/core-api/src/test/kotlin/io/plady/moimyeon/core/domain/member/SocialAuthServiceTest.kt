@@ -17,6 +17,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -26,8 +27,16 @@ class SocialAuthServiceTest {
     private val nicknameGenerator = mockk<NicknameGenerator>()
     private val termsFinder = mockk<TermsFinder>()
     private val termsAgreementRecorder = mockk<TermsAgreementRecorder>()
-    private val socialAuthService =
-        SocialAuthService(memberFinder, memberManager, nicknameGenerator, termsFinder, termsAgreementRecorder)
+
+    // 트랜잭션 경계는 relaxed 매니저를 물린 실제 TransactionTemplate 로 통과시킨다(커밋/롤백은 no-op)
+    private val socialAuthService = SocialAuthService(
+        memberFinder,
+        memberManager,
+        nicknameGenerator,
+        termsFinder,
+        termsAgreementRecorder,
+        TransactionTemplate(mockk(relaxed = true)),
+    )
 
     private val provider = SocialLoginProvider.GOOGLE
     private val email = Email("user@example.com")
