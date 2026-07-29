@@ -2,6 +2,8 @@
 
 Spring Boot (Kotlin) 기반 멀티모듈 프로젝트.
 
+> 아키텍처·코드 컨벤션은 [docs/conventions](docs/conventions/README.md) 에서 관리한다.
+
 ## 기술 스택
 
 | 항목 | 내용 |
