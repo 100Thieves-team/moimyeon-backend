@@ -19,14 +19,4 @@ class ProfileFinder(
 
     @Transactional(readOnly = true)
     fun exists(memberId: UUID): Boolean = memberProfileRepository.existsById(memberId)
-
-    @Transactional(readOnly = true)
-    fun isNicknameAvailable(nickname: Nickname): Boolean {
-        return !memberProfileRepository.existsByNickname(nickname.value)
-    }
-
-    @Transactional(readOnly = true)
-    fun isNicknameAvailableFor(memberId: UUID, nickname: Nickname): Boolean {
-        return !memberProfileRepository.existsByNicknameAndMemberIdNot(nickname.value, memberId)
-    }
 }

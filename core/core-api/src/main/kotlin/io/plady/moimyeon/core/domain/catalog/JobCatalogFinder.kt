@@ -12,9 +12,9 @@ class JobCatalogFinder(
 ) {
     @Transactional(readOnly = true)
     fun findActiveGroups(): List<JobGroup> {
-        val rolesByGroup = jobRoleRepository.findByRetiredAtIsNullOrderByJobGroupIdAscSortOrderAsc()
+        val rolesByGroup = jobRoleRepository.findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc()
             .groupBy { it.jobGroupId }
-        return jobGroupRepository.findByRetiredAtIsNullOrderBySortOrderAsc().map { group ->
+        return jobGroupRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { group ->
             JobGroup(
                 id = group.id,
                 code = group.code,
@@ -25,5 +25,5 @@ class JobCatalogFinder(
     }
 
     @Transactional(readOnly = true)
-    fun existsActiveRole(jobRoleId: Long): Boolean = jobRoleRepository.existsByIdAndRetiredAtIsNull(jobRoleId)
+    fun existsActiveRole(jobRoleId: Long): Boolean = jobRoleRepository.existsByIdAndDeletedAtIsNull(jobRoleId)
 }

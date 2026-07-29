@@ -9,6 +9,7 @@ import java.util.UUID
 data class MemberMeResponse(
     val memberId: UUID,
     val email: String,
+    val nickname: String,
     val status: MemberStatus,
     val profileCompleted: Boolean,
     val profile: ProfileResponse?,
@@ -18,6 +19,7 @@ data class MemberMeResponse(
             return MemberMeResponse(
                 memberId = member.id,
                 email = member.email.value,
+                nickname = member.nickname.value,
                 status = member.status,
                 profileCompleted = profile != null,
                 profile = profile?.let { ProfileResponse.from(it, interestCompanies) },

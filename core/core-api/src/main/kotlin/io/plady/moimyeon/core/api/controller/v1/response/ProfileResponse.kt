@@ -7,7 +7,6 @@ import java.util.UUID
 
 data class ProfileResponse(
     val memberId: UUID,
-    val nickname: String,
     val jobRoleId: Long?,
     val bio: String?,
     val meetingPreference: MeetingPreference?,
@@ -19,7 +18,6 @@ data class ProfileResponse(
         fun from(profile: MemberProfile, interestCompanies: List<Company>): ProfileResponse {
             return ProfileResponse(
                 memberId = profile.memberId,
-                nickname = profile.nickname.value,
                 jobRoleId = profile.jobRoleId,
                 bio = profile.bio,
                 meetingPreference = profile.meetingPreference,

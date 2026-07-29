@@ -8,6 +8,7 @@ import io.plady.moimyeon.core.domain.catalog.RegionFinder
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.domain.terms.TermsAgreementFinder
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -26,7 +27,6 @@ class ProfileServiceTest {
     private val companyFinder = mockk<CompanyFinder>()
     private val profileFinder = mockk<ProfileFinder>()
     private val profileManager = mockk<ProfileManager>()
-    private val nicknameGenerator = mockk<NicknameGenerator>()
     private val profileService = ProfileService(
         memberFinder,
         termsAgreementFinder,
@@ -35,15 +35,12 @@ class ProfileServiceTest {
         companyFinder,
         profileFinder,
         profileManager,
-        nicknameGenerator,
     )
 
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
-    private val member = Member.register(SocialLoginProvider.GOOGLE, "sub-1", Email("user@example.com"), now)
+    private val member = Member.register(SocialLoginProvider.GOOGLE, "sub-1", Email("user@example.com"), Nickname("차분한 펭귄 12"), now)
     private val memberId = member.id
-    private val profile = MemberProfile(
-        memberId = memberId,
-        nickname = Nickname("차분한 펭귄 12"),
+    private val content = ProfileContent(
         jobRoleId = 1L,
         bio = null,
         meetingPreference = null,
@@ -62,24 +59,23 @@ class ProfileServiceTest {
         givenValidCatalogRefs()
         every { termsAgreementFinder.hasAgreedAllRequiredActive(memberId) } returns true
         every { profileFinder.exists(memberId) } returns false
-        every { profileFinder.isNicknameAvailable(profile.nickname) } returns true
     }
 
     private fun assertCreateFails(errorType: CoreErrorType) {
-        assertThatThrownBy { profileService.create(profile) }
+        assertThatThrownBy { profileService.create(memberId, content) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
     }
 
     @Test
-    fun `검증을 모두 통과하면 프로필을 저장하고 반환한다`() {
+    fun `검증을 모두 통과하면 프로필을 저장하고 식별자를 반환한다`() {
         givenCreatable()
-        every { profileManager.append(profile) } returns profile
+        every { profileManager.append(memberId, content) } returns memberId
 
-        val created = profileService.create(profile)
+        val created = profileService.create(memberId, content)
 
-        assertThat(created).isEqualTo(profile)
+        assertThat(created).isEqualTo(memberId)
     }
 
     @Test
@@ -136,99 +132,34 @@ class ProfileServiceTest {
     }
 
     @Test
-    fun `닉네임이 중복이면 E1007 을 던진다`() {
-        every { memberFinder.getById(memberId) } returns member
-        givenValidCatalogRefs()
-        every { termsAgreementFinder.hasAgreedAllRequiredActive(memberId) } returns true
-        every { profileFinder.exists(memberId) } returns false
-        every { profileFinder.isNicknameAvailable(profile.nickname) } returns false
-
-        assertCreateFails(CoreErrorType.NICKNAME_DUPLICATED)
-    }
-
-    @Test
-    fun `동시 요청으로 유니크 충돌이 나면 재조회로 구분해 닉네임 중복은 E1007 로 매핑한다`() {
-        givenCreatable()
-        every { profileManager.append(profile) } throws DataIntegrityViolationException("uk_member_profile_nickname")
-
-        assertCreateFails(CoreErrorType.NICKNAME_DUPLICATED)
-    }
-
-    @Test
     fun `동시 요청으로 유니크 충돌이 났는데 내 프로필이 생겨 있으면 E1008 로 매핑한다`() {
         every { memberFinder.getById(memberId) } returns member
         givenValidCatalogRefs()
         every { termsAgreementFinder.hasAgreedAllRequiredActive(memberId) } returns true
         every { profileFinder.exists(memberId) } returns false andThen true
-        every { profileFinder.isNicknameAvailable(profile.nickname) } returns true
-        every { profileManager.append(profile) } throws DataIntegrityViolationException("pk")
+        every { profileManager.append(memberId, content) } throws DataIntegrityViolationException("pk")
 
         assertCreateFails(CoreErrorType.PROFILE_ALREADY_EXISTS)
     }
 
     @Test
-    fun `동시 요청이 아닌 무결성 위반은 유니크 충돌로 오인하지 않고 전파한다`() {
+    fun `동시 요청이 아닌 무결성 위반은 오인하지 않고 전파한다`() {
         givenCreatable()
-        every { profileManager.append(profile) } throws DataIntegrityViolationException("fk_member_profile_member")
+        every { profileManager.append(memberId, content) } throws DataIntegrityViolationException("NULL not allowed for column")
 
-        assertThatThrownBy { profileService.create(profile) }
+        assertThatThrownBy { profileService.create(memberId, content) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     @Test
-    fun `수정은 자신을 제외한 닉네임 유일성을 확인하고 전체 교체한다`() {
-        val updated = profile.copy(jobRoleId = 2L)
+    fun `수정은 카탈로그 참조를 검증하고 전체 교체한다`() {
+        val updatedContent = content.copy(jobRoleId = 2L)
         every { memberFinder.getById(memberId) } returns member
         every { jobCatalogFinder.existsActiveRole(2L) } returns true
         every { regionFinder.existsActiveSigungu(2L) } returns true
         every { companyFinder.allActive(listOf(1L)) } returns true
-        every { profileFinder.isNicknameAvailableFor(memberId, updated.nickname) } returns true
-        every { profileManager.update(updated) } returns updated
+        every { profileManager.update(memberId, updatedContent) } returns memberId
 
-        assertThat(profileService.update(updated)).isEqualTo(updated)
-    }
-
-    @Test
-    fun `수정 시 다른 회원의 닉네임이면 E1007 을 던진다`() {
-        every { memberFinder.getById(memberId) } returns member
-        givenValidCatalogRefs()
-        every { profileFinder.isNicknameAvailableFor(memberId, profile.nickname) } returns false
-
-        assertThatThrownBy { profileService.update(profile) }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
-            }
-    }
-
-    @Test
-    fun `수정 대상 프로필이 없으면 E1009 가 전파된다`() {
-        every { memberFinder.getById(memberId) } returns member
-        givenValidCatalogRefs()
-        every { profileFinder.isNicknameAvailableFor(memberId, profile.nickname) } returns true
-        every { profileManager.update(profile) } throws CoreException(CoreErrorType.PROFILE_NOT_FOUND)
-
-        assertThatThrownBy { profileService.update(profile) }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.PROFILE_NOT_FOUND)
-            }
-    }
-
-    @Test
-    fun `추천은 사용 가능한 후보가 나올 때까지 재생성한다`() {
-        val taken = Nickname("집요한 수달 07")
-        val available = Nickname("차분한 펭귄 12")
-        every { nicknameGenerator.generate() } returns taken andThen available
-        every { profileFinder.isNicknameAvailable(taken) } returns false
-        every { profileFinder.isNicknameAvailable(available) } returns true
-
-        assertThat(profileService.suggestNickname()).isEqualTo(available)
-    }
-
-    @Test
-    fun `가용성 확인은 형식 위반이면 중복 여부와 무관하게 E1005 를 던진다`() {
-        assertThatThrownBy { profileService.isNicknameAvailable("금지!문자@") }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.INVALID_NICKNAME)
-            }
+        assertThat(profileService.update(memberId, updatedContent)).isEqualTo(memberId)
     }
 }

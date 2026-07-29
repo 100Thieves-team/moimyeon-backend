@@ -10,14 +10,14 @@ class CompanyFinder(
 ) {
     @Transactional(readOnly = true)
     fun search(query: String): List<Company> {
-        return companyRepository.findTop20ByNameKrContainingAndRetiredAtIsNullOrderByNameKrAsc(query)
+        return companyRepository.findTop20ByNameKrContainingAndDeletedAtIsNullOrderByNameKrAsc(query)
             .map { Company(it.id, it.nameKr) }
     }
 
     @Transactional(readOnly = true)
     fun findActiveByIds(companyIds: Collection<Long>): List<Company> {
         if (companyIds.isEmpty()) return emptyList()
-        return companyRepository.findByIdInAndRetiredAtIsNull(companyIds).map { Company(it.id, it.nameKr) }
+        return companyRepository.findByIdInAndDeletedAtIsNull(companyIds).map { Company(it.id, it.nameKr) }
     }
 
     @Transactional(readOnly = true)

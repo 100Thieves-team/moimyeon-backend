@@ -39,6 +39,16 @@ class MemberFinder(
     }
 
     @Transactional(readOnly = true)
+    fun isNicknameAvailable(nickname: Nickname): Boolean {
+        return !memberRepository.existsByNickname(nickname.value)
+    }
+
+    @Transactional(readOnly = true)
+    fun isNicknameAvailableFor(memberId: UUID, nickname: Nickname): Boolean {
+        return !memberRepository.existsByNicknameAndIdNot(nickname.value, memberId)
+    }
+
+    @Transactional(readOnly = true)
     fun existsWithdrawnBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
         return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndStatus(
             provider,

@@ -83,6 +83,7 @@ class MemberFinderTest {
         val entity = MemberEntity(
             id = id,
             email = "user@example.com",
+            nickname = "차분한 펭귄 12",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
             withdrawnAt = null,
@@ -102,10 +103,23 @@ class MemberFinderTest {
         // then
         assertThat(member.id).isEqualTo(id)
         assertThat(member.email).isEqualTo(Email("user@example.com"))
+        assertThat(member.nickname).isEqualTo(Nickname("차분한 펭귄 12"))
         assertThat(member.status).isEqualTo(MemberStatus.ACTIVE)
         assertThat(member.socialAccounts).hasSize(1)
         assertThat(member.socialAccounts.first().provider).isEqualTo(provider)
         assertThat(member.socialAccounts.first().providerId).isEqualTo("sub-1")
         assertThat(member.socialAccounts.first().linkedEmail).isEqualTo(Email("social@example.com"))
+    }
+
+    @Test
+    fun `닉네임 유일성 판정은 전체 회원 대상, 자신 제외 판정은 변경용이다`() {
+        // given
+        val memberId = UUID.randomUUID()
+        every { memberRepository.existsByNickname("점유된 닉네임 01") } returns true
+        every { memberRepository.existsByNicknameAndIdNot("점유된 닉네임 01", memberId) } returns false
+
+        // when & then — 전체 기준으로는 사용 불가, 자신이 점유한 것이라면 변경 시 허용
+        assertThat(memberFinder.isNicknameAvailable(Nickname("점유된 닉네임 01"))).isFalse()
+        assertThat(memberFinder.isNicknameAvailableFor(memberId, Nickname("점유된 닉네임 01"))).isTrue()
     }
 }

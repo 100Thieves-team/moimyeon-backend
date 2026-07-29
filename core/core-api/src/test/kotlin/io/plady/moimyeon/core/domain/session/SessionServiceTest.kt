@@ -8,6 +8,7 @@ import io.mockk.verify
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -31,7 +32,7 @@ class SessionServiceTest {
     fun `유효 세션이고 활성 회원이면 memberId 를 반환한다`() {
         // given
         every { sessionManager.resolveMemberId("raw") } returns memberId
-        every { memberFinder.getById(memberId) } returns Member.register(provider, "sub", email, now)
+        every { memberFinder.getById(memberId) } returns Member.register(provider, "sub", email, Nickname("차분한 펭귄 12"), now)
 
         // when
         val result = sessionService.refreshAccess("raw")

@@ -5,31 +5,24 @@ import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberProfileRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Component
 class ProfileManager(
     private val memberProfileRepository: MemberProfileRepository,
 ) {
     @Transactional
-    fun append(profile: MemberProfile): MemberProfile {
-        return ProfileMapper.toDomain(memberProfileRepository.save(ProfileMapper.toEntity(profile)))
+    fun append(memberId: UUID, content: ProfileContent): UUID {
+        return memberProfileRepository.save(ProfileMapper.toEntity(memberId, content)).memberId
     }
 
-    // 영속 엔티티를 조회해 필드를 갱신 (변경 감지)
-    // save-merge 는 컬렉션 교체 시맨틱이 불명확해 사용 X
     @Transactional
-    fun update(profile: MemberProfile): MemberProfile {
+    fun update(memberId: UUID, content: ProfileContent): UUID {
         val entity = requireFound(
-            memberProfileRepository.findById(profile.memberId).orElse(null),
+            memberProfileRepository.findById(memberId).orElse(null),
             CoreErrorType.PROFILE_NOT_FOUND,
         )
-        entity.nickname = profile.nickname.value
-        entity.jobRoleId = profile.jobRoleId
-        entity.bio = profile.bio
-        entity.meetingPreference = profile.meetingPreference
-        entity.sigunguId = profile.sigunguId
-        entity.interestCompanyIds.clear()
-        entity.interestCompanyIds.addAll(profile.interestCompanyIds)
-        return ProfileMapper.toDomain(entity)
+        entity.updateProfile(content.jobRoleId, content.bio, content.meetingPreference, content.sigunguId, content.interestCompanyIds)
+        return entity.memberId
     }
 }

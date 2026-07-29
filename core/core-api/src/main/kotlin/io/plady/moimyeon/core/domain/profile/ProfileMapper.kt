@@ -1,11 +1,11 @@
 package io.plady.moimyeon.core.domain.profile
 
 import io.plady.moimyeon.storage.db.core.MemberProfileEntity
+import java.util.UUID
 
 object ProfileMapper {
     fun toDomain(entity: MemberProfileEntity): MemberProfile = MemberProfile(
         memberId = entity.memberId,
-        nickname = Nickname(entity.nickname),
         jobRoleId = entity.jobRoleId,
         bio = entity.bio,
         meetingPreference = entity.meetingPreference,
@@ -13,13 +13,12 @@ object ProfileMapper {
         interestCompanyIds = entity.interestCompanyIds.toList(),
     )
 
-    fun toEntity(profile: MemberProfile): MemberProfileEntity = MemberProfileEntity(
-        memberId = profile.memberId,
-        nickname = profile.nickname.value,
-        jobRoleId = profile.jobRoleId,
-        bio = profile.bio,
-        meetingPreference = profile.meetingPreference,
-        sigunguId = profile.sigunguId,
-        interestCompanyIds = profile.interestCompanyIds.toMutableList(),
+    fun toEntity(memberId: UUID, content: ProfileContent): MemberProfileEntity = MemberProfileEntity(
+        memberId = memberId,
+        jobRoleId = content.jobRoleId,
+        bio = content.bio,
+        meetingPreference = content.meetingPreference,
+        sigunguId = content.sigunguId,
+        interestCompanyIds = content.interestCompanyIds.toMutableList(),
     )
 }

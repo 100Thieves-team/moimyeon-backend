@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
@@ -24,14 +25,17 @@ class MemberProfileEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    var nickname: String,
     var jobRoleId: Long? = null,
     var bio: String? = null,
     @Enumerated(EnumType.STRING)
     var meetingPreference: MeetingPreference? = null,
     var sigunguId: Long? = null,
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "member_profile_interest", joinColumns = [JoinColumn(name = "member_id")])
+    @CollectionTable(
+        name = "member_profile_interest",
+        joinColumns = [JoinColumn(name = "member_id")],
+        uniqueConstraints = [UniqueConstraint(name = "uk_member_profile_interest", columnNames = ["member_id", "company_id"])],
+    )
     @Column(name = "company_id")
     var interestCompanyIds: MutableList<Long> = mutableListOf(),
 ) {
@@ -40,4 +44,20 @@ class MemberProfileEntity(
 
     @UpdateTimestamp
     val updatedAt: LocalDateTime = LocalDateTime.MIN
+
+    // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
+    fun updateProfile(
+        jobRoleId: Long?,
+        bio: String?,
+        meetingPreference: MeetingPreference?,
+        sigunguId: Long?,
+        interestCompanyIds: List<Long>,
+    ) {
+        this.jobRoleId = jobRoleId
+        this.bio = bio
+        this.meetingPreference = meetingPreference
+        this.sigunguId = sigunguId
+        this.interestCompanyIds.clear()
+        this.interestCompanyIds.addAll(interestCompanyIds)
+    }
 }

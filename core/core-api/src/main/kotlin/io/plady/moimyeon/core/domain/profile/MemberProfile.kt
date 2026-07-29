@@ -5,7 +5,6 @@ import java.util.UUID
 
 data class MemberProfile(
     val memberId: UUID,
-    val nickname: Nickname,
     val jobRoleId: Long?,
     val bio: String?,
     val meetingPreference: MeetingPreference?,

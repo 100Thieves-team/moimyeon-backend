@@ -12,9 +12,9 @@ class RegionFinder(
 ) {
     @Transactional(readOnly = true)
     fun findActiveSidos(): List<Sido> {
-        val sigungusBySido = sigunguRepository.findByRetiredAtIsNullOrderBySidoIdAscSortOrderAsc()
+        val sigungusBySido = sigunguRepository.findByDeletedAtIsNullOrderBySidoIdAscSortOrderAsc()
             .groupBy { it.sidoId }
-        return sidoRepository.findByRetiredAtIsNullOrderBySortOrderAsc().map { sido ->
+        return sidoRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { sido ->
             Sido(
                 id = sido.id,
                 name = sido.name,
@@ -25,5 +25,5 @@ class RegionFinder(
     }
 
     @Transactional(readOnly = true)
-    fun existsActiveSigungu(sigunguId: Long): Boolean = sigunguRepository.existsByIdAndRetiredAtIsNull(sigunguId)
+    fun existsActiveSigungu(sigunguId: Long): Boolean = sigunguRepository.existsByIdAndDeletedAtIsNull(sigunguId)
 }
