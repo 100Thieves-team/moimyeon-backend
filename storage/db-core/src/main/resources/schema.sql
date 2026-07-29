@@ -102,15 +102,18 @@ CREATE TABLE company (
 );
 CREATE INDEX ix_company_name_normalized ON company (name_normalized);
 
+-- nickname 은 가입 시 서버가 자동 생성하는 표시 이름(회원 신원의 일부, 전역 유일)
 CREATE TABLE member (
     id            BINARY(16)   NOT NULL,
     email         VARCHAR(320) NOT NULL,
+    nickname      VARCHAR(30)  NOT NULL,
     status        VARCHAR(20)  NOT NULL,
     last_login_at DATETIME     NOT NULL,
     withdrawn_at  DATETIME     NULL,
     created_at    DATETIME     NOT NULL,
     updated_at    DATETIME     NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT uk_member_nickname UNIQUE (nickname)
 );
 
 CREATE TABLE social_account (
@@ -140,17 +143,16 @@ CREATE TABLE refresh_token (
 CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 
+-- 소개 정보(전부 선택 입력). 행 존재 = 온보딩(최초 소개 작성) 제출 완료라는 파생 사실의 근거.
 CREATE TABLE member_profile (
     member_id          BINARY(16)   NOT NULL,
-    nickname           VARCHAR(30)  NOT NULL,
     job_role_id        BIGINT       NULL,
     bio                VARCHAR(500) NULL,
     meeting_preference VARCHAR(20)  NULL,
     sigungu_id         BIGINT       NULL,
     created_at         DATETIME     NOT NULL,
     updated_at         DATETIME     NOT NULL,
-    PRIMARY KEY (member_id),
-    CONSTRAINT uk_member_profile_nickname UNIQUE (nickname)
+    PRIMARY KEY (member_id)
 );
 
 -- 관심 회사(company 참조 다건). 프로필과 생명주기를 같이하는 값 컬렉션이라 별도 PK 없이 쌍 유니크만 둔다.

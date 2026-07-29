@@ -21,79 +21,41 @@ class ProfileService(
     private val companyFinder: CompanyFinder,
     private val profileFinder: ProfileFinder,
     private val profileManager: ProfileManager,
-    private val nicknameGenerator: NicknameGenerator,
 ) {
-    fun create(profile: MemberProfile): MemberProfile {
-        memberFinder.getById(profile.memberId)
-        validateCatalogRefs(profile)
-        requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(profile.memberId), CoreErrorType.TERMS_NOT_AGREED)
-        requireBusiness(!profileFinder.exists(profile.memberId), CoreErrorType.PROFILE_ALREADY_EXISTS)
-        requireBusiness(profileFinder.isNicknameAvailable(profile.nickname), CoreErrorType.NICKNAME_DUPLICATED)
+    fun create(memberId: UUID, content: ProfileContent): UUID {
+        memberFinder.getById(memberId)
+        validateCatalogRefs(content)
+        requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(memberId), CoreErrorType.TERMS_NOT_AGREED)
+        requireBusiness(!profileFinder.exists(memberId), CoreErrorType.PROFILE_ALREADY_EXISTS)
 
         return try {
-            profileManager.append(profile)
+            profileManager.append(memberId, content)
         } catch (e: DataIntegrityViolationException) {
-            // find ~ save 사이의 동시성 방지. 기대하지 않은 무결성 위반을 유니크 충돌로 오인하지 않도록 그 외에는 전파한다.
-            if (profileFinder.exists(profile.memberId)) {
+            // find ~ save 사이의 동시성 방지. 기대하지 않은 무결성 위반을 오인하지 않도록 그 외에는 전파한다.
+            if (profileFinder.exists(memberId)) {
                 throw CoreException(CoreErrorType.PROFILE_ALREADY_EXISTS)
-            }
-            if (isNicknameConflict(e)) {
-                throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
             }
             throw e
         }
     }
 
-    fun update(profile: MemberProfile): MemberProfile {
-        memberFinder.getById(profile.memberId)
-        validateCatalogRefs(profile)
-        requireBusiness(
-            profileFinder.isNicknameAvailableFor(profile.memberId, profile.nickname),
-            CoreErrorType.NICKNAME_DUPLICATED,
-        )
-        return try {
-            profileManager.update(profile)
-        } catch (e: DataIntegrityViolationException) {
-            if (isNicknameConflict(e)) {
-                throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
-            }
-            throw e
-        }
+    fun update(memberId: UUID, content: ProfileContent): UUID {
+        memberFinder.getById(memberId)
+        validateCatalogRefs(content)
+        return profileManager.update(memberId, content)
     }
 
     fun hasProfile(memberId: UUID): Boolean = profileFinder.exists(memberId)
 
     fun getProfile(memberId: UUID): MemberProfile = profileFinder.getProfile(memberId)
 
-    fun suggestNickname(): Nickname {
-        repeat(MAX_SUGGESTION_ATTEMPTS) {
-            val candidate = nicknameGenerator.generate()
-            if (profileFinder.isNicknameAvailable(candidate)) {
-                return candidate
-            }
-        }
-        return Nickname("면접자 ${UUID.randomUUID().toString().take(8)}")
-    }
-
-    fun isNicknameAvailable(rawNickname: String): Boolean {
-        return profileFinder.isNicknameAvailable(Nickname(rawNickname))
-    }
-
-    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_profile_nickname", ignoreCase = true)
-    }
-
-    private fun validateCatalogRefs(profile: MemberProfile) {
-        profile.jobRoleId?.let {
+    private fun validateCatalogRefs(content: ProfileContent) {
+        content.jobRoleId?.let {
             requireBusiness(jobCatalogFinder.existsActiveRole(it), CoreErrorType.JOB_ROLE_NOT_FOUND)
         }
-        profile.sigunguId?.let {
+        content.sigunguId?.let {
             requireBusiness(regionFinder.existsActiveSigungu(it), CoreErrorType.REGION_NOT_FOUND)
         }
-        requireBusiness(companyFinder.allActive(profile.interestCompanyIds), CoreErrorType.COMPANY_NOT_FOUND)
-    }
-
-    companion object {
-        private const val MAX_SUGGESTION_ATTEMPTS = 20
+        requireBusiness(companyFinder.allActive(content.interestCompanyIds), CoreErrorType.COMPANY_NOT_FOUND)
     }
 }

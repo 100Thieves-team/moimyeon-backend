@@ -163,6 +163,53 @@ include::{snippets}/memberMe/response-fields.adoc[]
 | 404 | E1006 | 토큰은 유효하지만 회원이 조회되지 않음 (탈퇴 등)
 |===
 
+'''
+
+=== 닉네임 변경
+==== Curl Request
+include::{snippets}/updateNickname/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/updateNickname/request-fields.adoc[]
+==== Http Response
+include::{snippets}/updateNickname/http-response.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)
+| 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
+| 409 | E1007 | 이미 사용 중인 닉네임 (자신이 쓰던 값은 허용)
+|===
+
+'''
+
+=== 닉네임 자동 추천
+==== Curl Request
+include::{snippets}/nicknameSuggestion/curl-request.adoc[]
+==== Http Response
+include::{snippets}/nicknameSuggestion/http-response.adoc[]
+==== Response Fields
+include::{snippets}/nicknameSuggestion/response-fields.adoc[]
+
+'''
+
+=== 닉네임 사용 가능 여부 확인
+==== Curl Request
+include::{snippets}/nicknameAvailability/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/nicknameAvailability/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/nicknameAvailability/http-response.adoc[]
+==== Response Fields
+include::{snippets}/nicknameAvailability/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | 닉네임(nickname) 파라미터 누락
+| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어). 중복은 400 이 아니라 200 + available=false
+|===
+
 == Catalog API
 
 프로필 폼의 드롭다운·검색 소스. 크롤러가 관리하는 참조 데이터다.
@@ -218,12 +265,10 @@ include::{snippets}/createProfile/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 요청 형태 오류 (bio 500자 초과, 필수 필드 누락, 깨진 JSON 등)
-| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)
+| 400 | E400 | 요청 형태 오류 (bio 500자 초과, 깨진 JSON 등)
 | 400 | E1301 | 존재하지 않는 직무 id
 | 400 | E1302 | 존재하지 않는 지역(시군구) id
 | 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
-| 409 | E1007 | 이미 사용 중인 닉네임
 | 409 | E1008 | 이미 작성된 프로필 존재
 | 409 | E1201 | 필수 약관 미동의
 |===
@@ -243,14 +288,12 @@ include::{snippets}/updateProfile/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 요청 형태 오류 (bio 500자 초과, 필수 필드 누락, 깨진 JSON 등)
-| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)
+| 400 | E400 | 요청 형태 오류 (bio 500자 초과, 깨진 JSON 등)
 | 400 | E1301 | 존재하지 않는 직무 id
 | 400 | E1302 | 존재하지 않는 지역(시군구) id
 | 400 | E1303 | 존재하지 않는 회사 id
 | 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
 | 404 | E1009 | 프로필 미작성 (최초 작성은 POST 사용)
-| 409 | E1007 | 이미 사용 중인 닉네임 (자신이 쓰던 값은 허용)
 |===
 
 '''
@@ -264,32 +307,3 @@ include::{snippets}/publicProfile/path-parameters.adoc[]
 include::{snippets}/publicProfile/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/publicProfile/response-fields.adoc[]
-
-'''
-
-=== 닉네임 자동 추천
-==== Curl Request
-include::{snippets}/nicknameSuggestion/curl-request.adoc[]
-==== Http Response
-include::{snippets}/nicknameSuggestion/http-response.adoc[]
-==== Response Fields
-include::{snippets}/nicknameSuggestion/response-fields.adoc[]
-
-'''
-
-=== 닉네임 사용 가능 여부 확인
-==== Curl Request
-include::{snippets}/nicknameAvailability/curl-request.adoc[]
-==== Query Parameters
-include::{snippets}/nicknameAvailability/query-parameters.adoc[]
-==== Http Response
-include::{snippets}/nicknameAvailability/http-response.adoc[]
-==== Response Fields
-include::{snippets}/nicknameAvailability/response-fields.adoc[]
-==== Error Responses
-|===
-| HTTP | error.code | 케이스
-
-| 400 | E400 | 닉네임(nickname) 파라미터 누락
-| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어). 중복은 400 이 아니라 200 + available=false
-|===

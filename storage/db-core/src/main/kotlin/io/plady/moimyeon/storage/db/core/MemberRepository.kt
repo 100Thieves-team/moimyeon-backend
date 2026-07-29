@@ -8,6 +8,11 @@ import java.util.UUID
 interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     fun findByIdAndStatusNot(memberId: UUID, status: MemberStatus): MemberEntity?
 
+    // 닉네임 유일성은 상태와 무관하게 전체 회원 대상이다(유니크 제약과 동일 기준)
+    fun existsByNickname(nickname: String): Boolean
+
+    fun existsByNicknameAndIdNot(nickname: String, id: UUID): Boolean
+
     fun findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
         provider: SocialLoginProvider,
         providerId: String,

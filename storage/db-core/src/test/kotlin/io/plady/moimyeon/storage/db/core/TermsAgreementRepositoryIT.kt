@@ -25,6 +25,7 @@ class TermsAgreementRepositoryIT(
         val member = MemberEntity(
             id = UUID.randomUUID(),
             email = "user@example.com",
+            nickname = "nick-$providerId",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
             withdrawnAt = null,

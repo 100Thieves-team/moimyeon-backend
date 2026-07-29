@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain.profile
+package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness

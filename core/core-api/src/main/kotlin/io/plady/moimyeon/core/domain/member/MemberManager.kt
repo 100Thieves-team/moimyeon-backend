@@ -14,9 +14,9 @@ class MemberManager(
     private val memberRepository: MemberRepository,
 ) {
     @Transactional
-    fun append(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
-        val member = Member.register(provider, providerId, email, LocalDateTime.now())
-        // 유니크 충돌(동시 가입)을 호출자 트랜잭션 안에서 잡을 수 있게 즉시 flush 한다
+    fun append(provider: SocialLoginProvider, providerId: String, email: Email, nickname: Nickname): UUID {
+        val member = Member.register(provider, providerId, email, nickname, LocalDateTime.now())
+        // 유니크 충돌(동시 가입)을 호출자 트랜잭션 안에서 잡을 수 있게 즉시 flush함.
         return memberRepository.saveAndFlush(MemberMapper.toEntity(member)).id
     }
 
@@ -24,5 +24,12 @@ class MemberManager(
     fun recordLogin(memberId: UUID) {
         val entity = requireFound(memberRepository.findById(memberId).orElse(null), CoreErrorType.MEMBER_NOT_FOUND)
         entity.loggedIn(LocalDateTime.now())
+    }
+
+    @Transactional
+    fun changeNickname(memberId: UUID, nickname: Nickname) {
+        val entity = requireFound(memberRepository.findById(memberId).orElse(null), CoreErrorType.MEMBER_NOT_FOUND)
+        entity.nickname = nickname.value
+        memberRepository.flush()
     }
 }

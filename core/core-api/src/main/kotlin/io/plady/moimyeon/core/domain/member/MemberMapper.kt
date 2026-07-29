@@ -7,6 +7,7 @@ object MemberMapper {
     fun toDomain(entity: MemberEntity): Member = Member(
         id = entity.id,
         email = Email(entity.email),
+        nickname = Nickname(entity.nickname),
         status = entity.status,
         socialAccounts = entity.socialAccounts.map { SocialAccount(it.provider, it.providerId, it.linkedEmail?.let(::Email)) },
         lastLoginAt = entity.lastLoginAt,
@@ -16,6 +17,7 @@ object MemberMapper {
     fun toEntity(member: Member): MemberEntity = MemberEntity(
         id = member.id,
         email = member.email.value,
+        nickname = member.nickname.value,
         status = member.status,
         lastLoginAt = member.lastLoginAt,
         withdrawnAt = member.withdrawnAt,

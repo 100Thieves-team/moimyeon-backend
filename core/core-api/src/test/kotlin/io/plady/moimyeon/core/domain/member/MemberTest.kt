@@ -14,8 +14,9 @@ import java.util.UUID
 class MemberTest {
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
     private val email = Email("user@example.com")
+    private val nickname = Nickname("차분한 펭귄 12")
 
-    private fun activeMember(): Member = Member.register(SocialLoginProvider.GOOGLE, "google-sub-1", email, now)
+    private fun activeMember(): Member = Member.register(SocialLoginProvider.GOOGLE, "google-sub-1", email, nickname, now)
 
     private fun socialAccount(providerId: String = "google-sub-1") = SocialAccount(SocialLoginProvider.GOOGLE, providerId, email)
 
@@ -24,7 +25,7 @@ class MemberTest {
         @Test
         fun `최초 로그인 시 ACTIVE 회원과 소셜 계정 1개가 생성된다`() {
             // when
-            val member = Member.register(SocialLoginProvider.GOOGLE, "sub-1", email, now)
+            val member = Member.register(SocialLoginProvider.GOOGLE, "sub-1", email, nickname, now)
 
             // then
             assertThat(member.status).isEqualTo(MemberStatus.ACTIVE)
@@ -41,8 +42,8 @@ class MemberTest {
         @Test
         fun `회원마다 서로 다른 식별자가 발급된다`() {
             // when
-            val a = Member.register(SocialLoginProvider.GOOGLE, "sub-1", email, now)
-            val b = Member.register(SocialLoginProvider.GOOGLE, "sub-2", email, now)
+            val a = Member.register(SocialLoginProvider.GOOGLE, "sub-1", email, nickname, now)
+            val b = Member.register(SocialLoginProvider.GOOGLE, "sub-2", email, nickname, now)
 
             // then
             assertThat(a.id).isNotEqualTo(b.id)
@@ -191,7 +192,7 @@ class MemberTest {
         fun `소셜 계정이 없으면 생성할 수 없다`() {
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, MemberStatus.ACTIVE, emptyList(), now, null)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, emptyList(), now, null)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
 
@@ -202,7 +203,7 @@ class MemberTest {
 
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, MemberStatus.ACTIVE, duplicates, now, null)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, duplicates, now, null)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
 
@@ -210,7 +211,7 @@ class MemberTest {
         fun `WITHDRAWN이 아닌데 withdrawnAt이 있으면 생성할 수 없다`() {
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, MemberStatus.ACTIVE, listOf(socialAccount()), now, now)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, listOf(socialAccount()), now, now)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
 
@@ -218,7 +219,7 @@ class MemberTest {
         fun `WITHDRAWN인데 withdrawnAt이 없으면 생성할 수 없다`() {
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, MemberStatus.WITHDRAWN, listOf(socialAccount()), now, null)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.WITHDRAWN, listOf(socialAccount()), now, null)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
     }

@@ -10,6 +10,7 @@ import java.util.UUID
 data class Member(
     val id: UUID,
     val email: Email,
+    val nickname: Nickname,
     val status: MemberStatus,
     val socialAccounts: List<SocialAccount>,
     val lastLoginAt: LocalDateTime,
@@ -52,10 +53,12 @@ data class Member(
             provider: SocialLoginProvider,
             providerId: String,
             email: Email,
+            nickname: Nickname,
             now: LocalDateTime,
         ): Member = Member(
             id = UUID.randomUUID(),
             email = email,
+            nickname = nickname,
             status = MemberStatus.ACTIVE,
             socialAccounts = listOf(SocialAccount(provider, providerId, linkedEmail = email)),
             lastLoginAt = now,

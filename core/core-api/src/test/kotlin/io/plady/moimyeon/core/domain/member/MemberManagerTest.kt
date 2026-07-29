@@ -1,6 +1,8 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.plady.moimyeon.core.enums.MemberStatus
@@ -30,12 +32,13 @@ class MemberManagerTest {
         every { memberRepository.saveAndFlush(capture(saved)) } answers { saved.captured }
 
         // when
-        val id = memberManager.append(provider, "sub-1", Email("user@example.com"))
+        val id = memberManager.append(provider, "sub-1", Email("user@example.com"), Nickname("차분한 펭귄 12"))
 
         // then
         val entity = saved.captured
         assertThat(id).isEqualTo(entity.id)
         assertThat(entity.email).isEqualTo("user@example.com")
+        assertThat(entity.nickname).isEqualTo("차분한 펭귄 12")
         assertThat(entity.status).isEqualTo(MemberStatus.ACTIVE) // Member.register 가 ACTIVE 로 생성
         assertThat(entity.withdrawnAt).isNull()
         assertThat(entity.socialAccounts).hasSize(1)
@@ -52,6 +55,7 @@ class MemberManagerTest {
         val entity = MemberEntity(
             id = id,
             email = "user@example.com",
+            nickname = "차분한 펭귄 12",
             status = MemberStatus.ACTIVE,
             lastLoginAt = oldLoginAt,
             withdrawnAt = null,
@@ -76,5 +80,28 @@ class MemberManagerTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
+    }
+
+    @Test
+    fun `changeNickname 은 닉네임을 갱신하고 즉시 flush 해 충돌을 드러낸다`() {
+        // given
+        val id = UUID.randomUUID()
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            nickname = "변경 전 닉네임 01",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = LocalDateTime.of(2026, 1, 1, 0, 0),
+            withdrawnAt = null,
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
+        )
+        every { memberRepository.findById(id) } returns Optional.of(entity)
+        every { memberRepository.flush() } just Runs
+
+        // when
+        memberManager.changeNickname(id, Nickname("변경 후 닉네임 02"))
+
+        // then
+        assertThat(entity.nickname).isEqualTo("변경 후 닉네임 02")
     }
 }

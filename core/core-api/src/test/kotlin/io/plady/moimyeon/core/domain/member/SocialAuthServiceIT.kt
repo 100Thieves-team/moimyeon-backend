@@ -48,6 +48,16 @@ class SocialAuthServiceIT(
     }
 
     @Test
+    fun `가입 시 형식 규칙을 만족하는 닉네임이 자동 부여된다`() {
+        // when
+        val memberId = socialAuthService.authenticate(provider, "google-sub-nick", Email("user@example.com"))
+
+        // then — 부여된 닉네임은 도메인 규칙(Nickname VO)을 통과하는 값이다
+        val nickname = memberRepository.findById(memberId).get().nickname
+        assertThat(Nickname(nickname).value).isEqualTo(nickname)
+    }
+
+    @Test
     fun `재인증하면 마지막 로그인 시각이 갱신된다`() {
         // given
         val providerId = "google-sub-2"

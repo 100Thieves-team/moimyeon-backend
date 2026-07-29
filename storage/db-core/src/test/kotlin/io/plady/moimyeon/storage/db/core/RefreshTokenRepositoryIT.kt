@@ -18,11 +18,12 @@ class RefreshTokenRepositoryIT(
 ) : CoreDbContextTest() {
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
-    // refresh_token.member_id 는 member(id) 를 참조(FK)하므로 회원을 먼저 저장한다.
+    // refresh_token.member_id 가 실제 회원을 가리키도록 회원을 먼저 저장한다(FK 는 없지만 데이터 정합 유지).
     private fun persistMember(providerId: String = "google-sub-1"): UUID {
         val member = MemberEntity(
             id = UUID.randomUUID(),
             email = "user@example.com",
+            nickname = "nick-$providerId",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
             withdrawnAt = null,

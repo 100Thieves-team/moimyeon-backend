@@ -21,9 +21,11 @@ class MemberRepositoryIT(
         providerId: String,
         memberEmail: String = "user@example.com", // 회원 계정 이메일 (가입 후 변경될 수 있음)
         socialEmail: String = memberEmail, // 공급자가 알려준 소셜 계정 이메일 (member.email 과 별개의 값)
+        nickname: String = "nick-$providerId",
     ) = MemberEntity(
         id = UUID.randomUUID(),
         email = memberEmail,
+        nickname = nickname,
         status = MemberStatus.ACTIVE,
         lastLoginAt = now,
         withdrawnAt = null,
@@ -82,10 +84,33 @@ class MemberRepositoryIT(
         // given
         memberRepository.saveAndFlush(newMember(providerId = "google-sub-3"))
 
+        // when & then — 닉네임은 달리해 (provider, providerId) 유니크 위반만 검증한다
+        assertThatThrownBy {
+            memberRepository.saveAndFlush(newMember(providerId = "google-sub-3", nickname = "다른 닉네임 01"))
+        }.isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    @Test
+    fun `닉네임은 유니크 제약으로 중복 저장되지 않는다`() {
+        // given
+        memberRepository.saveAndFlush(newMember(providerId = "google-sub-6", nickname = "중복 닉네임 01"))
+
         // when & then
         assertThatThrownBy {
-            memberRepository.saveAndFlush(newMember(providerId = "google-sub-3"))
+            memberRepository.saveAndFlush(newMember(providerId = "google-sub-7", nickname = "중복 닉네임 01"))
         }.isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    @Test
+    fun `닉네임 존재 여부와 자신 제외 존재 여부를 확인한다`() {
+        // given
+        val mine = memberRepository.saveAndFlush(newMember(providerId = "google-sub-8", nickname = "내 닉네임 01")).id
+
+        // when & then — 자기 닉네임은 중복이 아니고, 남이 보면 중복이다
+        assertThat(memberRepository.existsByNickname("내 닉네임 01")).isTrue()
+        assertThat(memberRepository.existsByNickname("없는 닉네임")).isFalse()
+        assertThat(memberRepository.existsByNicknameAndIdNot("내 닉네임 01", mine)).isFalse()
+        assertThat(memberRepository.existsByNicknameAndIdNot("내 닉네임 01", UUID.randomUUID())).isTrue()
     }
 
     @Test

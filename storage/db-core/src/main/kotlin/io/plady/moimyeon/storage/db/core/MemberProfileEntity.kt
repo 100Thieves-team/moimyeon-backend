@@ -20,15 +20,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
-@Table(
-    name = "member_profile",
-    uniqueConstraints = [UniqueConstraint(name = "uk_member_profile_nickname", columnNames = ["nickname"])],
-)
+@Table(name = "member_profile")
 class MemberProfileEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    var nickname: String,
     var jobRoleId: Long? = null,
     var bio: String? = null,
     @Enumerated(EnumType.STRING)
@@ -48,4 +44,20 @@ class MemberProfileEntity(
 
     @UpdateTimestamp
     val updatedAt: LocalDateTime = LocalDateTime.MIN
+
+    // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
+    fun updateProfile(
+        jobRoleId: Long?,
+        bio: String?,
+        meetingPreference: MeetingPreference?,
+        sigunguId: Long?,
+        interestCompanyIds: List<Long>,
+    ) {
+        this.jobRoleId = jobRoleId
+        this.bio = bio
+        this.meetingPreference = meetingPreference
+        this.sigunguId = sigunguId
+        this.interestCompanyIds.clear()
+        this.interestCompanyIds.addAll(interestCompanyIds)
+    }
 }

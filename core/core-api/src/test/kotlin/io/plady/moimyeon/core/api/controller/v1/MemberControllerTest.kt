@@ -1,14 +1,20 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.auth.ApiResponseAuthErrorWriter
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.request.UpdateNicknameRequest
+import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.catalog.CatalogService
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberService
+import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -19,10 +25,15 @@ import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
+import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
+import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.security.authentication.ProviderManager
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider
@@ -39,17 +50,34 @@ class MemberControllerTest : RestDocsTest() {
     private lateinit var profileService: ProfileService
     private lateinit var catalogService: CatalogService
 
-    private val member: Member =
-        Member.register(SocialLoginProvider.GOOGLE, "google-sub-1", Email("user@example.com"), LocalDateTime.of(2026, 1, 1, 0, 0))
+    private val member: Member = Member.register(
+        SocialLoginProvider.GOOGLE,
+        "google-sub-1",
+        Email("user@example.com"),
+        Nickname("차분한 펭귄 12"),
+        LocalDateTime.of(2026, 1, 1, 0, 0),
+    )
     private val memberId: UUID = member.id
     private val principal = Principal { memberId.toString() }
 
     private val memberMeSummary = "내 상태 조회"
     private val memberMeDescription =
-        "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 프로필 미작성이면 profileCompleted=false, profile=null 이다. " +
+        "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. " +
+            "프로필(소개) 미작성이면 profileCompleted=false, profile=null 이다. " +
             "profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. " +
             "FE 는 로그인 직후 이 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. " +
             "액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
+    private val updateNicknameSummary = "닉네임 변경"
+    private val updateNicknameDescription =
+        "회원의 닉네임을 변경한다. 자신이 쓰던 닉네임 유지는 허용하고, 변경 시 전체 중복을 확인한다. " +
+            "형식 위반 400(E1005), 인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007)로 응답한다."
+    private val nicknameSuggestionSummary = "닉네임 자동 추천"
+    private val nicknameSuggestionDescription =
+        "중복되지 않는 닉네임을 새로 생성해 반환한다. 닉네임 변경 폼의 ↻ 새로 만들기 재생성에서 사용한다."
+    private val nicknameAvailabilitySummary = "닉네임 사용 가능 여부 확인"
+    private val nicknameAvailabilityDescription =
+        "닉네임의 전체 중복 여부를 확인한다. 형식 위반(길이·문자·금칙어)은 available=false 가 아니라 400(E1005)으로, " +
+            "필수 쿼리 파라미터(nickname) 누락은 400(E400)으로 응답한다."
 
     @BeforeEach
     fun setUp() {
@@ -57,7 +85,7 @@ class MemberControllerTest : RestDocsTest() {
         profileService = mockk()
         catalogService = mockk()
         mockMvc = mockController(
-            MemberController(memberService, profileService, catalogService),
+            MemberController(memberService, MemberFacade(memberService, profileService, catalogService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -79,6 +107,7 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
                         fieldWithPath("data.email").type(JsonFieldType.STRING).description("대표 이메일"),
+                        fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임 (가입 시 자동 부여, 변경 가능)"),
                         fieldWithPath("data.status").type(JsonFieldType.STRING).description("회원 상태 (ACTIVE | RESTRICTED | WITHDRAWN)"),
                         fieldWithPath("data.profileCompleted").type(JsonFieldType.BOOLEAN).description("필수 프로필 작성 완료 여부"),
                         fieldWithPath("data.profile").type(JsonFieldType.NULL).optional()
@@ -101,7 +130,7 @@ class MemberControllerTest : RestDocsTest() {
     @Test
     fun `memberMe 유효하지 않은 토큰 E1102`() {
         val securedMockMvc = mockController(
-            MemberController(memberService, profileService, catalogService),
+            MemberController(memberService, MemberFacade(memberService, profileService, catalogService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
             filters = listOf(resourceServerFilter()),
@@ -110,6 +139,136 @@ class MemberControllerTest : RestDocsTest() {
         securedMockMvc.perform(get("/v1/members/me").header(HttpHeaders.AUTHORIZATION, "Bearer invalid-or-expired-token"))
             .andExpect(status().isUnauthorized)
             .andDo(documentApi("memberMe-e1102", memberMeSummary, memberMeDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun updateNickname() {
+        every { memberService.changeNickname(memberId, "명랑한 해달 33") } just Runs
+
+        mockMvc.perform(
+            put("/v1/members/me/nickname")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "updateNickname",
+                    updateNicknameSummary,
+                    updateNicknameDescription,
+                    requestFields(
+                        fieldWithPath("nickname").type(JsonFieldType.STRING).description("변경할 닉네임 (전체 중복 불가 — 자신 제외)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `updateNickname 형식 위반 E1005`() {
+        every { memberService.changeNickname(memberId, "금지문자!@#") } throws CoreException(CoreErrorType.INVALID_NICKNAME)
+
+        mockMvc.perform(
+            put("/v1/members/me/nickname")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("금지문자!@#"))),
+        )
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("updateNickname-e1005", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `updateNickname 닉네임 중복 E1007`() {
+        every { memberService.changeNickname(memberId, "명랑한 해달 33") } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+
+        mockMvc.perform(
+            put("/v1/members/me/nickname")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
+        )
+            .andExpect(status().isConflict)
+            .andDo(documentApi("updateNickname-e1007", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `updateNickname 인증 없음 E1102`() {
+        mockMvc.perform(
+            put("/v1/members/me/nickname")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
+        )
+            .andExpect(status().isUnauthorized)
+            .andDo(documentApi("updateNickname-e1102", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun nicknameSuggestion() {
+        every { memberService.suggestNickname() } returns Nickname("명랑한 알파카 42")
+
+        mockMvc.perform(get("/v1/nicknames/suggestion"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "nicknameSuggestion",
+                    nicknameSuggestionSummary,
+                    nicknameSuggestionDescription,
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("추천 닉네임 (중복 아님 보장)"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun nicknameAvailability() {
+        every { memberService.isNicknameAvailable("차분한 펭귄 12") } returns true
+
+        mockMvc.perform(get("/v1/nicknames/availability").param("nickname", "차분한 펭귄 12"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "nicknameAvailability",
+                    nicknameAvailabilitySummary,
+                    nicknameAvailabilityDescription,
+                    queryParameters(
+                        parameterWithName("nickname").description("확인할 닉네임"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.available").type(JsonFieldType.BOOLEAN).description("사용 가능 여부 (중복이면 false)"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `nicknameAvailability 파라미터 누락 E400`() {
+        mockMvc.perform(get("/v1/nicknames/availability"))
+            .andExpect(status().isBadRequest)
+            .andDo(
+                documentApi("nicknameAvailability-e400", nicknameAvailabilitySummary, nicknameAvailabilityDescription, errorResponseFields()),
+            )
+    }
+
+    @Test
+    fun `nicknameAvailability 닉네임 형식 위반 E1005`() {
+        every { memberService.isNicknameAvailable("금지문자!@#") } throws CoreException(CoreErrorType.INVALID_NICKNAME)
+
+        mockMvc.perform(get("/v1/nicknames/availability").param("nickname", "금지문자!@#"))
+            .andExpect(status().isBadRequest)
+            .andDo(
+                documentApi("nicknameAvailability-e1005", nicknameAvailabilitySummary, nicknameAvailabilityDescription, errorResponseFields()),
+            )
     }
 
     // 운영 필터 체인과 같은 조립: 리소스서버 필터 + 실제 EntryPoint/Writer.
