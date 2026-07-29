@@ -1,10 +1,18 @@
 import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
 import com.epages.restdocs.apispec.gradle.PluginOauth2Configuration
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.servers.Server
+
+buildscript {
+    dependencies {
+        // 생성된 스펙을 OpenAPI 3.0 규칙으로 파싱 검증하는 게이트 (validateOpenApiSpec)
+        classpath("io.swagger.parser.v3:swagger-parser:2.1.31")
+    }
+}
 
 plugins {
     id("com.epages.restdocs-api-spec")
@@ -72,8 +80,42 @@ tasks.withType<OpenApi3Task>().configureEach {
 
         if (yamlFile.exists()) {
             patchGeneratedSchemas(yamlFile)
+            validateOpenApiSpec(yamlFile)
             yamlFile.copyTo(target = ymlFile, overwrite = true)
         }
+    }
+}
+
+// 생성기가 3.0 에 유효하지 않은 스펙을 내는 회귀를 빌드에서 잡는다. swagger-parser 는 속성 누락 등
+// 구조 위반을 잡지만 oneOf 안의 bare null(실제로 샜던 형태)은 조용히 삼키므로 트리 검사로 보강한다.
+// 표현이 부족한 스키마(oneOf 만능 타입 등)까지 걸러주지는 못한다. 그건 필드 문서화 소관.
+fun validateOpenApiSpec(yamlFile: File) {
+    val text = yamlFile.readText()
+    val problems = mutableListOf<String>()
+    problems += io.swagger.parser.OpenAPIParser().readContents(text, null, null).messages.orEmpty()
+    collectNonObjectComposedSchemas(Yaml.mapper().readTree(text), "$", problems)
+    if (problems.isNotEmpty()) {
+        throw GradleException(
+            "생성된 ${yamlFile.name} 이 OpenAPI 3.0 규칙을 위반한다:\n" + problems.joinToString("\n"),
+        )
+    }
+}
+
+// oneOf/anyOf/allOf 의 원소는 항상 스키마 객체여야 한다 (OpenAPI 3.0 에는 null 타입이 없다)
+fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: MutableList<String>) {
+    if (node.isObject) {
+        node.fields().forEach { (name, value) ->
+            if (name in setOf("oneOf", "anyOf", "allOf") && value.isArray) {
+                value.forEachIndexed { i, element ->
+                    if (!element.isObject) {
+                        problems += "$path.$name[$i] 이 스키마 객체가 아니다: $element"
+                    }
+                }
+            }
+            collectNonObjectComposedSchemas(value, "$path.$name", problems)
+        }
+    } else if (node.isArray) {
+        node.forEachIndexed { i, element -> collectNonObjectComposedSchemas(element, "$path[$i]", problems) }
     }
 }
 
