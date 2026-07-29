@@ -8,7 +8,7 @@ info:
   version: 0.0.1-SNAPSHOT
 servers:
 - url: http://localhost:8080
-- url: https://api-dev.moimyeon.plady.io
+- url: https://api.dev.moimyeon.plady.io
 tags: []
 paths:
   /get/{exampleValue}:
@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-07-29",
-                        "datetime" : "2026-07-29T15:04:43.911780761",
+                        "datetime" : "2026-07-29T16:19:20.441766109",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-07-29",
-                        "datetime" : "2026-07-29T15:04:44.171284891",
+                        "datetime" : "2026-07-29T16:19:20.6851234",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -118,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 searchCompanies-e400:
                   value: |-
@@ -245,7 +245,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "17c69556-8b42-4d61-986e-98d27e6dc222",
+                          "termsId" : "1bbb0cd6-5420-49ab-b9ae-872020d495ff",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -253,7 +253,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "75c5597c-fd78-4b52-809a-7ff3962828cd",
+                          "termsId" : "d9bb025a-a900-4e2b-9ba2-0268b55c65b2",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -283,7 +283,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-logout198252895"
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
               examples:
                 authLogout:
                   value: |-
@@ -311,7 +311,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-logout198252895"
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
               examples:
                 authRefresh:
                   value: |-
@@ -325,7 +325,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -361,7 +361,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "eb28923b-7bbd-4aa5-806a-97a9c306449c",
+                        "memberId" : "bfe7181d-3198-4c0c-a3bb-a5f4eb4bba3a",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
@@ -375,7 +375,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -393,7 +393,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -427,7 +427,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-nicknames-availability1576365945"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -533,7 +533,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-logout198252895"
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
               examples:
                 updateNickname:
                   value: |-
@@ -547,7 +547,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1005:
                   value: |-
@@ -565,7 +565,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1102:
                   value: |-
@@ -583,7 +583,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1007:
                   value: |-
@@ -660,7 +660,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "c02a6d53-3689-4af0-ac51-65c15cba2aaf",
+                        "memberId" : "28f24ef9-1a42-4c4a-af59-e57318ad9498",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -681,7 +681,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -699,7 +699,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -717,7 +717,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1303:
                   value: |-
@@ -799,7 +799,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile2128882041"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1301:
                   value: |-
@@ -830,7 +830,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1201:
                   value: |-
@@ -859,14 +859,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile-1945481917"
+                $ref: "#/components/schemas/v1-members-me-profile902443370"
               examples:
                 createProfile:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "e34b443a-f238-48b5-859c-599134063e58",
+                        "memberId" : "aaadc56f-a892-4849-b646-75a1183e2bfb",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "BOTH",
@@ -881,7 +881,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1102:
                   value: |-
@@ -923,7 +923,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9b39b8a3-43bc-4673-b516-fd89ba68a1a8",
+                        "memberId" : "ac08171f-15a3-4977-a9f4-2a428dc72652",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -961,6 +961,57 @@ paths:
                     }
 components:
   schemas:
+    v1-members-me-profile902443370:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interestCompanies
+          - memberId
+          - profileCompleted
+          type: object
+          properties:
+            sigunguId:
+              type: number
+              description: 선호 지역 시군구 id (선택)
+              nullable: true
+            meetingPreference:
+              type: string
+              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+              nullable: true
+            interestCompanies:
+              type: array
+              description: "관심 회사 (최초 작성 시 빈 배열, 수정에서 입력)"
+              items:
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id
+                    nullable: true
+                  name:
+                    type: string
+                    description: 회사명
+                    nullable: true
+            profileCompleted:
+              type: boolean
+              description: 필수 프로필 작성 완료 여부
+            bio:
+              type: string
+              description: 자기소개 (선택)
+              nullable: true
+            jobRoleId:
+              type: number
+              description: 직무 id (선택)
+              nullable: true
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
     v1-companies1839974379:
       required:
       - result
@@ -1024,52 +1075,6 @@ components:
             available:
               type: boolean
               description: 사용 가능 여부 (중복이면 false)
-    v1-members-me-profile-1945481917:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - interestCompanies
-          - memberId
-          - profileCompleted
-          type: object
-          properties:
-            sigunguId:
-              type: number
-              description: 선호 지역 시군구 id (선택)
-              nullable: true
-            meetingPreference:
-              type: string
-              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-              nullable: true
-            interestCompanies:
-              type: array
-              description: "관심 회사 (최초 작성 시 빈 배열, 수정에서 입력)"
-              items:
-                oneOf:
-                - type: object
-                - type: boolean
-                - type: string
-                - type: number
-            profileCompleted:
-              type: boolean
-              description: 필수 프로필 작성 완료 여부
-            bio:
-              type: string
-              description: 자기소개 (선택)
-              nullable: true
-            jobRoleId:
-              type: number
-              description: 직무 id (선택)
-              nullable: true
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
     v1-members-me-nickname-346517390:
       required:
       - nickname
@@ -1178,68 +1183,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-nicknames-availability1576365945:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            data:
-              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
-              nullable: true
-              oneOf:
-              - null
-              - type: object
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
-    post191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
     v1-regions1871099627:
       required:
       - result
@@ -1284,7 +1227,43 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
-    v1-auth-logout198252895:
+    get-exampleValue191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+    v1-members-me-nickname198252895:
       required:
       - result
       type: object
@@ -1340,26 +1319,6 @@ components:
                   content:
                     type: string
                     description: 약관 본문
-    v1-members-me-nickname-2058664485:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
     v1-members-memberId-profile-573351263:
       required:
       - result
@@ -1484,7 +1443,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-companies910352763:
+    v1-members-me-nickname910352763:
       required:
       - result
       type: object
@@ -1505,6 +1464,8 @@ components:
               type: object
               description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
               nullable: true
+              additionalProperties:
+                type: string
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
@@ -1532,37 +1493,7 @@ components:
           description: "관심 회사 id 목록 (선택, /v1/companies 검색 — 전체 교체)"
           nullable: true
           items:
-            oneOf:
-            - type: object
-            - type: boolean
-            - type: string
-            - type: number
-    v1-members-me-profile2128882041:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: "에러 코드 (E 코드, 분기 기준)"
-            data:
-              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
-              nullable: true
-              oneOf:
-              - type: object
-              - null
-            message:
-              type: string
-              description: 사용자에게 표시 가능한 메시지
+            type: number
     v1-nicknames-suggestion679533277:
       required:
       - result
