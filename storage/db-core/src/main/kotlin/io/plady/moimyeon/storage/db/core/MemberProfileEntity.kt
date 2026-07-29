@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
@@ -19,7 +20,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
-@Table(name = "member_profile")
+@Table(
+    name = "member_profile",
+    uniqueConstraints = [UniqueConstraint(name = "uk_member_profile_nickname", columnNames = ["nickname"])],
+)
 class MemberProfileEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
@@ -31,7 +35,11 @@ class MemberProfileEntity(
     var meetingPreference: MeetingPreference? = null,
     var sigunguId: Long? = null,
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "member_profile_interest", joinColumns = [JoinColumn(name = "member_id")])
+    @CollectionTable(
+        name = "member_profile_interest",
+        joinColumns = [JoinColumn(name = "member_id")],
+        uniqueConstraints = [UniqueConstraint(name = "uk_member_profile_interest", columnNames = ["member_id", "company_id"])],
+    )
     @Column(name = "company_id")
     var interestCompanyIds: MutableList<Long> = mutableListOf(),
 ) {

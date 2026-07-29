@@ -5,10 +5,16 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
-import java.time.LocalDateTime
+import jakarta.persistence.UniqueConstraint
 
 @Entity
-@Table(name = "sigungu")
+@Table(
+    name = "sigungu",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uk_sigungu_sigungu_code", columnNames = ["sigungu_code"]),
+        UniqueConstraint(name = "uk_sigungu_sido_name", columnNames = ["sido_id", "name"]),
+    ],
+)
 class SigunguEntity(
     val sidoId: Long,
     val sigunguCode: String?,
@@ -16,5 +22,4 @@ class SigunguEntity(
     @Enumerated(EnumType.STRING)
     val level: SigunguLevel,
     val sortOrder: Short?,
-    val retiredAt: LocalDateTime? = null,
 ) : BaseEntity()

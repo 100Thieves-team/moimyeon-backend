@@ -3,5 +3,5 @@ package io.plady.moimyeon.storage.db.core
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface SidoRepository : JpaRepository<SidoEntity, Long> {
-    fun findByRetiredAtIsNullOrderBySortOrderAsc(): List<SidoEntity>
+    fun findByDeletedAtIsNullOrderBySortOrderAsc(): List<SidoEntity>
 }
