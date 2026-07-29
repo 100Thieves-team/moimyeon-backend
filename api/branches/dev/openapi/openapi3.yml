@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-26",
-                        "datetime" : "2026-07-26T17:24:23.256118774",
+                        "date" : "2026-07-29",
+                        "datetime" : "2026-07-29T15:04:43.911780761",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-26",
-                        "datetime" : "2026-07-26T17:24:23.445101154",
+                        "date" : "2026-07-29",
+                        "datetime" : "2026-07-29T15:04:44.171284891",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -245,7 +245,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "7c3eb81a-71b5-4bcb-8f7b-d083eae42fee",
+                          "termsId" : "17c69556-8b42-4d61-986e-98d27e6dc222",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -253,7 +253,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "1fe9e1f2-7abd-403d-a1e7-a73660241482",
+                          "termsId" : "75c5597c-fd78-4b52-809a-7ff3962828cd",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -325,7 +325,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -343,10 +343,10 @@ paths:
       tags:
       - v1
       summary: 내 상태 조회
-      description: "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 프로필 미작성이면 profileCompleted=false,\
-        \ profile=null 이다. profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. FE 는 로그인 직후 이\
-        \ 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. 액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만\
-        \ 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
+      description: "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. 프로필(소개\
+        ) 미작성이면 profileCompleted=false, profile=null 이다. profile 은 필수 프로필 작성 응답의 data\
+        \ 와 동일한 모양이다. FE 는 로그인 직후 이 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. 액세스 토큰이 없거나 유효하지\
+        \ 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
       operationId: memberMe
       responses:
         "200":
@@ -354,15 +354,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me1593439471"
+                $ref: "#/components/schemas/v1-members-me-766176819"
               examples:
                 memberMe:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "dec20885-26a0-4f3f-a39a-2515d67ec852",
+                        "memberId" : "eb28923b-7bbd-4aa5-806a-97a9c306449c",
                         "email" : "user@example.com",
+                        "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profileCompleted" : false,
                         "profile" : null
@@ -374,7 +375,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -392,7 +393,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -426,7 +427,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile1576365945"
+                $ref: "#/components/schemas/v1-nicknames-availability1576365945"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -473,7 +474,7 @@ paths:
       tags:
       - v1
       summary: 닉네임 자동 추천
-      description: 중복되지 않는 닉네임을 새로 생성해 반환한다. 최초 프로필 모달의 프리필과 ↻ 새로 만들기 재생성에서 사용한다.
+      description: 중복되지 않는 닉네임을 새로 생성해 반환한다. 닉네임 변경 폼의 ↻ 새로 만들기 재생성에서 사용한다.
       operationId: nicknameSuggestion
       responses:
         "200":
@@ -492,81 +493,99 @@ paths:
                       },
                       "error" : null
                     }
-  /v1/members/me/profile:
+  /v1/members/me/nickname:
     put:
       tags:
       - v1
-      summary: 프로필 수정
-      description: "마이페이지 수정 폼의 전체 교체 저장. 닉네임은 자신이 쓰던 값을 유지해도 되고, 변경 시 전체 중복을 확인한다\
-        . 직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. 요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005),\
-        \ 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303), 인증 정보 없음·무효 401(E1102), 프로필 미작성\
-        \ 404(E1009), 닉네임 중복 409(E1007)로 응답한다."
-      operationId: updateProfile
+      summary: 닉네임 변경
+      description: "회원의 닉네임을 변경한다. 자신이 쓰던 닉네임 유지는 허용하고, 변경 시 전체 중복을 확인한다. 형식 위반 400(E1005),\
+        \ 인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007)로 응답한다."
+      operationId: updateNickname
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-members-me-profile-835165503"
+              $ref: "#/components/schemas/v1-members-me-nickname-346517390"
             examples:
-              updateProfile-e1007:
+              updateNickname:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 2,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "nickname" : "명랑한 해달 33"
                   }
-              updateProfile:
+              updateNickname-e1005:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 2,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "nickname" : "금지문자!@#"
                   }
-              updateProfile-e1102:
+              updateNickname-e1102:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 2,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "nickname" : "명랑한 해달 33"
                   }
-              updateProfile-e1009:
+              updateNickname-e1007:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 2,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
-                  }
-              updateProfile-e1303:
-                value: |-
-                  {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 2,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "nickname" : "명랑한 해달 33"
                   }
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-auth-logout198252895"
+              examples:
+                updateNickname:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+              examples:
+                updateNickname-e1005:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1005",
+                        "message" : "닉네임 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
+              examples:
+                updateNickname-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
         "409":
           description: "409"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
-                updateProfile-e1007:
+                updateNickname-e1007:
                   value: |-
                     {
                       "result" : "ERROR",
@@ -577,20 +596,71 @@ paths:
                         "data" : null
                       }
                     }
+  /v1/members/me/profile:
+    put:
+      tags:
+      - v1
+      summary: 프로필 수정
+      description: "마이페이지 수정 폼의 전체 교체 저장. 직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. 요청 형태 오류\
+        \ 400(E400), 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303), 인증 정보 없음·무효 401(E1102),\
+        \ 프로필 미작성 404(E1009)로 응답한다."
+      operationId: updateProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-members-me-profile-69778644"
+            examples:
+              updateProfile:
+                value: |-
+                  {
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+              updateProfile-e1102:
+                value: |-
+                  {
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+              updateProfile-e1009:
+                value: |-
+                  {
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+              updateProfile-e1303:
+                value: |-
+                  {
+                    "jobRoleId" : 2,
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ],
+                    "meetingPreference" : "OFFLINE",
+                    "sigunguId" : 1
+                  }
+      responses:
         "200":
           description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile968366763"
+                $ref: "#/components/schemas/v1-members-me-profile-1915001008"
               examples:
                 updateProfile:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "4b1cfe17-7d3d-484d-9047-532759441025",
-                        "nickname" : "꼼꼼한 라쿤 34",
+                        "memberId" : "c02a6d53-3689-4af0-ac51-65c15cba2aaf",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -611,7 +681,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -629,7 +699,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -647,7 +717,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 updateProfile-e1303:
                   value: |-
@@ -664,21 +734,20 @@ paths:
       tags:
       - v1
       summary: 필수 프로필 작성
-      description: "닉네임(필수)과 선택 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. 직무·지역은 카탈로그 참조 id\
-        \ 를 받는다(/v1/job-roles, /v1/regions). 요청 형태 오류 400(E400), 닉네임 형식 위반 400(E1005),\
-        \ 존재하지 않는 직무/지역 400(E1301/E1302), 인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007),\
-        \ 이미 작성된 경우 409(E1008), 필수 약관 미동의 409(E1201)로 응답한다."
+      description: "온보딩에서 소개 정보를 받아 프로필을 생성하고 프로필 완성 상태로 전환한다. 모든 필드는 선택 입력이다(닉네임은\
+        \ 가입 시 자동 부여되는 회원 속성 — 변경은 닉네임 변경 API). 직무·지역은 카탈로그 참조 id 를 받는다(/v1/job-roles,\
+        \ /v1/regions). 요청 형태 오류 400(E400), 존재하지 않는 직무/지역 400(E1301/E1302), 인증 정보\
+        \ 없음·무효 401(E1102), 이미 작성된 경우 409(E1008), 필수 약관 미동의 409(E1201)로 응답한다."
       operationId: createProfile
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-members-me-profile1474390884"
+              $ref: "#/components/schemas/v1-members-me-profile889777487"
             examples:
               createProfile-e1301:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
                     "jobRoleId" : 1,
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                     "meetingPreference" : "BOTH",
@@ -687,7 +756,6 @@ paths:
               createProfile-e400:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
                     "jobRoleId" : 1,
                     "bio" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
                     "meetingPreference" : "BOTH",
@@ -696,7 +764,6 @@ paths:
               createProfile-e1201:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
                     "jobRoleId" : 1,
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                     "meetingPreference" : "BOTH",
@@ -705,7 +772,6 @@ paths:
               createProfile:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
                     "jobRoleId" : 1,
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                     "meetingPreference" : "BOTH",
@@ -714,7 +780,6 @@ paths:
               createProfile-e1008:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
                     "jobRoleId" : 1,
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                     "meetingPreference" : "BOTH",
@@ -723,25 +788,6 @@ paths:
               createProfile-e1102:
                 value: |-
                   {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 1,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "meetingPreference" : "BOTH",
-                    "sigunguId" : 1
-                  }
-              createProfile-e1007:
-                value: |-
-                  {
-                    "nickname" : "꼼꼼한 라쿤 34",
-                    "jobRoleId" : 1,
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "meetingPreference" : "BOTH",
-                    "sigunguId" : 1
-                  }
-              createProfile-e1005:
-                value: |-
-                  {
-                    "nickname" : "금지문자!@#",
                     "jobRoleId" : 1,
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                     "meetingPreference" : "BOTH",
@@ -753,7 +799,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile1576365945"
+                $ref: "#/components/schemas/v1-members-me-profile2128882041"
               examples:
                 createProfile-e1301:
                   value: |-
@@ -779,23 +825,12 @@ paths:
                         }
                       }
                     }
-                createProfile-e1005:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1005",
-                        "message" : "닉네임 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "409":
           description: "409"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 createProfile-e1201:
                   value: |-
@@ -819,31 +854,19 @@ paths:
                         "data" : null
                       }
                     }
-                createProfile-e1007:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1007",
-                        "message" : "이미 사용 중인 닉네임입니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile-400775982"
+                $ref: "#/components/schemas/v1-members-me-profile-1945481917"
               examples:
                 createProfile:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "fed8ffb0-0e00-40b6-b6b6-08ad2513ae99",
-                        "nickname" : "꼼꼼한 라쿤 34",
+                        "memberId" : "e34b443a-f238-48b5-859c-599134063e58",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "BOTH",
@@ -858,7 +881,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-auth-refresh-2058664485"
+                $ref: "#/components/schemas/v1-members-me-nickname-2058664485"
               examples:
                 createProfile-e1102:
                   value: |-
@@ -900,7 +923,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "a3156c69-67a1-41a2-8b5f-7b8f54bd816c",
+                        "memberId" : "9b39b8a3-43bc-4673-b516-fd89ba68a1a8",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -966,9 +989,7 @@ components:
                   name:
                     type: string
                     description: 회사명
-    v1-members-me-profile1474390884:
-      required:
-      - nickname
+    v1-members-me-profile889777487:
       type: object
       properties:
         sigunguId:
@@ -979,9 +1000,6 @@ components:
           type: string
           description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
           nullable: true
-        nickname:
-          type: string
-          description: "닉네임 (필수, 전체 중복 불가)"
         bio:
           type: string
           description: 자기소개 (선택)
@@ -1006,6 +1024,60 @@ components:
             available:
               type: boolean
               description: 사용 가능 여부 (중복이면 false)
+    v1-members-me-profile-1945481917:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interestCompanies
+          - memberId
+          - profileCompleted
+          type: object
+          properties:
+            sigunguId:
+              type: number
+              description: 선호 지역 시군구 id (선택)
+              nullable: true
+            meetingPreference:
+              type: string
+              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+              nullable: true
+            interestCompanies:
+              type: array
+              description: "관심 회사 (최초 작성 시 빈 배열, 수정에서 입력)"
+              items:
+                oneOf:
+                - type: object
+                - type: boolean
+                - type: string
+                - type: number
+            profileCompleted:
+              type: boolean
+              description: 필수 프로필 작성 완료 여부
+            bio:
+              type: string
+              description: 자기소개 (선택)
+              nullable: true
+            jobRoleId:
+              type: number
+              description: 직무 id (선택)
+              nullable: true
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
+    v1-members-me-nickname-346517390:
+      required:
+      - nickname
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: 변경할 닉네임 (전체 중복 불가 — 자신 제외)
     v1-job-roles-1436485238:
       required:
       - result
@@ -1054,7 +1126,59 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
-    v1-members-me-profile1576365945:
+    v1-members-me-profile-1915001008:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interestCompanies
+          - memberId
+          - profileCompleted
+          type: object
+          properties:
+            sigunguId:
+              type: number
+              description: 선호 지역 시군구 id (선택)
+              nullable: true
+            meetingPreference:
+              type: string
+              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+              nullable: true
+            interestCompanies:
+              type: array
+              description: 관심 회사
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  name:
+                    type: string
+                    description: 회사명
+            profileCompleted:
+              type: boolean
+              description: 필수 프로필 작성 완료 여부
+            bio:
+              type: string
+              description: 자기소개 (선택)
+              nullable: true
+            jobRoleId:
+              type: number
+              description: 직무 id (선택)
+              nullable: true
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
+    v1-nicknames-availability1576365945:
       required:
       - result
       type: object
@@ -1168,56 +1292,6 @@ components:
         result:
           type: string
           description: 처리 결과 (SUCCESS)
-    v1-members-me-profile-400775982:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - interestCompanies
-          - memberId
-          - nickname
-          - profileCompleted
-          type: object
-          properties:
-            sigunguId:
-              type: number
-              description: 선호 지역 시군구 id (선택)
-              nullable: true
-            meetingPreference:
-              type: string
-              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-              nullable: true
-            interestCompanies:
-              type: array
-              description: "관심 회사 (최초 작성 시 빈 배열, 수정에서 입력)"
-              items:
-                oneOf:
-                - type: object
-                - type: boolean
-                - type: string
-                - type: number
-            profileCompleted:
-              type: boolean
-              description: 필수 프로필 작성 완료 여부
-            nickname:
-              type: string
-              description: 닉네임
-            bio:
-              type: string
-              description: 자기소개 (선택)
-              nullable: true
-            jobRoleId:
-              type: number
-              description: 직무 id (선택)
-              nullable: true
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
     v1-terms1673199050:
       required:
       - result
@@ -1266,7 +1340,7 @@ components:
                   content:
                     type: string
                     description: 약관 본문
-    v1-auth-refresh-2058664485:
+    v1-members-me-nickname-2058664485:
       required:
       - result
       type: object
@@ -1370,62 +1444,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-members-me-profile968366763:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - interestCompanies
-          - memberId
-          - nickname
-          - profileCompleted
-          type: object
-          properties:
-            sigunguId:
-              type: number
-              description: 선호 지역 시군구 id (선택)
-              nullable: true
-            meetingPreference:
-              type: string
-              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-              nullable: true
-            interestCompanies:
-              type: array
-              description: 관심 회사
-              items:
-                required:
-                - companyId
-                - name
-                type: object
-                properties:
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  name:
-                    type: string
-                    description: 회사명
-            profileCompleted:
-              type: boolean
-              description: 필수 프로필 작성 완료 여부
-            nickname:
-              type: string
-              description: 닉네임
-            bio:
-              type: string
-              description: 자기소개 (선택)
-              nullable: true
-            jobRoleId:
-              type: number
-              description: 직무 id (선택)
-              nullable: true
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
     post-1780624183:
       required:
       - data
@@ -1434,7 +1452,7 @@ components:
         data:
           type: string
           description: ExampleBody Data Field
-    v1-members-me1593439471:
+    v1-members-me-766176819:
       required:
       - result
       type: object
@@ -1446,6 +1464,7 @@ components:
           required:
           - email
           - memberId
+          - nickname
           - profileCompleted
           - status
           type: object
@@ -1453,6 +1472,9 @@ components:
             profileCompleted:
               type: boolean
               description: 필수 프로필 작성 완료 여부
+            nickname:
+              type: string
+              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
             email:
               type: string
               description: 대표 이메일
@@ -1462,40 +1484,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-members-me-profile-835165503:
-      required:
-      - nickname
-      type: object
-      properties:
-        sigunguId:
-          type: number
-          description: "선호 지역 시군구 id (선택, /v1/regions)"
-          nullable: true
-        meetingPreference:
-          type: string
-          description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-          nullable: true
-        nickname:
-          type: string
-          description: "닉네임 (필수, 전체 중복 불가 — 자신 제외)"
-        bio:
-          type: string
-          description: 자기소개 (선택)
-          nullable: true
-        jobRoleId:
-          type: number
-          description: "직무 id (선택, /v1/job-roles)"
-          nullable: true
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (선택, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            oneOf:
-            - type: object
-            - type: boolean
-            - type: string
-            - type: number
     v1-companies910352763:
       required:
       - result
@@ -1517,6 +1505,61 @@ components:
               type: object
               description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
               nullable: true
+            message:
+              type: string
+              description: 사용자에게 표시 가능한 메시지
+    v1-members-me-profile-69778644:
+      type: object
+      properties:
+        sigunguId:
+          type: number
+          description: "선호 지역 시군구 id (선택, /v1/regions)"
+          nullable: true
+        meetingPreference:
+          type: string
+          description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+          nullable: true
+        bio:
+          type: string
+          description: 자기소개 (선택)
+          nullable: true
+        jobRoleId:
+          type: number
+          description: "직무 id (선택, /v1/job-roles)"
+          nullable: true
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (선택, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            oneOf:
+            - type: object
+            - type: boolean
+            - type: string
+            - type: number
+    v1-members-me-profile2128882041:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (ERROR)
+        error:
+          required:
+          - code
+          - message
+          type: object
+          properties:
+            code:
+              type: string
+              description: "에러 코드 (E 코드, 분기 기준)"
+            data:
+              description: "추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"
+              nullable: true
+              oneOf:
+              - type: object
+              - null
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
