@@ -53,6 +53,9 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
 
 - 현재 필터 체인은 공개 경로(oauth, refresh/logout, terms)만 명시하고 나머지는
   `permitAll`(TODO) 상태다. 실질 방어선은 ArgumentResolver 의 E1102.
+  이 상태에서는 `@LoginMember` 를 선언하지 않은 핸들러가 익명에게 열리므로, 보호가 필요한
+  엔드포인트는 반드시 `@LoginMember` 를 받아야 한다. 인가 정책 확정 시 `authenticated()` 전환으로
+  이 임시 방어를 대체한다.
 - 인가 정책(경로별 규칙, 역할)은 확정 시 `SecurityConfig.authorizeHttpRequests` 에 추가하고,
   403(E1103) 케이스를 API 문서에 반영한다 ([api-docs.md](api-docs.md)).
 

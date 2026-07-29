@@ -10,12 +10,12 @@
 `core.domain` 은 flat 이 아니라 **개념 단위 하위 패키지**로 나눈다.
 한 개념 패키지 안에 도메인 모델·Service·Implement(Finder/Manager/Mapper)를 함께 둔다.
 
-```
+```text
 core.domain
-└── {개념}            개념 명사 패키지. 예: profile
-    ├── {도메인 모델}   예: MemberProfile, Nickname(VO)
-    ├── {개념}Service   예: ProfileService
-    └── {Implement}     예: ProfileFinder, ProfileManager, ProfileMapper, NicknameGenerator
+└── {개념}            개념 명사 패키지. 예: member
+    ├── {도메인 모델}   예: Member, Nickname(VO)
+    ├── {개념}Service   예: MemberService
+    └── {Implement}     예: MemberFinder, MemberManager, MemberMapper, NicknameGenerator
 ```
 
 어느 패키지에 둘지 애매하면 "이 행위·상태가 누구의 불변식과 함께 움직이는가"로 판단한다.

@@ -41,8 +41,9 @@ JUnit5 `@Tag` 로 구분하고 Gradle 태스크로 선택 실행한다 (루트 `
 
 - 단위/통합의 기준: **규칙과 흐름은 mockk 단위로**, DB 제약·쿼리·트랜잭션이 얽힌 행위는 IT 로.
   같은 것을 두 층에서 반복 검증하지 않는다.
-- 동시성 레이스 같은 재현 불가 경로는 단위 테스트에서 예외 주입으로 검증한다
-  (예: `profileManager.append(...) throws DataIntegrityViolationException` → 매핑/전파 확인).
+- 동시성 레이스 자체는 테스트로 재현하지 않는다. 검증 대상은 레이스의 **결과 예외를 다루는 방식**
+  (매핑·전파·재시도)이며, 단위 테스트에서 예외 주입으로 확인한다
+  (예: `profileManager.append(...) throws DataIntegrityViolationException` → E1008 매핑 확인).
 
 ## 작성 스타일
 

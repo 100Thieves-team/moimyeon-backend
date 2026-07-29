@@ -5,7 +5,7 @@
 ## 브랜치
 
 - 기본 브랜치: `dev`. 기능 브랜치에서 작업하고 PR 로 합친다.
-- 브랜치명은 **ASCII 만**: `feat/MOI-{이슈번호}-{짧은-설명}` (예: `feat/MOI-351-error-response-docs`).
+- 브랜치명은 **ASCII 만**: `feat/MOI-{issue-number}-{short-description}` (예: `feat/MOI-351-error-response-docs`).
   Linear 가 제안하는 한글 브랜치명은 쓰지 않는다.
 - **PR 이 열린 브랜치는 rename 금지** — GitHub 이 PR 을 닫아버린다.
 
@@ -13,7 +13,7 @@
 
 **Angular 커밋 컨벤션**을 따른다. 제목·본문 한글 허용.
 
-```
+```text
 {type}({scope}): {subject}
 
 {본문: 무엇을·왜. 불릿 허용}

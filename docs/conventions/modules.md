@@ -2,7 +2,7 @@
 
 [← 허브로](README.md)
 
-```
+```text
 moimyeon/
 ├── admin/
 │   └── admin-api        어드민 API. core-api 런타임에 조립되는 비부트 모듈

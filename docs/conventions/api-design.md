@@ -48,7 +48,7 @@
 
 | 계층 | 수단 | 실패 응답 | 예 |
 | --- | --- | --- | --- |
-| 수송(요청 형태) | Bean Validation (`@Valid` 바디, 파라미터 제약 애노테이션) | 400 `E400` + 필드별 사유 | `bio @Size(max=500)`, `query @Size(1..50)` |
+| 수송(요청 형태) | Bean Validation (`@Valid` 바디, 파라미터 제약 애노테이션) | 400 `E400` + 필드별 사유 | `bio @Size(max = 500)`, `query @Size(min = 1, max = 50)` |
 | 값(도메인 VO) | VO 생성 시점 보증 | 도메인 코드 (400 `E1005` 등) | `Nickname` 형식·길이·금칙어 |
 | 교차 규칙 | Service 흐름 (`requireBusiness`) | 도메인 코드 (409 등) | 약관 동의, 닉네임 중복, 참조 존재 |
 

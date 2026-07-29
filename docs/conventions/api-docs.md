@@ -7,7 +7,7 @@
 
 ## 파이프라인
 
-```
+```text
 RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
   ├─▶ build/generated-snippets/{identifier}/*.adoc ─▶ src/docs/asciidoc/index.adoc ─▶ index.html
   └─▶ restdocs-api-spec 리소스 ─▶ :core:core-api:openapi3 ─▶ build/api-spec/openapi3.yaml (Swagger UI, dev 자동 배포)

@@ -2,7 +2,7 @@
 
 [← 허브로](README.md)
 
-```
+```text
 HTTP 요청
   │
   ▼
@@ -66,7 +66,8 @@ class ProfileFacade(
     private val catalogService: CatalogService,
 ) {
     fun update(memberId: UUID, content: ProfileContent): ProfileResponse {
-        val updated = profileService.update(memberId, content)
+        profileService.update(memberId, content) // 쓰기는 식별자만 반환
+        val updated = profileService.getProfile(memberId) // 응답 조립은 재조회로
         return ProfileResponse.from(updated, catalogService.getCompanies(updated.interestCompanyIds))
     }
 }
@@ -92,8 +93,11 @@ class ProfileFacade(
 - 교차 규칙(다른 개념과 얽힌 규칙)은 Service 가 확인한다. 단, 상대 개념의 Finder 가 노출한
   판정을 입력으로 쓴다 ([concepts.md](concepts.md)).
 - 다른 개념의 Service 호출 금지, Implement 호출은 허용.
-- 트랜잭션 경계: 여러 쓰기를 원자적으로 묶어야 하는 흐름은 Service 메서드에 `@Transactional`
-  (예: `SocialAuthService.authenticate` — 가입 + 약관 자동 동의).
+- 트랜잭션 경계: 여러 쓰기를 원자적으로 묶어야 하는 흐름은 Service 가 경계를 소유한다. 기본은
+  Service 메서드 `@Transactional`. 단, 실패한 쓰기를 잡아 **재시도**하는 흐름은 메서드 전체를 묶으면
+  rollback-only 가 된 같은 트랜잭션 안에서 재시도하게 되므로, `TransactionTemplate` 로 시도 단위
+  경계를 잡는다(예: `SocialAuthService` — 가입 + 약관 자동 동의가 한 시도, 닉네임 충돌 재시도는
+  새 트랜잭션).
 
 ## Implement (= Logic)
 

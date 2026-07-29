@@ -31,7 +31,7 @@
 
 ### 베이스 엔티티 계층
 
-```
+```text
 AbstractEntity (@MappedSuperclass, id 없음)
 │   deletedAt: LocalDateTime? (NULL=유효, private) + createdAt/updatedAt
 │   active() / isActive() / delete(now) / isDeleted()
