@@ -125,9 +125,12 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 fun patchGeneratedSchemas(yamlFile: File) {
     val mapper = Yaml.mapper()
     val root = mapper.readTree(yamlFile)
+    var errorDataPatched = 0
+    var interestCompanyIdsPatched = 0
     root.path("components").path("schemas").forEach { schema ->
         val errorData = schema.path("properties").path("error").path("properties").path("data")
         if (errorData is ObjectNode) {
+            errorDataPatched++
             errorData.remove("oneOf")
             errorData.put("type", "object")
             errorData.put("nullable", true)
@@ -135,8 +138,13 @@ fun patchGeneratedSchemas(yamlFile: File) {
         }
         val interestCompanyIds = schema.path("properties").path("interestCompanyIds")
         if (interestCompanyIds is ObjectNode && interestCompanyIds.path("type").asText() == "array") {
+            interestCompanyIdsPatched++
             interestCompanyIds.set<ObjectNode>("items", mapper.createObjectNode().put("type", "number"))
         }
     }
+    // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
+    // 미보정 스펙이 나가지 않도록 빌드를 실패시킨다.
+    check(errorDataPatched > 0) { "error.data 보정 대상을 스펙에서 찾지 못했다" }
+    check(interestCompanyIdsPatched > 0) { "interestCompanyIds 보정 대상을 스펙에서 찾지 못했다" }
     mapper.writeValue(yamlFile, root)
 }
