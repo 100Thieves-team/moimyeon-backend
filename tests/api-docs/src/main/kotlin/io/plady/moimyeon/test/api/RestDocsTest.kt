@@ -70,6 +70,9 @@ abstract class RestDocsTest {
         fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
         fieldWithPath("error.code").type(JsonFieldType.STRING).description("에러 코드 (E 코드, 분기 기준)"),
         fieldWithPath("error.message").type(JsonFieldType.STRING).description("사용자에게 표시 가능한 메시지"),
-        subsectionWithPath("error.data").optional().description("추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"),
+        // 타입을 명시하지 않으면 예시 페이로드(null/object)에서 추론되어 OpenAPI 3.0 에 유효하지 않은
+        // oneOf: [null, object] 스키마가 생성된다. OBJECT 로 고정한다(nullable 은 optional 에서 나온다).
+        subsectionWithPath("error.data").type(JsonFieldType.OBJECT).optional()
+            .description("추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"),
     )
 }

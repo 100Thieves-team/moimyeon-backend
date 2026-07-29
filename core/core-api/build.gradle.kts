@@ -1,7 +1,9 @@
 import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
 import com.epages.restdocs.apispec.gradle.PluginOauth2Configuration
+import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
+import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.servers.Server
 
 plugins {
@@ -40,7 +42,7 @@ configure<OpenApi3Extension> {
     setServers(
         listOf(
             closureOf<Server> { url = "http://localhost:8080" },
-            closureOf<Server> { url = "https://api-dev.moimyeon.plady.io" },
+            closureOf<Server> { url = "https://api.dev.moimyeon.plady.io" },
         ) as List<Closure<Server>>,
     )
     title = "Moimyeon API"
@@ -69,7 +71,30 @@ tasks.withType<OpenApi3Task>().configureEach {
         val ymlFile = layout.buildDirectory.file("api-spec/openapi3.yml").get().asFile
 
         if (yamlFile.exists()) {
+            patchGeneratedSchemas(yamlFile)
             yamlFile.copyTo(target = ymlFile, overwrite = true)
         }
     }
+}
+
+// restdocs-api-spec 필드 문서화로 표현할 수 없는 OpenAPI 3.0 계약을 생성 후 보정한다.
+// - error.data: "필드명 -> 사유" 맵이라 additionalProperties 스키마가 필요
+// - interestCompanyIds: 스칼라 배열의 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음
+fun patchGeneratedSchemas(yamlFile: File) {
+    val mapper = Yaml.mapper()
+    val root = mapper.readTree(yamlFile)
+    root.path("components").path("schemas").forEach { schema ->
+        val errorData = schema.path("properties").path("error").path("properties").path("data")
+        if (errorData is ObjectNode) {
+            errorData.remove("oneOf")
+            errorData.put("type", "object")
+            errorData.put("nullable", true)
+            errorData.set<ObjectNode>("additionalProperties", mapper.createObjectNode().put("type", "string"))
+        }
+        val interestCompanyIds = schema.path("properties").path("interestCompanyIds")
+        if (interestCompanyIds is ObjectNode && interestCompanyIds.path("type").asText() == "array") {
+            interestCompanyIds.set<ObjectNode>("items", mapper.createObjectNode().put("type", "number"))
+        }
+    }
+    mapper.writeValue(yamlFile, root)
 }

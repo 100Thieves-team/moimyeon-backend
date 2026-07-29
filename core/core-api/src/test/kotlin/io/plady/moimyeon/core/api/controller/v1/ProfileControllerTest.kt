@@ -120,6 +120,9 @@ class ProfileControllerTest : RestDocsTest() {
                         fieldWithPath("data.sigunguId").type(JsonFieldType.NUMBER).optional().description("선호 지역 시군구 id (선택)"),
                         fieldWithPath("data.interestCompanies").type(JsonFieldType.ARRAY)
                             .description("관심 회사 (최초 작성 시 빈 배열, 수정에서 입력)"),
+                        // 예시가 빈 배열이라 optional 로 두되, 아이템 스키마(companyId/name)가 스펙에 드러나게 문서화한다
+                        fieldWithPath("data.interestCompanies[].companyId").type(JsonFieldType.NUMBER).optional().description("회사 id"),
+                        fieldWithPath("data.interestCompanies[].name").type(JsonFieldType.STRING).optional().description("회사명"),
                         fieldWithPath("data.profileCompleted").type(JsonFieldType.BOOLEAN).description("필수 프로필 작성 완료 여부"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
@@ -189,6 +192,8 @@ class ProfileControllerTest : RestDocsTest() {
                     requestFields(
                         fieldWithPath("jobRoleId").type(JsonFieldType.NUMBER).optional().description("직무 id (선택, /v1/job-roles)"),
                         fieldWithPath("bio").type(JsonFieldType.STRING).optional().description("자기소개 (선택)"),
+                        // 스칼라 배열의 아이템 타입(number)은 생성기가 필드 문서화로 표현하지 못해
+                        // openapi3 태스크 후처리에서 보정한다 (build.gradle.kts patchGeneratedSchemas)
                         fieldWithPath("interestCompanyIds").type(JsonFieldType.ARRAY).optional()
                             .description("관심 회사 id 목록 (선택, /v1/companies 검색 — 전체 교체)"),
                         fieldWithPath("meetingPreference").type(JsonFieldType.STRING).optional()
