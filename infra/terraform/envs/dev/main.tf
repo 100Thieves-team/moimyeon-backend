@@ -6,6 +6,9 @@ module "dev" {
   github_repository        = var.github_repository
   github_branch            = "dev"
   github_oidc_provider_arn = var.github_oidc_provider_arn
+  # GitHub immutable OIDC subject prefix (numeric org/repo IDs).
+  # From: gh api /repos/100Thieves-team/moimyeon-backend/actions/oidc/customization/sub
+  github_deploy_immutable_repo = "100Thieves-team@278404932/moimyeon-backend@1307286446"
 
   route53_zone_id   = var.route53_zone_id
   route53_zone_name = var.route53_zone_name
