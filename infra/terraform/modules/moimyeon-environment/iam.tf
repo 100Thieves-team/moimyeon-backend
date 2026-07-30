@@ -1,0 +1,225 @@
+data "aws_iam_policy_document" "ecs_tasks_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Task execution role: pulls images, ships logs, reads SSM secrets at start.
+# ---------------------------------------------------------------------------
+resource "aws_iam_role" "task_execution" {
+  name               = "${local.name}-ecs-task-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "task_execution_managed" {
+  role       = aws_iam_role.task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "task_execution_ssm" {
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+    resources = local.ssm_parameter_arns
+  }
+
+  statement {
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "task_execution_ssm" {
+  name   = "${local.name}-read-ssm-secrets"
+  role   = aws_iam_role.task_execution.id
+  policy = data.aws_iam_policy_document.task_execution_ssm.json
+}
+
+# ---------------------------------------------------------------------------
+# Task role: the application's own AWS permissions (S3 uploads + ECS Exec).
+# ---------------------------------------------------------------------------
+resource "aws_iam_role" "task" {
+  name               = "${local.name}-ecs-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "task" {
+  statement {
+    sid = "UploadObjectRW"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+    ]
+    resources = ["${aws_s3_bucket.uploads.arn}/*"]
+  }
+
+  statement {
+    sid       = "UploadBucketList"
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.uploads.arn]
+  }
+
+  statement {
+    sid = "EcsExecChannels"
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "task" {
+  name   = "${local.name}-app-runtime"
+  role   = aws_iam_role.task.id
+  policy = data.aws_iam_policy_document.task.json
+}
+
+# ---------------------------------------------------------------------------
+# ECS container instance role (EC2 capacity).
+# ---------------------------------------------------------------------------
+resource "aws_iam_role" "ecs_instance" {
+  name               = "${local.name}-ecs-instance"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_ecs" {
+  role       = aws_iam_role.ecs_instance.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_ssm" {
+  role       = aws_iam_role.ecs_instance.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance" {
+  name = "${local.name}-ecs-instance"
+  role = aws_iam_role.ecs_instance.name
+
+  tags = local.tags
+}
+
+# ---------------------------------------------------------------------------
+# GitHub Actions deploy role (OIDC), restricted to this env's branch.
+# ---------------------------------------------------------------------------
+locals {
+  github_oidc_host = "token.actions.githubusercontent.com"
+}
+
+data "aws_iam_policy_document" "github_deploy_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.github_oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "${local.github_oidc_host}:sub"
+      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "github_deploy" {
+  name               = "${local.name}-github-deploy"
+  assume_role_policy = data.aws_iam_policy_document.github_deploy_assume_role.json
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "github_deploy" {
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeImages",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart",
+    ]
+    resources = [aws_ecr_repository.app.arn]
+  }
+
+  statement {
+    actions = [
+      "ecs:DescribeServices",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DescribeTasks",
+      "ecs:ListTasks",
+      "ecs:RegisterTaskDefinition",
+      "ecs:UpdateService",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    actions   = ["ssm:PutParameter"]
+    resources = [aws_ssm_parameter.image_uri.arn]
+  }
+
+  statement {
+    actions = ["iam:PassRole"]
+    resources = [
+      aws_iam_role.task.arn,
+      aws_iam_role.task_execution.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "github_deploy" {
+  name   = "${local.name}-github-deploy"
+  role   = aws_iam_role.github_deploy.id
+  policy = data.aws_iam_policy_document.github_deploy.json
+}

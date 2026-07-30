@@ -1,0 +1,302 @@
+name: Deploy AWS
+
+# Pattern A (ECS on EC2) continuous deploy. Push to dev/main builds the image,
+# pushes it to ECR, registers a new ECS task-definition revision with that image,
+# then rolls the service with the deployment circuit breaker (auto-rollback).
+#
+# Env is chosen by branch: dev -> dev environment, main -> live environment.
+# Each environment assumes its own OIDC deploy role whose trust policy is pinned
+# to the matching branch (infra/terraform/modules/moimyeon-environment/iam.tf).
+# Repo variables come from `scripts/sync-github-variables.sh`.
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-aws-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select environment
+        id: env
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "${GITHUB_REF_NAME}" in
+            dev)
+              echo "name=dev" >> "$GITHUB_OUTPUT"
+              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "ecr_repository_url=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_cluster=${{ vars.MOIMYEON_ECS_CLUSTER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
+              ;;
+            main)
+              echo "name=live" >> "$GITHUB_OUTPUT"
+              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "ecr_repository_url=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_cluster=${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unsupported branch ${GITHUB_REF_NAME}"
+              exit 1
+              ;;
+          esac
+
+      - name: Validate deployment variables
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(
+            "${{ steps.env.outputs.aws_region }}"
+            "${{ steps.env.outputs.role_arn }}"
+            "${{ steps.env.outputs.ecr_repository_url }}"
+            "${{ steps.env.outputs.ecs_cluster }}"
+            "${{ steps.env.outputs.ecs_service }}"
+            "${{ steps.env.outputs.ecs_container }}"
+            "${{ steps.env.outputs.image_uri_parameter }}"
+            "${{ steps.env.outputs.ecs_health_check_grace_seconds }}"
+          )
+          for value in "${required[@]}"; do
+            if [ -z "$value" ]; then
+              echo "::error::One or more MOIMYEON_* repository variables are missing for ${{ steps.env.outputs.name }}."
+              echo "::error::Run infra/terraform/scripts/sync-github-variables.sh --env ${{ steps.env.outputs.name }} after terraform apply."
+              exit 1
+            fi
+          done
+
+          if [[ ! "${{ steps.env.outputs.ecs_health_check_grace_seconds }}" =~ ^[0-9]+$ ]]; then
+            echo "::error::ecs_health_check_grace_seconds must be a positive integer."
+            exit 1
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.env.outputs.role_arn }}
+          aws-region: ${{ steps.env.outputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve image tags
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="${{ steps.env.outputs.ecr_repository_url }}"
+          env_tag="${{ steps.env.outputs.name }}"
+          sha_tag="${env_tag}-${GITHUB_SHA::12}"
+          image_uri="${repo}:${sha_tag}"
+
+          echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
+          {
+            echo "tags<<EOF"
+            echo "${image_uri}"
+            echo "${repo}:${env_tag}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.image.outputs.tags }}
+          cache-from: type=gha,scope=core-api
+          cache-to: type=gha,mode=max,scope=core-api
+
+      - name: Store deployed image URI in SSM
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "${{ steps.env.outputs.image_uri_parameter }}" \
+            --type String \
+            --value "${{ steps.image.outputs.image_uri }}" \
+            --overwrite
+
+      - name: Register task definition revision
+        id: task_def
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.ecs_service }}"
+          container="${{ steps.env.outputs.ecs_container }}"
+          image_uri="${{ steps.image.outputs.image_uri }}"
+
+          current_task_def_arn="$(aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            --query 'services[0].taskDefinition' \
+            --output text)"
+
+          aws ecs describe-task-definition \
+            --task-definition "${current_task_def_arn}" \
+            --query taskDefinition \
+            > task-definition.json
+
+          # Swap only the container image; keep every other field (env, secrets,
+          # roles, log config) that Terraform put in the definition. Drop the
+          # read-only fields the register call rejects.
+          jq \
+            --arg container "${container}" \
+            --arg image_uri "${image_uri}" '
+            .containerDefinitions |= map(
+              if .name == $container then .image = $image_uri else . end
+            )
+            | del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            )
+          ' task-definition.json > task-definition-next.json
+
+          next_task_def_arn="$(aws ecs register-task-definition \
+            --cli-input-json file://task-definition-next.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)"
+
+          echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy ECS service
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.ecs_service }}"
+          task_definition="${{ steps.task_def.outputs.arn }}"
+          grace_seconds="${{ steps.env.outputs.ecs_health_check_grace_seconds }}"
+          deployment_config='{"minimumHealthyPercent":50,"maximumPercent":200,"deploymentCircuitBreaker":{"enable":true,"rollback":true}}'
+
+          aws ecs update-service \
+            --cluster "${cluster}" \
+            --service "${service}" \
+            --task-definition "${task_definition}" \
+            --health-check-grace-period-seconds "${grace_seconds}" \
+            --deployment-configuration "${deployment_config}" \
+            --force-new-deployment \
+            > service-update.json
+
+          deadline=$((SECONDS + 1500))
+          while true; do
+            aws ecs describe-services \
+              --cluster "${cluster}" \
+              --services "${service}" \
+              > service.json
+
+            primary_task_definition="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition' service.json)"
+            primary_rollout_state="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .rolloutState // "UNKNOWN"' service.json)"
+            deployment_count="$(jq -r '.services[0].deployments | length' service.json)"
+            desired_count="$(jq -r '.services[0].desiredCount' service.json)"
+            running_count="$(jq -r '.services[0].runningCount' service.json)"
+            pending_count="$(jq -r '.services[0].pendingCount' service.json)"
+
+            echo "ECS service ${service}: rollout=${primary_rollout_state}, deployments=${deployment_count}, running=${running_count}/${desired_count}, pending=${pending_count}"
+
+            if [ "${primary_rollout_state}" = "COMPLETED" ] \
+              && [ "${primary_task_definition}" = "${task_definition}" ] \
+              && [ "${deployment_count}" = "1" ] \
+              && [ "${running_count}" = "${desired_count}" ] \
+              && [ "${pending_count}" = "0" ]; then
+              echo "ECS service ${service} is stable on ${task_definition}."
+              break
+            fi
+
+            if [ "${primary_rollout_state}" = "FAILED" ]; then
+              echo "::error::ECS deployment failed before the service became stable."
+              jq '.services[0].events[0:10]' service.json
+              exit 1
+            fi
+
+            if [ "${SECONDS}" -ge "${deadline}" ]; then
+              echo "::error::Timed out waiting for ECS service ${service} to stabilize."
+              jq '.services[0].deployments' service.json
+              jq '.services[0].events[0:10]' service.json
+              exit 1
+            fi
+
+            sleep 15
+          done
+
+      - name: Print ECS diagnostics
+        if: failure()
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.ecs_service }}"
+
+          aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            > service.json
+
+          echo "Recent ECS deployments:"
+          jq '.services[0].deployments' service.json
+
+          echo "Recent ECS events:"
+          jq '.services[0].events[0:20]' service.json
+
+          target_group_arn="$(jq -r '.services[0].loadBalancers[0].targetGroupArn // empty' service.json)"
+          if [ -n "${target_group_arn}" ]; then
+            echo "Target health:"
+            aws elbv2 describe-target-health \
+              --target-group-arn "${target_group_arn}" \
+              --query 'TargetHealthDescriptions[].{target:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason,description:TargetHealth.Description}' \
+              --output json
+          fi
+
+          task_arns="$(aws ecs list-tasks \
+            --cluster "${cluster}" \
+            --service-name "${service}" \
+            --desired-status STOPPED \
+            --max-items 5 \
+            --query 'taskArns' \
+            --output text)"
+          if [ -n "${task_arns}" ] && [ "${task_arns}" != "None" ]; then
+            echo "Recent stopped tasks:"
+            aws ecs describe-tasks \
+              --cluster "${cluster}" \
+              --tasks ${task_arns} \
+              --query 'tasks[].{taskArn:taskArn,taskDefinitionArn:taskDefinitionArn,lastStatus:lastStatus,stoppedReason:stoppedReason,stoppedAt:stoppedAt,containers:containers[].{name:name,exitCode:exitCode,reason:reason,lastStatus:lastStatus,healthStatus:healthStatus}}' \
+              --output json
+          fi
