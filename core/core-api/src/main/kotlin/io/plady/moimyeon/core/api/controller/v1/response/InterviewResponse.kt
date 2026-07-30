@@ -1,5 +1,7 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -48,6 +50,8 @@ data class InterviewRegionResponse(
 data class InterviewScheduleResponse(
     val date: LocalDate,
     val dayOfWeekLabel: String, // 토
+    // Jackson 기본 LocalTime 직렬화는 "14:00:00"(ISO) → FE 계약(HH:mm)에 맞춰 "14:00"으로 고정.
+    @get:JsonFormat(pattern = "HH:mm")
     val startTime: LocalTime,
     val startTimeLabel: String, // 오후 2:00
     val durationMinutes: Int,
@@ -70,6 +74,8 @@ data class InterviewHostResponse(
     val memberId: UUID,
     val nickname: String,
     val jobTitle: String?,
+    // Kotlin `isHost` 게터를 Jackson 이 boolean 프로퍼티 "host" 로 오인해 키가 `host` 로 나가는 것을 막고 `isHost` 로 고정.
+    @get:JsonProperty("isHost")
     val isHost: Boolean,
     val stats: InterviewHostStatsResponse,
     val aiSummary: String,
