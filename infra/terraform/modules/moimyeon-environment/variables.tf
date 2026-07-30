@@ -79,9 +79,15 @@ variable "vpc_cidr" {
 }
 
 variable "az_count" {
-  description = "Number of availability zones to use."
+  description = "Number of availability zones to use (ignored when availability_zones is set)."
   type        = number
   default     = 2
+}
+
+variable "availability_zones" {
+  description = "Explicit AZ list. Empty uses the first az_count available AZs. Set to match existing subnets when importing (dev uses 2a/2c)."
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_nat_gateway" {
@@ -94,6 +100,20 @@ variable "enable_s3_gateway_endpoint" {
   description = "Create an S3 Gateway VPC endpoint on the private-app route table (matches MOI-361 vpce-02c192c984d8874df)."
   type        = bool
   default     = true
+}
+
+# Security group descriptions are immutable in AWS (changing forces replacement).
+# Override to the existing value when importing a hand-built SG.
+variable "alb_sg_description" {
+  description = "ALB security group description (immutable)."
+  type        = string
+  default     = "Public ALB ingress"
+}
+
+variable "rds_sg_description" {
+  description = "RDS security group description (immutable)."
+  type        = string
+  default     = "RDS MySQL"
 }
 
 # ---------------------------------------------------------------------------
@@ -286,6 +306,12 @@ variable "db_skip_final_snapshot" {
   description = "Skip final RDS snapshot on destroy."
   type        = bool
   default     = false
+}
+
+variable "generate_db_password" {
+  description = "true: Terraform generates the DB password, writes it to SSM, and sets it as the RDS master password (fresh envs). false: reference an existing SSM SecureString (pre-populated with the current password) and never touch the RDS password — for absorbing an existing DB without rotating it."
+  type        = bool
+  default     = true
 }
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ upload_cors_allowed_origins = ["http://localhost:5173"]
 
 vpc_cidr    = "10.20.0.0/16"
 db_name     = "moimyeondev"
-db_username = "moimyeon"
+db_username = "moimyeon_admin"
 
 # Required for the app to boot (security-core.yml has no defaults).
 oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"

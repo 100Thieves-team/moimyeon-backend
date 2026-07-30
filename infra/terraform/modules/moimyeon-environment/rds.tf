@@ -1,11 +1,13 @@
 resource "random_password" "db" {
+  count = var.generate_db_password ? 1 : 0
+
   length           = 32
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "aws_db_subnet_group" "core" {
-  name       = "${local.name}-core-db"
+  name       = "${local.name}-rds-subnet-group"
   subnet_ids = aws_subnet.private_db[*].id
 
   tags = merge(local.tags, {
@@ -25,9 +27,11 @@ resource "aws_db_instance" "core" {
   storage_type          = "gp3"
   storage_encrypted     = true
 
-  db_name  = var.db_name
+  db_name = var.db_name
+  # generate mode: TF-managed random password. reference mode: null = unmanaged,
+  # so importing an existing DB never resets its master password.
   username = var.db_username
-  password = random_password.db.result
+  password = var.generate_db_password ? random_password.db[0].result : null
   port     = 3306
 
   db_subnet_group_name   = aws_db_subnet_group.core.name
@@ -48,11 +52,15 @@ resource "aws_db_instance" "core" {
   })
 }
 
+# Only in generate mode. In reference mode the parameter is pre-created out of
+# band (with the existing password) and its ARN is constructed in secrets.tf.
 resource "aws_ssm_parameter" "db_password" {
+  count = var.generate_db_password ? 1 : 0
+
   name        = "/${var.project}/${var.environment}/core-api/DB_PASSWORD"
   description = "RDS password for ${local.name} core-api"
   type        = "SecureString"
-  value       = random_password.db.result
+  value       = random_password.db[0].result
 
   tags = local.tags
 }

@@ -31,7 +31,7 @@ resource "aws_route_table_association" "private_mgmt" {
 resource "aws_security_group" "db_bastion" {
   count = var.enable_db_bastion ? 1 : 0
 
-  name        = "${local.name}-db-bastion"
+  name        = "${local.name}-sg-db-access"
   description = "SSM DB access bastion (no inbound; SSM is outbound)"
   vpc_id      = aws_vpc.this.id
 
@@ -51,7 +51,7 @@ resource "aws_security_group" "db_bastion" {
 resource "aws_iam_role" "db_bastion" {
   count = var.enable_db_bastion ? 1 : 0
 
-  name               = "${local.name}-ssm-db-access"
+  name               = "${local.name}-role-ssm-db-access"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 
   tags = local.tags
@@ -67,7 +67,7 @@ resource "aws_iam_role_policy_attachment" "db_bastion_ssm" {
 resource "aws_iam_instance_profile" "db_bastion" {
   count = var.enable_db_bastion ? 1 : 0
 
-  name = "${local.name}-ssm-db-access"
+  name = "${local.name}-role-ssm-db-access"
   role = aws_iam_role.db_bastion[0].name
 
   tags = local.tags

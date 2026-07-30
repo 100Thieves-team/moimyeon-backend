@@ -2,8 +2,8 @@
 # ecs_instance holds no inbound (tasks use their own ENIs in awsvpc mode).
 
 resource "aws_security_group" "alb" {
-  name        = "${local.name}-alb"
-  description = "Public ALB ingress"
+  name        = "${local.name}-sg-alb"
+  description = var.alb_sg_description
   vpc_id      = aws_vpc.this.id
 
   ingress {
@@ -80,8 +80,8 @@ resource "aws_security_group" "ecs_task" {
 }
 
 resource "aws_security_group" "rds" {
-  name        = "${local.name}-rds"
-  description = "RDS MySQL"
+  name        = "${local.name}-sg-rds"
+  description = var.rds_sg_description
   vpc_id      = aws_vpc.this.id
 
   ingress {

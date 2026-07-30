@@ -11,7 +11,7 @@ locals {
   profile   = var.environment == "live" ? "live" : "dev"
   image_tag = coalesce(var.container_image_tag, var.environment)
   image_uri = "${aws_ecr_repository.app.repository_url}:${local.image_tag}"
-  azs       = slice(data.aws_availability_zones.available.names, 0, var.az_count)
+  azs       = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, var.az_count)
 
   # moimyeon DB URL contract is host:port/db (see STORAGE_DATABASE_CORE_DB_URL).
   db_url = "${aws_db_instance.core.address}:${aws_db_instance.core.port}/${var.db_name}"

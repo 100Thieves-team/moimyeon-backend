@@ -70,9 +70,9 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "MySQL master username."
+  description = "MySQL master username (existing dev RDS master user)."
   type        = string
-  default     = "moimyeon"
+  default     = "moimyeon_admin"
 }
 
 variable "oauth_google_client_id" {

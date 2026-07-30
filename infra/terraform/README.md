@@ -94,9 +94,26 @@ Non-secret env: `SPRING_PROFILES_ACTIVE`, `SERVER_PORT`,
 `STORAGE_DATABASE_CORE_DB_URL` (host:port/db), `STORAGE_DATABASE_CORE_DB_USERNAME`,
 `GOOGLE_OAUTH_CLIENT_ID`, `AWS_REGION`.
 
-Secrets via SSM SecureString `valueFrom`: `STORAGE_DATABASE_CORE_DB_PASSWORD`
-(generated), `JWT_SECRET` (generated), `GOOGLE_OAUTH_CLIENT_SECRET` (from tfvars).
-All three are required — the app will not boot without them.
+Secrets via SSM SecureString `valueFrom` (hybrid model). All three are required —
+the app will not boot without them:
+
+| Secret | Source | Rotates on apply? |
+| --- | --- | --- |
+| `STORAGE_DATABASE_CORE_DB_PASSWORD` | **pre-existing SSM** (`generate_db_password = false`) — dev references it by ARN; the RDS master password is left untouched | No (preserved) |
+| `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
+
+**Before applying dev**, seed the DB password parameter with the value currently
+in the box's `app.env` (this is the one manual secret step of the absorb):
+
+```bash
+aws ssm put-parameter --region ap-northeast-2 \
+  --name /moimyeon/dev/core-api/DB_PASSWORD --type SecureString \
+  --value "<current app.env STORAGE_DATABASE_CORE_DB_PASSWORD>"
+```
+
+For a fresh env (e.g. live) set `generate_db_password = true` (default) and
+Terraform creates the parameter and the RDS master password itself.
 
 ## Open items / assumptions to confirm
 
