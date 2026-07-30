@@ -29,6 +29,12 @@ variable "github_oidc_provider_arn" {
   type        = string
 }
 
+variable "github_deploy_immutable_repo" {
+  description = "GitHub immutable OIDC subject prefix (org@orgid/repo@repoid) — GitHub now issues subs with numeric IDs. When set, the deploy role also trusts repo:<this>:ref:refs/heads/<branch>. Get it from: gh api /repos/<owner>/<repo>/actions/oidc/customization/sub (sub_claim_prefix)."
+  type        = string
+  default     = null
+}
+
 # ---------------------------------------------------------------------------
 # DNS / TLS
 # ---------------------------------------------------------------------------

@@ -139,6 +139,14 @@ resource "aws_iam_instance_profile" "ecs_instance" {
 # ---------------------------------------------------------------------------
 locals {
   github_oidc_host = "token.actions.githubusercontent.com"
+
+  # GitHub is migrating OIDC subjects to an immutable form that embeds numeric
+  # org/repo IDs (repo:org@id/repo@id:ref:...). Trust both the legacy name-based
+  # sub and the immutable one so the deploy works across the transition.
+  github_deploy_subs = concat(
+    ["repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"],
+    var.github_deploy_immutable_repo != null ? ["repo:${var.github_deploy_immutable_repo}:ref:refs/heads/${var.github_branch}"] : [],
+  )
 }
 
 data "aws_iam_policy_document" "github_deploy_assume_role" {
@@ -159,7 +167,7 @@ data "aws_iam_policy_document" "github_deploy_assume_role" {
     condition {
       test     = "StringLike"
       variable = "${local.github_oidc_host}:sub"
-      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"]
+      values   = local.github_deploy_subs
     }
   }
 }
