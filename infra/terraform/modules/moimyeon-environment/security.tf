@@ -105,6 +105,20 @@ resource "aws_security_group" "rds" {
     }
   }
 
+  # Transitional: keep existing app-host / bastion SGs allowed during cutover so
+  # the currently-running container does not lose its DB connection. Remove after.
+  dynamic "ingress" {
+    for_each = toset(var.extra_rds_ingress_security_group_ids)
+
+    content {
+      description     = "Transitional existing SG to MySQL"
+      from_port       = 3306
+      to_port         = 3306
+      protocol        = "tcp"
+      security_groups = [ingress.value]
+    }
+  }
+
   egress {
     description = "All outbound"
     from_port   = 0

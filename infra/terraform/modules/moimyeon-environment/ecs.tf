@@ -261,9 +261,14 @@ resource "aws_ecs_service" "app" {
     container_port   = var.container_port
   }
 
+  # ECS requires the TG to be attached to a listener before the service is
+  # created. Depend on whichever listener exists (real http/https when managed,
+  # or the provisional one during a pre-cutover absorb); count-0 ones are no-ops.
   depends_on = [
     aws_ecs_cluster_capacity_providers.this,
     aws_lb_listener.http,
+    aws_lb_listener.https,
+    aws_lb_listener.ecs_provisional,
   ]
 
   # Runtime deploy (GitHub Actions) and app-autoscaling own these; Terraform

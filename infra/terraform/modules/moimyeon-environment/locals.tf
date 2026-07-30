@@ -16,6 +16,8 @@ locals {
   # moimyeon DB URL contract is host:port/db (see STORAGE_DATABASE_CORE_DB_URL).
   db_url = "${aws_db_instance.core.address}:${aws_db_instance.core.port}/${var.db_name}"
 
+  tg_name = coalesce(var.target_group_name, "${local.name}-tg-app")
+
   app_domain_enabled       = var.app_domain_name != null && var.app_domain_name != ""
   route53_zone_lookup      = var.route53_zone_name != null && var.route53_zone_name != ""
   route53_zone_id_provided = var.route53_zone_id != null && var.route53_zone_id != ""

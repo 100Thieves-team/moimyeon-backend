@@ -220,6 +220,24 @@ variable "health_check_path" {
   default     = "/actuator/health"
 }
 
+variable "target_group_name" {
+  description = "ALB target group name. Null uses <name>-tg-app. Override when a same-named instance-type TG already exists (blue/green: use a distinct name, e.g. <name>-tg-ecs)."
+  type        = string
+  default     = null
+}
+
+variable "manage_alb_listeners" {
+  description = "Create/own the ALB HTTP/HTTPS listeners. false = leave existing listeners untouched (pre-cutover): the ECS target group is created and health-checked but receives no live traffic until the listener is switched over."
+  type        = bool
+  default     = true
+}
+
+variable "provisional_ecs_listener_port" {
+  description = "When set, create an HTTP listener on this port forwarding to the ECS target group. ECS requires a TG to be attached to a listener before a service can use it; this provides that during a pre-cutover absorb (manage_alb_listeners=false) without touching the live :80/:443 listeners. Not opened in the ALB SG, so it is health-check/internal only."
+  type        = number
+  default     = null
+}
+
 variable "enable_container_health_check" {
   description = "Add a container-level Docker HEALTHCHECK. Off by default: the eclipse-temurin JRE image has no wget/curl, so rollout health is judged by the ALB target group instead."
   type        = bool
@@ -322,6 +340,12 @@ variable "enable_db_bastion" {
   description = "Create the private SSM-managed bastion used to tunnel to RDS (matches moimyeon-dev-role-ssm-db-access)."
   type        = bool
   default     = true
+}
+
+variable "extra_rds_ingress_security_group_ids" {
+  description = "Additional SG IDs allowed to reach RDS on 3306. Transitional: keep the existing app-host / bastion SGs allowed during a blue/green absorb so the current container keeps its DB connection. Remove after cutover."
+  type        = list(string)
+  default     = []
 }
 
 variable "bastion_instance_type" {

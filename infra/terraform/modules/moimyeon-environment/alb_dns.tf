@@ -13,7 +13,7 @@ resource "aws_lb" "app" {
 }
 
 resource "aws_lb_target_group" "app" {
-  name        = "${local.name}-tg-app"
+  name        = local.tg_name
   port        = var.container_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -34,11 +34,13 @@ resource "aws_lb_target_group" "app" {
   }
 
   tags = merge(local.tags, {
-    Name = "${local.name}-tg-app"
+    Name = local.tg_name
   })
 }
 
 resource "aws_lb_listener" "http" {
+  count = var.manage_alb_listeners ? 1 : 0
+
   load_balancer_arn = aws_lb.app.arn
   port              = 80
   protocol          = "HTTP"
@@ -120,13 +122,32 @@ resource "aws_acm_certificate_validation" "app" {
 }
 
 resource "aws_lb_listener" "https" {
-  count = local.https_enabled ? 1 : 0
+  count = var.manage_alb_listeners && local.https_enabled ? 1 : 0
 
   load_balancer_arn = aws_lb.app.arn
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = aws_acm_certificate_validation.app[0].certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+
+  tags = local.tags
+}
+
+# Provisional listener so the ECS service can attach the otherwise-unrouted TG
+# before the real listener cutover. Not reachable externally (ALB SG allows only
+# 80/443); it exists solely to satisfy ECS's "TG must have a load balancer" rule
+# and to let the ALB run TG health checks against the new tasks.
+resource "aws_lb_listener" "ecs_provisional" {
+  count = var.provisional_ecs_listener_port != null ? 1 : 0
+
+  load_balancer_arn = aws_lb.app.arn
+  port              = var.provisional_ecs_listener_port
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
