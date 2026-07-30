@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-29",
-                        "datetime" : "2026-07-29T16:19:20.441766109",
+                        "date" : "2026-07-30",
+                        "datetime" : "2026-07-30T14:59:26.867848896",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-29",
-                        "datetime" : "2026-07-29T16:19:20.6851234",
+                        "date" : "2026-07-30",
+                        "datetime" : "2026-07-30T14:59:27.0260291",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -118,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 searchCompanies-e400:
                   value: |-
@@ -149,6 +149,101 @@ paths:
                           "companyId" : 1,
                           "name" : "달빛페이"
                         } ]
+                      },
+                      "error" : null
+                    }
+  /v1/interviews:
+    post:
+      tags:
+      - v1
+      summary: 면접 생성
+      description: "생성 위저드(B·06~B·09)의 입력을 한 번에 받아 면접을 만들고 즉시 모집(RECRUITING) 상태로 등\
+        록한다(§4.8). 회사·직무·지역·이력서는 카탈로그/업로드 참조 id 를 받는다. (모킹: 도메인 구현 전까지 고정 식별자(interviewId=1024)를\
+        \ 반환한다)"
+      operationId: createInterview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-interviews516247986"
+            examples:
+              createInterview:
+                value: |-
+                  {
+                    "companyId" : 1,
+                    "jobPostingId" : 1,
+                    "jobRoleId" : 1,
+                    "round" : "FIRST",
+                    "type" : "JOB",
+                    "method" : "OFFLINE",
+                    "sigunguId" : 1,
+                    "minParticipants" : 3,
+                    "maxParticipants" : 6,
+                    "schedule" : {
+                      "date" : "2026-08-01",
+                      "startTime" : "14:00",
+                      "durationMinutes" : 90
+                    },
+                    "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+                    "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
+                    "resumeId" : 90001,
+                    "discloseResumeOriginal" : true
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-interviews2000552289"
+              examples:
+                createInterview:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "interviewId" : 1024,
+                        "status" : "RECRUITING"
+                      },
+                      "error" : null
+                    }
+  /v1/job-posting-requests:
+    post:
+      tags:
+      - v1
+      summary: 채용 공고 링크 추가 요청
+      description: "'찾는 공고가 없나요? 공고 링크를 남기면 추가해 드려요'(B·06, §4.1) — 목록에 없는 공고를 링크로\
+        \ 접수한다. 회사 미선택 상태에서도 요청할 수 있다. url 누락·형식 오류는 400(E400)으로 응답한다. (모킹: 접수(RECEIVED)만\
+        \ 반환하고 고정 requestId(5001)를 돌려준다)"
+      operationId: requestJobPosting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-job-posting-requests-1605368061"
+            examples:
+              requestJobPosting:
+                value: |-
+                  {
+                    "companyId" : 43429,
+                    "url" : "https://company.example.com/careers/12345",
+                    "memo" : "결제플랫폼 프론트엔드 공고예요."
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-job-posting-requests2037882423"
+              examples:
+                requestJobPosting:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "requestId" : 5001,
+                        "status" : "RECEIVED"
                       },
                       "error" : null
                     }
@@ -223,6 +318,40 @@ paths:
                       },
                       "error" : null
                     }
+  /v1/resumes:
+    post:
+      tags:
+      - v1
+      summary: 이력서 업로드
+      description: "소개와 이력서(B·08) 단계의 이력서 PDF 업로드. multipart/form-data 로 파일 파트(file)를\
+        \ 받는다. 업로드 직후 AI 요약은 PROCESSING 이며, 이후 이력서 조회로 폴링해 DONE 을 확인한다(§4.5). (모킹\
+        : 파일을 저장하지 않고 메타데이터만 에코하며 고정 resumeId(90001)를 반환한다)"
+      operationId: uploadResume
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-resumes-1674245103"
+              examples:
+                uploadResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "resumeId" : 90001,
+                        "fileName" : "김민수_이력서.pdf",
+                        "fileSize" : 26,
+                        "fileSizeLabel" : "26B",
+                        "status" : "UPLOADED",
+                        "aiSummary" : {
+                          "status" : "PROCESSING",
+                          "text" : null
+                        }
+                      },
+                      "error" : null
+                    }
   /v1/terms:
     get:
       tags:
@@ -245,7 +374,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "1bbb0cd6-5420-49ab-b9ae-872020d495ff",
+                          "termsId" : "b480f429-dcf7-45b2-9161-5d29ddefac0c",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -253,7 +382,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "d9bb025a-a900-4e2b-9ba2-0268b55c65b2",
+                          "termsId" : "0d1cb8cc-9a25-4f11-a607-1f13d1da5f38",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -325,7 +454,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -337,6 +466,173 @@ paths:
                         "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
                         "data" : null
                       }
+                    }
+  /v1/interviews/form-options:
+    get:
+      tags:
+      - v1
+      summary: 면접 생성 폼 선택지 조회
+      description: 면접 정보·진행 방식(B·06·B·07) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다.
+        라벨을 서버가 소유하도록 목으로 제공한다.
+      operationId: interviewFormOptions
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-interviews-form-options-38619118"
+              examples:
+                interviewFormOptions:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "rounds" : [ {
+                          "code" : "FIRST",
+                          "label" : "1차"
+                        }, {
+                          "code" : "SECOND",
+                          "label" : "2차"
+                        }, {
+                          "code" : "THIRD",
+                          "label" : "3차"
+                        }, {
+                          "code" : "FINAL",
+                          "label" : "최종"
+                        } ],
+                        "types" : [ {
+                          "code" : "JOB",
+                          "label" : "직무 면접"
+                        }, {
+                          "code" : "CULTURE_FIT",
+                          "label" : "컬처핏"
+                        }, {
+                          "code" : "EXECUTIVE",
+                          "label" : "임원 면접"
+                        }, {
+                          "code" : "TECH_ASSIGNMENT",
+                          "label" : "기술 과제"
+                        } ],
+                        "methods" : [ {
+                          "code" : "ONLINE",
+                          "label" : "온라인",
+                          "hint" : "화상 링크는 진행이 확정되면 만들어져요."
+                        }, {
+                          "code" : "OFFLINE",
+                          "label" : "오프라인",
+                          "hint" : "지역만 정하면 돼요."
+                        } ],
+                        "durations" : [ {
+                          "minutes" : 30,
+                          "label" : "30분"
+                        }, {
+                          "minutes" : 60,
+                          "label" : "60분"
+                        }, {
+                          "minutes" : 90,
+                          "label" : "90분"
+                        }, {
+                          "minutes" : 120,
+                          "label" : "120분"
+                        } ],
+                        "participantConstraints" : {
+                          "min" : 2,
+                          "max" : 8
+                        }
+                      },
+                      "error" : null
+                    }
+  /v1/interviews/{interviewId}:
+    get:
+      tags:
+      - v1
+      summary: 면접 상세 조회
+      description: "생성 완료(B·10) 및 상세 화면. 공개 데이터만 노출한다(§6). 방장 블록의 신뢰 지표는 공개 프로필 API\
+        \ 와 같은 값을 미러링한다. (모킹: 도메인 구현 전까지 figma 목업 값 고정 반환)"
+      operationId: interviewDetail
+      parameters:
+      - name: interviewId
+        in: path
+        description: 조회할 면접 id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-interviews-interviewId-580137958"
+              examples:
+                interviewDetail:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "interviewId" : 1024,
+                        "status" : "RECRUITING",
+                        "statusLabel" : "모집 중",
+                        "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+                        "company" : {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        },
+                        "jobPosting" : {
+                          "jobPostingId" : 1,
+                          "title" : "프론트엔드 개발자 (결제플랫폼)"
+                        },
+                        "jobRole" : {
+                          "jobRoleId" : 1,
+                          "code" : "FRONTEND_DEVELOPER",
+                          "displayName" : "프론트엔드 개발"
+                        },
+                        "round" : "FIRST",
+                        "roundLabel" : "1차 면접",
+                        "type" : "JOB",
+                        "typeLabel" : "직무 면접",
+                        "method" : "OFFLINE",
+                        "methodLabel" : "오프라인",
+                        "region" : {
+                          "sigunguId" : 1,
+                          "label" : "서울 강남구"
+                        },
+                        "schedule" : {
+                          "date" : "2026-08-01",
+                          "dayOfWeekLabel" : "토",
+                          "startTime" : "14:00",
+                          "startTimeLabel" : "오후 2:00",
+                          "durationMinutes" : 90,
+                          "durationLabel" : "90분",
+                          "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+                        },
+                        "description" : "실제 1차 면접 형식 그대로 진행해요. 한 사람씩 30분 모의면접을 보고, 끝나면 다 같이 피드백을 나눠요. 결제·정산 도메인 질문 위주로 준비할게요.",
+                        "notice" : "신청할 땐 이력서를 올려요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
+                        "recruit" : {
+                          "current" : 1,
+                          "min" : 3,
+                          "max" : 6,
+                          "confirmable" : false,
+                          "remainingToConfirm" : 2,
+                          "progressRatio" : 0.17,
+                          "message" : "2명이 더 모이면 확정할 수 있어요"
+                        },
+                        "host" : {
+                          "memberId" : "00000000-0000-0000-0000-000000000001",
+                          "nickname" : "집요한 수달 07",
+                          "jobTitle" : "프론트엔드 개발",
+                          "isHost" : true,
+                          "stats" : {
+                            "completedInterviewCount" : 12,
+                            "attendanceRate" : 96,
+                            "averageRating" : 4.8
+                          },
+                          "aiSummary" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심, 디자인 시스템 구축 경험."
+                        },
+                        "viewerRole" : "HOST"
+                      },
+                      "error" : null
                     }
   /v1/members/me:
     get:
@@ -361,7 +657,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "bfe7181d-3198-4c0c-a3bb-a5f4eb4bba3a",
+                        "memberId" : "8d40203a-5fa4-454a-b784-91ea45fcd9ef",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
@@ -375,7 +671,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -393,7 +689,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -427,7 +723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -493,6 +789,103 @@ paths:
                       },
                       "error" : null
                     }
+  /v1/resumes/{resumeId}:
+    get:
+      tags:
+      - v1
+      summary: 이력서 조회
+      description: "업로드한 이력서의 상태와 AI 요약을 조회한다. 업로드 후 요약 완료(DONE)를 폴링하는 용도. (모킹: 조회\
+        \ 시 항상 요약 완료(DONE)를 반환한다)"
+      operationId: resumeDetail
+      parameters:
+      - name: resumeId
+        in: path
+        description: 조회할 이력서 id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-resumes-resumeId1899319176"
+              examples:
+                resumeDetail:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "resumeId" : 90001,
+                        "fileName" : "김민수_이력서.pdf",
+                        "fileSize" : 245760,
+                        "fileSizeLabel" : "240KB",
+                        "status" : "UPLOADED",
+                        "aiSummary" : {
+                          "status" : "DONE",
+                          "text" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심으로 일했고, 디자인 시스템 구축 경험이 있어요."
+                        }
+                      },
+                      "error" : null
+                    }
+  /v1/companies/{companyId}/job-postings:
+    get:
+      tags:
+      - v1
+      summary: 회사별 채용 공고 목록 조회
+      description: "면접 정보(B·06)에서 회사를 고르면 그 회사의 채용 공고 목록이 채워진다. 공고를 고르면 직무 셀렉트가 자동\
+        으로 채워질 수 있다. (모킹: '공고' 카탈로그 도입이 미확정이라 회사와 무관하게 고정 3건을 반환하되 요청 companyId 를\
+        \ 각 공고에 반영한다)"
+      operationId: jobPostings
+      parameters:
+      - name: companyId
+        in: path
+        description: 공고를 조회할 회사 id (/v1/companies 검색 결과)
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-companies-companyId-job-postings1023174911"
+              examples:
+                jobPostings:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "jobPostings" : [ {
+                          "jobPostingId" : 1,
+                          "companyId" : 43429,
+                          "title" : "프론트엔드 개발자 (결제플랫폼)",
+                          "jobRoleId" : 1,
+                          "jobRoleName" : "프론트엔드 개발",
+                          "sourceUrl" : "https://dalbitpay.example.com/careers/fe-pay",
+                          "status" : "OPEN"
+                        }, {
+                          "jobPostingId" : 2,
+                          "companyId" : 43429,
+                          "title" : "백엔드 개발자 (정산)",
+                          "jobRoleId" : 2,
+                          "jobRoleName" : "백엔드 개발",
+                          "sourceUrl" : "https://dalbitpay.example.com/careers/be-settle",
+                          "status" : "OPEN"
+                        }, {
+                          "jobPostingId" : 3,
+                          "companyId" : 43429,
+                          "title" : "프로덕트 디자이너",
+                          "jobRoleId" : 3,
+                          "jobRoleName" : "프로덕트 디자인",
+                          "sourceUrl" : "https://dalbitpay.example.com/careers/product-designer",
+                          "status" : "OPEN"
+                        } ]
+                      },
+                      "error" : null
+                    }
   /v1/members/me/nickname:
     put:
       tags:
@@ -547,7 +940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateNickname-e1005:
                   value: |-
@@ -565,7 +958,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateNickname-e1102:
                   value: |-
@@ -583,7 +976,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateNickname-e1007:
                   value: |-
@@ -660,7 +1053,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "28f24ef9-1a42-4c4a-af59-e57318ad9498",
+                        "memberId" : "ae19f3ab-7669-43f2-b64d-0ad8e0533365",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -681,7 +1074,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -699,7 +1092,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -717,7 +1110,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 updateProfile-e1303:
                   value: |-
@@ -799,7 +1192,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 createProfile-e1301:
                   value: |-
@@ -830,7 +1223,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 createProfile-e1201:
                   value: |-
@@ -866,7 +1259,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "aaadc56f-a892-4849-b646-75a1183e2bfb",
+                        "memberId" : "c48bf400-c379-4313-9f9b-a96bbe74459b",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "BOTH",
@@ -881,7 +1274,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me910352763"
               examples:
                 createProfile-e1102:
                   value: |-
@@ -923,7 +1316,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "ac08171f-15a3-4977-a9f4-2a428dc72652",
+                        "memberId" : "39013756-0d37-490b-9ea8-aab74c638194",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -961,6 +1354,325 @@ paths:
                     }
 components:
   schemas:
+    v1-job-posting-requests2037882423:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - requestId
+          - status
+          type: object
+          properties:
+            requestId:
+              type: number
+              description: 접수된 요청 id
+            status:
+              type: string
+              description: 접수 상태 (RECEIVED)
+    v1-companies1839974379:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - companies
+          type: object
+          properties:
+            companies:
+              type: array
+              description: 검색 결과 (최대 20건)
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id (관심 회사 저장에 사용)
+                  name:
+                    type: string
+                    description: 회사명
+    v1-companies-companyId-job-postings1023174911:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - jobPostings
+          type: object
+          properties:
+            jobPostings:
+              type: array
+              description: 채용 공고 목록
+              items:
+                required:
+                - companyId
+                - jobPostingId
+                - status
+                - title
+                type: object
+                properties:
+                  sourceUrl:
+                    type: string
+                    description: 원본 공고 링크 (선택)
+                    nullable: true
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  jobPostingId:
+                    type: number
+                    description: 채용 공고 id
+                  jobRoleId:
+                    type: number
+                    description: "매핑된 직무 id (선택, 직무 셀렉트 자동 채움)"
+                    nullable: true
+                  title:
+                    type: string
+                    description: 공고 제목
+                  jobRoleName:
+                    type: string
+                    description: 매핑된 직무명 (선택)
+                    nullable: true
+                  status:
+                    type: string
+                    description: 공고 상태 (OPEN)
+    v1-members-me-profile889777487:
+      type: object
+      properties:
+        sigunguId:
+          type: number
+          description: "선호 지역 시군구 id (선택, /v1/regions)"
+          nullable: true
+        meetingPreference:
+          type: string
+          description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+          nullable: true
+        bio:
+          type: string
+          description: 자기소개 (선택)
+          nullable: true
+        jobRoleId:
+          type: number
+          description: "직무 id (선택, /v1/job-roles)"
+          nullable: true
+    v1-nicknames-availability-1805856748:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - available
+          type: object
+          properties:
+            available:
+              type: boolean
+              description: 사용 가능 여부 (중복이면 false)
+    v1-members-me-profile-1915001008:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interestCompanies
+          - memberId
+          - profileCompleted
+          type: object
+          properties:
+            sigunguId:
+              type: number
+              description: 선호 지역 시군구 id (선택)
+              nullable: true
+            meetingPreference:
+              type: string
+              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
+              nullable: true
+            interestCompanies:
+              type: array
+              description: 관심 회사
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  name:
+                    type: string
+                    description: 회사명
+            profileCompleted:
+              type: boolean
+              description: 필수 프로필 작성 완료 여부
+            bio:
+              type: string
+              description: 자기소개 (선택)
+              nullable: true
+            jobRoleId:
+              type: number
+              description: 직무 id (선택)
+              nullable: true
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+    v1-members-me-nickname198252895:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+    v1-job-posting-requests-1605368061:
+      required:
+      - url
+      type: object
+      properties:
+        companyId:
+          type: number
+          description: "회사 id (선택, 미선택 상태에서도 요청 가능)"
+          nullable: true
+        memo:
+          type: string
+          description: "운영 전달용 메모 (선택, 최대 500자)"
+          nullable: true
+        url:
+          type: string
+          description: "추가를 요청하는 공고 링크 (필수, 최대 2000자)"
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
+    v1-members-me-766176819:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - email
+          - memberId
+          - nickname
+          - profileCompleted
+          - status
+          type: object
+          properties:
+            profileCompleted:
+              type: boolean
+              description: 필수 프로필 작성 완료 여부
+            nickname:
+              type: string
+              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
+            email:
+              type: string
+              description: 대표 이메일
+            status:
+              type: string
+              description: 회원 상태 (ACTIVE | RESTRICTED | WITHDRAWN)
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
+    v1-nicknames-suggestion679533277:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - nickname
+          type: object
+          properties:
+            nickname:
+              type: string
+              description: 추천 닉네임 (중복 아님 보장)
+    v1-interviews2000552289:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interviewId
+          - status
+          type: object
+          properties:
+            interviewId:
+              type: number
+              description: 생성된 면접 id (상세로 이동에 사용)
+            status:
+              type: string
+              description: 면접 상태 (RECRUITING)
     v1-members-me-profile902443370:
       required:
       - result
@@ -1012,7 +1724,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-companies1839974379:
+    v1-interviews-form-options-38619118:
       required:
       - result
       type: object
@@ -1022,44 +1734,89 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - companies
+          - durations
+          - methods
+          - rounds
+          - types
           type: object
           properties:
-            companies:
+            types:
               type: array
-              description: 검색 결과 (최대 20건)
+              description: 면접 유형 선택지
               items:
                 required:
-                - companyId
-                - name
+                - code
+                - label
                 type: object
                 properties:
-                  companyId:
-                    type: number
-                    description: 회사 id (관심 회사 저장에 사용)
-                  name:
+                  code:
                     type: string
-                    description: 회사명
-    v1-members-me-profile889777487:
-      type: object
-      properties:
-        sigunguId:
-          type: number
-          description: "선호 지역 시군구 id (선택, /v1/regions)"
-          nullable: true
-        meetingPreference:
-          type: string
-          description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-          nullable: true
-        bio:
-          type: string
-          description: 자기소개 (선택)
-          nullable: true
-        jobRoleId:
-          type: number
-          description: "직무 id (선택, /v1/job-roles)"
-          nullable: true
-    v1-nicknames-availability-1805856748:
+                    description: 유형 코드
+                  label:
+                    type: string
+                    description: 유형 표시명
+            methods:
+              type: array
+              description: 진행 방식 선택지
+              items:
+                required:
+                - code
+                - hint
+                - label
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: 진행 방식 코드 (ONLINE | OFFLINE)
+                  hint:
+                    type: string
+                    description: 선택 시 안내 문구
+                  label:
+                    type: string
+                    description: 진행 방식 표시명
+            durations:
+              type: array
+              description: 예상 소요 시간 선택지
+              items:
+                required:
+                - label
+                - minutes
+                type: object
+                properties:
+                  minutes:
+                    type: number
+                    description: 소요 시간(분)
+                  label:
+                    type: string
+                    description: 소요 시간 표시명
+            participantConstraints:
+              required:
+              - max
+              - min
+              type: object
+              properties:
+                min:
+                  type: number
+                  description: 허용 최소 인원
+                max:
+                  type: number
+                  description: 허용 최대 인원
+            rounds:
+              type: array
+              description: 면접 회차 선택지
+              items:
+                required:
+                - code
+                - label
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: 회차 코드
+                  label:
+                    type: string
+                    description: 회차 표시명
+    v1-resumes-1674245103:
       required:
       - result
       type: object
@@ -1069,12 +1826,40 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - available
+          - fileName
+          - fileSize
+          - fileSizeLabel
+          - resumeId
+          - status
           type: object
           properties:
-            available:
-              type: boolean
-              description: 사용 가능 여부 (중복이면 false)
+            fileName:
+              type: string
+              description: 원본 파일명
+            resumeId:
+              type: number
+              description: 이력서 id (면접 생성 시 참조)
+            fileSize:
+              type: number
+              description: 파일 크기(바이트)
+            aiSummary:
+              required:
+              - status
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: AI 요약 본문 (PROCESSING 중에는 null)
+                  nullable: true
+                status:
+                  type: string
+                  description: AI 요약 상태 (PROCESSING | DONE | FAILED)
+            fileSizeLabel:
+              type: string
+              description: 파일 크기 표시명 (240KB)
+            status:
+              type: string
+              description: 이력서 상태 (UPLOADED)
     v1-members-me-nickname-346517390:
       required:
       - nickname
@@ -1131,58 +1916,6 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
-    v1-members-me-profile-1915001008:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - interestCompanies
-          - memberId
-          - profileCompleted
-          type: object
-          properties:
-            sigunguId:
-              type: number
-              description: 선호 지역 시군구 id (선택)
-              nullable: true
-            meetingPreference:
-              type: string
-              description: "진행 방식 선호 (ONLINE | OFFLINE | BOTH, 선택)"
-              nullable: true
-            interestCompanies:
-              type: array
-              description: 관심 회사
-              items:
-                required:
-                - companyId
-                - name
-                type: object
-                properties:
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  name:
-                    type: string
-                    description: 회사명
-            profileCompleted:
-              type: boolean
-              description: 필수 프로필 작성 완료 여부
-            bio:
-              type: string
-              description: 자기소개 (선택)
-              nullable: true
-            jobRoleId:
-              type: number
-              description: 직무 id (선택)
-              nullable: true
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
     v1-regions1871099627:
       required:
       - result
@@ -1227,50 +1960,6 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
-    get-exampleValue191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
-    v1-members-me-nickname198252895:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
     v1-terms1673199050:
       required:
       - result
@@ -1319,6 +2008,224 @@ components:
                   content:
                     type: string
                     description: 약관 본문
+    v1-interviews-interviewId-580137958:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - interviewId
+          - method
+          - methodLabel
+          - notice
+          - round
+          - roundLabel
+          - status
+          - statusLabel
+          - title
+          - viewerRole
+          type: object
+          properties:
+            method:
+              type: string
+              description: 진행 방식 코드 (ONLINE | OFFLINE)
+            viewerRole:
+              type: string
+              description: 조회자 역할 (HOST | PARTICIPANT | GUEST)
+            description:
+              type: string
+              description: 면접 소개 (선택)
+              nullable: true
+            jobPosting:
+              type: object
+              properties:
+                jobPostingId:
+                  type: number
+                  description: 채용 공고 id (없으면 미노출)
+                  nullable: true
+                title:
+                  type: string
+                  description: 채용 공고 제목
+                  nullable: true
+            type:
+              type: string
+              description: 면접 유형 코드 (선택)
+              nullable: true
+            title:
+              type: string
+              description: 면접 제목
+            statusLabel:
+              type: string
+              description: 상태 표시명 (모집 중)
+            schedule:
+              required:
+              - date
+              - dayOfWeekLabel
+              - displayLabel
+              - durationLabel
+              - durationMinutes
+              - startTime
+              - startTimeLabel
+              type: object
+              properties:
+                displayLabel:
+                  type: string
+                  description: 일정 전체 표시 문구
+                date:
+                  type: string
+                  description: 면접 날짜 (yyyy-MM-dd)
+                durationMinutes:
+                  type: number
+                  description: 예상 소요 시간(분)
+                startTimeLabel:
+                  type: string
+                  description: 시작 시각 표시명 (오후 2:00)
+                startTime:
+                  type: string
+                  description: 시작 시각 (HH:mm)
+                dayOfWeekLabel:
+                  type: string
+                  description: 요일 표시명 (토)
+                durationLabel:
+                  type: string
+                  description: 소요 시간 표시명 (90분)
+            interviewId:
+              type: number
+              description: 면접 id
+            round:
+              type: string
+              description: 면접 회차 코드
+            recruit:
+              required:
+              - confirmable
+              - current
+              - max
+              - message
+              - min
+              - progressRatio
+              - remainingToConfirm
+              type: object
+              properties:
+                progressRatio:
+                  type: number
+                  description: 모집 진행률 (0.0~1.0)
+                remainingToConfirm:
+                  type: number
+                  description: 확정까지 남은 인원
+                current:
+                  type: number
+                  description: 현재 인원 (방장 겸 참여자 포함)
+                min:
+                  type: number
+                  description: 최소 인원
+                max:
+                  type: number
+                  description: 최대 인원
+                confirmable:
+                  type: boolean
+                  description: 확정 가능 여부 (최소 인원 충족)
+                message:
+                  type: string
+                  description: 모집 상태 안내 문구
+            host:
+              required:
+              - aiSummary
+              - isHost
+              - memberId
+              - nickname
+              type: object
+              properties:
+                isHost:
+                  type: boolean
+                  description: 조회자가 방장인지 여부
+                stats:
+                  required:
+                  - attendanceRate
+                  - averageRating
+                  - completedInterviewCount
+                  type: object
+                  properties:
+                    completedInterviewCount:
+                      type: number
+                      description: 방장 완료 면접 수
+                    averageRating:
+                      type: number
+                      description: 방장 평균 별점
+                    attendanceRate:
+                      type: number
+                      description: 방장 출석률 (%)
+                aiSummary:
+                  type: string
+                  description: 방장 이력 AI 요약
+                jobTitle:
+                  type: string
+                  description: 방장 직무 (선택)
+                  nullable: true
+                nickname:
+                  type: string
+                  description: 방장 닉네임
+                memberId:
+                  type: string
+                  description: 방장 회원 식별자 (UUID)
+            methodLabel:
+              type: string
+              description: 진행 방식 표시명
+            jobRole:
+              required:
+              - code
+              - displayName
+              - jobRoleId
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 직무 코드
+                displayName:
+                  type: string
+                  description: 직무 표시명
+                jobRoleId:
+                  type: number
+                  description: 직무 id
+            typeLabel:
+              type: string
+              description: 면접 유형 표시명 (선택)
+              nullable: true
+            company:
+              required:
+              - companyId
+              - name
+              type: object
+              properties:
+                companyId:
+                  type: number
+                  description: 회사 id
+                name:
+                  type: string
+                  description: 회사명
+            region:
+              type: object
+              properties:
+                sigunguId:
+                  type: number
+                  description: 지역 시군구 id (OFFLINE 일 때)
+                  nullable: true
+                label:
+                  type: string
+                  description: 지역 표시명 (서울 강남구)
+                  nullable: true
+            roundLabel:
+              type: string
+              description: 면접 회차 표시명
+            notice:
+              type: string
+              description: 신청 전 안내 문구
+            status:
+              type: string
+              description: 면접 상태 (RECRUITING)
     v1-members-memberId-profile-573351263:
       required:
       - result
@@ -1403,47 +2310,80 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    post-1780624183:
+    v1-interviews516247986:
       required:
-      - data
+      - companyId
+      - discloseResumeOriginal
+      - jobRoleId
+      - maxParticipants
+      - method
+      - minParticipants
+      - resumeId
+      - round
+      - title
       type: object
       properties:
-        data:
+        method:
           type: string
-          description: ExampleBody Data Field
-    v1-members-me-766176819:
-      required:
-      - result
-      type: object
-      properties:
-        result:
+          description: 진행 방식 (ONLINE | OFFLINE)
+        description:
           type: string
-          description: 처리 결과 (SUCCESS)
-        data:
+          description: "면접 소개 (선택, 최대 1000자)"
+          nullable: true
+        title:
+          type: string
+          description: "면접 제목 (필수, 최대 60자)"
+        type:
+          type: string
+          description: "면접 유형 (JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT, 선택\
+            )"
+          nullable: true
+        minParticipants:
+          type: number
+          description: "최소 인원 (방장 포함, 2 이상)"
+        maxParticipants:
+          type: number
+          description: "최대 인원 (8 이하, 최소 인원 이상)"
+        schedule:
           required:
-          - email
-          - memberId
-          - nickname
-          - profileCompleted
-          - status
+          - date
+          - durationMinutes
+          - startTime
           type: object
           properties:
-            profileCompleted:
-              type: boolean
-              description: 필수 프로필 작성 완료 여부
-            nickname:
+            date:
               type: string
-              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
-            email:
+              description: 면접 날짜 (yyyy-MM-dd)
+            durationMinutes:
+              type: number
+              description: 예상 소요 시간(분)
+            startTime:
               type: string
-              description: 대표 이메일
-            status:
-              type: string
-              description: 회원 상태 (ACTIVE | RESTRICTED | WITHDRAWN)
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
-    v1-members-me-nickname910352763:
+              description: 시작 시각 (HH:mm)
+        companyId:
+          type: number
+          description: "회사 id (필수, /v1/companies 검색)"
+        discloseResumeOriginal:
+          type: boolean
+          description: 이력서 원본 공개 여부 (기본 true)
+        sigunguId:
+          type: number
+          description: "지역 시군구 id (OFFLINE 일 때, /v1/regions)"
+          nullable: true
+        resumeId:
+          type: number
+          description: 업로드한 이력서 id (POST /v1/resumes)
+        round:
+          type: string
+          description: 면접 회차 (FIRST | SECOND | THIRD | FINAL)
+        jobPostingId:
+          type: number
+          description: "채용 공고 id (선택, /v1/companies/{companyId}/job-postings)"
+          nullable: true
+        jobRoleId:
+          type: number
+          description: "직무 id (필수, /v1/job-roles)"
+    v1-members-me910352763:
       required:
       - result
       type: object
@@ -1494,7 +2434,7 @@ components:
           nullable: true
           items:
             type: number
-    v1-nicknames-suggestion679533277:
+    v1-resumes-resumeId1899319176:
       required:
       - result
       type: object
@@ -1504,12 +2444,40 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - nickname
+          - fileName
+          - fileSize
+          - fileSizeLabel
+          - resumeId
+          - status
           type: object
           properties:
-            nickname:
+            fileName:
               type: string
-              description: 추천 닉네임 (중복 아님 보장)
+              description: 원본 파일명
+            resumeId:
+              type: number
+              description: 이력서 id
+            fileSize:
+              type: number
+              description: 파일 크기(바이트)
+            aiSummary:
+              required:
+              - status
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: AI 요약 본문 (DONE 이면 채워짐)
+                  nullable: true
+                status:
+                  type: string
+                  description: AI 요약 상태 (PROCESSING | DONE | FAILED)
+            fileSizeLabel:
+              type: string
+              description: 파일 크기 표시명 (240KB)
+            status:
+              type: string
+              description: 이력서 상태 (UPLOADED)
   securitySchemes:
     oauth2:
       type: oauth2
