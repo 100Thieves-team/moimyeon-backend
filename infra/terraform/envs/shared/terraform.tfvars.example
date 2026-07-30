@@ -1,0 +1,14 @@
+aws_region        = "ap-northeast-2"
+project           = "moimyeon"
+github_repository = "100Thieves-team/moimyeon-backend"
+
+# Account 781897847312 already has a GitHub OIDC provider (used by plady /
+# plady-agent-platform). Keep this false so shared references the existing one
+# instead of failing with EntityAlreadyExists.
+create_oidc_provider = false
+
+# DNS for *.dev.moimyeon.plady.io is managed in Cloudflare, not Route 53.
+# Keep these off and create records in Cloudflare from env `external_dns_records`.
+route53_zone_name  = null
+create_hosted_zone = false
+register_domain    = false

@@ -1,0 +1,17 @@
+# Terraform
+.terraform/
+# .terraform.lock.hcl IS committed (provider pinning), like plady.
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Generated per-account backend config (bucket name is account-specific).
+backend.tf
+
+# Local variable files (may contain secrets: OAuth, etc.). Only *.example is tracked.
+*.tfvars
+!*.tfvars.example
+
+# Plan outputs
+*.tfplan
