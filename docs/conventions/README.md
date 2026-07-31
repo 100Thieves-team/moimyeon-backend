@@ -35,19 +35,26 @@
   영역끼리는 서로에 대해 아는 것을 최소로 유지한다 — 예를 들어 Profile 은 Member 의 id 만
   알고, Member 는 프로필의 존재를 모른다.
   → [concepts.md](concepts.md)
-- **레이어**: Controller(DTO 변환) → Service(비즈니스 흐름) → Implement(Finder/Manager 등
+- **레이어**: Controller(DTO 변환) → Service(비즈니스 흐름) → Implement(Finder/Validator/Manager 등
   재사용 로직·저장소 접근) → Repository. 여러 Service 의 결과를 조합하는 응답은 컨트롤러가 아니라
   **Facade**(`core.api.facade`)가 조립한다. 핵심은 두 가지 — **Service 를 읽으면 비즈니스 흐름이
   보여야 하고, Service 는 JPA 엔티티를 직접 다루지 않는다.** Implement 레이어는 이를 위한
   권장 패턴이지 강제가 아니다.
+  **Service 본문에 들어가는 것은 셋뿐이다 — 검증 도구 호출 + 외부 I/O + 쓰기 호출.** 판정은
+  도구가 하고 예외도 도구가 던진다(Service 에 `requireBusiness` 를 쓰지 않는다). 도구 이름은
+  규칙을 말하지 호출자를 말하지 않는다(`validateActive` ○ / `validateForCreate` ✗).
+  트랜잭션 경계도 Service 가 아니라 쓰기 Implement 가 소유한다.
   → [layers.md](layers.md)
 - **에러**: 도메인 규칙 위반은 `CoreException(CoreErrorType)`, 요청 형태·인증 오류는
   `CoreApiException(CoreApiErrorType)`. 에러 코드(`ErrorCode`)는 하나의 체계를 공유하고 테스트로
   일관성을 강제한다. FE 분기 기준은 HTTP 상태가 아니라 `error.code`.
   → [errors.md](errors.md)
 - **API**: URI 는 `/v1/{복수형 리소스}`, 요청은 `XXXRequest.toXxx()`, 응답은 `XXXResponse.from/of(...)`.
-  검증은 셋으로 나눈다: 요청 형태는 Bean Validation, 값 규칙은 값 객체(`Nickname` 등) 생성 시점,
-  다른 데이터와 얽힌 규칙은 Service. 컨트롤러 클래스에 `@Validated` 금지.
+  **Bean Validation 을 쓰지 않는다** — 경계를 넘는 순간 온전한 개념 객체여야 하므로, 값 규칙은
+  요청 DTO 의 `toXxx()`(형식·범위)와 값 객체 생성 시점(도메인 규칙)에서 확정한다. 필드 간·참조
+  관계 규칙은 개념 객체 `init`, DB 를 봐야 하는 규칙은 그 데이터를 다루는 쓰기 Implement 가
+  Repository 를 직접 보고 판정한다(다른 개념의 판정을 물어야 할 때만 그 개념의 `Validator`).
+  스펙은 RestDocs 테스트가 문서로 만든다(요청 DTO 단위 테스트를 따로 두지 않는다).
   → [api-design.md](api-design.md)
 - **인증**: 컨트롤러는 `@LoginMember CurrentMember` 로 주입받는다. api 와 security 의 접점은
   표준 `Principal` 하나뿐이고, security 가 필요로 하는 기능은 인터페이스로 선언해 core-api 가

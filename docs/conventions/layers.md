@@ -22,15 +22,15 @@ Repository / Entity (storage.db.core)   ── Spring Data JPA
 ## 반드시 지킬 것은 두 가지다
 
 1. **Service 를 읽으면 비즈니스 흐름이 보여야 한다.** 무엇을 어떤 순서로 확인하고 언제 저장하는지가
-   메서드 본문에서 그대로 읽혀야 한다. 조회 방법·매핑·쿼리 같은 세부가 본문에 섞여 흐름을 가리면
-   아래 레이어로 내린다.
+   메서드 본문에서 그대로 읽혀야 한다. 본문에 들어가는 것은 **검증 도구 호출 + 외부 I/O +
+   쓰기 호출** 셋뿐이다. 판정 방법·조회 방법·매핑·쿼리 같은 세부가 섞여 흐름을 가리면 아래
+   레이어로 내린다.
 2. **Service 는 JPA 엔티티를 직접 다루지 않는다.** 엔티티 타입은 저장소 접근 코드 안에서 도메인
    객체로 변환을 끝내고 나온다. Service 이상에 엔티티가 등장하면 경계 위반이다.
 
-**Implement 레이어(Finder/Manager 등)는 이 둘을 지키기 위한 권장 패턴이지, 그 자체가 강제는
-아니다.** 개념이 단순하면 역할을 잘게 쪼개지 않아도 되고, 엔티티가 오가지 않는 단순 판정
-(`existsBy...` 등)은 Service 가 Repository 를 직접 불러도 된다. 반대로 저장소 접근·변환 코드가
-Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한다.
+**Implement 레이어(Finder/Validator/Manager 등)는 이 둘을 지키기 위한 권장 패턴이지, 그 자체가
+강제는 아니다.** 개념이 단순하면 역할을 잘게 쪼개지 않아도 된다. 반대로 판정·저장소 접근·변환
+코드가 Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한다.
 
 각 레이어의 역할 한 줄 정의:
 
@@ -38,8 +38,8 @@ Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한�
 | --- | --- | --- |
 | Controller | 요청/응답 DTO 변환, ApiResponse 래핑 | 비즈니스 판단, 여러 Service 조합 |
 | Facade | 여러 Service 결과를 **조합**해 응답 DTO 조립 | 비즈니스 판단 |
-| Service | 비즈니스 **흐름** — 검증 순서, 분기 | JPA 엔티티 사용, 트랜잭션 경계 |
-| Implement | **재사용 로직** — 조회·저장·변환·생성, **커밋 단위 조합**, 트랜잭션 경계 | 외부 I/O, 사용자 대면 흐름 분기 |
+| Service | 비즈니스 **흐름의 골격** — 검증 도구 호출 + 외부 I/O + 쓰기 호출 | 직접 판정(`requireBusiness`), JPA 엔티티 사용, 트랜잭션 경계 |
+| Implement | **재사용 로직** — 조회·검증·저장·변환·생성, **커밋 단위 조합**, 트랜잭션 경계 | 외부 I/O, 사용자 대면 흐름 분기 |
 | Repository | 파생 쿼리·JPQL | 도메인 규칙 |
 
 ## Controller
@@ -51,8 +51,9 @@ Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한�
 - 컨트롤러는 **애그리거트(개념) 단위**로 묶는다. 엔드포인트가 아니라 개념이 기준이다.
   예: 내 상태·닉네임(회원 속성)은 `MemberController`, 소개 작성/수정은 `ProfileController`.
 - 인증 주입은 `@LoginMember currentMember: CurrentMember` ([auth.md](auth.md)).
-- 요청 바디는 `@Valid @RequestBody`, 쿼리/경로 파라미터 제약은 애노테이션만 붙인다
-  (클래스 레벨 `@Validated` 금지 — [api-design.md](api-design.md)).
+- **Bean Validation 을 쓰지 않는다.** 요청 바디는 `@RequestBody` 로만 받고, 값 규칙은 요청 DTO 의
+  `toXxx()` 안에서 확정한다. 쿼리/경로 파라미터 제약은 핸들러 본문에서 검증한다
+  ([api-design.md](api-design.md)).
 
 ## Facade
 
@@ -81,20 +82,161 @@ class ProfileFacade(
 
 ## Service (= Business)
 
-- 개념의 **흐름**을 소유한다. 무엇을 어떤 순서로 확인하고, 언제 저장하는지.
-  ```kotlin
-  // ProfileService.create 의 흐름
-  memberFinder.getById(memberId)          // 살아있는 회원인가 (아니면 E1006 이 이미 던져짐)
-  validateCatalogRefs(content)            // 참조 무결성 사전 검증 (E1301/E1302/E1303)
-  requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(...), TERMS_NOT_AGREED)
-  requireBusiness(!profileFinder.exists(...), PROFILE_ALREADY_EXISTS)
-  profileManager.append(memberId, content) // 저장 (동시 생성 레이스는 append 가 자기 경계 안에서 처리)
-  ```
-- 교차 규칙(다른 개념과 얽힌 규칙)은 Service 가 확인한다. 단, 상대 개념의 Finder 가 노출한
-  판정을 입력으로 쓴다 ([concepts.md](concepts.md)).
+Service 는 개념의 **흐름의 골격**이다. 본문에 들어가는 것은 셋뿐이다.
+
+> **검증 도구 호출 + 외부 I/O + 쓰기 호출**
+
+```kotlin
+// ProfileService.create
+validateCatalogRefs(content)                     // 다른 개념(catalog)의 판정 — 트랜잭션 밖
+return profileManager.append(memberId, content)  // 쓰기 — 약관 동의·프로필 중복은 append 가 자기 경계 안에서
+```
+
+**Service 는 판정하지 않는다.**
+
+- **`requireBusiness`/`requireFound` 를 Service 본문에 쓰지 않는다.** 규칙 위반은 그 규칙을
+  판정한 Implement 가 던진다. Service 에 `if`/`requireBusiness` 가 쌓이기 시작하면 그 판정은
+  아래로 내려갈 신호다.
 - 다른 개념의 Service 호출 금지, Implement 호출은 허용.
-- Service 는 기본적으로 트랜잭션 경계를 갖지 않는다. 경계는 쓰기 Implement 가 소유한다 —
+- Service 는 트랜잭션 경계를 갖지 않는다. 경계는 쓰기 Implement 가 소유한다 —
   [트랜잭션](#트랜잭션) 절 참고.
+
+### 검증은 기본적으로 쓰기 Implement 안에서 한다
+
+대부분의 검증은 **한 줄짜리**다. 그런 것을 위해 별도 컴포넌트를 만들면 클래스만 늘고 호출
+경로만 길어진다. 그 판정에 필요한 데이터를 이미 보고 있는 `Manager`/`Adder`/`Recorder` 안에서
+그냥 검증한다.
+
+```kotlin
+@Transactional
+fun changeNickname(memberId: UUID, nickname: Nickname) {
+    val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), MEMBER_NOT_FOUND)
+    requireBusiness(!memberRepository.existsByNicknameAndIdNot(nickname.value, memberId), NICKNAME_DUPLICATED)
+    ...
+}
+```
+
+특히 **"이미 있는가" 류는 쓰기 경계 안에서 확정되어야 정확하다.** Service 에서 미리 확인하면
+판정이 두 곳으로 갈리고, 커밋 밖의 확인이라 어차피 확정이 아니다 — 최종 방어선은 유니크 제약이고
+그 충돌을 도메인 에러로 번역하는 것도 그 쓰기 Implement 의 일이다
+(`ProfileManager.append` 가 `uk_member_profile_member` 충돌을 `PROFILE_ALREADY_EXISTS` 로 번역한다).
+
+### 별도 `Validator` 는 다른 개념의 판정을 물어야 할 때만 만든다
+
+**단일 개념 안에서 자기 데이터만 보면 되는 검증은 도구로 빼지 않는다.** 그 컴포넌트가 Repository 를
+직접 불러 그 자리에서 검증하면 된다. 굳이 빼면 클래스와 의존만 늘어난다.
+
+`Validator` 는 **판정 자체가 개념 경계를 넘을 때** 생긴다. 두 방향이 있다.
+
+- **자기 개념의 판정을 밖에 노출** — `CatalogRefValidator`. catalog 가 자기 참조 데이터의 유효성을
+  판정해 profile·room·job-posting 이 쓴다.
+- **자기 개념의 판정인데 다른 개념 데이터가 필요** — `ReviewPolicyValidator`. "이 리뷰를 쓸 자격이
+  있는가"는 review 의 규칙이지만 order 데이터를 조회해야 판정된다.
+
+어느 쪽이든 그 조회 묶음 자체가 로직이고, 조회 결과를 뒤 단계로 넘길 것이 있으면 반환한다
+(`ReviewPolicyValidator.validateNew` 가 `ReviewKey` 를 만들어 돌려준다).
+
+```kotlin
+// catalog 개념이 자기 참조 데이터(직무·지역·회사)의 유효성을 판정해 밖에 노출한다.
+// profile 이 쓰고, room·job-posting 도 같은 판정을 쓴다.
+@Component
+class CatalogRefValidator(
+    private val jobRoleRepository: JobRoleRepository,
+    private val sigunguRepository: SigunguRepository,
+    private val companyRepository: CompanyRepository,
+) {
+    fun validateJobRoles(jobRoleIds: Collection<Long>) { ... }
+    fun validateSigungu(sigunguId: Long) { ... }
+    fun validateCompanies(companyIds: Collection<Long>) { ... }
+}
+```
+
+- **도구 이름은 규칙을 말한다. 호출자를 말하지 않는다.** `validateForCreate` 처럼 호출하는 Service
+  메서드 이름이 박히면 그 호출자 전용이 되어 재사용이 사라진다 — Service 본문을 옮겨놓은 것일 뿐이다.
+- **검증 항목은 쪼개서 노출한다.** 여러 규칙을 한 메서드로 묶으면 그 조합이 곧 호출자의 모양이 된다.
+  프로필은 세 가지를 다 쓰지만 다른 개념은 하나만 쓸 수 있다.
+- 조회만 하므로 **쓰기 트랜잭션 밖(Service)에서 호출**한다. 트랜잭션 안에 넣으면 커밋 단위가
+  참조 조회만큼 길어진다.
+
+### 같은 개념 안에서는 Implement 끼리 참조하지 않는다
+
+`Manager` 가 같은 개념의 `Finder` 를 주입받아 한 줄 위임을 쓰는 형태는 만들지 않는다.
+**자기 개념의 데이터는 Repository 를 직접 부른다.** 한 줄 얻자고 컴포넌트를 끼우면 의존 그래프만
+복잡해지고, 그 Finder 가 바뀔 때 영향 범위가 넓어진다.
+
+```kotlin
+// ✗ 같은 개념(member)의 Finder 를 한 줄 위임으로 끼운다
+class NicknameGenerator(private val memberFinder: MemberFinder)
+
+// ○ 자기 개념의 Repository 를 직접 본다
+class NicknameGenerator(private val memberRepository: MemberRepository)
+```
+
+같은 개념 안에서 Implement 를 참조하는 것은 **위임이 아니라 실질적 이유가 있을 때만**이다.
+
+- 트랜잭션 경계를 나누려고 (`SettlementTransferProcessor` → `SettlementTransferHandler`)
+- 커밋 단위 조합 (`MemberProvisioner` → `MemberManager`)
+- 그 자체가 로직인 컴포넌트 (`ProfileManager` → `ProfileInterestManager` 의 차집합 교체,
+  `OrderManager` → `OrderKeyGenerator`)
+
+### 격벽을 넘는 것은 Implement 의 일이다
+
+> **Service 는 자기 개념의 Implement 를 본다. 그 Implement 가 다른 격벽의 컴포넌트를 본다.**
+
+```
+PaymentService → PaymentValidator·PaymentProcessor → order·cancel Repository, PointHandler
+```
+
+결제·취소·정산처럼 **경계에 걸친 행위**는 여러 개념의 데이터를 한 커밋으로 다뤄야 한다. 그 조합
+Implement 가 다른 개념에 접근하는 것은 정상이다 — 그러라고 만든 자리다.
+
+**단, 접근 방식에 우선순위가 있다.**
+
+> **다른 개념이 필요하면 그 개념의 로직 클래스를 우선 쓴다.**
+> Repository 직접 접근은 금지가 아니라 **차선**이다 — 위임할 로직 클래스가 없거나, 그 클래스로는
+> 목적을 이룰 수 없을 때만 내려간다.
+
+`CancelProcessor` 가 그 둘을 한 클래스 안에서 정확히 갈라 쓴다.
+
+```kotlin
+// 위임 — 그 개념이 로직을 갖고 있다(상태 전이·잔액 갱신·이력 기록·예외 번역)
+ownedCouponUsageManager.revert(payment.ownedCouponId)
+pointHandler.earn(User(payment.userId), PointType.PAYMENT, payment.id, payment.usedPoint)
+
+// 직접 — 남의 엔티티를 자기 커밋 안에서 변경해야 한다. 도메인 객체를 받으면 변경 감지가 안 된다
+val order = orderRepository.findByOrderKeyAndStateAndStatus(...) ?: throw ...
+order.canceled()
+```
+
+Repository 직접이 정당한 경우는 대체로 이 셋이다.
+
+- **남의 엔티티를 자기 커밋 안에서 변경**해야 한다 (`order.canceled()`) — Finder 는 도메인 객체를
+  반환하므로 변경 감지가 걸리지 않는다
+- **락 획득이 목적**이다 — 락은 Finder 의 계약이 아니다
+- 그 개념에 **위임할 로직 클래스가 아직 없다**
+
+그 외 **단순 조회·판정은 반드시 그 개념의 로직 클래스를 거친다.**
+
+```kotlin
+// ✗ 다른 개념(member)의 Repository 로 단순 조회
+val entity = memberRepository.findByIdAndDeletedAtIsNull(memberId) ?: throw ...
+
+// ○ 그 개념이 노출한 조회를 쓴다
+val member = memberFinder.getById(memberId)
+```
+
+Repository 로 내려갈 때는 **왜 위임할 수 없었는지 주석으로 남긴다.** 그래야 다음 사람이
+"편해서 그랬나"와 구분한다.
+
+**단순 조회 컴포넌트(`Finder`/`Reader`)는 다른 개념 Repository 를 볼 일이 없다.** 자기 개념만 본다.
+그럴 필요가 생겼다면 그건 조회가 아니라 경계에 걸친 행위라는 신호다.
+
+**예외 — 개념 객체가 이미 다른 개념을 알고 있으면 Service 가 직접 쓴다.**
+`OrderItem` 이 `productId`·`productName` 을 들고 있으니 `OrderService` 가 `ProductFinder` 를
+주입받는다. `MemberProfile` 이 관심 직무·회사·지역 id 를 들고 있으니 `ProfileService` 가
+`CatalogRefValidator` 를 쓴다. 개념 객체가 모르는 사이라면 Service 도 몰라야 한다 —
+`Member` 는 프로필의 존재를 모르므로 `MemberService` 는 `ProfileFinder` 를 쓰지 않고,
+둘을 함께 보여줄 응답은 `MemberFacade` 가 조합한다([concepts.md](concepts.md)).
 
 ## Implement (= Logic)
 
@@ -105,6 +247,7 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 | 접미사         | 책임                                                       | 예시                       |
 |-------------|----------------------------------------------------------|--------------------------|
 | `Finder`    | 조회. **`get*`(non-null) / `exists*`·`is*`(Boolean) 만 노출** | `ProfileFinder`          |
+| `Validator` | **다른 개념에 노출하는** 규칙 검증. 위반이면 자기가 던진다        | `CatalogRefValidator` |
 | `Reader`    | 복합 조회 + 도메인 객체 조립                                        |                          |
 | `Adder`     | 추가                                                       |                          |
 | `Handler`   | 흐름 처리                                                    |                          |
@@ -142,11 +285,12 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 - **라운드트립이 늘어난다.** 조합이 Service 에 있으면 각 단계가 독립 호출이 되어, 한 번에 할 수
   있는 조회가 N 번으로 갈라진다.
 
-**Implement 간 참조는 허용된다.** 조합 Implement 는 같은 개념이든 다른 개념이든 하위
-Implement 를 주입받아 호출한다(`MemberProvisioner` → `MemberManager`·`TermsFinder`·
-`TermsAgreementRecorder`, `ProfileManager` → `ProfileInterestManager`). 레이어를 불문하고
-금지되는 참조는 **다른 개념의 Service** 하나다([concepts.md](concepts.md)) — Service 는
-흐름이므로, 흐름이 흐름을 부르면 어느 쪽을 읽어도 전체가 안 보인다.
+**조합 Implement 는 하위 Implement 를 주입받아 호출한다** — 같은 개념이든 다른 개념이든
+(`MemberProvisioner` → `MemberManager`·`TermsFinder`·`TermsAgreementRecorder`). 조합이 존재
+이유이므로 위의 "같은 개념 안에서는 참조하지 않는다"의 예외에 해당한다.
+
+레이어를 불문하고 금지되는 참조는 **다른 개념의 Service** 하나다([concepts.md](concepts.md)) —
+Service 는 흐름이므로, 흐름이 흐름을 부르면 어느 쪽을 읽어도 전체가 안 보인다.
 
 한 커밋 안의 여러 쓰기를 조합하는 컴포넌트에는 책임이 드러나는 이름을 준다 —
 `Provisioner`, `Processor`, `Handler` 등. 접미사 표는 참고 사전이지 강제가 아니다.
@@ -178,8 +322,18 @@ Implement 를 주입받아 호출한다(`MemberProvisioner` → `MemberManager`�
 
 ### 예외는 Implement 에서 던진다
 
-"없음"의 의미 부여(어떤 E 코드인가)는 조회 책임을 가진 Finder 가 한다. Service 는 null 을 받지 않으므로
-not-found 매핑을 반복하지 않는다. 규칙 위반은 Service 가 `requireBusiness` 로 던진다 ([errors.md](errors.md)).
+**판정한 쪽이 던진다.** Service 는 도구를 호출할 뿐 자기가 `requireBusiness`/`requireFound` 를
+쓰지 않는다 ([errors.md](errors.md)).
+
+| 무엇 | 던지는 곳 |
+| --- | --- |
+| "없음"의 의미 부여(어떤 E 코드인가) | 조회 책임을 가진 `Finder` (`get*` 안의 `requireFound`) |
+| 규칙 위반 | 그 규칙을 판정한 쓰기 Implement (여러 엔티티 조회면 `Validator`) |
+| 상태 전이 위반 | 쓰기 `Manager` (엔티티의 `can*` 판정을 도메인 에러로 매핑) |
+| 제약 위반(유니크 등) | 그 제약을 아는 쓰기 Implement 또는 조합 Implement |
+
+`Finder` 의 `exists*`/`is*` 는 **판정을 응답으로 돌려줄 때**(조회 API) 쓴다. 그 값을 Service 가
+받아 `requireBusiness` 로 바꾸고 있다면 그 판정은 아래로 내려갈 자리다.
 
 ## 트랜잭션
 

@@ -42,23 +42,51 @@
   }
   ```
 
-## 검증: 3계층
+## 검증: 어디서 확정되는가
 
-검증은 "누구의 규칙인가"로 나눈다. 같은 규칙을 두 군데서 검증하지 않는다.
+> **경계를 넘는 순간 온전한 개념 객체여야 한다.**
+> 요청 DTO 는 API 스펙이고, `toXxx()` 가 그것을 개념 객체로 바꾸는 유일한 지점이다.
+> 그 전환이 끝나면 뒤쪽 레이어에는 스펙 검증이 남지 않는다.
 
-| 계층 | 수단 | 실패 응답 | 예 |
+**Bean Validation 을 쓰지 않는다.** `@Valid`·`@field:Size`·`@Validated` 모두 금지이며
+`spring-boot-starter-validation` 의존성도 두지 않는다. 스펙을 애노테이션에 흩어놓으면
+개념 객체는 빈 그릇이 되고, 스펙이 어디까지인지가 테스트가 아니라 리플렉션에 숨는다.
+
+| 무엇 | 어디서 | 실패 응답 | 예 |
 | --- | --- | --- | --- |
-| 수송(요청 형태) | Bean Validation (`@Valid` 바디, 파라미터 제약 애노테이션) | 400 `E400` + 필드별 사유 | `bio @Size(max = 500)`, `query @Size(min = 1, max = 50)` |
-| 값(도메인 VO) | VO 생성 시점 보증 | 도메인 코드 (400 `E1005` 등) | `Nickname` 형식·길이·금칙어 |
-| 교차 규칙 | Service 흐름 (`requireBusiness`) | 도메인 코드 (409 등) | 약관 동의, 닉네임 중복, 참조 존재 |
+| **값 하나의 형식·범위** (API 스펙) | 요청 DTO 의 `toXxx()` / 컨트롤러 파라미터 | 400 `E400` (`CoreApiException`) | `bio` 최대 500자, `query` 1~50자 |
+| **값의 도메인 규칙** | 값 객체 생성 시점 | 도메인 코드 (400 `E1005` 등) | `Nickname` 형식·길이·금칙어 |
+| **개념 객체의 성립 조건** | 개념 객체 `init { require(...) }` | 도메인 코드 | 필드 간 정합, 참조 관계 불변식 (`Member` 의 소셜 계정 최소 1개·중복 불가) |
+| **DB 를 봐야 하는 규칙** | 그 데이터를 다루는 쓰기 Implement 안 (다른 개념의 판정이면 그 개념의 `Validator`) | 도메인 코드 (409 등) | 닉네임 중복은 `MemberManager` 안, 카탈로그 참조는 `CatalogRefValidator` |
+| 본문 해석·타입 불일치·파라미터 누락 | 프레임워크 → `ApiControllerAdvice` | 400 `E400` | 깨진 JSON, UUID 아닌 경로 변수 |
 
-- 수송 계층 검증은 **스키마 제약의 반영**이다(DB 컬럼 길이 등). 도메인 규칙(닉네임 형식)은
-  VO 소관이므로 요청 DTO 에 중복 정의하지 않는다.
-- **컨트롤러 클래스에 `@Validated` 를 붙이지 않는다.** Spring 6.1+ 는 핸들러 파라미터 제약을
-  내장 메서드 검증으로 처리하며(`HandlerMethodValidationException` → E400), `@Validated` 가 있으면
-  내장 검증이 꺼지고 AOP 경로(`ConstraintViolationException`, 미처리 500)로 바뀐다.
-- `@Validated` 는 컨트롤러가 아닌 일반 빈의 메서드 검증에만 의미가 있는데, 이 코드베이스는
-  그 용법을 쓰지 않는다(도메인 규칙은 VO·Implement 가 보증).
+```kotlin
+data class CreateProfileRequest(
+    val interestJobRoleIds: List<Long> = emptyList(),
+    val bio: String? = null,
+    ...
+) {
+    fun toContent(): ProfileContent {
+        if (bio != null && bio.length > BIO_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+
+        return ProfileContent(..., interestCompanyIds = emptyList())
+    }
+}
+```
+
+- **값 하나면 프레젠테이션, 관계면 개념 객체, DB 를 봐야 하면 Implement.** 길이·형식처럼 그 값만 보면
+  판정되는 것은 API 스펙이므로 DTO 가 확정한다. 여러 필드의 관계나 객체 간 참조에서 나오는 규칙은 그
+  개념 객체 안에서 판정한다. 조회가 필요하면 그 데이터를 다루는 쓰기 Implement 가 Repository 를
+  직접 보고 검증하고, **다른 개념의 판정을 물어야 할 때만** 그 개념의 `Validator` 를 쓴다
+  ([layers.md](layers.md)).
+- **검증 실패는 `if (...) throw` 로 쓴다.** 별도 헬퍼를 만들지 않는다 — 스펙이 그대로 읽히는 것이 중요하다.
+- **개념 객체의 필드에 기본값을 두지 않는다.** 기본값은 "안 받는다"와 "빠뜨렸다"를 구분 불가능하게 만든다.
+  받지 않는 값은 `toXxx()` 에서 `emptyList()` 를 명시적으로 넘겨 의도를 남긴다.
+- **목킹 단계라 변환할 개념 객체가 아직 없으면** DTO 에 `validate()` 를 두고 컨트롤러가 호출한다.
+  도메인이 붙으면 `toXxx()` 안으로 옮긴다.
+- **스펙은 RestDocs 테스트가 문서로 만든다.** 값 규칙 위반 케이스를 컨트롤러 문서화 테스트에 두면
+  openapi3.yaml 의 4xx 예시로 나간다([api-docs.md](api-docs.md)). **요청 DTO 단위 테스트를 따로 만들지
+  않는다** — 같은 규칙을 두 층에서 검증하면서 문서에는 실리지 않는다.
 
 ## 응답 포맷
 
