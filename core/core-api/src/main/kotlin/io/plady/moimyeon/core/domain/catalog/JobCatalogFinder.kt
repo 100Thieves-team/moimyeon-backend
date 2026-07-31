@@ -10,6 +10,7 @@ class JobCatalogFinder(
     private val jobGroupRepository: JobGroupRepository,
     private val jobRoleRepository: JobRoleRepository,
 ) {
+    // 직무 + 직군 2쿼리를 한 스냅샷으로 읽는다.
     @Transactional(readOnly = true)
     fun findActiveGroups(): List<JobGroup> {
         val rolesByGroup = jobRoleRepository.findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc()
@@ -24,14 +25,12 @@ class JobCatalogFinder(
         }
     }
 
-    @Transactional(readOnly = true)
     fun findActiveRolesByIds(jobRoleIds: Collection<Long>): List<JobRole> {
         if (jobRoleIds.isEmpty()) return emptyList()
         return jobRoleRepository.findByIdInAndDeletedAtIsNull(jobRoleIds)
             .map { JobRole(it.id, it.code, it.displayName) }
     }
 
-    @Transactional(readOnly = true)
     fun allActiveRoles(jobRoleIds: Collection<Long>): Boolean {
         return findActiveRolesByIds(jobRoleIds).size == jobRoleIds.toSet().size
     }
