@@ -50,4 +50,21 @@ class MemberEntity(
     fun changeNickname(nickname: String) {
         this.nickname = nickname
     }
+
+    // 전이 판정(can*)은 엔티티가, 도메인 에러 매핑은 core-api(Manager)가 맡는다 —
+    // 에러 타입이 core-api 소속이라 여기서 참조할 수 없다. check 는 판정을 건너뛴
+    // 호출(프로그래밍 오류)을 즉시 잡는 백스톱이다.
+    fun canRestrict(): Boolean = status == MemberStatus.ACTIVE
+
+    fun restrict() {
+        check(canRestrict()) { "ACTIVE 회원만 제재할 수 있습니다. current=$status" }
+        status = MemberStatus.RESTRICTED
+    }
+
+    fun canReactivate(): Boolean = status == MemberStatus.RESTRICTED
+
+    fun reactivate() {
+        check(canReactivate()) { "RESTRICTED 회원만 해제할 수 있습니다. current=$status" }
+        status = MemberStatus.ACTIVE
+    }
 }

@@ -10,7 +10,6 @@ class RegionFinder(
     private val sidoRepository: SidoRepository,
     private val sigunguRepository: SigunguRepository,
 ) {
-    // 시군구 + 시도 2쿼리를 한 스냅샷으로 읽는다.
     @Transactional(readOnly = true)
     fun findActiveSidos(): List<Sido> {
         val sigungusBySido = sigunguRepository.findByDeletedAtIsNullOrderBySidoIdAscSortOrderAsc()

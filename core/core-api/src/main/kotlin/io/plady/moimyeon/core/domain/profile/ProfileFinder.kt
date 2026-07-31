@@ -12,7 +12,6 @@ class ProfileFinder(
     private val memberProfileRepository: MemberProfileRepository,
     private val profileInterestFinder: ProfileInterestFinder,
 ) {
-    // 프로필 + 관심직무 + 관심회사 3쿼리를 한 스냅샷으로 읽는다.
     @Transactional(readOnly = true)
     fun getProfile(memberId: UUID): MemberProfile {
         val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), CoreErrorType.PROFILE_NOT_FOUND)

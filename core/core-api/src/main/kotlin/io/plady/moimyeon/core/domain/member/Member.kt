@@ -2,8 +2,6 @@ package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.requireBusiness
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -23,18 +21,6 @@ data class Member(
             "동일한 (provider, providerId) 소셜 계정은 중복될 수 없습니다."
         }
     }
-
-    fun restrict(): Member {
-        requireBusiness(status == MemberStatus.ACTIVE, CoreErrorType.MEMBER_NOT_ACTIVE)
-        return copy(status = MemberStatus.RESTRICTED)
-    }
-
-    fun reactivate(): Member {
-        requireBusiness(status == MemberStatus.RESTRICTED, CoreErrorType.MEMBER_NOT_RESTRICTED)
-        return copy(status = MemberStatus.ACTIVE)
-    }
-
-    fun recordLogin(now: LocalDateTime): Member = copy(lastLoginAt = now)
 
     companion object {
         fun register(

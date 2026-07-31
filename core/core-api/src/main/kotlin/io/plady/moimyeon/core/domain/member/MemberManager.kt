@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import org.springframework.stereotype.Component
@@ -31,6 +32,13 @@ class MemberManager(
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.changeNickname(nickname.value)
         memberRepository.flush()
+    }
+
+    @Transactional
+    fun restrict(memberId: UUID) {
+        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+        requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
+        entity.restrict()
     }
 
     @Transactional
