@@ -603,9 +603,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
-<li><a href="#_interview_면접세션_api">Interview (면접·세션) API</a>
+<li><a href="#_room_룸면접_api">Room (룸·면접) API</a>
 <ul class="sectlevel2">
-<li><a href="#_면접_생성_폼_선택지_조회">면접 생성 폼 선택지 조회</a>
+<li><a href="#_룸_생성_폼_선택지_조회">룸 생성 폼 선택지 조회</a>
 <ul class="sectlevel3">
 <li><a href="#_http_response_16">Http Response</a></li>
 <li><a href="#_response_fields_15">Response Fields</a></li>
@@ -618,7 +618,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_response_fields_16">Response Fields</a></li>
 </ul>
 </li>
-<li><a href="#_채용_공고_링크_추가_요청">채용 공고 링크 추가 요청</a>
+<li><a href="#_채용_공고_링크_메타데이터_조회">채용 공고 링크 메타데이터 조회</a>
 <ul class="sectlevel3">
 <li><a href="#_request_fields_5">Request Fields</a></li>
 <li><a href="#_http_response_18">Http Response</a></li>
@@ -626,34 +626,56 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_error_responses_8">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_이력서_업로드">이력서 업로드</a>
+<li><a href="#_채용_공고_즉시_생성">채용 공고 즉시 생성</a>
 <ul class="sectlevel3">
-<li><a href="#_request_parts">Request Parts</a></li>
+<li><a href="#_request_fields_6">Request Fields</a></li>
 <li><a href="#_http_response_19">Http Response</a></li>
 <li><a href="#_response_fields_18">Response Fields</a></li>
 <li><a href="#_error_responses_9">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_이력서_조회">이력서 조회</a>
+<li><a href="#_룸_생성">룸 생성</a>
 <ul class="sectlevel3">
-<li><a href="#_path_parameters_4">Path Parameters</a></li>
+<li><a href="#_request_fields_7">Request Fields</a></li>
 <li><a href="#_http_response_20">Http Response</a></li>
 <li><a href="#_response_fields_19">Response Fields</a></li>
-</ul>
-</li>
-<li><a href="#_면접_생성">면접 생성</a>
-<ul class="sectlevel3">
-<li><a href="#_request_fields_6">Request Fields</a></li>
-<li><a href="#_http_response_21">Http Response</a></li>
-<li><a href="#_response_fields_20">Response Fields</a></li>
 <li><a href="#_error_responses_10">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_면접_상세_조회">면접 상세 조회</a>
+<li><a href="#_룸_상세_조회">룸 상세 조회</a>
 <ul class="sectlevel3">
-<li><a href="#_path_parameters_5">Path Parameters</a></li>
+<li><a href="#_path_parameters_4">Path Parameters</a></li>
+<li><a href="#_http_response_21">Http Response</a></li>
+<li><a href="#_response_fields_20">Response Fields</a></li>
+</ul>
+</li>
+<li><a href="#_룸_탐색_목록_조회">룸 탐색 목록 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_4">Query Parameters</a></li>
 <li><a href="#_http_response_22">Http Response</a></li>
 <li><a href="#_response_fields_21">Response Fields</a></li>
+</ul>
+</li>
+<li><a href="#_참가_신청_목록_조회_방장">참가 신청 목록 조회 (방장)</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_5">Path Parameters</a></li>
+<li><a href="#_http_response_23">Http Response</a></li>
+<li><a href="#_response_fields_22">Response Fields</a></li>
+</ul>
+</li>
+<li><a href="#_참가_신청_수락">참가 신청 수락</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_6">Path Parameters</a></li>
+<li><a href="#_http_response_24">Http Response</a></li>
+<li><a href="#_response_fields_23">Response Fields</a></li>
+</ul>
+</li>
+<li><a href="#_참가_신청_반려">참가 신청 반려</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_7">Path Parameters</a></li>
+<li><a href="#_request_fields_8">Request Fields</a></li>
+<li><a href="#_http_response_25">Http Response</a></li>
+<li><a href="#_response_fields_24">Response Fields</a></li>
 </ul>
 </li>
 </ul>
@@ -851,8 +873,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-07-30",
-    "datetime" : "2026-07-30T14:59:26.867848896",
+    "date" : "2026-07-31",
+    "datetime" : "2026-07-31T07:34:19.713804846",
     "items" : [ {
       "key" : "1"
     }, {
@@ -959,14 +981,14 @@ Content-Length: 236
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 235
+Content-Length: 237
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-07-30",
-    "datetime" : "2026-07-30T14:59:27.0260291",
+    "date" : "2026-07-31",
+    "datetime" : "2026-07-31T07:34:19.927178144",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1125,7 +1147,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 30 Jul 2026 15:29:26 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 31 Jul 2026 08:04:18 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1331,7 +1353,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "b480f429-dcf7-45b2-9161-5d29ddefac0c",
+      "termsId" : "7f45fbba-deab-45ad-89fe-7a4a4e7b6541",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1339,7 +1361,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "0d1cb8cc-9a25-4f11-a607-1f13d1da5f38",
+      "termsId" : "4549726f-c77c-482a-bbb3-9f108965310a",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1444,7 +1466,7 @@ Content-Length: 271
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "8d40203a-5fa4-454a-b784-91ea45fcd9ef",
+    "memberId" : "027aeff9-feb7-4bdb-838b-073cee600900",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
@@ -2189,7 +2211,7 @@ Content-Length: 332
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "c48bf400-c379-4313-9f9b-a96bbe74459b",
+    "memberId" : "e5e0c2c9-7697-4998-8ad6-c0a5658bb7db",
     "jobRoleId" : 1,
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "BOTH",
@@ -2395,7 +2417,7 @@ Content-Length: 461
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "ae19f3ab-7669-43f2-b64d-0ad8e0533365",
+    "memberId" : "f10182a9-e645-4ab0-9ce0-3f5d50871068",
     "jobRoleId" : 2,
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -2540,7 +2562,7 @@ Content-Length: 461
 <h4 id="_curl_request_15"><a class="link" href="#_curl_request_15">Curl Request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/39013756-0d37-490b-9ea8-aab74c638194/profile' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/13e8b2ff-8c54-4008-896b-f13b11142947/profile' -i -X GET</code></pre>
 </div>
 </div>
 </div>
@@ -2577,7 +2599,7 @@ Content-Length: 1159
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "39013756-0d37-490b-9ea8-aab74c638194",
+    "memberId" : "13e8b2ff-8c54-4008-896b-f13b11142947",
     "nickname" : "집요한 수달 07",
     "jobTitle" : "프론트엔드 개발",
     "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -2719,21 +2741,23 @@ Content-Length: 1159
 </div>
 </div>
 <div class="sect1">
-<h2 id="_interview_면접세션_api"><a class="link" href="#_interview_면접세션_api">Interview (면접·세션) API</a></h2>
+<h2 id="_room_룸면접_api"><a class="link" href="#_room_룸면접_api">Room (룸·면접) API</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>면접 생성 위저드(figma B·06~B·10)를 위한 API. 도메인 구현 전까지 목(<code>@MockApiProfile</code>, local/local-dev/dev 에서만 활성)으로 제공하며,
-고정 예시 값을 반환한다. 회사·직무·지역은 <a href="#_catalog_api">Catalog API</a> 를, 이력서는 아래 이력서 업로드를 참조 id 로 연결한다.</p>
+<p>모의면접 룸의 생성·탐색·참가 신청 관리를 위한 API. 데이터·코드에서는 룸(Room), 사용자 화면 표기는 면접이다.
+도메인 구현 전까지 목(<code>@MockApiProfile</code>, local/local-dev/dev 에서만 활성)으로 제공하며, 고정 예시 값을 반환한다.
+회사·직무·지역은 <a href="#_catalog_api">Catalog API</a> 를 참조 id 로 연결한다. 회사는 공고를 고르면 함께 확정되므로 룸에는 따로 저장하지 않는다.
+룸 id 는 외부 노출 식별자라 UUID(UUIDv7 계열)다.</p>
 </div>
 <div class="sect2">
-<h3 id="_면접_생성_폼_선택지_조회"><a class="link" href="#_면접_생성_폼_선택지_조회">면접 생성 폼 선택지 조회</a></h3>
+<h3 id="_룸_생성_폼_선택지_조회"><a class="link" href="#_룸_생성_폼_선택지_조회">룸 생성 폼 선택지 조회</a></h3>
 <div class="paragraph">
-<p>회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다(B·06·B·07).
+<p>회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다(「룸 생성」 §4.1·§4.2).
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/interviews/form-options' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/form-options' -i -X GET</code></pre>
 </div>
 </div>
 <div class="sect3">
@@ -2909,7 +2933,7 @@ Content-Length: 1185
 <div class="sect2">
 <h3 id="_회사별_채용_공고_목록_조회"><a class="link" href="#_회사별_채용_공고_목록_조회">회사별 채용 공고 목록 조회</a></h3>
 <div class="paragraph">
-<p>회사를 고르면 그 회사의 공고 목록이 채워진다(B·06). 공고 선택 시 직무 셀렉트가 자동으로 채워질 수 있다.
+<p>회사를 고르면 그 회사의 공고 목록이 채워진다(§4.1). 공고 선택 시 직무 셀렉트가 자동으로 채워질 수 있다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
@@ -2945,7 +2969,7 @@ Content-Length: 1185
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 923
+Content-Length: 942
 
 {
   "result" : "SUCCESS",
@@ -2953,27 +2977,27 @@ Content-Length: 923
     "jobPostings" : [ {
       "jobPostingId" : 1,
       "companyId" : 43429,
-      "title" : "프론트엔드 개발자 (결제플랫폼)",
+      "postingName" : "프론트엔드 개발자 (결제플랫폼)",
       "jobRoleId" : 1,
       "jobRoleName" : "프론트엔드 개발",
       "sourceUrl" : "https://dalbitpay.example.com/careers/fe-pay",
-      "status" : "OPEN"
+      "verified" : true
     }, {
       "jobPostingId" : 2,
       "companyId" : 43429,
-      "title" : "백엔드 개발자 (정산)",
+      "postingName" : "백엔드 개발자 (정산)",
       "jobRoleId" : 2,
       "jobRoleName" : "백엔드 개발",
       "sourceUrl" : "https://dalbitpay.example.com/careers/be-settle",
-      "status" : "OPEN"
+      "verified" : true
     }, {
       "jobPostingId" : 3,
       "companyId" : 43429,
-      "title" : "프로덕트 디자이너",
+      "postingName" : "프로덕트 디자이너",
       "jobRoleId" : 3,
       "jobRoleName" : "프로덕트 디자인",
       "sourceUrl" : "https://dalbitpay.example.com/careers/product-designer",
-      "status" : "OPEN"
+      "verified" : false
     } ]
   },
   "error" : null
@@ -3018,9 +3042,9 @@ Content-Length: 923
 <td class="tableblock halign-left valign-top"><p class="tableblock">회사 id</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostings[].title</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostings[].postingName</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">공고 제목</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고명</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostings[].jobRoleId</code></p></td>
@@ -3038,9 +3062,9 @@ Content-Length: 923
 <td class="tableblock halign-left valign-top"><p class="tableblock">원본 공고 링크 (선택)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostings[].status</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">공고 상태 (OPEN)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostings[].verified</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">운영 검수 여부 (링크 생성분은 false)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3048,19 +3072,18 @@ Content-Length: 923
 </div>
 </div>
 <div class="sect2">
-<h3 id="_채용_공고_링크_추가_요청"><a class="link" href="#_채용_공고_링크_추가_요청">채용 공고 링크 추가 요청</a></h3>
+<h3 id="_채용_공고_링크_메타데이터_조회"><a class="link" href="#_채용_공고_링크_메타데이터_조회">채용 공고 링크 메타데이터 조회</a></h3>
 <div class="paragraph">
-<p>목록에 없는 공고를 링크로 접수한다(B·06, '찾는 공고가 없나요?'). 회사 미선택 상태에서도 요청할 수 있다.
+<p>목록에 없는 공고를 만들기 전, 링크의 OG 태그를 읽어 공고명 후보(og:title)와 미리보기(이미지·설명·출처)를 돌려준다(§4.1).
+회사는 OG 에서 추출하지 않으며, 아래 공고 생성 요청에서 목록으로 지정한다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/job-posting-requests' -i -X POST \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/job-postings/link-metadata' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "companyId" : 43429,
-  "url" : "https://company.example.com/careers/12345",
-  "memo" : "결제플랫폼 프론트엔드 공고예요."
+  "url" : "https://company.example.com/careers/12345"
 }'</code></pre>
 </div>
 </div>
@@ -3081,19 +3104,9 @@ Content-Length: 923
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>companyId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id (선택, 미선택 상태에서도 요청 가능)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>url</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">추가를 요청하는 공고 링크 (필수, 최대 2000자)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>memo</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">운영 전달용 메모 (선택, 최대 500자)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">메타데이터를 읽을 공고 링크 (필수, 최대 2000자)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3104,13 +3117,15 @@ Content-Length: 923
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 112
+Content-Length: 348
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "requestId" : 5001,
-    "status" : "RECEIVED"
+    "postingName" : "프론트엔드 개발자 (결제플랫폼)",
+    "imageUrl" : "https://img.example.com/careers/fe-pay.png",
+    "description" : "결제·정산 플랫폼 프론트엔드 개발자를 모집합니다.",
+    "sourceUrl" : "https://company.example.com/careers/12345"
   },
   "error" : null
 }</code></pre>
@@ -3139,14 +3154,24 @@ Content-Length: 112
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.requestId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">접수된 요청 id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.postingName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고명 후보 (og:title, 사용자가 확인·수정)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.imageUrl</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">접수 상태 (RECEIVED)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">미리보기 이미지 (og:image, 없으면 null)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.description</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">미리보기 설명 (og:description, 없으면 null)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sourceUrl</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고 출처 링크 (og:url, 없으면 요청 url)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3178,36 +3203,53 @@ Content-Length: 112
 </div>
 </div>
 <div class="sect2">
-<h3 id="_이력서_업로드"><a class="link" href="#_이력서_업로드">이력서 업로드</a></h3>
+<h3 id="_채용_공고_즉시_생성"><a class="link" href="#_채용_공고_즉시_생성">채용 공고 즉시 생성</a></h3>
 <div class="paragraph">
-<p>소개와 이력서(B·08) 단계의 이력서 PDF 업로드. <code>multipart/form-data</code> 로 파일 파트(<code>file</code>)를 받는다.
-업로드 직후 AI 요약은 <code>PROCESSING</code> 이며, 이후 <a href="#_이력서_조회">이력서 조회</a> 로 폴링해 <code>DONE</code> 을 확인한다.
+<p>링크로 공고를 즉시 생성한다(§4.1). 승인 대기 없이 <code>verified=false</code> 로 만들어져 바로 룸 생성에 쓸 수 있다.
+회사는 기존 카탈로그 회사 id(companyId)로 받고, 공고명은 사용자가 확정한 값을 사용한다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/resumes' -i -X POST \
-    -H 'Content-Type: multipart/form-data' \
-    -F 'file=@김민수_이력서.pdf;type=application/pdf'</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/job-postings' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "companyId" : 43429,
+  "url" : "https://company.example.com/careers/12345",
+  "postingName" : "프론트엔드 개발자 (결제플랫폼)"
+}'</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_request_parts"><a class="link" href="#_request_parts">Request Parts</a></h4>
+<h4 id="_request_fields_6"><a class="link" href="#_request_fields_6">Request Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Part</th>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
 <th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>file</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 PDF 파일 (multipart/form-data 파트명: file)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>companyId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id (필수, /v1/companies 검색 결과)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>url</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원본 공고 링크 (필수, 최대 2000자)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>postingName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정한 공고명 (필수, 최대 100자)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3218,20 +3260,16 @@ Content-Length: 112
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 284
+Content-Length: 268
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "resumeId" : 90001,
-    "fileName" : "김민수_이력서.pdf",
-    "fileSize" : 26,
-    "fileSizeLabel" : "26B",
-    "status" : "UPLOADED",
-    "aiSummary" : {
-      "status" : "PROCESSING",
-      "text" : null
-    }
+    "jobPostingId" : 90101,
+    "companyId" : 43429,
+    "postingName" : "프론트엔드 개발자 (결제플랫폼)",
+    "sourceUrl" : "https://company.example.com/careers/12345",
+    "verified" : false
   },
   "error" : null
 }</code></pre>
@@ -3260,39 +3298,29 @@ Content-Length: 284
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumeId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostingId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 id (면접 생성 시 참조)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 채용 공고 id (룸 생성에 바로 사용)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileName</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">원본 파일명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileSize</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.companyId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">파일 크기(바이트)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileSizeLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.postingName</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">파일 크기 표시명 (240KB)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고명</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sourceUrl</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 상태 (UPLOADED)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고 출처 링크</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.aiSummary.status</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 상태 (PROCESSING | DONE | FAILED)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.aiSummary.text</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 본문 (PROCESSING 중에는 null)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.verified</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">운영 검수 여부 (생성 직후 false)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3316,7 +3344,7 @@ Content-Length: 284
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">파일 파트(file) 누락 (multipart 아님 포함)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">companyId·url·postingName 누락 또는 형식 오류. <code>error.data</code> 에 필드별 사유</p></td>
 </tr>
 </tbody>
 </table>
@@ -3324,139 +3352,18 @@ Content-Length: 284
 </div>
 </div>
 <div class="sect2">
-<h3 id="_이력서_조회"><a class="link" href="#_이력서_조회">이력서 조회</a></h3>
+<h3 id="_룸_생성"><a class="link" href="#_룸_생성">룸 생성</a></h3>
 <div class="paragraph">
-<p>업로드한 이력서의 상태와 AI 요약을 조회한다. 요약 완료(<code>DONE</code>)를 폴링하는 용도.
+<p>생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받아 룸을 만들고 즉시 모집(<code>RECRUITING</code>) 상태로 등록한다.
+방장은 생성과 동시에 참여 1명으로 등록된다(§4.8). 성공 시 <a href="#_룸_상세_조회">룸 상세</a> 로 이동한다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/resumes/90001' -i -X GET</code></pre>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_path_parameters_4"><a class="link" href="#_path_parameters_4">Path Parameters</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 4. /v1/resumes/{resumeId}</caption>
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Parameter</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>resumeId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회할 이력서 id</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_http_response_20"><a class="link" href="#_http_response_20">Http Response</a></h4>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Content-Type: application/json
-Content-Length: 424
-
-{
-  "result" : "SUCCESS",
-  "data" : {
-    "resumeId" : 90001,
-    "fileName" : "김민수_이력서.pdf",
-    "fileSize" : 245760,
-    "fileSizeLabel" : "240KB",
-    "status" : "UPLOADED",
-    "aiSummary" : {
-      "status" : "DONE",
-      "text" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심으로 일했고, 디자인 시스템 구축 경험이 있어요."
-    }
-  },
-  "error" : null
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_response_fields_19"><a class="link" href="#_response_fields_19">Response Fields</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Path</th>
-<th class="tableblock halign-left valign-top">Type</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumeId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 id</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileName</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">원본 파일명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileSize</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">파일 크기(바이트)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.fileSizeLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">파일 크기 표시명 (240KB)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 상태 (UPLOADED)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.aiSummary.status</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 상태 (PROCESSING | DONE | FAILED)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.aiSummary.text</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 본문 (DONE 이면 채워짐)</p></td>
-</tr>
-</tbody>
-</table>
-<hr>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_면접_생성"><a class="link" href="#_면접_생성">면접 생성</a></h3>
-<div class="paragraph">
-<p>생성 위저드(B·06~B·09)의 입력을 한 번에 받아 면접을 만들고 즉시 모집(<code>RECRUITING</code>) 상태로 등록한다.
-성공 시 <a href="#_면접_상세_조회">면접 상세</a> 로 이동한다.
-==== Curl Request</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/interviews' -i -X POST \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "companyId" : 1,
-  "jobPostingId" : 1,
+  "postingId" : 1,
   "jobRoleId" : 1,
   "round" : "FIRST",
   "type" : "JOB",
@@ -3472,12 +3379,12 @@ Content-Length: 424
   "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
   "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
   "resumeId" : 90001,
-  "discloseResumeOriginal" : true
+  "resumePublic" : true
 }'</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_request_fields_6"><a class="link" href="#_request_fields_6">Request Fields</a></h4>
+<h4 id="_request_fields_7"><a class="link" href="#_request_fields_7">Request Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -3493,14 +3400,9 @@ Content-Length: 424
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>companyId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>postingId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id (필수, /v1/companies 검색)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jobPostingId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id (선택, /v1/companies/{companyId}/job-postings)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id (필수, /v1/companies/{companyId}/job-postings 또는 POST /v1/job-postings). 회사는 공고에서 파생</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>jobRoleId</code></p></td>
@@ -3540,7 +3442,7 @@ Content-Length: 424
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>schedule.date</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 날짜 (yyyy-MM-dd)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd, 미래)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>schedule.startTime</code></p></td>
@@ -3555,38 +3457,38 @@ Content-Length: 424
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>title</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 제목 (필수, 최대 60자)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 제목 (필수, 최대 60자)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>description</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 소개 (선택, 최대 1000자)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 설명 (선택, 최대 1000자)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>resumeId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">업로드한 이력서 id (POST /v1/resumes)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">방장이 제출할 보관 이력서 id (회원 보관함)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>discloseResumeOriginal</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>resumePublic</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (기본 true)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (룸 속성, 기본 false)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_21"><a class="link" href="#_http_response_21">Http Response</a></h4>
+<h4 id="_http_response_20"><a class="link" href="#_http_response_20">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 116
+Content-Length: 145
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "interviewId" : 1024,
+    "roomId" : "01920000-0000-7000-8000-000000000001",
     "status" : "RECRUITING"
   },
   "error" : null
@@ -3595,7 +3497,7 @@ Content-Length: 116
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_20"><a class="link" href="#_response_fields_20">Response Fields</a></h4>
+<h4 id="_response_fields_19"><a class="link" href="#_response_fields_19">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -3616,14 +3518,14 @@ Content-Length: 116
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.interviewId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 면접 id (상세로 이동에 사용)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 룸 id (UUID, 상세로 이동에 사용)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 상태 (RECRUITING)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 상태 (RECRUITING)</p></td>
 </tr>
 </tbody>
 </table>
@@ -3655,20 +3557,20 @@ Content-Length: 116
 </div>
 </div>
 <div class="sect2">
-<h3 id="_면접_상세_조회"><a class="link" href="#_면접_상세_조회">면접 상세 조회</a></h3>
+<h3 id="_룸_상세_조회"><a class="link" href="#_룸_상세_조회">룸 상세 조회</a></h3>
 <div class="paragraph">
-<p>생성 완료(B·10) 및 상세 화면. 공개 데이터만 노출한다. 방장 블록의 신뢰 지표는 공개 프로필 API 와 같은 값을 미러링한다.
+<p>생성 완료 및 탐색 상세 화면(「룸 탐색」 §4.4). 공개 데이터만 노출한다. 방장 블록의 신뢰 지표는 공개 프로필 API 와 같은 값을 미러링한다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/interviews/1024' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001' -i -X GET</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_5"><a class="link" href="#_path_parameters_5">Path Parameters</a></h4>
+<h4 id="_path_parameters_4"><a class="link" href="#_path_parameters_4">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 5. /v1/interviews/{interviewId}</caption>
+<caption class="title">Table 4. /v1/rooms/{roomId}</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3681,24 +3583,24 @@ Content-Length: 116
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>interviewId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회할 면접 id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회할 룸 id (UUID)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_22"><a class="link" href="#_http_response_22">Http Response</a></h4>
+<h4 id="_http_response_21"><a class="link" href="#_http_response_21">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 2132
+Content-Length: 2295
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "interviewId" : 1024,
+    "roomId" : "01920000-0000-7000-8000-000000000001",
     "status" : "RECRUITING",
     "statusLabel" : "모집 중",
     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
@@ -3708,7 +3610,7 @@ Content-Length: 2132
     },
     "jobPosting" : {
       "jobPostingId" : 1,
-      "title" : "프론트엔드 개발자 (결제플랫폼)"
+      "postingName" : "프론트엔드 개발자 (결제플랫폼)"
     },
     "jobRole" : {
       "jobRoleId" : 1,
@@ -3735,7 +3637,9 @@ Content-Length: 2132
       "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
     },
     "description" : "실제 1차 면접 형식 그대로 진행해요. 한 사람씩 30분 모의면접을 보고, 끝나면 다 같이 피드백을 나눠요. 결제·정산 도메인 질문 위주로 준비할게요.",
-    "notice" : "신청할 땐 이력서를 올려요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
+    "resumePublic" : true,
+    "resumePolicyLabel" : "이력서 원본 공개 (진행 확정 후 확정 참여자끼리)",
+    "notice" : "신청할 땐 보관한 이력서를 골라요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
     "recruit" : {
       "current" : 1,
       "min" : 3,
@@ -3751,7 +3655,7 @@ Content-Length: 2132
       "jobTitle" : "프론트엔드 개발",
       "isHost" : true,
       "stats" : {
-        "completedInterviewCount" : 12,
+        "completedRoomCount" : 12,
         "attendanceRate" : 96,
         "averageRating" : 4.8
       },
@@ -3765,7 +3669,7 @@ Content-Length: 2132
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_21"><a class="link" href="#_response_fields_21">Response Fields</a></h4>
+<h4 id="_response_fields_20"><a class="link" href="#_response_fields_20">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -3786,14 +3690,14 @@ Content-Length: 2132
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.interviewId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 상태 (RECRUITING)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.statusLabel</code></p></td>
@@ -3803,7 +3707,7 @@ Content-Length: 2132
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.title</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 제목</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 제목</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.company.companyId</code></p></td>
@@ -3816,14 +3720,19 @@ Content-Length: 2132
 <td class="tableblock halign-left valign-top"><p class="tableblock">회사명</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.jobPostingId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id (없으면 미노출)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 (없으면 null)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.title</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.jobPostingId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.postingName</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 제목</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고명</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRole.jobRoleId</code></p></td>
@@ -3871,6 +3780,11 @@ Content-Length: 2132
 <td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 표시명</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이면 null)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region.sigunguId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">지역 시군구 id (OFFLINE 일 때)</p></td>
@@ -3883,7 +3797,7 @@ Content-Length: 2132
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.date</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 날짜 (yyyy-MM-dd)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.dayOfWeekLabel</code></p></td>
@@ -3918,7 +3832,17 @@ Content-Length: 2132
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.description</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 소개 (선택)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 설명 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePublic</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (룸 속성)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePolicyLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 공유 정책 표시명</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.notice</code></p></td>
@@ -3981,9 +3905,9 @@ Content-Length: 2132
 <td class="tableblock halign-left valign-top"><p class="tableblock">조회자가 방장인지 여부</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.completedInterviewCount</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.completedRoomCount</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 완료 면접 수</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">방장 완료 룸 수</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.attendanceRate</code></p></td>
@@ -4003,7 +3927,801 @@ Content-Length: 2132
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewerRole</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자 역할 (HOST | PARTICIPANT | GUEST)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자 역할 (HOST | PARTICIPANT | APPLICANT | GUEST)</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_룸_탐색_목록_조회"><a class="link" href="#_룸_탐색_목록_조회">룸 탐색 목록 조회</a></h3>
+<div class="paragraph">
+<p>조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있고, 필터는 AND 로 결합한다.
+완료·취소·일정 경과 룸은 목록에서 제외된다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms?method=OFFLINE&amp;availableOnly=true&amp;sort=SCHEDULE' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_4"><a class="link" href="#_query_parameters_4">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>companyId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id 필터 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jobRoleId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 id 필터 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>round</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 차수 필터 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>method</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 필터 (ONLINE | OFFLINE, 선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sigunguId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 시군구 id 필터 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>availableOnly</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 가능한 룸만 보기 토글 (기본 false)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sort</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순 | CLOSING 마감 임박순, 기본 SCHEDULE)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_22"><a class="link" href="#_http_response_22">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 2466
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "rooms" : [ {
+      "roomId" : "01920000-0000-7000-8000-000000000001",
+      "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+      "company" : {
+        "companyId" : 1,
+        "name" : "달빛페이"
+      },
+      "jobPosting" : {
+        "jobPostingId" : 1,
+        "postingName" : "프론트엔드 개발자 (결제플랫폼)"
+      },
+      "jobRole" : {
+        "jobRoleId" : 1,
+        "code" : "FRONTEND_DEVELOPER",
+        "displayName" : "프론트엔드 개발"
+      },
+      "round" : "FIRST",
+      "roundLabel" : "1차 면접",
+      "type" : "JOB",
+      "typeLabel" : "직무 면접",
+      "method" : "OFFLINE",
+      "methodLabel" : "오프라인",
+      "region" : {
+        "sigunguId" : 1,
+        "label" : "서울 강남구"
+      },
+      "schedule" : {
+        "date" : "2026-08-01",
+        "dayOfWeekLabel" : "토",
+        "startTime" : "14:00",
+        "startTimeLabel" : "오후 2:00",
+        "durationMinutes" : 90,
+        "durationLabel" : "90분",
+        "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+      },
+      "recruit" : {
+        "current" : 1,
+        "max" : 6,
+        "recruitStatus" : "RECRUITING",
+        "recruitStatusLabel" : "모집 중"
+      }
+    }, {
+      "roomId" : "01920000-0000-7000-8000-000000000002",
+      "title" : "정산 백엔드 최종 면접 같이 대비해요",
+      "company" : {
+        "companyId" : 1,
+        "name" : "달빛페이"
+      },
+      "jobPosting" : {
+        "jobPostingId" : 2,
+        "postingName" : "백엔드 개발자 (정산)"
+      },
+      "jobRole" : {
+        "jobRoleId" : 2,
+        "code" : "BACKEND_DEVELOPER",
+        "displayName" : "백엔드 개발"
+      },
+      "round" : "FINAL",
+      "roundLabel" : "최종 면접",
+      "type" : null,
+      "typeLabel" : null,
+      "method" : "ONLINE",
+      "methodLabel" : "온라인",
+      "region" : null,
+      "schedule" : {
+        "date" : "2026-08-03",
+        "dayOfWeekLabel" : "월",
+        "startTime" : "20:00",
+        "startTimeLabel" : "오후 8:00",
+        "durationMinutes" : 60,
+        "durationLabel" : "60분",
+        "displayLabel" : "8월 3일 (월) 오후 8:00 · 60분"
+      },
+      "recruit" : {
+        "current" : 4,
+        "max" : 4,
+        "recruitStatus" : "CLOSED",
+        "recruitStatusLabel" : "모집 마감"
+      }
+    } ],
+    "sort" : "SCHEDULE",
+    "totalCount" : 2
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_21"><a class="link" href="#_response_fields_21">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].title</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 제목</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].company.companyId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].company.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 (없으면 null)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting.jobPostingId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting.postingName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobRole.jobRoleId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobRole.code</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 코드</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobRole.displayName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].round</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 코드</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].roundLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 유형 코드 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].typeLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 유형 표시명 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].method</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 코드 (ONLINE | OFFLINE)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].methodLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].region</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이면 null)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].region.sigunguId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">지역 시군구 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].region.label</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">지역 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.date</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.dayOfWeekLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요일 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.startTime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 (HH:mm)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.startTimeLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.durationMinutes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">예상 소요 시간(분)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.durationLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">소요 시간 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.displayLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">일정 전체 표시 문구</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.current</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.max</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최대 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.recruitStatus</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.recruitStatusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sort</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">적용된 정렬 (요청 값 에코)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.totalCount</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">전체 결과 수</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_참가_신청_목록_조회_방장"><a class="link" href="#_참가_신청_목록_조회_방장">참가 신청 목록 조회 (방장)</a></h3>
+<div class="paragraph">
+<p>방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자 공개 정보·전달 사항·이력서 AI 요약을 함께 내려준다.
+전달 사항·요약은 방장 외 비공개이며, 이력서 원본으로 가는 경로는 없다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_5"><a class="link" href="#_path_parameters_5">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. /v1/rooms/{roomId}/applications</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 목록을 조회할 룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_23"><a class="link" href="#_http_response_23">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 1213
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "applications" : [ {
+      "applicationId" : 3001,
+      "applicant" : {
+        "memberId" : "00000000-0000-0000-0000-000000000002",
+        "nickname" : "성실한 다람쥐 12",
+        "jobTitle" : "프론트엔드 개발",
+        "activitySummary" : "완료한 모의면접 8회"
+      },
+      "note" : "결제 도메인 1차 면접을 앞두고 있어요. 실전처럼 연습하고 싶어 신청합니다.",
+      "aiSummary" : {
+        "status" : "DONE",
+        "text" : "프론트엔드 2년 차. React·TypeScript, 결제 위젯 연동 경험."
+      },
+      "status" : "PENDING",
+      "statusLabel" : "대기",
+      "appliedAt" : "2026-07-31T10:20:00"
+    }, {
+      "applicationId" : 3002,
+      "applicant" : {
+        "memberId" : "00000000-0000-0000-0000-000000000003",
+        "nickname" : "꼼꼼한 고슴도치 03",
+        "jobTitle" : "프론트엔드 개발",
+        "activitySummary" : null
+      },
+      "note" : null,
+      "aiSummary" : {
+        "status" : "PROCESSING",
+        "text" : null
+      },
+      "status" : "PENDING",
+      "statusLabel" : "대기",
+      "appliedAt" : "2026-07-31T11:05:00"
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_22"><a class="link" href="#_response_fields_22">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참가 신청 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicationId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 id (수락·반려의 입력)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청자 회원 식별자 (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청자 닉네임</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.jobTitle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청자 직무 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.activitySummary</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공개 가능한 활동 정보 (선택, trust 격벽 전까지 자리만)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].note</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">전달 사항 (선택, 방장 외 비공개)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].aiSummary.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 AI 요약 상태 (PROCESSING | DONE | FAILED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].aiSummary.text</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 본문 (준비 중이면 null)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].statusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 표시명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].appliedAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 시각 (yyyy-MM-ddTHH:mm:ss)</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_참가_신청_수락"><a class="link" href="#_참가_신청_수락">참가 신청 수락</a></h3>
+<div class="paragraph">
+<p>방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인원을 증가시킨다.
+정원에 도달하면 모집 상태가 마감(<code>CLOSED</code>)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도 1건만 성공한다(정원 마감 시 수락 불가 — 에러 코드는 도메인 구현 시 확정).
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications/3001/accept' -i -X POST</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_6"><a class="link" href="#_path_parameters_6">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 6. /v1/rooms/{roomId}/applications/{applicationId}/accept</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>applicationId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">수락할 신청 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_24"><a class="link" href="#_http_response_24">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 289
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "applicationId" : 3001,
+    "status" : "ACCEPTED",
+    "statusLabel" : "수락",
+    "recruit" : {
+      "current" : 2,
+      "max" : 6,
+      "recruitStatus" : "RECRUITING",
+      "recruitStatusLabel" : "모집 중"
+    }
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_23"><a class="link" href="#_response_fields_23">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applicationId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리된 신청 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 (ACCEPTED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.statusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 표시명 (수락)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.current</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">수락 반영 후 현재 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.max</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최대 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatus</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 표시명</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_참가_신청_반려"><a class="link" href="#_참가_신청_반려">참가 신청 반려</a></h3>
+<div class="paragraph">
+<p>방장이 대기 중인 신청을 반려한다(「룸 참여」 §4.4). 사유는 선택이며, 반려는 정원·참여자 목록에 영향이 없다. 반려된 사용자는 같은 룸에 재신청할 수 없다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications/3001/reject' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "reason" : "이번 일정과 준비 방향이 맞지 않아요."
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_7"><a class="link" href="#_path_parameters_7">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 7. /v1/rooms/{roomId}/applications/{applicationId}/reject</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>applicationId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">반려할 신청 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_8"><a class="link" href="#_request_fields_8">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>reason</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">반려 사유 (선택, 최대 200자)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_25"><a class="link" href="#_http_response_25">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 289
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "applicationId" : 3001,
+    "status" : "REJECTED",
+    "statusLabel" : "반려",
+    "recruit" : {
+      "current" : 1,
+      "max" : 6,
+      "recruitStatus" : "RECRUITING",
+      "recruitStatusLabel" : "모집 중"
+    }
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_24"><a class="link" href="#_response_fields_24">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applicationId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리된 신청 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 (REJECTED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.statusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청 상태 표시명 (반려)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.current</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원 (반려는 변동 없음)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.max</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최대 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatus</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 (RECRUITING | CLOSED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatusLabel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 표시명</p></td>
 </tr>
 </tbody>
 </table>
@@ -4015,7 +4733,7 @@ Content-Length: 2132
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-07-30 14:58:42 UTC
+Last updated 2026-07-31 07:33:21 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

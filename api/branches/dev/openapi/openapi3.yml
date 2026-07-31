@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-07-30",
-                        "datetime" : "2026-07-30T14:59:26.867848896",
+                        "date" : "2026-07-31",
+                        "datetime" : "2026-07-31T07:34:19.713804846",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-07-30",
-                        "datetime" : "2026-07-30T14:59:27.0260291",
+                        "date" : "2026-07-31",
+                        "datetime" : "2026-07-31T07:34:19.927178144",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -118,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 searchCompanies-e400:
                   value: |-
@@ -152,82 +152,27 @@ paths:
                       },
                       "error" : null
                     }
-  /v1/interviews:
+  /v1/job-postings:
     post:
       tags:
       - v1
-      summary: 면접 생성
-      description: "생성 위저드(B·06~B·09)의 입력을 한 번에 받아 면접을 만들고 즉시 모집(RECRUITING) 상태로 등\
-        록한다(§4.8). 회사·직무·지역·이력서는 카탈로그/업로드 참조 id 를 받는다. (모킹: 도메인 구현 전까지 고정 식별자(interviewId=1024)를\
-        \ 반환한다)"
-      operationId: createInterview
+      summary: 채용 공고 즉시 생성
+      description: "링크로 공고를 즉시 생성한다(§4.1). 승인 대기 없이 verified=false 로 만들어져 바로 룸 생성에\
+        \ 사용할 수 있다. 회사는 기존 카탈로그 회사 id 로 받고, 공고명은 사용자가 확정한 값을 사용한다. companyId·url·\
+        postingName 누락·형식 오류는 400(E400)으로 응답한다. (모킹: 고정 jobPostingId(90101)를 반환한다)"
+      operationId: createJobPosting
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-interviews516247986"
+              $ref: "#/components/schemas/v1-job-postings1900667415"
             examples:
-              createInterview:
-                value: |-
-                  {
-                    "companyId" : 1,
-                    "jobPostingId" : 1,
-                    "jobRoleId" : 1,
-                    "round" : "FIRST",
-                    "type" : "JOB",
-                    "method" : "OFFLINE",
-                    "sigunguId" : 1,
-                    "minParticipants" : 3,
-                    "maxParticipants" : 6,
-                    "schedule" : {
-                      "date" : "2026-08-01",
-                      "startTime" : "14:00",
-                      "durationMinutes" : 90
-                    },
-                    "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
-                    "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-                    "resumeId" : 90001,
-                    "discloseResumeOriginal" : true
-                  }
-      responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-interviews2000552289"
-              examples:
-                createInterview:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "interviewId" : 1024,
-                        "status" : "RECRUITING"
-                      },
-                      "error" : null
-                    }
-  /v1/job-posting-requests:
-    post:
-      tags:
-      - v1
-      summary: 채용 공고 링크 추가 요청
-      description: "'찾는 공고가 없나요? 공고 링크를 남기면 추가해 드려요'(B·06, §4.1) — 목록에 없는 공고를 링크로\
-        \ 접수한다. 회사 미선택 상태에서도 요청할 수 있다. url 누락·형식 오류는 400(E400)으로 응답한다. (모킹: 접수(RECEIVED)만\
-        \ 반환하고 고정 requestId(5001)를 돌려준다)"
-      operationId: requestJobPosting
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/v1-job-posting-requests-1605368061"
-            examples:
-              requestJobPosting:
+              createJobPosting:
                 value: |-
                   {
                     "companyId" : 43429,
                     "url" : "https://company.example.com/careers/12345",
-                    "memo" : "결제플랫폼 프론트엔드 공고예요."
+                    "postingName" : "프론트엔드 개발자 (결제플랫폼)"
                   }
       responses:
         "200":
@@ -235,15 +180,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-job-posting-requests2037882423"
+                $ref: "#/components/schemas/v1-job-postings1515935278"
               examples:
-                requestJobPosting:
+                createJobPosting:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "requestId" : 5001,
-                        "status" : "RECEIVED"
+                        "jobPostingId" : 90101,
+                        "companyId" : 43429,
+                        "postingName" : "프론트엔드 개발자 (결제플랫폼)",
+                        "sourceUrl" : "https://company.example.com/careers/12345",
+                        "verified" : false
                       },
                       "error" : null
                     }
@@ -318,37 +266,206 @@ paths:
                       },
                       "error" : null
                     }
-  /v1/resumes:
-    post:
+  /v1/rooms:
+    get:
       tags:
       - v1
-      summary: 이력서 업로드
-      description: "소개와 이력서(B·08) 단계의 이력서 PDF 업로드. multipart/form-data 로 파일 파트(file)를\
-        \ 받는다. 업로드 직후 AI 요약은 PROCESSING 이며, 이후 이력서 조회로 폴링해 DONE 을 확인한다(§4.5). (모킹\
-        : 파일을 저장하지 않고 메타데이터만 에코하며 고정 resumeId(90001)를 반환한다)"
-      operationId: uploadResume
+      summary: 룸 탐색 목록 조회
+      description: "조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있다. 필터는\
+        \ AND 로 결합하고, 완료·취소·일정 경과 룸은 제외된다. (모킹: 필터·정렬을 실제 적용하지 않고 고정 목록을 반환하되 요청 sort\
+        \ 는 그대로 되돌려준다)"
+      operationId: rooms
+      parameters:
+      - name: companyId
+        in: query
+        description: 회사 id 필터 (선택)
+        required: false
+        schema:
+          type: string
+      - name: jobRoleId
+        in: query
+        description: 직무 id 필터 (선택)
+        required: false
+        schema:
+          type: string
+      - name: round
+        in: query
+        description: 면접 차수 필터 (선택)
+        required: false
+        schema:
+          type: string
+      - name: method
+        in: query
+        description: "진행 방식 필터 (ONLINE | OFFLINE, 선택)"
+        required: false
+        schema:
+          type: string
+      - name: sigunguId
+        in: query
+        description: 오프라인 지역 시군구 id 필터 (선택)
+        required: false
+        schema:
+          type: string
+      - name: availableOnly
+        in: query
+        description: 참여 가능한 룸만 보기 토글 (기본 false)
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        description: "정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순 | CLOSING 마감 임박순, 기본 SCHEDULE)"
+        required: false
+        schema:
+          type: string
       responses:
         "200":
           description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-resumes-1674245103"
+                $ref: "#/components/schemas/v1-rooms-126398339"
               examples:
-                uploadResume:
+                rooms:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "resumeId" : 90001,
-                        "fileName" : "김민수_이력서.pdf",
-                        "fileSize" : 26,
-                        "fileSizeLabel" : "26B",
-                        "status" : "UPLOADED",
-                        "aiSummary" : {
-                          "status" : "PROCESSING",
-                          "text" : null
-                        }
+                        "rooms" : [ {
+                          "roomId" : "01920000-0000-7000-8000-000000000001",
+                          "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+                          "company" : {
+                            "companyId" : 1,
+                            "name" : "달빛페이"
+                          },
+                          "jobPosting" : {
+                            "jobPostingId" : 1,
+                            "postingName" : "프론트엔드 개발자 (결제플랫폼)"
+                          },
+                          "jobRole" : {
+                            "jobRoleId" : 1,
+                            "code" : "FRONTEND_DEVELOPER",
+                            "displayName" : "프론트엔드 개발"
+                          },
+                          "round" : "FIRST",
+                          "roundLabel" : "1차 면접",
+                          "type" : "JOB",
+                          "typeLabel" : "직무 면접",
+                          "method" : "OFFLINE",
+                          "methodLabel" : "오프라인",
+                          "region" : {
+                            "sigunguId" : 1,
+                            "label" : "서울 강남구"
+                          },
+                          "schedule" : {
+                            "date" : "2026-08-01",
+                            "dayOfWeekLabel" : "토",
+                            "startTime" : "14:00",
+                            "startTimeLabel" : "오후 2:00",
+                            "durationMinutes" : 90,
+                            "durationLabel" : "90분",
+                            "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+                          },
+                          "recruit" : {
+                            "current" : 1,
+                            "max" : 6,
+                            "recruitStatus" : "RECRUITING",
+                            "recruitStatusLabel" : "모집 중"
+                          }
+                        }, {
+                          "roomId" : "01920000-0000-7000-8000-000000000002",
+                          "title" : "정산 백엔드 최종 면접 같이 대비해요",
+                          "company" : {
+                            "companyId" : 1,
+                            "name" : "달빛페이"
+                          },
+                          "jobPosting" : {
+                            "jobPostingId" : 2,
+                            "postingName" : "백엔드 개발자 (정산)"
+                          },
+                          "jobRole" : {
+                            "jobRoleId" : 2,
+                            "code" : "BACKEND_DEVELOPER",
+                            "displayName" : "백엔드 개발"
+                          },
+                          "round" : "FINAL",
+                          "roundLabel" : "최종 면접",
+                          "type" : null,
+                          "typeLabel" : null,
+                          "method" : "ONLINE",
+                          "methodLabel" : "온라인",
+                          "region" : null,
+                          "schedule" : {
+                            "date" : "2026-08-03",
+                            "dayOfWeekLabel" : "월",
+                            "startTime" : "20:00",
+                            "startTimeLabel" : "오후 8:00",
+                            "durationMinutes" : 60,
+                            "durationLabel" : "60분",
+                            "displayLabel" : "8월 3일 (월) 오후 8:00 · 60분"
+                          },
+                          "recruit" : {
+                            "current" : 4,
+                            "max" : 4,
+                            "recruitStatus" : "CLOSED",
+                            "recruitStatusLabel" : "모집 마감"
+                          }
+                        } ],
+                        "sort" : "SCHEDULE",
+                        "totalCount" : 2
+                      },
+                      "error" : null
+                    }
+    post:
+      tags:
+      - v1
+      summary: 룸 생성
+      description: "생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받아 룸을 만들고 즉시 모집(RECRUITING)\
+        \ 상태로 등록한다(§4.8). 공고를 고르면 회사가 함께 확정되므로 룸에는 회사를 따로 저장하지 않는다(공고 → 회사 파생). 직무\
+        ·지역·이력서는 카탈로그/보관함 참조 id 를 받는다. (모킹: 도메인 구현 전까지 고정 roomId(UUID)를 반환한다)"
+      operationId: createRoom
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-1620848945"
+            examples:
+              createRoom:
+                value: |-
+                  {
+                    "postingId" : 1,
+                    "jobRoleId" : 1,
+                    "round" : "FIRST",
+                    "type" : "JOB",
+                    "method" : "OFFLINE",
+                    "sigunguId" : 1,
+                    "minParticipants" : 3,
+                    "maxParticipants" : 6,
+                    "schedule" : {
+                      "date" : "2026-08-01",
+                      "startTime" : "14:00",
+                      "durationMinutes" : 90
+                    },
+                    "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+                    "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
+                    "resumeId" : 90001,
+                    "resumePublic" : true
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-583341076"
+              examples:
+                createRoom:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "roomId" : "01920000-0000-7000-8000-000000000001",
+                        "status" : "RECRUITING"
                       },
                       "error" : null
                     }
@@ -374,7 +491,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "b480f429-dcf7-45b2-9161-5d29ddefac0c",
+                          "termsId" : "7f45fbba-deab-45ad-89fe-7a4a4e7b6541",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -382,7 +499,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "0d1cb8cc-9a25-4f11-a607-1f13d1da5f38",
+                          "termsId" : "4549726f-c77c-482a-bbb3-9f108965310a",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -454,7 +571,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -467,170 +584,43 @@ paths:
                         "data" : null
                       }
                     }
-  /v1/interviews/form-options:
-    get:
+  /v1/job-postings/link-metadata:
+    post:
       tags:
       - v1
-      summary: 면접 생성 폼 선택지 조회
-      description: 면접 정보·진행 방식(B·06·B·07) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다.
-        라벨을 서버가 소유하도록 목으로 제공한다.
-      operationId: interviewFormOptions
+      summary: 채용 공고 링크 메타데이터 조회
+      description: "목록에 없는 공고를 만들기 전, 링크의 OG 태그를 읽어 공고명 후보와 미리보기(이미지·설명·출처)를 돌려준다\
+        (§4.1). 회사는 OG 에서 추출하지 않으며, 생성 요청에서 목록으로 지정한다. url 누락·형식 오류는 400(E400)으로 응\
+        답한다. (모킹: 링크와 무관하게 고정 메타를 반환하되 요청 url 을 출처로 반영한다)"
+      operationId: jobPostingLinkMetadata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-job-postings-link-metadata-637272183"
+            examples:
+              jobPostingLinkMetadata:
+                value: |-
+                  {
+                    "url" : "https://company.example.com/careers/12345"
+                  }
       responses:
         "200":
           description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-interviews-form-options-38619118"
+                $ref: "#/components/schemas/v1-job-postings-link-metadata-841275103"
               examples:
-                interviewFormOptions:
+                jobPostingLinkMetadata:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "rounds" : [ {
-                          "code" : "FIRST",
-                          "label" : "1차"
-                        }, {
-                          "code" : "SECOND",
-                          "label" : "2차"
-                        }, {
-                          "code" : "THIRD",
-                          "label" : "3차"
-                        }, {
-                          "code" : "FINAL",
-                          "label" : "최종"
-                        } ],
-                        "types" : [ {
-                          "code" : "JOB",
-                          "label" : "직무 면접"
-                        }, {
-                          "code" : "CULTURE_FIT",
-                          "label" : "컬처핏"
-                        }, {
-                          "code" : "EXECUTIVE",
-                          "label" : "임원 면접"
-                        }, {
-                          "code" : "TECH_ASSIGNMENT",
-                          "label" : "기술 과제"
-                        } ],
-                        "methods" : [ {
-                          "code" : "ONLINE",
-                          "label" : "온라인",
-                          "hint" : "화상 링크는 진행이 확정되면 만들어져요."
-                        }, {
-                          "code" : "OFFLINE",
-                          "label" : "오프라인",
-                          "hint" : "지역만 정하면 돼요."
-                        } ],
-                        "durations" : [ {
-                          "minutes" : 30,
-                          "label" : "30분"
-                        }, {
-                          "minutes" : 60,
-                          "label" : "60분"
-                        }, {
-                          "minutes" : 90,
-                          "label" : "90분"
-                        }, {
-                          "minutes" : 120,
-                          "label" : "120분"
-                        } ],
-                        "participantConstraints" : {
-                          "min" : 2,
-                          "max" : 8
-                        }
-                      },
-                      "error" : null
-                    }
-  /v1/interviews/{interviewId}:
-    get:
-      tags:
-      - v1
-      summary: 면접 상세 조회
-      description: "생성 완료(B·10) 및 상세 화면. 공개 데이터만 노출한다(§6). 방장 블록의 신뢰 지표는 공개 프로필 API\
-        \ 와 같은 값을 미러링한다. (모킹: 도메인 구현 전까지 figma 목업 값 고정 반환)"
-      operationId: interviewDetail
-      parameters:
-      - name: interviewId
-        in: path
-        description: 조회할 면접 id
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-interviews-interviewId-580137958"
-              examples:
-                interviewDetail:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "interviewId" : 1024,
-                        "status" : "RECRUITING",
-                        "statusLabel" : "모집 중",
-                        "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
-                        "company" : {
-                          "companyId" : 1,
-                          "name" : "달빛페이"
-                        },
-                        "jobPosting" : {
-                          "jobPostingId" : 1,
-                          "title" : "프론트엔드 개발자 (결제플랫폼)"
-                        },
-                        "jobRole" : {
-                          "jobRoleId" : 1,
-                          "code" : "FRONTEND_DEVELOPER",
-                          "displayName" : "프론트엔드 개발"
-                        },
-                        "round" : "FIRST",
-                        "roundLabel" : "1차 면접",
-                        "type" : "JOB",
-                        "typeLabel" : "직무 면접",
-                        "method" : "OFFLINE",
-                        "methodLabel" : "오프라인",
-                        "region" : {
-                          "sigunguId" : 1,
-                          "label" : "서울 강남구"
-                        },
-                        "schedule" : {
-                          "date" : "2026-08-01",
-                          "dayOfWeekLabel" : "토",
-                          "startTime" : "14:00",
-                          "startTimeLabel" : "오후 2:00",
-                          "durationMinutes" : 90,
-                          "durationLabel" : "90분",
-                          "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
-                        },
-                        "description" : "실제 1차 면접 형식 그대로 진행해요. 한 사람씩 30분 모의면접을 보고, 끝나면 다 같이 피드백을 나눠요. 결제·정산 도메인 질문 위주로 준비할게요.",
-                        "notice" : "신청할 땐 이력서를 올려요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
-                        "recruit" : {
-                          "current" : 1,
-                          "min" : 3,
-                          "max" : 6,
-                          "confirmable" : false,
-                          "remainingToConfirm" : 2,
-                          "progressRatio" : 0.17,
-                          "message" : "2명이 더 모이면 확정할 수 있어요"
-                        },
-                        "host" : {
-                          "memberId" : "00000000-0000-0000-0000-000000000001",
-                          "nickname" : "집요한 수달 07",
-                          "jobTitle" : "프론트엔드 개발",
-                          "isHost" : true,
-                          "stats" : {
-                            "completedInterviewCount" : 12,
-                            "attendanceRate" : 96,
-                            "averageRating" : 4.8
-                          },
-                          "aiSummary" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심, 디자인 시스템 구축 경험."
-                        },
-                        "viewerRole" : "HOST"
+                        "postingName" : "프론트엔드 개발자 (결제플랫폼)",
+                        "imageUrl" : "https://img.example.com/careers/fe-pay.png",
+                        "description" : "결제·정산 플랫폼 프론트엔드 개발자를 모집합니다.",
+                        "sourceUrl" : "https://company.example.com/careers/12345"
                       },
                       "error" : null
                     }
@@ -657,7 +647,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "8d40203a-5fa4-454a-b784-91ea45fcd9ef",
+                        "memberId" : "027aeff9-feb7-4bdb-838b-073cee600900",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
@@ -671,7 +661,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -689,7 +679,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -723,7 +713,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -789,18 +779,94 @@ paths:
                       },
                       "error" : null
                     }
-  /v1/resumes/{resumeId}:
+  /v1/rooms/form-options:
     get:
       tags:
       - v1
-      summary: 이력서 조회
-      description: "업로드한 이력서의 상태와 AI 요약을 조회한다. 업로드 후 요약 완료(DONE)를 폴링하는 용도. (모킹: 조회\
-        \ 시 항상 요약 완료(DONE)를 반환한다)"
-      operationId: resumeDetail
+      summary: 룸 생성 폼 선택지 조회
+      description: 기본 정보·진행 방식(§4.1·§4.2) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다.
+        라벨을 서버가 소유하도록 목으로 제공한다.
+      operationId: roomFormOptions
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-form-options-38619118"
+              examples:
+                roomFormOptions:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "rounds" : [ {
+                          "code" : "FIRST",
+                          "label" : "1차"
+                        }, {
+                          "code" : "SECOND",
+                          "label" : "2차"
+                        }, {
+                          "code" : "THIRD",
+                          "label" : "3차"
+                        }, {
+                          "code" : "FINAL",
+                          "label" : "최종"
+                        } ],
+                        "types" : [ {
+                          "code" : "JOB",
+                          "label" : "직무 면접"
+                        }, {
+                          "code" : "CULTURE_FIT",
+                          "label" : "컬처핏"
+                        }, {
+                          "code" : "EXECUTIVE",
+                          "label" : "임원 면접"
+                        }, {
+                          "code" : "TECH_ASSIGNMENT",
+                          "label" : "기술 과제"
+                        } ],
+                        "methods" : [ {
+                          "code" : "ONLINE",
+                          "label" : "온라인",
+                          "hint" : "화상 링크는 진행이 확정되면 만들어져요."
+                        }, {
+                          "code" : "OFFLINE",
+                          "label" : "오프라인",
+                          "hint" : "지역만 정하면 돼요."
+                        } ],
+                        "durations" : [ {
+                          "minutes" : 30,
+                          "label" : "30분"
+                        }, {
+                          "minutes" : 60,
+                          "label" : "60분"
+                        }, {
+                          "minutes" : 90,
+                          "label" : "90분"
+                        }, {
+                          "minutes" : 120,
+                          "label" : "120분"
+                        } ],
+                        "participantConstraints" : {
+                          "min" : 2,
+                          "max" : 8
+                        }
+                      },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}:
+    get:
+      tags:
+      - v1
+      summary: 룸 상세 조회
+      description: "생성 완료 및 탐색 상세 화면(「룸 탐색」 §4.4). 공개 데이터만 노출한다(§6). 방장 블록의 신뢰 지표는\
+        \ 공개 프로필 API 와 같은 값을 미러링한다. (모킹: 도메인 구현 전까지 figma 목업 값 고정 반환)"
+      operationId: roomDetail
       parameters:
-      - name: resumeId
+      - name: roomId
         in: path
-        description: 조회할 이력서 id
+        description: 조회할 룸 id (UUID)
         required: true
         schema:
           type: string
@@ -810,22 +876,75 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-resumes-resumeId1899319176"
+                $ref: "#/components/schemas/v1-rooms-roomId-1097935140"
               examples:
-                resumeDetail:
+                roomDetail:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "resumeId" : 90001,
-                        "fileName" : "김민수_이력서.pdf",
-                        "fileSize" : 245760,
-                        "fileSizeLabel" : "240KB",
-                        "status" : "UPLOADED",
-                        "aiSummary" : {
-                          "status" : "DONE",
-                          "text" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심으로 일했고, 디자인 시스템 구축 경험이 있어요."
-                        }
+                        "roomId" : "01920000-0000-7000-8000-000000000001",
+                        "status" : "RECRUITING",
+                        "statusLabel" : "모집 중",
+                        "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
+                        "company" : {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        },
+                        "jobPosting" : {
+                          "jobPostingId" : 1,
+                          "postingName" : "프론트엔드 개발자 (결제플랫폼)"
+                        },
+                        "jobRole" : {
+                          "jobRoleId" : 1,
+                          "code" : "FRONTEND_DEVELOPER",
+                          "displayName" : "프론트엔드 개발"
+                        },
+                        "round" : "FIRST",
+                        "roundLabel" : "1차 면접",
+                        "type" : "JOB",
+                        "typeLabel" : "직무 면접",
+                        "method" : "OFFLINE",
+                        "methodLabel" : "오프라인",
+                        "region" : {
+                          "sigunguId" : 1,
+                          "label" : "서울 강남구"
+                        },
+                        "schedule" : {
+                          "date" : "2026-08-01",
+                          "dayOfWeekLabel" : "토",
+                          "startTime" : "14:00",
+                          "startTimeLabel" : "오후 2:00",
+                          "durationMinutes" : 90,
+                          "durationLabel" : "90분",
+                          "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+                        },
+                        "description" : "실제 1차 면접 형식 그대로 진행해요. 한 사람씩 30분 모의면접을 보고, 끝나면 다 같이 피드백을 나눠요. 결제·정산 도메인 질문 위주로 준비할게요.",
+                        "resumePublic" : true,
+                        "resumePolicyLabel" : "이력서 원본 공개 (진행 확정 후 확정 참여자끼리)",
+                        "notice" : "신청할 땐 보관한 이력서를 골라요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
+                        "recruit" : {
+                          "current" : 1,
+                          "min" : 3,
+                          "max" : 6,
+                          "confirmable" : false,
+                          "remainingToConfirm" : 2,
+                          "progressRatio" : 0.17,
+                          "message" : "2명이 더 모이면 확정할 수 있어요"
+                        },
+                        "host" : {
+                          "memberId" : "00000000-0000-0000-0000-000000000001",
+                          "nickname" : "집요한 수달 07",
+                          "jobTitle" : "프론트엔드 개발",
+                          "isHost" : true,
+                          "stats" : {
+                            "completedRoomCount" : 12,
+                            "attendanceRate" : 96,
+                            "averageRating" : 4.8
+                          },
+                          "aiSummary" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심, 디자인 시스템 구축 경험."
+                        },
+                        "viewerRole" : "HOST"
                       },
                       "error" : null
                     }
@@ -834,9 +953,9 @@ paths:
       tags:
       - v1
       summary: 회사별 채용 공고 목록 조회
-      description: "면접 정보(B·06)에서 회사를 고르면 그 회사의 채용 공고 목록이 채워진다. 공고를 고르면 직무 셀렉트가 자동\
-        으로 채워질 수 있다. (모킹: '공고' 카탈로그 도입이 미확정이라 회사와 무관하게 고정 3건을 반환하되 요청 companyId 를\
-        \ 각 공고에 반영한다)"
+      description: "기본 정보(「룸 생성」 §4.1)에서 회사를 고르면 그 회사의 채용 공고 목록이 채워진다. 공고를 고르면 직무\
+        \ 셀렉트가 자동으로 채워질 수 있다. (모킹: '공고' 카탈로그 시드가 미구현이라 회사와 무관하게 고정 3건을 반환하되 요청 companyId\
+        \ 를 각 공고에 반영한다)"
       operationId: jobPostings
       parameters:
       - name: companyId
@@ -851,7 +970,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies-companyId-job-postings1023174911"
+                $ref: "#/components/schemas/v1-companies-companyId-job-postings-104781794"
               examples:
                 jobPostings:
                   value: |-
@@ -861,27 +980,27 @@ paths:
                         "jobPostings" : [ {
                           "jobPostingId" : 1,
                           "companyId" : 43429,
-                          "title" : "프론트엔드 개발자 (결제플랫폼)",
+                          "postingName" : "프론트엔드 개발자 (결제플랫폼)",
                           "jobRoleId" : 1,
                           "jobRoleName" : "프론트엔드 개발",
                           "sourceUrl" : "https://dalbitpay.example.com/careers/fe-pay",
-                          "status" : "OPEN"
+                          "verified" : true
                         }, {
                           "jobPostingId" : 2,
                           "companyId" : 43429,
-                          "title" : "백엔드 개발자 (정산)",
+                          "postingName" : "백엔드 개발자 (정산)",
                           "jobRoleId" : 2,
                           "jobRoleName" : "백엔드 개발",
                           "sourceUrl" : "https://dalbitpay.example.com/careers/be-settle",
-                          "status" : "OPEN"
+                          "verified" : true
                         }, {
                           "jobPostingId" : 3,
                           "companyId" : 43429,
-                          "title" : "프로덕트 디자이너",
+                          "postingName" : "프로덕트 디자이너",
                           "jobRoleId" : 3,
                           "jobRoleName" : "프로덕트 디자인",
                           "sourceUrl" : "https://dalbitpay.example.com/careers/product-designer",
-                          "status" : "OPEN"
+                          "verified" : false
                         } ]
                       },
                       "error" : null
@@ -940,7 +1059,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1005:
                   value: |-
@@ -958,7 +1077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1102:
                   value: |-
@@ -976,7 +1095,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1007:
                   value: |-
@@ -1053,7 +1172,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "ae19f3ab-7669-43f2-b64d-0ad8e0533365",
+                        "memberId" : "f10182a9-e645-4ab0-9ce0-3f5d50871068",
                         "jobRoleId" : 2,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1074,7 +1193,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -1092,7 +1211,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -1110,7 +1229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1303:
                   value: |-
@@ -1192,7 +1311,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1301:
                   value: |-
@@ -1223,7 +1342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1201:
                   value: |-
@@ -1259,7 +1378,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "c48bf400-c379-4313-9f9b-a96bbe74459b",
+                        "memberId" : "e5e0c2c9-7697-4998-8ad6-c0a5658bb7db",
                         "jobRoleId" : 1,
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "BOTH",
@@ -1274,7 +1393,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createProfile-e1102:
                   value: |-
@@ -1316,7 +1435,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "39013756-0d37-490b-9ea8-aab74c638194",
+                        "memberId" : "13e8b2ff-8c54-4008-896b-f13b11142947",
                         "nickname" : "집요한 수달 07",
                         "jobTitle" : "프론트엔드 개발",
                         "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -1352,28 +1471,177 @@ paths:
                       },
                       "error" : null
                     }
+  /v1/rooms/{roomId}/applications:
+    get:
+      tags:
+      - v1
+      summary: 참가 신청 목록 조회 (방장)
+      description: "방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자의 공개 정보·전달 사항·이력\
+        서 AI 요약·처리 상태를 함께 내려준다. AI 요약이 아직 없으면 status=PROCESSING('요약 준비 중')으로 표시된다\
+        . 전달 사항·요약은 방장 외 비공개이며, 이력서 원본으로 가는 경로는 없다(§6). (모킹: 고정 신청 2건(대기)을 반환한다)"
+      operationId: roomApplications
+      parameters:
+      - name: roomId
+        in: path
+        description: 신청 목록을 조회할 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-applications-1743114874"
+              examples:
+                roomApplications:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "applications" : [ {
+                          "applicationId" : 3001,
+                          "applicant" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000002",
+                            "nickname" : "성실한 다람쥐 12",
+                            "jobTitle" : "프론트엔드 개발",
+                            "activitySummary" : "완료한 모의면접 8회"
+                          },
+                          "note" : "결제 도메인 1차 면접을 앞두고 있어요. 실전처럼 연습하고 싶어 신청합니다.",
+                          "aiSummary" : {
+                            "status" : "DONE",
+                            "text" : "프론트엔드 2년 차. React·TypeScript, 결제 위젯 연동 경험."
+                          },
+                          "status" : "PENDING",
+                          "statusLabel" : "대기",
+                          "appliedAt" : "2026-07-31T10:20:00"
+                        }, {
+                          "applicationId" : 3002,
+                          "applicant" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000003",
+                            "nickname" : "꼼꼼한 고슴도치 03",
+                            "jobTitle" : "프론트엔드 개발",
+                            "activitySummary" : null
+                          },
+                          "note" : null,
+                          "aiSummary" : {
+                            "status" : "PROCESSING",
+                            "text" : null
+                          },
+                          "status" : "PENDING",
+                          "statusLabel" : "대기",
+                          "appliedAt" : "2026-07-31T11:05:00"
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}/applications/{applicationId}/accept:
+    post:
+      tags:
+      - v1
+      summary: 참가 신청 수락
+      description: "방장이 대기 중인 신청을 수락한다(§4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인\
+        원을 증가시킨다. 정원에 도달하면 모집 상태가 마감(CLOSED)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도 1건만 성공한\
+        다(동시성). (모킹: 정원 검사 없이 성공 결과(current+1)를 고정 반환한다)"
+      operationId: acceptApplication
+      parameters:
+      - name: roomId
+        in: path
+        description: 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      - name: applicationId
+        in: path
+        description: 수락할 신청 id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-accept1478496507"
+              examples:
+                acceptApplication:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "applicationId" : 3001,
+                        "status" : "ACCEPTED",
+                        "statusLabel" : "수락",
+                        "recruit" : {
+                          "current" : 2,
+                          "max" : 6,
+                          "recruitStatus" : "RECRUITING",
+                          "recruitStatusLabel" : "모집 중"
+                        }
+                      },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}/applications/{applicationId}/reject:
+    post:
+      tags:
+      - v1
+      summary: 참가 신청 반려
+      description: "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택이며, 반려는 정원·참여자 목록에 영향이 없다. 반려된\
+        \ 사용자는 같은 룸에 재신청할 수 없다. (모킹: 성공 결과를 고정 반환한다)"
+      operationId: rejectApplication
+      parameters:
+      - name: roomId
+        in: path
+        description: 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      - name: applicationId
+        in: path
+        description: 반려할 신청 id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-reject-1248448091"
+            examples:
+              rejectApplication:
+                value: |-
+                  {
+                    "reason" : "이번 일정과 준비 방향이 맞지 않아요."
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-reject855969760"
+              examples:
+                rejectApplication:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "applicationId" : 3001,
+                        "status" : "REJECTED",
+                        "statusLabel" : "반려",
+                        "recruit" : {
+                          "current" : 1,
+                          "max" : 6,
+                          "recruitStatus" : "RECRUITING",
+                          "recruitStatusLabel" : "모집 중"
+                        }
+                      },
+                      "error" : null
+                    }
 components:
   schemas:
-    v1-job-posting-requests2037882423:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - requestId
-          - status
-          type: object
-          properties:
-            requestId:
-              type: number
-              description: 접수된 요청 id
-            status:
-              type: string
-              description: 접수 상태 (RECEIVED)
     v1-companies1839974379:
       required:
       - result
@@ -1402,54 +1670,6 @@ components:
                   name:
                     type: string
                     description: 회사명
-    v1-companies-companyId-job-postings1023174911:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - jobPostings
-          type: object
-          properties:
-            jobPostings:
-              type: array
-              description: 채용 공고 목록
-              items:
-                required:
-                - companyId
-                - jobPostingId
-                - status
-                - title
-                type: object
-                properties:
-                  sourceUrl:
-                    type: string
-                    description: 원본 공고 링크 (선택)
-                    nullable: true
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  jobPostingId:
-                    type: number
-                    description: 채용 공고 id
-                  jobRoleId:
-                    type: number
-                    description: "매핑된 직무 id (선택, 직무 셀렉트 자동 채움)"
-                    nullable: true
-                  title:
-                    type: string
-                    description: 공고 제목
-                  jobRoleName:
-                    type: string
-                    description: 매핑된 직무명 (선택)
-                    nullable: true
-                  status:
-                    type: string
-                    description: 공고 상태 (OPEN)
     v1-members-me-profile889777487:
       type: object
       properties:
@@ -1485,6 +1705,178 @@ components:
             available:
               type: boolean
               description: 사용 가능 여부 (중복이면 false)
+    v1-job-postings-link-metadata-637272183:
+      required:
+      - url
+      type: object
+      properties:
+        url:
+          type: string
+          description: "메타데이터를 읽을 공고 링크 (필수, 최대 2000자)"
+    v1-rooms-126398339:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - rooms
+          - sort
+          - totalCount
+          type: object
+          properties:
+            rooms:
+              type: array
+              description: 룸 목록
+              items:
+                required:
+                - method
+                - methodLabel
+                - roomId
+                - round
+                - roundLabel
+                - title
+                type: object
+                properties:
+                  method:
+                    type: string
+                    description: 진행 방식 코드 (ONLINE | OFFLINE)
+                  jobPosting:
+                    type: object
+                    properties:
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 id
+                        nullable: true
+                      postingName:
+                        type: string
+                        description: 채용 공고명
+                        nullable: true
+                    description: 채용 공고 (없으면 null)
+                  type:
+                    type: string
+                    description: 면접 유형 코드 (선택)
+                    nullable: true
+                  title:
+                    type: string
+                    description: 룸 제목
+                  roomId:
+                    type: string
+                    description: 룸 id (UUID)
+                  schedule:
+                    required:
+                    - date
+                    - dayOfWeekLabel
+                    - displayLabel
+                    - durationLabel
+                    - durationMinutes
+                    - startTime
+                    - startTimeLabel
+                    type: object
+                    properties:
+                      displayLabel:
+                        type: string
+                        description: 일정 전체 표시 문구
+                      date:
+                        type: string
+                        description: 진행 날짜 (yyyy-MM-dd)
+                      durationMinutes:
+                        type: number
+                        description: 예상 소요 시간(분)
+                      startTimeLabel:
+                        type: string
+                        description: 시작 시각 표시명
+                      startTime:
+                        type: string
+                        description: 시작 시각 (HH:mm)
+                      dayOfWeekLabel:
+                        type: string
+                        description: 요일 표시명
+                      durationLabel:
+                        type: string
+                        description: 소요 시간 표시명
+                  round:
+                    type: string
+                    description: 면접 회차 코드
+                  recruit:
+                    required:
+                    - current
+                    - max
+                    - recruitStatus
+                    - recruitStatusLabel
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                        description: 현재 인원
+                      max:
+                        type: number
+                        description: 최대 인원
+                      recruitStatus:
+                        type: string
+                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                      recruitStatusLabel:
+                        type: string
+                        description: 모집 상태 표시명
+                  methodLabel:
+                    type: string
+                    description: 진행 방식 표시명
+                  jobRole:
+                    required:
+                    - code
+                    - displayName
+                    - jobRoleId
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: 직무 코드
+                      displayName:
+                        type: string
+                        description: 직무 표시명
+                      jobRoleId:
+                        type: number
+                        description: 직무 id
+                  typeLabel:
+                    type: string
+                    description: 면접 유형 표시명 (선택)
+                    nullable: true
+                  company:
+                    required:
+                    - companyId
+                    - name
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                      name:
+                        type: string
+                        description: 회사명
+                  region:
+                    type: object
+                    properties:
+                      sigunguId:
+                        type: number
+                        description: 지역 시군구 id
+                        nullable: true
+                      label:
+                        type: string
+                        description: 지역 표시명
+                        nullable: true
+                    description: 오프라인 지역 (온라인이면 null)
+                  roundLabel:
+                    type: string
+                    description: 면접 회차 표시명
+            sort:
+              type: string
+              description: 적용된 정렬 (요청 값 에코)
+            totalCount:
+              type: number
+              description: 전체 결과 수
     v1-members-me-profile-1915001008:
       required:
       - result
@@ -1581,22 +1973,234 @@ components:
         result:
           type: string
           description: 처리 결과 (SUCCESS)
-    v1-job-posting-requests-1605368061:
+    v1-rooms-roomId-1097935140:
       required:
-      - url
+      - result
       type: object
       properties:
-        companyId:
-          type: number
-          description: "회사 id (선택, 미선택 상태에서도 요청 가능)"
-          nullable: true
-        memo:
+        result:
           type: string
-          description: "운영 전달용 메모 (선택, 최대 500자)"
-          nullable: true
-        url:
-          type: string
-          description: "추가를 요청하는 공고 링크 (필수, 최대 2000자)"
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - method
+          - methodLabel
+          - notice
+          - resumePolicyLabel
+          - resumePublic
+          - roomId
+          - round
+          - roundLabel
+          - status
+          - statusLabel
+          - title
+          - viewerRole
+          type: object
+          properties:
+            resumePublic:
+              type: boolean
+              description: 이력서 원본 공개 여부 (룸 속성)
+            method:
+              type: string
+              description: 진행 방식 코드 (ONLINE | OFFLINE)
+            viewerRole:
+              type: string
+              description: 조회자 역할 (HOST | PARTICIPANT | APPLICANT | GUEST)
+            description:
+              type: string
+              description: 룸 설명 (선택)
+              nullable: true
+            jobPosting:
+              type: object
+              properties:
+                jobPostingId:
+                  type: number
+                  description: 채용 공고 id
+                  nullable: true
+                postingName:
+                  type: string
+                  description: 채용 공고명
+                  nullable: true
+              description: 채용 공고 (없으면 null)
+            type:
+              type: string
+              description: 면접 유형 코드 (선택)
+              nullable: true
+            title:
+              type: string
+              description: 룸 제목
+            statusLabel:
+              type: string
+              description: 상태 표시명 (모집 중)
+            roomId:
+              type: string
+              description: 룸 id (UUID)
+            schedule:
+              required:
+              - date
+              - dayOfWeekLabel
+              - displayLabel
+              - durationLabel
+              - durationMinutes
+              - startTime
+              - startTimeLabel
+              type: object
+              properties:
+                displayLabel:
+                  type: string
+                  description: 일정 전체 표시 문구
+                date:
+                  type: string
+                  description: 진행 날짜 (yyyy-MM-dd)
+                durationMinutes:
+                  type: number
+                  description: 예상 소요 시간(분)
+                startTimeLabel:
+                  type: string
+                  description: 시작 시각 표시명 (오후 2:00)
+                startTime:
+                  type: string
+                  description: 시작 시각 (HH:mm)
+                dayOfWeekLabel:
+                  type: string
+                  description: 요일 표시명 (토)
+                durationLabel:
+                  type: string
+                  description: 소요 시간 표시명 (90분)
+            round:
+              type: string
+              description: 면접 회차 코드
+            recruit:
+              required:
+              - confirmable
+              - current
+              - max
+              - message
+              - min
+              - progressRatio
+              - remainingToConfirm
+              type: object
+              properties:
+                progressRatio:
+                  type: number
+                  description: 모집 진행률 (0.0~1.0)
+                remainingToConfirm:
+                  type: number
+                  description: 확정까지 남은 인원
+                current:
+                  type: number
+                  description: 현재 인원 (방장 겸 참여자 포함)
+                min:
+                  type: number
+                  description: 최소 인원
+                max:
+                  type: number
+                  description: 최대 인원
+                confirmable:
+                  type: boolean
+                  description: 확정 가능 여부 (최소 인원 충족)
+                message:
+                  type: string
+                  description: 모집 상태 안내 문구
+            host:
+              required:
+              - aiSummary
+              - isHost
+              - memberId
+              - nickname
+              type: object
+              properties:
+                isHost:
+                  type: boolean
+                  description: 조회자가 방장인지 여부
+                stats:
+                  required:
+                  - attendanceRate
+                  - averageRating
+                  - completedRoomCount
+                  type: object
+                  properties:
+                    averageRating:
+                      type: number
+                      description: 방장 평균 별점
+                    completedRoomCount:
+                      type: number
+                      description: 방장 완료 룸 수
+                    attendanceRate:
+                      type: number
+                      description: 방장 출석률 (%)
+                aiSummary:
+                  type: string
+                  description: 방장 이력 AI 요약
+                jobTitle:
+                  type: string
+                  description: 방장 직무 (선택)
+                  nullable: true
+                nickname:
+                  type: string
+                  description: 방장 닉네임
+                memberId:
+                  type: string
+                  description: 방장 회원 식별자 (UUID)
+            methodLabel:
+              type: string
+              description: 진행 방식 표시명
+            jobRole:
+              required:
+              - code
+              - displayName
+              - jobRoleId
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 직무 코드
+                displayName:
+                  type: string
+                  description: 직무 표시명
+                jobRoleId:
+                  type: number
+                  description: 직무 id
+            typeLabel:
+              type: string
+              description: 면접 유형 표시명 (선택)
+              nullable: true
+            company:
+              required:
+              - companyId
+              - name
+              type: object
+              properties:
+                companyId:
+                  type: number
+                  description: 회사 id
+                name:
+                  type: string
+                  description: 회사명
+            resumePolicyLabel:
+              type: string
+              description: 이력서 공유 정책 표시명
+            region:
+              type: object
+              properties:
+                sigunguId:
+                  type: number
+                  description: 지역 시군구 id (OFFLINE 일 때)
+                  nullable: true
+                label:
+                  type: string
+                  description: 지역 표시명 (서울 강남구)
+                  nullable: true
+              description: 오프라인 지역 (온라인이면 null)
+            roundLabel:
+              type: string
+              description: 면접 회차 표시명
+            notice:
+              type: string
+              description: 신청 전 안내 문구
+            status:
+              type: string
+              description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
     post-1780624183:
       required:
       - data
@@ -1605,6 +2209,26 @@ components:
         data:
           type: string
           description: ExampleBody Data Field
+    v1-rooms-583341076:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - roomId
+          - status
+          type: object
+          properties:
+            roomId:
+              type: string
+              description: "생성된 룸 id (UUID, 상세로 이동에 사용)"
+            status:
+              type: string
+              description: 룸 상태 (RECRUITING)
     v1-members-me-766176819:
       required:
       - result
@@ -1637,6 +2261,122 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+    v1-rooms-roomId-applications-applicationId-accept1478496507:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            recruit:
+              required:
+              - current
+              - max
+              - recruitStatus
+              - recruitStatusLabel
+              type: object
+              properties:
+                current:
+                  type: number
+                  description: 수락 반영 후 현재 인원
+                max:
+                  type: number
+                  description: 최대 인원
+                recruitStatus:
+                  type: string
+                  description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                recruitStatusLabel:
+                  type: string
+                  description: 모집 상태 표시명
+            applicationId:
+              type: number
+              description: 처리된 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (수락)
+            status:
+              type: string
+              description: 신청 상태 (ACCEPTED)
+    v1-rooms-roomId-applications-1743114874:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applications
+          type: object
+          properties:
+            applications:
+              type: array
+              description: 참가 신청 목록
+              items:
+                required:
+                - applicationId
+                - appliedAt
+                - status
+                - statusLabel
+                type: object
+                properties:
+                  note:
+                    type: string
+                    description: "전달 사항 (선택, 방장 외 비공개)"
+                    nullable: true
+                  aiSummary:
+                    required:
+                    - status
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                        description: AI 요약 본문 (준비 중이면 null)
+                        nullable: true
+                      status:
+                        type: string
+                        description: 이력서 AI 요약 상태 (PROCESSING | DONE | FAILED)
+                  applicationId:
+                    type: number
+                    description: 신청 id (수락·반려의 입력)
+                  appliedAt:
+                    type: string
+                    description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
+                  statusLabel:
+                    type: string
+                    description: 신청 상태 표시명
+                  status:
+                    type: string
+                    description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN)
+                  applicant:
+                    required:
+                    - memberId
+                    - nickname
+                    type: object
+                    properties:
+                      jobTitle:
+                        type: string
+                        description: 신청자 직무 (선택)
+                        nullable: true
+                      nickname:
+                        type: string
+                        description: 신청자 닉네임
+                      activitySummary:
+                        type: string
+                        description: "공개 가능한 활동 정보 (선택, trust 격벽 전까지 자리만)"
+                        nullable: true
+                      memberId:
+                        type: string
+                        description: 신청자 회원 식별자 (UUID)
     v1-nicknames-suggestion679533277:
       required:
       - result
@@ -1653,7 +2393,23 @@ components:
             nickname:
               type: string
               description: 추천 닉네임 (중복 아님 보장)
-    v1-interviews2000552289:
+    v1-job-postings1900667415:
+      required:
+      - companyId
+      - postingName
+      - url
+      type: object
+      properties:
+        companyId:
+          type: number
+          description: "회사 id (필수, /v1/companies 검색 결과)"
+        postingName:
+          type: string
+          description: "확정한 공고명 (필수, 최대 100자)"
+        url:
+          type: string
+          description: "원본 공고 링크 (필수, 최대 2000자)"
+    v1-companies-companyId-job-postings-104781794:
       required:
       - result
       type: object
@@ -1663,16 +2419,44 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - interviewId
-          - status
+          - jobPostings
           type: object
           properties:
-            interviewId:
-              type: number
-              description: 생성된 면접 id (상세로 이동에 사용)
-            status:
-              type: string
-              description: 면접 상태 (RECRUITING)
+            jobPostings:
+              type: array
+              description: 채용 공고 목록
+              items:
+                required:
+                - companyId
+                - jobPostingId
+                - postingName
+                - verified
+                type: object
+                properties:
+                  sourceUrl:
+                    type: string
+                    description: 원본 공고 링크 (선택)
+                    nullable: true
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  jobPostingId:
+                    type: number
+                    description: 채용 공고 id
+                  verified:
+                    type: boolean
+                    description: 운영 검수 여부 (링크 생성분은 false)
+                  jobRoleId:
+                    type: number
+                    description: "매핑된 직무 id (선택, 직무 셀렉트 자동 채움)"
+                    nullable: true
+                  postingName:
+                    type: string
+                    description: 공고명
+                  jobRoleName:
+                    type: string
+                    description: 매핑된 직무명 (선택)
+                    nullable: true
     v1-members-me-profile902443370:
       required:
       - result
@@ -1724,7 +2508,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-interviews-form-options-38619118:
+    v1-rooms-form-options-38619118:
       required:
       - result
       type: object
@@ -1816,7 +2600,7 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
-    v1-resumes-1674245103:
+    v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result
       type: object
@@ -1826,40 +2610,40 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - fileName
-          - fileSize
-          - fileSizeLabel
-          - resumeId
+          - applicationId
           - status
+          - statusLabel
           type: object
           properties:
-            fileName:
-              type: string
-              description: 원본 파일명
-            resumeId:
-              type: number
-              description: 이력서 id (면접 생성 시 참조)
-            fileSize:
-              type: number
-              description: 파일 크기(바이트)
-            aiSummary:
+            recruit:
               required:
-              - status
+              - current
+              - max
+              - recruitStatus
+              - recruitStatusLabel
               type: object
               properties:
-                text:
+                current:
+                  type: number
+                  description: 현재 인원 (반려는 변동 없음)
+                max:
+                  type: number
+                  description: 최대 인원
+                recruitStatus:
                   type: string
-                  description: AI 요약 본문 (PROCESSING 중에는 null)
-                  nullable: true
-                status:
+                  description: 모집 상태 (RECRUITING | CLOSED)
+                recruitStatusLabel:
                   type: string
-                  description: AI 요약 상태 (PROCESSING | DONE | FAILED)
-            fileSizeLabel:
+                  description: 모집 상태 표시명
+            applicationId:
+              type: number
+              description: 처리된 신청 id
+            statusLabel:
               type: string
-              description: 파일 크기 표시명 (240KB)
+              description: 신청 상태 표시명 (반려)
             status:
               type: string
-              description: 이력서 상태 (UPLOADED)
+              description: 신청 상태 (REJECTED)
     v1-members-me-nickname-346517390:
       required:
       - nickname
@@ -1916,6 +2700,76 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
+    v1-rooms-1620848945:
+      required:
+      - jobRoleId
+      - maxParticipants
+      - method
+      - minParticipants
+      - postingId
+      - resumeId
+      - resumePublic
+      - round
+      - title
+      type: object
+      properties:
+        resumePublic:
+          type: boolean
+          description: "이력서 원본 공개 여부 (룸 속성, 기본 false)"
+        method:
+          type: string
+          description: 진행 방식 (ONLINE | OFFLINE)
+        description:
+          type: string
+          description: "룸 설명 (선택, 최대 1000자)"
+          nullable: true
+        title:
+          type: string
+          description: "룸 제목 (필수, 최대 60자)"
+        type:
+          type: string
+          description: "면접 유형 (JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT, 선택\
+            )"
+          nullable: true
+        minParticipants:
+          type: number
+          description: "최소 인원 (방장 포함, 2 이상)"
+        maxParticipants:
+          type: number
+          description: "최대 인원 (8 이하, 최소 인원 이상)"
+        schedule:
+          required:
+          - date
+          - durationMinutes
+          - startTime
+          type: object
+          properties:
+            date:
+              type: string
+              description: "진행 날짜 (yyyy-MM-dd, 미래)"
+            durationMinutes:
+              type: number
+              description: 예상 소요 시간(분)
+            startTime:
+              type: string
+              description: 시작 시각 (HH:mm)
+        postingId:
+          type: number
+          description: "채용 공고 id (필수, /v1/companies/{companyId}/job-postings 또는 POST\
+            \ /v1/job-postings). 회사는 공고에서 파생"
+        sigunguId:
+          type: number
+          description: "지역 시군구 id (OFFLINE 일 때, /v1/regions)"
+          nullable: true
+        resumeId:
+          type: number
+          description: 방장이 제출할 보관 이력서 id (회원 보관함)
+        round:
+          type: string
+          description: 면접 회차 (FIRST | SECOND | THIRD | FINAL)
+        jobRoleId:
+          type: number
+          description: "직무 id (필수, /v1/job-roles)"
     v1-regions1871099627:
       required:
       - result
@@ -2008,224 +2862,6 @@ components:
                   content:
                     type: string
                     description: 약관 본문
-    v1-interviews-interviewId-580137958:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - interviewId
-          - method
-          - methodLabel
-          - notice
-          - round
-          - roundLabel
-          - status
-          - statusLabel
-          - title
-          - viewerRole
-          type: object
-          properties:
-            method:
-              type: string
-              description: 진행 방식 코드 (ONLINE | OFFLINE)
-            viewerRole:
-              type: string
-              description: 조회자 역할 (HOST | PARTICIPANT | GUEST)
-            description:
-              type: string
-              description: 면접 소개 (선택)
-              nullable: true
-            jobPosting:
-              type: object
-              properties:
-                jobPostingId:
-                  type: number
-                  description: 채용 공고 id (없으면 미노출)
-                  nullable: true
-                title:
-                  type: string
-                  description: 채용 공고 제목
-                  nullable: true
-            type:
-              type: string
-              description: 면접 유형 코드 (선택)
-              nullable: true
-            title:
-              type: string
-              description: 면접 제목
-            statusLabel:
-              type: string
-              description: 상태 표시명 (모집 중)
-            schedule:
-              required:
-              - date
-              - dayOfWeekLabel
-              - displayLabel
-              - durationLabel
-              - durationMinutes
-              - startTime
-              - startTimeLabel
-              type: object
-              properties:
-                displayLabel:
-                  type: string
-                  description: 일정 전체 표시 문구
-                date:
-                  type: string
-                  description: 면접 날짜 (yyyy-MM-dd)
-                durationMinutes:
-                  type: number
-                  description: 예상 소요 시간(분)
-                startTimeLabel:
-                  type: string
-                  description: 시작 시각 표시명 (오후 2:00)
-                startTime:
-                  type: string
-                  description: 시작 시각 (HH:mm)
-                dayOfWeekLabel:
-                  type: string
-                  description: 요일 표시명 (토)
-                durationLabel:
-                  type: string
-                  description: 소요 시간 표시명 (90분)
-            interviewId:
-              type: number
-              description: 면접 id
-            round:
-              type: string
-              description: 면접 회차 코드
-            recruit:
-              required:
-              - confirmable
-              - current
-              - max
-              - message
-              - min
-              - progressRatio
-              - remainingToConfirm
-              type: object
-              properties:
-                progressRatio:
-                  type: number
-                  description: 모집 진행률 (0.0~1.0)
-                remainingToConfirm:
-                  type: number
-                  description: 확정까지 남은 인원
-                current:
-                  type: number
-                  description: 현재 인원 (방장 겸 참여자 포함)
-                min:
-                  type: number
-                  description: 최소 인원
-                max:
-                  type: number
-                  description: 최대 인원
-                confirmable:
-                  type: boolean
-                  description: 확정 가능 여부 (최소 인원 충족)
-                message:
-                  type: string
-                  description: 모집 상태 안내 문구
-            host:
-              required:
-              - aiSummary
-              - isHost
-              - memberId
-              - nickname
-              type: object
-              properties:
-                isHost:
-                  type: boolean
-                  description: 조회자가 방장인지 여부
-                stats:
-                  required:
-                  - attendanceRate
-                  - averageRating
-                  - completedInterviewCount
-                  type: object
-                  properties:
-                    completedInterviewCount:
-                      type: number
-                      description: 방장 완료 면접 수
-                    averageRating:
-                      type: number
-                      description: 방장 평균 별점
-                    attendanceRate:
-                      type: number
-                      description: 방장 출석률 (%)
-                aiSummary:
-                  type: string
-                  description: 방장 이력 AI 요약
-                jobTitle:
-                  type: string
-                  description: 방장 직무 (선택)
-                  nullable: true
-                nickname:
-                  type: string
-                  description: 방장 닉네임
-                memberId:
-                  type: string
-                  description: 방장 회원 식별자 (UUID)
-            methodLabel:
-              type: string
-              description: 진행 방식 표시명
-            jobRole:
-              required:
-              - code
-              - displayName
-              - jobRoleId
-              type: object
-              properties:
-                code:
-                  type: string
-                  description: 직무 코드
-                displayName:
-                  type: string
-                  description: 직무 표시명
-                jobRoleId:
-                  type: number
-                  description: 직무 id
-            typeLabel:
-              type: string
-              description: 면접 유형 표시명 (선택)
-              nullable: true
-            company:
-              required:
-              - companyId
-              - name
-              type: object
-              properties:
-                companyId:
-                  type: number
-                  description: 회사 id
-                name:
-                  type: string
-                  description: 회사명
-            region:
-              type: object
-              properties:
-                sigunguId:
-                  type: number
-                  description: 지역 시군구 id (OFFLINE 일 때)
-                  nullable: true
-                label:
-                  type: string
-                  description: 지역 표시명 (서울 강남구)
-                  nullable: true
-            roundLabel:
-              type: string
-              description: 면접 회차 표시명
-            notice:
-              type: string
-              description: 신청 전 안내 문구
-            status:
-              type: string
-              description: 면접 상태 (RECRUITING)
     v1-members-memberId-profile-573351263:
       required:
       - result
@@ -2310,80 +2946,46 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-interviews516247986:
-      required:
-      - companyId
-      - discloseResumeOriginal
-      - jobRoleId
-      - maxParticipants
-      - method
-      - minParticipants
-      - resumeId
-      - round
-      - title
+    v1-rooms-roomId-applications-applicationId-reject-1248448091:
       type: object
       properties:
-        method:
+        reason:
           type: string
-          description: 진행 방식 (ONLINE | OFFLINE)
-        description:
-          type: string
-          description: "면접 소개 (선택, 최대 1000자)"
+          description: "반려 사유 (선택, 최대 200자)"
           nullable: true
-        title:
+    v1-job-postings1515935278:
+      required:
+      - result
+      type: object
+      properties:
+        result:
           type: string
-          description: "면접 제목 (필수, 최대 60자)"
-        type:
-          type: string
-          description: "면접 유형 (JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT, 선택\
-            )"
-          nullable: true
-        minParticipants:
-          type: number
-          description: "최소 인원 (방장 포함, 2 이상)"
-        maxParticipants:
-          type: number
-          description: "최대 인원 (8 이하, 최소 인원 이상)"
-        schedule:
+          description: 처리 결과 (SUCCESS)
+        data:
           required:
-          - date
-          - durationMinutes
-          - startTime
+          - companyId
+          - jobPostingId
+          - postingName
+          - sourceUrl
+          - verified
           type: object
           properties:
-            date:
+            sourceUrl:
               type: string
-              description: 면접 날짜 (yyyy-MM-dd)
-            durationMinutes:
+              description: 공고 출처 링크
+            companyId:
               type: number
-              description: 예상 소요 시간(분)
-            startTime:
+              description: 회사 id
+            jobPostingId:
+              type: number
+              description: 생성된 채용 공고 id (룸 생성에 바로 사용)
+            verified:
+              type: boolean
+              description: 운영 검수 여부 (생성 직후 false)
+            postingName:
               type: string
-              description: 시작 시각 (HH:mm)
-        companyId:
-          type: number
-          description: "회사 id (필수, /v1/companies 검색)"
-        discloseResumeOriginal:
-          type: boolean
-          description: 이력서 원본 공개 여부 (기본 true)
-        sigunguId:
-          type: number
-          description: "지역 시군구 id (OFFLINE 일 때, /v1/regions)"
-          nullable: true
-        resumeId:
-          type: number
-          description: 업로드한 이력서 id (POST /v1/resumes)
-        round:
-          type: string
-          description: 면접 회차 (FIRST | SECOND | THIRD | FINAL)
-        jobPostingId:
-          type: number
-          description: "채용 공고 id (선택, /v1/companies/{companyId}/job-postings)"
-          nullable: true
-        jobRoleId:
-          type: number
-          description: "직무 id (필수, /v1/job-roles)"
-    v1-members-me910352763:
+              description: 공고명
+    v1-members-me-nickname910352763:
       required:
       - result
       type: object
@@ -2409,6 +3011,34 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
+    v1-job-postings-link-metadata-841275103:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - postingName
+          - sourceUrl
+          type: object
+          properties:
+            sourceUrl:
+              type: string
+              description: "공고 출처 링크 (og:url, 없으면 요청 url)"
+            imageUrl:
+              type: string
+              description: "미리보기 이미지 (og:image, 없으면 null)"
+              nullable: true
+            description:
+              type: string
+              description: "미리보기 설명 (og:description, 없으면 null)"
+              nullable: true
+            postingName:
+              type: string
+              description: "공고명 후보 (og:title, 사용자가 확인·수정)"
     v1-members-me-profile-69778644:
       type: object
       properties:
@@ -2434,50 +3064,6 @@ components:
           nullable: true
           items:
             type: number
-    v1-resumes-resumeId1899319176:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - fileName
-          - fileSize
-          - fileSizeLabel
-          - resumeId
-          - status
-          type: object
-          properties:
-            fileName:
-              type: string
-              description: 원본 파일명
-            resumeId:
-              type: number
-              description: 이력서 id
-            fileSize:
-              type: number
-              description: 파일 크기(바이트)
-            aiSummary:
-              required:
-              - status
-              type: object
-              properties:
-                text:
-                  type: string
-                  description: AI 요약 본문 (DONE 이면 채워짐)
-                  nullable: true
-                status:
-                  type: string
-                  description: AI 요약 상태 (PROCESSING | DONE | FAILED)
-            fileSizeLabel:
-              type: string
-              description: 파일 크기 표시명 (240KB)
-            status:
-              type: string
-              description: 이력서 상태 (UPLOADED)
   securitySchemes:
     oauth2:
       type: oauth2
