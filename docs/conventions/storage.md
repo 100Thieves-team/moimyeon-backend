@@ -124,8 +124,10 @@ CONSTRAINT uk_xxx_active UNIQUE (col, _active_check)
 
   뒤집어 말하면, 조인에 속성이 붙을 여지가 조금이라도 있으면(관심 등록 시각, 우선순위)
   처음부터 엔티티로 만든다. 나중에 갈아엎는 비용이 훨씬 크다.
-- 이력 테이블은 append-only 로 선언하고(주석) 애플리케이션에서 UPDATE/DELETE 하지 않는다
-  (예: `terms_agreement`).
+- 이력 테이블은 append-only 로 선언한다(주석). **이미 쌓인 사실을 고치거나 물리 삭제하지 않는다**는
+  뜻이며(예: `terms_agreement`, `room_status_log`), 유일한 예외가 `deleted_at` 이다.
+  소프트 삭제는 값의 수정이 아니라 "이 기록은 무효"라는 표식의 추가로 읽고, 그 밖의 컬럼은
+  한 번 쓰면 바뀌지 않는다. 재동의처럼 사실이 갱신되는 경우는 되살리기가 아니라 새 행 append 다.
 
 ## JPA 매핑 규칙
 

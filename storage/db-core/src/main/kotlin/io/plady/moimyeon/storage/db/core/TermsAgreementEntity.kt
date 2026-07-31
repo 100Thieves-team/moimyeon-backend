@@ -8,7 +8,8 @@ import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
-// append-only 이력. 재동의는 되살리기가 아니라 새 행 append 다(schema.sql 의 _active_check).
+// append-only 이력. 쌓인 사실은 고치지 않고 deleted_at 으로 가리는 것만 허용한다.
+// 재동의는 되살리기가 아니라 새 행 append 다(schema.sql 의 _active_check).
 @Entity
 @Table(
     name = "terms_agreement",

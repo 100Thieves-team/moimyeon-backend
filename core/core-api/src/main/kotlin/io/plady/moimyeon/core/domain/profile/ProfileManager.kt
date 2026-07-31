@@ -16,7 +16,7 @@ class ProfileManager(
 ) {
     @Transactional
     fun append(memberId: UUID, content: ProfileContent): UUID {
-        val existing = memberProfileRepository.findById(memberId).orElse(null)
+        val existing = memberProfileRepository.findForUpdateByMemberId(memberId)
         if (existing == null) {
             memberProfileRepository.save(ProfileMapper.toEntity(memberId, content))
         } else {
@@ -31,7 +31,7 @@ class ProfileManager(
     @Transactional
     fun update(memberId: UUID, content: ProfileContent): UUID {
         val entity = requireFound(
-            memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId),
+            memberProfileRepository.findForUpdateByMemberId(memberId)?.takeIf { it.isActive() },
             CoreErrorType.PROFILE_NOT_FOUND,
         )
         entity.updateProfile(content.bio, content.meetingPreference, content.sigunguId)

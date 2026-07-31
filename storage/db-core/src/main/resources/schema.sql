@@ -76,7 +76,7 @@
 --                       terms 의 (type, version) 도 같은 버전을 다시 발행하지 않는다.
 -- - PK 가 유니크 역할을 하는 member_profile 은 이 트릭을 쓸 수 없어 되살리기로 처리한다.
 --
--- created_at/updated_at 은 모든 엔티티 테이블이 갖는다(값 컬렉션 3개는 제외).
+-- created_at/updated_at 은 모든 엔티티 테이블이 갖는다(값 컬렉션인 review_tag 만 제외).
 --   참조 데이터는 갱신 주체인 크롤러가 직접 세팅한다 —
 --   ON UPDATE CURRENT_TIMESTAMP 는 H2 가 지원하지 않아 이 파일에 쓰지 않는다(위 ⚠️ 참고).
 --
@@ -317,7 +317,7 @@ CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 
 -- 소개 정보(전부 선택 입력). 행 존재 = 온보딩(최초 소개 작성) 제출 완료라는 파생 사실의 근거.
--- 관심 회사·관심 직무는 다건이라 별도 값 컬렉션 테이블로 뺐다(아래).
+-- 관심 회사·관심 직무는 다건이라 별도 조인 엔티티로 뺐다(아래) — 값 컬렉션이 아니다.
 -- 베이스 상속(AbstractEntity) — PK 가 member_id 라 UuidBaseEntity 는 쓸 수 없다.
 --   PK 에는 _active_check 트릭이 통하지 않으므로(PK 는 NULL 불가) 재작성은 되살리기로 처리한다.
 --   온보딩 완료 판정은 "행 존재"에서 "살아있는 행 존재"로 읽는다.
@@ -406,7 +406,9 @@ CREATE TABLE terms (
     CONSTRAINT uk_terms_type_version UNIQUE (type, version)
 );
 
--- 동의 이력은 append-only: 애플리케이션에서 UPDATE/DELETE 를 수행하지 않는다.
+-- 동의 이력은 append-only: 이미 쌓인 사실(누가 언제 무엇에 동의했는가)을 고치거나 물리 삭제하지 않는다.
+-- 유일한 예외가 deleted_at 이다. 잘못 쌓인 행을 가리는 소프트 삭제만 허용하고, 그것도 값의 수정이 아니라
+-- "이 기록은 무효"라는 표식의 추가로 읽는다. 나머지 컬럼은 한 번 쓰면 바뀌지 않는다.
 -- 재동의는 되살리기가 아니라 새 행으로 append 한다 — 언제 다시 동의했는지가 증빙의 핵심이다.
 -- _active_check 가 그 append 를 가능하게 한다(유니크를 살아있는 행끼리만 걸어 준다).
 CREATE TABLE terms_agreement (
@@ -465,8 +467,8 @@ CREATE INDEX ix_room_sigungu_id ON room (sigungu_id);
 -- 룸의 상태를 바꾼 사람과 시각. 비즈니스 로직이 읽는 값이 아니라 분쟁 대응·지표용이다.
 -- 방장이 위임되면 확정자와 완료자가 달라질 수 있어 룸의 컬럼으로 두지 않았다.
 -- (room_id, transition_type) 유니크가 확정·완료 처리의 멱등성을 DB 레벨에서 보장한다.
--- append-only 로 다루되 베이스는 상속한다 — 애플리케이션은 UPDATE/DELETE 를 하지 않고,
---   deleted_at 은 운영이 잘못 찍힌 전이를 걷어낼 때만 쓴다. 룸이 소프트 삭제돼도 로그는 남는다.
+-- append-only 로 다루되 베이스는 상속한다 — 쌓인 전이 기록은 고치지 않고,
+--   deleted_at 만 예외로 운영이 잘못 찍힌 전이를 걷어낼 때 쓴다. 룸이 소프트 삭제돼도 로그는 남는다.
 --   유니크가 멱등성을 보장하므로 걷어낸 뒤 다시 전이할 수 있도록 _active_check 를 붙였다.
 CREATE TABLE room_status_log (
     id                BIGINT      NOT NULL AUTO_INCREMENT,
@@ -780,8 +782,10 @@ CREATE INDEX ix_review_target_member_id ON review (target_member_id);
 
 -- 평가 태그(다건). 태그는 열거값이며 마스터 테이블을 두지 않는다 —
 -- "자주 받은 태그" 집계는 GROUP BY 로 되고, 마스터가 있어도 집계에 도움이 되지 않는다.
--- member_profile_interest_* 와 같은 값 컬렉션 패턴이라 별도 PK 없이 쌍 유니크만 둔다.
--- @ElementCollection 이라 타임스탬프도 deleted_at 도 없다 — 후기가 소프트 삭제되면 태그는 그대로 딸려 숨는다.
+-- 마스터가 없는 단순 값이므로 값 컬렉션이다 — 이 스키마에서 @ElementCollection 은 여기 하나뿐이다.
+-- 그래서 별도 PK 없이 쌍 유니크만 두고 타임스탬프도 deleted_at 도 없다.
+-- 후기가 소프트 삭제되면 태그는 그대로 딸려 숨는다.
+-- (member_profile_interest_* 는 양쪽이 다 엔티티인 M:N 이라 조인 테이블도 엔티티다. 위 정책 참고.)
 CREATE TABLE review_tag (
     review_id BIGINT      NOT NULL,
     tag       VARCHAR(40) NOT NULL,
