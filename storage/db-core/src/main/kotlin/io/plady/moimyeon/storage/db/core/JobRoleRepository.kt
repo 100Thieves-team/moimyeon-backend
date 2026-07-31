@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface JobRoleRepository : JpaRepository<JobRoleEntity, Long> {
     fun findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc(): List<JobRoleEntity>
 
-    fun existsByIdAndDeletedAtIsNull(id: Long): Boolean
+    fun findByIdInAndDeletedAtIsNull(ids: Collection<Long>): List<JobRoleEntity>
 }

@@ -2,6 +2,7 @@ import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
 import com.epages.restdocs.apispec.gradle.PluginOauth2Configuration
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
 import io.swagger.v3.core.util.Yaml
@@ -121,12 +122,15 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 
 // restdocs-api-spec 필드 문서화로 표현할 수 없는 OpenAPI 3.0 계약을 생성 후 보정한다.
 // - error.data: "필드명 -> 사유" 맵이라 additionalProperties 스키마가 필요
-// - interestCompanyIds: 스칼라 배열의 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음
+// - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
+//   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
+val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
+
 fun patchGeneratedSchemas(yamlFile: File) {
     val mapper = Yaml.mapper()
     val root = mapper.readTree(yamlFile)
     var errorDataPatched = 0
-    var interestCompanyIdsPatched = 0
+    val numberArraysPatched = mutableSetOf<String>()
     root.path("components").path("schemas").forEach { schema ->
         val errorData = schema.path("properties").path("error").path("properties").path("data")
         if (errorData is ObjectNode) {
@@ -136,15 +140,26 @@ fun patchGeneratedSchemas(yamlFile: File) {
             errorData.put("nullable", true)
             errorData.set<ObjectNode>("additionalProperties", mapper.createObjectNode().put("type", "string"))
         }
-        val interestCompanyIds = schema.path("properties").path("interestCompanyIds")
-        if (interestCompanyIds is ObjectNode && interestCompanyIds.path("type").asText() == "array") {
-            interestCompanyIdsPatched++
-            interestCompanyIds.set<ObjectNode>("items", mapper.createObjectNode().put("type", "number"))
-        }
+        patchNumberIdArrays(schema, mapper, numberArraysPatched)
     }
     // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
     // 미보정 스펙이 나가지 않도록 빌드를 실패시킨다.
     check(errorDataPatched > 0) { "error.data 보정 대상을 스펙에서 찾지 못했다" }
-    check(interestCompanyIdsPatched > 0) { "interestCompanyIds 보정 대상을 스펙에서 찾지 못했다" }
+    val missing = numberIdArrayProperties - numberArraysPatched
+    check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
     mapper.writeValue(yamlFile, root)
+}
+
+fun patchNumberIdArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSet<String>) {
+    if (node is ObjectNode) {
+        node.fields().forEach { (name, value) ->
+            if (name in numberIdArrayProperties && value is ObjectNode && value.path("type").asText() == "array") {
+                patched += name
+                value.set<ObjectNode>("items", mapper.createObjectNode().put("type", "number"))
+            }
+            patchNumberIdArrays(value, mapper, patched)
+        }
+    } else if (node.isArray) {
+        node.forEach { patchNumberIdArrays(it, mapper, patched) }
+    }
 }

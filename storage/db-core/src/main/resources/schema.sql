@@ -10,7 +10,8 @@
 
 DROP TABLE IF EXISTS refresh_token;
 DROP TABLE IF EXISTS terms_agreement;
-DROP TABLE IF EXISTS member_profile_interest;
+DROP TABLE IF EXISTS member_profile_interest_job_role;
+DROP TABLE IF EXISTS member_profile_interest_company;
 DROP TABLE IF EXISTS member_profile;
 DROP TABLE IF EXISTS social_account;
 DROP TABLE IF EXISTS terms;
@@ -146,9 +147,10 @@ CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 
 -- 소개 정보(전부 선택 입력). 행 존재 = 온보딩(최초 소개 작성) 제출 완료라는 파생 사실의 근거.
+-- 직무 단일 참조(job_role_id) 컬럼은 두지 않는다 — 관심 직무는 다건이라
+--   member_profile_interest_job_role 로 뺐다.
 CREATE TABLE member_profile (
     member_id          BINARY(16)   NOT NULL,
-    job_role_id        BIGINT       NULL,
     bio                VARCHAR(500) NULL,
     meeting_preference VARCHAR(20)  NULL,
     sigungu_id         BIGINT       NULL,
@@ -158,12 +160,37 @@ CREATE TABLE member_profile (
     PRIMARY KEY (member_id)
 );
 
--- 관심 회사(company 참조 다건). 프로필과 생명주기를 같이하는 값 컬렉션이라 별도 PK 없이 쌍 유니크만 둔다.
-CREATE TABLE member_profile_interest (
-    member_id  BINARY(16) NOT NULL,
-    company_id BIGINT     NOT NULL,
-    CONSTRAINT uk_member_profile_interest UNIQUE (member_id, company_id)
+-- 관심 회사(프로필↔company 의 M:N 조인). 양쪽이 다 엔티티이므로 값 컬렉션이 아니라 엔티티다 —
+-- id·타임스탬프·deleted_at 을 갖는다. 값 컬렉션은 마스터가 없는 단순 값에만 쓴다(review_tag).
+-- 관심에서 뺀 것은 소프트 삭제로 남긴다. _active_check 덕분에 뺐다가 다시 담으면 새 행으로 들어가고,
+--   "언제부터 관심이었는가"가 created_at 에 보존된다.
+CREATE TABLE member_profile_interest_company (
+    id            BIGINT     NOT NULL AUTO_INCREMENT,
+    member_id     BINARY(16) NOT NULL,
+    company_id    BIGINT     NOT NULL,
+    created_at    DATETIME   NOT NULL,
+    updated_at    DATETIME   NOT NULL,
+    deleted_at    DATETIME   NULL,
+    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+    PRIMARY KEY (id),
+    CONSTRAINT uk_member_profile_interest_company_active UNIQUE (member_id, company_id, _active_check)
 );
+CREATE INDEX ix_member_profile_interest_company_company_id ON member_profile_interest_company (company_id);
+
+-- 관심 직무(프로필↔job_role 의 M:N 조인). 한 사람이 백엔드와 데이터 엔지니어를 함께 준비하는 일이 흔하다.
+-- 프로필의 직무가 아니라 관심 직무이므로 단일 참조가 아니다. 관심 회사와 같은 엔티티 패턴.
+CREATE TABLE member_profile_interest_job_role (
+    id            BIGINT     NOT NULL AUTO_INCREMENT,
+    member_id     BINARY(16) NOT NULL,
+    job_role_id   BIGINT     NOT NULL,
+    created_at    DATETIME   NOT NULL,
+    updated_at    DATETIME   NOT NULL,
+    deleted_at    DATETIME   NULL,
+    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+    PRIMARY KEY (id),
+    CONSTRAINT uk_member_profile_interest_job_role_active UNIQUE (member_id, job_role_id, _active_check)
+);
+CREATE INDEX ix_member_profile_interest_job_role_job_role_id ON member_profile_interest_job_role (job_role_id);
 
 -- status=DEPRECATED 는 "구버전이라 신규 동의 대상 아님"(기존 동의는 유효), deleted_at 은 행 자체의 폐기.
 CREATE TABLE terms (

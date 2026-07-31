@@ -41,15 +41,15 @@ class ProfileServiceTest {
     private val member = Member.register(SocialLoginProvider.GOOGLE, "sub-1", Email("user@example.com"), Nickname("차분한 펭귄 12"), now)
     private val memberId = member.id
     private val content = ProfileContent(
-        jobRoleId = 1L,
         bio = null,
         meetingPreference = null,
         sigunguId = 2L,
+        interestJobRoleIds = listOf(1L),
         interestCompanyIds = listOf(1L),
     )
 
     private fun givenValidCatalogRefs() {
-        every { jobCatalogFinder.existsActiveRole(1L) } returns true
+        every { jobCatalogFinder.allActiveRoles(listOf(1L)) } returns true
         every { regionFinder.existsActiveSigungu(2L) } returns true
         every { companyFinder.allActive(listOf(1L)) } returns true
     }
@@ -86,9 +86,9 @@ class ProfileServiceTest {
     }
 
     @Test
-    fun `존재하지 않는 직무를 선택하면 E1301 을 던진다`() {
+    fun `존재하지 않는 관심 직무를 담으면 E1301 을 던진다`() {
         every { memberFinder.getById(memberId) } returns member
-        every { jobCatalogFinder.existsActiveRole(1L) } returns false
+        every { jobCatalogFinder.allActiveRoles(listOf(1L)) } returns false
 
         assertCreateFails(CoreErrorType.JOB_ROLE_NOT_FOUND)
     }
@@ -96,7 +96,7 @@ class ProfileServiceTest {
     @Test
     fun `존재하지 않는 지역을 선택하면 E1302 를 던진다`() {
         every { memberFinder.getById(memberId) } returns member
-        every { jobCatalogFinder.existsActiveRole(1L) } returns true
+        every { jobCatalogFinder.allActiveRoles(listOf(1L)) } returns true
         every { regionFinder.existsActiveSigungu(2L) } returns false
 
         assertCreateFails(CoreErrorType.REGION_NOT_FOUND)
@@ -105,7 +105,7 @@ class ProfileServiceTest {
     @Test
     fun `존재하지 않는 회사를 담으면 E1303 을 던진다`() {
         every { memberFinder.getById(memberId) } returns member
-        every { jobCatalogFinder.existsActiveRole(1L) } returns true
+        every { jobCatalogFinder.allActiveRoles(listOf(1L)) } returns true
         every { regionFinder.existsActiveSigungu(2L) } returns true
         every { companyFinder.allActive(listOf(1L)) } returns false
 
@@ -153,9 +153,9 @@ class ProfileServiceTest {
 
     @Test
     fun `수정은 카탈로그 참조를 검증하고 전체 교체한다`() {
-        val updatedContent = content.copy(jobRoleId = 2L)
+        val updatedContent = content.copy(interestJobRoleIds = listOf(1L, 2L))
         every { memberFinder.getById(memberId) } returns member
-        every { jobCatalogFinder.existsActiveRole(2L) } returns true
+        every { jobCatalogFinder.allActiveRoles(listOf(1L, 2L)) } returns true
         every { regionFinder.existsActiveSigungu(2L) } returns true
         every { companyFinder.allActive(listOf(1L)) } returns true
         every { profileManager.update(memberId, updatedContent) } returns memberId

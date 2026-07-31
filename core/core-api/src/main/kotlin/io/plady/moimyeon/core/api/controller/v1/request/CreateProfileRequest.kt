@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size
 
 // 직무·지역 참조 id 유효성은 도메인(ProfileService)이 검증
 data class CreateProfileRequest(
-    val jobRoleId: Long? = null,
+    val interestJobRoleIds: List<Long> = emptyList(),
     @field:Size(max = 500)
     val bio: String? = null,
     val meetingPreference: MeetingPreference? = null,
@@ -14,10 +14,10 @@ data class CreateProfileRequest(
 ) {
     fun toContent(): ProfileContent {
         return ProfileContent(
-            jobRoleId = jobRoleId,
             bio = bio,
             meetingPreference = meetingPreference,
             sigunguId = sigunguId,
+            interestJobRoleIds = interestJobRoleIds,
         )
     }
 }

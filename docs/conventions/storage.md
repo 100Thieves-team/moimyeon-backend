@@ -89,8 +89,18 @@ CONSTRAINT uk_xxx_active UNIQUE (col, _active_check)
 - `createdAt`/`updatedAt` 은 모든 테이블이 갖는다(`@CreationTimestamp`/`@UpdateTimestamp` —
   베이스 상속 시 베이스가, 직접 선언 시 엔티티가 제공).
 - Kotlin + JPA 호환: `allOpen` 플러그인을 `@Entity`/`@MappedSuperclass`/`@Embeddable` 에 적용.
-- 값 컬렉션은 `@ElementCollection` + `@CollectionTable` (예: `member_profile_interest` —
-  프로필과 생명주기를 같이하므로 별도 엔티티를 만들지 않는다).
+- 값 컬렉션은 `@ElementCollection` + `@CollectionTable` (예: `review_tag` — 마스터 테이블이 없는
+  열거 문자열이라 별도 엔티티를 만들지 않는다).
+  **기준은 "마스터 테이블이 없는 단순 값인가"다.** 양쪽이 다 엔티티인 M:N 의 조인 테이블은
+  값 컬렉션으로 두지 않고 **조인 테이블도 엔티티로 만든다**
+  (예: `member_profile_interest_company`, `member_profile_interest_job_role`).
+  값 컬렉션에는 세 가지 대가가 따르기 때문이다.
+  - Hibernate 가 한 건만 바뀌어도 소유자의 행을 **전량 DELETE 후 재삽입**한다.
+  - 레포지터리가 없어 "이 직무에 관심 있는 회원" 같은 반대 방향 조회를 못 한다.
+  - `deleted_at` 이 없어 "웬만하면 남긴다"는 소프트 삭제 원칙에서 그 테이블만 빠진다.
+
+  뒤집어 말하면, 조인에 속성이 붙을 여지가 조금이라도 있으면(관심 등록 시각, 우선순위)
+  처음부터 엔티티로 만든다. 나중에 갈아엎는 비용이 훨씬 크다.
 - 이력 테이블은 append-only 로 선언하고(주석) 애플리케이션에서 UPDATE/DELETE 하지 않는다
   (예: `terms_agreement`).
 

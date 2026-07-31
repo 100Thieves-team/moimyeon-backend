@@ -1,54 +1,37 @@
 package io.plady.moimyeon.storage.db.core
 
 import io.plady.moimyeon.core.enums.MeetingPreference
-import jakarta.persistence.CollectionTable
-import jakarta.persistence.Column
-import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.util.UUID
 
+// 관심 회사·관심 직무는 M:N 조인 엔티티로 분리되어 있다
+// (MemberProfileInterestCompanyEntity / MemberProfileInterestJobRoleEntity).
+// 연관관계를 걸지 않는 컨벤션에 따라 여기서 컬렉션을 들지 않고, ProfileManager 가 함께 다룬다.
 @Entity
 @Table(name = "member_profile")
 class MemberProfileEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    var jobRoleId: Long? = null,
     var bio: String? = null,
     @Enumerated(EnumType.STRING)
     var meetingPreference: MeetingPreference? = null,
     var sigunguId: Long? = null,
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-        name = "member_profile_interest",
-        joinColumns = [JoinColumn(name = "member_id")],
-        uniqueConstraints = [UniqueConstraint(name = "uk_member_profile_interest", columnNames = ["member_id", "company_id"])],
-    )
-    @Column(name = "company_id")
-    var interestCompanyIds: MutableList<Long> = mutableListOf(),
 ) : AbstractEntity() {
     // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
     fun updateProfile(
-        jobRoleId: Long?,
         bio: String?,
         meetingPreference: MeetingPreference?,
         sigunguId: Long?,
-        interestCompanyIds: List<Long>,
     ) {
-        this.jobRoleId = jobRoleId
         this.bio = bio
         this.meetingPreference = meetingPreference
         this.sigunguId = sigunguId
-        this.interestCompanyIds.clear()
-        this.interestCompanyIds.addAll(interestCompanyIds)
     }
 }

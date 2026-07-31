@@ -17,15 +17,19 @@ class MemberProfileRepositoryIT(
     val companyRepository: CompanyRepository,
     val jobGroupRepository: JobGroupRepository,
     val jobRoleRepository: JobRoleRepository,
+    val interestCompanyRepository: MemberProfileInterestCompanyRepository,
+    val interestJobRoleRepository: MemberProfileInterestJobRoleRepository,
 ) : CoreDbContextTest() {
     private fun persistCompany(name: String): Long {
         return companyRepository.saveAndFlush(CompanyEntity(corpCode = null, nameKr = name, nameNormalized = name)).id
     }
 
-    private fun persistJobRole(): Long {
-        val group = jobGroupRepository.saveAndFlush(JobGroupEntity(code = "TEST_직군", displayName = "테스트 직군", sortOrder = 1))
+    // code 는 전역 유니크라 호출마다 달라야 한다. 직군은 한 번만 만들어 재사용한다.
+    private fun persistJobRole(code: String = "TEST_직무"): Long {
+        val group = jobGroupRepository.findAll().firstOrNull()
+            ?: jobGroupRepository.saveAndFlush(JobGroupEntity(code = "TEST_직군", displayName = "테스트 직군", sortOrder = 1))
         return jobRoleRepository.saveAndFlush(
-            JobRoleEntity(jobGroupId = group.id, code = "TEST_직무", displayName = "테스트 직무", sortOrder = 1),
+            JobRoleEntity(jobGroupId = group.id, code = code, displayName = "테스트 직무", sortOrder = 1),
         ).id
     }
 
@@ -53,7 +57,6 @@ class MemberProfileRepositoryIT(
         memberProfileRepository.saveAndFlush(
             MemberProfileEntity(
                 memberId = memberId,
-                jobRoleId = persistJobRole(),
                 bio = "자기소개",
                 meetingPreference = MeetingPreference.BOTH,
                 sigunguId = null,
@@ -70,19 +73,49 @@ class MemberProfileRepositoryIT(
     }
 
     @Test
-    fun `관심 회사 컬렉션이 함께 저장되고 조회된다`() {
+    fun `관심 회사 조인이 회원별로 조회된다`() {
         // given
         val memberId = persistMember("google-sub-5")
-        val companyIds = mutableListOf(persistCompany("달빛페이"), persistCompany("한빛커머스"))
-        memberProfileRepository.saveAndFlush(
-            MemberProfileEntity(memberId = memberId, interestCompanyIds = companyIds),
+        val companyIds = listOf(persistCompany("달빛페이"), persistCompany("한빛커머스"))
+        interestCompanyRepository.saveAllAndFlush(
+            companyIds.map { MemberProfileInterestCompanyEntity(memberId = memberId, companyId = it) },
         )
 
         // when
-        val found = memberProfileRepository.findById(memberId).orElse(null)
+        val found = interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId)
 
         // then
-        assertThat(found!!.interestCompanyIds).containsExactlyInAnyOrderElementsOf(companyIds)
+        assertThat(found.map { it.companyId }).containsExactlyInAnyOrderElementsOf(companyIds)
+    }
+
+    @Test
+    fun `관심 직무는 소프트 삭제되고 같은 직무를 다시 담으면 새 행이 된다`() {
+        // given — 한 사람이 여러 직무를 함께 준비하는 경우
+        val memberId = persistMember("google-sub-7")
+        val backend = persistJobRole("TEST_서버_백엔드")
+        val frontend = persistJobRole("TEST_프론트엔드")
+        val saved = interestJobRoleRepository.saveAllAndFlush(
+            listOf(backend, frontend).map { MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = it) },
+        )
+        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+            .containsExactlyInAnyOrder(backend, frontend)
+
+        // when — 백엔드를 관심에서 뺀다(소프트 삭제)
+        saved.first { it.jobRoleId == backend }.delete(now)
+        interestJobRoleRepository.flush()
+
+        // then — 조회에서는 빠지지만 행은 남는다
+        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+            .containsExactly(frontend)
+        assertThat(interestJobRoleRepository.count()).isEqualTo(2)
+
+        // when — 뺐던 직무를 다시 담는다. _active_check 덕분에 유니크와 충돌하지 않는다
+        interestJobRoleRepository.saveAndFlush(MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = backend))
+
+        // then — 되살리기가 아니라 새 행이라 "언제부터 관심인지"가 새로 기록된다
+        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+            .containsExactlyInAnyOrder(backend, frontend)
+        assertThat(interestJobRoleRepository.count()).isEqualTo(3)
     }
 
     @Test
