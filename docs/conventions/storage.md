@@ -11,21 +11,44 @@
 - 재실행 안전을 위해 DROP IF EXISTS(자식→부모) 후 CREATE(부모→자식). DROP 은 인메모리 H2
   재초기화·docker 최초 initdb 용이다. 데이터가 있는 영속 DB 에 수동 실행하면 파괴적이므로 금지.
 - `ddl-auto`: 공통 `validate` (엔티티-스키마 불일치를 부팅에서 검출), local 은 `none` + `sql.init`.
-- 미확정: 운영 스키마 마이그레이션 도구(Flyway 등)는 미도입. 그 전까지 스키마 변경은
-  schema.sql 수정 + dev/live 수동 반영으로 관리한다.
+
+## 영속 DB 변경: Flyway 마이그레이션
+
+- 반영 주체가 환경마다 다르다. local·test(H2)는 `schema.sql`, dev·staging·live 는
+  `db/migration/V*.sql` 이다(`spring.flyway.enabled` 로 가른다). 앱 부팅 시 Flyway 가
+  JPA 보다 먼저 실행되고, 그 결과를 `ddl-auto=validate` 가 검증한다.
+- **`schema.sql` 은 여전히 단일 소스다.** 스키마를 바꾸는 PR 은 `schema.sql` 수정과
+  마이그레이션 추가를 **함께** 한다. `schema.sql` 은 "지금의 전체 모습", 마이그레이션은
+  "거기까지 간 경로"이고 둘의 결과는 같아야 한다.
+- 마이그레이션은 MySQL 에서만 실행되므로 MySQL 방언을 써도 된다. `schema.sql` 은 H2 공통 문법 제약을
+  그대로 받는다 — 그래서 의도적으로 어긋나는 부분이 있다(`job_posting.content` 의 MEDIUMTEXT·FULLTEXT,
+  크롤러 테이블의 `ON UPDATE CURRENT_TIMESTAMP` 와 FK). 그 목록은 `schema.sql` 상단 ⚠️ 블록에 있다.
+- 파일명은 충돌을 피하려고 순번 대신 의미를 쓴다: `V<번호>__<무엇을_하는지>.sql`.
+  번호는 머지 순서대로 이어 붙이되, 브랜치가 겹치면 뒤에 머지되는 쪽이 번호를 올린다.
+- **적용된 마이그레이션은 절대 수정하지 않는다**(체크섬이 깨져 부팅이 막힌다). 잘못 썼으면
+  되돌리는 새 파일을 추가한다. 약관 개정처럼 데이터가 바뀌는 것도 새 파일이다.
+- 데이터가 있는 테이블은 `ALTER` 로만 바꾼다. `DROP TABLE`·`TRUNCATE` 는 0행이 확인된 테이블에만 쓰고,
+  그 전제를 마이그레이션 안에서 가드로 검증한다(V3 참고 — 행이 있으면 스스로 실패한다).
+- 크롤러 소유 테이블(`sido`·`sigungu`·`job_group`·`job_role`·`company`·`job_posting`·`job_posting_role`)의
+  FK 는 남긴다. "FK 를 걸지 않는다"는 앱 테이블 규칙이고, 크롤러 FK 는 적재 파이프라인이 쓰는 장치다.
+- `V1__baseline_dev_snapshot.sql` 은 Flyway 도입 시점 dev 의 실제 모습이라 컨벤션에 어긋나는
+  이름·타입이 들어 있다. 의도된 것이며 V2 가 바로잡는다.
 
 ## 시딩 체계: 세 파일의 역할
 
 | 파일 | 내용 | 로드 경로 |
 | --- | --- | --- |
 | `schema.sql` | DDL | local·test 는 `sql.init`, 로컬 MySQL 은 docker initdb |
-| `seed.sql` | **참조 데이터**(약관, 카탈로그). 스키마의 일부로 취급 | local·test 항상 로드. dev/live 는 수동 1회 |
+| `seed.sql` | **참조 데이터**(약관, 카탈로그). 스키마의 일부로 취급 | local·test 항상 로드. dev/live 는 마이그레이션(V5) |
 | `data-local.sql` | 사람용 로컬 테스트 데이터(테스트 회원 등) | **docker initdb 전용** (앱 설정에 없음) |
 
 - 테스트는 "스키마 + 참조 데이터"만 전제한다. 그 외 데이터는 각 테스트가 스스로 만든다.
   사람용 테스트 데이터가 테스트에 실리면 count 단언이 깨지므로 `data-local.sql` 은 앱 설정에 싣지 않는다.
 - `test` 프로파일은 `spring.profiles.group` 으로 **local 을 상속**하고 데이터 로드만 오버라이드한다.
-- 참조 데이터를 추가하는 PR 은 배포 시 dev/live 에 seed.sql 해당분 수동 반영이 필요함을 PR 본문에 명시한다.
+- 참조 데이터를 추가하는 PR 은 `seed.sql` 과 마이그레이션에 같은 INSERT 를 함께 넣는다.
+  수동 반영에 기대면 환경마다 어긋난다 — dev 의 약관이 오래 비어 있었던 것이 그 사례다.
+  단, `seed.sql` 의 카탈로그 최소 시드(sido·sigungu·job_group·job_role·company)는 마이그레이션에
+  넣지 않는다. dev/live 에는 크롤러가 채운 진짜 데이터가 있고 고정 id 가 충돌한다.
 
 ## 엔티티 스타일
 

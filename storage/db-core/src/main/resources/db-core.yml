@@ -9,6 +9,14 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_batch_fetch_size: 100
+  # 스키마 반영 주체는 환경마다 다르다.
+  #   local·test(H2)  → schema.sql (아래 sql.init). Flyway 는 꺼 둔다.
+  #   dev·staging·live → Flyway (db/migration/*.sql). 각 프로파일 문서에서 켠다.
+  # Flyway 는 JPA EntityManagerFactory 보다 먼저 실행되므로, 마이그레이션이 끝난 스키마를
+  # ddl-auto=validate 가 검증한다. 둘의 순서는 스프링 부트 자동설정이 보장한다.
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
 
 ---
 spring.config.activate.on-profile: local
@@ -94,6 +102,19 @@ storage:
 ---
 spring.config.activate.on-profile: dev
 
+spring:
+  flyway:
+    enabled: true
+    # dev DB 는 Flyway 도입 전에 손으로 만들어져 크롤링 데이터가 들어 있다(company·job_posting 등).
+    # 비어 있지 않은 스키마에 이력 테이블이 없으면 Flyway 는 기본적으로 실패하는데,
+    # baseline-on-migrate 가 그때 V1 을 "이미 적용됨"으로 도장만 찍고 V2 부터 실행하게 한다.
+    # V1 이 곧 그 dev 스냅샷이라 도장을 찍는 것이 사실과 일치한다.
+    # 이 옵션은 최초 1회를 위한 것이다 — 첫 마이그레이션이 성공하면 이력 테이블이 생기므로
+    # 이후로는 아무 효과가 없다. 신규 환경(staging·live)에는 켜지 않는다.
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: dev snapshot before Flyway
+
 storage:
   datasource:
     core:
@@ -123,6 +144,10 @@ storage:
 ---
 spring.config.activate.on-profile: staging
 
+spring:
+  flyway:
+    enabled: true
+
 storage:
   datasource:
     core:
@@ -151,6 +176,13 @@ storage:
 
 ---
 spring.config.activate.on-profile: live
+
+spring:
+  flyway:
+    # live 는 빈 DB 에서 시작하므로 V1 부터 순서대로 실행된다.
+    # baseline-on-migrate 를 켜지 않는 것이 중요하다 — 켜 두면 예상치 못하게 비어 있지 않은
+    # 스키마를 만났을 때 V1 을 조용히 건너뛰어, 없는 테이블 위에서 V2 가 실패한다.
+    enabled: true
 
 storage:
   datasource:
