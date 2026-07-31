@@ -50,15 +50,39 @@ AbstractEntity (@MappedSuperclass, id 없음)
 흐려지므로, 애초에 상속하지 말고 **id·createdAt/updatedAt 을 엔티티에 직접 선언**한다.
 "별도 라이프사이클"의 예:
 
-- 도메인 상태가 삭제 의미를 이미 포함 (예: member 의 `MemberStatus.WITHDRAWN`)
 - 삭제가 아닌 무효화 시각 컬럼으로 관리 (예: refresh_token 의 `revoked_at`)
-- append-only 이력이거나, 부모 애그리거트가 물리 삭제를 관리
+- 부모 애그리거트가 삭제를 관리 (예: social_account — 삭제 시각은 member 의 `deleted_at`)
+
+**행의 존재 여부는 `deleted_at` 하나로만 표현한다.** 도메인 상태 enum 에 삭제 의미를 겹쳐 담지
+않는다 — 한 사실을 두 컬럼으로 들면 둘을 동기화하는 불변식이 따라붙는다. member 가 그 예로,
+`MemberStatus.WITHDRAWN` + `withdrawn_at` 을 `deleted_at` 하나로 합쳤고 `MemberStatus` 에는
+그와 직교하는 제재 상태(ACTIVE/RESTRICTED)만 남겼다.
 
 상속하지 않는 엔티티에는 **파일 상단 주석으로 이유를 남긴다** — 어떤 테이블이 어느 쪽인지의
 원본은 문서가 아니라 각 엔티티 파일이다.
 
 소프트 삭제된 행의 조회 제외는 각 Finder 의 파생 쿼리 소관이다(예: `...DeletedAtIsNull`).
 전역 필터(@Where 등)는 쓰지 않는다 — 제외가 쿼리에 드러나야 한다.
+
+### 소프트 삭제와 유니크 제약
+
+유니크 인덱스는 NULL 을 서로 다른 값으로 취급하므로 `UNIQUE(col, deleted_at)` 은 방향이 반대다
+(활성 중복이 통과하고, 같은 시각에 삭제된 행이 차단된다). "살아있는 행끼리만 유일"이 필요하면
+NULL 의 방향을 뒤집는 생성 컬럼을 둔다:
+
+```sql
+_active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+CONSTRAINT uk_xxx_active UNIQUE (col, _active_check)
+```
+
+- `STORED`/`VIRTUAL` 키워드는 **쓰지 않는다** — H2 가 파싱하지 못한다. MySQL 은 생략 시 VIRTUAL 이
+  기본이고, VIRTUAL 이어도 세컨더리 유니크 인덱스는 정상 동작하며 `ADD COLUMN` 이 in-place 로 끝난다.
+- 표현식은 `CASE WHEN` 을 쓴다(`IF()` 는 H2 미지원).
+- 엔티티의 `@Table(uniqueConstraints = ...)` 에도 `_active_check` 를 포함한 실제 제약 이름·컬럼으로 선언한다.
+- **기본값은 이 컬럼을 두지 않는 것이다.** 삭제된 행이 키를 계속 점유해야 하는 제약도 있다
+  (예: `uk_member_nickname` 은 탈퇴자 포함 전체 유일, `uk_social_account_provider_provider_id` 는
+  탈퇴자 재가입 차단이 이 점유에 의존한다). 적용 여부는 제약별 제품 결정이다.
+- PK 충돌은 이 방법으로 풀리지 않는다(예: member_profile 의 `member_id`). 되살리기로 처리한다.
 
 ### 공통
 
@@ -89,7 +113,7 @@ AbstractEntity (@MappedSuperclass, id 없음)
 
 - `interface XxxRepository : JpaRepository<XxxEntity, ID>` 파생 쿼리 우선, 복잡하면 `@Query`(JPQL).
 - **조회 메서드는 도메인 규칙을 반영한 이름으로 뚫는다.** 예: 살아있는 회원 조회는
-  `findByIdAndStatusNot(id, WITHDRAWN)` 계열 — Finder 가 이를 감싸 도메인 세계에 탈퇴 회원이
+  `findByIdAndDeletedAtIsNull(id)` 계열 — Finder 가 이를 감싸 도메인 세계에 탈퇴 회원이
   들어오지 않게 한다 ([layers.md](layers.md)).
 - N+1 대응: `hibernate.default_batch_fetch_size: 100` 전역 + 필요 시 fetch join.
 - `open-in-view: false`.
