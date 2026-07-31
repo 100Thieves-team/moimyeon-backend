@@ -143,7 +143,7 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun updateNickname() {
-        every { memberService.changeNickname(memberId, "명랑한 해달 33") } just Runs
+        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } just Runs
 
         mockMvc.perform(
             put("/v1/members/me/nickname")
@@ -171,8 +171,6 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun `updateNickname 형식 위반 E1005`() {
-        every { memberService.changeNickname(memberId, "금지문자!@#") } throws CoreException(CoreErrorType.INVALID_NICKNAME)
-
         mockMvc.perform(
             put("/v1/members/me/nickname")
                 .principal(principal)
@@ -185,7 +183,7 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun `updateNickname 닉네임 중복 E1007`() {
-        every { memberService.changeNickname(memberId, "명랑한 해달 33") } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
 
         mockMvc.perform(
             put("/v1/members/me/nickname")

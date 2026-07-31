@@ -8,7 +8,6 @@ import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.support.response.ApiResponse
-import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -22,7 +21,7 @@ class ProfileController(
     @PostMapping("/v1/members/me/profile")
     fun createProfile(
         @LoginMember currentMember: CurrentMember,
-        @Valid @RequestBody request: CreateProfileRequest,
+        @RequestBody request: CreateProfileRequest,
     ): ApiResponse<ProfileResponse> {
         profileService.create(currentMember.id, request.toContent())
         return ApiResponse.success(ProfileResponse.from(profileService.getProfile(currentMember.id), emptyList()))
@@ -31,7 +30,7 @@ class ProfileController(
     @PutMapping("/v1/members/me/profile")
     fun updateProfile(
         @LoginMember currentMember: CurrentMember,
-        @Valid @RequestBody request: UpdateProfileRequest,
+        @RequestBody request: UpdateProfileRequest,
     ): ApiResponse<ProfileResponse> {
         return ApiResponse.success(profileFacade.update(currentMember.id, request.toContent()))
     }

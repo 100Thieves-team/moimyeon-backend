@@ -4,8 +4,9 @@ import io.plady.moimyeon.core.api.controller.v1.response.CompanySearchResponse
 import io.plady.moimyeon.core.api.controller.v1.response.JobCatalogResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RegionsResponse
 import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.support.error.CoreApiErrorType
+import io.plady.moimyeon.core.support.error.CoreApiException
 import io.plady.moimyeon.core.support.response.ApiResponse
-import jakarta.validation.constraints.Size
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -26,8 +27,14 @@ class CatalogController(
 
     @GetMapping("/v1/companies")
     fun searchCompanies(
-        @RequestParam @Size(min = 1, max = 50) query: String,
+        @RequestParam query: String,
     ): ApiResponse<CompanySearchResponse> {
+        if (query.length !in QUERY_LENGTH_RANGE) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+
         return ApiResponse.success(CompanySearchResponse.from(catalogService.searchCompanies(query)))
+    }
+
+    companion object {
+        private val QUERY_LENGTH_RANGE = 1..50
     }
 }

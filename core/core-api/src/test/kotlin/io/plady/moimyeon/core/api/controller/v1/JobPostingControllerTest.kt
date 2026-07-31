@@ -17,7 +17,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 
 class JobPostingControllerTest : RestDocsTest() {
     private val jobPostingsSummary = "회사별 채용 공고 목록 조회"
@@ -41,7 +40,6 @@ class JobPostingControllerTest : RestDocsTest() {
         mockMvc = mockController(
             JobPostingController(),
             controllerAdvice = ApiControllerAdvice(),
-            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
         )
     }
 

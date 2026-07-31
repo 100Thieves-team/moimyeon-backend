@@ -17,7 +17,7 @@ class MemberService(
         return memberFinder.isNicknameAvailable(Nickname(rawNickname))
     }
 
-    fun changeNickname(memberId: UUID, rawNickname: String) {
-        memberManager.changeNickname(memberId, Nickname(rawNickname))
+    fun changeNickname(memberId: UUID, nickname: Nickname) {
+        memberManager.changeNickname(memberId, nickname)
     }
 }

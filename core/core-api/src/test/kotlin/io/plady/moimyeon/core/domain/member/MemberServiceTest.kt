@@ -32,7 +32,7 @@ class MemberServiceTest {
     fun `닉네임 변경은 Manager 에 위임한다`() {
         every { memberManager.changeNickname(memberId, Nickname("명랑한 해달 33")) } just Runs
 
-        memberService.changeNickname(memberId, "명랑한 해달 33")
+        memberService.changeNickname(memberId, Nickname("명랑한 해달 33"))
 
         verify { memberManager.changeNickname(memberId, Nickname("명랑한 해달 33")) }
     }
@@ -43,7 +43,7 @@ class MemberServiceTest {
             memberManager.changeNickname(memberId, Nickname("명랑한 해달 33"))
         } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
 
-        assertThatThrownBy { memberService.changeNickname(memberId, "명랑한 해달 33") }
+        assertThatThrownBy { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
             }

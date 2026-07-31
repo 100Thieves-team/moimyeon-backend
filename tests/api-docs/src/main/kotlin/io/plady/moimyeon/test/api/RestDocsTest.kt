@@ -18,7 +18,6 @@ import org.springframework.restdocs.snippet.Snippet
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder
-import org.springframework.validation.Validator
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 
 @Tag("restdocs")
@@ -36,14 +35,12 @@ abstract class RestDocsTest {
         controller: Any,
         vararg argumentResolvers: HandlerMethodArgumentResolver,
         controllerAdvice: Any? = null,
-        validator: Validator? = null,
         filters: List<Filter> = emptyList(),
     ): MockMvc {
         val builder = MockMvcBuilders.standaloneSetup(controller)
             .setCustomArgumentResolvers(*argumentResolvers)
             .apply<StandaloneMockMvcBuilder>(MockMvcRestDocumentation.documentationConfiguration(restDocumentation))
         controllerAdvice?.let { builder.setControllerAdvice(it) }
-        validator?.let { builder.setValidator(it) }
         if (filters.isNotEmpty()) {
             builder.addFilters<StandaloneMockMvcBuilder>(*filters.toTypedArray())
         }

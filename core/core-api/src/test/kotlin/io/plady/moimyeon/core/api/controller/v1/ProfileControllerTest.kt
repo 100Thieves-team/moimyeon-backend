@@ -27,7 +27,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import java.security.Principal
 import java.util.UUID
 
@@ -72,7 +71,6 @@ class ProfileControllerTest : RestDocsTest() {
             ProfileController(profileService, ProfileFacade(profileService, catalogService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
-            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
         )
     }
 
