@@ -308,24 +308,26 @@ include::{snippets}/publicProfile/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/publicProfile/response-fields.adoc[]
 
-== Interview (면접·세션) API
+== Room (룸·면접) API
 
-면접 생성 위저드(figma B·06~B·10)를 위한 API. 도메인 구현 전까지 목(`@MockApiProfile`, local/local-dev/dev 에서만 활성)으로 제공하며,
-고정 예시 값을 반환한다. 회사·직무·지역은 <<_catalog_api,Catalog API>> 를, 이력서는 아래 이력서 업로드를 참조 id 로 연결한다.
+모의면접 룸의 생성·탐색·참가 신청 관리를 위한 API. 데이터·코드에서는 룸(Room), 사용자 화면 표기는 면접이다.
+도메인 구현 전까지 목(`@MockApiProfile`, local/local-dev/dev 에서만 활성)으로 제공하며, 고정 예시 값을 반환한다.
+회사·직무·지역은 <<_catalog_api,Catalog API>> 를 참조 id 로 연결한다. 회사는 공고를 고르면 함께 확정되므로 룸에는 따로 저장하지 않는다.
+룸 id 는 외부 노출 식별자라 UUID(UUIDv7 계열)다.
 
-=== 면접 생성 폼 선택지 조회
-회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다(B·06·B·07).
+=== 룸 생성 폼 선택지 조회
+회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다(「룸 생성」 §4.1·§4.2).
 ==== Curl Request
-include::{snippets}/interviewFormOptions/curl-request.adoc[]
+include::{snippets}/roomFormOptions/curl-request.adoc[]
 ==== Http Response
-include::{snippets}/interviewFormOptions/http-response.adoc[]
+include::{snippets}/roomFormOptions/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/interviewFormOptions/response-fields.adoc[]
+include::{snippets}/roomFormOptions/response-fields.adoc[]
 
 '''
 
 === 회사별 채용 공고 목록 조회
-회사를 고르면 그 회사의 공고 목록이 채워진다(B·06). 공고 선택 시 직무 셀렉트가 자동으로 채워질 수 있다.
+회사를 고르면 그 회사의 공고 목록이 채워진다(§4.1). 공고 선택 시 직무 셀렉트가 자동으로 채워질 수 있다.
 ==== Curl Request
 include::{snippets}/jobPostings/curl-request.adoc[]
 ==== Path Parameters
@@ -337,16 +339,17 @@ include::{snippets}/jobPostings/response-fields.adoc[]
 
 '''
 
-=== 채용 공고 링크 추가 요청
-목록에 없는 공고를 링크로 접수한다(B·06, '찾는 공고가 없나요?'). 회사 미선택 상태에서도 요청할 수 있다.
+=== 채용 공고 링크 메타데이터 조회
+목록에 없는 공고를 만들기 전, 링크의 OG 태그를 읽어 공고명 후보(og:title)와 미리보기(이미지·설명·출처)를 돌려준다(§4.1).
+회사는 OG 에서 추출하지 않으며, 아래 공고 생성 요청에서 목록으로 지정한다.
 ==== Curl Request
-include::{snippets}/requestJobPosting/curl-request.adoc[]
+include::{snippets}/jobPostingLinkMetadata/curl-request.adoc[]
 ==== Request Fields
-include::{snippets}/requestJobPosting/request-fields.adoc[]
+include::{snippets}/jobPostingLinkMetadata/request-fields.adoc[]
 ==== Http Response
-include::{snippets}/requestJobPosting/http-response.adoc[]
+include::{snippets}/jobPostingLinkMetadata/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/requestJobPosting/response-fields.adoc[]
+include::{snippets}/jobPostingLinkMetadata/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
@@ -356,51 +359,37 @@ include::{snippets}/requestJobPosting/response-fields.adoc[]
 
 '''
 
-=== 이력서 업로드
-소개와 이력서(B·08) 단계의 이력서 PDF 업로드. `multipart/form-data` 로 파일 파트(`file`)를 받는다.
-업로드 직후 AI 요약은 `PROCESSING` 이며, 이후 <<_이력서_조회,이력서 조회>> 로 폴링해 `DONE` 을 확인한다.
+=== 채용 공고 즉시 생성
+링크로 공고를 즉시 생성한다(§4.1). 승인 대기 없이 `verified=false` 로 만들어져 바로 룸 생성에 쓸 수 있다.
+회사는 기존 카탈로그 회사 id(companyId)로 받고, 공고명은 사용자가 확정한 값을 사용한다.
 ==== Curl Request
-include::{snippets}/uploadResume/curl-request.adoc[]
-==== Request Parts
-include::{snippets}/uploadResume/request-parts.adoc[]
+include::{snippets}/createJobPosting/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/createJobPosting/request-fields.adoc[]
 ==== Http Response
-include::{snippets}/uploadResume/http-response.adoc[]
+include::{snippets}/createJobPosting/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/uploadResume/response-fields.adoc[]
+include::{snippets}/createJobPosting/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 파일 파트(file) 누락 (multipart 아님 포함)
+| 400 | E400 | companyId·url·postingName 누락 또는 형식 오류. `error.data` 에 필드별 사유
 |===
 
 '''
 
-[[_이력서_조회]]
-=== 이력서 조회
-업로드한 이력서의 상태와 AI 요약을 조회한다. 요약 완료(`DONE`)를 폴링하는 용도.
+=== 룸 생성
+생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받아 룸을 만들고 즉시 모집(`RECRUITING`) 상태로 등록한다.
+방장은 생성과 동시에 참여 1명으로 등록된다(§4.8). 성공 시 <<_룸_상세_조회,룸 상세>> 로 이동한다.
 ==== Curl Request
-include::{snippets}/resumeDetail/curl-request.adoc[]
-==== Path Parameters
-include::{snippets}/resumeDetail/path-parameters.adoc[]
-==== Http Response
-include::{snippets}/resumeDetail/http-response.adoc[]
-==== Response Fields
-include::{snippets}/resumeDetail/response-fields.adoc[]
-
-'''
-
-=== 면접 생성
-생성 위저드(B·06~B·09)의 입력을 한 번에 받아 면접을 만들고 즉시 모집(`RECRUITING`) 상태로 등록한다.
-성공 시 <<_면접_상세_조회,면접 상세>> 로 이동한다.
-==== Curl Request
-include::{snippets}/createInterview/curl-request.adoc[]
+include::{snippets}/createRoom/curl-request.adoc[]
 ==== Request Fields
-include::{snippets}/createInterview/request-fields.adoc[]
+include::{snippets}/createRoom/request-fields.adoc[]
 ==== Http Response
-include::{snippets}/createInterview/http-response.adoc[]
+include::{snippets}/createRoom/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/createInterview/response-fields.adoc[]
+include::{snippets}/createRoom/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
@@ -410,14 +399,71 @@ include::{snippets}/createInterview/response-fields.adoc[]
 
 '''
 
-[[_면접_상세_조회]]
-=== 면접 상세 조회
-생성 완료(B·10) 및 상세 화면. 공개 데이터만 노출한다. 방장 블록의 신뢰 지표는 공개 프로필 API 와 같은 값을 미러링한다.
+[[_룸_상세_조회]]
+=== 룸 상세 조회
+생성 완료 및 탐색 상세 화면(「룸 탐색」 §4.4). 공개 데이터만 노출한다. 방장 블록의 신뢰 지표는 공개 프로필 API 와 같은 값을 미러링한다.
 ==== Curl Request
-include::{snippets}/interviewDetail/curl-request.adoc[]
+include::{snippets}/roomDetail/curl-request.adoc[]
 ==== Path Parameters
-include::{snippets}/interviewDetail/path-parameters.adoc[]
+include::{snippets}/roomDetail/path-parameters.adoc[]
 ==== Http Response
-include::{snippets}/interviewDetail/http-response.adoc[]
+include::{snippets}/roomDetail/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/interviewDetail/response-fields.adoc[]
+include::{snippets}/roomDetail/response-fields.adoc[]
+
+'''
+
+=== 룸 탐색 목록 조회
+조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있고, 필터는 AND 로 결합한다.
+완료·취소·일정 경과 룸은 목록에서 제외된다.
+==== Curl Request
+include::{snippets}/rooms/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/rooms/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/rooms/http-response.adoc[]
+==== Response Fields
+include::{snippets}/rooms/response-fields.adoc[]
+
+'''
+
+=== 참가 신청 목록 조회 (방장)
+방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자 공개 정보·전달 사항·이력서 AI 요약을 함께 내려준다.
+전달 사항·요약은 방장 외 비공개이며, 이력서 원본으로 가는 경로는 없다.
+==== Curl Request
+include::{snippets}/roomApplications/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/roomApplications/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/roomApplications/http-response.adoc[]
+==== Response Fields
+include::{snippets}/roomApplications/response-fields.adoc[]
+
+'''
+
+=== 참가 신청 수락
+방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인원을 증가시킨다.
+정원에 도달하면 모집 상태가 마감(`CLOSED`)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도 1건만 성공한다(정원 마감 시 수락 불가 — 에러 코드는 도메인 구현 시 확정).
+==== Curl Request
+include::{snippets}/acceptApplication/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/acceptApplication/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/acceptApplication/http-response.adoc[]
+==== Response Fields
+include::{snippets}/acceptApplication/response-fields.adoc[]
+
+'''
+
+=== 참가 신청 반려
+방장이 대기 중인 신청을 반려한다(「룸 참여」 §4.4). 사유는 선택이며, 반려는 정원·참여자 목록에 영향이 없다. 반려된 사용자는 같은 룸에 재신청할 수 없다.
+==== Curl Request
+include::{snippets}/rejectApplication/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/rejectApplication/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/rejectApplication/request-fields.adoc[]
+==== Http Response
+include::{snippets}/rejectApplication/http-response.adoc[]
+==== Response Fields
+include::{snippets}/rejectApplication/response-fields.adoc[]
