@@ -41,10 +41,10 @@ class MemberManagerTest {
         assertThat(entity.nickname).isEqualTo("차분한 펭귄 12")
         assertThat(entity.status).isEqualTo(MemberStatus.ACTIVE) // Member.register 가 ACTIVE 로 생성
         assertThat(entity.isDeleted()).isFalse()
-        assertThat(entity.socialAccounts).hasSize(1)
-        assertThat(entity.socialAccounts.first().provider).isEqualTo(provider)
-        assertThat(entity.socialAccounts.first().providerId).isEqualTo("sub-1")
-        assertThat(entity.socialAccounts.first().linkedEmail).isEqualTo("user@example.com")
+        assertThat(entity.socialAccounts()).hasSize(1)
+        assertThat(entity.socialAccounts().first().provider).isEqualTo(provider)
+        assertThat(entity.socialAccounts().first().providerId).isEqualTo("sub-1")
+        assertThat(entity.socialAccounts().first().linkedEmail).isEqualTo("user@example.com")
     }
 
     @Test

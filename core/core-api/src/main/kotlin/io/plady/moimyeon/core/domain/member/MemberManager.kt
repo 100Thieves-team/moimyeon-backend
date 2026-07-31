@@ -29,7 +29,7 @@ class MemberManager(
     @Transactional
     fun changeNickname(memberId: UUID, nickname: Nickname) {
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
-        entity.nickname = nickname.value
+        entity.changeNickname(nickname.value)
         memberRepository.flush()
     }
 

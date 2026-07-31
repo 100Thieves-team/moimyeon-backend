@@ -19,17 +19,35 @@ import java.util.UUID
 )
 class MemberEntity(
     id: UUID,
-    var email: String,
-    var nickname: String,
+    val email: String,
+    nickname: String,
+    status: MemberStatus,
+    lastLoginAt: LocalDateTime,
+    socialAccounts: List<SocialAccountEntity> = emptyList(),
+) : UuidBaseEntity(id) {
+    var nickname: String = nickname
+        protected set
+
     @Enumerated(EnumType.STRING)
-    var status: MemberStatus,
-    var lastLoginAt: LocalDateTime,
-    // 소셜 계정은 회원과 라이프사이클이 정확히 같아 예외적으로 연관관계를 걸었음
+    var status: MemberStatus = status
+        protected set
+
+    var lastLoginAt: LocalDateTime = lastLoginAt
+        protected set
+
+    // 소셜 계정은 회원과 라이프사이클이 정확히 같아 예외적으로 연관관계를 걸었음.
+    // cascade=ALL + orphanRemoval 이므로 컬렉션 조작이 곧 INSERT/DELETE 다 — 외부에 노출하지 않는다.
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "member_id", nullable = false)
-    var socialAccounts: MutableList<SocialAccountEntity> = mutableListOf(),
-) : UuidBaseEntity(id) {
+    private val socialAccounts: MutableList<SocialAccountEntity> = socialAccounts.toMutableList()
+
+    fun socialAccounts(): List<SocialAccountEntity> = socialAccounts.toList()
+
     fun loggedIn(time: LocalDateTime) {
         this.lastLoginAt = time
+    }
+
+    fun changeNickname(nickname: String) {
+        this.nickname = nickname
     }
 }

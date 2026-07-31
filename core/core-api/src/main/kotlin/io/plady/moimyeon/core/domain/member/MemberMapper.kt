@@ -9,7 +9,7 @@ object MemberMapper {
         email = Email(entity.email),
         nickname = Nickname(entity.nickname),
         status = entity.status,
-        socialAccounts = entity.socialAccounts.map { SocialAccount(it.provider, it.providerId, it.linkedEmail?.let(::Email)) },
+        socialAccounts = entity.socialAccounts().map { SocialAccount(it.provider, it.providerId, it.linkedEmail?.let(::Email)) },
         lastLoginAt = entity.lastLoginAt,
     )
 
@@ -20,7 +20,6 @@ object MemberMapper {
         status = member.status,
         lastLoginAt = member.lastLoginAt,
         socialAccounts = member.socialAccounts
-            .map { SocialAccountEntity(it.provider, it.providerId, it.linkedEmail?.value) }
-            .toMutableList(),
+            .map { SocialAccountEntity(it.provider, it.providerId, it.linkedEmail?.value) },
     )
 }

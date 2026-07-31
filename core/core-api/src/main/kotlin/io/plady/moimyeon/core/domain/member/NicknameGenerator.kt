@@ -12,8 +12,7 @@ class NicknameGenerator(
         return Nickname("${ADJECTIVES.random()} ${ANIMALS.random()} ${"%02d".format(Random.nextInt(1, 100))}")
     }
 
-    // ATTEMPTS 전부 충돌하면 UUID 기반 fallback. fallback 도 점유 확인을 거치고, 그래도 전부
-    // 충돌하면 마지막 후보를 그대로 반환한다(최종 방어선은 DB 유니크 제약 uk_member_nickname).
+    // TODO: 실 배포 전에 닉네임 생성 설계 다시하기
     fun generateUnique(): Nickname {
         repeat(MAX_ATTEMPTS) {
             val candidate = generate()
