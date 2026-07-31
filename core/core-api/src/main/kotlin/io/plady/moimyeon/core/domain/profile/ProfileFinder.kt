@@ -10,13 +10,18 @@ import java.util.UUID
 @Component
 class ProfileFinder(
     private val memberProfileRepository: MemberProfileRepository,
+    private val profileInterestManager: ProfileInterestManager,
 ) {
     @Transactional(readOnly = true)
     fun getProfile(memberId: UUID): MemberProfile {
-        val entity = requireFound(memberProfileRepository.findById(memberId).orElse(null), CoreErrorType.PROFILE_NOT_FOUND)
-        return ProfileMapper.toDomain(entity)
+        val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), CoreErrorType.PROFILE_NOT_FOUND)
+        return ProfileMapper.toDomain(
+            entity,
+            interestJobRoleIds = profileInterestManager.findJobRoleIds(memberId),
+            interestCompanyIds = profileInterestManager.findCompanyIds(memberId),
+        )
     }
 
     @Transactional(readOnly = true)
-    fun exists(memberId: UUID): Boolean = memberProfileRepository.existsById(memberId)
+    fun exists(memberId: UUID): Boolean = memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
 }

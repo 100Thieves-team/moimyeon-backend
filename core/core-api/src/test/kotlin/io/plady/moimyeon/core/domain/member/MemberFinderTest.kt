@@ -23,13 +23,12 @@ class MemberFinderTest {
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
 
     @Test
-    fun `살아있는 회원 조회는 WITHDRAWN 을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
+    fun `살아있는 회원 조회는 소프트 삭제된 회원을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
         // given — 탈퇴 회원만 존재하는 신원은 조회 결과가 없다 (persistence 경계에서 필터)
         every {
-            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
                 provider,
                 "withdrawn-sub",
-                MemberStatus.WITHDRAWN,
             )
         } returns null
 
@@ -41,10 +40,10 @@ class MemberFinderTest {
     }
 
     @Test
-    fun `id 조회도 WITHDRAWN 을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
+    fun `id 조회도 소프트 삭제된 회원을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
         // given
         val memberId = UUID.randomUUID()
-        every { memberRepository.findByIdAndStatusNot(memberId, MemberStatus.WITHDRAWN) } returns null
+        every { memberRepository.findByIdAndDeletedAtIsNull(memberId) } returns null
 
         // when & then
         assertThatThrownBy { memberFinder.getById(memberId) }
@@ -57,17 +56,15 @@ class MemberFinderTest {
     fun `살아있는 회원 존재 여부와 탈퇴 점유 여부를 구분해 반환한다`() {
         // given
         every {
-            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
                 provider,
                 "sub-1",
-                MemberStatus.WITHDRAWN,
             )
         } returns false
         every {
-            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndStatus(
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
                 provider,
                 "sub-1",
-                MemberStatus.WITHDRAWN,
             )
         } returns true
 
@@ -86,14 +83,12 @@ class MemberFinderTest {
             nickname = "차분한 펭귄 12",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
-            withdrawnAt = null,
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "social@example.com")),
         )
         every {
-            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
                 provider,
                 "sub-1",
-                MemberStatus.WITHDRAWN,
             )
         } returns entity
 

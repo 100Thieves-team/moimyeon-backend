@@ -17,7 +17,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.Optional
 import java.util.UUID
 
 class MemberManagerTest {
@@ -41,7 +40,7 @@ class MemberManagerTest {
         assertThat(entity.email).isEqualTo("user@example.com")
         assertThat(entity.nickname).isEqualTo("차분한 펭귄 12")
         assertThat(entity.status).isEqualTo(MemberStatus.ACTIVE) // Member.register 가 ACTIVE 로 생성
-        assertThat(entity.withdrawnAt).isNull()
+        assertThat(entity.isDeleted()).isFalse()
         assertThat(entity.socialAccounts).hasSize(1)
         assertThat(entity.socialAccounts.first().provider).isEqualTo(provider)
         assertThat(entity.socialAccounts.first().providerId).isEqualTo("sub-1")
@@ -59,10 +58,9 @@ class MemberManagerTest {
             nickname = "차분한 펭귄 12",
             status = MemberStatus.ACTIVE,
             lastLoginAt = oldLoginAt,
-            withdrawnAt = null,
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
         )
-        every { memberRepository.findById(id) } returns Optional.of(entity)
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
 
         // when
         memberManager.recordLogin(id)
@@ -74,7 +72,7 @@ class MemberManagerTest {
     @Test
     fun `recordLogin 은 회원이 없으면 MEMBER_NOT_FOUND 예외를 던진다`() {
         // given
-        every { memberRepository.findById(any()) } returns Optional.empty()
+        every { memberRepository.findByIdAndDeletedAtIsNull(any()) } returns null
 
         // when & then
         assertThatThrownBy { memberManager.recordLogin(UUID.randomUUID()) }
@@ -93,10 +91,9 @@ class MemberManagerTest {
             nickname = "변경 전 닉네임 01",
             status = MemberStatus.ACTIVE,
             lastLoginAt = LocalDateTime.of(2026, 1, 1, 0, 0),
-            withdrawnAt = null,
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
         )
-        every { memberRepository.findById(id) } returns Optional.of(entity)
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
         every { memberRepository.flush() } just Runs
 
         // when
@@ -105,5 +102,27 @@ class MemberManagerTest {
         // then
         assertThat(entity.nickname).isEqualTo("변경 후 닉네임 02")
         verify(exactly = 1) { memberRepository.flush() }
+    }
+
+    @Test
+    fun `withdraw 는 회원을 소프트 삭제한다`() {
+        // given
+        val id = UUID.randomUUID()
+        val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            nickname = "차분한 펭귄 12",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = now,
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
+        )
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+
+        // when
+        memberManager.withdraw(id, now)
+
+        // then
+        assertThat(entity.isDeleted()).isTrue()
     }
 }

@@ -28,7 +28,6 @@ class TermsAgreementRepositoryIT(
             nickname = "nick-$providerId",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
-            withdrawnAt = null,
             socialAccounts = mutableListOf(
                 SocialAccountEntity(SocialLoginProvider.GOOGLE, providerId, "user@example.com"),
             ),
@@ -60,12 +59,12 @@ class TermsAgreementRepositoryIT(
         )
 
         // when
-        val found = termsAgreementRepository.findByMemberId(memberId)
+        val found = termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)
 
         // then
         assertThat(found).hasSize(1)
         assertThat(found[0].termsId).isEqualTo(termsId)
-        assertThat(termsAgreementRepository.existsByMemberIdAndTermsId(memberId, termsId)).isTrue()
+        assertThat(termsAgreementRepository.existsByMemberIdAndTermsIdAndDeletedAtIsNull(memberId, termsId)).isTrue()
     }
 
     @Test
@@ -77,11 +76,37 @@ class TermsAgreementRepositoryIT(
             TermsAgreementEntity(id = UUID.randomUUID(), memberId = memberId, termsId = termsId, agreedAt = now),
         )
 
-        // when & then — 재동의는 새 약관 버전(termsId)으로만 가능하다(append-only)
+        // when & then — 살아있는 동의가 있는 동안에는 같은 쌍을 다시 기록할 수 없다
         assertThatThrownBy {
             termsAgreementRepository.saveAndFlush(
                 TermsAgreementEntity(id = UUID.randomUUID(), memberId = memberId, termsId = termsId, agreedAt = now),
             )
         }.isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    @Test
+    fun `소프트 삭제된 동의 이력은 조회에서 빠지고, 같은 약관에 다시 동의할 수 있다`() {
+        // given
+        val memberId = persistMember("google-sub-3")
+        val termsId = persistTerms("test-1.2")
+        val agreement = termsAgreementRepository.saveAndFlush(
+            TermsAgreementEntity(id = UUID.randomUUID(), memberId = memberId, termsId = termsId, agreedAt = now),
+        )
+
+        // when
+        agreement.delete(now)
+        termsAgreementRepository.flush()
+
+        // then — 조회에서는 빠지지만 행은 남는다
+        assertThat(termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)).isEmpty()
+        assertThat(termsAgreementRepository.existsByMemberIdAndTermsIdAndDeletedAtIsNull(memberId, termsId)).isFalse()
+        assertThat(termsAgreementRepository.findById(agreement.id)).isPresent()
+
+        // then — 유니크가 살아있는 행끼리만 걸리므로 재동의가 새 행으로 append 된다(_active_check)
+        val reagreed = termsAgreementRepository.saveAndFlush(
+            TermsAgreementEntity(id = UUID.randomUUID(), memberId = memberId, termsId = termsId, agreedAt = now.plusDays(1)),
+        )
+        assertThat(termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.id })
+            .containsExactly(reagreed.id)
     }
 }

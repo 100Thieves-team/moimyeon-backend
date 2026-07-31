@@ -22,14 +22,20 @@ class MemberManager(
 
     @Transactional
     fun recordLogin(memberId: UUID) {
-        val entity = requireFound(memberRepository.findById(memberId).orElse(null), CoreErrorType.MEMBER_NOT_FOUND)
+        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.loggedIn(LocalDateTime.now())
     }
 
     @Transactional
     fun changeNickname(memberId: UUID, nickname: Nickname) {
-        val entity = requireFound(memberRepository.findById(memberId).orElse(null), CoreErrorType.MEMBER_NOT_FOUND)
+        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.nickname = nickname.value
         memberRepository.flush()
+    }
+
+    @Transactional
+    fun withdraw(memberId: UUID, now: LocalDateTime) {
+        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+        entity.delete(now)
     }
 }

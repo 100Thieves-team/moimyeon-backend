@@ -13,6 +13,8 @@ import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.LocalDateTime
 
+// 회원과 함께 삭제되므로 삭제 시각은 member.deleted_at 이 대신한다.
+// (provider, provider_id) 유니크는 탈퇴자 재가입 차단에 쓰여 삭제 후에도 키를 점유해야 한다.
 @Entity
 @Table(
     name = "social_account",

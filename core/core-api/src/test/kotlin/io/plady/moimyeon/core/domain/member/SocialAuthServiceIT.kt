@@ -22,14 +22,14 @@ class SocialAuthServiceIT(
     @Test
     fun `신규 가입 시 현재 유효한 필수 약관 전부에 대한 동의가 버전(termsId)과 함께 기록된다`() {
         // given — 시드로 등록된 현재 유효(ACTIVE) 필수 약관
-        val requiredTermsIds = termsRepository.findByStatus(TermsStatus.ACTIVE).filter { it.required }.map { it.id }
+        val requiredTermsIds = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).filter { it.required }.map { it.id }
         assertThat(requiredTermsIds).isNotEmpty()
 
         // when
         val memberId = socialAuthService.authenticate(provider, "google-sub-terms", Email("user@example.com"))
 
         // then — 어떤 약관 버전에 동의했는지(termsId)가 회원별로 남는다
-        val agreements = termsAgreementRepository.findByMemberId(memberId)
+        val agreements = termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)
         assertThat(agreements.map { it.termsId }).containsExactlyInAnyOrderElementsOf(requiredTermsIds)
     }
 

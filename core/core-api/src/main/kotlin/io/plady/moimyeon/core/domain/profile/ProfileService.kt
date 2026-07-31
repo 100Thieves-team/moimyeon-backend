@@ -50,9 +50,7 @@ class ProfileService(
     fun getProfile(memberId: UUID): MemberProfile = profileFinder.getProfile(memberId)
 
     private fun validateCatalogRefs(content: ProfileContent) {
-        content.jobRoleId?.let {
-            requireBusiness(jobCatalogFinder.existsActiveRole(it), CoreErrorType.JOB_ROLE_NOT_FOUND)
-        }
+        requireBusiness(jobCatalogFinder.allActiveRoles(content.interestJobRoleIds), CoreErrorType.JOB_ROLE_NOT_FOUND)
         content.sigunguId?.let {
             requireBusiness(regionFinder.existsActiveSigungu(it), CoreErrorType.REGION_NOT_FOUND)
         }
