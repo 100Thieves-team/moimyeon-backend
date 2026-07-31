@@ -28,7 +28,6 @@ class MemberRepositoryIT(
         nickname = nickname,
         status = MemberStatus.ACTIVE,
         lastLoginAt = now,
-        withdrawnAt = null,
         socialAccounts = mutableListOf(
             SocialAccountEntity(SocialLoginProvider.GOOGLE, providerId, socialEmail),
         ),
@@ -46,7 +45,7 @@ class MemberRepositoryIT(
         // then
         assertThat(found.id).isEqualTo(member.id)
         assertThat(found.status).isEqualTo(MemberStatus.ACTIVE)
-        assertThat(found.withdrawnAt).isNull()
+        assertThat(found.isDeleted()).isFalse()
         assertThat(found.createdAt).isNotNull()
         assertThat(found.socialAccounts).hasSize(1)
         assertThat(found.socialAccounts.first().providerId).isEqualTo("google-sub-1")
@@ -58,25 +57,31 @@ class MemberRepositoryIT(
         val member = memberRepository.saveAndFlush(newMember(providerId = "google-sub-2"))
 
         // when
-        val found = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+        val found = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
             SocialLoginProvider.GOOGLE,
             "google-sub-2",
-            MemberStatus.WITHDRAWN,
         )
 
         // then
         assertThat(found?.id).isEqualTo(member.id)
 
-        // 탈퇴 처리하면 같은 신원으로 조회되지 않는다
-        found!!.status = MemberStatus.WITHDRAWN
+        // 탈퇴(소프트 삭제)하면 같은 신원으로 조회되지 않는다
+        found!!.delete(now)
         memberRepository.saveAndFlush(found)
         assertThat(
-            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndStatusNot(
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
                 SocialLoginProvider.GOOGLE,
                 "google-sub-2",
-                MemberStatus.WITHDRAWN,
             ),
         ).isNull()
+
+        // 재가입 차단 판정용으로는 여전히 조회된다
+        assertThat(
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
+                SocialLoginProvider.GOOGLE,
+                "google-sub-2",
+            ),
+        ).isTrue()
     }
 
     @Test

@@ -14,7 +14,6 @@ data class Member(
     val status: MemberStatus,
     val socialAccounts: List<SocialAccount>,
     val lastLoginAt: LocalDateTime,
-    val withdrawnAt: LocalDateTime?,
 ) {
     init {
         require(socialAccounts.isNotEmpty()) {
@@ -22,9 +21,6 @@ data class Member(
         }
         require(socialAccounts.distinctBy { it.provider to it.providerId }.size == socialAccounts.size) {
             "동일한 (provider, providerId) 소셜 계정은 중복될 수 없습니다."
-        }
-        require((status == MemberStatus.WITHDRAWN) == (withdrawnAt != null)) {
-            "withdrawnAt은 WITHDRAWN 상태일 때만 존재해야 합니다. status=$status, withdrawnAt=$withdrawnAt"
         }
     }
 
@@ -38,15 +34,7 @@ data class Member(
         return copy(status = MemberStatus.ACTIVE)
     }
 
-    fun recordLogin(now: LocalDateTime): Member {
-        requireBusiness(status != MemberStatus.WITHDRAWN, CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
-        return copy(lastLoginAt = now)
-    }
-
-    fun withdraw(now: LocalDateTime): Member {
-        requireBusiness(status != MemberStatus.WITHDRAWN, CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
-        return copy(status = MemberStatus.WITHDRAWN, withdrawnAt = now)
-    }
+    fun recordLogin(now: LocalDateTime): Member = copy(lastLoginAt = now)
 
     companion object {
         fun register(
@@ -62,7 +50,6 @@ data class Member(
             status = MemberStatus.ACTIVE,
             socialAccounts = listOf(SocialAccount(provider, providerId, linkedEmail = email)),
             lastLoginAt = now,
-            withdrawnAt = null,
         )
     }
 }

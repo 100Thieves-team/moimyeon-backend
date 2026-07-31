@@ -103,15 +103,17 @@ CREATE TABLE company (
 CREATE INDEX ix_company_name_normalized ON company (name_normalized);
 
 -- nickname 은 가입 시 서버가 자동 생성하는 표시 이름(회원 신원의 일부, 전역 유일)
+-- 탈퇴는 deleted_at 으로 표현한다. status 는 그와 직교하는 제재 상태(ACTIVE/RESTRICTED)만 담는다.
+-- 닉네임 유니크는 탈퇴자를 포함한 전체 회원 대상이라 _active_check 를 쓰지 않는다.
 CREATE TABLE member (
     id            BINARY(16)   NOT NULL,
     email         VARCHAR(320) NOT NULL,
     nickname      VARCHAR(30)  NOT NULL,
     status        VARCHAR(20)  NOT NULL,
     last_login_at DATETIME     NOT NULL,
-    withdrawn_at  DATETIME     NULL,
     created_at    DATETIME     NOT NULL,
     updated_at    DATETIME     NOT NULL,
+    deleted_at    DATETIME     NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_nickname UNIQUE (nickname)
 );

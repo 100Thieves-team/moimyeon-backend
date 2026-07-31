@@ -29,7 +29,6 @@ class MemberTest {
 
             // then
             assertThat(member.status).isEqualTo(MemberStatus.ACTIVE)
-            assertThat(member.withdrawnAt).isNull()
             assertThat(member.lastLoginAt).isEqualTo(now)
             assertThat(member.socialAccounts).hasSize(1)
 
@@ -144,46 +143,6 @@ class MemberTest {
             assertThat(logged.status).isEqualTo(MemberStatus.RESTRICTED)
             assertThat(logged.lastLoginAt).isEqualTo(later)
         }
-
-        @Test
-        fun `탈퇴한 회원은 MEMBER_ALREADY_WITHDRAWN으로 실패한다`() {
-            // given
-            val withdrawn = activeMember().withdraw(now)
-
-            // when & then
-            assertThatThrownBy { withdrawn.recordLogin(now) }
-                .isInstanceOf(CoreException::class.java)
-                .extracting("errorType")
-                .isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
-        }
-    }
-
-    @Nested
-    inner class Withdraw {
-        @Test
-        fun `WITHDRAWN으로 전이하고 탈퇴 시각을 기록한다`() {
-            // given
-            val member = activeMember()
-
-            // when
-            val withdrawn = member.withdraw(now)
-
-            // then
-            assertThat(withdrawn.status).isEqualTo(MemberStatus.WITHDRAWN)
-            assertThat(withdrawn.withdrawnAt).isEqualTo(now)
-        }
-
-        @Test
-        fun `이미 탈퇴한 회원은 MEMBER_ALREADY_WITHDRAWN으로 실패한다`() {
-            // given
-            val withdrawn = activeMember().withdraw(now)
-
-            // when & then
-            assertThatThrownBy { withdrawn.withdraw(now) }
-                .isInstanceOf(CoreException::class.java)
-                .extracting("errorType")
-                .isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
-        }
     }
 
     @Nested
@@ -192,7 +151,7 @@ class MemberTest {
         fun `소셜 계정이 없으면 생성할 수 없다`() {
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, emptyList(), now, null)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, emptyList(), now)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
 
@@ -203,23 +162,7 @@ class MemberTest {
 
             // when & then
             assertThatThrownBy {
-                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, duplicates, now, null)
-            }.isInstanceOf(IllegalArgumentException::class.java)
-        }
-
-        @Test
-        fun `WITHDRAWN이 아닌데 withdrawnAt이 있으면 생성할 수 없다`() {
-            // when & then
-            assertThatThrownBy {
-                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, listOf(socialAccount()), now, now)
-            }.isInstanceOf(IllegalArgumentException::class.java)
-        }
-
-        @Test
-        fun `WITHDRAWN인데 withdrawnAt이 없으면 생성할 수 없다`() {
-            // when & then
-            assertThatThrownBy {
-                Member(UUID.randomUUID(), email, nickname, MemberStatus.WITHDRAWN, listOf(socialAccount()), now, null)
+                Member(UUID.randomUUID(), email, nickname, MemberStatus.ACTIVE, duplicates, now)
             }.isInstanceOf(IllegalArgumentException::class.java)
         }
     }

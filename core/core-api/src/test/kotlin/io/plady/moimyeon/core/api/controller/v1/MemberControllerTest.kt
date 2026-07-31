@@ -108,7 +108,7 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
                         fieldWithPath("data.email").type(JsonFieldType.STRING).description("대표 이메일"),
                         fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임 (가입 시 자동 부여, 변경 가능)"),
-                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("회원 상태 (ACTIVE | RESTRICTED | WITHDRAWN)"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("회원 상태 (ACTIVE | RESTRICTED)"),
                         fieldWithPath("data.profileCompleted").type(JsonFieldType.BOOLEAN).description("필수 프로필 작성 완료 여부"),
                         fieldWithPath("data.profile").type(JsonFieldType.NULL).optional()
                             .description("프로필 (미작성이면 null, 작성 완료 시 필수 프로필 작성 응답의 data 와 동일 모양)"),

@@ -26,7 +26,6 @@ class RefreshTokenRepositoryIT(
             nickname = "nick-$providerId",
             status = MemberStatus.ACTIVE,
             lastLoginAt = now,
-            withdrawnAt = null,
             socialAccounts = mutableListOf(
                 SocialAccountEntity(SocialLoginProvider.GOOGLE, providerId, "user@example.com"),
             ),
