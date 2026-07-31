@@ -42,9 +42,11 @@ class MemberManager(
         }
     }
 
-    // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
-    internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
+    companion object {
+        // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
+        internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+            return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
+        }
     }
 
     @Transactional
