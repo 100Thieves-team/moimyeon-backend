@@ -134,6 +134,33 @@ requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
 entity.restrict()
 ```
 
+**판정을 밖에서 물을 수 없으면 storage 전용 기술 예외를 만들어 던진다.** `can*` 판정 분리는
+판정에 필요한 데이터가 밖에서 보일 때 성립한다. 판정 데이터가 엔티티 `private` 필드라 외부에서
+미리 물을 수 없으면, storage 모듈이 자체 기술 예외를 `storage.db.core.error` 패키지에 두고
+엔티티 전이 메서드가 직접 던진다. core-api 의 Manager 가 경계에서 `CoreException` 으로 번역한다.
+
+```kotlin
+// storage/db-core/.../error — 기술 예외. CoreErrorType 을 모른다
+class IllegalCouponUsageException(override val message: String) : RuntimeException(message)
+
+// storage 엔티티 — usedCount 가 private 이라 can* 로 밖에서 판정할 수 없다
+fun use() {
+    if (isFullyUsed()) throw IllegalCouponUsageException("Coupon cannot be used anymore")
+    usedCount += 1L
+    if (isFullyUsed()) state = OwnedCouponState.USED
+}
+
+// core-api Manager — 경계에서 도메인 에러로 번역
+catch (e: IllegalCouponUsageException) {
+    log.error("[OWNED_COUPON_USAGE] 비정상적인 쿠폰 사용 ownedCouponId={}", ownedCouponId, e)
+    throw CoreException(ErrorType.OWNED_COUPON_INVALID_USAGE)
+}
+```
+
+두 형태의 선택 기준은 **판정 데이터의 가시성**이다. 밖에서 물을 수 있으면 `can*` + `check`
+(번역 계층이 필요 없어 더 가볍다), 물을 수 없으면 전용 예외 + 경계 번역. 지금 이 레포에는
+후자에 해당하는 엔티티가 없어 `storage.db.core.error` 패키지도 아직 없다 — 필요해질 때 만든다.
+
 **Hibernate 동작에는 영향이 없다.** `@Id` 가 필드에 붙어 있어 field access 로 판정되므로 Hibernate
 는 setter 를 호출하지 않고 리플렉션으로 필드에 직접 쓴다. `protected set`·`private set` 모두 안전하다.
 
