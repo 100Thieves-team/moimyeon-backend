@@ -58,19 +58,38 @@
 
 ## 유니크 충돌(동시성 레이스) 매핑 규칙
 
-확인-후-저장 사이의 레이스는 DB 유니크 제약이 최종 방어선이다. 이때 catch 규칙:
+확인-후-저장 사이의 레이스는 DB 유니크 제약이 최종 방어선이다.
+
+### 어디서 번역하는가
+
+**그 제약을 아는 곳이 번역한다** — 트랜잭션 경계와 같은 자리다 ([layers.md](layers.md)).
+
+| 상황 | 번역하는 곳 | 예 |
+| --- | --- | --- |
+| 쓰기 하나의 제약 | 그 쓰기 Implement 안 | `MemberManager.changeNickname` — `uk_member_nickname` 을 아는 유일한 곳 |
+| 여러 쓰기 조합 + 재시도 | 조합 Implement 안 | `MemberProvisioner.provision` — 닉네임 충돌은 재시도, 소셜 계정 충돌은 E1004 |
+| 락으로 직렬화되는 경우 | 번역 불필요 | `ProfileManager.append` — 회원 행 락으로 직렬화되어 `CoreException` 이 먼저 난다 |
+
+**Service 는 번역하지 않는다.** 제약명은 storage 지식이고, Service 로 새면 호출자마다 복제된다.
+번역 코드가 트랜잭션 경계 밖에 있으면 어느 제약이 터졌는지 판별이 부정확해진다.
+
+### catch 규칙
 
 - **기대한 충돌만** 도메인 에러로 매핑한다. 어떤 제약이 터졌는지(재조회 또는 제약명 확인)로 구분한다.
   ```kotlin
-  // MemberService.changeNickname: 기대한 닉네임 유니크 충돌(제약명 확인)만 E1007, 그 외는 전파
-  catch (e: DataIntegrityViolationException) {
-      if (isNicknameConflict(e)) throw CoreException(NICKNAME_DUPLICATED) // uk_member_nickname 확인
-      throw e
+  // MemberProvisioner.provision
+  when {
+      MemberManager.isNicknameConflict(e) -> retryOnce(provider, providerId, email)
+      isSocialAccountConflict(e) -> throw CoreException(SOCIAL_ACCOUNT_ALREADY_LINKED)
+      else -> throw e     // 기대하지 않은 무결성 위반은 오인하지 않도록 전파
   }
   ```
 - 그 외 무결성 위반(not-null 위반 등)을 삼키면 **오인 매핑**이 된다. 반드시 전파해 500 으로 드러낸다.
+  확인하지 않은 원인을 else 로 단정하면, 사용자는 자기가 할 수 있는 일이 없는 엉뚱한 에러를 받는다.
+- **재시도가 있으면 마지막 시도를 도메인 에러로 닫는다.** 재시도 밖으로 새는 예외는 그대로 500 이 된다
+  (`MemberProvisioner.retryOnce`).
 - 충돌을 트랜잭션 안에서 드러내야 하면 `save` 대신 `saveAndFlush` 를 쓴다
-  (예: `MemberManager.append` — 동시 가입 레이스를 E1004 로 매핑하기 위해).
+  (예: `MemberManager.append` — `MemberProvisioner` 가 잡아 재시도할 수 있게).
   flush 위치 규칙은 [layers.md](layers.md)의 트랜잭션 절 참고.
 - 참조 무결성은 DB 가 아니라 애플리케이션이 담당한다 — **FK 제약을 걸지 않으므로**
   ([storage.md](storage.md)), 존재하지 않는 참조 id 는 **저장 전에 명시 검증**해 전용 코드로

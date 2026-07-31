@@ -47,8 +47,13 @@ core.domain
   Implement 는 재사용 로직이라 참조가 허용된다.
   예: `ProfileService` 는 다른 개념의 Finder(memberFinder 등)를,
   `MemberProvisioner`(Implement)는 terms 개념의 `TermsFinder`·`TermsAgreementRecorder` 를 주입받는다.
-- 두 개념을 한 메서드에 합성하지 않는다. `findOrRegister` 류의 합성 메서드 금지 —
-  조회와 등록은 별개 행위이며, 흐름 분기는 Service(Business)가 명시적으로 한다.
+- **흐름 분기를 Implement 에 숨기지 않는다.** `findOrRegister` 류의 합성 메서드 금지 —
+  조회냐 등록이냐는 흐름이므로 Service 가 명시적으로 분기한다
+  (`SocialAuthService.authenticate` — 기존 회원이면 로그인, 아니면 provisioning).
+  단 **한 커밋 단위의 조합은 Implement 가 소유한다** — 두 개념의 쓰기가 함께 커밋돼야 하면
+  그 조합 자체가 하나의 개념이다(`MemberProvisioner` — 회원 생성 + 필수 약관 자동 동의).
+  판별 기준(그 단계들 사이에 외부 I/O 가 끼는가)은 [layers.md](layers.md)의
+  "Implement 도 조합한다" 절.
 - 상태로 개념을 오염시키지 않는다. 예: "탈퇴한 회원"은 도메인 세계의 `Member` 개념에 들어오지 못하게
   **persistence 경계(Finder)에서 걸러낸다**. 도메인 객체는 상태 분기를 모른다 ([layers.md](layers.md)).
 - 개념 규칙은 값 객체가 보증한다. 예: 닉네임 형식·길이·금칙어는 `Nickname` VO 생성 시점에 검증된다.

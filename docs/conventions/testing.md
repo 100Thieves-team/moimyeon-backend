@@ -31,7 +31,8 @@ JUnit5 `@Tag` 로 구분하고 Gradle 태스크로 선택 실행한다 (루트 `
 
 | 대상 | 방식 | 예 |
 | --- | --- | --- |
-| Service 규칙·흐름 | 순수 단위 테스트. 스프링 없이 **MockK** 로 협력 객체 mock | `ProfileServiceTest` — 검증 순서·에러 매핑·전파 |
+| Service 규칙·흐름 | 순수 단위 테스트. 스프링 없이 **MockK** 로 협력 객체 mock | `ProfileServiceTest` — 검증 순서·분기 |
+| 조합·예외 번역 | 순수 단위 테스트. 예외를 주입해 매핑·전파·재시도를 확인 | `MemberProvisionerTest`, `MemberManagerTest` |
 | 도메인 VO | 순수 단위 테스트 | `NicknameTest` |
 | 도메인 흐름 (DB 포함) | `ContextTest` 상속 + 실제 빈·H2 + `@Transactional` | `ProfileServiceIT`, `SocialAuthServiceIT` |
 | Repository | `CoreDbContextTest` 상속 + `@Transactional` | `MemberProfileRepositoryIT` — 파생 쿼리·유니크 제약 |
@@ -42,8 +43,11 @@ JUnit5 `@Tag` 로 구분하고 Gradle 태스크로 선택 실행한다 (루트 `
 - 단위/통합의 기준: **규칙과 흐름은 mockk 단위로**, DB 제약·쿼리·트랜잭션이 얽힌 행위는 IT 로.
   같은 것을 두 층에서 반복 검증하지 않는다.
 - 동시성 레이스 자체는 테스트로 재현하지 않는다. 검증 대상은 레이스의 **결과 예외를 다루는 방식**
-  (매핑·전파·재시도)이며, 단위 테스트에서 예외 주입으로 확인한다
-  (예: `profileManager.append(...) throws DataIntegrityViolationException` → E1008 매핑 확인).
+  (매핑·전파·재시도)이며, 예외 번역을 소유한 Implement 의 단위 테스트에서 예외 주입으로 확인한다
+  ([errors.md](errors.md)의 번역 위치 규칙과 짝을 이룬다).
+  - `MemberProvisionerTest` — `uk_member_nickname` 은 재시도, `uk_social_account_...` 는 E1004
+  - **기대하지 않은 무결성 위반이 전파되는지도 테스트한다** — 오인 매핑을 막는 것이 이 규칙의 핵심이다
+    (`MemberProvisionerTest` 의 `"NULL not allowed for column EMAIL"` 케이스).
 
 ## 작성 스타일
 
