@@ -2,9 +2,11 @@ package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -31,7 +33,18 @@ class MemberManager(
     fun changeNickname(memberId: UUID, nickname: Nickname) {
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.changeNickname(nickname.value)
-        memberRepository.flush()
+        try {
+            memberRepository.flush()
+        } catch (e: DataIntegrityViolationException) {
+            // 기대한 닉네임 충돌(동시 변경 레이스)만 도메인 에러로 번역하고, 그 외 무결성 위반은 전파한다.
+            if (isNicknameConflict(e)) throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+            throw e
+        }
+    }
+
+    // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
+    internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
     }
 
     @Transactional

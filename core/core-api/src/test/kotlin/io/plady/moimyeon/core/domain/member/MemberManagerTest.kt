@@ -16,6 +16,7 @@ import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -102,6 +103,33 @@ class MemberManagerTest {
         // then
         assertThat(entity.nickname).isEqualTo("변경 후 닉네임 02")
         verify(exactly = 1) { memberRepository.flush() }
+    }
+
+    @Test
+    fun `동시 변경으로 유니크 충돌이 나면 E1007 로 번역하고, 그 외 무결성 위반은 전파한다`() {
+        // given
+        val id = UUID.randomUUID()
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            nickname = "변경 전 닉네임 01",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = LocalDateTime.of(2026, 1, 1, 0, 0),
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
+        )
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+        every { memberRepository.flush() } throws DataIntegrityViolationException("uk_member_nickname")
+
+        // when & then — 기대한 충돌은 도메인 에러로
+        assertThatThrownBy { memberManager.changeNickname(id, Nickname("명랑한 해달 33")) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
+            }
+
+        // when & then — 그 외 무결성 위반은 전파
+        every { memberRepository.flush() } throws DataIntegrityViolationException("NULL not allowed for column")
+        assertThatThrownBy { memberManager.changeNickname(id, Nickname("성실한 치타 77")) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     @Test

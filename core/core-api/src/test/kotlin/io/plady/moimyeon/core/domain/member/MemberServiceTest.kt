@@ -10,7 +10,6 @@ import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.springframework.dao.DataIntegrityViolationException
 import java.time.LocalDateTime
 
 class MemberServiceTest {
@@ -56,22 +55,4 @@ class MemberServiceTest {
             }
     }
 
-    @Test
-    fun `동시 변경으로 유니크 충돌이 나면 E1007 로 매핑하고, 그 외 무결성 위반은 전파한다`() {
-        every { memberFinder.getById(memberId) } returns member
-        // Nickname 은 value class 라 mockk any() 매처가 깨져 구체 인자로 스텁한다
-        every { memberFinder.isNicknameAvailableFor(memberId, Nickname("명랑한 해달 33")) } returns true
-        every { memberFinder.isNicknameAvailableFor(memberId, Nickname("성실한 치타 77")) } returns true
-        every { memberManager.changeNickname(memberId, Nickname("명랑한 해달 33")) } throws
-            DataIntegrityViolationException("uk_member_nickname")
-        every { memberManager.changeNickname(memberId, Nickname("성실한 치타 77")) } throws
-            DataIntegrityViolationException("NULL not allowed for column")
-
-        assertThatThrownBy { memberService.changeNickname(memberId, "명랑한 해달 33") }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
-            }
-        assertThatThrownBy { memberService.changeNickname(memberId, "성실한 치타 77") }
-            .isInstanceOf(DataIntegrityViolationException::class.java)
-    }
 }

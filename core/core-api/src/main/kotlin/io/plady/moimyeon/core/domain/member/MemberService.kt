@@ -1,9 +1,7 @@
 package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -25,17 +23,6 @@ class MemberService(
         val nickname = Nickname(rawNickname)
         memberFinder.getById(memberId)
         requireBusiness(memberFinder.isNicknameAvailableFor(memberId, nickname), CoreErrorType.NICKNAME_DUPLICATED)
-        try {
-            memberManager.changeNickname(memberId, nickname)
-        } catch (e: DataIntegrityViolationException) {
-            if (isNicknameConflict(e)) {
-                throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
-            }
-            throw e
-        }
-    }
-
-    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
+        memberManager.changeNickname(memberId, nickname) // 동시 변경 레이스는 Manager 가 번역한다
     }
 }
