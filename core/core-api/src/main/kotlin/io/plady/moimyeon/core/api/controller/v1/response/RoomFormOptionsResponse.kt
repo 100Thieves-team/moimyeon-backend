@@ -1,8 +1,8 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
-// 면접 생성 폼(B·06·B·07)의 선택지 enum 을 한 번에 내려준다.
+// 룸 생성 폼(「룸 생성」 §4.1·§4.2)의 선택지 enum 을 한 번에 내려준다.
 // FE 상수로 둬도 되는 값이지만, 라벨을 서버가 소유하도록 목으로 제공한다.
-data class InterviewFormOptionsResponse(
+data class RoomFormOptionsResponse(
     val rounds: List<CodeLabelResponse>, // 1차/2차/3차/최종
     val types: List<CodeLabelResponse>, // 직무 면접/컬처핏/임원 면접/기술 과제
     val methods: List<MethodOptionResponse>, // 온라인/오프라인
@@ -10,8 +10,8 @@ data class InterviewFormOptionsResponse(
     val participantConstraints: ParticipantConstraintsResponse, // 인원 제약
 ) {
     companion object {
-        fun mock(): InterviewFormOptionsResponse {
-            return InterviewFormOptionsResponse(
+        fun mock(): RoomFormOptionsResponse {
+            return RoomFormOptionsResponse(
                 rounds = listOf(
                     CodeLabelResponse("FIRST", "1차"),
                     CodeLabelResponse("SECOND", "2차"),
