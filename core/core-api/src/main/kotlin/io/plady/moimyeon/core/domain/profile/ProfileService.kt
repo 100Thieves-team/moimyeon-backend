@@ -6,9 +6,7 @@ import io.plady.moimyeon.core.domain.catalog.RegionFinder
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.terms.TermsAgreementFinder
 import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -28,15 +26,7 @@ class ProfileService(
         requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(memberId), CoreErrorType.TERMS_NOT_AGREED)
         requireBusiness(!profileFinder.exists(memberId), CoreErrorType.PROFILE_ALREADY_EXISTS)
 
-        return try {
-            profileManager.append(memberId, content)
-        } catch (e: DataIntegrityViolationException) {
-            // find ~ save 사이의 동시성 방지. 기대하지 않은 무결성 위반을 오인하지 않도록 그 외에는 전파한다.
-            if (profileFinder.exists(memberId)) {
-                throw CoreException(CoreErrorType.PROFILE_ALREADY_EXISTS)
-            }
-            throw e
-        }
+        return profileManager.append(memberId, content) // 동시 생성 레이스는 append 안의 회원 행 락으로 직렬화
     }
 
     fun update(memberId: UUID, content: ProfileContent): UUID {

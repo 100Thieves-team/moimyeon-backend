@@ -4,6 +4,7 @@ import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberProfileRepository
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -11,11 +12,16 @@ import java.util.UUID
 
 @Component
 class ProfileManager(
+    private val memberRepository: MemberRepository,
     private val memberProfileRepository: MemberProfileRepository,
     private val profileInterestManager: ProfileInterestManager,
 ) {
     @Transactional
     fun append(memberId: UUID, content: ProfileContent): UUID {
+        // 최초 생성은 프로필 행이 아직 없어 잠글 대상이 없다 — 부모(member) 행을 잠가
+        // 확인-후-저장 동시 생성을 직렬화한다. 두 번째 트랜잭션은 락 해제 후 아래
+        // findForUpdateByMemberId 에서 먼저 커밋된 행을 보고 PROFILE_ALREADY_EXISTS 로 떨어진다.
+        requireFound(memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         val existing = memberProfileRepository.findForUpdateByMemberId(memberId)
         if (existing == null) {
             memberProfileRepository.save(ProfileMapper.toEntity(memberId, content))

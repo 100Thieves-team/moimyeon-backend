@@ -16,7 +16,6 @@ import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.springframework.dao.DataIntegrityViolationException
 import java.time.LocalDateTime
 
 class ProfileServiceTest {
@@ -129,26 +128,6 @@ class ProfileServiceTest {
         every { profileFinder.exists(memberId) } returns true
 
         assertCreateFails(CoreErrorType.PROFILE_ALREADY_EXISTS)
-    }
-
-    @Test
-    fun `동시 요청으로 유니크 충돌이 났는데 내 프로필이 생겨 있으면 E1008 로 매핑한다`() {
-        every { memberFinder.getById(memberId) } returns member
-        givenValidCatalogRefs()
-        every { termsAgreementFinder.hasAgreedAllRequiredActive(memberId) } returns true
-        every { profileFinder.exists(memberId) } returns false andThen true
-        every { profileManager.append(memberId, content) } throws DataIntegrityViolationException("pk")
-
-        assertCreateFails(CoreErrorType.PROFILE_ALREADY_EXISTS)
-    }
-
-    @Test
-    fun `동시 요청이 아닌 무결성 위반은 오인하지 않고 전파한다`() {
-        givenCreatable()
-        every { profileManager.append(memberId, content) } throws DataIntegrityViolationException("NULL not allowed for column")
-
-        assertThatThrownBy { profileService.create(memberId, content) }
-            .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     @Test
