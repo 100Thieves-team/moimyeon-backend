@@ -14,8 +14,8 @@ class TermsAgreementFinder(
 ) {
     @Transactional(readOnly = true)
     fun hasAgreedAllRequiredActive(memberId: UUID): Boolean {
-        val agreedTermsIds = termsAgreementRepository.findByMemberId(memberId).map { it.termsId }.toSet()
-        return termsRepository.findByStatus(TermsStatus.ACTIVE)
+        val agreedTermsIds = termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.termsId }.toSet()
+        return termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE)
             .filter { it.required }
             .all { it.id in agreedTermsIds }
     }

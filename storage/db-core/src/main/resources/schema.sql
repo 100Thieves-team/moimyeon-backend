@@ -152,6 +152,7 @@ CREATE TABLE member_profile (
     sigungu_id         BIGINT       NULL,
     created_at         DATETIME     NOT NULL,
     updated_at         DATETIME     NOT NULL,
+    deleted_at         DATETIME     NULL,
     PRIMARY KEY (member_id)
 );
 
@@ -162,6 +163,7 @@ CREATE TABLE member_profile_interest (
     CONSTRAINT uk_member_profile_interest UNIQUE (member_id, company_id)
 );
 
+-- status=DEPRECATED 는 "구버전이라 신규 동의 대상 아님"(기존 동의는 유효), deleted_at 은 행 자체의 폐기.
 CREATE TABLE terms (
     id             BINARY(16)   NOT NULL,
     type           VARCHAR(20)  NOT NULL,
@@ -173,20 +175,26 @@ CREATE TABLE terms (
     status         VARCHAR(20)  NOT NULL,
     created_at     DATETIME     NOT NULL,
     updated_at     DATETIME     NOT NULL,
+    deleted_at     DATETIME     NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_terms_type_version UNIQUE (type, version)
 );
 
 -- 동의 이력은 append-only: 애플리케이션에서 UPDATE/DELETE 를 수행하지 않는다.
+-- _active_check: 유니크를 살아있는 행끼리만 걸기 위한 어댑터. 유니크 인덱스는 NULL 을 서로 다른 값으로
+-- 취급해서 deleted_at 을 그대로 넣으면 방향이 반대가 된다(활성 중복이 통과). STORED/VIRTUAL 키워드는
+-- H2 가 파싱하지 못하므로 생략한다(MySQL 기본값이 VIRTUAL).
 CREATE TABLE terms_agreement (
-    id         BINARY(16) NOT NULL,
-    member_id  BINARY(16) NOT NULL,
-    terms_id   BINARY(16) NOT NULL,
-    agreed_at  DATETIME   NOT NULL,
-    created_at DATETIME   NOT NULL,
-    updated_at DATETIME   NOT NULL,
+    id            BINARY(16) NOT NULL,
+    member_id     BINARY(16) NOT NULL,
+    terms_id      BINARY(16) NOT NULL,
+    agreed_at     DATETIME   NOT NULL,
+    created_at    DATETIME   NOT NULL,
+    updated_at    DATETIME   NOT NULL,
+    deleted_at    DATETIME   NULL,
+    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_terms_agreement_member_terms UNIQUE (member_id, terms_id)
+    CONSTRAINT uk_terms_agreement_member_terms_active UNIQUE (member_id, terms_id, _active_check)
 );
 CREATE INDEX ix_terms_agreement_member_id ON terms_agreement (member_id);
 

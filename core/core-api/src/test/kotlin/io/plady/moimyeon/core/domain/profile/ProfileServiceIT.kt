@@ -29,7 +29,7 @@ class ProfileServiceIT(
     fun `가입(자동 동의)부터 소개 저장·완성 상태 전환까지의 흐름이 동작한다`() {
         // given — 가입하면 필수 약관 동의가 기록된다 (시드 2건: SERVICE·PRIVACY v1.0)
         val memberId = signUp("google-sub-p1")
-        assertThat(termsAgreementRepository.findByMemberId(memberId)).hasSize(2)
+        assertThat(termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)).hasSize(2)
         assertThat(profileService.hasProfile(memberId)).isFalse()
 
         // when — jobRoleId=1(서버·백엔드), sigunguId=1(강남구) — seed.sql 참조 데이터

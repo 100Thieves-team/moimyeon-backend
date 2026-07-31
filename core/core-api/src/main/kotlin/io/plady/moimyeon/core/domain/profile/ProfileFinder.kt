@@ -13,10 +13,10 @@ class ProfileFinder(
 ) {
     @Transactional(readOnly = true)
     fun getProfile(memberId: UUID): MemberProfile {
-        val entity = requireFound(memberProfileRepository.findById(memberId).orElse(null), CoreErrorType.PROFILE_NOT_FOUND)
+        val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), CoreErrorType.PROFILE_NOT_FOUND)
         return ProfileMapper.toDomain(entity)
     }
 
     @Transactional(readOnly = true)
-    fun exists(memberId: UUID): Boolean = memberProfileRepository.existsById(memberId)
+    fun exists(memberId: UUID): Boolean = memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
 }

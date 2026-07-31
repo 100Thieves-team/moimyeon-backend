@@ -85,4 +85,20 @@ class MemberProfileRepositoryIT(
         // then
         assertThat(found!!.interestCompanyIds).containsExactlyInAnyOrderElementsOf(companyIds)
     }
+
+    @Test
+    fun `소프트 삭제된 프로필은 조회에서 빠지지만 행은 남는다`() {
+        // given
+        val memberId = persistMember("google-sub-6")
+        val profile = memberProfileRepository.saveAndFlush(MemberProfileEntity(memberId = memberId, bio = "자기소개"))
+
+        // when
+        profile.delete(now)
+        memberProfileRepository.flush()
+
+        // then
+        assertThat(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId)).isNull()
+        assertThat(memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)).isFalse()
+        assertThat(memberProfileRepository.findById(memberId)).isPresent()
+    }
 }

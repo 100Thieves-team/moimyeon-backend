@@ -5,7 +5,7 @@ import java.util.UUID
 
 // append-only
 interface TermsAgreementRepository : JpaRepository<TermsAgreementEntity, UUID> {
-    fun existsByMemberIdAndTermsId(memberId: UUID, termsId: UUID): Boolean
+    fun existsByMemberIdAndTermsIdAndDeletedAtIsNull(memberId: UUID, termsId: UUID): Boolean
 
-    fun findByMemberId(memberId: UUID): List<TermsAgreementEntity>
+    fun findByMemberIdAndDeletedAtIsNull(memberId: UUID): List<TermsAgreementEntity>
 }

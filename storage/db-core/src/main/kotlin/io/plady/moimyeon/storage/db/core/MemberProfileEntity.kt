@@ -12,11 +12,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
-import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.type.SqlTypes
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
@@ -38,13 +35,7 @@ class MemberProfileEntity(
     )
     @Column(name = "company_id")
     var interestCompanyIds: MutableList<Long> = mutableListOf(),
-) {
-    @CreationTimestamp
-    val createdAt: LocalDateTime = LocalDateTime.MIN
-
-    @UpdateTimestamp
-    val updatedAt: LocalDateTime = LocalDateTime.MIN
-
+) : AbstractEntity() {
     // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
     fun updateProfile(
         jobRoleId: Long?,

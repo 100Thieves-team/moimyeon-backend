@@ -11,7 +11,7 @@ class TermsFinder(
 ) {
     @Transactional(readOnly = true)
     fun findActive(): List<Terms> {
-        return termsRepository.findByStatus(TermsStatus.ACTIVE).map(TermsMapper::toDomain)
+        return termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map(TermsMapper::toDomain)
     }
 
     @Transactional(readOnly = true)
