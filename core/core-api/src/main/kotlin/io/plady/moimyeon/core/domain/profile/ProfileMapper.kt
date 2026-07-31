@@ -18,6 +18,7 @@ object ProfileMapper {
     )
 
     fun toEntity(memberId: UUID, content: ProfileContent): MemberProfileEntity = MemberProfileEntity(
+        id = UUID.randomUUID(),
         memberId = memberId,
         bio = content.bio,
         meetingPreference = content.meetingPreference,

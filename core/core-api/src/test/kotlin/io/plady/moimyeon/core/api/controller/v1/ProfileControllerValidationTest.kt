@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.security.Principal
@@ -33,7 +33,7 @@ class ProfileControllerValidationTest {
     @BeforeEach
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-            ProfileController(profileService, ProfileFacade(profileService, catalogService)),
+            ProfileController(ProfileFacade(profileService, catalogService)),
             MemberController(memberService, memberFacade),
             PublicProfileController(),
         )
@@ -42,8 +42,8 @@ class ProfileControllerValidationTest {
             .build()
     }
 
-    private fun performCreate(body: String) = mockMvc.perform(
-        post("/v1/members/me/profile")
+    private fun performUpdate(body: String) = mockMvc.perform(
+        put("/v1/members/me/profile")
             .principal(principal)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body),
@@ -51,7 +51,7 @@ class ProfileControllerValidationTest {
 
     @Test
     fun `깨진 JSON 은 400 E400 을 반환한다`() {
-        val body = performCreate("""{"bio": """)
+        val body = performUpdate("""{"bio": """)
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 

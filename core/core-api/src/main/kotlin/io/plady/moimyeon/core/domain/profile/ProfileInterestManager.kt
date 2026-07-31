@@ -17,34 +17,34 @@ class ProfileInterestManager(
     private val interestJobRoleRepository: MemberProfileInterestJobRoleRepository,
 ) {
     @Transactional
-    fun replaceAll(memberId: UUID, companyIds: List<Long>, jobRoleIds: List<Long>, now: LocalDateTime) {
-        replaceCompanies(memberId, companyIds, now)
-        replaceJobRoles(memberId, jobRoleIds, now)
+    fun replaceAll(profileId: UUID, companyIds: List<Long>, jobRoleIds: List<Long>, now: LocalDateTime) {
+        replaceCompanies(profileId, companyIds, now)
+        replaceJobRoles(profileId, jobRoleIds, now)
     }
 
     @Transactional
-    fun deleteAll(memberId: UUID, now: LocalDateTime) {
-        replaceAll(memberId, emptyList(), emptyList(), now)
+    fun deleteAll(profileId: UUID, now: LocalDateTime) {
+        replaceAll(profileId, emptyList(), emptyList(), now)
     }
 
-    private fun replaceCompanies(memberId: UUID, companyIds: List<Long>, now: LocalDateTime) {
+    private fun replaceCompanies(profileId: UUID, companyIds: List<Long>, now: LocalDateTime) {
         replace(
             repository = interestCompanyRepository,
-            existing = interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId),
+            existing = interestCompanyRepository.findByProfileIdAndDeletedAtIsNull(profileId),
             refOf = { it.companyId },
             wanted = companyIds,
-            create = { MemberProfileInterestCompanyEntity(memberId, it) },
+            create = { MemberProfileInterestCompanyEntity(profileId, it) },
             now = now,
         )
     }
 
-    private fun replaceJobRoles(memberId: UUID, jobRoleIds: List<Long>, now: LocalDateTime) {
+    private fun replaceJobRoles(profileId: UUID, jobRoleIds: List<Long>, now: LocalDateTime) {
         replace(
             repository = interestJobRoleRepository,
-            existing = interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId),
+            existing = interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId),
             refOf = { it.jobRoleId },
             wanted = jobRoleIds,
-            create = { MemberProfileInterestJobRoleEntity(memberId, it) },
+            create = { MemberProfileInterestJobRoleEntity(profileId, it) },
             now = now,
         )
     }

@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import io.plady.moimyeon.core.domain.profile.ProfileManager
 import io.plady.moimyeon.core.domain.terms.Terms
 import io.plady.moimyeon.core.domain.terms.TermsAgreementRecorder
 import io.plady.moimyeon.core.domain.terms.TermsFinder
@@ -27,12 +28,15 @@ class MemberProvisionerTest {
     private val termsFinder = mockk<TermsFinder>()
     private val termsAgreementRecorder = mockk<TermsAgreementRecorder>()
 
+    private val profileManager = mockk<ProfileManager>(relaxed = true)
+
     // 트랜잭션 경계는 relaxed 매니저를 물린 실제 TransactionTemplate 로 통과시킨다(커밋/롤백은 no-op)
     private val memberProvisioner = MemberProvisioner(
         memberManager,
         nicknameGenerator,
         termsFinder,
         termsAgreementRecorder,
+        profileManager,
         TransactionTemplate(mockk(relaxed = true)),
     )
 

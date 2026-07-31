@@ -19,57 +19,57 @@ class ProfileInterestManagerIT(
     val interestCompanyRepository: MemberProfileInterestCompanyRepository,
     val interestJobRoleRepository: MemberProfileInterestJobRoleRepository,
 ) : ContextTest() {
-    private val memberId: UUID = UUID.randomUUID()
+    private val profileId: UUID = UUID.randomUUID()
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
     // 트랜잭션 롤백이 없으므로 이 테스트가 만든 행을 직접 지운다.
     @AfterEach
     fun cleanUp() {
-        interestCompanyRepository.deleteAll(interestCompanyRepository.findAll().filter { it.memberId == memberId })
-        interestJobRoleRepository.deleteAll(interestJobRoleRepository.findAll().filter { it.memberId == memberId })
+        interestCompanyRepository.deleteAll(interestCompanyRepository.findAll().filter { it.profileId == profileId })
+        interestJobRoleRepository.deleteAll(interestJobRoleRepository.findAll().filter { it.profileId == profileId })
     }
 
     @Test
     fun `트랜잭션 밖에서 replaceAll 을 호출해도 빠진 항목의 소프트 삭제가 반영된다`() {
         // given — 관심 회사 2, 관심 직무 2
         interestCompanyRepository.saveAllAndFlush(
-            listOf(101L, 102L).map { MemberProfileInterestCompanyEntity(memberId = memberId, companyId = it) },
+            listOf(101L, 102L).map { MemberProfileInterestCompanyEntity(profileId = profileId, companyId = it) },
         )
         interestJobRoleRepository.saveAllAndFlush(
-            listOf(201L, 202L).map { MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = it) },
+            listOf(201L, 202L).map { MemberProfileInterestJobRoleEntity(profileId = profileId, jobRoleId = it) },
         )
 
         // when — 회사 하나를 빼고 직무 하나를 바꾼다. 호출자 트랜잭션 없음.
-        profileInterestManager.replaceAll(memberId, listOf(101L), listOf(201L, 203L), now)
+        profileInterestManager.replaceAll(profileId, listOf(101L), listOf(201L, 203L), now)
 
         // then — 삭제와 삽입이 함께 반영된다
-        assertThat(interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.companyId })
+        assertThat(interestCompanyRepository.findByProfileIdAndDeletedAtIsNull(profileId).map { it.companyId })
             .containsExactly(101L)
-        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+        assertThat(interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId).map { it.jobRoleId })
             .containsExactlyInAnyOrder(201L, 203L)
 
         // 소프트 삭제 — 행 자체는 남는다
-        assertThat(interestCompanyRepository.findAll().filter { it.memberId == memberId }).hasSize(2)
-        assertThat(interestJobRoleRepository.findAll().filter { it.memberId == memberId }).hasSize(3)
+        assertThat(interestCompanyRepository.findAll().filter { it.profileId == profileId }).hasSize(2)
+        assertThat(interestJobRoleRepository.findAll().filter { it.profileId == profileId }).hasSize(3)
     }
 
     @Test
     fun `트랜잭션 밖에서 deleteAll 을 호출하면 관심이 전부 소프트 삭제된다`() {
         // given
         interestCompanyRepository.saveAllAndFlush(
-            listOf(MemberProfileInterestCompanyEntity(memberId = memberId, companyId = 111L)),
+            listOf(MemberProfileInterestCompanyEntity(profileId = profileId, companyId = 111L)),
         )
         interestJobRoleRepository.saveAllAndFlush(
-            listOf(MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = 211L)),
+            listOf(MemberProfileInterestJobRoleEntity(profileId = profileId, jobRoleId = 211L)),
         )
 
         // when
-        profileInterestManager.deleteAll(memberId, now)
+        profileInterestManager.deleteAll(profileId, now)
 
         // then
-        assertThat(interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId)).isEmpty()
-        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId)).isEmpty()
-        assertThat(interestCompanyRepository.findAll().filter { it.memberId == memberId }).hasSize(1)
-        assertThat(interestJobRoleRepository.findAll().filter { it.memberId == memberId }).hasSize(1)
+        assertThat(interestCompanyRepository.findByProfileIdAndDeletedAtIsNull(profileId)).isEmpty()
+        assertThat(interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId)).isEmpty()
+        assertThat(interestCompanyRepository.findAll().filter { it.profileId == profileId }).hasSize(1)
+        assertThat(interestJobRoleRepository.findAll().filter { it.profileId == profileId }).hasSize(1)
     }
 }

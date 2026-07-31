@@ -20,8 +20,8 @@ class ProfileFinder(
         val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), CoreErrorType.PROFILE_NOT_FOUND)
         return ProfileMapper.toDomain(
             entity,
-            interestJobRoleIds = interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId },
-            interestCompanyIds = interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.companyId },
+            interestJobRoleIds = interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(entity.id).map { it.jobRoleId },
+            interestCompanyIds = interestCompanyRepository.findByProfileIdAndDeletedAtIsNull(entity.id).map { it.companyId },
         )
     }
 

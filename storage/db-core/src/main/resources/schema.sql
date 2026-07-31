@@ -74,7 +74,8 @@
 --                       참조 데이터의 업무키(sido_code·code·corp_code·source_uid 등)는 재크롤 때
 --                       지워진 행을 찾아 되살려야 하므로 유니크가 전체를 덮어야 upsert 가 성립한다.
 --                       terms 의 (type, version) 도 같은 버전을 다시 발행하지 않는다.
--- - PK 가 유니크 역할을 하는 member_profile 은 이 트릭을 쓸 수 없어 되살리기로 처리한다.
+-- - member_profile 은 uk_member_profile_member 에 _active_check 를 붙이지 않는다 — 소프트 삭제된
+--   프로필도 유니크를 점유해야 재작성이 새 행이 아니라 되살리기가 된다(프로필은 회원당 하나뿐이다).
 --
 -- created_at/updated_at 은 모든 엔티티 테이블이 갖는다(값 컬렉션인 review_tag 만 제외).
 --   참조 데이터는 갱신 주체인 크롤러가 직접 세팅한다 —
@@ -324,14 +325,16 @@ CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
 -- 직무 단일 참조(job_role_id) 컬럼은 두지 않는다 — 관심 직무는 다건이라
 --   member_profile_interest_job_role 로 뺐다.
 CREATE TABLE member_profile (
+    id                 BINARY(16)   NOT NULL,
     member_id          BINARY(16)   NOT NULL,
-    bio                VARCHAR(500) NULL,
-    meeting_preference VARCHAR(20)  NULL,
+    bio                VARCHAR(500) NOT NULL DEFAULT '',
+    meeting_preference VARCHAR(20)  NOT NULL DEFAULT 'UNSPECIFIED',
     sigungu_id         BIGINT       NULL,
     created_at         DATETIME     NOT NULL,
     updated_at         DATETIME     NOT NULL,
     deleted_at         DATETIME     NULL,
-    PRIMARY KEY (member_id)
+    PRIMARY KEY (id),
+    CONSTRAINT uk_member_profile_member UNIQUE (member_id)
 );
 
 -- 관심 회사(프로필↔company 의 M:N 조인). 양쪽이 다 엔티티이므로 값 컬렉션이 아니라 엔티티다 —
@@ -340,14 +343,14 @@ CREATE TABLE member_profile (
 --   "언제부터 관심이었는가"가 created_at 에 보존된다.
 CREATE TABLE member_profile_interest_company (
     id            BIGINT     NOT NULL AUTO_INCREMENT,
-    member_id     BINARY(16) NOT NULL,
+    profile_id    BINARY(16) NOT NULL,
     company_id    BIGINT     NOT NULL,
     created_at    DATETIME   NOT NULL,
     updated_at    DATETIME   NOT NULL,
     deleted_at    DATETIME   NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_member_profile_interest_company_active UNIQUE (member_id, company_id, _active_check)
+    CONSTRAINT uk_member_profile_interest_company_active UNIQUE (profile_id, company_id, _active_check)
 );
 CREATE INDEX ix_member_profile_interest_company_company_id ON member_profile_interest_company (company_id);
 
@@ -355,14 +358,14 @@ CREATE INDEX ix_member_profile_interest_company_company_id ON member_profile_int
 -- 프로필의 직무가 아니라 관심 직무이므로 단일 참조가 아니다. 관심 회사와 같은 엔티티 패턴.
 CREATE TABLE member_profile_interest_job_role (
     id            BIGINT     NOT NULL AUTO_INCREMENT,
-    member_id     BINARY(16) NOT NULL,
+    profile_id    BINARY(16) NOT NULL,
     job_role_id   BIGINT     NOT NULL,
     created_at    DATETIME   NOT NULL,
     updated_at    DATETIME   NOT NULL,
     deleted_at    DATETIME   NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_member_profile_interest_job_role_active UNIQUE (member_id, job_role_id, _active_check)
+    CONSTRAINT uk_member_profile_interest_job_role_active UNIQUE (profile_id, job_role_id, _active_check)
 );
 CREATE INDEX ix_member_profile_interest_job_role_job_role_id ON member_profile_interest_job_role (job_role_id);
 
