@@ -71,6 +71,7 @@
 - 그 외 무결성 위반(not-null 위반 등)을 삼키면 **오인 매핑**이 된다. 반드시 전파해 500 으로 드러낸다.
 - 충돌을 트랜잭션 안에서 드러내야 하면 `save` 대신 `saveAndFlush` 를 쓴다
   (예: `MemberManager.append` — 동시 가입 레이스를 E1004 로 매핑하기 위해).
+  flush 위치 규칙은 [layers.md](layers.md)의 트랜잭션 절 참고.
 - 참조 무결성은 DB 가 아니라 애플리케이션이 담당한다 — **FK 제약을 걸지 않으므로**
   ([storage.md](storage.md)), 존재하지 않는 참조 id 는 **저장 전에 명시 검증**해 전용 코드로
   응답한다(예: 존재하지 않는 직무 id → `JOB_ROLE_NOT_FOUND`).

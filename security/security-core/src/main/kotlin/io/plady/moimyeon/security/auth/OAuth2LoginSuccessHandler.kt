@@ -26,6 +26,8 @@ class OAuth2LoginSuccessHandler(
         // sub 는 OIDC 규격상 항상 존재한다. 없으면 구조 불변식 위반 → fail-fast.
         val subject = requireNotNull(oidcUser.subject) { "OIDC principal 에 sub(subject) 가 없습니다." }
 
+        // 가입 커밋(resolve)과 세션 저장(open)은 의도적으로 별도 트랜잭션이다 — 세션 저장이
+        // 실패해도 재로그인이 기존 회원 경로로 흘러 복구되므로 원자성을 요구하지 않는다.
         val memberId = socialMemberResolver.resolve(
             provider = SocialLoginProvider.GOOGLE,
             providerId = subject,

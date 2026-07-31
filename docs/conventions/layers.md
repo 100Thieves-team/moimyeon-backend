@@ -38,8 +38,8 @@ Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한�
 | --- | --- | --- |
 | Controller | 요청/응답 DTO 변환, ApiResponse 래핑 | 비즈니스 판단, 여러 Service 조합 |
 | Facade | 여러 Service 결과를 **조합**해 응답 DTO 조립 | 비즈니스 판단 |
-| Service | 비즈니스 **흐름** — 검증 순서, 분기, 트랜잭션 경계 | JPA 엔티티 사용 |
-| Implement | **재사용 로직** — 조회·저장·변환·생성 단위 구현 | 흐름 분기(합성 메서드 금지) |
+| Service | 비즈니스 **흐름** — 검증 순서, 분기 | JPA 엔티티 사용, 트랜잭션 경계 |
+| Implement | **재사용 로직** — 조회·저장·변환·생성 단위 구현, 트랜잭션 경계 | 흐름 분기(합성 메서드 금지) |
 | Repository | 파생 쿼리·JPQL | 도메인 규칙 |
 
 ## Controller
@@ -93,11 +93,8 @@ class ProfileFacade(
 - 교차 규칙(다른 개념과 얽힌 규칙)은 Service 가 확인한다. 단, 상대 개념의 Finder 가 노출한
   판정을 입력으로 쓴다 ([concepts.md](concepts.md)).
 - 다른 개념의 Service 호출 금지, Implement 호출은 허용.
-- 트랜잭션 경계: 여러 쓰기를 원자적으로 묶어야 하는 흐름은 Service 가 경계를 소유한다. 기본은
-  Service 메서드 `@Transactional`. 단, 실패한 쓰기를 잡아 **재시도**하는 흐름은 메서드 전체를 묶으면
-  rollback-only 가 된 같은 트랜잭션 안에서 재시도하게 되므로, `TransactionTemplate` 로 시도 단위
-  경계를 잡는다(예: `SocialAuthService` — 가입 + 약관 자동 동의가 한 시도, 닉네임 충돌 재시도는
-  새 트랜잭션).
+- Service 는 기본적으로 트랜잭션 경계를 갖지 않는다. 경계는 쓰기 Implement 가 소유한다 —
+  [트랜잭션](#트랜잭션) 절 참고.
 
 ## Implement (= Logic)
 
@@ -132,7 +129,6 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
   - `find*`(nullable 반환) 메서드를 **외부에 노출하지 않는다**. null 검사와 예외 매핑이 호출부마다
     반복되는 것을 막기 위함이다.
   ```kotlin
-  @Transactional(readOnly = true)
   fun getProfile(memberId: UUID): MemberProfile {
       val entity = requireFound(memberProfileRepository.findById(memberId).orElse(null), CoreErrorType.PROFILE_NOT_FOUND)
       return ProfileMapper.toDomain(entity)
@@ -149,11 +145,99 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 "없음"의 의미 부여(어떤 E 코드인가)는 조회 책임을 가진 Finder 가 한다. Service 는 null 을 받지 않으므로
 not-found 매핑을 반복하지 않는다. 규칙 위반은 Service 가 `requireBusiness` 로 던진다 ([errors.md](errors.md)).
 
-### 트랜잭션
+## 트랜잭션
 
-- 조회는 Finder 메서드에 `@Transactional(readOnly = true)`.
-- 단건 쓰기는 Manager 메서드에 `@Transactional`. 흐름 단위 원자성이 필요하면 Service 로 올린다.
+> **트랜잭션은 레이어가 아니라 커밋 단위에 붙인다.**
+
+판별 기준은 하나다. 이 메서드가 실패했을 때 **DB 쓰기 전체가 한꺼번에 없던 일이 돼야 하는가?**
+Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
+
+경계를 쓰기 Implement(`Manager`/`Recorder` 등) 단위로 설계하는 목적은 **커밋의 응집**이다 —
+함께 롤백돼야 하는 쓰기 묶음이 곧 하나의 쓰기 컴포넌트가 되고, 트랜잭션은 그 컴포넌트의
+메서드에 붙는다. Service 에 `@Transactional` 이 금지라서가 아니다. Service 는 커밋 단위가
+아니라 흐름이고, 외부 I/O(소셜 API·알림·파일 업로드·PG)가 끼어드는 자리라서 경계로 삼을
+이유가 없다. Service 에 달면 외부 시스템이 느려질 때 DB 커넥션을 그만큼 붙잡아, 장애가
+무관한 API 로 번진다.
+
+| 대상 | 트랜잭션 |
+| --- | --- |
+| Controller / Facade | 없음 |
+| Service | 기본 없음 (예외: 아래 "여러 쓰기를 묶어야 할 때"의 3) |
+| `Finder`/`Reader` | 여러 쿼리를 한 스냅샷으로 읽을 때만 `readOnly = true` |
+| `Manager`/`Recorder`/`Adder` (쓰기) | `@Transactional` **필수** |
+| `Generator`/`Mapper` (계산·변환) | 없음 |
+
+쓰기 컴포넌트의 `@Transactional` 이 필수인 이유: dirty checking(엔티티 수정·소프트 삭제)은
+영속성 컨텍스트가 없으면 조용히 유실된다. 호출자가 트랜잭션을 갖고 있으리라는 암묵적
+의존은 시그니처에 드러나지 않으므로, 쓰기 컴포넌트가 자기 경계를 소유한다
+(예: `ProfileInterestManager.replaceAll` — 트랜잭션 없이 호출되면 소프트 삭제만 유실되고
+삽입만 커밋되는 부분 쓰기가 된다).
+
+### 여러 쓰기를 원자적으로 묶어야 할 때
+
+우선순위대로 시도한다.
+
+1. **호출을 쓰기 컴포넌트 안으로 내린다.** 함께 커밋돼야 하는 두 쓰기는 대개 한 쓰기
+   컴포넌트의 책임이다. 하위 Manager 도 각자 `@Transactional` 을 갖되 전파는 기본
+   `REQUIRED` 이므로, 상위 트랜잭션에 참여해 커밋 하나가 된다.
+   (`ProfileManager.append` → `ProfileInterestManager.replaceAll` 이 이 형태다.)
+2. **둘을 감싸는 새 Implement 를 만든다.** 두 개념의 쓰기가 한 커밋이어야 하면,
+   그 조합 자체가 재사용 가능한 하나의 개념이다. (예정 사례: 탈퇴는 회원·프로필·관심
+   소프트 삭제가 한 커밋이어야 하므로 `MemberWithdrawProcessor` 하나가 감싼다.)
+3. **Service 에서 `TransactionTemplate` 으로 시도 단위 경계를 잡는다.** 실패한 쓰기를 잡아
+   **재시도**하는 흐름은 메서드 전체를 `@Transactional` 로 묶으면 rollback-only 가 된 같은
+   트랜잭션 안에서 재시도하게 되므로 이 형태를 쓴다. (`SocialAuthService.provision` —
+   가입 + 약관 자동 동의가 한 시도, 닉네임 충돌 재시도는 새 트랜잭션.)
+
+`REQUIRES_NEW` 는 쓰지 않는다. "일부만 커밋돼야 한다"는 요구는 대개 컴포넌트를 잘못
+나눴다는 신호다.
+
+### 트랜잭션 안에 두지 않는 것 (하드 룰)
+
+- 외부 시스템 호출: HTTP/Feign, 메일·푸시·SMS, 파일 스토리지, 메시지 발행
+- 되돌릴 수 없는 부수효과 전반 — 롤백돼도 되돌아오지 않으므로 커밋 단위에 있을 이유가 없다
+- 재시도 루프·대기 (예: `NicknameGenerator.generateUnique` 의 점유 확인 SELECT 루프는
+  가입 트랜잭션 밖에서 실행한다 — 유일성의 최종 보장은 DB 유니크 제약이다)
+
+외부 호출은 Service 에 남기고, 그 앞뒤의 DB 쓰기만 Implement 로 내려 각각 짧은
+트랜잭션으로 만든다. 외부 호출이 성공한 뒤 DB 쓰기가 실패하는 구간은 **원자적일 수
+없다** — 보상 로직이나 재처리로 다루고, 트랜잭션으로 덮으려 하지 않는다.
+
+성공 사례: OAuth 로그인은 토큰 교환(외부 I/O)이 Spring Security 필터 체인(트랜잭션 밖)에서
+끝나고, `OAuth2LoginSuccessHandler` 는 DB 쓰기만 한다. 가입 커밋(트랜잭션 A)과 세션
+저장(트랜잭션 B)은 **의도된 비원자 경계**다 — B 가 실패해도 재로그인이
+`existsBySocialAccount` → `recordLogin` 경로로 흘러 복구되므로 원자성을 요구하지 않는다.
+
+### 조회 트랜잭션
+
+- **여러 쿼리를 한 스냅샷으로 읽어야 할 때만** `@Transactional(readOnly = true)` 를 붙인다.
+  레포지토리 호출이 하나뿐인 위임 메서드에는 붙이지 않는다 — `SimpleJpaRepository` 가 이미
+  클래스 레벨 `readOnly` 트랜잭션이라 트랜잭션만 하나 더 열 뿐 얻는 것이 없다.
+
+  ```kotlin
+  @Transactional(readOnly = true)   // 프로필 + 관심직무 + 관심회사 3쿼리를 한 스냅샷으로
+  fun getProfile(memberId: UUID): MemberProfile { ... }
+
+  fun exists(memberId: UUID): Boolean =            // 단일 위임 — 붙이지 않는다
+      memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
+  ```
+
+- 한 요청이 만드는 트랜잭션 개수를 의식한다. 습관적으로 붙이면 요청 하나에 트랜잭션이
+  수 개씩 열리고 닫힌다. 개별 비용은 작지만 "습관적으로 붙인다"의 결과라는 점은 같다.
 - `open-in-view: false`. 레이지 로딩에 기대지 말고 경계 안에서 조립을 끝낸다.
+
+### 유니크 충돌을 호출자가 잡아야 하면 쓰기 Implement 안에서 flush 한다
+
+flush 하지 않으면 제약 위반은 **커밋 시점**, 즉 쓰기 Implement 의 트랜잭션 경계에서
+터진다. 그러면 어떤 제약이 터졌는지 구분하기 어렵고, 같은 메서드 안의 다른 쓰기까지
+모두 수행한 뒤에 실패한다. 호출자가 `DataIntegrityViolationException` 을 잡아 도메인
+예외로 매핑하는 흐름이라면, 쓰기 직후 flush 해서 예외가 예측 가능한 지점에서 터지게 한다
+([errors.md](errors.md)의 유니크 충돌 처리와 같은 규칙).
+
+- `MemberManager.append` — `saveAndFlush`. `SocialAuthService` 가 닉네임 충돌을 잡아 재시도한다.
+- `MemberManager.changeNickname` — `flush()`. `MemberService` 가 `NICKNAME_DUPLICATED` 로 매핑한다.
+
+flush 여부는 **호출자가 그 예외를 잡는가**로 결정한다. 잡지 않으면 붙이지 않는다.
 
 ## 레이어 간 반환 타입
 
