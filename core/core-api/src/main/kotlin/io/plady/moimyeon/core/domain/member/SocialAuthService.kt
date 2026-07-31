@@ -47,10 +47,14 @@ class SocialAuthService(
     // authenticate 전체를 @Transactional 로 묶으면 닉네임 충돌 예외가 트랜잭션을 rollback-only 로
     // 만들어 같은 트랜잭션 안의 재시도가 커밋될 수 없으므로, 시도 단위로 경계를 명시한다.
     private fun provision(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
+        // 닉네임 생성은 최대 수십 회의 점유 확인 SELECT 루프라 커밋 단위에 속하지 않는다 —
+        // 트랜잭션 안에 두면 가입 트랜잭션 수명이 조회 루프에 지배된다. 유일성의 최종 보장은
+        // DB 유니크 제약이고, 재시도는 provision 재호출이므로 닉네임도 새로 생성된다.
+        val nickname = nicknameGenerator.generateUnique()
         return checkNotNull(
             transactionTemplate.execute {
-                val nickname = nicknameGenerator.generateUnique()
                 val memberId = memberManager.append(provider, providerId, email, nickname)
+                // 가입 시점의 필수 약관을 동의 기록과 같은 스냅샷에서 읽기 위해 트랜잭션 안에 둔다.
                 val requiredTerms = termsFinder.findRequiredActive()
                 termsAgreementRecorder.recordAll(memberId, requiredTerms.map { it.id }, LocalDateTime.now())
                 memberId
