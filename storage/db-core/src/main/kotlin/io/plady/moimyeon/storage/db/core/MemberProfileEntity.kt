@@ -19,11 +19,20 @@ class MemberProfileEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    var bio: String? = null,
-    @Enumerated(EnumType.STRING)
-    var meetingPreference: MeetingPreference? = null,
-    var sigunguId: Long? = null,
+    bio: String? = null,
+    meetingPreference: MeetingPreference? = null,
+    sigunguId: Long? = null,
 ) : AbstractEntity() {
+    var bio: String? = bio
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    var meetingPreference: MeetingPreference? = meetingPreference
+        protected set
+
+    var sigunguId: Long? = sigunguId
+        protected set
+
     // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
     fun updateProfile(
         bio: String?,

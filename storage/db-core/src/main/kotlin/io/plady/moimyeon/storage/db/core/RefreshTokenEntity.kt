@@ -23,8 +23,12 @@ class RefreshTokenEntity(
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
     val expiresAt: LocalDateTime,
-    var revokedAt: LocalDateTime? = null,
+    revokedAt: LocalDateTime? = null,
 ) {
+    // 최초 폐기 시각은 덮어쓰지 않는다(revoke 의 null 가드) — 대입 경로를 의도 메서드로 좁힌다.
+    var revokedAt: LocalDateTime? = revokedAt
+        protected set
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0
