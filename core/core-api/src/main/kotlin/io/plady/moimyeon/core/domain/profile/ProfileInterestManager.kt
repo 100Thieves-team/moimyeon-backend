@@ -7,6 +7,7 @@ import io.plady.moimyeon.storage.db.core.MemberProfileInterestJobRoleEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestJobRoleRepository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -20,22 +21,17 @@ class ProfileInterestManager(
     private val interestCompanyRepository: MemberProfileInterestCompanyRepository,
     private val interestJobRoleRepository: MemberProfileInterestJobRoleRepository,
 ) {
+    // 소프트 삭제가 dirty checking 으로만 반영되므로 트랜잭션 없이 호출되면 삭제만 유실된다.
+    @Transactional
     fun replaceAll(memberId: UUID, companyIds: List<Long>, jobRoleIds: List<Long>, now: LocalDateTime) {
         replaceCompanies(memberId, companyIds, now)
         replaceJobRoles(memberId, jobRoleIds, now)
     }
 
     // 프로필이 소프트 삭제될 때 딸린 관심도 같은 시각으로 함께 가린다.
+    @Transactional
     fun deleteAll(memberId: UUID, now: LocalDateTime) {
         replaceAll(memberId, emptyList(), emptyList(), now)
-    }
-
-    fun findCompanyIds(memberId: UUID): List<Long> {
-        return interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.companyId }
-    }
-
-    fun findJobRoleIds(memberId: UUID): List<Long> {
-        return interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId }
     }
 
     private fun replaceCompanies(memberId: UUID, companyIds: List<Long>, now: LocalDateTime) {
