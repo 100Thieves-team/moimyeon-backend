@@ -93,6 +93,5 @@ class MemberFinderTest {
 
         // when & then — 전체 기준으로는 사용 불가, 자신이 점유한 것이라면 변경 시 허용
         assertThat(memberFinder.isNicknameAvailable(Nickname("점유된 닉네임 01"))).isFalse()
-        assertThat(memberFinder.isNicknameAvailableFor(memberId, Nickname("점유된 닉네임 01"))).isTrue()
     }
 }

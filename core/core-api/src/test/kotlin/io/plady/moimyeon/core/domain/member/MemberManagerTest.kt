@@ -100,6 +100,7 @@ class MemberManagerTest {
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
         )
         every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+        every { memberRepository.existsByNicknameAndIdNot(any(), id) } returns false
         every { memberRepository.flush() } just Runs
 
         // when
@@ -123,6 +124,7 @@ class MemberManagerTest {
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
         )
         every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+        every { memberRepository.existsByNicknameAndIdNot(any(), id) } returns false
         every { memberRepository.flush() } throws DataIntegrityViolationException("uk_member_nickname")
 
         // when & then — 기대한 충돌은 도메인 에러로

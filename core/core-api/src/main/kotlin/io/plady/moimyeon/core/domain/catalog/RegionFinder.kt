@@ -23,6 +23,4 @@ class RegionFinder(
             )
         }
     }
-
-    fun existsActiveSigungu(sigunguId: Long): Boolean = sigunguRepository.existsByIdAndDeletedAtIsNull(sigunguId)
 }

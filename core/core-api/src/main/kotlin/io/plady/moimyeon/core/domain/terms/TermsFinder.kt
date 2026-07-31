@@ -13,6 +13,6 @@ class TermsFinder(
     }
 
     fun findRequiredActive(): List<Terms> {
-        return findActive().filter { it.required }
+        return termsRepository.findByRequiredIsTrueAndStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map(TermsMapper::toDomain)
     }
 }

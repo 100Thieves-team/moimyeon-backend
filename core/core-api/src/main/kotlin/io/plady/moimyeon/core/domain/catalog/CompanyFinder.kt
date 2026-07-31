@@ -16,8 +16,4 @@ class CompanyFinder(
         if (companyIds.isEmpty()) return emptyList()
         return companyRepository.findByIdInAndDeletedAtIsNull(companyIds).map { Company(it.id, it.nameKr) }
     }
-
-    fun allActive(companyIds: Collection<Long>): Boolean {
-        return findActiveByIds(companyIds).size == companyIds.toSet().size
-    }
 }

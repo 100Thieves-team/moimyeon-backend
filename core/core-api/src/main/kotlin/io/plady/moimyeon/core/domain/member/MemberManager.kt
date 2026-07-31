@@ -38,6 +38,11 @@ class MemberManager(
     @Transactional
     fun changeNickname(memberId: UUID, nickname: Nickname) {
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+        requireBusiness(
+            !memberRepository.existsByNicknameAndIdNot(nickname.value, memberId),
+            CoreErrorType.NICKNAME_DUPLICATED,
+        )
+
         entity.changeNickname(nickname.value)
         try {
             memberRepository.flush()
@@ -45,13 +50,6 @@ class MemberManager(
             // 기대한 닉네임 충돌(동시 변경 레이스)만 도메인 에러로 번역하고, 그 외 무결성 위반은 전파한다.
             if (isNicknameConflict(e)) throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
             throw e
-        }
-    }
-
-    companion object {
-        // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
-        internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-            return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
         }
     }
 
@@ -66,5 +64,12 @@ class MemberManager(
     fun withdraw(memberId: UUID, now: LocalDateTime) {
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.delete(now)
+    }
+
+    companion object {
+        // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
+        internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+            return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
+        }
     }
 }

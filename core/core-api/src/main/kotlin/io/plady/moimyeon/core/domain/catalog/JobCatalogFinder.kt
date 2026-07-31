@@ -29,8 +29,4 @@ class JobCatalogFinder(
         return jobRoleRepository.findByIdInAndDeletedAtIsNull(jobRoleIds)
             .map { JobRole(it.id, it.code, it.displayName) }
     }
-
-    fun allActiveRoles(jobRoleIds: Collection<Long>): Boolean {
-        return findActiveRolesByIds(jobRoleIds).size == jobRoleIds.toSet().size
-    }
 }

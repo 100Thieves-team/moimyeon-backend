@@ -10,11 +10,9 @@ class SessionService(
     private val sessionManager: SessionManager,
     private val memberFinder: MemberFinder,
 ) {
-
     fun refreshAccess(rawCredential: String): UUID {
         val memberId = sessionFinder.getMemberId(rawCredential)
-        memberFinder.getById(memberId)
-        return memberId
+        return memberFinder.getById(memberId).id
     }
 
     fun logout(rawCredential: String) {

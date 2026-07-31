@@ -27,10 +27,6 @@ class MemberFinder(
         return !memberRepository.existsByNickname(nickname.value)
     }
 
-    fun isNicknameAvailableFor(memberId: UUID, nickname: Nickname): Boolean {
-        return !memberRepository.existsByNicknameAndIdNot(nickname.value, memberId)
-    }
-
     fun existsWithdrawnBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
         return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
             provider,

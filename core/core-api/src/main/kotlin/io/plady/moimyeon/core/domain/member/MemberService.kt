@@ -1,7 +1,5 @@
 package io.plady.moimyeon.core.domain.member
 
-import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -20,9 +18,6 @@ class MemberService(
     }
 
     fun changeNickname(memberId: UUID, rawNickname: String) {
-        val nickname = Nickname(rawNickname)
-        memberFinder.getById(memberId)
-        requireBusiness(memberFinder.isNicknameAvailableFor(memberId, nickname), CoreErrorType.NICKNAME_DUPLICATED)
-        memberManager.changeNickname(memberId, nickname) // 동시 변경 레이스는 Manager 가 번역한다
+        memberManager.changeNickname(memberId, Nickname(rawNickname))
     }
 }

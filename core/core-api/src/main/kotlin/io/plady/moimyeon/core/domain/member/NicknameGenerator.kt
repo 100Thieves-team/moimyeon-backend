@@ -1,12 +1,13 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 import kotlin.random.Random
 
 @Component
 class NicknameGenerator(
-    private val memberFinder: MemberFinder,
+    private val memberRepository: MemberRepository,
 ) {
     fun generate(): Nickname {
         return Nickname("${ADJECTIVES.random()} ${ANIMALS.random()} ${"%02d".format(Random.nextInt(1, 100))}")
@@ -16,13 +17,13 @@ class NicknameGenerator(
     fun generateUnique(): Nickname {
         repeat(MAX_ATTEMPTS) {
             val candidate = generate()
-            if (memberFinder.isNicknameAvailable(candidate)) {
+            if (!memberRepository.existsByNickname(candidate.value)) {
                 return candidate
             }
         }
         repeat(MAX_ATTEMPTS) {
             val fallback = fallbackCandidate()
-            if (memberFinder.isNicknameAvailable(fallback)) {
+            if (!memberRepository.existsByNickname(fallback.value)) {
                 return fallback
             }
         }
