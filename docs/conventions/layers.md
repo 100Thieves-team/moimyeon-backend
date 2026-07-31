@@ -88,7 +88,7 @@ class ProfileFacade(
   validateCatalogRefs(content)            // 참조 무결성 사전 검증 (E1301/E1302/E1303)
   requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(...), TERMS_NOT_AGREED)
   requireBusiness(!profileFinder.exists(...), PROFILE_ALREADY_EXISTS)
-  profileManager.append(memberId, content) // 저장 (동시 생성 레이스는 append 안의 회원 행 락으로 직렬화)
+  profileManager.append(memberId, content) // 저장 (동시 생성 레이스는 append 가 자기 경계 안에서 처리)
   ```
 - 교차 규칙(다른 개념과 얽힌 규칙)은 Service 가 확인한다. 단, 상대 개념의 Finder 가 노출한
   판정을 입력으로 쓴다 ([concepts.md](concepts.md)).
@@ -153,8 +153,7 @@ Implement 를 주입받아 호출한다(`MemberProvisioner` → `MemberManager`�
 
 **유니크 충돌의 번역 위치도 이 선을 따른다.** 제약명으로 판별 가능한 충돌은 그 제약을 아는
 쓰기 Implement 안에서 도메인 에러로 번역한다(`MemberManager.changeNickname` —
-`uk_member_nickname` 을 아는 유일한 곳). 판별에 재조회가 필요한 충돌(PK 등)은 catch 로
-번역하는 대신 **락으로 애초에 레이스를 직렬화**한다(`ProfileManager.append` — 회원 행 락).
+`uk_member_nickname` 을 아는 유일한 곳).
 
 ### nullable 과 엔티티는 persistence 경계를 넘지 않는다
 
