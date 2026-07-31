@@ -39,7 +39,7 @@ Service 본문에 쌓여 흐름이 안 읽히기 시작하면 그때 분리한�
 | Controller | 요청/응답 DTO 변환, ApiResponse 래핑 | 비즈니스 판단, 여러 Service 조합 |
 | Facade | 여러 Service 결과를 **조합**해 응답 DTO 조립 | 비즈니스 판단 |
 | Service | 비즈니스 **흐름** — 검증 순서, 분기 | JPA 엔티티 사용, 트랜잭션 경계 |
-| Implement | **재사용 로직** — 조회·저장·변환·생성 단위 구현, 트랜잭션 경계 | 흐름 분기(합성 메서드 금지) |
+| Implement | **재사용 로직** — 조회·저장·변환·생성, **커밋 단위 조합**, 트랜잭션 경계 | 외부 I/O, 사용자 대면 흐름 분기 |
 | Repository | 파생 쿼리·JPQL | 도메인 규칙 |
 
 ## Controller
@@ -88,7 +88,7 @@ class ProfileFacade(
   validateCatalogRefs(content)            // 참조 무결성 사전 검증 (E1301/E1302/E1303)
   requireBusiness(termsAgreementFinder.hasAgreedAllRequiredActive(...), TERMS_NOT_AGREED)
   requireBusiness(!profileFinder.exists(...), PROFILE_ALREADY_EXISTS)
-  profileManager.append(memberId, content) // 저장 (동시성 레이스는 유니크 충돌 catch 로 흡수)
+  profileManager.append(memberId, content) // 저장 (동시 생성 레이스는 append 안의 회원 행 락으로 직렬화)
   ```
 - 교차 규칙(다른 개념과 얽힌 규칙)은 Service 가 확인한다. 단, 상대 개념의 Finder 가 노출한
   판정을 입력으로 쓴다 ([concepts.md](concepts.md)).
@@ -112,12 +112,43 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 | `Manager`   | 쓰기(생성/수정)                                                | `ProfileManager`         |
 | `Recorder`  | append-only 이력 기록                                        | `TermsAgreementRecorder` |
 | `Generator` | 값 생성기                                                    | `NicknameGenerator`      |
+| `Provisioner` | 한 커밋 단위의 여러 쓰기 조합 + 예외 번역                        | `MemberProvisioner`      |
 | `Mapper`    | Entity ↔ 도메인 변환 (`object`, 빈 아님)                         | `ProfileMapper`          |
 
 **이 표는 강제가 아니라 자주 쓰는 어휘의 참고 사전이다.** 같은 책임이면 표의 접미사를 재사용해
 일관성을 유지하되, 표에 없는 책임이 나오면 요구사항에 맞춰 책임이 드러나는 이름을 새로 지으면
 된다(예: `Calculator`, `Validator`). 중요한 건 접미사 자체가 아니라 읽기/쓰기/계산/검증의 책임이
 한 클래스에 섞이지 않는 것이다.
+
+### Implement 도 조합한다 — 단, 커밋 단위 안에서만
+
+합성 금지의 목적은 **흐름이 Implement 로 숨는 것을 막는 것**이지, 조합 자체를 막는 것이 아니다.
+경계는 이렇다.
+
+> **"흐름"은 Service, "한 커밋 단위 안의 순서"는 Implement.**
+> 판별 기준: **그 단계들 사이에 외부 I/O 가 끼는가.**
+
+- 낀다 → 흐름이다. Service 가 소유한다. (소셜 API·알림·파일 업로드·PG 응답을 사이에 두고
+  갈라지는 순서)
+- 안 낀다 → 한 커밋으로 묶일 수 있다. **쓰기 Implement 가 조합한다.** 트랜잭션 경계가 이미
+  거기 있으므로, 조합을 Service 에 두면 경계와 조합이 서로 다른 레이어로 찢어진다.
+
+찢어지면 생기는 일:
+
+- **예외 번역이 트랜잭션 밖으로 밀린다.** 제약 위반은 flush/commit 시점에 나므로 경계 밖에서만
+  잡히고, 그러면 번역 코드가 호출자 수만큼 복제된다.
+- **DB 제약 이름 같은 storage 지식이 Service 로 샌다.** "예외는 Implement 에서 던진다" 원칙과
+  정면으로 어긋난다.
+- **라운드트립이 늘어난다.** 조합이 Service 에 있으면 각 단계가 독립 호출이 되어, 한 번에 할 수
+  있는 조회가 N 번으로 갈라진다.
+
+한 커밋 안의 여러 쓰기를 조합하는 컴포넌트에는 책임이 드러나는 이름을 준다 —
+`Provisioner`, `Processor`, `Handler` 등. 접미사 표는 참고 사전이지 강제가 아니다.
+
+**유니크 충돌의 번역 위치도 이 선을 따른다.** 제약명으로 판별 가능한 충돌은 그 제약을 아는
+쓰기 Implement 안에서 도메인 에러로 번역한다(`MemberManager.changeNickname` —
+`uk_member_nickname` 을 아는 유일한 곳). 판별에 재조회가 필요한 충돌(PK 등)은 catch 로
+번역하는 대신 **락으로 애초에 레이스를 직렬화**한다(`ProfileManager.append` — 회원 행 락).
 
 ### nullable 과 엔티티는 persistence 경계를 넘지 않는다
 
@@ -162,7 +193,7 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
 | 대상 | 트랜잭션 |
 | --- | --- |
 | Controller / Facade | 없음 |
-| Service | 기본 없음 (예외: 아래 "여러 쓰기를 묶어야 할 때"의 3) |
+| Service | 없음 |
 | `Finder`/`Reader` | 여러 쿼리를 한 스냅샷으로 읽을 때만 `readOnly = true` |
 | `Manager`/`Recorder`/`Adder` (쓰기) | `@Transactional` **필수** |
 | `Generator`/`Mapper` (계산·변환) | 없음 |
@@ -182,11 +213,13 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
    `REQUIRED` 이므로, 상위 트랜잭션에 참여해 커밋 하나가 된다.
    (`ProfileManager.append` → `ProfileInterestManager.replaceAll` 이 이 형태다.)
 2. **둘을 감싸는 새 Implement 를 만든다.** 두 개념의 쓰기가 한 커밋이어야 하면,
-   그 조합 자체가 재사용 가능한 하나의 개념이다. (예정 사례: 탈퇴는 회원·프로필·관심
-   소프트 삭제가 한 커밋이어야 하므로 `MemberWithdrawProcessor` 하나가 감싼다.)
-3. **Service 에서 `TransactionTemplate` 으로 시도 단위 경계를 잡는다.** 실패한 쓰기를 잡아
-   **재시도**하는 흐름은 메서드 전체를 `@Transactional` 로 묶으면 rollback-only 가 된 같은
-   트랜잭션 안에서 재시도하게 되므로 이 형태를 쓴다. (`SocialAuthService.provision` —
+   그 조합 자체가 재사용 가능한 하나의 개념이다. (`MemberProvisioner` — 가입은 회원 생성 +
+   필수 약관 자동 동의가 한 커밋. 예정 사례: 탈퇴는 회원·프로필·관심 소프트 삭제가
+   한 커밋이어야 하므로 `MemberWithdrawProcessor` 하나가 감싼다.)
+
+   실패한 쓰기를 잡아 **재시도**하는 조합은 메서드 전체를 `@Transactional` 로 묶으면
+   rollback-only 가 된 같은 트랜잭션 안에서 재시도하게 되므로, 그 조합 Implement 가
+   `TransactionTemplate` 으로 시도 단위 경계를 명시한다. (`MemberProvisioner.provision` —
    가입 + 약관 자동 동의가 한 시도, 닉네임 충돌 재시도는 새 트랜잭션.)
 
 `REQUIRES_NEW` 는 쓰지 않는다. "일부만 커밋돼야 한다"는 요구는 대개 컴포넌트를 잘못
@@ -234,8 +267,9 @@ flush 하지 않으면 제약 위반은 **커밋 시점**, 즉 쓰기 Implement 
 예외로 매핑하는 흐름이라면, 쓰기 직후 flush 해서 예외가 예측 가능한 지점에서 터지게 한다
 ([errors.md](errors.md)의 유니크 충돌 처리와 같은 규칙).
 
-- `MemberManager.append` — `saveAndFlush`. `SocialAuthService` 가 닉네임 충돌을 잡아 재시도한다.
-- `MemberManager.changeNickname` — `flush()`. `MemberService` 가 `NICKNAME_DUPLICATED` 로 매핑한다.
+- `MemberManager.append` — `saveAndFlush`. `MemberProvisioner` 가 닉네임 충돌을 잡아 재시도한다.
+- `MemberManager.changeNickname` — `flush()` 직후 자기 안에서 `NICKNAME_DUPLICATED` 로 번역한다.
+  제약명(`uk_member_nickname`)을 아는 곳이 번역까지 맡는다.
 
 flush 여부는 **호출자가 그 예외를 잡는가**로 결정한다. 잡지 않으면 붙이지 않는다.
 
