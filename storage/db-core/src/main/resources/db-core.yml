@@ -105,6 +105,14 @@ spring.config.activate.on-profile: dev
 spring:
   flyway:
     enabled: true
+    # Flyway 전용 접속 정보. 앱 DataSource 를 그대로 쓰면 socketTimeout=3000 이 걸려 있어
+    # 3초를 넘는 DDL 에서 커넥션이 끊기고(SQLSTATE 08S01) 마이그레이션이 중간에 실패한다.
+    # 서버는 그 DDL 을 계속 수행하므로 "적용은 됐는데 실패로 기록되는" 상태가 만들어진다.
+    # url 을 주면 스프링 부트가 Flyway 전용 DataSource 를 따로 만든다. OLTP 타임아웃은 그대로 두고
+    # 마이그레이션에만 넉넉한 값을 준다.
+    url: jdbc:mysql://${storage.database.core-db.url}?socketTimeout=600000&connectTimeout=10000
+    user: ${storage.database.core-db.username}
+    password: ${storage.database.core-db.password}
     # dev DB 는 Flyway 도입 전에 손으로 만들어져 크롤링 데이터가 들어 있다(company·job_posting 등).
     # 비어 있지 않은 스키마에 이력 테이블이 없으면 Flyway 는 기본적으로 실패하는데,
     # baseline-on-migrate 가 그때 V1 을 "이미 적용됨"으로 도장만 찍고 V2 부터 실행하게 한다.
@@ -147,6 +155,14 @@ spring.config.activate.on-profile: staging
 spring:
   flyway:
     enabled: true
+    # Flyway 전용 접속 정보. 앱 DataSource 를 그대로 쓰면 socketTimeout=3000 이 걸려 있어
+    # 3초를 넘는 DDL 에서 커넥션이 끊기고(SQLSTATE 08S01) 마이그레이션이 중간에 실패한다.
+    # 서버는 그 DDL 을 계속 수행하므로 "적용은 됐는데 실패로 기록되는" 상태가 만들어진다.
+    # url 을 주면 스프링 부트가 Flyway 전용 DataSource 를 따로 만든다. OLTP 타임아웃은 그대로 두고
+    # 마이그레이션에만 넉넉한 값을 준다.
+    url: jdbc:mysql://${storage.database.core-db.url}?socketTimeout=600000&connectTimeout=10000
+    user: ${storage.database.core-db.username}
+    password: ${storage.database.core-db.password}
 
 storage:
   datasource:
@@ -183,6 +199,14 @@ spring:
     # baseline-on-migrate 를 켜지 않는 것이 중요하다 — 켜 두면 예상치 못하게 비어 있지 않은
     # 스키마를 만났을 때 V1 을 조용히 건너뛰어, 없는 테이블 위에서 V2 가 실패한다.
     enabled: true
+    # Flyway 전용 접속 정보. 앱 DataSource 를 그대로 쓰면 socketTimeout=3000 이 걸려 있어
+    # 3초를 넘는 DDL 에서 커넥션이 끊기고(SQLSTATE 08S01) 마이그레이션이 중간에 실패한다.
+    # 서버는 그 DDL 을 계속 수행하므로 "적용은 됐는데 실패로 기록되는" 상태가 만들어진다.
+    # url 을 주면 스프링 부트가 Flyway 전용 DataSource 를 따로 만든다. OLTP 타임아웃은 그대로 두고
+    # 마이그레이션에만 넉넉한 값을 준다.
+    url: jdbc:mysql://${storage.database.core-db.url}?socketTimeout=600000&connectTimeout=10000
+    user: ${storage.database.core-db.username}
+    password: ${storage.database.core-db.password}
 
 storage:
   datasource:
