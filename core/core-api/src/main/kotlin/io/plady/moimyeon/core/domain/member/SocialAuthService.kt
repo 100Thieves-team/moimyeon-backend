@@ -14,9 +14,7 @@ class SocialAuthService(
 ) {
     fun authenticate(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
         if (memberFinder.existsBySocialAccount(provider, providerId)) {
-            val member = memberFinder.getBySocialAccount(provider, providerId)
-            memberManager.recordLogin(member.id)
-            return member.id
+            return memberManager.recordLogin(provider, providerId)
         }
 
         requireBusiness(!memberFinder.existsWithdrawnBySocialAccount(provider, providerId), CoreErrorType.MEMBER_ALREADY_WITHDRAWN)

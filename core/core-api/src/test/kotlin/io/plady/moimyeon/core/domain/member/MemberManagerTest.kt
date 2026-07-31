@@ -49,7 +49,7 @@ class MemberManagerTest {
     }
 
     @Test
-    fun `recordLogin 은 회원의 마지막 로그인 시각을 갱신한다`() {
+    fun `recordLogin 은 소셜 신원으로 회원을 찾아 마지막 로그인 시각을 갱신하고 id 를 반환한다`() {
         // given
         val id = UUID.randomUUID()
         val oldLoginAt = LocalDateTime.of(2020, 1, 1, 0, 0)
@@ -61,22 +61,27 @@ class MemberManagerTest {
             lastLoginAt = oldLoginAt,
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
         )
-        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+        every {
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(provider, "sub-1")
+        } returns entity
 
         // when
-        memberManager.recordLogin(id)
+        val result = memberManager.recordLogin(provider, "sub-1")
 
         // then
+        assertThat(result).isEqualTo(id)
         assertThat(entity.lastLoginAt).isAfter(oldLoginAt)
     }
 
     @Test
     fun `recordLogin 은 회원이 없으면 MEMBER_NOT_FOUND 예외를 던진다`() {
         // given
-        every { memberRepository.findByIdAndDeletedAtIsNull(any()) } returns null
+        every {
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(provider, "nope")
+        } returns null
 
         // when & then
-        assertThatThrownBy { memberManager.recordLogin(UUID.randomUUID()) }
+        assertThatThrownBy { memberManager.recordLogin(provider, "nope") }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }

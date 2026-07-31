@@ -1,8 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.SocialLoginProvider
@@ -11,7 +9,6 @@ import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.util.UUID
 
 class SocialAuthServiceTest {
@@ -22,22 +19,20 @@ class SocialAuthServiceTest {
 
     private val provider = SocialLoginProvider.GOOGLE
     private val email = Email("user@example.com")
-    private val nickname = Nickname("차분한 펭귄 12")
 
     @Test
     fun `기존 회원이면 재로그인만 기록하고 같은 id 를 반환하며 새로 가입하지 않는다`() {
         // given
-        val existing = Member.register(provider, "sub-1", email, nickname, LocalDateTime.of(2026, 1, 1, 0, 0))
+        val existingId = UUID.randomUUID()
         every { memberFinder.existsBySocialAccount(provider, "sub-1") } returns true
-        every { memberFinder.getBySocialAccount(provider, "sub-1") } returns existing
-        every { memberManager.recordLogin(existing.id) } just Runs
+        every { memberManager.recordLogin(provider, "sub-1") } returns existingId
 
         // when
         val result = socialAuthService.authenticate(provider, "sub-1", email)
 
         // then
-        assertThat(result).isEqualTo(existing.id)
-        verify(exactly = 1) { memberManager.recordLogin(existing.id) }
+        assertThat(result).isEqualTo(existingId)
+        verify(exactly = 1) { memberManager.recordLogin(provider, "sub-1") }
         // Email 이 inline value class 라 any() 매처가 깨져 구체 인자로 검증.
         verify(exactly = 0) { memberProvisioner.provision(provider, "sub-1", email) }
     }
@@ -56,7 +51,7 @@ class SocialAuthServiceTest {
         // then
         assertThat(result).isEqualTo(newMemberId)
         verify(exactly = 1) { memberProvisioner.provision(provider, "sub-2", email) }
-        verify(exactly = 0) { memberManager.recordLogin(any()) }
+        verify(exactly = 0) { memberManager.recordLogin(any(), any()) }
     }
 
     @Test
@@ -70,7 +65,7 @@ class SocialAuthServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
             }
-        verify(exactly = 0) { memberManager.recordLogin(any()) }
+        verify(exactly = 0) { memberManager.recordLogin(any(), any()) }
         verify(exactly = 0) { memberProvisioner.provision(provider, "sub-3", email) }
     }
 }

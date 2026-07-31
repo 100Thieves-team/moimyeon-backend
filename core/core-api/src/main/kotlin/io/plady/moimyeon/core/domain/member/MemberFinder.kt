@@ -16,14 +16,6 @@ class MemberFinder(
         return MemberMapper.toDomain(requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND))
     }
 
-    fun getBySocialAccount(provider: SocialLoginProvider, providerId: String): Member {
-        val entity = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
-            provider,
-            providerId,
-        )
-        return MemberMapper.toDomain(requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND))
-    }
-
     fun existsBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
         return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
             provider,

@@ -54,5 +54,4 @@ class MemberServiceTest {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
             }
     }
-
 }

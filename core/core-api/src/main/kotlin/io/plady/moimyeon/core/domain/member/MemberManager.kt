@@ -23,10 +23,16 @@ class MemberManager(
         return memberRepository.saveAndFlush(MemberMapper.toEntity(member)).id
     }
 
+    // 로그인 경로 전용 — 조회와 갱신을 한 트랜잭션 한 쿼리로 묶고 id 만 반환한다.
+    // Member 도메인 객체 조립(소셜 계정 조인·값 객체 검증)은 이 경로에 필요 없다.
     @Transactional
-    fun recordLogin(memberId: UUID) {
-        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+    fun recordLogin(provider: SocialLoginProvider, providerId: String): UUID {
+        val entity = requireFound(
+            memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(provider, providerId),
+            CoreErrorType.MEMBER_NOT_FOUND,
+        )
         entity.loggedIn(LocalDateTime.now())
+        return entity.id
     }
 
     @Transactional
