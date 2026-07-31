@@ -142,6 +142,12 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 - **라운드트립이 늘어난다.** 조합이 Service 에 있으면 각 단계가 독립 호출이 되어, 한 번에 할 수
   있는 조회가 N 번으로 갈라진다.
 
+**Implement 간 참조는 허용된다.** 조합 Implement 는 같은 개념이든 다른 개념이든 하위
+Implement 를 주입받아 호출한다(`MemberProvisioner` → `MemberManager`·`TermsFinder`·
+`TermsAgreementRecorder`, `ProfileManager` → `ProfileInterestManager`). 레이어를 불문하고
+금지되는 참조는 **다른 개념의 Service** 하나다([concepts.md](concepts.md)) — Service 는
+흐름이므로, 흐름이 흐름을 부르면 어느 쪽을 읽어도 전체가 안 보인다.
+
 한 커밋 안의 여러 쓰기를 조합하는 컴포넌트에는 책임이 드러나는 이름을 준다 —
 `Provisioner`, `Processor`, `Handler` 등. 접미사 표는 참고 사전이지 강제가 아니다.
 

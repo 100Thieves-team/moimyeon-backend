@@ -43,7 +43,10 @@ core.domain
 ## 격벽을 지키는 규칙
 
 - 다른 개념의 **Service 참조는 금지**, 다른 개념의 **Implement(Finder 등) 참조는 허용**한다.
-  예: `ProfileService` 는 다른 개념의 Finder(memberFinder 등)를 주입받는다.
+  이 규칙은 호출자가 Service 든 Implement 든 같다 — Service 는 흐름의 소유자라 참조가 금지되고,
+  Implement 는 재사용 로직이라 참조가 허용된다.
+  예: `ProfileService` 는 다른 개념의 Finder(memberFinder 등)를,
+  `MemberProvisioner`(Implement)는 terms 개념의 `TermsFinder`·`TermsAgreementRecorder` 를 주입받는다.
 - 두 개념을 한 메서드에 합성하지 않는다. `findOrRegister` 류의 합성 메서드 금지 —
   조회와 등록은 별개 행위이며, 흐름 분기는 Service(Business)가 명시적으로 한다.
 - 상태로 개념을 오염시키지 않는다. 예: "탈퇴한 회원"은 도메인 세계의 `Member` 개념에 들어오지 못하게
