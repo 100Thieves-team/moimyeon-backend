@@ -23,7 +23,4 @@ class RegionFinder(
             )
         }
     }
-
-    @Transactional(readOnly = true)
-    fun existsActiveSigungu(sigunguId: Long): Boolean = sigunguRepository.existsByIdAndDeletedAtIsNull(sigunguId)
 }

@@ -87,6 +87,88 @@ AbstractEntity (@MappedSuperclass, id 없음)
 소프트 삭제된 행의 조회 제외는 각 Finder 의 파생 쿼리 소관이다(예: `...DeletedAtIsNull`).
 전역 필터(@Where 등)는 쓰지 않는다 — 제외가 쿼리에 드러나야 한다.
 
+### 가변 필드는 setter 를 닫고 의도 메서드로만 바꾼다
+
+이 레포는 **저장을 변경 감지(dirty checking)에 맡긴다** — 쓰기 경로에 `save` 호출이 없는 곳이
+많다(`MemberProfileEntity.updateProfile`, `MemberEntity.loggedIn`, `RefreshTokenEntity.revoke`).
+그러면 **필드에 대입하는 행위 자체가 UPDATE 발행**이다. setter 를 public 으로 열어두면 어디서든
+UPDATE 를 유발할 수 있고, "이 트랜잭션 안에서 무엇이 바뀌는가"를 타입이 아니라 grep 으로
+확인해야 한다. 트랜잭션 경계를 제대로 잡으려면 경계 안의 변경이 **열거 가능**해야 한다
+([layers.md](layers.md)의 트랜잭션 절과 짝을 이룬다).
+
+우선순위대로 적용한다.
+
+1. **변경되지 않는 필드는 `val`.** 가장 싸고 효과가 크다. 실제로 바뀌는 필드만 `var` 로 두면
+   이 엔티티에서 무엇을 신경 써야 하는지가 선언에서 바로 읽힌다(예: `MemberEntity.email`).
+2. **컬렉션은 `private val` + 접근 메서드.** setter 가시성으로는 막히지 않는다 —
+   `protected set` 을 붙여도 `entity.items.clear()` 는 그대로 컴파일된다. `cascade`/
+   `orphanRemoval` 이 걸린 컬렉션에서 그 한 줄은 DELETE 다.
+   ```kotlin
+   @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+   @JoinColumn(name = "member_id", nullable = false)
+   private val socialAccounts: MutableList<SocialAccountEntity> = socialAccounts.toMutableList()
+
+   fun socialAccounts(): List<SocialAccountEntity> = socialAccounts.toList()
+   ```
+3. **불변식이 있는 필드는 `protected set` + 의도 메서드.** 제재 상태, 1회성 시각(폐기·승인)처럼
+   "아무 값이나 대입되면 안 되는" 필드가 대상이다(예: `MemberEntity.status`,
+   `RefreshTokenEntity.revokedAt`).
+4. 불변식 없는 단순 값 갱신은 public `var` 로 둬도 된다. 규칙을 위한 규칙은 만들지 않는다.
+
+**상태 전이는 판정과 에러 매핑을 나눈다.** `CoreErrorType`/`requireBusiness` 는 core-api 소속이라
+storage 엔티티에서 참조할 수 없다(역방향 의존은 순환). 전이 판정(Boolean)은 엔티티가 노출하고,
+도메인 에러 매핑은 core-api 의 Manager 가 한다. 엔티티 전이 메서드의 `check` 는 판정을 건너뛴
+호출(프로그래밍 오류)을 즉시 잡는 백스톱이다.
+
+```kotlin
+// storage — core-api 참조 0개
+fun canRestrict(): Boolean = status == MemberStatus.ACTIVE
+
+fun restrict() {
+    check(canRestrict()) { "ACTIVE 회원만 제재할 수 있습니다. current=$status" }
+    status = MemberStatus.RESTRICTED
+}
+
+// core-api Manager — 도메인 에러는 여기서
+requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
+entity.restrict()
+```
+
+**판정을 밖에서 물을 수 없으면 storage 전용 기술 예외를 만들어 던진다.** `can*` 판정 분리는
+판정에 필요한 데이터가 밖에서 보일 때 성립한다. 판정 데이터가 엔티티 `private` 필드라 외부에서
+미리 물을 수 없으면, storage 모듈이 자체 기술 예외를 `storage.db.core.error` 패키지에 두고
+엔티티 전이 메서드가 직접 던진다. core-api 의 Manager 가 경계에서 `CoreException` 으로 번역한다.
+
+```kotlin
+// storage/db-core/.../error — 기술 예외. CoreErrorType 을 모른다
+class IllegalCouponUsageException(override val message: String) : RuntimeException(message)
+
+// storage 엔티티 — usedCount 가 private 이라 can* 로 밖에서 판정할 수 없다
+fun use() {
+    if (isFullyUsed()) throw IllegalCouponUsageException("Coupon cannot be used anymore")
+    usedCount += 1L
+    if (isFullyUsed()) state = OwnedCouponState.USED
+}
+
+// core-api Manager — 경계에서 도메인 에러로 번역
+catch (e: IllegalCouponUsageException) {
+    log.error("[OWNED_COUPON_USAGE] 비정상적인 쿠폰 사용 ownedCouponId={}", ownedCouponId, e)
+    throw CoreException(ErrorType.OWNED_COUPON_INVALID_USAGE)
+}
+```
+
+두 형태의 선택 기준은 **판정 데이터의 가시성**이다. 밖에서 물을 수 있으면 `can*` + `check`
+(번역 계층이 필요 없어 더 가볍다), 물을 수 없으면 전용 예외 + 경계 번역. 지금 이 레포에는
+후자에 해당하는 엔티티가 없어 `storage.db.core.error` 패키지도 아직 없다 — 필요해질 때 만든다.
+
+**Hibernate 동작에는 영향이 없다.** `@Id` 가 필드에 붙어 있어 field access 로 판정되므로 Hibernate
+는 setter 를 호출하지 않고 리플렉션으로 필드에 직접 쓴다. `protected set`·`private set` 모두 안전하다.
+
+**비용**: Kotlin 은 생성자 프로퍼티에 `protected set` 을 직접 붙일 수 없어, 생성자 파라미터와
+프로퍼티 선언을 분리해야 한다(필드당 3줄). 그래서 **모든 `var` 에 일괄 적용하지 않는다** —
+위 1·2·3 에 해당하는 필드만 적용한다. 아직 변경 기능이 없는 필드(`TermsEntity.status`)는
+기능이 붙을 때 의도 메서드와 함께 시작한다.
+
 ### 소프트 삭제와 유니크 제약
 
 유니크 인덱스는 NULL 을 서로 다른 값으로 취급하므로 `UNIQUE(col, deleted_at)` 은 방향이 반대다

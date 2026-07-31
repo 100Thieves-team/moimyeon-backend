@@ -15,8 +15,8 @@ class MemberFacade(
 ) {
     fun me(memberId: UUID): MemberMeResponse {
         val member = memberService.getMember(memberId)
-        val profile = if (profileService.hasProfile(memberId)) profileService.getProfile(memberId) else null
-        val interestCompanies = profile?.let { catalogService.getCompanies(it.interestCompanyIds) }.orEmpty()
+        val profile = profileService.getProfile(memberId)
+        val interestCompanies = catalogService.getCompanies(profile.interestCompanyIds)
         return MemberMeResponse.of(member, profile, interestCompanies)
     }
 }

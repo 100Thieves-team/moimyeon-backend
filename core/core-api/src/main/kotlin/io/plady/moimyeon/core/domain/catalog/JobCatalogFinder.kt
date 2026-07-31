@@ -24,15 +24,9 @@ class JobCatalogFinder(
         }
     }
 
-    @Transactional(readOnly = true)
     fun findActiveRolesByIds(jobRoleIds: Collection<Long>): List<JobRole> {
         if (jobRoleIds.isEmpty()) return emptyList()
         return jobRoleRepository.findByIdInAndDeletedAtIsNull(jobRoleIds)
             .map { JobRole(it.id, it.code, it.displayName) }
-    }
-
-    @Transactional(readOnly = true)
-    fun allActiveRoles(jobRoleIds: Collection<Long>): Boolean {
-        return findActiveRolesByIds(jobRoleIds).size == jobRoleIds.toSet().size
     }
 }

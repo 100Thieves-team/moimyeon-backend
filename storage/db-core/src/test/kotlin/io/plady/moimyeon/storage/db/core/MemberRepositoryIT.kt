@@ -47,8 +47,8 @@ class MemberRepositoryIT(
         assertThat(found.status).isEqualTo(MemberStatus.ACTIVE)
         assertThat(found.isDeleted()).isFalse()
         assertThat(found.createdAt).isNotNull()
-        assertThat(found.socialAccounts).hasSize(1)
-        assertThat(found.socialAccounts.first().providerId).isEqualTo("google-sub-1")
+        assertThat(found.socialAccounts()).hasSize(1)
+        assertThat(found.socialAccounts().first().providerId).isEqualTo("google-sub-1")
     }
 
     @Test

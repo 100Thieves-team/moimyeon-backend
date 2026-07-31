@@ -16,23 +16,27 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class SessionServiceTest {
+    private val sessionFinder = mockk<SessionFinder>()
     private val sessionManager = mockk<SessionManager>()
     private val memberFinder = mockk<MemberFinder>()
-    private val sessionService = SessionService(sessionManager, memberFinder)
+    private val sessionService = SessionService(sessionFinder, sessionManager, memberFinder)
 
-    private val provider = SocialLoginProvider.GOOGLE
-    private val email = Email("user@example.com")
-    private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
-    private val memberId = UUID.randomUUID()
+    private val member = Member.register(
+        SocialLoginProvider.GOOGLE,
+        "sub-1",
+        Email("user@example.com"),
+        Nickname("차분한 펭귄 12"),
+        LocalDateTime.of(2026, 1, 1, 0, 0),
+    )
+    private val memberId = member.id
 
     @Test
     fun `유효 세션이고 활성 회원이면 memberId 를 반환한다`() {
         // given
-        every { sessionManager.resolveMemberId("raw") } returns memberId
-        every { memberFinder.getById(memberId) } returns Member.register(provider, "sub", email, Nickname("차분한 펭귄 12"), now)
+        every { sessionFinder.getMemberId("raw") } returns memberId
+        every { memberFinder.getById(memberId) } returns member
 
         // when
         val result = sessionService.refreshAccess("raw")
@@ -44,7 +48,7 @@ class SessionServiceTest {
     @Test
     fun `세션은 유효하나 회원이 없거나 탈퇴했으면 MEMBER_NOT_FOUND`() {
         // given
-        every { sessionManager.resolveMemberId("raw") } returns memberId
+        every { sessionFinder.getMemberId("raw") } returns memberId
         every { memberFinder.getById(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         // when & then

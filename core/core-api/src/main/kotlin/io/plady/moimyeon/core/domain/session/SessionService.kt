@@ -6,14 +6,13 @@ import java.util.UUID
 
 @Service
 class SessionService(
+    private val sessionFinder: SessionFinder,
     private val sessionManager: SessionManager,
     private val memberFinder: MemberFinder,
 ) {
-
     fun refreshAccess(rawCredential: String): UUID {
-        val memberId = sessionManager.resolveMemberId(rawCredential)
-        memberFinder.getById(memberId)
-        return memberId
+        val memberId = sessionFinder.getMemberId(rawCredential)
+        return memberFinder.getById(memberId).id
     }
 
     fun logout(rawCredential: String) {

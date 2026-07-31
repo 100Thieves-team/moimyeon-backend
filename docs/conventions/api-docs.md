@@ -27,7 +27,6 @@ mockMvc = mockController(
     ProfileController(profileService, catalogService),   // mockk Service
     LoginMemberArgumentResolver(),
     controllerAdvice = ApiControllerAdvice(),            // 에러 응답 문서화에 필요
-    validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },  // Bean Validation 문서화에 필요
 )
 ```
 

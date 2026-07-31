@@ -19,7 +19,7 @@
 @PostMapping("/v1/members/me/profile")
 fun createProfile(
     @LoginMember currentMember: CurrentMember,
-    @Valid @RequestBody request: CreateProfileRequest,
+    @RequestBody request: CreateProfileRequest,
 ): ApiResponse<ProfileResponse>
 ```
 

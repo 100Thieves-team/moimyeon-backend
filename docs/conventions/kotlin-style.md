@@ -32,6 +32,8 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 ## 검증·예외 관용구
 
 - 정상 흐름에서 도달 가능한 규칙 위반: `requireBusiness(cond, errorType)` / `requireFound(value, errorType)`.
+  **호출 위치는 그 규칙을 판정한 Implement 안이다** — Service 본문에는 쓰지 않는다
+  ([layers.md](layers.md)의 Service 절).
 - 도달하면 버그인 불변식: 표준 `require`/`check` (500 fail-fast). 구분 기준은 [errors.md](errors.md).
 - null 처리는 persistence 경계까지만. `?.let` 체인으로 null 을 흘려보내는 코드는 경계 위반 신호다
   ([layers.md](layers.md)).

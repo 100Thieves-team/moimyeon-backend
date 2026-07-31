@@ -15,7 +15,6 @@ import org.springframework.restdocs.request.RequestDocumentation.parameterWithNa
 import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 
 class RoomControllerTest : RestDocsTest() {
     private val createSummary = "룸 생성"
@@ -67,7 +66,6 @@ class RoomControllerTest : RestDocsTest() {
         mockMvc = mockController(
             RoomController(),
             controllerAdvice = ApiControllerAdvice(),
-            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
         )
     }
 

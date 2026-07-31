@@ -9,7 +9,6 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomRecruitSummaryResponse
 import io.plady.moimyeon.core.support.response.ApiResponse
-import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -60,8 +59,9 @@ class RoomApplicationController {
     fun reject(
         @PathVariable roomId: UUID,
         @PathVariable applicationId: Long,
-        @Valid @RequestBody(required = false) request: RejectApplicationRequest?,
+        @RequestBody(required = false) request: RejectApplicationRequest?,
     ): ApiResponse<ApplicationDecisionResponse> {
+        request?.validate()
         return ApiResponse.success(
             ApplicationDecisionResponse(
                 applicationId = applicationId,

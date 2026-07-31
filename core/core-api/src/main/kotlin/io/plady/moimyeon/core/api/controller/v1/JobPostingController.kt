@@ -8,7 +8,6 @@ import io.plady.moimyeon.core.api.controller.v1.response.JobPostingLinkMetadataR
 import io.plady.moimyeon.core.api.controller.v1.response.JobPostingResponse
 import io.plady.moimyeon.core.api.controller.v1.response.JobPostingsResponse
 import io.plady.moimyeon.core.support.response.ApiResponse
-import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -32,8 +31,9 @@ class JobPostingController {
     // 회사는 여기서 추출하지 않는다. 목은 링크와 무관하게 고정 메타를 반환하되 요청 url 을 출처로 반영한다.
     @PostMapping("/v1/job-postings/link-metadata")
     fun linkMetadata(
-        @Valid @RequestBody request: JobPostingLinkMetadataRequest,
+        @RequestBody request: JobPostingLinkMetadataRequest,
     ): ApiResponse<JobPostingLinkMetadataResponse> {
+        request.validate()
         return ApiResponse.success(
             JobPostingLinkMetadataResponse(
                 postingName = "프론트엔드 개발자 (결제플랫폼)",
@@ -48,8 +48,9 @@ class JobPostingController {
     // 회사는 요청의 companyId(기존 카탈로그 회사)로 받고, 공고명은 사용자가 확정한 값을 사용한다.
     @PostMapping("/v1/job-postings")
     fun createJobPosting(
-        @Valid @RequestBody request: CreateJobPostingRequest,
+        @RequestBody request: CreateJobPostingRequest,
     ): ApiResponse<JobPostingCreatedResponse> {
+        request.validate()
         return ApiResponse.success(
             JobPostingCreatedResponse(
                 jobPostingId = MOCK_CREATED_POSTING_ID,

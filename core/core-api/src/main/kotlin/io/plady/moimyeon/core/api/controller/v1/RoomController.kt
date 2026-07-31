@@ -17,7 +17,6 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomScheduleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.support.response.ApiResponse
-import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -37,8 +36,9 @@ class RoomController {
     // POST /v1/rooms — 생성 전 확인의 '이대로 룸 만들기'. 생성 즉시 모집(RECRUITING) 상태로 등록(§4.8).
     @PostMapping("/v1/rooms")
     fun create(
-        @Valid @RequestBody request: CreateRoomRequest,
+        @RequestBody request: CreateRoomRequest,
     ): ApiResponse<RoomCreatedResponse> {
+        request.validate()
         return ApiResponse.success(RoomCreatedResponse(roomId = MOCK_ROOM_ID, status = "RECRUITING"))
     }
 

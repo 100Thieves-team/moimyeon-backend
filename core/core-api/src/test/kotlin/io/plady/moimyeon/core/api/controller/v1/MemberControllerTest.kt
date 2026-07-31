@@ -15,7 +15,9 @@ import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.member.Nickname
+import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileService
+import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -58,14 +60,24 @@ class MemberControllerTest : RestDocsTest() {
         LocalDateTime.of(2026, 1, 1, 0, 0),
     )
     private val memberId: UUID = member.id
+
+    // 가입 시 만들어지는 빈 프로필 — 미지정은 null 이 아니라 값이다
+    private val profile = MemberProfile(
+        memberId = memberId,
+        bio = "",
+        meetingPreference = MeetingPreference.UNSPECIFIED,
+        sigunguId = null,
+        interestJobRoleIds = emptyList(),
+        interestCompanyIds = emptyList(),
+    )
     private val principal = Principal { memberId.toString() }
 
     private val memberMeSummary = "내 상태 조회"
     private val memberMeDescription =
-        "인증된 회원의 상태와 프로필 완성 여부를 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. " +
-            "프로필(소개) 미작성이면 profileCompleted=false, profile=null 이다. " +
-            "profile 은 필수 프로필 작성 응답의 data 와 동일한 모양이다. " +
-            "FE 는 로그인 직후 이 값으로 최초 프로필 작성 모달 노출 여부를 판단한다. " +
+        "인증된 회원의 상태와 프로필을 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. " +
+            "프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재한다 — 아직 안 채운 값은 " +
+            "null 이 아니라 빈 문자열·UNSPECIFIED 로 내려간다(지역만 미선택이 null). " +
+            "profile 은 프로필 수정 응답의 data 와 동일한 모양이다. " +
             "액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
     private val updateNicknameSummary = "닉네임 변경"
     private val updateNicknameDescription =
@@ -94,7 +106,8 @@ class MemberControllerTest : RestDocsTest() {
     @Test
     fun memberMe() {
         every { memberService.getMember(memberId) } returns member
-        every { profileService.hasProfile(memberId) } returns false
+        every { profileService.getProfile(memberId) } returns profile
+        every { catalogService.getCompanies(emptyList()) } returns emptyList()
 
         mockMvc.perform(get("/v1/members/me").principal(principal))
             .andExpect(status().isOk)
@@ -109,9 +122,13 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("data.email").type(JsonFieldType.STRING).description("대표 이메일"),
                         fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임 (가입 시 자동 부여, 변경 가능)"),
                         fieldWithPath("data.status").type(JsonFieldType.STRING).description("회원 상태 (ACTIVE | RESTRICTED)"),
-                        fieldWithPath("data.profileCompleted").type(JsonFieldType.BOOLEAN).description("필수 프로필 작성 완료 여부"),
-                        fieldWithPath("data.profile").type(JsonFieldType.NULL).optional()
-                            .description("프로필 (미작성이면 null, 작성 완료 시 필수 프로필 작성 응답의 data 와 동일 모양)"),
+                        fieldWithPath("data.profile").type(JsonFieldType.OBJECT).description("프로필 (프로필 수정 응답의 data 와 동일 모양)"),
+                        fieldWithPath("data.profile.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
+                        fieldWithPath("data.profile.interestJobRoleIds").type(JsonFieldType.ARRAY).description("관심 직무 id 목록 (미지정이면 빈 배열)"),
+                        fieldWithPath("data.profile.bio").type(JsonFieldType.STRING).description("한 줄 소개 (미지정이면 빈 문자열)"),
+                        fieldWithPath("data.profile.meetingPreference").type(JsonFieldType.STRING).description("만남 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
+                        fieldWithPath("data.profile.sigunguId").type(JsonFieldType.NUMBER).optional().description("관심 지역 시군구 id (미선택이면 null)"),
+                        fieldWithPath("data.profile.interestCompanies").type(JsonFieldType.ARRAY).description("관심 회사 목록 (미지정이면 빈 배열)"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
@@ -143,7 +160,7 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun updateNickname() {
-        every { memberService.changeNickname(memberId, "명랑한 해달 33") } just Runs
+        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } just Runs
 
         mockMvc.perform(
             put("/v1/members/me/nickname")
@@ -171,8 +188,6 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun `updateNickname 형식 위반 E1005`() {
-        every { memberService.changeNickname(memberId, "금지문자!@#") } throws CoreException(CoreErrorType.INVALID_NICKNAME)
-
         mockMvc.perform(
             put("/v1/members/me/nickname")
                 .principal(principal)
@@ -185,7 +200,7 @@ class MemberControllerTest : RestDocsTest() {
 
     @Test
     fun `updateNickname 닉네임 중복 E1007`() {
-        every { memberService.changeNickname(memberId, "명랑한 해달 33") } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
 
         mockMvc.perform(
             put("/v1/members/me/nickname")

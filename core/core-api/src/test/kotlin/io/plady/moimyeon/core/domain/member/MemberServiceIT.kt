@@ -31,7 +31,7 @@ class MemberServiceIT(
         assertThat(memberService.isNicknameAvailable(assigned)).isFalse()
 
         // 자기 닉네임 그대로 변경 요청은 허용된다
-        memberService.changeNickname(memberId, assigned)
+        memberService.changeNickname(memberId, Nickname(assigned))
         assertThat(memberRepository.findById(memberId).get().nickname).isEqualTo(assigned)
     }
 
@@ -40,11 +40,11 @@ class MemberServiceIT(
         // given
         val first = signUp("google-sub-n2")
         val second = signUp("google-sub-n3")
-        memberService.changeNickname(first, "변경된 닉네임 01")
+        memberService.changeNickname(first, Nickname("변경된 닉네임 01"))
 
         // when & then
         assertThat(memberRepository.findById(first).get().nickname).isEqualTo("변경된 닉네임 01")
-        assertThatThrownBy { memberService.changeNickname(second, "변경된 닉네임 01") }
+        assertThatThrownBy { memberService.changeNickname(second, Nickname("변경된 닉네임 01")) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
             }

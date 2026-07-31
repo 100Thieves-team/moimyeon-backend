@@ -1,9 +1,7 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import com.fasterxml.jackson.module.kotlin.jsonMapper
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
-import io.plady.moimyeon.core.api.controller.v1.request.CreateProfileRequest
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.facade.ProfileFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
@@ -16,14 +14,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import java.security.Principal
 import java.util.UUID
 
-// 수송 계층(요청 형태) 검증 계약: 검증 실패·본문 해석 실패는 400(E400)으로 응답한다.
+// 어드바이스의 수송 계층 예외 계약: 본문 해석 실패·파라미터 누락·타입 불일치는 400(E400)으로 응답한다.
+// 엔드포인트별 값 규칙(API 스펙)은 요청 DTO 의 toXxx() 가 확정하고 RestDocs 테스트가 문서화한다.
 class ProfileControllerValidationTest {
     private lateinit var mockMvc: MockMvc
     private val profileService = mockk<ProfileService>()
@@ -35,39 +33,25 @@ class ProfileControllerValidationTest {
     @BeforeEach
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-            ProfileController(profileService, ProfileFacade(profileService, catalogService)),
+            ProfileController(ProfileFacade(profileService, catalogService)),
             MemberController(memberService, memberFacade),
             PublicProfileController(),
         )
             .setCustomArgumentResolvers(LoginMemberArgumentResolver())
-            .setValidator(LocalValidatorFactoryBean().apply { afterPropertiesSet() })
             .setControllerAdvice(ApiControllerAdvice())
             .build()
     }
 
-    private fun performCreate(body: String) = mockMvc.perform(
-        post("/v1/members/me/profile")
+    private fun performUpdate(body: String) = mockMvc.perform(
+        put("/v1/members/me/profile")
             .principal(principal)
             .contentType(MediaType.APPLICATION_JSON)
             .content(body),
     )
 
     @Test
-    fun `스키마 길이를 넘는 선택 필드는 400 E400 과 필드 정보를 반환한다`() {
-        val request = CreateProfileRequest(bio = "가".repeat(501))
-
-        val body = performCreate(jsonMapper().writeValueAsString(request))
-            .andExpect(status().isBadRequest)
-            .andReturn().response.contentAsString
-
-        assertThat(body).contains("\"result\":\"ERROR\"")
-        assertThat(body).contains("\"code\":\"E400\"")
-        assertThat(body).contains("\"bio\"")
-    }
-
-    @Test
     fun `깨진 JSON 은 400 E400 을 반환한다`() {
-        val body = performCreate("""{"bio": """)
+        val body = performUpdate("""{"bio": """)
             .andExpect(status().isBadRequest)
             .andReturn().response.contentAsString
 

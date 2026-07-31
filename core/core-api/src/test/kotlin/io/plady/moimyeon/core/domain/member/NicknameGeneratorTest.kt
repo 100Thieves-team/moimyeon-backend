@@ -9,9 +9,8 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 
 class NicknameGeneratorTest {
-    // Nickname 은 value class 라 mockk 매처(any)가 깨진다. String 을 받는 저장소 레벨로 스텁한다.
     private val memberRepository = mockk<MemberRepository>()
-    private val generator = NicknameGenerator(MemberFinder(memberRepository))
+    private val generator = NicknameGenerator(memberRepository)
 
     @RepeatedTest(20)
     fun `생성된 닉네임은 형식 규칙을 통과하는 '형용사 동물 NN' 형태다`() {

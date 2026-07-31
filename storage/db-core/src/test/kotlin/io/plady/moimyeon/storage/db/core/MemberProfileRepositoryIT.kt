@@ -35,6 +35,12 @@ class MemberProfileRepositoryIT(
 
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
+    private fun persistProfile(memberId: UUID, bio: String? = null): UUID {
+        return memberProfileRepository.saveAndFlush(
+            MemberProfileEntity(id = UUID.randomUUID(), memberId = memberId, bio = bio ?: ""),
+        ).id
+    }
+
     // member_profile.member_id 가 실제 회원을 가리키도록 회원을 먼저 저장한다(FK 는 없지만 데이터 정합 유지).
     private fun persistMember(providerId: String): UUID {
         val member = MemberEntity(
@@ -56,6 +62,7 @@ class MemberProfileRepositoryIT(
         val memberId = persistMember("google-sub-1")
         memberProfileRepository.saveAndFlush(
             MemberProfileEntity(
+                id = UUID.randomUUID(),
                 memberId = memberId,
                 bio = "자기소개",
                 meetingPreference = MeetingPreference.BOTH,
@@ -64,7 +71,7 @@ class MemberProfileRepositoryIT(
         )
 
         // when
-        val found = memberProfileRepository.findById(memberId).orElse(null)
+        val found = memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId)
 
         // then
         assertThat(found).isNotNull
@@ -73,16 +80,16 @@ class MemberProfileRepositoryIT(
     }
 
     @Test
-    fun `관심 회사 조인이 회원별로 조회된다`() {
+    fun `관심 회사 조인이 프로필별로 조회된다`() {
         // given
-        val memberId = persistMember("google-sub-5")
+        val profileId = persistProfile(persistMember("google-sub-5"))
         val companyIds = listOf(persistCompany("달빛페이"), persistCompany("한빛커머스"))
         interestCompanyRepository.saveAllAndFlush(
-            companyIds.map { MemberProfileInterestCompanyEntity(memberId = memberId, companyId = it) },
+            companyIds.map { MemberProfileInterestCompanyEntity(profileId = profileId, companyId = it) },
         )
 
         // when
-        val found = interestCompanyRepository.findByMemberIdAndDeletedAtIsNull(memberId)
+        val found = interestCompanyRepository.findByProfileIdAndDeletedAtIsNull(profileId)
 
         // then
         assertThat(found.map { it.companyId }).containsExactlyInAnyOrderElementsOf(companyIds)
@@ -91,13 +98,13 @@ class MemberProfileRepositoryIT(
     @Test
     fun `관심 직무는 소프트 삭제되고 같은 직무를 다시 담으면 새 행이 된다`() {
         // given — 한 사람이 여러 직무를 함께 준비하는 경우
-        val memberId = persistMember("google-sub-7")
+        val profileId = persistProfile(persistMember("google-sub-7"))
         val backend = persistJobRole("TEST_서버_백엔드")
         val frontend = persistJobRole("TEST_프론트엔드")
         val saved = interestJobRoleRepository.saveAllAndFlush(
-            listOf(backend, frontend).map { MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = it) },
+            listOf(backend, frontend).map { MemberProfileInterestJobRoleEntity(profileId = profileId, jobRoleId = it) },
         )
-        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+        assertThat(interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId).map { it.jobRoleId })
             .containsExactlyInAnyOrder(backend, frontend)
 
         // when — 백엔드를 관심에서 뺀다(소프트 삭제)
@@ -105,15 +112,15 @@ class MemberProfileRepositoryIT(
         interestJobRoleRepository.flush()
 
         // then — 조회에서는 빠지지만 행은 남는다
-        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+        assertThat(interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId).map { it.jobRoleId })
             .containsExactly(frontend)
         assertThat(interestJobRoleRepository.count()).isEqualTo(2)
 
         // when — 뺐던 직무를 다시 담는다. _active_check 덕분에 유니크와 충돌하지 않는다
-        interestJobRoleRepository.saveAndFlush(MemberProfileInterestJobRoleEntity(memberId = memberId, jobRoleId = backend))
+        interestJobRoleRepository.saveAndFlush(MemberProfileInterestJobRoleEntity(profileId = profileId, jobRoleId = backend))
 
         // then — 되살리기가 아니라 새 행이라 "언제부터 관심인지"가 새로 기록된다
-        assertThat(interestJobRoleRepository.findByMemberIdAndDeletedAtIsNull(memberId).map { it.jobRoleId })
+        assertThat(interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(profileId).map { it.jobRoleId })
             .containsExactlyInAnyOrder(backend, frontend)
         assertThat(interestJobRoleRepository.count()).isEqualTo(3)
     }
@@ -122,7 +129,9 @@ class MemberProfileRepositoryIT(
     fun `소프트 삭제된 프로필은 조회에서 빠지지만 행은 남는다`() {
         // given
         val memberId = persistMember("google-sub-6")
-        val profile = memberProfileRepository.saveAndFlush(MemberProfileEntity(memberId = memberId, bio = "자기소개"))
+        val profile = memberProfileRepository.saveAndFlush(
+            MemberProfileEntity(id = UUID.randomUUID(), memberId = memberId, bio = "자기소개"),
+        )
 
         // when
         profile.delete(now)
@@ -131,6 +140,6 @@ class MemberProfileRepositoryIT(
         // then
         assertThat(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId)).isNull()
         assertThat(memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)).isFalse()
-        assertThat(memberProfileRepository.findById(memberId)).isPresent()
+        assertThat(memberProfileRepository.findById(profile.id)).isPresent()
     }
 }

@@ -17,12 +17,12 @@ import java.util.UUID
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_member_profile_interest_company_active",
-            columnNames = ["member_id", "company_id", "_active_check"],
+            columnNames = ["profile_id", "company_id", "_active_check"],
         ),
     ],
 )
 class MemberProfileInterestCompanyEntity(
     @JdbcTypeCode(SqlTypes.BINARY)
-    val memberId: UUID,
+    val profileId: UUID,
     val companyId: Long,
 ) : BaseEntity()

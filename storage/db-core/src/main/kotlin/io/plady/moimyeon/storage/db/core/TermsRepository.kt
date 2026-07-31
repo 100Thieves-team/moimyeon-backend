@@ -6,4 +6,6 @@ import java.util.UUID
 
 interface TermsRepository : JpaRepository<TermsEntity, UUID> {
     fun findByStatusAndDeletedAtIsNull(status: TermsStatus): List<TermsEntity>
+
+    fun findByRequiredIsTrueAndStatusAndDeletedAtIsNull(status: TermsStatus): List<TermsEntity>
 }

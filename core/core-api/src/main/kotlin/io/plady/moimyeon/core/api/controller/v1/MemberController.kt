@@ -32,7 +32,7 @@ class MemberController(
         @LoginMember currentMember: CurrentMember,
         @RequestBody request: UpdateNicknameRequest,
     ): ApiResponse<Any> {
-        memberService.changeNickname(currentMember.id, request.nickname)
+        memberService.changeNickname(currentMember.id, request.toNickname())
         return ApiResponse.success()
     }
 

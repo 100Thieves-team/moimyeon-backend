@@ -6,4 +6,6 @@ interface JobRoleRepository : JpaRepository<JobRoleEntity, Long> {
     fun findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc(): List<JobRoleEntity>
 
     fun findByIdInAndDeletedAtIsNull(ids: Collection<Long>): List<JobRoleEntity>
+
+    fun countByIdInAndDeletedAtIsNull(ids: Collection<Long>): Long
 }

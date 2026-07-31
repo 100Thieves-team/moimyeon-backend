@@ -19,7 +19,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 
 class CatalogControllerTest : RestDocsTest() {
     private lateinit var catalogService: CatalogService
@@ -35,7 +34,6 @@ class CatalogControllerTest : RestDocsTest() {
         mockMvc = mockController(
             CatalogController(catalogService),
             controllerAdvice = ApiControllerAdvice(),
-            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
         )
     }
 

@@ -16,7 +16,6 @@ import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 
 class RoomApplicationControllerTest : RestDocsTest() {
     private val roomId = "01920000-0000-7000-8000-000000000001"
@@ -41,7 +40,6 @@ class RoomApplicationControllerTest : RestDocsTest() {
         mockMvc = mockController(
             RoomApplicationController(),
             controllerAdvice = ApiControllerAdvice(),
-            validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() },
         )
     }
 

@@ -1,111 +1,57 @@
 package io.plady.moimyeon.core.domain.member
 
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import io.plady.moimyeon.core.domain.terms.Terms
-import io.plady.moimyeon.core.domain.terms.TermsAgreementRecorder
-import io.plady.moimyeon.core.domain.terms.TermsFinder
 import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.core.enums.TermsStatus
-import io.plady.moimyeon.core.enums.TermsType
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.transaction.support.TransactionTemplate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class SocialAuthServiceTest {
     private val memberFinder = mockk<MemberFinder>()
     private val memberManager = mockk<MemberManager>()
-    private val nicknameGenerator = mockk<NicknameGenerator>()
-    private val termsFinder = mockk<TermsFinder>()
-    private val termsAgreementRecorder = mockk<TermsAgreementRecorder>()
-
-    // 트랜잭션 경계는 relaxed 매니저를 물린 실제 TransactionTemplate 로 통과시킨다(커밋/롤백은 no-op)
-    private val socialAuthService = SocialAuthService(
-        memberFinder,
-        memberManager,
-        nicknameGenerator,
-        termsFinder,
-        termsAgreementRecorder,
-        TransactionTemplate(mockk(relaxed = true)),
-    )
+    private val memberProvisioner = mockk<MemberProvisioner>()
+    private val socialAuthService = SocialAuthService(memberFinder, memberManager, memberProvisioner)
 
     private val provider = SocialLoginProvider.GOOGLE
     private val email = Email("user@example.com")
-    private val nickname = Nickname("차분한 펭귄 12")
-
-    private fun requiredTerms(id: UUID) = Terms(
-        id = id,
-        type = TermsType.SERVICE,
-        version = "v1.0",
-        title = "이용약관",
-        content = "본문",
-        required = true,
-        effectiveFrom = LocalDateTime.of(2026, 7, 1, 0, 0),
-        status = TermsStatus.ACTIVE,
-    )
 
     @Test
     fun `기존 회원이면 재로그인만 기록하고 같은 id 를 반환하며 새로 가입하지 않는다`() {
         // given
-        val existing = Member.register(provider, "sub-1", email, nickname, LocalDateTime.of(2026, 1, 1, 0, 0))
+        val existingId = UUID.randomUUID()
         every { memberFinder.existsBySocialAccount(provider, "sub-1") } returns true
-        every { memberFinder.getBySocialAccount(provider, "sub-1") } returns existing
-        every { memberManager.recordLogin(existing.id) } just Runs
+        every { memberManager.recordLogin(provider, "sub-1") } returns existingId
 
         // when
         val result = socialAuthService.authenticate(provider, "sub-1", email)
 
         // then
-        assertThat(result).isEqualTo(existing.id)
-        verify(exactly = 1) { memberManager.recordLogin(existing.id) }
-        // append 는 호출되지 않는다(가입 안 함). Email 이 inline value class 라 any() 매처가 깨져 구체 인자로 검증.
-        verify(exactly = 0) { memberManager.append(provider, "sub-1", email, nickname) }
-        verify(exactly = 0) { termsAgreementRecorder.recordAll(any(), any(), any()) }
+        assertThat(result).isEqualTo(existingId)
+        verify(exactly = 1) { memberManager.recordLogin(provider, "sub-1") }
+        // Email 이 inline value class 라 any() 매처가 깨져 구체 인자로 검증.
+        verify(exactly = 0) { memberProvisioner.provision(provider, "sub-1", email) }
     }
 
     @Test
-    fun `처음 보는 신원이면 provisioning 하고 현재 유효한 필수 약관 동의를 모두 기록한다`() {
+    fun `처음 보는 신원이면 provisioning 에 위임하고 그 결과를 반환한다`() {
         // given
         val newMemberId = UUID.randomUUID()
-        val termsId = UUID.randomUUID()
         every { memberFinder.existsBySocialAccount(provider, "sub-2") } returns false
         every { memberFinder.existsWithdrawnBySocialAccount(provider, "sub-2") } returns false
-        every { nicknameGenerator.generateUnique() } returns nickname
-        every { memberManager.append(provider, "sub-2", email, nickname) } returns newMemberId
-        every { termsFinder.findRequiredActive() } returns listOf(requiredTerms(termsId))
-        every { termsAgreementRecorder.recordAll(newMemberId, listOf(termsId), any()) } just Runs
+        every { memberProvisioner.provision(provider, "sub-2", email) } returns newMemberId
 
         // when
         val result = socialAuthService.authenticate(provider, "sub-2", email)
 
         // then
         assertThat(result).isEqualTo(newMemberId)
-        verify(exactly = 1) { memberManager.append(provider, "sub-2", email, nickname) }
-        verify(exactly = 1) { termsAgreementRecorder.recordAll(newMemberId, listOf(termsId), any()) }
-        verify(exactly = 0) { memberManager.recordLogin(any()) }
-    }
-
-    @Test
-    fun `동시 가입으로 유니크 충돌이 나면 E1004 로 매핑한다`() {
-        every { memberFinder.existsBySocialAccount(provider, "sub-4") } returns false
-        every { memberFinder.existsWithdrawnBySocialAccount(provider, "sub-4") } returns false
-        every { nicknameGenerator.generateUnique() } returns nickname
-        every { memberManager.append(provider, "sub-4", email, nickname) } throws
-            DataIntegrityViolationException("uk_social_account_provider_provider_id")
-
-        assertThatThrownBy { socialAuthService.authenticate(provider, "sub-4", email) }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED)
-            }
+        verify(exactly = 1) { memberProvisioner.provision(provider, "sub-2", email) }
+        verify(exactly = 0) { memberManager.recordLogin(any(), any()) }
     }
 
     @Test
@@ -119,28 +65,7 @@ class SocialAuthServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_ALREADY_WITHDRAWN)
             }
-        verify(exactly = 0) { memberManager.recordLogin(any()) }
-        verify(exactly = 0) { memberManager.append(provider, "sub-3", email, nickname) }
-    }
-
-    @Test
-    fun `가입 중 닉네임 동시 충돌이 나면 새 닉네임으로 1회 재시도한다`() {
-        // given — 첫 시도는 uk_member_nickname 충돌, 두 번째 후보로 성공
-        val newMemberId = UUID.randomUUID()
-        val retryNickname = Nickname("명랑한 해달 33")
-        every { memberFinder.existsBySocialAccount(provider, "sub-5") } returns false
-        every { memberFinder.existsWithdrawnBySocialAccount(provider, "sub-5") } returns false
-        every { nicknameGenerator.generateUnique() } returns nickname andThen retryNickname
-        every { memberManager.append(provider, "sub-5", email, nickname) } throws
-            DataIntegrityViolationException("uk_member_nickname")
-        every { memberManager.append(provider, "sub-5", email, retryNickname) } returns newMemberId
-        every { termsFinder.findRequiredActive() } returns emptyList()
-        every { termsAgreementRecorder.recordAll(newMemberId, emptyList(), any()) } just Runs
-
-        // when
-        val result = socialAuthService.authenticate(provider, "sub-5", email)
-
-        // then
-        assertThat(result).isEqualTo(newMemberId)
+        verify(exactly = 0) { memberManager.recordLogin(any(), any()) }
+        verify(exactly = 0) { memberProvisioner.provision(provider, "sub-3", email) }
     }
 }
