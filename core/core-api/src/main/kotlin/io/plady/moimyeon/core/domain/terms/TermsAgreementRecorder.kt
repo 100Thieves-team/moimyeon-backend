@@ -13,15 +13,15 @@ class TermsAgreementRecorder(
 ) {
     @Transactional
     fun recordAll(memberId: UUID, termsIds: List<UUID>, agreedAt: LocalDateTime) {
-        termsIds.forEach { termsId ->
-            termsAgreementRepository.save(
+        termsAgreementRepository.saveAll(
+            termsIds.map { termsId ->
                 TermsAgreementEntity(
                     id = UUID.randomUUID(),
                     memberId = memberId,
                     termsId = termsId,
                     agreedAt = agreedAt,
-                ),
-            )
-        }
+                )
+            },
+        )
     }
 }
