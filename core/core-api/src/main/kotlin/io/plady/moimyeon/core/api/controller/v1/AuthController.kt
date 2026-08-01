@@ -24,7 +24,7 @@ class AuthController(
         response: HttpServletResponse,
     ): ApiResponse<Any> {
         val credential = requireFound(refreshToken, CoreErrorType.INVALID_SESSION)
-        val memberId = sessionService.refreshAccess(credential)
+        val memberId = sessionService.authenticate(credential)
         response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createAccess(jwtTokenProvider.issue(memberId)).toString())
         return ApiResponse.success()
     }

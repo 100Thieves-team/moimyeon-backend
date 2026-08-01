@@ -6,7 +6,6 @@ import io.mockk.slot
 import io.plady.moimyeon.storage.db.core.RefreshTokenEntity
 import io.plady.moimyeon.storage.db.core.RefreshTokenRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -17,43 +16,53 @@ class SessionManagerTest {
     private val sessionManager = SessionManager(refreshTokenRepository, sessionProperties)
 
     private val memberId = UUID.randomUUID()
+    private val openedAt = LocalDateTime.of(2026, 8, 1, 12, 0)
 
     @Test
-    fun `세션을 열면 원문 크리덴셜을 반환하고 저장은 해시로 한다`() {
-        // given
+    fun `세션을 열면 원문 크리덴셜과 만료 시각을 반환하고 저장은 해시로 한다`() {
         val saved = slot<RefreshTokenEntity>()
         every { refreshTokenRepository.save(capture(saved)) } answers { saved.captured }
 
-        // when
-        val issued = sessionManager.open(memberId)
+        val session = sessionManager.open(memberId, openedAt)
 
-        // then
-        assertThat(issued.credential).isNotBlank()
-        assertThat(saved.captured.tokenHash).isEqualTo(RefreshTokenGenerator.hash(issued.credential))
-        assertThat(saved.captured.tokenHash).isNotEqualTo(issued.credential) // 원문이 그대로 저장되지 않는다
+        assertThat(session.credential.value).isNotBlank()
+        assertThat(session.expiresAt).isEqualTo(openedAt.plusSeconds(sessionProperties.ttlSeconds))
+        assertThat(saved.captured.tokenHash).isEqualTo(session.credential.hash())
+        assertThat(saved.captured.tokenHash).isNotEqualTo(session.credential.value)
         assertThat(saved.captured.memberId).isEqualTo(memberId)
+        assertThat(saved.captured.expiresAt).isEqualTo(session.expiresAt)
     }
 
     @Test
-    fun `로그아웃하면 세션이 종료된다`() {
-        // given
-        val raw = "to-revoke"
-        val entity = RefreshTokenEntity(RefreshTokenGenerator.hash(raw), memberId, LocalDateTime.now().plusDays(1))
-        every { refreshTokenRepository.findByTokenHash(RefreshTokenGenerator.hash(raw)) } returns entity
+    fun `세션을 종료하면 최초 종료 시각을 기록한다`() {
+        val credential = SessionCredential.from("to-close")
+        val closedAt = openedAt.plusHours(1)
+        val entity = RefreshTokenEntity(credential.hash(), memberId, openedAt.plusDays(1))
+        every { refreshTokenRepository.findByTokenHash(credential.hash()) } returns entity
 
-        // when
-        sessionManager.revoke(raw)
+        sessionManager.close(credential, closedAt)
 
-        // then
-        assertThat(entity.revokedAt).isNotNull()
+        assertThat(entity.revokedAt).isEqualTo(closedAt)
     }
 
     @Test
-    fun `없는 세션 로그아웃도 예외 없이 통과한다(멱등)`() {
-        // given
-        every { refreshTokenRepository.findByTokenHash(any()) } returns null
+    fun `존재하지 않는 세션 종료도 예외 없이 통과한다`() {
+        val credential = SessionCredential.from("unknown")
+        every { refreshTokenRepository.findByTokenHash(credential.hash()) } returns null
 
-        // when & then
-        assertThatCode { sessionManager.revoke("nope") }.doesNotThrowAnyException()
+        sessionManager.close(credential, openedAt)
+    }
+
+    @Test
+    fun `이미 종료된 세션을 다시 종료해도 최초 종료 시각을 보존한다`() {
+        val credential = SessionCredential.from("already-closed")
+        val firstClosedAt = openedAt.plusHours(1)
+        val entity = RefreshTokenEntity(credential.hash(), memberId, openedAt.plusDays(1))
+        every { refreshTokenRepository.findByTokenHash(credential.hash()) } returns entity
+
+        sessionManager.close(credential, firstClosedAt)
+        sessionManager.close(credential, firstClosedAt.plusHours(1))
+
+        assertThat(entity.revokedAt).isEqualTo(firstClosedAt)
     }
 }
