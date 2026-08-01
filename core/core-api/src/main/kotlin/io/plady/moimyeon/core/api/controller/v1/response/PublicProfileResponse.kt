@@ -1,31 +1,38 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import java.time.LocalDate
 import java.util.UUID
 
 data class PublicProfileResponse(
     val memberId: UUID,
+    val withdrawn: Boolean,
     val nickname: String,
     val jobTitle: String?,
     val bio: String?,
-    val stats: PublicProfileStatsResponse,
-    val frequentReviews: List<FrequentReviewResponse>,
-    val recentActivities: List<RecentActivityResponse>,
+    val trust: PublicProfileTrustResponse?,
+    val recentActivities: List<PublicProfileActivityResponse>,
 )
 
-data class PublicProfileStatsResponse(
-    val completedInterviewCount: Int,
+data class PublicProfileTrustResponse(
+    val completedRoomCount: Int,
     val attendanceRate: Int,
     val noShowCount: Int,
     val averageRating: Double,
+    val representativeTags: List<PublicProfileTagResponse>,
 )
 
-data class FrequentReviewResponse(
+data class PublicProfileTagResponse(
     val label: String,
     val count: Int,
 )
 
-data class RecentActivityResponse(
-    val role: String,
+data class PublicProfileActivityResponse(
+    val role: PublicProfileActivityRole,
     val title: String,
-    val date: String,
+    val date: LocalDate,
 )
+
+enum class PublicProfileActivityRole {
+    PARTICIPANT,
+    HOST,
+}
