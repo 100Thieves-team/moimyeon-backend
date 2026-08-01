@@ -36,7 +36,7 @@ class MemberFinderTest {
     }
 
     @Test
-    fun `살아있는 회원 존재 여부와 탈퇴 점유 여부를 구분해 반환한다`() {
+    fun `살아있는 회원의 소셜 계정 존재 여부를 반환한다`() {
         // given
         every {
             memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
@@ -44,16 +44,16 @@ class MemberFinderTest {
                 "sub-1",
             )
         } returns false
-        every {
-            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
-                provider,
-                "sub-1",
-            )
-        } returns true
-
         // when & then
         assertThat(memberFinder.existsBySocialAccount(provider, "sub-1")).isFalse()
-        assertThat(memberFinder.existsWithdrawnBySocialAccount(provider, "sub-1")).isTrue()
+    }
+
+    @Test
+    fun `탈퇴하지 않은 회원의 존재 여부를 반환한다`() {
+        val memberId = UUID.randomUUID()
+        every { memberRepository.existsByIdAndDeletedAtIsNull(memberId) } returns true
+
+        assertThat(memberFinder.existsById(memberId)).isTrue()
     }
 
     @Test

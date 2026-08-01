@@ -11,8 +11,4 @@ class TermsFinder(
     fun findActive(): List<Terms> {
         return termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map(TermsMapper::toDomain)
     }
-
-    fun findRequiredActive(): List<Terms> {
-        return termsRepository.findByRequiredIsTrueAndStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map(TermsMapper::toDomain)
-    }
 }

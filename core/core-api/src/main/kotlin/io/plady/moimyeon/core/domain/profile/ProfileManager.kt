@@ -18,7 +18,7 @@ class ProfileManager(
     // 동시 호출은 uk_member_profile_member 가 막고, 그 상황은 가입이 두 번 커밋됐다는 뜻이라
     // 도메인 에러로 번역하지 않고 전파한다.
     @Transactional
-    fun initialize(memberId: UUID): UUID {
+    fun createEmpty(memberId: UUID): UUID {
         return memberProfileRepository.save(MemberProfileEntity(id = UUID.randomUUID(), memberId = memberId)).id
     }
 

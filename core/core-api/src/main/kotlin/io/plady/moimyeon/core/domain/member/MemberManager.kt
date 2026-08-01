@@ -17,15 +17,6 @@ class MemberManager(
     private val memberRepository: MemberRepository,
 ) {
     @Transactional
-    fun append(provider: SocialLoginProvider, providerId: String, email: Email, nickname: Nickname): UUID {
-        val member = Member.register(provider, providerId, email, nickname, LocalDateTime.now())
-        // 유니크 충돌(동시 가입)을 호출자 트랜잭션 안에서 잡을 수 있게 즉시 flush함.
-        return memberRepository.saveAndFlush(MemberMapper.toEntity(member)).id
-    }
-
-    // 로그인 경로 전용 — 조회와 갱신을 한 트랜잭션 한 쿼리로 묶고 id 만 반환한다.
-    // Member 도메인 객체 조립(소셜 계정 조인·값 객체 검증)은 이 경로에 필요 없다.
-    @Transactional
     fun recordLogin(provider: SocialLoginProvider, providerId: String): UUID {
         val entity = requireFound(
             memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(provider, providerId),
@@ -66,10 +57,7 @@ class MemberManager(
         entity.delete(now)
     }
 
-    companion object {
-        // uk_member_nickname 을 아는 유일한 곳. 가입 재시도(MemberProvisioner)도 이 판별을 쓴다.
-        internal fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-            return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
-        }
+    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
+        return (e.rootCause?.message ?: e.message).orEmpty().contains("uk_member_nickname", ignoreCase = true)
     }
 }
