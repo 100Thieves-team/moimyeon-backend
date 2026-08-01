@@ -16,11 +16,11 @@
 ## 컨트롤러에서 인증 주체 받기
 
 ```kotlin
-@PostMapping("/v1/members/me/profile")
-fun createProfile(
+@PostMapping("/v1/orders")
+fun createOrder(
     @LoginMember currentMember: CurrentMember,
-    @RequestBody request: CreateProfileRequest,
-): ApiResponse<ProfileResponse>
+    @RequestBody request: CreateOrderRequest,
+): ApiResponse<OrderResponse>
 ```
 
 - `@LoginMember CurrentMember` 로 주입받는다. `CurrentMember` 는 api 소유의 단순 값

@@ -31,9 +31,9 @@
   core-api 프로세스에 **runtimeOnly 로 함께 조립**되고, 서로의 코드는 컴파일 타임에 모른다.
   인증 기술(spring-security)은 security 모듈에 격리되어 api 코드에는 등장하지 않는다.
   → [modules.md](modules.md)
-- **도메인**: `core.domain` 은 도메인 영역별 패키지(예: `member/`, `profile/`)로 나눈다.
-  영역끼리는 서로에 대해 아는 것을 최소로 유지한다 — 예를 들어 Profile 은 Member 의 id 만
-  알고, Member 는 프로필의 존재를 모른다.
+- **도메인**: `core.domain` 은 도메인 영역별 패키지(예: `order/`, `product/`)로 나눈다.
+  영역끼리는 서로에 대해 아는 것을 최소로 유지한다 — 한쪽이 상대의 id 만 알고, 역방향은
+  필요해질 때까지 만들지 않는다.
   → [concepts.md](concepts.md)
 - **레이어**: Controller(DTO 변환) → Service(비즈니스 흐름) → Implement(Finder/Validator/Manager 등
   재사용 로직·저장소 접근) → Repository. 여러 Service 의 결과를 조합하는 응답은 컨트롤러가 아니라
