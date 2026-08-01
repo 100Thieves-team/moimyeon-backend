@@ -45,6 +45,7 @@ class PublicProfileController {
             trust = PublicProfileTrustResponse(
                 completedRoomCount = 4,
                 attendanceRate = 100,
+                noShowCount = 0,
                 averageRating = 4.7,
                 representativeTags = listOf(
                     PublicProfileTagResponse("시간을 잘 지켜요", 6),

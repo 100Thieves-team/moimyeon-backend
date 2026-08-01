@@ -16,6 +16,7 @@ data class PublicProfileResponse(
 data class PublicProfileTrustResponse(
     val completedRoomCount: Int,
     val attendanceRate: Int,
+    val noShowCount: Int,
     val averageRating: Double,
     val representativeTags: List<PublicProfileTagResponse>,
 )

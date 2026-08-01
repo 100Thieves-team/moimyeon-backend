@@ -296,7 +296,7 @@ include::{snippets}/updateProfile/response-fields.adoc[]
 | `withdrawn=true`, 닉네임 `탈퇴한 사용자`, 나머지 공개 정보 비움
 |===
 
-`data.trust`의 완료 룸 수·출석률·평균 별점·대표 태그는 목에서만 예시 값을 채운다.
+`data.trust`의 완료 룸 수·출석률·누적 노쇼 횟수·평균 별점·대표 태그는 목에서만 예시 값을 채운다.
 실 API(MOI-378)는 이번 스프린트에 이 영역을 `null`로 반환하고, 신뢰 도메인이 구현되면 같은 응답 모양에 값을 채운다.
 
 ==== 활성 회원 예시

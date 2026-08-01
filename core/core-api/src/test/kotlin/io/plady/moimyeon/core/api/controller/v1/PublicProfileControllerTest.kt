@@ -45,6 +45,7 @@ class PublicProfileControllerTest : RestDocsTest() {
                     .contains("\"jobTitle\":\"백엔드 개발\"")
                     .contains("\"completedRoomCount\":4")
                     .contains("\"attendanceRate\":100")
+                    .contains("\"noShowCount\":0")
                     .contains("\"averageRating\":4.7")
                     .contains("\"label\":\"시간을 잘 지켜요\",\"count\":6")
                     .doesNotContain("\"email\"")
@@ -133,6 +134,7 @@ class PublicProfileControllerTest : RestDocsTest() {
             .description("신뢰 정보 (목에서만 제공, 실 API는 이번 스프린트에 null)"),
         fieldWithPath("data.trust.completedRoomCount").type(JsonFieldType.NUMBER).optional().description("완료한 룸 수"),
         fieldWithPath("data.trust.attendanceRate").type(JsonFieldType.NUMBER).optional().description("출석률 (%)"),
+        fieldWithPath("data.trust.noShowCount").type(JsonFieldType.NUMBER).optional().description("누적 노쇼 횟수"),
         fieldWithPath("data.trust.averageRating").type(JsonFieldType.NUMBER).optional().description("평균 별점"),
         fieldWithPath("data.trust.representativeTags").type(JsonFieldType.ARRAY).optional().description("대표 평가 태그"),
         fieldWithPath("data.trust.representativeTags[].label").type(JsonFieldType.STRING).optional().description("평가 문구"),
