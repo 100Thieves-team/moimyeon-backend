@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-01",
-                        "datetime" : "2026-08-01T09:16:50.574669705",
+                        "datetime" : "2026-08-01T15:22:39.061505111",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-01",
-                        "datetime" : "2026-08-01T09:16:50.754239601",
+                        "datetime" : "2026-08-01T15:22:39.305517909",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -603,7 +603,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "df79be47-a35f-4eb3-a301-632606f4ee80",
+                          "termsId" : "4a7a1e91-84c4-4d59-8722-80ef05baa486",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -611,7 +611,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "6b84b464-8089-455a-9212-01bc1ebf861a",
+                          "termsId" : "f68245c1-6097-45fe-90ef-df7007c11a72",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -759,12 +759,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "54aba03e-715f-4578-9880-5db59043b360",
+                        "memberId" : "5f9ec49d-bc14-44ad-9350-03ee01ccbffa",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "54aba03e-715f-4578-9880-5db59043b360",
+                          "memberId" : "5f9ec49d-bc14-44ad-9350-03ee01ccbffa",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1052,15 +1052,15 @@ paths:
                         },
                         "host" : {
                           "memberId" : "00000000-0000-0000-0000-000000000001",
-                          "nickname" : "집요한 수달 07",
-                          "jobTitle" : "프론트엔드 개발",
+                          "nickname" : "성실한 사슴 03",
+                          "jobTitle" : "백엔드 개발",
                           "isHost" : true,
                           "stats" : {
-                            "completedRoomCount" : 12,
-                            "attendanceRate" : 96,
-                            "averageRating" : 4.8
+                            "completedRoomCount" : 4,
+                            "attendanceRate" : 100,
+                            "averageRating" : 4.7
                           },
-                          "aiSummary" : "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심, 디자인 시스템 구축 경험."
+                          "aiSummary" : "백엔드 개발자. 서버 개발과 시스템 설계 이야기를 나누는 걸 좋아해요."
                         },
                         "viewerRole" : "HOST"
                       },
@@ -1350,7 +1350,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "884ad7f2-8a66-4370-bbe4-a3a738e3596c",
+                        "memberId" : "9521df9d-0c84-4ff1-9e2f-0c5018436a3e",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1406,9 +1406,11 @@ paths:
       tags:
       - v1
       summary: 공개 프로필 조회
-      description: "다른 사용자가 보는 공개 프로필. 공개 범위(닉네임·직무·자기소개)와 신뢰 지표·최근 활동만 노출하고, 이메일·\
-        비공개 관심 정보는 담지 않는다. 마이페이지의 신뢰 지표 카드도 이 API(자신의 memberId)로 조회한다. (모킹: 세션·피드백\
-        \ 도메인 구현 전까지 figma 목업 값 고정 반환)"
+      description: "다른 사용자가 보는 공개 프로필로 닉네임·직무·자기소개·공개 활동만 노출하고, 이메일·OAuth 식별자·약관 동\
+        의 이력·비공개 관심 정보는 담지 않는다. 목 API는 활성 회원(00000000-0000-0000-0000-000000000001)과\
+        \ 탈퇴 회원(00000000-0000-0000-0000-000000000410)을 고정 예시로 제공하며, 그 밖의 회원은 404(E1006)로\
+        \ 응답한다. 신뢰 정보는 목에서만 예시 값을 채우고, 실 API는 이번 스프린트에 data.trust를 null로 반환한다. 잘못된\
+        \ UUID는 400(E400)으로 응답한다."
       operationId: publicProfile
       parameters:
       - name: memberId
@@ -1423,48 +1425,102 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-memberId-profile-573351263"
+                $ref: "#/components/schemas/v1-members-memberId-profile-250325338"
               examples:
+                publicProfile-withdrawn:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "00000000-0000-0000-0000-000000000410",
+                        "withdrawn" : true,
+                        "nickname" : "탈퇴한 사용자",
+                        "jobTitle" : null,
+                        "bio" : null,
+                        "trust" : null,
+                        "recentActivities" : [ ]
+                      },
+                      "error" : null
+                    }
                 publicProfile:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "a94d37d8-8981-4401-a2f2-76eee6345152",
-                        "nickname" : "집요한 수달 07",
-                        "jobTitle" : "프론트엔드 개발",
-                        "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                        "stats" : {
-                          "completedInterviewCount" : 12,
-                          "attendanceRate" : 96,
+                        "memberId" : "00000000-0000-0000-0000-000000000001",
+                        "withdrawn" : false,
+                        "nickname" : "성실한 사슴 03",
+                        "jobTitle" : "백엔드 개발",
+                        "bio" : "백엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                        "trust" : {
+                          "completedRoomCount" : 4,
+                          "attendanceRate" : 100,
                           "noShowCount" : 0,
-                          "averageRating" : 4.8
+                          "averageRating" : 4.7,
+                          "representativeTags" : [ {
+                            "label" : "시간을 잘 지켜요",
+                            "count" : 6
+                          }, {
+                            "label" : "질문이 날카로워요",
+                            "count" : 5
+                          }, {
+                            "label" : "소통이 원활해요",
+                            "count" : 3
+                          } ]
                         },
-                        "frequentReviews" : [ {
-                          "label" : "피드백이 구체적이에요",
-                          "count" : 8
-                        }, {
-                          "label" : "시간을 잘 지켜요",
-                          "count" : 6
-                        }, {
-                          "label" : "질문이 날카로워요",
-                          "count" : 5
-                        } ],
                         "recentActivities" : [ {
                           "role" : "PARTICIPANT",
-                          "title" : "달빛페이 · 프론트엔드 · 1차 면접",
+                          "title" : "달빛페이 · 백엔드 · 1차 면접",
                           "date" : "2026-07-12"
                         }, {
                           "role" : "PARTICIPANT",
-                          "title" : "한빛커머스 · 프론트엔드 · 2차 면접",
+                          "title" : "한빛커머스 · 백엔드 · 2차 면접",
                           "date" : "2026-06-28"
                         }, {
                           "role" : "HOST",
-                          "title" : "구름클라우드 · 프론트엔드 · 최종 면접",
+                          "title" : "구름클라우드 · 백엔드 · 최종 면접",
                           "date" : "2026-06-14"
                         } ]
                       },
                       "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-companies910352763"
+              examples:
+                publicProfile-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "memberId" : "type mismatch"
+                        }
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-companies910352763"
+              examples:
+                publicProfile-e1006:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1006",
+                        "message" : "회원을 찾을 수 없습니다.",
+                        "data" : null
+                      }
                     }
   /v1/rooms/{roomId}/applications:
     get:
@@ -1853,7 +1909,7 @@ components:
             totalCount:
               type: number
               description: 전체 결과 수
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -2846,7 +2902,7 @@ components:
                   content:
                     type: string
                     description: 약관 본문
-    v1-members-memberId-profile-573351263:
+    v1-members-memberId-profile-250325338:
       required:
       - result
       type: object
@@ -2856,77 +2912,78 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - frequentReviews
           - memberId
           - nickname
           - recentActivities
+          - withdrawn
           type: object
           properties:
-            stats:
-              required:
-              - attendanceRate
-              - averageRating
-              - completedInterviewCount
-              - noShowCount
+            trust:
               type: object
               properties:
-                completedInterviewCount:
-                  type: number
-                  description: 완료한 면접 수
+                representativeTags:
+                  type: array
+                  description: 대표 평가 태그
+                  items:
+                    type: object
+                    properties:
+                      count:
+                        type: number
+                        description: 받은 횟수
+                        nullable: true
+                      label:
+                        type: string
+                        description: 평가 문구
+                        nullable: true
                 averageRating:
                   type: number
                   description: 평균 별점
+                  nullable: true
+                completedRoomCount:
+                  type: number
+                  description: 완료한 룸 수
+                  nullable: true
                 attendanceRate:
                   type: number
                   description: 출석률 (%)
+                  nullable: true
                 noShowCount:
                   type: number
-                  description: 노쇼 횟수
+                  description: 누적 노쇼 횟수
+                  nullable: true
+              description: "신뢰 정보 (목에서만 제공, 실 API는 이번 스프린트에 null)"
             recentActivities:
               type: array
-              description: 최근 공개 활동
+              description: 최근 공개 활동 (없으면 빈 배열)
               items:
-                required:
-                - date
-                - role
-                - title
                 type: object
                 properties:
                   date:
                     type: string
-                    description: 활동 일자
+                    description: 활동 일자 (yyyy-MM-dd)
+                    nullable: true
                   role:
                     type: string
                     description: 역할 (PARTICIPANT | HOST)
+                    nullable: true
                   title:
                     type: string
                     description: 활동 제목
+                    nullable: true
             jobTitle:
               type: string
-              description: 직무 (선택)
+              description: "직무 (선택, 탈퇴 회원은 null)"
               nullable: true
             nickname:
               type: string
-              description: 닉네임
+              description: 닉네임 (탈퇴 회원은 '탈퇴한 사용자')
+            withdrawn:
+              type: boolean
+              description: 탈퇴한 회원 여부
             bio:
               type: string
-              description: 자기소개 (선택)
+              description: "자기소개 (선택, 탈퇴 회원은 null)"
               nullable: true
-            frequentReviews:
-              type: array
-              description: 자주 받은 평가 태그
-              items:
-                required:
-                - count
-                - label
-                type: object
-                properties:
-                  count:
-                    type: number
-                    description: 받은 횟수
-                  label:
-                    type: string
-                    description: 평가 문구
             memberId:
               type: string
               description: 회원 식별자 (UUID)
