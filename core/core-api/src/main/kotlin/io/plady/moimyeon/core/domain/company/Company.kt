@@ -1,4 +1,4 @@
-package io.plady.moimyeon.core.domain.catalog
+package io.plady.moimyeon.core.domain.company
 
 data class Company(
     val id: Long,

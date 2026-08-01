@@ -28,11 +28,11 @@ VALUES (1, 1, '서버_백엔드', '서버·백엔드', 1),
        (5, 1, '데이터_엔지니어', '데이터 엔지니어', 5),
        (6, 1, 'PM_PO', 'PM·PO', 6);
 
-INSERT INTO company (id, name_kr, name_normalized)
-VALUES (1, '달빛페이', '달빛페이'),
-       (2, '한빛커머스', '한빛커머스'),
-       (3, '구름클라우드', '구름클라우드'),
-       (4, '별빛헬스', '별빛헬스');
+INSERT INTO company (id, name_kr, name_normalized, verified)
+VALUES (1, '달빛페이', '달빛페이', TRUE),
+       (2, '한빛커머스', '한빛커머스', TRUE),
+       (3, '구름클라우드', '구름클라우드', TRUE),
+       (4, '별빛헬스', '별빛헬스', TRUE);
 
 INSERT INTO terms (id, type, version, title, content, required, effective_from, status, created_at, updated_at)
 VALUES (X'019daf00000070008000000000000001', 'SERVICE', 'v1.0', '모이면 이용약관',

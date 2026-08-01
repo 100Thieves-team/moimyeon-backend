@@ -2,7 +2,6 @@ package io.plady.moimyeon.core.domain.catalog
 
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
-import io.plady.moimyeon.storage.db.core.CompanyRepository
 import io.plady.moimyeon.storage.db.core.JobRoleRepository
 import io.plady.moimyeon.storage.db.core.SigunguRepository
 import org.springframework.stereotype.Component
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component
 class CatalogRefValidator(
     private val jobRoleRepository: JobRoleRepository,
     private val sigunguRepository: SigunguRepository,
-    private val companyRepository: CompanyRepository,
 ) {
     fun validateJobRoles(jobRoleIds: Collection<Long>) {
         val distinctIds = jobRoleIds.toSet()
@@ -24,14 +22,5 @@ class CatalogRefValidator(
 
     fun validateSigungu(sigunguId: Long) {
         requireBusiness(sigunguRepository.existsByIdAndDeletedAtIsNull(sigunguId), CoreErrorType.REGION_NOT_FOUND)
-    }
-
-    fun validateCompanies(companyIds: Collection<Long>) {
-        val distinctIds = companyIds.toSet()
-        if (distinctIds.isEmpty()) return
-        requireBusiness(
-            companyRepository.countByIdInAndDeletedAtIsNull(distinctIds) == distinctIds.size.toLong(),
-            CoreErrorType.COMPANY_NOT_FOUND,
-        )
     }
 }
