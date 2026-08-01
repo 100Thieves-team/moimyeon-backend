@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-01",
-                        "datetime" : "2026-08-01T15:22:39.061505111",
+                        "datetime" : "2026-08-01T16:34:57.506197998",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-01",
-                        "datetime" : "2026-08-01T15:22:39.305517909",
+                        "datetime" : "2026-08-01T16:34:57.692175893",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -118,7 +118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 searchCompanies-e400-length:
                   value: |-
@@ -437,7 +437,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-rooms-1620848945"
+              $ref: "#/components/schemas/v1-rooms-2062104186"
             examples:
               createRoom-e400-min-participants:
                 value: |-
@@ -457,7 +457,7 @@ paths:
                     },
                     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
                     "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-                    "resumeId" : 90001,
+                    "resumeId" : "01920000-0000-7000-8000-000000000101",
                     "resumePublic" : true
                   }
               createRoom-e400-max-participants:
@@ -478,7 +478,7 @@ paths:
                     },
                     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
                     "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-                    "resumeId" : 90001,
+                    "resumeId" : "01920000-0000-7000-8000-000000000101",
                     "resumePublic" : true
                   }
               createRoom:
@@ -499,7 +499,7 @@ paths:
                     },
                     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
                     "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-                    "resumeId" : 90001,
+                    "resumeId" : "01920000-0000-7000-8000-000000000101",
                     "resumePublic" : true
                   }
               createRoom-e400:
@@ -520,7 +520,7 @@ paths:
                     },
                     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
                     "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-                    "resumeId" : 90001,
+                    "resumeId" : "01920000-0000-7000-8000-000000000101",
                     "resumePublic" : true
                   }
       responses:
@@ -529,7 +529,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 createRoom-e400-min-participants:
                   value: |-
@@ -603,7 +603,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "4a7a1e91-84c4-4d59-8722-80ef05baa486",
+                          "termsId" : "f6ff8759-148b-4d65-aa30-cf9b65a5a453",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -611,7 +611,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "f68245c1-6097-45fe-90ef-df7007c11a72",
+                          "termsId" : "ab8ef9b3-7d44-4d8a-87d2-d16f161d4f93",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -683,7 +683,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -759,12 +759,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "5f9ec49d-bc14-44ad-9350-03ee01ccbffa",
+                        "memberId" : "0d7e992f-be0f-43e8-bdcb-2e02279bc00d",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "5f9ec49d-bc14-44ad-9350-03ee01ccbffa",
+                          "memberId" : "0d7e992f-be0f-43e8-bdcb-2e02279bc00d",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -779,7 +779,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -797,7 +797,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -831,7 +831,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -1177,7 +1177,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1005:
                   value: |-
@@ -1195,7 +1195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1102:
                   value: |-
@@ -1213,7 +1213,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateNickname-e1007:
                   value: |-
@@ -1303,7 +1303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1301:
                   value: |-
@@ -1350,7 +1350,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9521df9d-0c84-4ff1-9e2f-0c5018436a3e",
+                        "memberId" : "d6736b3d-f033-4d15-8176-cbed81f2047f",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1370,7 +1370,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -1388,7 +1388,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -1401,6 +1401,216 @@ paths:
                         "data" : null
                       }
                     }
+  /v1/members/me/resumes:
+    get:
+      tags:
+      - v1
+      summary: 보관 이력서 목록 조회
+      description: "인증 회원의 보관 이력서를 마이페이지·룸 생성·참가 신청에서 함께 사용할 수 있는 동일한 자원 형태로 반환한다\
+        . 숨긴 이력서는 목록에서 제외되며, 기본 이력서를 먼저 보여준다. 최대 보관 개수는 최신 PRD 기준 10개다. 신청 화면에서는 선\
+        택지를 열 때 조회하며 개별 AI 요약 상태를 확인하는 폴링에는 단건 조회 API를 사용한다. AI 요약은 DONE·PROCESSING·\
+        FAILED 상태를 가지며 준비 중이면 text가 null이다. 인증 정보가 없으면 401(E1102)로 응답한다. 목 API는 고정\
+        \ 이력서 3건(DONE 2건, PROCESSING 1건)을 반환한다."
+      operationId: resumes
+      responses:
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resumes-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-resumes258595286"
+              examples:
+                resumes:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "maxCount" : 10,
+                        "resumes" : [ {
+                          "resumeId" : "01920000-0000-7000-8000-000000000101",
+                          "name" : "백엔드 개발 이력서",
+                          "file" : {
+                            "originalName" : "든든한곰_이력서.pdf",
+                            "sizeBytes" : 217088,
+                            "contentType" : "application/pdf"
+                          },
+                          "aiSummary" : {
+                            "status" : "DONE",
+                            "text" : "핀테크 백엔드 3년 차. 결제 정산 배치·대사와 Kotlin·Spring 경험."
+                          },
+                          "isDefault" : true,
+                          "registeredAt" : "2026-07-12T09:30:00"
+                        }, {
+                          "resumeId" : "01920000-0000-7000-8000-000000000102",
+                          "name" : "커머스 프로젝트 이력서",
+                          "file" : {
+                            "originalName" : "든든한곰_이력서_커머스.pdf",
+                            "sizeBytes" : 202752,
+                            "contentType" : "application/pdf"
+                          },
+                          "aiSummary" : {
+                            "status" : "DONE",
+                            "text" : "커머스 주문·재고 프로젝트 중심. 대용량 배치 처리 경험을 강조한 이력서."
+                          },
+                          "isDefault" : false,
+                          "registeredAt" : "2026-06-28T18:10:00"
+                        }, {
+                          "resumeId" : "01920000-0000-7000-8000-000000000103",
+                          "name" : "시스템 설계 이력서",
+                          "file" : {
+                            "originalName" : "든든한곰_이력서_시스템설계.pdf",
+                            "sizeBytes" : 229376,
+                            "contentType" : "application/pdf"
+                          },
+                          "aiSummary" : {
+                            "status" : "PROCESSING",
+                            "text" : null
+                          },
+                          "isDefault" : false,
+                          "registeredAt" : "2026-08-01T14:20:00"
+                        } ]
+                      },
+                      "error" : null
+                    }
+    post:
+      tags:
+      - v1
+      summary: 이력서 등록
+      description: "사용자가 식별할 이름과 PDF 파일을 이력서 보관함에 등록한다. PDF만 허용하고 파일 크기는 10MB 이하여야\
+        \ 한다. 등록한 이력서는 수정하지 않으며 내용 변경은 새 등록으로 처리한다. 등록 직후 AI 요약은 PROCESSING이고 text는\
+        \ null이다. AI 요약 완료를 기다리지 않고 응답하며, 클라이언트는 반환된 resumeId로 단건 조회 API를 폴링해 DONE\
+        \ 또는 FAILED 전이를 확인한다. 필수 파트 누락·빈 이름·PDF가 아닌 파일·빈 파일·10MB 초과는 400(E400), 인증\
+        \ 정보 없음은 401(E1102)로 응답한다."
+      operationId: createResume
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createResume-e400-file-size:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                createResume-e400-file-type:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                createResume-e400-missing-file:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "file" : "required part is missing"
+                        }
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createResume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-resumes-1278253126"
+              examples:
+                createResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "resumeId" : "01920000-0000-7000-8000-000000000103",
+                        "name" : "백엔드 지원용 이력서",
+                        "file" : {
+                          "originalName" : "backend-resume.pdf",
+                          "sizeBytes" : 20,
+                          "contentType" : "application/pdf"
+                        },
+                        "aiSummary" : {
+                          "status" : "PROCESSING",
+                          "text" : null
+                        },
+                        "isDefault" : false,
+                        "registeredAt" : "2026-08-01T15:30:00"
+                      },
+                      "error" : null
+                    }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - name
+              - file
+              properties:
+                name:
+                  type: string
+                  description: 사용자가 이력서를 구분할 이름 (공백 불가)
+                file:
+                  type: string
+                  format: binary
+                  description: "PDF 이력서 파일 (application/pdf, 1byte~10MB)"
+            encoding:
+              name:
+                contentType: text/plain; charset=utf-8
+              file:
+                contentType: application/pdf
   /v1/members/{memberId}/profile:
     get:
       tags:
@@ -1489,7 +1699,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 publicProfile-e400:
                   value: |-
@@ -1509,7 +1719,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-companies910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 publicProfile-e1006:
                   value: |-
@@ -1586,6 +1796,194 @@ paths:
                         } ]
                       },
                       "error" : null
+                    }
+  /v1/members/me/resumes/{resumeId}:
+    get:
+      tags:
+      - v1
+      summary: 보관 이력서 단건 조회
+      description: "인증 회원이 소유한 이력서 한 건을 조회한다. AI 요약이 PROCESSING이면 클라이언트는 이 API를 일정\
+        \ 간격으로 폴링하고 DONE 또는 FAILED가 되면 중단한다. SSE는 제공하지 않는다. 식별자 형식 오류는 400(E400),\
+        \ 존재하지 않거나 본인 소유가 아닌 이력서는 404(E1010), 인증 정보 없음은 401(E1102)로 응답한다."
+      operationId: resume
+      parameters:
+      - name: resumeId
+        in: path
+        description: 이력서 식별자 (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resume-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "resumeId" : "type mismatch"
+                        }
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-resumes-1278253126"
+              examples:
+                resume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "resumeId" : "01920000-0000-7000-8000-000000000103",
+                        "name" : "시스템 설계 이력서",
+                        "file" : {
+                          "originalName" : "든든한곰_이력서_시스템설계.pdf",
+                          "sizeBytes" : 229376,
+                          "contentType" : "application/pdf"
+                        },
+                        "aiSummary" : {
+                          "status" : "PROCESSING",
+                          "text" : null
+                        },
+                        "isDefault" : false,
+                        "registeredAt" : "2026-08-01T14:20:00"
+                      },
+                      "error" : null
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resume-e1010:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1010",
+                        "message" : "이력서를 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+    delete:
+      tags:
+      - v1
+      summary: 보관 이력서 삭제
+      description: "사용자 관점에서는 이력서를 삭제하지만 서버는 보관 목록에서 숨긴다. 숨긴 이력서는 이후 룸 생성·참가 신청에서\
+        \ 선택되지 않으며, 이미 제출된 룸의 기록에는 영향을 주지 않는다. 같은 요청을 반복해도 성공하는 멱등 계약이다. 식별자 형식 오류\
+        는 400(E400), 존재하지 않거나 본인 소유가 아닌 이력서는 404(E1010), 인증 정보 없음은 401(E1102)로 응답한\
+        다."
+      operationId: hideResume
+      parameters:
+      - name: resumeId
+        in: path
+        description: 이력서 식별자 (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                hideResume-e1010:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1010",
+                        "message" : "이력서를 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                hideResume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                hideResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                hideResume-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "resumeId" : "type mismatch"
+                        }
+                      }
                     }
   /v1/rooms/{roomId}/applications/{applicationId}/accept:
     post:
@@ -1953,6 +2351,76 @@ components:
         result:
           type: string
           description: 처리 결과 (SUCCESS)
+    v1-rooms-2062104186:
+      required:
+      - jobRoleId
+      - maxParticipants
+      - method
+      - minParticipants
+      - postingId
+      - resumeId
+      - resumePublic
+      - round
+      - title
+      type: object
+      properties:
+        resumePublic:
+          type: boolean
+          description: "이력서 원본 공개 여부 (룸 속성, 기본 false)"
+        method:
+          type: string
+          description: 진행 방식 (ONLINE | OFFLINE)
+        description:
+          type: string
+          description: "룸 설명 (선택, 최대 1000자)"
+          nullable: true
+        title:
+          type: string
+          description: "룸 제목 (필수, 최대 60자)"
+        type:
+          type: string
+          description: "면접 유형 (JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT, 선택\
+            )"
+          nullable: true
+        minParticipants:
+          type: number
+          description: "최소 인원 (방장 포함, 2 이상)"
+        maxParticipants:
+          type: number
+          description: "최대 인원 (8 이하, 최소 인원 이상)"
+        schedule:
+          required:
+          - date
+          - durationMinutes
+          - startTime
+          type: object
+          properties:
+            date:
+              type: string
+              description: "진행 날짜 (yyyy-MM-dd, 미래)"
+            durationMinutes:
+              type: number
+              description: 예상 소요 시간(분)
+            startTime:
+              type: string
+              description: 시작 시각 (HH:mm)
+        postingId:
+          type: number
+          description: "채용 공고 id (필수, /v1/companies/{companyId}/job-postings 또는 POST\
+            \ /v1/job-postings). 회사는 공고에서 파생"
+        sigunguId:
+          type: number
+          description: "지역 시군구 id (OFFLINE 일 때, /v1/regions)"
+          nullable: true
+        resumeId:
+          type: string
+          description: "방장이 제출할 보관 이력서 id (UUID, /v1/members/me/resumes)"
+        round:
+          type: string
+          description: 면접 회차 (FIRST | SECOND | THIRD | FINAL)
+        jobRoleId:
+          type: number
+          description: "직무 id (필수, /v1/job-roles)"
     v1-rooms-roomId-1097935140:
       required:
       - result
@@ -2674,76 +3142,6 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
-    v1-rooms-1620848945:
-      required:
-      - jobRoleId
-      - maxParticipants
-      - method
-      - minParticipants
-      - postingId
-      - resumeId
-      - resumePublic
-      - round
-      - title
-      type: object
-      properties:
-        resumePublic:
-          type: boolean
-          description: "이력서 원본 공개 여부 (룸 속성, 기본 false)"
-        method:
-          type: string
-          description: 진행 방식 (ONLINE | OFFLINE)
-        description:
-          type: string
-          description: "룸 설명 (선택, 최대 1000자)"
-          nullable: true
-        title:
-          type: string
-          description: "룸 제목 (필수, 최대 60자)"
-        type:
-          type: string
-          description: "면접 유형 (JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT, 선택\
-            )"
-          nullable: true
-        minParticipants:
-          type: number
-          description: "최소 인원 (방장 포함, 2 이상)"
-        maxParticipants:
-          type: number
-          description: "최대 인원 (8 이하, 최소 인원 이상)"
-        schedule:
-          required:
-          - date
-          - durationMinutes
-          - startTime
-          type: object
-          properties:
-            date:
-              type: string
-              description: "진행 날짜 (yyyy-MM-dd, 미래)"
-            durationMinutes:
-              type: number
-              description: 예상 소요 시간(분)
-            startTime:
-              type: string
-              description: 시작 시각 (HH:mm)
-        postingId:
-          type: number
-          description: "채용 공고 id (필수, /v1/companies/{companyId}/job-postings 또는 POST\
-            \ /v1/job-postings). 회사는 공고에서 파생"
-        sigunguId:
-          type: number
-          description: "지역 시군구 id (OFFLINE 일 때, /v1/regions)"
-          nullable: true
-        resumeId:
-          type: number
-          description: 방장이 제출할 보관 이력서 id (회원 보관함)
-        round:
-          type: string
-          description: 면접 회차 (FIRST | SECOND | THIRD | FINAL)
-        jobRoleId:
-          type: number
-          description: "직무 id (필수, /v1/job-roles)"
     v1-members-me-1954777904:
       required:
       - result
@@ -2994,6 +3392,63 @@ components:
           type: string
           description: "반려 사유 (선택, 최대 200자)"
           nullable: true
+    v1-members-me-resumes-1278253126:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - isDefault
+          - name
+          - registeredAt
+          - resumeId
+          type: object
+          properties:
+            isDefault:
+              type: boolean
+              description: 기본 이력서 여부
+            file:
+              required:
+              - contentType
+              - originalName
+              - sizeBytes
+              type: object
+              properties:
+                originalName:
+                  type: string
+                  description: 업로드 당시 원본 파일명
+                contentType:
+                  type: string
+                  description: 파일 미디어 타입 (application/pdf)
+                sizeBytes:
+                  type: number
+                  description: 파일 크기 (byte)
+            resumeId:
+              type: string
+              description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
+            aiSummary:
+              required:
+              - status
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: AI 요약 본문 (준비 중·실패면 null)
+                  nullable: true
+                status:
+                  type: string
+                  description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
+                    목록 조회를 폴링하고 DONE·FAILED에서 중단
+            registeredAt:
+              type: string
+              description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
+            name:
+              type: string
+              description: 사용자가 붙인 이력서 이름
     v1-job-postings1515935278:
       required:
       - result
@@ -3026,7 +3481,7 @@ components:
             postingName:
               type: string
               description: 공고명
-    v1-companies910352763:
+    v1-members-me-nickname910352763:
       required:
       - result
       type: object
@@ -3080,6 +3535,75 @@ components:
             postingName:
               type: string
               description: "공고명 후보 (og:title, 사용자가 확인·수정)"
+    v1-members-me-resumes258595286:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - maxCount
+          - resumes
+          type: object
+          properties:
+            resumes:
+              type: array
+              description: 숨김되지 않은 보관 이력서 목록 (기본 이력서 우선)
+              items:
+                required:
+                - isDefault
+                - name
+                - registeredAt
+                - resumeId
+                type: object
+                properties:
+                  isDefault:
+                    type: boolean
+                    description: 기본 이력서 여부
+                  file:
+                    required:
+                    - contentType
+                    - originalName
+                    - sizeBytes
+                    type: object
+                    properties:
+                      originalName:
+                        type: string
+                        description: 업로드 당시 원본 파일명
+                      contentType:
+                        type: string
+                        description: 파일 미디어 타입 (application/pdf)
+                      sizeBytes:
+                        type: number
+                        description: 파일 크기 (byte)
+                  resumeId:
+                    type: string
+                    description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
+                  aiSummary:
+                    required:
+                    - status
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                        description: AI 요약 본문 (준비 중·실패면 null)
+                        nullable: true
+                      status:
+                        type: string
+                        description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
+                          목록 조회를 폴링하고 DONE·FAILED에서 중단
+                  registeredAt:
+                    type: string
+                    description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
+                  name:
+                    type: string
+                    description: 사용자가 붙인 이력서 이름
+            maxCount:
+              type: number
+              description: 최대 보관 가능 개수 (10)
   securitySchemes:
     oauth2:
       type: oauth2
