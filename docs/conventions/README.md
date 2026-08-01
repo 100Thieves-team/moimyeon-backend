@@ -42,8 +42,10 @@
   권장 패턴이지 강제가 아니다.
   **Service 본문에 들어가는 것은 셋뿐이다 — 검증 도구 호출 + 외부 I/O + 쓰기 호출.** 판정은
   도구가 하고 예외도 도구가 던진다(Service 에 `requireBusiness` 를 쓰지 않는다). 도구 이름은
-  규칙을 말하지 호출자를 말하지 않는다(`validateActive` ○ / `validateForCreate` ✗).
-  트랜잭션 경계도 Service 가 아니라 쓰기 Implement 가 소유한다.
+  요구사항을 자연어로 풀어낸 뒤 그 역할에서 가져오고, 접미사 표는 보조 사전으로만 쓴다.
+  기술 메커니즘보다 개념적인 도구가 드러나야 한다(`MemberRegistrar.register` ○ /
+  `MemberRegistrationCommitter.commit` ✗). 트랜잭션은 접미사가 아니라 실제 커밋 단위를 소유한
+  메서드에 붙인다.
   → [layers.md](layers.md)
 - **에러**: 도메인 규칙 위반은 `CoreException(CoreErrorType)`, 요청 형태·인증 오류는
   `CoreApiException(CoreApiErrorType)`. 에러 코드(`ErrorCode`)는 하나의 체계를 공유하고 테스트로
