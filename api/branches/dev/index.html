@@ -450,7 +450,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_introduce">Introduce</a></li>
 <li><a href="#_error_responses_공통_에러_규약">Error Responses (공통 에러 규약)</a>
 <ul class="sectlevel2">
-<li><a href="#_검증_에러_응답_예시_e400_필드별_사유_포함">검증 에러 응답 예시 (E400, 필드별 사유 포함)</a></li>
+<li><a href="#_검증_에러_응답_예시_e400_요청_dto_값_규칙_위반">검증 에러 응답 예시 (E400, 요청 DTO 값 규칙 위반)</a></li>
 <li><a href="#_인증_에러_응답_예시_e1102_무효만료_토큰">인증 에러 응답 예시 (E1102, 무효·만료 토큰)</a></li>
 </ul>
 </li>
@@ -711,7 +711,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><code>error.message</code> : 사용자에게 그대로 표시 가능한 한국어 메시지</p>
 </li>
 <li>
-<p><code>error.data</code> : 추가 정보. <code>E400</code> 검증 오류에서는 필드/파라미터별 사유 맵(<code>{"bio": "size must be between 0 and 500"}</code>), 그 외에는 보통 <code>null</code></p>
+<p><code>error.data</code> : 추가 정보. <code>E400</code> 중 파라미터 누락·타입 불일치는 파라미터별 사유 맵(<code>{"query": "required parameter is missing"}</code>), 그 외에는 <code>null</code></p>
 </li>
 </ul>
 </div>
@@ -738,7 +738,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형식 오류. Bean Validation 실패·필수 파라미터 누락·타입 불일치·본문 해석 실패(깨진 JSON 등). <code>error.data</code> 에 필드별 사유</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형식 오류. 요청 DTO 값 규칙 위반·필수 파라미터 누락·타입 불일치·본문 해석 실패(깨진 JSON 등). 파라미터 누락·타입 불일치일 때만 <code>error.data</code> 에 사유 맵이 실린다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">500</p></td>
@@ -752,9 +752,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 FE 는 <a href="#_refresh_access_token">재발급 API</a> 호출 후 재시도한다. (권한 부족 시 <code>403(E1103)</code> 은 인가 정책 확정 후 적용 예정)</p>
 </div>
 <div class="sect2">
-<h3 id="_검증_에러_응답_예시_e400_필드별_사유_포함"><a class="link" href="#_검증_에러_응답_예시_e400_필드별_사유_포함">검증 에러 응답 예시 (E400, 필드별 사유 포함)</a></h3>
-<div class="paragraph">
-<p>Unresolved directive in index.adoc - include::build/generated-snippets/createProfile-e400/http-response.adoc[]</p>
+<h3 id="_검증_에러_응답_예시_e400_요청_dto_값_규칙_위반"><a class="link" href="#_검증_에러_응답_예시_e400_요청_dto_값_규칙_위반">검증 에러 응답 예시 (E400, 요청 DTO 값 규칙 위반)</a></h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Content-Length: 162
+
+{
+  "result" : "ERROR",
+  "data" : null,
+  "error" : {
+    "code" : "E400",
+    "message" : "요청 형식이 올바르지 않습니다.",
+    "data" : null
+  }
+}</code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -848,8 +862,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-07-31",
-    "datetime" : "2026-07-31T18:49:44.689052824",
+    "date" : "2026-08-01",
+    "datetime" : "2026-08-01T09:16:50.574669705",
     "items" : [ {
       "key" : "1"
     }, {
@@ -962,8 +976,8 @@ Content-Length: 237
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-07-31",
-    "datetime" : "2026-07-31T18:49:44.914339742",
+    "date" : "2026-08-01",
+    "datetime" : "2026-08-01T09:16:50.754239601",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1122,7 +1136,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 31 Jul 2026 19:19:43 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sat, 1 Aug 2026 09:46:49 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1328,7 +1342,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "c6a1d3d2-1bb6-4df7-aedb-2c67ce593ddf",
+      "termsId" : "df79be47-a35f-4eb3-a301-632606f4ee80",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1336,7 +1350,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "149557e9-21d1-4f12-b208-67621cb7bf23",
+      "termsId" : "6b84b464-8089-455a-9212-01bc1ebf861a",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1441,12 +1455,12 @@ Content-Length: 454
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "ddd8a454-cd5f-49b1-91af-e90cdc4de58a",
+    "memberId" : "54aba03e-715f-4578-9880-5db59043b360",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "ddd8a454-cd5f-49b1-91af-e90cdc4de58a",
+      "memberId" : "54aba03e-715f-4578-9880-5db59043b360",
       "interestJobRoleIds" : [ ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2055,7 +2069,7 @@ Content-Length: 304
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>query</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">검색어 (회사명 부분 일치, 1~50자)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">검색어 (회사명 부분 일치, 공백 불가, 1~50자)</p></td>
 </tr>
 </tbody>
 </table>
@@ -2139,7 +2153,12 @@ Content-Length: 145
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">검색어(query) 누락 또는 1~50자 범위 위반. <code>error.data</code> 에 파라미터별 사유</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">검색어(query) 누락. <code>error.data</code> 에 파라미터별 사유</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">검색어가 공백이거나 1~50자 범위 위반. <code>error.data</code> 는 <code>null</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -2227,7 +2246,7 @@ Content-Length: 443
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "6c6a76b3-1eea-423a-9f5c-e6f7acb520f8",
+    "memberId" : "884ad7f2-8a66-4370-bbe4-a3a738e3596c",
     "interestJobRoleIds" : [ 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -2366,7 +2385,7 @@ Content-Length: 443
 <h4 id="_curl_request_14"><a class="link" href="#_curl_request_14">Curl Request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/b4b3ef48-478a-4ac1-8e15-233e2a80489a/profile' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/members/a94d37d8-8981-4401-a2f2-76eee6345152/profile' -i -X GET</code></pre>
 </div>
 </div>
 </div>
@@ -2403,7 +2422,7 @@ Content-Length: 1159
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "b4b3ef48-478a-4ac1-8e15-233e2a80489a",
+    "memberId" : "a94d37d8-8981-4401-a2f2-76eee6345152",
     "nickname" : "집요한 수달 07",
     "jobTitle" : "프론트엔드 개발",
     "bio" : "결제 도메인 3년 차 프론트엔드 개발자예요. 실전처럼 압박 질문을 주고받는 걸 좋아해요.",
@@ -2999,7 +3018,7 @@ Content-Length: 348
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">공고 링크(url) 누락 또는 형식 오류(최대 2000자). <code>error.data</code> 에 필드별 사유</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공고 링크(url) 누락 또는 형식 오류(최대 2000자). <code>error.data</code> 는 <code>null</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3148,7 +3167,7 @@ Content-Length: 268
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">companyId·url·postingName 누락 또는 형식 오류. <code>error.data</code> 에 필드별 사유</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">companyId·url·postingName 누락 또는 형식 오류. <code>error.data</code> 는 <code>null</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3353,7 +3372,7 @@ Content-Length: 145
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형태 오류 (제목 누락·60자 초과, 인원 범위 위반, 깨진 JSON 등). <code>error.data</code> 에 필드별 사유</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">요청 형태 오류 (제목 누락·60자 초과, 인원 범위 위반, 깨진 JSON 등). <code>error.data</code> 는 <code>null</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -4537,7 +4556,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-07-31 18:48:43 UTC
+Last updated 2026-08-01 09:15:47 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
