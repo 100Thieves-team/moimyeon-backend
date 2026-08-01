@@ -30,7 +30,7 @@ This is the Core API documentation.
 
 * `error.code` : 분기 기준이 되는 에러 코드
 * `error.message` : 사용자에게 그대로 표시 가능한 한국어 메시지
-* `error.data` : 추가 정보. `E400` 검증 오류에서는 필드/파라미터별 사유 맵(`{"bio": "size must be between 0 and 500"}`), 그 외에는 보통 `null`
+* `error.data` : 추가 정보. `E400` 중 파라미터 누락·타입 불일치는 파라미터별 사유 맵(`{"query": "required parameter is missing"}`), 그 외에는 `null`
 
 각 API 가 응답하는 예외 케이스는 해당 API 섹션의 Error Responses 표에 정의한다(OpenAPI 스펙의 4xx 응답과 동일).
 
@@ -39,15 +39,15 @@ This is the Core API documentation.
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 요청 형식 오류. Bean Validation 실패·필수 파라미터 누락·타입 불일치·본문 해석 실패(깨진 JSON 등). `error.data` 에 필드별 사유
+| 400 | E400 | 요청 형식 오류. 요청 DTO 값 규칙 위반·필수 파라미터 누락·타입 불일치·본문 해석 실패(깨진 JSON 등). 파라미터 누락·타입 불일치일 때만 `error.data` 에 사유 맵이 실린다
 | 500 | E500 | 서버 내부 오류
 |===
 
 인증이 필요한 API 는 액세스 토큰이 없거나 만료·무효이면 `401(E1102)` 로 응답한다.
 FE 는 <<_refresh_access_token,재발급 API>> 호출 후 재시도한다. (권한 부족 시 `403(E1103)` 은 인가 정책 확정 후 적용 예정)
 
-=== 검증 에러 응답 예시 (E400, 필드별 사유 포함)
-include::{snippets}/createProfile-e400/http-response.adoc[]
+=== 검증 에러 응답 예시 (E400, 요청 DTO 값 규칙 위반)
+include::{snippets}/updateProfile-e400/http-response.adoc[]
 
 === 인증 에러 응답 예시 (E1102, 무효·만료 토큰)
 include::{snippets}/memberMe-e1102/http-response.adoc[]
