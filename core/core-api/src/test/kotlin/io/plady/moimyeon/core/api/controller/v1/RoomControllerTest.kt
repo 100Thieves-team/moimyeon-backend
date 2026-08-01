@@ -57,7 +57,7 @@ class RoomControllerTest : RestDocsTest() {
           },
           "title": "달빛페이 프론트 1차, 실전처럼 봐요",
           "description": "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-          "resumeId": 90001,
+          "resumeId": "01920000-0000-7000-8000-000000000101",
           "resumePublic": true
         }
         """.trimIndent()
@@ -136,7 +136,8 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
                         fieldWithPath("title").type(JsonFieldType.STRING).description("룸 제목 (필수, 최대 60자)"),
                         fieldWithPath("description").type(JsonFieldType.STRING).optional().description("룸 설명 (선택, 최대 1000자)"),
-                        fieldWithPath("resumeId").type(JsonFieldType.NUMBER).description("방장이 제출할 보관 이력서 id (회원 보관함)"),
+                        fieldWithPath("resumeId").type(JsonFieldType.STRING)
+                            .description("방장이 제출할 보관 이력서 id (UUID, /v1/members/me/resumes)"),
                         fieldWithPath("resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성, 기본 false)"),
                     ),
                     responseFields(
