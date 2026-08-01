@@ -35,8 +35,9 @@ data class CreateRoomRequest(
 ) {
     // 목킹 단계라 변환할 개념 객체가 아직 없다. 도메인이 붙으면 toXxx() 안으로 옮긴다.
     fun validate() {
-        if (minParticipants < MIN_PARTICIPANTS) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
-        if (maxParticipants > MAX_PARTICIPANTS) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        if (minParticipants !in MIN_PARTICIPANTS..MAX_PARTICIPANTS) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        if (maxParticipants !in MIN_PARTICIPANTS..MAX_PARTICIPANTS) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        if (minParticipants > maxParticipants) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
         if (title.isBlank() || title.length > TITLE_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
         if (description != null && description.length > DESCRIPTION_MAX_LENGTH) {
             throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)

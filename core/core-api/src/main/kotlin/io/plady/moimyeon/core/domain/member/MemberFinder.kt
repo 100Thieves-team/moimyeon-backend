@@ -16,6 +16,10 @@ class MemberFinder(
         return MemberMapper.toDomain(requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND))
     }
 
+    fun existsById(memberId: UUID): Boolean {
+        return memberRepository.existsByIdAndDeletedAtIsNull(memberId)
+    }
+
     fun existsBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
         return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(
             provider,
@@ -25,12 +29,5 @@ class MemberFinder(
 
     fun isNicknameAvailable(nickname: Nickname): Boolean {
         return !memberRepository.existsByNickname(nickname.value)
-    }
-
-    fun existsWithdrawnBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
-        return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
-            provider,
-            providerId,
-        )
     }
 }

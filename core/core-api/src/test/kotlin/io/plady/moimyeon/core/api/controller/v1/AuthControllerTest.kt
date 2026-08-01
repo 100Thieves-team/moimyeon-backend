@@ -50,7 +50,7 @@ class AuthControllerTest : RestDocsTest() {
     @Test
     fun authRefresh() {
         val memberId = UUID.randomUUID()
-        every { sessionService.refreshAccess("refresh-credential") } returns memberId
+        every { sessionService.authenticate("refresh-credential") } returns memberId
         every { jwtTokenProvider.issue(memberId) } returns "issued-access-token"
         every { authCookieFactory.createAccess("issued-access-token") } returns
             ResponseCookie.from(AuthCookieFactory.ACCESS_TOKEN, "issued-access-token")

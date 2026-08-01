@@ -15,29 +15,31 @@
 
 | 대상 | 규칙 | 예시 |
 | --- | --- | --- |
-| 요청 | `[동사][대상]Request` | `CreateProfileRequest` |
-| 응답 | `[대상]Response` / `[대상][용도]Response` | `ProfileResponse`, `CompanySearchResponse` |
+| 요청 | `[동사][대상]Request` | `CreateOrderRequest` |
+| 응답 | `[대상]Response` / `[대상][용도]Response` | `OrderResponse`, `ProductSearchResponse` |
 
 - DTO 는 파일당 하나. 단, 응답 구조상 강결합된 하위 DTO 는 같은 파일에 둘 수 있다
-  (`RegionsResponse` + `SidoResponse` + `SigunguResponse`).
+  (`OrderResponse` + `OrderLineResponse`).
 
 ### 변환 방향
 
-- **요청 → 도메인**: 요청 DTO 의 `toXxx()` 메서드. **변환 결과(행위 입력 값)는 식별자를 담지
-  않는다** — 인증 주체 id 는 컨트롤러가 Service/Facade 호출 인자로 따로 넘긴다.
+- **요청 → 도메인**: 요청 DTO 의 `toXxx()` 메서드. **변환 결과(행위 입력 값)는 인증 주체
+  식별자를 담지 않는다** — `currentMember.id`는 컨트롤러가 Service/Facade 호출 인자로 따로
+  넘긴다. 요청으로 선택한 `productIds` 같은 다른 개념의 참조 식별자는 행위 입력에 포함할 수 있다.
   ```kotlin
-  data class UpdateProfileRequest(...) {
-      fun toContent(): ProfileContent = ProfileContent(...)
+  data class CreateOrderRequest(val productIds: List<Long>, ...) {
+      fun toContent(): OrderContent = OrderContent(productIds = productIds, ...)
   }
-  // 컨트롤러: profileFacade.update(currentMember.id, request.toContent())
+  // 컨트롤러: orderService.place(currentMember.id, request.toContent())
+  // 단일 Service 호출이면 컨트롤러가 직접 부른다. Facade 는 여러 Service 결과를 조합할 때만.
   ```
 - **도메인 → 응답**: 응답 DTO 의 `companion object` 정적 팩토리 `from(...)`/`of(...)`.
   파라미터는 **도메인 객체 또는 풀어낸 필드**만 받는다. **Request 타입을 받지 않는다**
   (응답이 요청 표현에 의존하면 안 됨).
   ```kotlin
-  data class ProfileResponse(...) {
+  data class OrderResponse(...) {
       companion object {
-          fun from(profile: MemberProfile, interestCompanies: List<Company>): ProfileResponse { ... }
+          fun from(order: Order, products: List<Product>): OrderResponse { ... }
       }
   }
   ```
@@ -54,22 +56,22 @@
 
 | 무엇 | 어디서 | 실패 응답 | 예 |
 | --- | --- | --- | --- |
-| **값 하나의 형식·범위** (API 스펙) | 요청 DTO 의 `toXxx()` / 컨트롤러 파라미터 | 400 `E400` (`CoreApiException`) | `bio` 최대 500자, `query` 1~50자 |
-| **값의 도메인 규칙** | 값 객체 생성 시점 | 도메인 코드 (400 `E1005` 등) | `Nickname` 형식·길이·금칙어 |
-| **개념 객체의 성립 조건** | 개념 객체 `init { require(...) }` | 도메인 코드 | 필드 간 정합, 참조 관계 불변식 (`Member` 의 소셜 계정 최소 1개·중복 불가) |
-| **DB 를 봐야 하는 규칙** | 그 데이터를 다루는 쓰기 Implement 안 (다른 개념의 판정이면 그 개념의 `Validator`) | 도메인 코드 (409 등) | 닉네임 중복은 `MemberManager` 안, 카탈로그 참조는 `CatalogRefValidator` |
+| **값 하나의 형식·범위** (API 스펙) | 요청 DTO 의 `toXxx()` / 컨트롤러 파라미터 | 400 `E400` (`CoreApiException`) | 메모 최대 500자, `query` 1~50자 |
+| **값의 도메인 규칙** | 값 객체 생성 시점 | 도메인 코드 (400 `E1005` 등) | 주문번호 형식, 금칙어 |
+| **개념 객체의 성립 조건** | 개념 객체 `init { require(...) }` | 도메인 코드 | 필드 간 정합, 참조 관계 불변식 (주문에 주문라인 최소 1개, 최소·최대 수량의 대소) |
+| **DB 를 봐야 하는 규칙** | 그 데이터를 다루는 쓰기 Implement 안 (다른 개념의 판정이면 그 개념의 `Validator`) | 도메인 코드 (409 등) | 값 중복은 그 쓰기 Manager 안, 다른 개념의 참조 유효성은 그 개념의 `Validator` |
 | 본문 해석·타입 불일치·파라미터 누락 | 프레임워크 → `ApiControllerAdvice` | 400 `E400` | 깨진 JSON, UUID 아닌 경로 변수 |
 
 ```kotlin
-data class CreateProfileRequest(
-    val interestJobRoleIds: List<Long> = emptyList(),
-    val bio: String? = null,
+data class CreateOrderRequest(
+    val productIds: List<Long> = emptyList(),
+    val memo: String? = null,
     ...
 ) {
-    fun toContent(): ProfileContent {
-        if (bio != null && bio.length > BIO_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+    fun toContent(): OrderContent {
+        if (memo != null && memo.length > MEMO_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
 
-        return ProfileContent(..., interestCompanyIds = emptyList())
+        return OrderContent(...)
     }
 }
 ```
@@ -108,7 +110,7 @@ class ApiResponse<T> private constructor(
 ## Enum
 
 - 도메인 전역 공유 Enum 은 `core:core-enum` (`io.plady.moimyeon.core.enums`)에 둔다
-  (예: `MemberStatus`).
+  (예: 여러 모듈이 함께 쓰는 상태 enum).
 - 제한된 문자열 값은 항상 Enum 으로 표현하고 `@Enumerated(EnumType.STRING)` 으로 저장한다.
 
 ## 모킹 API 패턴

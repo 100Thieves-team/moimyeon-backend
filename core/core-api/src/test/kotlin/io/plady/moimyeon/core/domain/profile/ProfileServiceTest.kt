@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
+import io.plady.moimyeon.core.domain.company.CompanyValidator
 import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -15,9 +16,10 @@ import java.util.UUID
 
 class ProfileServiceTest {
     private val catalogRefValidator = mockk<CatalogRefValidator>()
+    private val companyValidator = mockk<CompanyValidator>()
     private val profileFinder = mockk<ProfileFinder>()
     private val profileManager = mockk<ProfileManager>()
-    private val profileService = ProfileService(catalogRefValidator, profileFinder, profileManager)
+    private val profileService = ProfileService(catalogRefValidator, companyValidator, profileFinder, profileManager)
 
     private val memberId = UUID.randomUUID()
     private val content = ProfileContent(
@@ -31,7 +33,7 @@ class ProfileServiceTest {
     private fun givenValidCatalogRefs() {
         every { catalogRefValidator.validateJobRoles(listOf(1L)) } just Runs
         every { catalogRefValidator.validateSigungu(2L) } just Runs
-        every { catalogRefValidator.validateCompanies(listOf(1L)) } just Runs
+        every { companyValidator.validateSelectable(listOf(1L)) } just Runs
     }
 
     private fun assertUpdateFails(errorType: CoreErrorType) {
@@ -65,10 +67,10 @@ class ProfileServiceTest {
     }
 
     @Test
-    fun `존재하지 않는 회사를 담으면 E1303 을 던진다`() {
+    fun `선택할 수 없는 회사를 담으면 E1303 을 던진다`() {
         every { catalogRefValidator.validateJobRoles(listOf(1L)) } just Runs
         every { catalogRefValidator.validateSigungu(2L) } just Runs
-        every { catalogRefValidator.validateCompanies(listOf(1L)) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
+        every { companyValidator.validateSelectable(listOf(1L)) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
 
         assertUpdateFails(CoreErrorType.COMPANY_NOT_FOUND)
     }

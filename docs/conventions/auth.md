@@ -16,11 +16,11 @@
 ## 컨트롤러에서 인증 주체 받기
 
 ```kotlin
-@PostMapping("/v1/members/me/profile")
-fun createProfile(
+@PostMapping("/v1/orders")
+fun createOrder(
     @LoginMember currentMember: CurrentMember,
-    @RequestBody request: CreateProfileRequest,
-): ApiResponse<ProfileResponse>
+    @RequestBody request: CreateOrderRequest,
+): ApiResponse<OrderResponse>
 ```
 
 - `@LoginMember CurrentMember` 로 주입받는다. `CurrentMember` 는 api 소유의 단순 값
@@ -48,6 +48,15 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
   직접 응답을 쓴다. 에러 코드는 E1102(401)/E1103(403) ([errors.md](errors.md)).
 - 세션 저장(리프레시 토큰) 로직은 `core.domain.session` 소유다. security 는 발급을 요청할 뿐
   저장 방식을 모른다.
+
+## 세션 인증 규칙
+
+- 리프레시 자격 증명으로 활성 세션을 찾고, 그 세션이 가리키는 회원이 현재 존재해야 인증된다.
+- 탈퇴 회원은 `MemberFinder`의 활성 회원 조회 기준에서 존재하지 않는 회원이다. 활성 세션 행이
+  남아 있어도 인증하지 않는다.
+- 세션 없음·만료·폐기와 탈퇴 회원 참조는 모두 `INVALID_SESSION`(401 E1104)으로 응답한다.
+  내부의 회원 존재 여부를 `MEMBER_NOT_FOUND` 등으로 구분해 외부에 노출하지 않는다.
+- logout은 같은 자격 증명으로 반복 호출해도 최초 폐기 시각을 유지하는 멱등 행위다.
 
 ## 인가 정책
 

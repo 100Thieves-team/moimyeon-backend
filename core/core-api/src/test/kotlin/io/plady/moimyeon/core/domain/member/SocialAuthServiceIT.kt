@@ -34,7 +34,7 @@ class SocialAuthServiceIT(
     }
 
     @Test
-    fun `최초 인증은 회원을 provisioning 하고, 같은 신원 재인증은 같은 memberId 를 반환하며 새로 가입하지 않는다`() {
+    fun `최초 인증은 회원을 가입시키고, 같은 신원 재인증은 같은 memberId 를 반환하며 새로 가입하지 않는다`() {
         // given
         val providerId = "google-sub-1"
 

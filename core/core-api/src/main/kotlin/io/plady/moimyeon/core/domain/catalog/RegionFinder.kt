@@ -11,7 +11,7 @@ class RegionFinder(
     private val sigunguRepository: SigunguRepository,
 ) {
     @Transactional(readOnly = true)
-    fun findActiveSidos(): List<Sido> {
+    fun getRegions(): List<Sido> {
         val sigungusBySido = sigunguRepository.findByDeletedAtIsNullOrderBySidoIdAscSortOrderAsc()
             .groupBy { it.sidoId }
         return sidoRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { sido ->

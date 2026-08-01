@@ -9,7 +9,7 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 ## 파일 구성
 
 - **도메인 객체는 파일당 1클래스.** 한 코틀린 파일에 도메인 클래스 두 개를 넣지 않는다
-  (`JobGroup.kt` 와 `JobRole.kt` 는 별개 파일). ktlint 규칙상 파일명은 클래스명과 일치.
+  (`Order.kt` 와 `OrderLine.kt` 는 별개 파일). ktlint 규칙상 파일명은 클래스명과 일치.
 - **DTO 는 예외**: 응답 구조상 강결합된 하위 DTO 는 같은 파일에 둘 수 있다 ([api-design.md](api-design.md)).
 - Mapper 처럼 상태 없는 변환기는 `object` 로 선언한다(빈으로 만들지 않는다).
 
@@ -18,11 +18,11 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 - 도메인 모델·DTO 는 `data class`, 불변(`val`) 우선. 수정은 `copy` 또는 의도를 드러내는 메서드로.
 - 도메인 객체의 필드는 nullable 하지 않는 것을 지향한다 — 업무적으로 없을 수 있는 값만 `?`
   ([concepts.md](concepts.md)의 규칙 참고).
-- 값에 규칙이 있으면 원시 타입 대신 **VO** 로 감싼다(`Nickname`, `Email`). 규칙은 `init` 에서
+- 값에 규칙이 있으면 원시 타입 대신 **VO** 로 감싼다(`OrderNumber`, `Email`). 규칙은 `init` 에서
   `requireBusiness` 로 보증한다 — 잘못된 값은 생성 자체가 불가능하다.
 - 생성자 파라미터가 많으면 **named parameter** 로 생성한다. 같은 타입 필드 혼동 방지.
-- 도메인 객체 생성은 의도를 드러내는 정적 팩토리(`Member.register(...)`),
-  기술/표현 객체는 `from`/`of`(`ProfileResponse.from(...)`).
+- 도메인 객체 생성은 의도를 드러내는 정적 팩토리(`Order.place(...)`),
+  기술/표현 객체는 `from`/`of`(`OrderResponse.from(...)`).
 
 ## 의존성 주입
 
@@ -32,8 +32,9 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 ## 검증·예외 관용구
 
 - 정상 흐름에서 도달 가능한 규칙 위반: `requireBusiness(cond, errorType)` / `requireFound(value, errorType)`.
-  **호출 위치는 그 규칙을 판정한 Implement 안이다** — Service 본문에는 쓰지 않는다
-  ([layers.md](layers.md)의 Service 절).
+  **호출 위치는 그 규칙을 판정한 곳이다** — 값 형식·성립 조건이면 VO/개념 객체의 `init`,
+  DB 를 봐야 하는 규칙이면 그 데이터를 다루는 Implement 안. Service 본문에는 쓰지 않는다
+  ([layers.md](layers.md)의 Service 절, [errors.md](errors.md)의 호출 위치 절).
 - 도달하면 버그인 불변식: 표준 `require`/`check` (500 fail-fast). 구분 기준은 [errors.md](errors.md).
 - null 처리는 persistence 경계까지만. `?.let` 체인으로 null 을 흘려보내는 코드는 경계 위반 신호다
   ([layers.md](layers.md)).
@@ -61,7 +62,7 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 
 ## 기타
 
-- 메서드명은 동사로 시작(`createProfile`, `suggestNickname`). Boolean 판정은 `is*`/`exists*`/`has*`.
+- 메서드명은 동사로 시작(`updateProfile`, `suggestNickname`). Boolean 판정은 `is*`/`exists*`/`has*`.
 - 매직 넘버·매직 문자열은 상수화한다(`const val`, `companion object`).
 - 시간은 호출부에서 주입받거나 고정 값으로 다룬다. 도메인 로직 안에서 `LocalDateTime.now()` 를
   직접 부르는 것을 지양한다(테스트 재현성).

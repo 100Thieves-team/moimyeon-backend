@@ -49,7 +49,7 @@ Repository / Entity (storage.db.core)   ── Spring Data JPA
 - 단일 Service 호출은 컨트롤러가 직접 한다. **여러 Service 의 결과를 조합해야 하는 응답은
   컨트롤러에서 조합하지 않고 Facade 를 둔다.**
 - 컨트롤러는 **애그리거트(개념) 단위**로 묶는다. 엔드포인트가 아니라 개념이 기준이다.
-  예: 내 상태·닉네임(회원 속성)은 `MemberController`, 소개 작성/수정은 `ProfileController`.
+  예: 계정 속성 변경은 `AccountController`, 주문 생성/취소는 `OrderController`.
 - 인증 주입은 `@LoginMember currentMember: CurrentMember` ([auth.md](auth.md)).
 - **Bean Validation 을 쓰지 않는다.** 요청 바디는 `@RequestBody` 로만 받고, 값 규칙은 요청 DTO 의
   `toXxx()` 안에서 확정한다. 쿼리/경로 파라미터 제약은 핸들러 본문에서 검증한다
@@ -62,14 +62,14 @@ Repository / Entity (storage.db.core)   ── Spring Data JPA
 
 ```kotlin
 @Component
-class ProfileFacade(
-    private val profileService: ProfileService,
-    private val catalogService: CatalogService,
+class OrderFacade(
+    private val orderService: OrderService,
+    private val productService: ProductService,
 ) {
-    fun update(memberId: UUID, content: ProfileContent): ProfileResponse {
-        profileService.update(memberId, content) // 쓰기는 식별자만 반환
-        val updated = profileService.getProfile(memberId) // 응답 조립은 재조회로
-        return ProfileResponse.from(updated, catalogService.getCompanies(updated.interestCompanyIds))
+    fun place(userId: UUID, content: OrderContent): OrderResponse {
+        val orderId = orderService.place(userId, content) // 쓰기는 식별자만 반환
+        val order = orderService.getOrder(orderId) // 응답 조립은 재조회로
+        return OrderResponse.from(order, productService.getProducts(order.productIds))
     }
 }
 ```
@@ -87,10 +87,14 @@ Service 는 개념의 **흐름의 골격**이다. 본문에 들어가는 것은 
 > **검증 도구 호출 + 외부 I/O + 쓰기 호출**
 
 ```kotlin
-// ProfileService.create
-validateCatalogRefs(content)                     // 다른 개념(catalog)의 판정 — 트랜잭션 밖
-return profileManager.append(memberId, content)  // 쓰기 — 약관 동의·프로필 중복은 append 가 자기 경계 안에서
+// OrderService.place
+productRefValidator.validateProducts(content.productIds)  // 다른 개념(product)의 판정 — 트랜잭션 밖
+content.couponId?.let { couponValidator.validateUsable(it) }
+return orderManager.place(userId, content)                // 쓰기 — 재고 확인은 place 가 자기 경계 안에서
 ```
+
+이 셋은 **쓰기 흐름**의 이야기다. 조회 요청을 받는 경로는 흐름이랄 것이 없으므로 Service 가
+`Finder` 로 한 줄 위임하고 끝낸다 — 그 한 줄에 판정이나 분기가 붙기 시작하면 그때 아래로 내린다.
 
 **Service 는 판정하지 않는다.**
 
@@ -109,9 +113,9 @@ return profileManager.append(memberId, content)  // 쓰기 — 약관 동의·�
 
 ```kotlin
 @Transactional
-fun changeNickname(memberId: UUID, nickname: Nickname) {
-    val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), MEMBER_NOT_FOUND)
-    requireBusiness(!memberRepository.existsByNicknameAndIdNot(nickname.value, memberId), NICKNAME_DUPLICATED)
+fun changeLoginId(accountId: UUID, loginId: LoginId) {
+    val entity = requireFound(accountRepository.findByIdAndDeletedAtIsNull(accountId), ACCOUNT_NOT_FOUND)
+    requireBusiness(!accountRepository.existsByLoginIdAndIdNot(loginId.value, accountId), LOGIN_ID_DUPLICATED)
     ...
 }
 ```
@@ -119,7 +123,7 @@ fun changeNickname(memberId: UUID, nickname: Nickname) {
 특히 **"이미 있는가" 류는 쓰기 경계 안에서 확정되어야 정확하다.** Service 에서 미리 확인하면
 판정이 두 곳으로 갈리고, 커밋 밖의 확인이라 어차피 확정이 아니다 — 최종 방어선은 유니크 제약이고
 그 충돌을 도메인 에러로 번역하는 것도 그 쓰기 Implement 의 일이다
-(`ProfileManager.append` 가 `uk_member_profile_member` 충돌을 `PROFILE_ALREADY_EXISTS` 로 번역한다).
+(위 예에서 `uk_account_login_id` 충돌을 `LOGIN_ID_DUPLICATED` 로 번역하는 것도 이 메서드 안이다).
 
 ### 별도 `Validator` 는 다른 개념의 판정을 물어야 할 때만 만든다
 
@@ -128,8 +132,8 @@ fun changeNickname(memberId: UUID, nickname: Nickname) {
 
 `Validator` 는 **판정 자체가 개념 경계를 넘을 때** 생긴다. 두 방향이 있다.
 
-- **자기 개념의 판정을 밖에 노출** — `CatalogRefValidator`. catalog 가 자기 참조 데이터의 유효성을
-  판정해 profile·room·job-posting 이 쓴다.
+- **자기 개념의 판정을 밖에 노출** — `ProductRefValidator`. product 가 자기 참조 데이터의 유효성을
+  판정해 order·cart·review 가 쓴다.
 - **자기 개념의 판정인데 다른 개념 데이터가 필요** — `ReviewPolicyValidator`. "이 리뷰를 쓸 자격이
   있는가"는 review 의 규칙이지만 order 데이터를 조회해야 판정된다.
 
@@ -137,24 +141,24 @@ fun changeNickname(memberId: UUID, nickname: Nickname) {
 (`ReviewPolicyValidator.validateNew` 가 `ReviewKey` 를 만들어 돌려준다).
 
 ```kotlin
-// catalog 개념이 자기 참조 데이터(직무·지역·회사)의 유효성을 판정해 밖에 노출한다.
-// profile 이 쓰고, room·job-posting 도 같은 판정을 쓴다.
+// product 개념이 자기 참조 데이터(상품·옵션·브랜드)의 유효성을 판정해 밖에 노출한다.
+// order 가 쓰고, cart·review 도 같은 판정을 쓴다.
 @Component
-class CatalogRefValidator(
-    private val jobRoleRepository: JobRoleRepository,
-    private val sigunguRepository: SigunguRepository,
-    private val companyRepository: CompanyRepository,
+class ProductRefValidator(
+    private val productRepository: ProductRepository,
+    private val optionRepository: OptionRepository,
+    private val brandRepository: BrandRepository,
 ) {
-    fun validateJobRoles(jobRoleIds: Collection<Long>) { ... }
-    fun validateSigungu(sigunguId: Long) { ... }
-    fun validateCompanies(companyIds: Collection<Long>) { ... }
+    fun validateProducts(productIds: Collection<Long>) { ... }
+    fun validateOption(optionId: Long) { ... }
+    fun validateBrand(brandId: Long) { ... }
 }
 ```
 
 - **도구 이름은 규칙을 말한다. 호출자를 말하지 않는다.** `validateForCreate` 처럼 호출하는 Service
   메서드 이름이 박히면 그 호출자 전용이 되어 재사용이 사라진다 — Service 본문을 옮겨놓은 것일 뿐이다.
 - **검증 항목은 쪼개서 노출한다.** 여러 규칙을 한 메서드로 묶으면 그 조합이 곧 호출자의 모양이 된다.
-  프로필은 세 가지를 다 쓰지만 다른 개념은 하나만 쓸 수 있다.
+  어떤 개념은 셋을 다 쓰지만 다른 개념은 하나만 쓸 수 있다.
 - 조회만 하므로 **쓰기 트랜잭션 밖(Service)에서 호출**한다. 트랜잭션 안에 넣으면 커밋 단위가
   참조 조회만큼 길어진다.
 
@@ -165,19 +169,19 @@ class CatalogRefValidator(
 복잡해지고, 그 Finder 가 바뀔 때 영향 범위가 넓어진다.
 
 ```kotlin
-// ✗ 같은 개념(member)의 Finder 를 한 줄 위임으로 끼운다
-class NicknameGenerator(private val memberFinder: MemberFinder)
+// ✗ 같은 개념(order)의 Finder 를 한 줄 위임으로 끼운다
+class OrderNumberGenerator(private val orderFinder: OrderFinder)
 
 // ○ 자기 개념의 Repository 를 직접 본다
-class NicknameGenerator(private val memberRepository: MemberRepository)
+class OrderNumberGenerator(private val orderRepository: OrderRepository)
 ```
 
 같은 개념 안에서 Implement 를 참조하는 것은 **위임이 아니라 실질적 이유가 있을 때만**이다.
 
 - 트랜잭션 경계를 나누려고 (`SettlementTransferProcessor` → `SettlementTransferHandler`)
-- 커밋 단위 조합 (`MemberProvisioner` → `MemberManager`)
-- 그 자체가 로직인 컴포넌트 (`ProfileManager` → `ProfileInterestManager` 의 차집합 교체,
-  `OrderManager` → `OrderKeyGenerator`)
+- 커밋 단위 조합 (`OrderPlacer` → `OrderManager`)
+- 그 자체가 로직인 컴포넌트 (`OrderManager` → `OrderLineManager` 의 차집합 교체,
+  `OrderManager` → `OrderNumberGenerator`)
 
 ### 격벽을 넘는 것은 Implement 의 일이다
 
@@ -233,10 +237,9 @@ Repository 로 내려갈 때는 **왜 위임할 수 없었는지 주석으로 �
 
 **예외 — 개념 객체가 이미 다른 개념을 알고 있으면 Service 가 직접 쓴다.**
 `OrderItem` 이 `productId`·`productName` 을 들고 있으니 `OrderService` 가 `ProductFinder` 를
-주입받는다. `MemberProfile` 이 관심 직무·회사·지역 id 를 들고 있으니 `ProfileService` 가
-`CatalogRefValidator` 를 쓴다. 개념 객체가 모르는 사이라면 Service 도 몰라야 한다 —
-`Member` 는 프로필의 존재를 모르므로 `MemberService` 는 `ProfileFinder` 를 쓰지 않고,
-둘을 함께 보여줄 응답은 `MemberFacade` 가 조합한다([concepts.md](concepts.md)).
+주입받는 것은 자연스럽다. 반대로 개념 객체가 모르는 사이라면 Service 도 몰라야 한다 —
+`Account` 가 배송지의 존재를 모르면 `AccountService` 는 `AddressFinder` 를 쓰지 않고,
+둘을 함께 보여줄 응답은 Facade 가 조합한다([concepts.md](concepts.md)).
 
 ## Implement (= Logic)
 
@@ -244,24 +247,54 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
 **쓰는 것 자체가 목적이 아니다** — 위의 두 규칙(흐름 가시성·엔티티 격리)을 지키는 수단이고,
 필요해질 때 만든다. `@Component`, 개념 패키지 안에 위치. 역할 접미사로 책임을 드러낸다.
 
+### 도구 이름은 요구사항에서 얻는다
+
+접미사부터 고르지 않는다. 먼저 요구사항을 **"누가 무엇을 한다"** 로 풀어 쓰고, 클래스에는 그
+행위를 수행하는 개념적인 도구의 이름을, 메서드에는 업무 동사를 붙인다.
+
+- `MemberRegistrar.register`: 회원을 등록한다.
+- `SessionAuthenticator.authenticate`: 세션으로 회원을 인증한다.
+- `ProfileManager.createEmpty`: 회원의 빈 프로필을 만든다.
+
+`MemberRegistrationCommitter.commit`, `MemberInitializer.initialize`, `MemberProvisioner.provision`
+처럼 트랜잭션·초기화 절차 등 구현 메커니즘만 설명하는 이름은 피한다. 다만 특정 접미사를 금지어로
+두지는 않는다. 예를 들어 `Processor` 가 요구사항에 존재하는 처리 단계와 생명주기를 정확히
+나타낸다면 좋은 이름이고, 여러 잡다한 코드를 "처리"라는 말로 가릴 때만 나쁜 이름이다.
+
+이름이 애매하면 **"이 도구가 있어서 회원을 등록한다"** 처럼 요구사항 문장 안에서 읽어본다.
+문장은 자연스럽지 않은데 프레임워크나 트랜잭션 설명만 쉬워진다면 기술적인 이름일 가능성이 높다.
+
 | 접미사         | 책임                                                       | 예시                       |
 |-------------|----------------------------------------------------------|--------------------------|
-| `Finder`    | 조회. **`get*`(non-null) / `exists*`·`is*`(Boolean) 만 노출** | `ProfileFinder`          |
-| `Validator` | **다른 개념에 노출하는** 규칙 검증. 위반이면 자기가 던진다        | `CatalogRefValidator` |
+| `Finder`    | 조회. **`get*`(non-null) / `exists*`·`is*`(Boolean) 만 노출** | `OrderFinder`            |
+| `Validator` | **다른 개념에 노출하는** 규칙 검증. 위반이면 자기가 던진다        | `ProductRefValidator`    |
 | `Reader`    | 복합 조회 + 도메인 객체 조립                                        |                          |
 | `Adder`     | 추가                                                       |                          |
 | `Handler`   | 흐름 처리                                                    |                          |
-| `Processor` | 처리/후처리                                                   |                          |
-| `Manager`   | 쓰기(생성/수정)                                                | `ProfileManager`         |
-| `Recorder`  | append-only 이력 기록                                        | `TermsAgreementRecorder` |
-| `Generator` | 값 생성기                                                    | `NicknameGenerator`      |
-| `Provisioner` | 한 커밋 단위의 여러 쓰기 조합 + 예외 번역                        | `MemberProvisioner`      |
-| `Mapper`    | Entity ↔ 도메인 변환 (`object`, 빈 아님)                         | `ProfileMapper`          |
+| `Processor` | 요구사항에 이름이 있는 처리 단계                                   |                          |
+| `Manager`   | 한 개념의 상태 변경 또는 관련 도구 조합                           | `OrderManager`, `SessionManager` |
+| `Recorder`  | append-only 이력 기록                                        | `OrderHistoryRecorder`   |
+| `Generator` | 값 생성기                                                    | `OrderNumberGenerator`   |
+| `Mapper`    | Entity ↔ 도메인 변환 (`object`, 빈 아님)                         | `OrderMapper`            |
 
-**이 표는 강제가 아니라 자주 쓰는 어휘의 참고 사전이다.** 같은 책임이면 표의 접미사를 재사용해
-일관성을 유지하되, 표에 없는 책임이 나오면 요구사항에 맞춰 책임이 드러나는 이름을 새로 지으면
-된다(예: `Calculator`, `Validator`). 중요한 건 접미사 자체가 아니라 읽기/쓰기/계산/검증의 책임이
-한 클래스에 섞이지 않는 것이다.
+**이 표는 이름을 만드는 출발점이 아니라 자주 쓰는 어휘의 참고 사전이다.** 요구사항에서 역할이
+드러난 뒤 같은 책임이면 표의 접미사를 재사용한다. 표에 없는 책임은 그 역할이 드러나는 이름을
+새로 지어도 된다(예: `Registrar`, `Authenticator`, `Calculator`). 중요한 건 접미사 자체가 아니라
+이름과 실제 책임이 일치하는가다.
+
+### 클래스는 메서드 수가 아니라 응집으로 나눈다
+
+`1 클래스 = 1 메서드`도, `여러 메서드 = 한 클래스`도 목표가 아니다.
+
+- 같은 상태와 생명주기를 다루고, 같은 불변식과 의존성을 공유하면 한 클래스에 둔다.
+  세션의 열기와 닫기처럼 한 개념의 생명주기를 함께 관리하는 `SessionManager.open/close`가
+  여기에 해당한다.
+- 독립된 규칙, 격벽, 커밋 단위를 소유한다면 public 메서드가 하나뿐이어도 별도 클래스가 자연스럽다.
+  `MemberRegistrar.register`, `SessionAuthenticator.authenticate`가 여기에 해당한다.
+- 같은 개념의 Repository 호출을 한 줄 감싼 클래스는 만들지 않는다. 이름만 늘고 새로운 규칙이나
+  경계를 만들지 못한다.
+- 롤백·재시도 경계가 다르거나 외부 I/O가 사이에 끼거나 서로 다른 개념의 정책이 자라기 시작하면
+  분리를 검토한다.
 
 ### Implement 도 조합한다 — 단, 커밋 단위 안에서만
 
@@ -286,18 +319,18 @@ Service 의 흐름을 가리는 세부(조회 방법·엔티티 변환·저장·
   있는 조회가 N 번으로 갈라진다.
 
 **조합 Implement 는 하위 Implement 를 주입받아 호출한다** — 같은 개념이든 다른 개념이든
-(`MemberProvisioner` → `MemberManager`·`TermsFinder`·`TermsAgreementRecorder`). 조합이 존재
+(`OrderPlacer` → `OrderManager`·`StockManager`·`OrderHistoryRecorder`). 조합이 존재
 이유이므로 위의 "같은 개념 안에서는 참조하지 않는다"의 예외에 해당한다.
 
 레이어를 불문하고 금지되는 참조는 **다른 개념의 Service** 하나다([concepts.md](concepts.md)) —
 Service 는 흐름이므로, 흐름이 흐름을 부르면 어느 쪽을 읽어도 전체가 안 보인다.
 
-한 커밋 안의 여러 쓰기를 조합하는 컴포넌트에는 책임이 드러나는 이름을 준다 —
-`Provisioner`, `Processor`, `Handler` 등. 접미사 표는 참고 사전이지 강제가 아니다.
+한 커밋 안의 여러 쓰기를 조합하는 컴포넌트도 커밋 기술이 아니라 요구사항의 행위로 이름 붙인다.
+회원·필수 약관 동의·빈 프로필을 함께 만드는 도구는 `MemberRegistrationCommitter`가 아니라
+`MemberRegistrar`다. `Processor`, `Handler`, `Manager`도 실제 요구사항의 역할을 표현할 때만 쓴다.
 
 **유니크 충돌의 번역 위치도 이 선을 따른다.** 제약명으로 판별 가능한 충돌은 그 제약을 아는
-쓰기 Implement 안에서 도메인 에러로 번역한다(`MemberManager.changeNickname` —
-`uk_member_nickname` 을 아는 유일한 곳).
+쓰기 Implement 안에서 도메인 에러로 번역한다 — 그 제약명을 아는 유일한 곳이기 때문이다.
 
 ### nullable 과 엔티티는 persistence 경계를 넘지 않는다
 
@@ -309,15 +342,15 @@ Service 는 흐름이므로, 흐름이 흐름을 부르면 어느 쪽을 읽어�
   - `find*`(nullable 반환) 메서드를 **외부에 노출하지 않는다**. null 검사와 예외 매핑이 호출부마다
     반복되는 것을 막기 위함이다.
   ```kotlin
-  fun getProfile(memberId: UUID): MemberProfile {
-      val entity = requireFound(memberProfileRepository.findById(memberId).orElse(null), CoreErrorType.PROFILE_NOT_FOUND)
-      return ProfileMapper.toDomain(entity)
+  fun getOrder(orderId: UUID): Order {
+      val entity = requireFound(orderRepository.findById(orderId).orElse(null), CoreErrorType.ORDER_NOT_FOUND)
+      return OrderMapper.toDomain(entity)
   }
   ```
 - **엔티티**: Entity 는 Implement(Mapper) 안에서 도메인 객체로 변환되어 나간다.
   Service 이상의 레이어에 Entity 타입이 등장하면 경계 위반이다.
 - **상태 필터도 경계에서**: 도메인에 들어오면 안 되는 상태의 행은 Finder 의 파생 쿼리로 걸러낸다
-  (예: 탈퇴 회원은 `...DeletedAtIsNull` 조회로 도메인 세계에 들여보내지 않는다).
+  (예: 소프트 삭제된 행은 `...DeletedAtIsNull` 조회로 도메인 세계에 들여보내지 않는다).
   예외적으로 걸러진 행을 봐야 하는 경우는 의도가 드러나는 전용 조회를 따로 판다.
 
 ### 예외는 Implement 에서 던진다
@@ -354,14 +387,16 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
 | Controller / Facade | 없음 |
 | Service | 없음 |
 | `Finder`/`Reader` | 여러 쿼리를 한 스냅샷으로 읽을 때만 `readOnly = true` |
-| `Manager`/`Recorder`/`Adder` (쓰기) | `@Transactional` **필수** |
+| DB 쓰기·dirty checking과 한 커밋을 직접 소유하는 메서드 | `@Transactional` **필수** |
+| 재시도·여러 커밋을 조립하는 메서드 | 없음 |
 | `Generator`/`Mapper` (계산·변환) | 없음 |
 
-쓰기 컴포넌트의 `@Transactional` 이 필수인 이유: dirty checking(엔티티 수정·소프트 삭제)은
-영속성 컨텍스트가 없으면 조용히 유실된다. 호출자가 트랜잭션을 갖고 있으리라는 암묵적
-의존은 시그니처에 드러나지 않으므로, 쓰기 컴포넌트가 자기 경계를 소유한다
-(예: `ProfileInterestManager.replaceAll` — 트랜잭션 없이 호출되면 소프트 삭제만 유실되고
-삽입만 커밋되는 부분 쓰기가 된다).
+트랜잭션 여부는 `Manager`, `Recorder` 같은 클래스 접미사로 판단하지 않고 **메서드가 직접 하는
+일**로 판단한다. 쓰기 메서드의 `@Transactional` 이 필수인 이유는 dirty checking(엔티티 수정·
+소프트 삭제)이 영속성 컨텍스트가 없으면 조용히 유실되기 때문이다. 호출자가 트랜잭션을 갖고
+있으리라는 암묵적 의존은 시그니처에 드러나지 않으므로, 쓰기 메서드가 자기 경계를 소유한다
+(예: 기존 행을 소프트 삭제하고 새 행을 넣는 `replaceAll` 류는 트랜잭션 없이 호출되면
+소프트 삭제만 유실되고 삽입만 커밋되는 부분 쓰기가 된다).
 
 ### 여러 쓰기를 원자적으로 묶어야 할 때
 
@@ -370,16 +405,24 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
 1. **호출을 쓰기 컴포넌트 안으로 내린다.** 함께 커밋돼야 하는 두 쓰기는 대개 한 쓰기
    컴포넌트의 책임이다. 하위 Manager 도 각자 `@Transactional` 을 갖되 전파는 기본
    `REQUIRED` 이므로, 상위 트랜잭션에 참여해 커밋 하나가 된다.
-   (`ProfileManager.append` → `ProfileInterestManager.replaceAll` 이 이 형태다.)
+   (`OrderManager.place` → `OrderLineManager.replaceAll` 이 이 형태다.)
 2. **둘을 감싸는 새 Implement 를 만든다.** 두 개념의 쓰기가 한 커밋이어야 하면,
-   그 조합 자체가 재사용 가능한 하나의 개념이다. (`MemberProvisioner` — 가입은 회원 생성 +
-   필수 약관 자동 동의가 한 커밋. 예정 사례: 탈퇴는 회원·프로필·관심 소프트 삭제가
-   한 커밋이어야 하므로 `MemberWithdrawProcessor` 하나가 감싼다.)
+   그 조합 자체가 재사용 가능한 하나의 개념이다. (`OrderPlacer` — 주문 생성 + 재고 차감 +
+   쿠폰 사용이 한 커밋. 여러 개념의 소프트 삭제가 한 커밋이어야 하는 탈퇴 같은 흐름도
+   `WithdrawProcessor` 하나가 감싼다.)
 
-   실패한 쓰기를 잡아 **재시도**하는 조합은 메서드 전체를 `@Transactional` 로 묶으면
-   rollback-only 가 된 같은 트랜잭션 안에서 재시도하게 되므로, 그 조합 Implement 가
-   `TransactionTemplate` 으로 시도 단위 경계를 명시한다. (`MemberProvisioner.provision` —
-   가입 + 약관 자동 동의가 한 시도, 닉네임 충돌 재시도는 새 트랜잭션.)
+   실패한 쓰기를 잡아 **재시도**할 때는 두 도구로 역할을 나눈다.
+
+   - 상위 도구는 트랜잭션 없이 후보 생성과 재시도 횟수를 조립한다
+     (`MemberRegistrationManager.register`).
+   - 별도 Spring Bean의 한 시도 메서드가 `@Transactional` 로 원자적 쓰기를 소유한다
+     (`MemberRegistrar.register`: 회원 + 필수 약관 동의 + 빈 프로필).
+   - 상위 도구가 프록시를 통해 한 시도 메서드를 호출하므로, 예외가 돌아왔을 때는 그 시도의
+     롤백이 끝나 있다. 다음 반복은 자연스럽게 새 트랜잭션에서 시작한다.
+
+   같은 클래스의 자기 호출로 경계를 만들지 않고, 재시도 루프에 `@Transactional` 을 붙이지 않는다.
+   `TransactionTemplate` 은 개념적인 도구로 경계를 분리할 수 없는 명시적인 이유가 있을 때만 쓰는
+   예외 수단이며 기본 해법이 아니다.
 
 `REQUIRES_NEW` 는 쓰지 않는다. "일부만 커밋돼야 한다"는 요구는 대개 컴포넌트를 잘못
 나눴다는 신호다.
@@ -388,17 +431,17 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
 
 - 외부 시스템 호출: HTTP/Feign, 메일·푸시·SMS, 파일 스토리지, 메시지 발행
 - 되돌릴 수 없는 부수효과 전반 — 롤백돼도 되돌아오지 않으므로 커밋 단위에 있을 이유가 없다
-- 재시도 루프·대기 (예: `NicknameGenerator.generateUnique` 의 점유 확인 SELECT 루프는
-  가입 트랜잭션 밖에서 실행한다 — 유일성의 최종 보장은 DB 유니크 제약이다)
+- 재시도 루프·대기 (예: 값 생성기의 점유 확인 SELECT 루프는 쓰기 트랜잭션 밖에서
+  실행한다 — 유일성의 최종 보장은 DB 유니크 제약이다)
 
 외부 호출은 Service 에 남기고, 그 앞뒤의 DB 쓰기만 Implement 로 내려 각각 짧은
 트랜잭션으로 만든다. 외부 호출이 성공한 뒤 DB 쓰기가 실패하는 구간은 **원자적일 수
 없다** — 보상 로직이나 재처리로 다루고, 트랜잭션으로 덮으려 하지 않는다.
 
-성공 사례: OAuth 로그인은 토큰 교환(외부 I/O)이 Spring Security 필터 체인(트랜잭션 밖)에서
-끝나고, `OAuth2LoginSuccessHandler` 는 DB 쓰기만 한다. 가입 커밋(트랜잭션 A)과 세션
-저장(트랜잭션 B)은 **의도된 비원자 경계**다 — B 가 실패해도 재로그인이
-`existsBySocialAccount` → `recordLogin` 경로로 흘러 복구되므로 원자성을 요구하지 않는다.
+전형적인 형태: 외부 토큰 교환(외부 I/O)을 트랜잭션 밖에서 끝내고 그 뒤 핸들러는 DB 쓰기만
+한다. 이때 가입 커밋(트랜잭션 A)과 세션 저장(트랜잭션 B)을 나누는 것은 **의도된 비원자
+경계**다 — B 가 실패해도 다음 로그인이 "이미 있으면 기록만" 경로로 흘러 복구되므로
+원자성을 요구하지 않는다. 이런 판단은 코드가 아니라 주석으로 남겨야 다음 사람이 버그로 읽지 않는다.
 
 ### 조회 트랜잭션
 
@@ -407,11 +450,11 @@ Yes → 그 메서드가 트랜잭션 경계. No → 붙이지 않는다.
   클래스 레벨 `readOnly` 트랜잭션이라 트랜잭션만 하나 더 열 뿐 얻는 것이 없다.
 
   ```kotlin
-  @Transactional(readOnly = true)   // 프로필 + 관심직무 + 관심회사 3쿼리를 한 스냅샷으로
-  fun getProfile(memberId: UUID): MemberProfile { ... }
+  @Transactional(readOnly = true)   // 주문 + 주문라인 + 배송 3쿼리를 한 스냅샷으로
+  fun getOrder(orderId: UUID): Order { ... }
 
-  fun exists(memberId: UUID): Boolean =            // 단일 위임 — 붙이지 않는다
-      memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
+  fun exists(orderId: UUID): Boolean =             // 단일 위임 — 붙이지 않는다
+      orderRepository.existsByIdAndDeletedAtIsNull(orderId)
   ```
 
 - 한 요청이 만드는 트랜잭션 개수를 의식한다. 습관적으로 붙이면 요청 하나에 트랜잭션이
@@ -426,9 +469,10 @@ flush 하지 않으면 제약 위반은 **커밋 시점**, 즉 쓰기 Implement 
 예외로 매핑하는 흐름이라면, 쓰기 직후 flush 해서 예외가 예측 가능한 지점에서 터지게 한다
 ([errors.md](errors.md)의 유니크 충돌 처리와 같은 규칙).
 
-- `MemberManager.append` — `saveAndFlush`. `MemberProvisioner` 가 닉네임 충돌을 잡아 재시도한다.
-- `MemberManager.changeNickname` — `flush()` 직후 자기 안에서 `NICKNAME_DUPLICATED` 로 번역한다.
-  제약명(`uk_member_nickname`)을 아는 곳이 번역까지 맡는다.
+- 조합 Implement 가 충돌을 잡아 **재시도**하는 경우 — 하위 쓰기에서 `saveAndFlush` 로 예외를
+  그 자리에서 터뜨린다.
+- 쓰기 Implement 가 **자기 안에서 번역**하는 경우 — `flush()` 직후 제약명을 보고 도메인 에러로
+  바꾼다. 제약명을 아는 곳이 번역까지 맡는다.
 
 flush 여부는 **호출자가 그 예외를 잡는가**로 결정한다. 잡지 않으면 붙이지 않는다.
 
@@ -444,4 +488,4 @@ flush 여부는 **호출자가 그 예외를 잡는가**로 결정한다. 잡지
 
 **쓰기(save/update) 연산은 도메인 객체를 반환하지 않는다.** 식별자(id — Long 이 기본, PK 가 UUID 면
 UUID)를 우선 반환하고, 반환할 것이 마땅치 않으면 Unit. 응답 조립에 갱신된 상태가 필요하면
-쓰기 후 Finder 로 **재조회**한다(예: `ProfileFacade.update` — update 후 getProfile 로 응답 구성).
+쓰기 후 Finder 로 **재조회**한다(위 `OrderFacade` 예 — place 후 getOrder 로 응답 구성).

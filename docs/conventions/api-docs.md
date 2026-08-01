@@ -24,7 +24,7 @@ RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
 
 ```kotlin
 mockMvc = mockController(
-    ProfileController(profileService, catalogService),   // mockk Service
+    OrderController(orderService),                       // mockk Service
     LoginMemberArgumentResolver(),
     controllerAdvice = ApiControllerAdvice(),            // 에러 응답 문서화에 필요
 )
@@ -41,7 +41,7 @@ mockMvc = mockController(
 **모든 API 는 성공뿐 아니라 예외 응답도 스펙에 정의한다.** 방법: 예외를 실제로 발생시키는
 문서화 테스트를 추가한다.
 
-- identifier 규칙: `{operation}-e{코드소문자}` (예: `createProfile-e1007`, `searchCompanies-e400`).
+- identifier 규칙: `{operation}-e{코드소문자}` (예: `updateProfile-e1301`, `searchCompanies-e400`).
 - 응답 스니펫은 공용 `errorResponseFields()` 를 쓴다(에러 봉투는 전 API 동일).
 - 예외 발생 방법:
   - 도메인 에러: mockk Service 가 `CoreException(errorType)` 던지게

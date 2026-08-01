@@ -7,8 +7,8 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.UpdateProfileRequest
 import io.plady.moimyeon.core.api.facade.ProfileFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
-import io.plady.moimyeon.core.domain.catalog.CatalogService
-import io.plady.moimyeon.core.domain.catalog.Company
+import io.plady.moimyeon.core.domain.company.Company
+import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileContent
 import io.plady.moimyeon.core.domain.profile.ProfileService
@@ -30,7 +30,7 @@ import java.util.UUID
 
 class ProfileControllerTest : RestDocsTest() {
     private lateinit var profileService: ProfileService
-    private lateinit var catalogService: CatalogService
+    private lateinit var companyService: CompanyService
     private val memberId: UUID = UUID.randomUUID()
     private val principal = Principal { memberId.toString() }
 
@@ -38,8 +38,8 @@ class ProfileControllerTest : RestDocsTest() {
     private val updateProfileDescription =
         "프로필 전체 교체 저장. 프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재하므로 별도 생성 API 는 없다. " +
             "아직 안 채운 값은 null 이 아니라 빈 문자열·UNSPECIFIED 로 오간다(지역만 미선택이 null). " +
-            "관심 직무·지역·관심 회사는 카탈로그 참조 id 를 받는다. " +
-            "요청 형태 오류 400(E400), 존재하지 않는 직무/지역/회사 400(E1301/E1302/E1303), " +
+            "관심 직무·지역·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는 검증 완료된 회사만 선택할 수 있다. " +
+            "요청 형태 오류 400(E400), 존재하지 않는 직무/지역 또는 선택할 수 없는 회사 400(E1301/E1302/E1303), " +
             "인증 정보 없음·무효 401(E1102), 프로필을 찾을 수 없음 404(E1009)로 응답한다."
 
     private val validUpdateRequest = UpdateProfileRequest(
@@ -53,9 +53,9 @@ class ProfileControllerTest : RestDocsTest() {
     @BeforeEach
     fun setUp() {
         profileService = mockk()
-        catalogService = mockk()
+        companyService = mockk()
         mockMvc = mockController(
-            ProfileController(ProfileFacade(profileService, catalogService)),
+            ProfileController(ProfileFacade(profileService, companyService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -73,7 +73,7 @@ class ProfileControllerTest : RestDocsTest() {
         val request = validUpdateRequest
         every { profileService.update(memberId, request.toContent()) } returns memberId
         every { profileService.getProfile(memberId) } returns request.toContent().toProfileFixture(memberId)
-        every { catalogService.getCompanies(listOf(1L, 2L)) } returns listOf(Company(1L, "달빛페이"), Company(2L, "한빛커머스"))
+        every { companyService.getCompanies(listOf(1L, 2L)) } returns listOf(Company(1L, "달빛페이"), Company(2L, "한빛커머스"))
 
         performUpdate(request)
             .andExpect(status().isOk)
@@ -140,7 +140,7 @@ class ProfileControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `updateProfile 존재하지 않는 회사 E1303`() {
+    fun `updateProfile 선택할 수 없는 회사 E1303`() {
         every { profileService.update(memberId, any()) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
 
         performUpdate(validUpdateRequest)

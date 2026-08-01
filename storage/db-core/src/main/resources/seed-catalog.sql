@@ -642,6 +642,9 @@ INSERT INTO company (id, corp_code, name_kr, name_normalized, created_at, update
   (91356, NULL, 'vox.ai', 'voxai', '2026-07-22 19:45:35', '2026-07-22 19:45:35', NULL, 0, NULL),
   (91386, '01475371', '테슬라(Tesla)', '테슬라Tesla', '2026-07-22 19:45:35', '2026-07-22 19:45:35', NULL, 0, NULL);
 
+-- 이 시드는 크롤러가 적재한 회사만 담는다. V7 운영 마이그레이션과 같은 기준으로 검증 완료 처리한다.
+UPDATE company SET verified = TRUE WHERE created_by_member_id IS NULL AND verified = FALSE;
+
 -- job_posting — 선정 회사별 최근 공고 최대 2건 (80 rows)
 INSERT INTO job_posting (id, source_uid, company_id, title, regions, career_min, career_max, employee_types, educations, posted_at, end_date, deadline_type, is_open, source_url, redirect_url, summary, content, created_at, updated_at, deleted_at, verified, created_by_member_id) VALUES
   (2029, 'e207eb1a-d6ea-4da5-b0da-3a6edcd13485', 78606, '그로스 플랫폼 프로덕트 빌더', '경기', 5, 100, '정규직', '무관', '2026-07-14 21:05:04', NULL, '상시채용', 1, 'https://zighang.com/recruitment/e207eb1a-d6ea-4da5-b0da-3a6edcd13485', 'https://www.wanted.co.kr/wd/374934?client_id=ubRphx9ewFwQvQV3kyJjjFSp', NULL, '소개
@@ -5140,4 +5143,3 @@ INSERT INTO job_posting_role (id, job_role_id, job_posting_id) VALUES
   (7116, 39, 3951),
   (7117, 41, 3951),
   (7191, 29, 3993);
-

@@ -1,21 +1,23 @@
 package io.plady.moimyeon.core.domain.session
 
-import io.plady.moimyeon.core.domain.member.MemberFinder
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
 class SessionService(
-    private val sessionFinder: SessionFinder,
+    private val sessionAuthenticator: SessionAuthenticator,
     private val sessionManager: SessionManager,
-    private val memberFinder: MemberFinder,
 ) {
-    fun refreshAccess(rawCredential: String): UUID {
-        val memberId = sessionFinder.getMemberId(rawCredential)
-        return memberFinder.getById(memberId).id
+    fun open(memberId: UUID): Session {
+        return sessionManager.open(memberId, LocalDateTime.now())
+    }
+
+    fun authenticate(rawCredential: String): UUID {
+        return sessionAuthenticator.authenticate(SessionCredential.from(rawCredential), LocalDateTime.now())
     }
 
     fun logout(rawCredential: String) {
-        sessionManager.revoke(rawCredential)
+        sessionManager.close(SessionCredential.from(rawCredential), LocalDateTime.now())
     }
 }

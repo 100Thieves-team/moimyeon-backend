@@ -4,7 +4,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
@@ -25,28 +24,6 @@ class MemberManagerTest {
     private val memberManager = MemberManager(memberRepository)
 
     private val provider = SocialLoginProvider.GOOGLE
-
-    @Test
-    fun `append 는 도메인 불변식을 만족한 신규 회원을 저장하고 저장된 id 를 반환한다`() {
-        // given
-        val saved = slot<MemberEntity>()
-        every { memberRepository.saveAndFlush(capture(saved)) } answers { saved.captured }
-
-        // when
-        val id = memberManager.append(provider, "sub-1", Email("user@example.com"), Nickname("차분한 펭귄 12"))
-
-        // then
-        val entity = saved.captured
-        assertThat(id).isEqualTo(entity.id)
-        assertThat(entity.email).isEqualTo("user@example.com")
-        assertThat(entity.nickname).isEqualTo("차분한 펭귄 12")
-        assertThat(entity.status).isEqualTo(MemberStatus.ACTIVE) // Member.register 가 ACTIVE 로 생성
-        assertThat(entity.isDeleted()).isFalse()
-        assertThat(entity.socialAccounts()).hasSize(1)
-        assertThat(entity.socialAccounts().first().provider).isEqualTo(provider)
-        assertThat(entity.socialAccounts().first().providerId).isEqualTo("sub-1")
-        assertThat(entity.socialAccounts().first().linkedEmail).isEqualTo("user@example.com")
-    }
 
     @Test
     fun `recordLogin 은 소셜 신원으로 회원을 찾아 마지막 로그인 시각을 갱신하고 id 를 반환한다`() {
