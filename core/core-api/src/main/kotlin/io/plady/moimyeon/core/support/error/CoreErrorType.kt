@@ -13,6 +13,8 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     NICKNAME_DUPLICATED(HttpStatus.CONFLICT, ErrorCode.E1007, "이미 사용 중인 닉네임입니다.", LogLevel.WARN),
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1009, "프로필을 찾을 수 없습니다.", LogLevel.WARN),
     RESUME_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1010, "이력서를 찾을 수 없습니다.", LogLevel.WARN),
+    RESUME_LIMIT_EXCEEDED(HttpStatus.CONFLICT, ErrorCode.E1011, "이력서는 최대 10개까지 등록할 수 있습니다.", LogLevel.WARN),
+    DEFAULT_RESUME_CANNOT_BE_HIDDEN(HttpStatus.CONFLICT, ErrorCode.E1012, "기본 이력서는 숨길 수 없습니다.", LogLevel.WARN),
 
     INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
 

@@ -30,7 +30,7 @@
 --   그 밖(컬럼명·유니크명·인덱스명·타입)은 이 파일이 정본이고 dev/live 도 여기에 맞춘다.
 --
 -- 식별자 정책
--- - 외부에 노출되는 식별자만 BINARY(16) UUID: member, room, terms, terms_agreement.
+-- - 외부에 노출되는 식별자만 BINARY(16) UUID: member, resume, room, terms, terms_agreement.
 --   UUID 는 시간 정렬(UUIDv7)로 생성한다 — 무작위 v4 는 InnoDB 클러스터 인덱스를 파편화시킨다.
 -- - 그 밖에는 BIGINT AUTO_INCREMENT.
 -- - PK 컬럼명은 테이블 안에서 항상 id, 참조 컬럼명은 <테이블>_id.
@@ -377,17 +377,25 @@ CREATE INDEX ix_member_profile_interest_job_role_job_role_id ON member_profile_i
 -- 베이스 상속: deleted_at 은 탈퇴 처리로 파일·내용을 지운 뒤 남기는 표식이다. 행 자체는 지우지 않는다 —
 --   resume_submission 이 참조하고 있어 "누가 어떤 이력서를 냈는가"가 사라지면 안 된다.
 CREATE TABLE resume (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    id              BINARY(16)   NOT NULL,
     member_id       BINARY(16)   NOT NULL,
-    title           VARCHAR(100) NOT NULL,
-    file_ref        VARCHAR(500) NULL,
+    name            VARCHAR(100) NOT NULL,
+    file_key        VARCHAR(500) NOT NULL,
+    original_name   VARCHAR(255) NOT NULL,
+    size_bytes      BIGINT       NOT NULL,
+    content_type    VARCHAR(100) NOT NULL,
     summary_content TEXT         NULL,
     summary_status  VARCHAR(20)  NOT NULL,
+    is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
     archived_at     DATETIME     NULL,
     created_at      DATETIME     NOT NULL,
     updated_at      DATETIME     NOT NULL,
     deleted_at      DATETIME     NULL,
-    PRIMARY KEY (id)
+    _default_member_id BINARY(16) GENERATED ALWAYS AS (
+        CASE WHEN is_default = TRUE AND archived_at IS NULL AND deleted_at IS NULL THEN member_id ELSE NULL END
+    ),
+    PRIMARY KEY (id),
+    CONSTRAINT uk_resume_member_default UNIQUE (_default_member_id)
 );
 CREATE INDEX ix_resume_member_id ON resume (member_id);
 
@@ -544,7 +552,7 @@ CREATE TABLE resume_submission (
     id           BIGINT     NOT NULL AUTO_INCREMENT,
     room_id      BINARY(16) NOT NULL,
     member_id    BINARY(16) NOT NULL,
-    resume_id    BIGINT     NOT NULL,
+    resume_id    BINARY(16) NOT NULL,
     submitted_at DATETIME   NOT NULL,
     created_at   DATETIME   NOT NULL,
     updated_at   DATETIME   NOT NULL,
