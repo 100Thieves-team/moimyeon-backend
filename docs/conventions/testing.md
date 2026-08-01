@@ -6,13 +6,24 @@
 
 JUnit5 `@Tag` 로 구분하고 Gradle 태스크로 선택 실행한다 (루트 `build.gradle.kts`).
 
-| 태스크 | 대상 | 용도 |
-| --- | --- | --- |
-| `test` (기본) | `develop`·`restdocs` 제외 전부 | CI 기본 |
-| `unitTest` | `develop`·`context`·`restdocs` 제외 | 순수 단위 테스트만 빠르게 |
-| `contextTest` | `@Tag("context")` | 스프링 컨텍스트 통합 테스트 |
-| `restDocsTest` | `@Tag("restdocs")` | API 문서화 테스트 (`asciidoctor`/`openapi3` 가 의존) |
-| `developTest` | `@Tag("develop")` | 개발 중 임시 |
+| 태스크 | 대상 | 용도 | PR CI |
+| --- | --- | --- | --- |
+| `test` (기본) | `develop`·`restdocs` 제외 전부 | CI 기본 | ✅ |
+| `unitTest` | `develop`·`context`·`restdocs` 제외 | 순수 단위 테스트만 빠르게 | (test 에 포함) |
+| `contextTest` | `@Tag("context")` | 스프링 컨텍스트 통합 테스트 | (test 에 포함) |
+| `restDocsTest` | `@Tag("restdocs")` | API 문서화 테스트 (`asciidoctor`/`openapi3` 가 의존) | ❌ |
+| `developTest` | `@Tag("develop")` | **개발 환경 전용** | ❌ |
+
+**어디서 도는지가 곧 그 테스트의 값이다.**
+
+- **`context` 는 CI 에서 돈다.** PR 과 배포의 관문이므로 머신을 가리지 않고 재현돼야 한다.
+  인메모리 H2 + `test` 프로파일 위에서만 돌고 외부 자원에 기대지 않는다.
+- **`develop` 은 CI 에서 돌지 않는다.** GitHub Actions 는 `test` 태스크만 실행하고 이 태그는
+  거기서 제외된다. 개발자 로컬에서 실제 개발 환경을 붙여 확인하는 용도다.
+  **회귀를 막을 목적의 검증을 이 태그에 두지 않는다** — 아무도 실행하지 않는 테스트가 된다.
+- **`restdocs` 도 PR CI 에서 돌지 않는다.** 문서 발행 워크플로가 `dev`/`main` push 때 돌린다.
+  즉 API 스펙 검증은 **머지 이후에** 처음 실행된다. 스펙을 깨는 변경이 PR 을 통과할 수 있으므로,
+  요청 DTO 값 규칙을 고쳤으면 로컬에서 `restDocsTest` 를 직접 돌려 확인한다.
 
 컨텍스트 테스트는 환경 변수(`JWT_SECRET` 32바이트+, `GOOGLE_OAUTH_CLIENT_ID/SECRET`)가 필요하다.
 
@@ -23,6 +34,7 @@ JUnit5 `@Tag` 로 구분하고 Gradle 태스크로 선택 실행한다 (루트 `
 | `ContextTest` (core-api) | `@SpringBootTest` + `@ActiveProfiles("test")` + `@TestConstructor(ALL)` + `@Tag("context")` | 도메인 통합 테스트 (`XxxServiceIT`) |
 | `CoreDbContextTest` (db-core) | 동일 구성 | Repository 통합 테스트 (`XxxRepositoryIT`) |
 | `RestDocsTest` (tests/api-docs) | standalone MockMvc + `@Tag("restdocs")` | 컨트롤러 문서화 테스트 ([api-docs.md](api-docs.md)) |
+| `DevelopTest` (core-api) | `@SpringBootTest` + `@Tag("develop")`, **프로파일 지정 없음** | 개발 환경을 붙여 눈으로 확인할 때만. CI 에서 실행되지 않는다 |
 
 - 통합 테스트 빈 주입은 **생성자 주입**(`@TestConstructor(ALL)`).
 - `test` 프로파일은 local 상속이라 H2 + schema.sql + seed.sql 위에서 돈다 ([storage.md](storage.md)).

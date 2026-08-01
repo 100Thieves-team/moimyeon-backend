@@ -67,6 +67,8 @@
   → [storage.md](storage.md)
 - **테스트**: 태그 4종(`unitTest`/`contextTest`/`restDocsTest`/`developTest`)으로 분리 실행.
   단위는 MockK, 통합은 `ContextTest`/`CoreDbContextTest`(생성자 주입), 문서화는 `RestDocsTest`(standalone).
+  **PR CI 가 돌리는 것은 `test` 뿐이다** — `develop` 과 `restdocs` 는 거기서 제외되므로,
+  회귀를 막을 검증은 `develop` 태그에 두지 않는다.
   → [testing.md](testing.md)
 - **API 문서화**: 문서는 테스트가 만든다. 성공뿐 아니라 **예외 케이스도 에러 코드와 함께** 문서화 테스트로 정의하고,
   openapi3.yaml 의 4xx 응답·코드별 예시로 병합된다.
