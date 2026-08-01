@@ -42,9 +42,25 @@ class CompanyFinderIT(
 
     @Test
     fun `회사 id 목록으로 유효한 회사 정보를 조회한다`() {
-        val found = companyFinder.getByIds(listOf(1L, 2L))
+        val first = companyRepository.saveAndFlush(
+            CompanyEntity(corpCode = null, nameKr = "테스트 회사 A", nameNormalized = "테스트 회사 A", verified = true),
+        )
+        val second = companyRepository.saveAndFlush(
+            CompanyEntity(corpCode = null, nameKr = "테스트 회사 B", nameNormalized = "테스트 회사 B", verified = true),
+        )
 
-        assertThat(found.map { it.id }).containsExactlyInAnyOrder(1L, 2L)
-        assertThat(found.map { it.name }).containsExactlyInAnyOrder("달빛페이", "한빛커머스")
+        val found = companyFinder.getByIds(listOf(first.id, second.id))
+
+        assertThat(found.map { it.id }).containsExactlyInAnyOrder(first.id, second.id)
+        assertThat(found.map { it.name }).containsExactlyInAnyOrder("테스트 회사 A", "테스트 회사 B")
+    }
+
+    @Test
+    fun `기존 관심 회사는 검증이 해제된 뒤에도 id로 조회한다`() {
+        val company = companyRepository.saveAndFlush(
+            CompanyEntity(corpCode = null, nameKr = "검증 해제 회사", nameNormalized = "검증 해제 회사", verified = false),
+        )
+
+        assertThat(companyFinder.getByIds(listOf(company.id))).containsExactly(Company(company.id, "검증 해제 회사"))
     }
 }

@@ -23,11 +23,12 @@
 
 ### 변환 방향
 
-- **요청 → 도메인**: 요청 DTO 의 `toXxx()` 메서드. **변환 결과(행위 입력 값)는 식별자를 담지
-  않는다** — 인증 주체 id 는 컨트롤러가 Service/Facade 호출 인자로 따로 넘긴다.
+- **요청 → 도메인**: 요청 DTO 의 `toXxx()` 메서드. **변환 결과(행위 입력 값)는 인증 주체
+  식별자를 담지 않는다** — `currentMember.id`는 컨트롤러가 Service/Facade 호출 인자로 따로
+  넘긴다. 요청으로 선택한 `productIds` 같은 다른 개념의 참조 식별자는 행위 입력에 포함할 수 있다.
   ```kotlin
-  data class CreateOrderRequest(...) {
-      fun toContent(): OrderContent = OrderContent(...)
+  data class CreateOrderRequest(val productIds: List<Long>, ...) {
+      fun toContent(): OrderContent = OrderContent(productIds = productIds, ...)
   }
   // 컨트롤러: orderService.place(currentMember.id, request.toContent())
   // 단일 Service 호출이면 컨트롤러가 직접 부른다. Facade 는 여러 Service 결과를 조합할 때만.

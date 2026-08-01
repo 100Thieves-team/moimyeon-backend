@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.api.controller.v1
 
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -77,7 +78,32 @@ class RoomControllerTest : RestDocsTest() {
                 .content(createRequestJson.replace("\"maxParticipants\": 6", "\"maxParticipants\": 2")),
         )
             .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("createRoom-e400", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `createRoom 최소 인원이 2보다 작으면 E400`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"minParticipants\": 3", "\"minParticipants\": 1")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
+            .andDo(documentApi("createRoom-e400-min-participants", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `createRoom 최대 인원이 8보다 크면 E400`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"maxParticipants\": 6", "\"maxParticipants\": 9")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
+            .andDo(documentApi("createRoom-e400-max-participants", createSummary, createDescription, errorResponseFields()))
     }
 
     @Test

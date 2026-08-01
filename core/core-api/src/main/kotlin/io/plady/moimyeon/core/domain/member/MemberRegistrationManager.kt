@@ -22,12 +22,15 @@ class MemberRegistrationManager(
                 return memberRegistrar.register(provider, providerId, email, nickname, registeredAt)
             } catch (e: DataIntegrityViolationException) {
                 when {
-                    isNicknameConflict(e) && attempt == MAX_ATTEMPTS - 1 -> {
+                    e.matchesConstraint(MEMBER_NICKNAME_UNIQUE_CONSTRAINT) && attempt == MAX_ATTEMPTS - 1 -> {
                         throw CoreException(CoreErrorType.NICKNAME_DUPLICATED)
                     }
 
-                    isNicknameConflict(e) -> Unit
-                    isSocialAccountConflict(e) -> throw CoreException(CoreErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED)
+                    e.matchesConstraint(MEMBER_NICKNAME_UNIQUE_CONSTRAINT) -> Unit
+                    e.matchesConstraint(MEMBER_SOCIAL_ACCOUNT_UNIQUE_CONSTRAINT) -> {
+                        throw CoreException(CoreErrorType.SOCIAL_ACCOUNT_ALREADY_LINKED)
+                    }
+
                     else -> throw e
                 }
             }
@@ -36,21 +39,7 @@ class MemberRegistrationManager(
         error("회원 가입 시도 횟수를 벗어났습니다.")
     }
 
-    private fun isNicknameConflict(e: DataIntegrityViolationException): Boolean {
-        return constraintMessage(e).contains(NICKNAME_CONSTRAINT, ignoreCase = true)
-    }
-
-    private fun isSocialAccountConflict(e: DataIntegrityViolationException): Boolean {
-        return constraintMessage(e).contains(SOCIAL_ACCOUNT_CONSTRAINT, ignoreCase = true)
-    }
-
-    private fun constraintMessage(e: DataIntegrityViolationException): String {
-        return (e.rootCause?.message ?: e.message).orEmpty()
-    }
-
     private companion object {
         const val MAX_ATTEMPTS = 2
-        const val NICKNAME_CONSTRAINT = "uk_member_nickname"
-        const val SOCIAL_ACCOUNT_CONSTRAINT = "uk_social_account_provider_provider_id"
     }
 }

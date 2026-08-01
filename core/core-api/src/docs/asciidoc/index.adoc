@@ -247,7 +247,8 @@ include::{snippets}/searchCompanies/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 검색어(query) 누락 또는 1~50자 범위 위반. `error.data` 에 파라미터별 사유
+| 400 | E400 | 검색어(query) 누락. `error.data` 에 파라미터별 사유
+| 400 | E400 | 검색어가 공백이거나 1~50자 범위 위반. `error.data` 는 `null`
 |===
 
 == Profile API
@@ -334,7 +335,7 @@ include::{snippets}/jobPostingLinkMetadata/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 공고 링크(url) 누락 또는 형식 오류(최대 2000자). `error.data` 에 필드별 사유
+| 400 | E400 | 공고 링크(url) 누락 또는 형식 오류(최대 2000자). `error.data` 는 `null`
 |===
 
 '''
@@ -354,7 +355,7 @@ include::{snippets}/createJobPosting/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | companyId·url·postingName 누락 또는 형식 오류. `error.data` 에 필드별 사유
+| 400 | E400 | companyId·url·postingName 누락 또는 형식 오류. `error.data` 는 `null`
 |===
 
 '''
@@ -374,7 +375,7 @@ include::{snippets}/createRoom/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 요청 형태 오류 (제목 누락·60자 초과, 인원 범위 위반, 깨진 JSON 등). `error.data` 에 필드별 사유
+| 400 | E400 | 요청 형태 오류 (제목 누락·60자 초과, 인원 범위 위반, 깨진 JSON 등). `error.data` 는 `null`
 |===
 
 '''
