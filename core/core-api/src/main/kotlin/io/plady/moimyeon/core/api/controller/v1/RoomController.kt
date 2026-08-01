@@ -110,15 +110,15 @@ class RoomController {
             ),
             host = RoomHostResponse(
                 memberId = MOCK_HOST_MEMBER_ID,
-                nickname = "집요한 수달 07",
-                jobTitle = "프론트엔드 개발",
+                nickname = "성실한 사슴 03",
+                jobTitle = "백엔드 개발",
                 isHost = true,
                 stats = RoomHostStatsResponse(
-                    completedRoomCount = 12,
-                    attendanceRate = 96,
-                    averageRating = 4.8,
+                    completedRoomCount = 4,
+                    attendanceRate = 100,
+                    averageRating = 4.7,
                 ),
-                aiSummary = "결제 도메인 3년 차 프론트엔드 개발자. React·TypeScript 중심, 디자인 시스템 구축 경험.",
+                aiSummary = "백엔드 개발자. 서버 개발과 시스템 설계 이야기를 나누는 걸 좋아해요.",
             ),
             viewerRole = "HOST",
         )

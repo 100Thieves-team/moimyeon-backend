@@ -280,6 +280,26 @@ include::{snippets}/updateProfile/response-fields.adoc[]
 '''
 
 === 공개 프로필 조회
+
+다른 사용자에게 보이는 공개 프로필이다. 닉네임·직무·자기소개·공개 활동만 노출하며,
+이메일·OAuth 식별자·약관 동의 이력·비공개 관심 정보는 응답에 포함하지 않는다.
+
+목 API는 아래 고정 회원으로 응답 변형을 제공한다. 그 밖의 UUID는 존재하지 않는 회원으로 처리한다.
+
+|===
+| memberId | 응답
+
+| `00000000-0000-0000-0000-000000000001`
+| 활성 회원 공개 프로필과 Figma 신뢰 정보 예시
+
+| `00000000-0000-0000-0000-000000000410`
+| `withdrawn=true`, 닉네임 `탈퇴한 사용자`, 나머지 공개 정보 비움
+|===
+
+`data.trust`의 완료 룸 수·출석률·평균 별점·대표 태그는 목에서만 예시 값을 채운다.
+실 API(MOI-378)는 이번 스프린트에 이 영역을 `null`로 반환하고, 신뢰 도메인이 구현되면 같은 응답 모양에 값을 채운다.
+
+==== 활성 회원 예시
 ==== Curl Request
 include::{snippets}/publicProfile/curl-request.adoc[]
 ==== Path Parameters
@@ -288,6 +308,18 @@ include::{snippets}/publicProfile/path-parameters.adoc[]
 include::{snippets}/publicProfile/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/publicProfile/response-fields.adoc[]
+
+==== 탈퇴 회원 예시
+===== Http Response
+include::{snippets}/publicProfile-withdrawn/http-response.adoc[]
+
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | 회원 식별자가 UUID 형식이 아님
+| 404 | E1006 | 존재하지 않는 회원
+|===
 
 == Room (룸·면접) API
 
