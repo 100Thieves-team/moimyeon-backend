@@ -70,6 +70,17 @@ class RoomControllerTest : RestDocsTest() {
     }
 
     @Test
+    fun `createRoom 최소 인원이 최대 인원보다 크면 E400`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"maxParticipants\": 6", "\"maxParticipants\": 2")),
+        )
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("createRoom-e400", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
     fun createRoom() {
         mockMvc.perform(
             post("/v1/rooms")
