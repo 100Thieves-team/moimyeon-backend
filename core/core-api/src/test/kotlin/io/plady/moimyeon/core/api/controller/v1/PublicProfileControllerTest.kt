@@ -93,6 +93,9 @@ class PublicProfileControllerTest : RestDocsTest() {
     fun `존재하지 않는 회원의 공개 프로필은 E1006 을 반환한다`() {
         mockMvc.perform(get("/v1/members/{memberId}/profile", unknownMemberId))
             .andExpect(status().isNotFound)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString).contains("\"code\":\"E1006\"")
+            }
             .andDo(
                 documentApi(
                     "publicProfile-e1006",
@@ -108,6 +111,9 @@ class PublicProfileControllerTest : RestDocsTest() {
     fun `회원 식별자가 UUID 형식이 아니면 E400 을 반환한다`() {
         mockMvc.perform(get("/v1/members/{memberId}/profile", "not-a-uuid"))
             .andExpect(status().isBadRequest)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString).contains("\"code\":\"E400\"")
+            }
             .andDo(
                 documentApi(
                     "publicProfile-e400",
