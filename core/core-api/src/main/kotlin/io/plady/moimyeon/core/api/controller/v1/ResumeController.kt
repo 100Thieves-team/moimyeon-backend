@@ -26,15 +26,15 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 // TODO(MOI-377): 파일 보관과 AI 요약 생성이 구현되면 URI·응답 계약은 유지하고 이 고정 목만 교체한다.
-// 삭제 요청은 실제 구현에서도 물리 삭제가 아니라 이후 선택 목록에서 숨기는 행위다.
+// 삭제된 이력서는 활성 보관 목록과 이후 선택지에서 제외한다.
 @MockApiProfile
 @RestController
 class ResumeController {
     private val defaultResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000101")
     private val commerceResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000102")
     private val processingResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000103")
-    private val hiddenResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000104")
-    private val knownResumeIds: Set<UUID> = setOf(defaultResumeId, commerceResumeId, processingResumeId, hiddenResumeId)
+    private val deletedResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000104")
+    private val knownResumeIds: Set<UUID> = setOf(defaultResumeId, commerceResumeId, processingResumeId, deletedResumeId)
 
     @GetMapping("/v1/members/me/resumes")
     fun resumes(
@@ -60,19 +60,17 @@ class ResumeController {
     )
     fun create(
         @LoginMember currentMember: CurrentMember,
-        @RequestPart("name") name: String,
         @RequestPart("file") file: MultipartFile,
     ): ApiResponse<ResumeResponse> {
-        val request = CreateResumeRequest(name, file)
-        request.validate()
+        val upload = CreateResumeRequest(file).toUpload()
         return ApiResponse.success(
             ResumeResponse(
                 resumeId = processingResumeId,
-                name = request.name,
+                name = upload.originalName,
                 file = ResumeFileResponse(
-                    originalName = request.file.originalFilename.orEmpty(),
-                    sizeBytes = request.file.size,
-                    contentType = MediaType.APPLICATION_PDF_VALUE,
+                    originalName = upload.originalName,
+                    sizeBytes = upload.content.size.toLong(),
+                    contentType = upload.contentType,
                 ),
                 aiSummary = ResumeAiSummaryResponse(
                     status = ResumeAiSummaryStatus.PROCESSING,
@@ -85,7 +83,7 @@ class ResumeController {
     }
 
     @DeleteMapping("/v1/members/me/resumes/{resumeId}")
-    fun hide(
+    fun delete(
         @LoginMember currentMember: CurrentMember,
         @PathVariable resumeId: UUID,
     ): ApiResponse<Any> {
@@ -101,7 +99,7 @@ class ResumeController {
             resumes = listOf(
                 ResumeResponse(
                     resumeId = defaultResumeId,
-                    name = "백엔드 개발 이력서",
+                    name = "든든한곰_이력서.pdf",
                     file = ResumeFileResponse(
                         originalName = "든든한곰_이력서.pdf",
                         sizeBytes = 217_088,
@@ -116,7 +114,7 @@ class ResumeController {
                 ),
                 ResumeResponse(
                     resumeId = commerceResumeId,
-                    name = "커머스 프로젝트 이력서",
+                    name = "든든한곰_이력서_커머스.pdf",
                     file = ResumeFileResponse(
                         originalName = "든든한곰_이력서_커머스.pdf",
                         sizeBytes = 202_752,
@@ -131,7 +129,7 @@ class ResumeController {
                 ),
                 ResumeResponse(
                     resumeId = processingResumeId,
-                    name = "시스템 설계 이력서",
+                    name = "든든한곰_이력서_시스템설계.pdf",
                     file = ResumeFileResponse(
                         originalName = "든든한곰_이력서_시스템설계.pdf",
                         sizeBytes = 229_376,
