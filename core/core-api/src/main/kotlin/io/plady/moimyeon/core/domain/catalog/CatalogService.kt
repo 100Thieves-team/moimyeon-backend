@@ -9,5 +9,7 @@ class CatalogService(
 ) {
     fun getJobCatalog(): List<JobGroup> = jobCatalogFinder.getJobCatalog()
 
+    fun searchJobRoles(query: String): List<JobRoleSearchResult> = jobCatalogFinder.searchJobRoles(query)
+
     fun getRegions(): List<Sido> = regionFinder.getRegions()
 }

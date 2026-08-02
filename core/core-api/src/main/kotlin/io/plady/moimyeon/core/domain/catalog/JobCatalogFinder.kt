@@ -23,4 +23,26 @@ class JobCatalogFinder(
             )
         }
     }
+
+    // 직무명으로 유효 직무를 검색하고 상위 직군을 얹어 반환한다(룸 생성 직무 검색). 폐기된 직군의 직무는 제외한다.
+    @Transactional(readOnly = true)
+    fun searchJobRoles(query: String): List<JobRoleSearchResult> {
+        val roles = jobRoleRepository.findTop20ByDisplayNameContainingAndDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc(query)
+        if (roles.isEmpty()) return emptyList()
+
+        val activeGroups = jobGroupRepository.findAllById(roles.map { it.jobGroupId }.toSet())
+            .filter { it.isActive() }
+            .associateBy { it.id }
+
+        return roles.mapNotNull { role ->
+            val group = activeGroups[role.jobGroupId] ?: return@mapNotNull null
+            JobRoleSearchResult(
+                id = role.id,
+                code = role.code,
+                displayName = role.displayName,
+                groupCode = group.code,
+                groupDisplayName = group.displayName,
+            )
+        }
+    }
 }
