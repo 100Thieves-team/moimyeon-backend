@@ -23,8 +23,8 @@ class ResumeRegistrarIT(
             Email("resume@example.com"),
         )
 
-        val firstResumeId = resumeRegistrar.register(memberId, "백엔드 지원용", resumeFile(memberId, "first.pdf"))
-        val secondResumeId = resumeRegistrar.register(memberId, "커머스 지원용", resumeFile(memberId, "second.pdf"))
+        val firstResumeId = resumeRegistrar.register(memberId, newResume(memberId, "first.pdf"))
+        val secondResumeId = resumeRegistrar.register(memberId, newResume(memberId, "second.pdf"))
 
         val first = resumeRepository.findById(firstResumeId).orElseThrow()
         val second = resumeRepository.findById(secondResumeId).orElseThrow()
@@ -43,5 +43,9 @@ class ResumeRegistrarIT(
             sizeBytes = 1_024,
             contentType = "application/pdf",
         )
+    }
+
+    private fun newResume(memberId: UUID, originalName: String): NewResume {
+        return NewResume(originalName, resumeFile(memberId, originalName))
     }
 }

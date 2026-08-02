@@ -5,4 +5,9 @@ data class ResumeFile(
     val originalName: String,
     val sizeBytes: Long,
     val contentType: String,
-)
+) {
+
+    fun toNewResume(): NewResume {
+        return NewResume(originalName, this)
+    }
+}

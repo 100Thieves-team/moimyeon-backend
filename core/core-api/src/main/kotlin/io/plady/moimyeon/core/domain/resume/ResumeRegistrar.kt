@@ -2,8 +2,8 @@ package io.plady.moimyeon.core.domain.resume
 
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
-import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
@@ -17,27 +17,29 @@ class ResumeRegistrar(
     private val resumeRepository: ResumeRepository,
 ) {
     fun validateCapacity(memberId: UUID) {
-        requireCapacity(resumeRepository.countByMemberIdAndArchivedAtIsNullAndDeletedAtIsNull(memberId))
+        val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)
+        requireBusiness(
+            resumeCount < MAX_RESUME_COUNT,
+            CoreErrorType.RESUME_LIMIT_EXCEEDED,
+        )
     }
 
     @Transactional
-    fun register(memberId: UUID, name: String, file: ResumeFile): UUID {
-        // 회원 행 잠금이 같은 회원의 동시 등록을 직렬화한다. 단순 조회가 아니라
-        // 최대 개수와 첫 기본 이력서 판정을 한 커밋에서 확정하기 위한 잠금이다.
-        requireFound(memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+    fun register(memberId: UUID, resume: NewResume): UUID {
+        lockMember(memberId)
 
-        val resumeCount = resumeRepository.countByMemberIdAndArchivedAtIsNullAndDeletedAtIsNull(memberId)
-        requireCapacity(resumeCount)
+        val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)
+        requireBusiness(resumeCount < MAX_RESUME_COUNT, CoreErrorType.RESUME_LIMIT_EXCEEDED)
 
         val resumeId = resumeRepository.save(
             ResumeEntity(
                 id = UUID.randomUUID(),
                 memberId = memberId,
-                name = name,
-                fileKey = file.key,
-                originalName = file.originalName,
-                sizeBytes = file.sizeBytes,
-                contentType = file.contentType,
+                name = resume.name,
+                fileKey = resume.file.key,
+                originalName = resume.file.originalName,
+                sizeBytes = resume.file.sizeBytes,
+                contentType = resume.file.contentType,
                 summaryStatus = ResumeSummaryStatus.PROCESSING,
                 isDefault = resumeCount == 0L,
             ),
@@ -46,7 +48,11 @@ class ResumeRegistrar(
         return resumeId
     }
 
-    private fun requireCapacity(resumeCount: Long) {
-        requireBusiness(resumeCount < RESUME_VAULT_MAX_COUNT, CoreErrorType.RESUME_LIMIT_EXCEEDED)
+    private fun lockMember(memberId: UUID) {
+        // 보관함 행이 없으므로 회원 행을 잠가 같은 회원의 동시 등록을 직렬화한다.
+        val member = memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId)
+        if (member == null) throw CoreException(CoreErrorType.MEMBER_NOT_FOUND)
     }
 }
+
+private const val MAX_RESUME_COUNT = 10

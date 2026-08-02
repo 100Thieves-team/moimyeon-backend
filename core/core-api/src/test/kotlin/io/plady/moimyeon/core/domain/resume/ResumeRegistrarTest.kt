@@ -28,10 +28,11 @@ class ResumeRegistrarTest {
         sizeBytes = 1_024,
         contentType = "application/pdf",
     )
+    private val newResume = NewResume(file.originalName, file)
 
     @Test
     fun `활성 이력서가 10개면 E1011 을 던진다`() {
-        every { resumeRepository.countByMemberIdAndArchivedAtIsNullAndDeletedAtIsNull(memberId) } returns 10
+        every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 10
 
         assertThatThrownBy { resumeRegistrar.validateCapacity(memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
@@ -40,18 +41,30 @@ class ResumeRegistrarTest {
     }
 
     @Test
+    fun `파일 저장 중 이력서가 10개가 되면 트랜잭션 안에서 등록을 거절한다`() {
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
+        every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 10
+
+        assertThatThrownBy { resumeRegistrar.register(memberId, newResume) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_LIMIT_EXCEEDED)
+            }
+        verify(exactly = 0) { resumeRepository.save(any()) }
+    }
+
+    @Test
     fun `첫 이력서를 기본 이력서이자 요약 처리 중 상태로 등록한다`() {
         val savedResume = slot<ResumeEntity>()
         every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
-        every { resumeRepository.countByMemberIdAndArchivedAtIsNullAndDeletedAtIsNull(memberId) } returns 0
+        every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 0
         every { resumeRepository.save(capture(savedResume)) } answers { savedResume.captured }
 
-        val resumeId = resumeRegistrar.register(memberId, "백엔드 지원용", file)
+        val resumeId = resumeRegistrar.register(memberId, newResume)
 
         val entity = savedResume.captured
         assertThat(resumeId).isEqualTo(entity.id)
         assertThat(entity.memberId).isEqualTo(memberId)
-        assertThat(entity.name).isEqualTo("백엔드 지원용")
+        assertThat(entity.name).isEqualTo(file.originalName)
         assertThat(entity.fileKey).isEqualTo(file.key)
         assertThat(entity.originalName).isEqualTo(file.originalName)
         assertThat(entity.sizeBytes).isEqualTo(file.sizeBytes)
@@ -65,10 +78,10 @@ class ResumeRegistrarTest {
     fun `두 번째 이력서는 기본 이력서로 등록하지 않는다`() {
         val savedResume = slot<ResumeEntity>()
         every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
-        every { resumeRepository.countByMemberIdAndArchivedAtIsNullAndDeletedAtIsNull(memberId) } returns 1
+        every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 1
         every { resumeRepository.save(capture(savedResume)) } answers { savedResume.captured }
 
-        resumeRegistrar.register(memberId, "커머스 지원용", file)
+        resumeRegistrar.register(memberId, newResume)
 
         assertThat(savedResume.captured.isDefault).isFalse()
         verify(exactly = 1) { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) }

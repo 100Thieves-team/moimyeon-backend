@@ -33,12 +33,11 @@ CREATE TABLE resume (
     summary_content TEXT         NULL,
     summary_status  VARCHAR(20)  NOT NULL,
     is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
-    archived_at     DATETIME     NULL,
-    created_at      DATETIME     NOT NULL,
-    updated_at      DATETIME     NOT NULL,
+    created_at      DATETIME(6)  NOT NULL,
+    updated_at      DATETIME(6)  NOT NULL,
     deleted_at      DATETIME     NULL,
     _default_member_id BINARY(16) GENERATED ALWAYS AS (
-        CASE WHEN is_default = TRUE AND archived_at IS NULL AND deleted_at IS NULL THEN member_id ELSE NULL END
+        CASE WHEN is_default = TRUE AND deleted_at IS NULL THEN member_id ELSE NULL END
     ),
     PRIMARY KEY (id),
     CONSTRAINT uk_resume_member_default UNIQUE (_default_member_id)

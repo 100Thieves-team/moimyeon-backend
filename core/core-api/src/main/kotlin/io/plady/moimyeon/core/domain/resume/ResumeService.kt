@@ -10,20 +10,24 @@ class ResumeService(
     private val resumeRegistrar: ResumeRegistrar,
     private val resumeSummarizer: ResumeSummarizer,
 ) {
-    fun getVault(memberId: UUID): ResumeVault = resumeFinder.getVault(memberId)
+    fun getAll(memberId: UUID): List<Resume> = resumeFinder.getAll(memberId)
 
     fun makeDefault(memberId: UUID, resumeId: UUID) {
         resumeManager.makeDefault(memberId, resumeId)
     }
 
-    fun hide(memberId: UUID, resumeId: UUID) {
-        resumeManager.hide(memberId, resumeId, LocalDateTime.now())
+    fun rename(memberId: UUID, resumeId: UUID, name: String) {
+        resumeManager.rename(memberId, resumeId, name)
     }
 
-    fun register(memberId: UUID, registration: ResumeRegistration): UUID {
+    fun delete(memberId: UUID, resumeId: UUID) {
+        resumeManager.delete(memberId, resumeId, LocalDateTime.now())
+    }
+
+    fun register(memberId: UUID, upload: ResumeUpload): UUID {
         resumeRegistrar.validateCapacity(memberId)
-        val file = fileStorage.store(memberId, registration.upload)
-        val resumeId = resumeRegistrar.register(memberId, registration.name, file)
+        val newResume = fileStorage.store(memberId, upload).toNewResume()
+        val resumeId = resumeRegistrar.register(memberId, newResume)
         resumeSummarizer.summarize(resumeId)
         return resumeId
     }

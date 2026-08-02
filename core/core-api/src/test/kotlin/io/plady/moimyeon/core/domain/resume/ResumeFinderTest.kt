@@ -14,19 +14,34 @@ class ResumeFinderTest {
     private val resumeFinder = ResumeFinder(resumeRepository)
 
     @Test
-    fun `선택 가능한 이력서를 모아 회원의 보관함으로 조립한다`() {
+    fun `보관한 이력서가 없으면 빈 목록을 반환한다`() {
+        val memberId = UUID.randomUUID()
+        every {
+            resumeRepository.findByMemberIdAndDeletedAtIsNullOrderByIsDefaultDescCreatedAtDesc(
+                memberId,
+            )
+        } returns emptyList()
+
+        val resumes = resumeFinder.getAll(memberId)
+
+        assertThat(resumes).isEmpty()
+    }
+
+    @Test
+    fun `선택 가능한 회원의 이력서를 조회한다`() {
         val memberId = UUID.randomUUID()
         val defaultResume = resumeEntity(memberId, "백엔드 지원용", isDefault = true)
         val otherResume = resumeEntity(memberId, "커머스 지원용", isDefault = false)
         every {
-            resumeRepository.findByMemberIdAndArchivedAtIsNullAndDeletedAtIsNullOrderByCreatedAtDesc(memberId)
+            resumeRepository.findByMemberIdAndDeletedAtIsNullOrderByIsDefaultDescCreatedAtDesc(
+                memberId,
+            )
         } returns listOf(defaultResume, otherResume)
 
-        val vault = resumeFinder.getVault(memberId)
+        val resumes = resumeFinder.getAll(memberId)
 
-        assertThat(vault.maxCount).isEqualTo(10)
-        assertThat(vault.resumes).extracting("id").containsExactly(defaultResume.id, otherResume.id)
-        assertThat(vault.defaultResume?.id).isEqualTo(defaultResume.id)
+        assertThat(resumes).extracting("id").containsExactly(defaultResume.id, otherResume.id)
+        assertThat(resumes.first().isDefault).isTrue()
     }
 
     private fun resumeEntity(memberId: UUID, name: String, isDefault: Boolean): ResumeEntity {

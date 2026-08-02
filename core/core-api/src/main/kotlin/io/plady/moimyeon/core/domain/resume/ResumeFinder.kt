@@ -8,10 +8,9 @@ import java.util.UUID
 class ResumeFinder(
     private val resumeRepository: ResumeRepository,
 ) {
-    fun getVault(memberId: UUID): ResumeVault {
-        val resumes = resumeRepository
-            .findByMemberIdAndArchivedAtIsNullAndDeletedAtIsNullOrderByCreatedAtDesc(memberId)
+    fun getAll(memberId: UUID): List<Resume> {
+        return resumeRepository
+            .findByMemberIdAndDeletedAtIsNullOrderByIsDefaultDescCreatedAtDesc(memberId)
             .map(ResumeMapper::toDomain)
-        return ResumeVault(resumes)
     }
 }

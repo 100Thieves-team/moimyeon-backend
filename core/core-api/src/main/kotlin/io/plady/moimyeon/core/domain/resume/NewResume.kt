@@ -1,6 +1,6 @@
 package io.plady.moimyeon.core.domain.resume
 
-data class ResumeRegistration(
+data class NewResume(
     val name: String,
-    val upload: ResumeUpload,
+    val file: ResumeFile,
 )

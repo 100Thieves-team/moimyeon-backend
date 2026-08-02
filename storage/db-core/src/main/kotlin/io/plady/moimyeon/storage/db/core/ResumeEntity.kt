@@ -8,7 +8,6 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Entity
@@ -22,7 +21,7 @@ class ResumeEntity(
     id: UUID,
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    val name: String,
+    name: String,
     val fileKey: String,
     val originalName: String,
     val sizeBytes: Long,
@@ -30,8 +29,10 @@ class ResumeEntity(
     summaryStatus: ResumeSummaryStatus,
     summaryContent: String? = null,
     isDefault: Boolean,
-    archivedAt: LocalDateTime? = null,
 ) : UuidBaseEntity(id) {
+    var name: String = name
+        protected set
+
     @Enumerated(EnumType.STRING)
     var summaryStatus: ResumeSummaryStatus = summaryStatus
         protected set
@@ -42,11 +43,8 @@ class ResumeEntity(
     var isDefault: Boolean = isDefault
         protected set
 
-    var archivedAt: LocalDateTime? = archivedAt
-        protected set
-
     fun makeDefault() {
-        check(archivedAt == null) { "숨긴 이력서는 기본으로 지정할 수 없습니다." }
+        check(isActive()) { "삭제한 이력서는 기본으로 지정할 수 없습니다." }
         isDefault = true
     }
 
@@ -54,10 +52,7 @@ class ResumeEntity(
         isDefault = false
     }
 
-    fun canHide(): Boolean = !isDefault && archivedAt == null
-
-    fun hide(hiddenAt: LocalDateTime) {
-        check(canHide()) { "기본 이력서나 이미 숨긴 이력서는 숨길 수 없습니다." }
-        archivedAt = hiddenAt
+    fun rename(name: String) {
+        this.name = name
     }
 }

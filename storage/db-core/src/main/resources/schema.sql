@@ -372,10 +372,8 @@ CREATE INDEX ix_member_profile_interest_job_role_job_role_id ON member_profile_i
 -- 회원이 보관하는 이력서. 등록 후 내용을 수정하지 않는다 — 바꾸려면 새 이력서를 등록한다.
 -- 이미 제출한 룸의 참여자가 본 이력서가 그대로 보존되어야 하기 때문이다.
 -- summary_content: 등록 시 1회 생성해 여러 룸의 신청에 재사용한다.
--- archived_at: 사용자가 목록에서 숨긴 시각(이후 신청에서 선택되지 않음). 되돌리면 NULL 로 지운다.
---   숨김과 삭제는 다른 축이라 두 컬럼이 공존한다 — 숨긴 이력서는 본인에게 보이고, 지운 이력서는 아무에게도 안 보인다.
--- 베이스 상속: deleted_at 은 탈퇴 처리로 파일·내용을 지운 뒤 남기는 표식이다. 행 자체는 지우지 않는다 —
---   resume_submission 이 참조하고 있어 "누가 어떤 이력서를 냈는가"가 사라지면 안 된다.
+-- 베이스 상속: 사용자의 삭제는 deleted_at 으로 관리하며 행과 파일은 즉시 물리 삭제하지 않는다.
+--   이미 제출한 내용의 독립적인 보존은 resume_submission 의 제출 시점 사본이 담당해야 한다.
 CREATE TABLE resume (
     id              BINARY(16)   NOT NULL,
     member_id       BINARY(16)   NOT NULL,
@@ -387,12 +385,11 @@ CREATE TABLE resume (
     summary_content TEXT         NULL,
     summary_status  VARCHAR(20)  NOT NULL,
     is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
-    archived_at     DATETIME     NULL,
-    created_at      DATETIME     NOT NULL,
-    updated_at      DATETIME     NOT NULL,
+    created_at      DATETIME(6)  NOT NULL,
+    updated_at      DATETIME(6)  NOT NULL,
     deleted_at      DATETIME     NULL,
     _default_member_id BINARY(16) GENERATED ALWAYS AS (
-        CASE WHEN is_default = TRUE AND archived_at IS NULL AND deleted_at IS NULL THEN member_id ELSE NULL END
+        CASE WHEN is_default = TRUE AND deleted_at IS NULL THEN member_id ELSE NULL END
     ),
     PRIMARY KEY (id),
     CONSTRAINT uk_resume_member_default UNIQUE (_default_member_id)
