@@ -14,7 +14,7 @@ data class RoomApplicationResponse(
     val applicationId: Long,
     val applicant: ApplicantResponse,
     val note: String?, // 전달 사항(선택). 방장 외 비공개
-    val aiSummary: ApplicationAiSummaryResponse, // 이력서 AI 요약(등록 시점 생성, 재사용)
+    val aiSummary: ApplicationAiSummaryResponse?, // 이력서 AI 요약. 연동(J5) 전까지 null
     val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN
     val statusLabel: String, // 대기 | 수락 | 반려 | 철회
     @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
