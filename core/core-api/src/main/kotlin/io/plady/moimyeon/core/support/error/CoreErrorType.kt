@@ -21,6 +21,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     JOB_ROLE_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1301, "존재하지 않는 직무입니다.", LogLevel.WARN),
     REGION_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1302, "존재하지 않는 지역입니다.", LogLevel.WARN),
     COMPANY_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1303, "존재하지 않는 회사입니다.", LogLevel.WARN),
+    JOB_POSTING_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1304, "존재하지 않는 채용 공고입니다.", LogLevel.WARN),
 
     INVALID_ROOM_TITLE(HttpStatus.BAD_REQUEST, ErrorCode.E1401, "방 제목 형식이 올바르지 않습니다.", LogLevel.WARN),
     INVALID_ROOM_CAPACITY(HttpStatus.BAD_REQUEST, ErrorCode.E1402, "허용된 인원수 범위가 아닙니다.", LogLevel.WARN),

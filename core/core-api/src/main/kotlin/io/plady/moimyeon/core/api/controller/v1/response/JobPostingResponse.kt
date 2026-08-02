@@ -1,9 +1,29 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import io.plady.moimyeon.core.domain.jobposting.JobPosting
+
 // 회사별 채용 공고 목록(「룸 생성」 §4.1). 회사를 고르면 그 회사의 공고만 채워진다.
 data class JobPostingsResponse(
     val jobPostings: List<JobPostingResponse>,
-)
+) {
+    companion object {
+        fun from(jobPostings: List<JobPosting>): JobPostingsResponse {
+            return JobPostingsResponse(
+                jobPostings.map {
+                    JobPostingResponse(
+                        jobPostingId = it.id,
+                        companyId = it.companyId,
+                        postingName = it.postingName,
+                        jobRoleId = it.jobRoleId,
+                        jobRoleName = it.jobRoleName,
+                        sourceUrl = it.sourceUrl,
+                        verified = it.verified,
+                    )
+                },
+            )
+        }
+    }
+}
 
 data class JobPostingResponse(
     val jobPostingId: Long,
