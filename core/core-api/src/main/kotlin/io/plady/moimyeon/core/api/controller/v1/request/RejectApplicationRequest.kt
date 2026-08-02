@@ -7,12 +7,14 @@ import io.plady.moimyeon.core.support.error.CoreApiException
 data class RejectApplicationRequest(
     val reason: String? = null,
 ) {
-    // 목킹 단계라 변환할 개념 객체가 아직 없다. 도메인이 붙으면 toXxx() 안으로 옮긴다.
-    fun validate() {
-        if (reason != null && reason.length > REASON_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+    // 반려 사유 정규화. 공백뿐이면 사유 없음(null)으로 보고, 저장 컬럼(reject_reason VARCHAR(50)) 길이를 넘기면 거른다.
+    fun toReason(): String? {
+        val trimmed = reason?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (trimmed.length > REASON_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        return trimmed
     }
 
     companion object {
-        private const val REASON_MAX_LENGTH = 200
+        private const val REASON_MAX_LENGTH = 50
     }
 }
