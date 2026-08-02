@@ -26,7 +26,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     INVALID_ROOM_CAPACITY(HttpStatus.BAD_REQUEST, ErrorCode.E1402, "허용된 인원수 범위가 아닙니다.", LogLevel.WARN),
     INVALID_ROOM_SCHEDULE(HttpStatus.BAD_REQUEST, ErrorCode.E1403, "허용된 방 일정 범위가 아닙니다.", LogLevel.WARN),
     INVALID_ROOM_DESCRIPTION(HttpStatus.BAD_REQUEST, ErrorCode.E1404, "방 설명 형식이 올바르지 않습니다.", LogLevel.WARN),
-    ROOM_START_AT_NOT_FUTURE(HttpStatus.BAD_REQUEST, ErrorCode.E1403, "방 시작 일정이 현재보다 과거입니다", LogLevel.WARN),
+    ROOM_START_AT_NOT_FUTURE(HttpStatus.BAD_REQUEST, ErrorCode.E1407, "방 시작 일정이 현재보다 과거입니다", LogLevel.WARN),
 
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1405, "방을 찾을 수 없습니다.", LogLevel.WARN),
     ROOM_FORBIDDEN(HttpStatus.FORBIDDEN, ErrorCode.E1406, "방장만 수정하거나 삭제할 수 있습니다.", LogLevel.WARN),
