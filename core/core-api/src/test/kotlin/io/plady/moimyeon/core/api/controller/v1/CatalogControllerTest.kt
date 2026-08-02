@@ -6,6 +6,7 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.domain.catalog.CatalogService
 import io.plady.moimyeon.core.domain.catalog.JobGroup
 import io.plady.moimyeon.core.domain.catalog.JobRole
+import io.plady.moimyeon.core.domain.catalog.JobRoleSearchResult
 import io.plady.moimyeon.core.domain.catalog.Sido
 import io.plady.moimyeon.core.domain.catalog.Sigungu
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -15,6 +16,8 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
+import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
+import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class CatalogControllerTest : RestDocsTest() {
@@ -60,6 +63,51 @@ class CatalogControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun searchJobRoles() {
+        every { catalogService.searchJobRoles("백엔드") } returns listOf(
+            JobRoleSearchResult(
+                id = 1L,
+                code = "서버_백엔드",
+                displayName = "서버·백엔드",
+                groupCode = "IT_개발",
+                groupDisplayName = "IT·개발",
+            ),
+        )
+
+        mockMvc.perform(get("/v1/job-roles/search").param("query", "백엔드"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "searchJobRoles",
+                    "직무 검색",
+                    "룸 생성 직무 셀렉트의 검색 소스. 직무명 부분 일치로 유효(미폐기) 직무를 상위 직군과 함께 최대 20건 반환한다. " +
+                        "직무는 공고와 독립한 평면 카탈로그이므로 공고 선택과 무관하게 고른다. " +
+                        "검색어가 없거나 공백이거나 1~50자를 벗어나면 400(E400)으로 응답한다.",
+                    queryParameters(
+                        parameterWithName("query").description("검색어 (직무명 부분 일치, 공백 불가, 1~50자)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.jobRoles").type(JsonFieldType.ARRAY).description("검색 결과 (최대 20건)"),
+                        fieldWithPath("data.jobRoles[].jobRoleId").type(JsonFieldType.NUMBER).description("직무 id (룸 생성에 사용)"),
+                        fieldWithPath("data.jobRoles[].code").type(JsonFieldType.STRING).description("직무 코드"),
+                        fieldWithPath("data.jobRoles[].displayName").type(JsonFieldType.STRING).description("직무 표시명"),
+                        fieldWithPath("data.jobRoles[].group.code").type(JsonFieldType.STRING).description("상위 직군 코드"),
+                        fieldWithPath("data.jobRoles[].group.displayName").type(JsonFieldType.STRING).description("상위 직군 표시명"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `직무 검색어가 공백이면 E400 을 반환한다`() {
+        mockMvc.perform(get("/v1/job-roles/search").param("query", " "))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("searchJobRoles-e400-blank", "직무 검색", "직무명 부분 일치 검색", errorResponseFields()))
     }
 
     @Test
