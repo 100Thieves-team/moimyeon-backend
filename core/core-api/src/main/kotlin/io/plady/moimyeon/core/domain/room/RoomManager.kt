@@ -79,9 +79,8 @@ class RoomManager(
         return room
     }
 
-    private fun MeetingPlace.toEntityValues(): Pair<MeetingType, Long?> =
-        when (this) {
-            MeetingPlace.Online -> MeetingType.ONLINE to null
-            is MeetingPlace.Offline -> MeetingType.OFFLINE to sigunguId
-        }
+    private fun MeetingPlace.toEntityValues(): Pair<MeetingType, Long?> = when (this) {
+        MeetingPlace.Online -> MeetingType.ONLINE to null
+        is MeetingPlace.Offline -> MeetingType.OFFLINE to sigunguId
+    }
 }

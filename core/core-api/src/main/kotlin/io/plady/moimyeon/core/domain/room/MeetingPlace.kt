@@ -4,5 +4,5 @@ sealed interface MeetingPlace {
     data object Online : MeetingPlace
     data class Offline(
         val sigunguId: Long,
-    ): MeetingPlace
+    ) : MeetingPlace
 }

@@ -24,7 +24,6 @@ class Room(
     val interviewStage: InterviewStage,
     val interviewType: InterviewType?,
 
-
     // 모임 방식, 모집 인원수, 진행 일정
     val meetingPlace: MeetingPlace,
     val capacity: RoomCapacity,
@@ -91,20 +90,19 @@ class Room(
             schedule: RoomSchedule,
             resumeSharingPolicy: ResumeSharingPolicy,
             status: RoomStatus,
-        ): Room =
-            Room(
-                id = id,
-                jobPostingId = jobPostingId,
-                jobRoleId = jobRoleId,
-                title = title,
-                description = description,
-                interviewStage = interviewStage,
-                interviewType = interviewType,
-                meetingPlace = meetingPlace,
-                capacity = capacity,
-                schedule = schedule,
-                resumeSharingPolicy = resumeSharingPolicy,
-                status = status,
-            )
+        ): Room = Room(
+            id = id,
+            jobPostingId = jobPostingId,
+            jobRoleId = jobRoleId,
+            title = title,
+            description = description,
+            interviewStage = interviewStage,
+            interviewType = interviewType,
+            meetingPlace = meetingPlace,
+            capacity = capacity,
+            schedule = schedule,
+            resumeSharingPolicy = resumeSharingPolicy,
+            status = status,
+        )
     }
 }

@@ -9,7 +9,7 @@ data class RoomSchedule(
     val durationMinutes: Int,
 ) {
     init {
-        val endAt : LocalDateTime = startAt.plusMinutes(durationMinutes.toLong())
+        val endAt: LocalDateTime = startAt.plusMinutes(durationMinutes.toLong())
         requireBusiness(durationMinutes > 0, CoreErrorType.INVALID_ROOM_SCHEDULE)
     }
 }

@@ -10,8 +10,8 @@ data class RoomCapacity(
     init {
         requireBusiness(
             min in ALLOWED_RANGE &&
-                    max in ALLOWED_RANGE &&
-                    min <= max,
+                max in ALLOWED_RANGE &&
+                min <= max,
             CoreErrorType.INVALID_ROOM_CAPACITY,
             data = mapOf(
                 "min" to min,

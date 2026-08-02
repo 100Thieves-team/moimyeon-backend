@@ -10,7 +10,7 @@ value class RoomDescription(
     init {
         requireBusiness(
             value.length <= MAX_LENGTH,
-            CoreErrorType.INVALID_ROOM_DESCRIPTION
+            CoreErrorType.INVALID_ROOM_DESCRIPTION,
 
         )
     }

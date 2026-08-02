@@ -21,17 +21,16 @@ data class UpdateRoomRequest(
     val title: String,
     val description: String? = null,
 ) {
-    fun toCommand(): RoomUpdateCommand =
-        RoomUpdateCommand(
-            title = RoomTitle(title),
-            description = description?.let(::RoomDescription),
-            interviewStage = parseRoomEnum<InterviewStage>(round),
-            interviewType = type?.let { parseRoomEnum<InterviewType>(it) },
-            meetingPlace = resolveMeetingPlace(method, sigunguId),
-            capacity = RoomCapacity(min = minParticipants, max = maxParticipants),
-            schedule = RoomSchedule(
-                startAt = schedule.date.atTime(schedule.startTime),
-                durationMinutes = schedule.durationMinutes,
-            ),
-        )
+    fun toCommand(): RoomUpdateCommand = RoomUpdateCommand(
+        title = RoomTitle(title),
+        description = description?.let(::RoomDescription),
+        interviewStage = parseRoomEnum<InterviewStage>(round),
+        interviewType = type?.let { parseRoomEnum<InterviewType>(it) },
+        meetingPlace = resolveMeetingPlace(method, sigunguId),
+        capacity = RoomCapacity(min = minParticipants, max = maxParticipants),
+        schedule = RoomSchedule(
+            startAt = schedule.date.atTime(schedule.startTime),
+            durationMinutes = schedule.durationMinutes,
+        ),
+    )
 }

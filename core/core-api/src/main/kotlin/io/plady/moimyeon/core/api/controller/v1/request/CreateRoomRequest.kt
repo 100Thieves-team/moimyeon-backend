@@ -44,24 +44,23 @@ data class CreateRoomRequest(
 ) {
     // 요청을 도메인 입력으로 변환한다. enum 코드 파싱·진행 방식↔지역 정합은 형식 검증이라 여기서(400) 처리하고,
     // 제목·인원·일정 등 값 규칙은 각 값 객체(RoomTitle/RoomCapacity/RoomSchedule)가 생성 시 검증한다.
-    fun toCommand(): RoomCreationCommand =
-        RoomCreationCommand(
-            jobPostingId = postingId,
-            jobRoleId = jobRoleId,
-            title = RoomTitle(title),
-            description = description?.let(::RoomDescription),
-            interviewStage = parseRoomEnum<InterviewStage>(round),
-            interviewType = type?.let { parseRoomEnum<InterviewType>(it) },
-            meetingPlace = resolveMeetingPlace(method, sigunguId),
-            capacity = RoomCapacity(min = minParticipants, max = maxParticipants),
-            schedule = RoomSchedule(
-                startAt = schedule.date.atTime(schedule.startTime),
-                durationMinutes = schedule.durationMinutes,
-            ),
-            resumeSharingPolicy =
-                if (resumePublic) ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION else ResumeSharingPolicy.AI_SUMMARY_ONLY,
-            resumeId = resumeId,
-        )
+    fun toCommand(): RoomCreationCommand = RoomCreationCommand(
+        jobPostingId = postingId,
+        jobRoleId = jobRoleId,
+        title = RoomTitle(title),
+        description = description?.let(::RoomDescription),
+        interviewStage = parseRoomEnum<InterviewStage>(round),
+        interviewType = type?.let { parseRoomEnum<InterviewType>(it) },
+        meetingPlace = resolveMeetingPlace(method, sigunguId),
+        capacity = RoomCapacity(min = minParticipants, max = maxParticipants),
+        schedule = RoomSchedule(
+            startAt = schedule.date.atTime(schedule.startTime),
+            durationMinutes = schedule.durationMinutes,
+        ),
+        resumeSharingPolicy =
+        if (resumePublic) ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION else ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        resumeId = resumeId,
+    )
 }
 
 data class RoomScheduleRequest(
@@ -71,23 +70,21 @@ data class RoomScheduleRequest(
 )
 
 // §4.2: 온라인은 지역을 받지 않고, 오프라인은 공개 지역(sigungu)이 필수다. 생성·수정 요청이 공유한다.
-internal fun resolveMeetingPlace(method: String, sigunguId: Long?): MeetingPlace =
-    when (parseRoomEnum<MeetingType>(method)) {
-        MeetingType.ONLINE -> {
-            if (sigunguId != null) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
-            MeetingPlace.Online
-        }
-
-        MeetingType.OFFLINE ->
-            MeetingPlace.Offline(
-                sigunguId = sigunguId ?: throw CoreApiException(CoreApiErrorType.INVALID_REQUEST),
-            )
+internal fun resolveMeetingPlace(method: String, sigunguId: Long?): MeetingPlace = when (parseRoomEnum<MeetingType>(method)) {
+    MeetingType.ONLINE -> {
+        if (sigunguId != null) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        MeetingPlace.Online
     }
+
+    MeetingType.OFFLINE ->
+        MeetingPlace.Offline(
+            sigunguId = sigunguId ?: throw CoreApiException(CoreApiErrorType.INVALID_REQUEST),
+        )
+}
 
 // enum 코드 파싱 실패는 형식 오류(400)다. 도메인 규칙 위반과 구분해 CoreApiException 으로 던진다.
-internal inline fun <reified E : Enum<E>> parseRoomEnum(value: String): E =
-    try {
-        enumValueOf<E>(value)
-    } catch (e: IllegalArgumentException) {
-        throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
-    }
+internal inline fun <reified E : Enum<E>> parseRoomEnum(value: String): E = try {
+    enumValueOf<E>(value)
+} catch (e: IllegalArgumentException) {
+    throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+}
