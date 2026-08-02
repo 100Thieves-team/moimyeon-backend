@@ -7,6 +7,8 @@ import java.util.UUID
 interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     fun findByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?
 
+    fun existsByIdAndDeletedAtIsNull(memberId: UUID): Boolean
+
     // 닉네임 유일성은 삭제 여부와 무관하게 전체 회원 대상이다(유니크 제약과 동일 기준)
     fun existsByNickname(nickname: String): Boolean
 

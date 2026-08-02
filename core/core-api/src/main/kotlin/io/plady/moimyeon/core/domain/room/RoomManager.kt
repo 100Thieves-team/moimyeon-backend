@@ -23,7 +23,7 @@ class RoomManager(
     // 룸 생성 트랜잭션. ERD §4.2는 room + 방장 participation + resume_submission + chat_room + room_status_log
     // 5개를 한 트랜잭션으로 쓴다. 현재 room 과 방장 participation 까지 구현했고, 나머지 3개는 엔티티가 생기면 추가한다.
     @Transactional
-    fun create(room: Room, hostMemberId: UUID, resumeId: Long) {
+    fun create(room: Room, hostMemberId: UUID, resumeId: UUID) {
         roomRepository.save(RoomMapper.toEntity(room))
         participationRepository.save(
             ParticipationEntity(

@@ -11,7 +11,7 @@ class JobCatalogFinder(
     private val jobRoleRepository: JobRoleRepository,
 ) {
     @Transactional(readOnly = true)
-    fun findActiveGroups(): List<JobGroup> {
+    fun getJobCatalog(): List<JobGroup> {
         val rolesByGroup = jobRoleRepository.findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc()
             .groupBy { it.jobGroupId }
         return jobGroupRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { group ->
@@ -22,11 +22,5 @@ class JobCatalogFinder(
                 roles = rolesByGroup[group.id].orEmpty().map { JobRole(it.id, it.code, it.displayName) },
             )
         }
-    }
-
-    fun findActiveRolesByIds(jobRoleIds: Collection<Long>): List<JobRole> {
-        if (jobRoleIds.isEmpty()) return emptyList()
-        return jobRoleRepository.findByIdInAndDeletedAtIsNull(jobRoleIds)
-            .map { JobRole(it.id, it.code, it.displayName) }
     }
 }

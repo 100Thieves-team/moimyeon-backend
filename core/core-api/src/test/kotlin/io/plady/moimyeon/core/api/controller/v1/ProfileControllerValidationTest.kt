@@ -5,7 +5,7 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.facade.ProfileFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
-import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.profile.ProfileService
 import org.assertj.core.api.Assertions.assertThat
@@ -25,7 +25,7 @@ import java.util.UUID
 class ProfileControllerValidationTest {
     private lateinit var mockMvc: MockMvc
     private val profileService = mockk<ProfileService>()
-    private val catalogService = mockk<CatalogService>()
+    private val companyService = mockk<CompanyService>()
     private val memberService = mockk<MemberService>()
     private val memberFacade = mockk<MemberFacade>()
     private val principal = Principal { UUID.randomUUID().toString() }
@@ -33,7 +33,7 @@ class ProfileControllerValidationTest {
     @BeforeEach
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-            ProfileController(ProfileFacade(profileService, catalogService)),
+            ProfileController(ProfileFacade(profileService, companyService)),
             MemberController(memberService, memberFacade),
             PublicProfileController(),
         )

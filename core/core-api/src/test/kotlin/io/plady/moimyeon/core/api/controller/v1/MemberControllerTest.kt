@@ -10,7 +10,7 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.UpdateNicknameRequest
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
-import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberService
@@ -50,7 +50,7 @@ import javax.crypto.spec.SecretKeySpec
 class MemberControllerTest : RestDocsTest() {
     private lateinit var memberService: MemberService
     private lateinit var profileService: ProfileService
-    private lateinit var catalogService: CatalogService
+    private lateinit var companyService: CompanyService
 
     private val member: Member = Member.register(
         SocialLoginProvider.GOOGLE,
@@ -95,9 +95,9 @@ class MemberControllerTest : RestDocsTest() {
     fun setUp() {
         memberService = mockk()
         profileService = mockk()
-        catalogService = mockk()
+        companyService = mockk()
         mockMvc = mockController(
-            MemberController(memberService, MemberFacade(memberService, profileService, catalogService)),
+            MemberController(memberService, MemberFacade(memberService, profileService, companyService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -107,7 +107,7 @@ class MemberControllerTest : RestDocsTest() {
     fun memberMe() {
         every { memberService.getMember(memberId) } returns member
         every { profileService.getProfile(memberId) } returns profile
-        every { catalogService.getCompanies(emptyList()) } returns emptyList()
+        every { companyService.getCompanies(emptyList()) } returns emptyList()
 
         mockMvc.perform(get("/v1/members/me").principal(principal))
             .andExpect(status().isOk)
@@ -147,7 +147,7 @@ class MemberControllerTest : RestDocsTest() {
     @Test
     fun `memberMe 유효하지 않은 토큰 E1102`() {
         val securedMockMvc = mockController(
-            MemberController(memberService, MemberFacade(memberService, profileService, catalogService)),
+            MemberController(memberService, MemberFacade(memberService, profileService, companyService)),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
             filters = listOf(resourceServerFilter()),

@@ -125,6 +125,7 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - error.data: "필드명 -> 사유" 맵이라 additionalProperties 스키마가 필요
 // - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
 //   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
+// - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
 val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
 
 fun patchGeneratedSchemas(yamlFile: File) {
@@ -148,7 +149,44 @@ fun patchGeneratedSchemas(yamlFile: File) {
     check(errorDataPatched > 0) { "error.data 보정 대상을 스펙에서 찾지 못했다" }
     val missing = numberIdArrayProperties - numberArraysPatched
     check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
+    check(patchResumeMultipartRequest(root, mapper)) { "이력서 multipart 요청 보정 대상을 스펙에서 찾지 못했다" }
     mapper.writeValue(yamlFile, root)
+}
+
+fun patchResumeMultipartRequest(root: JsonNode, mapper: ObjectMapper): Boolean {
+    val post = root.path("paths").path("/v1/members/me/resumes").path("post")
+    if (post !is ObjectNode) {
+        return false
+    }
+
+    val schema = mapper.createObjectNode().apply {
+        put("type", "object")
+        putArray("required").add("name").add("file")
+        putObject("properties").apply {
+            putObject("name").apply {
+                put("type", "string")
+                put("description", "사용자가 이력서를 구분할 이름 (공백 불가)")
+            }
+            putObject("file").apply {
+                put("type", "string")
+                put("format", "binary")
+                put("description", "PDF 이력서 파일 (application/pdf, 1byte~10MB)")
+            }
+        }
+    }
+    val multipart = mapper.createObjectNode().apply {
+        set<ObjectNode>("schema", schema)
+        putObject("encoding").apply {
+            putObject("name").put("contentType", "text/plain; charset=utf-8")
+            putObject("file").put("contentType", "application/pdf")
+        }
+    }
+    val requestBody = mapper.createObjectNode().apply {
+        put("required", true)
+        putObject("content").set<ObjectNode>("multipart/form-data", multipart)
+    }
+    post.set<ObjectNode>("requestBody", requestBody)
+    return true
 }
 
 fun patchNumberIdArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSet<String>) {

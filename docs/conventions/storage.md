@@ -77,9 +77,8 @@ AbstractEntity (@MappedSuperclass, id 없음)
 - 부모 애그리거트가 삭제를 관리 (예: social_account — 삭제 시각은 member 의 `deleted_at`)
 
 **행의 존재 여부는 `deleted_at` 하나로만 표현한다.** 도메인 상태 enum 에 삭제 의미를 겹쳐 담지
-않는다 — 한 사실을 두 컬럼으로 들면 둘을 동기화하는 불변식이 따라붙는다. member 가 그 예로,
-`MemberStatus.WITHDRAWN` + `withdrawn_at` 을 `deleted_at` 하나로 합쳤고 `MemberStatus` 에는
-그와 직교하는 제재 상태(ACTIVE/RESTRICTED)만 남겼다.
+않는다 — 한 사실을 두 컬럼으로 들면 둘을 동기화하는 불변식이 따라붙는다. 상태 enum 에 `WITHDRAWN`
+같은 삭제 의미가 들어 있으면 `deleted_at` 하나로 합치고, enum 에는 그와 직교하는 상태만 남긴다.
 
 상속하지 않는 엔티티에는 **파일 상단 주석으로 이유를 남긴다** — 어떤 테이블이 어느 쪽인지의
 원본은 문서가 아니라 각 엔티티 파일이다.
@@ -90,7 +89,7 @@ AbstractEntity (@MappedSuperclass, id 없음)
 ### 가변 필드는 setter 를 닫고 의도 메서드로만 바꾼다
 
 이 레포는 **저장을 변경 감지(dirty checking)에 맡긴다** — 쓰기 경로에 `save` 호출이 없는 곳이
-많다(`MemberProfileEntity.updateProfile`, `MemberEntity.loggedIn`, `RefreshTokenEntity.revoke`).
+많다(엔티티의 `updateXxx`·`revoke` 같은 의도 메서드가 필드를 바꾸는 것으로 끝난다).
 그러면 **필드에 대입하는 행위 자체가 UPDATE 발행**이다. setter 를 public 으로 열어두면 어디서든
 UPDATE 를 유발할 수 있고, "이 트랜잭션 안에서 무엇이 바뀌는가"를 타입이 아니라 grep 으로
 확인해야 한다. 트랜잭션 경계를 제대로 잡으려면 경계 안의 변경이 **열거 가능**해야 한다
@@ -99,20 +98,19 @@ UPDATE 를 유발할 수 있고, "이 트랜잭션 안에서 무엇이 바뀌는
 우선순위대로 적용한다.
 
 1. **변경되지 않는 필드는 `val`.** 가장 싸고 효과가 크다. 실제로 바뀌는 필드만 `var` 로 두면
-   이 엔티티에서 무엇을 신경 써야 하는지가 선언에서 바로 읽힌다(예: `MemberEntity.email`).
+   이 엔티티에서 무엇을 신경 써야 하는지가 선언에서 바로 읽힌다(예: 가입 후 바뀌지 않는 식별 값).
 2. **컬렉션은 `private val` + 접근 메서드.** setter 가시성으로는 막히지 않는다 —
    `protected set` 을 붙여도 `entity.items.clear()` 는 그대로 컴파일된다. `cascade`/
    `orphanRemoval` 이 걸린 컬렉션에서 그 한 줄은 DELETE 다.
    ```kotlin
    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-   @JoinColumn(name = "member_id", nullable = false)
-   private val socialAccounts: MutableList<SocialAccountEntity> = socialAccounts.toMutableList()
+   @JoinColumn(name = "order_id", nullable = false)
+   private val lines: MutableList<OrderLineEntity> = lines.toMutableList()
 
-   fun socialAccounts(): List<SocialAccountEntity> = socialAccounts.toList()
+   fun lines(): List<OrderLineEntity> = lines.toList()
    ```
 3. **불변식이 있는 필드는 `protected set` + 의도 메서드.** 제재 상태, 1회성 시각(폐기·승인)처럼
-   "아무 값이나 대입되면 안 되는" 필드가 대상이다(예: `MemberEntity.status`,
-   `RefreshTokenEntity.revokedAt`).
+   "아무 값이나 대입되면 안 되는" 필드가 대상이다(상태 enum, 폐기 시각 등).
 4. 불변식 없는 단순 값 갱신은 public `var` 로 둬도 된다. 규칙을 위한 규칙은 만들지 않는다.
 
 **상태 전이는 판정과 에러 매핑을 나눈다.** `CoreErrorType`/`requireBusiness` 는 core-api 소속이라
@@ -122,16 +120,16 @@ storage 엔티티에서 참조할 수 없다(역방향 의존은 순환). 전이
 
 ```kotlin
 // storage — core-api 참조 0개
-fun canRestrict(): Boolean = status == MemberStatus.ACTIVE
+fun canCancel(): Boolean = status == OrderStatus.PAID
 
-fun restrict() {
-    check(canRestrict()) { "ACTIVE 회원만 제재할 수 있습니다. current=$status" }
-    status = MemberStatus.RESTRICTED
+fun cancel() {
+    check(canCancel()) { "결제 완료 주문만 취소할 수 있습니다. current=$status" }
+    status = OrderStatus.CANCELED
 }
 
 // core-api Manager — 도메인 에러는 여기서
-requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
-entity.restrict()
+requireBusiness(entity.canCancel(), CoreErrorType.ORDER_NOT_CANCELABLE)
+entity.cancel()
 ```
 
 **판정을 밖에서 물을 수 없으면 storage 전용 기술 예외를 만들어 던진다.** `can*` 판정 분리는
@@ -166,8 +164,8 @@ catch (e: IllegalCouponUsageException) {
 
 **비용**: Kotlin 은 생성자 프로퍼티에 `protected set` 을 직접 붙일 수 없어, 생성자 파라미터와
 프로퍼티 선언을 분리해야 한다(필드당 3줄). 그래서 **모든 `var` 에 일괄 적용하지 않는다** —
-위 1·2·3 에 해당하는 필드만 적용한다. 아직 변경 기능이 없는 필드(`TermsEntity.status`)는
-기능이 붙을 때 의도 메서드와 함께 시작한다.
+위 1·2·3 에 해당하는 필드만 적용한다. 아직 변경 기능이 없는 필드는 기능이 붙을 때
+의도 메서드와 함께 시작한다.
 
 ### 소프트 삭제와 유니크 제약
 
@@ -185,9 +183,10 @@ CONSTRAINT uk_xxx_active UNIQUE (col, _active_check)
 - 표현식은 `CASE WHEN` 을 쓴다(`IF()` 는 H2 미지원).
 - 엔티티의 `@Table(uniqueConstraints = ...)` 에도 `_active_check` 를 포함한 실제 제약 이름·컬럼으로 선언한다.
 - **기본값은 이 컬럼을 두지 않는 것이다.** 삭제된 행이 키를 계속 점유해야 하는 제약도 있다
-  (예: `uk_member_nickname` 은 탈퇴자 포함 전체 유일, `uk_social_account_provider_provider_id` 는
-  탈퇴자 재가입 차단이 이 점유에 의존한다). 적용 여부는 제약별 제품 결정이다.
-- PK 충돌은 이 방법으로 풀리지 않는다(예: member_profile 의 `member_id`). 되살리기로 처리한다.
+  (예: 탈퇴자가 쓰던 값을 남이 못 쓰게 막거나, 재가입 차단이 그 점유에 의존하는 경우).
+  적용 여부는 제약별 제품 결정이다.
+- PK 충돌은 이 방법으로 풀리지 않는다. 되살리기로 처리하거나, 애초에 자체 PK 를 두고
+  유니크 제약으로 분리한다.
 
 ### 공통
 

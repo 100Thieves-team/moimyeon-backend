@@ -14,6 +14,7 @@ import io.plady.moimyeon.core.support.error.CoreApiErrorType
 import io.plady.moimyeon.core.support.error.CoreApiException
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 // 룸 생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받는다.
 data class CreateRoomRequest(
@@ -36,8 +37,8 @@ data class CreateRoomRequest(
     val title: String,
     val description: String? = null,
     // --- 이력서(§4.5) ---
-    // 방장이 제출하는 이력서 = 회원 보관함의 이력서 id(「회원 프로필」 4.4-1, 준서 트랙).
-    val resumeId: Long,
+    // 방장이 제출하는 이력서 = 회원 보관함의 이력서 id(「회원 프로필」 4.4-1, 준서 트랙). id 체계는 dev와 통일해 UUID.
+    val resumeId: UUID,
     // 이력서 원본 공개 여부는 룸 속성이다(§4.5). 방장이 생성 시 정하며 모든 참여자에게 동일 적용된다.
     val resumePublic: Boolean = false,
 ) {

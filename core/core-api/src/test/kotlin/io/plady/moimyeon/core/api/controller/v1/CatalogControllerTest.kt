@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.domain.catalog.CatalogService
-import io.plady.moimyeon.core.domain.catalog.Company
 import io.plady.moimyeon.core.domain.catalog.JobGroup
 import io.plady.moimyeon.core.domain.catalog.JobRole
 import io.plady.moimyeon.core.domain.catalog.Sido
@@ -16,17 +15,10 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
-import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
-import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class CatalogControllerTest : RestDocsTest() {
     private lateinit var catalogService: CatalogService
-
-    private val searchCompaniesSummary = "회사 검색"
-    private val searchCompaniesDescription =
-        "관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 유효(미폐기) 회사를 최대 20건 반환한다. 크롤러가 관리하는 참조 데이터다. " +
-            "검색어가 없거나 1~50자를 벗어나면 400(E400)으로 응답한다."
 
     @BeforeEach
     fun setUp() {
@@ -39,7 +31,7 @@ class CatalogControllerTest : RestDocsTest() {
 
     @Test
     fun jobRoles() {
-        every { catalogService.getJobGroups() } returns listOf(
+        every { catalogService.getJobCatalog() } returns listOf(
             JobGroup(
                 id = 1L,
                 code = "IT_개발",
@@ -100,37 +92,5 @@ class CatalogControllerTest : RestDocsTest() {
                     ),
                 ),
             )
-    }
-
-    @Test
-    fun searchCompanies() {
-        every { catalogService.searchCompanies("달빛") } returns listOf(Company(1L, "달빛페이"))
-
-        mockMvc.perform(get("/v1/companies").param("query", "달빛"))
-            .andExpect(status().isOk)
-            .andDo(
-                documentApi(
-                    "searchCompanies",
-                    searchCompaniesSummary,
-                    searchCompaniesDescription,
-                    queryParameters(
-                        parameterWithName("query").description("검색어 (회사명 부분 일치, 1~50자)"),
-                    ),
-                    responseFields(
-                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
-                        fieldWithPath("data.companies").type(JsonFieldType.ARRAY).description("검색 결과 (최대 20건)"),
-                        fieldWithPath("data.companies[].companyId").type(JsonFieldType.NUMBER).description("회사 id (관심 회사 저장에 사용)"),
-                        fieldWithPath("data.companies[].name").type(JsonFieldType.STRING).description("회사명"),
-                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
-                    ),
-                ),
-            )
-    }
-
-    @Test
-    fun `searchCompanies 검색어 길이 위반 E400`() {
-        mockMvc.perform(get("/v1/companies").param("query", "가".repeat(51)))
-            .andExpect(status().isBadRequest)
-            .andDo(documentApi("searchCompanies-e400", searchCompaniesSummary, searchCompaniesDescription, errorResponseFields()))
     }
 }

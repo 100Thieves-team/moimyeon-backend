@@ -31,9 +31,9 @@
   core-api 프로세스에 **runtimeOnly 로 함께 조립**되고, 서로의 코드는 컴파일 타임에 모른다.
   인증 기술(spring-security)은 security 모듈에 격리되어 api 코드에는 등장하지 않는다.
   → [modules.md](modules.md)
-- **도메인**: `core.domain` 은 도메인 영역별 패키지(예: `member/`, `profile/`)로 나눈다.
-  영역끼리는 서로에 대해 아는 것을 최소로 유지한다 — 예를 들어 Profile 은 Member 의 id 만
-  알고, Member 는 프로필의 존재를 모른다.
+- **도메인**: `core.domain` 은 도메인 영역별 패키지(예: `order/`, `product/`)로 나눈다.
+  영역끼리는 서로에 대해 아는 것을 최소로 유지한다 — 한쪽이 상대의 id 만 알고, 역방향은
+  필요해질 때까지 만들지 않는다.
   → [concepts.md](concepts.md)
 - **레이어**: Controller(DTO 변환) → Service(비즈니스 흐름) → Implement(Finder/Validator/Manager 등
   재사용 로직·저장소 접근) → Repository. 여러 Service 의 결과를 조합하는 응답은 컨트롤러가 아니라
@@ -42,8 +42,10 @@
   권장 패턴이지 강제가 아니다.
   **Service 본문에 들어가는 것은 셋뿐이다 — 검증 도구 호출 + 외부 I/O + 쓰기 호출.** 판정은
   도구가 하고 예외도 도구가 던진다(Service 에 `requireBusiness` 를 쓰지 않는다). 도구 이름은
-  규칙을 말하지 호출자를 말하지 않는다(`validateActive` ○ / `validateForCreate` ✗).
-  트랜잭션 경계도 Service 가 아니라 쓰기 Implement 가 소유한다.
+  요구사항을 자연어로 풀어낸 뒤 그 역할에서 가져오고, 접미사 표는 보조 사전으로만 쓴다.
+  기술 메커니즘보다 개념적인 도구가 드러나야 한다(`MemberRegistrar.register` ○ /
+  `MemberRegistrationCommitter.commit` ✗). 트랜잭션은 접미사가 아니라 실제 커밋 단위를 소유한
+  메서드에 붙인다.
   → [layers.md](layers.md)
 - **에러**: 도메인 규칙 위반은 `CoreException(CoreErrorType)`, 요청 형태·인증 오류는
   `CoreApiException(CoreApiErrorType)`. 에러 코드(`ErrorCode`)는 하나의 체계를 공유하고 테스트로
@@ -67,6 +69,8 @@
   → [storage.md](storage.md)
 - **테스트**: 태그 4종(`unitTest`/`contextTest`/`restDocsTest`/`developTest`)으로 분리 실행.
   단위는 MockK, 통합은 `ContextTest`/`CoreDbContextTest`(생성자 주입), 문서화는 `RestDocsTest`(standalone).
+  **PR CI 가 돌리는 것은 `test` 뿐이다** — `develop` 과 `restdocs` 는 거기서 제외되므로,
+  회귀를 막을 검증은 `develop` 태그에 두지 않는다.
   → [testing.md](testing.md)
 - **API 문서화**: 문서는 테스트가 만든다. 성공뿐 아니라 **예외 케이스도 에러 코드와 함께** 문서화 테스트로 정의하고,
   openapi3.yaml 의 4xx 응답·코드별 예시로 병합된다.

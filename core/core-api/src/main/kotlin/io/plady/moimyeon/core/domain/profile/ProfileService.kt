@@ -1,20 +1,24 @@
 package io.plady.moimyeon.core.domain.profile
 
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
+import io.plady.moimyeon.core.domain.company.CompanyValidator
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
 class ProfileService(
     private val catalogRefValidator: CatalogRefValidator,
+    private val companyValidator: CompanyValidator,
     private val profileFinder: ProfileFinder,
     private val profileManager: ProfileManager,
 ) {
     fun update(memberId: UUID, content: ProfileContent): UUID {
-        // 카탈로그 참조는 세 테이블을 조회해야 하고 쓰기 트랜잭션에 넣을 이유가 없어 도구로 분리한다.
+        // 선택 가능 여부는 요청을 받아들이는 시점의 조건이지 프로필에 영구히 유지할 불변식이 아니다.
+        // 회사는 저장 후에도 검증 해제·폐기될 수 있고 기존 관심 참조는 이력으로 남으므로,
+        // 각 소유 개념이 쓰기 트랜잭션 밖에서 현재 상태만 판정한다.
         catalogRefValidator.validateJobRoles(content.interestJobRoleIds)
         content.sigunguId?.let { catalogRefValidator.validateSigungu(it) }
-        catalogRefValidator.validateCompanies(content.interestCompanyIds)
+        companyValidator.validateSelectable(content.interestCompanyIds)
 
         return profileManager.update(memberId, content)
     }

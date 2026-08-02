@@ -36,10 +36,16 @@
 
 `contract` 가 걸려 있어 호출 이후 스마트 캐스트가 동작한다.
 
-**호출 위치는 Implement 다.** `requireBusiness`/`requireFound` 는 그 규칙을 판정한 도구
-(`Validator`/`Finder`/`Manager`) 안에서 부른다. Service 는 도구를 호출할 뿐 자기가 판정하지
-않는다 ([layers.md](layers.md)의 Service 절). Service 본문에 `requireBusiness` 가 보이면
-그 판정을 가져갈 도구가 없다는 뜻이다.
+**호출 위치는 그 규칙을 판정한 곳이다.** 두 자리가 있다.
+
+- **값·개념 객체 자신**: 값 형식이나 개념의 성립 조건은 `init` 에서 `requireBusiness` 로 보증한다.
+  잘못된 값은 생성 자체가 불가능하다.
+- **Implement**: DB 를 봐야 판정되는 규칙은 그 데이터를 다루는 도구(`Validator`/`Finder`/`Manager`)
+  안에서 `requireFound`/`requireBusiness` 로 부른다.
+
+어느 쪽이든 **Service 는 아니다.** Service 는 도구를 호출할 뿐 자기가 판정하지 않는다
+([layers.md](layers.md)의 Service 절). Service 본문에 `requireBusiness` 가 보이면 그 판정을
+가져갈 자리가 없다는 뜻이다.
 
 ## 전역 핸들링 (`ApiControllerAdvice`)
 
@@ -73,9 +79,9 @@
 
 | 상황 | 번역하는 곳 | 예 |
 | --- | --- | --- |
-| 쓰기 하나의 제약 | 그 쓰기 Implement 안 | `MemberManager.changeNickname` — `uk_member_nickname` 을 아는 유일한 곳 |
-| 여러 쓰기 조합 + 재시도 | 조합 Implement 안 | `MemberProvisioner.provision` — 닉네임 충돌은 재시도, 소셜 계정 충돌은 E1004 |
-| 확인-후-저장 레이스 | 그 쓰기 Implement 안 | `ProfileManager.append` — `uk_member_profile_member` 충돌을 `PROFILE_ALREADY_EXISTS` 로 |
+| 쓰기 하나의 제약 | 그 쓰기 Implement 안 | 그 제약명을 아는 유일한 곳이다 |
+| 여러 쓰기 조합 + 재시도 | 조합 Implement 안 | 어떤 충돌은 재시도, 어떤 충돌은 도메인 에러 — 그 분기를 아는 곳이다 |
+| 확인-후-저장 레이스 | 그 쓰기 Implement 안 | 미리 확인한 중복이 커밋 순간 뒤집혀도 유니크 제약이 최종 방어선 |
 
 **Service 는 번역하지 않는다.** 제약명은 storage 지식이고, Service 로 새면 호출자마다 복제된다.
 번역 코드가 트랜잭션 경계 밖에 있으면 어느 제약이 터졌는지 판별이 부정확해진다.
@@ -84,30 +90,28 @@
 
 - **기대한 충돌만** 도메인 에러로 매핑한다. 어떤 제약이 터졌는지(재조회 또는 제약명 확인)로 구분한다.
   ```kotlin
-  // MemberProvisioner.provision
+  // 조합 Implement 안 — 어떤 제약이 터졌는지에 따라 갈린다
   when {
-      MemberManager.isNicknameConflict(e) -> retryOnce(provider, providerId, email)
-      isSocialAccountConflict(e) -> throw CoreException(SOCIAL_ACCOUNT_ALREADY_LINKED)
+      isOrderNumberConflict(e) -> retryOnce(userId, content)   // 재생성 가능한 값 → 재시도
+      isCouponUsageConflict(e) -> throw CoreException(COUPON_ALREADY_USED)
       else -> throw e     // 기대하지 않은 무결성 위반은 오인하지 않도록 전파
   }
   ```
 - 그 외 무결성 위반(not-null 위반 등)을 삼키면 **오인 매핑**이 된다. 반드시 전파해 500 으로 드러낸다.
   확인하지 않은 원인을 else 로 단정하면, 사용자는 자기가 할 수 있는 일이 없는 엉뚱한 에러를 받는다.
-- **재시도가 있으면 마지막 시도를 도메인 에러로 닫는다.** 재시도 밖으로 새는 예외는 그대로 500 이 된다
-  (`MemberProvisioner.retryOnce`).
-- 충돌을 트랜잭션 안에서 드러내야 하면 `save` 대신 `saveAndFlush` 를 쓴다
-  (예: `MemberManager.append` — `MemberProvisioner` 가 잡아 재시도할 수 있게).
-  flush 위치 규칙은 [layers.md](layers.md)의 트랜잭션 절 참고.
+- **재시도가 있으면 마지막 시도를 도메인 에러로 닫는다.** 재시도 밖으로 새는 예외는 그대로 500 이 된다.
+- 충돌을 트랜잭션 안에서 드러내야 하면 `save` 대신 `saveAndFlush` 를 쓴다 (조합 Implement 가 잡아
+  재시도할 수 있게). flush 위치 규칙은 [layers.md](layers.md)의 트랜잭션 절 참고.
 - 참조 무결성은 DB 가 아니라 애플리케이션이 담당한다 — **FK 제약을 걸지 않으므로**
   ([storage.md](storage.md)), 존재하지 않는 참조 id 는 **저장 전에 명시 검증**해 전용 코드로
-  응답한다(예: 존재하지 않는 직무 id → `JOB_ROLE_NOT_FOUND`).
+  응답한다(예: 존재하지 않는 상품 id → `PRODUCT_NOT_FOUND`).
 
 ## 응답 포맷
 
 모든 에러 응답은 같은 봉투를 쓴다 ([api-design.md](api-design.md)):
 
 ```json
-{ "result": "ERROR", "data": null, "error": { "code": "E1007", "message": "이미 사용 중인 닉네임입니다.", "data": null } }
+{ "result": "ERROR", "data": null, "error": { "code": "E1007", "message": "이미 사용 중인 값입니다.", "data": null } }
 ```
 
 `error.data` 는 추가 정보(검증 오류의 필드별 사유 등)에만 쓴다. 예외 케이스는 API 문서에

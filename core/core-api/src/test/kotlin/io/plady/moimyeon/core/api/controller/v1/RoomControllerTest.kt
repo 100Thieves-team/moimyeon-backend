@@ -17,6 +17,7 @@ import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -79,7 +80,7 @@ class RoomControllerTest : RestDocsTest() {
           },
           "title": "달빛페이 프론트 1차, 실전처럼 봐요",
           "description": "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
-          "resumeId": 90001,
+          "resumeId": "01920000-0000-7000-8000-000000000101",
           "resumePublic": true
         }
         """.trimIndent()
@@ -109,6 +110,47 @@ class RoomControllerTest : RestDocsTest() {
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
         now = LocalDateTime.now(),
     )
+
+    // 인원 규칙은 값 객체 RoomCapacity 가 검증한다 → 형식 오류(E400)가 아니라 도메인 코드 E1402(INVALID_ROOM_CAPACITY).
+    // create 는 @LoginMember 가 필수라, 검증에 도달하려면 인증 principal 이 있어야 한다.
+    @Test
+    fun `createRoom 최소 인원이 최대 인원보다 크면 E1402`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"maxParticipants\": 6", "\"maxParticipants\": 2")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1402\"") }
+            .andDo(documentApi("createRoom-e1402", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `createRoom 최소 인원이 2보다 작으면 E1402`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"minParticipants\": 3", "\"minParticipants\": 1")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1402\"") }
+            .andDo(documentApi("createRoom-e1402-min-participants", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `createRoom 최대 인원이 8보다 크면 E1402`() {
+        mockMvc.perform(
+            post("/v1/rooms")
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRequestJson.replace("\"maxParticipants\": 6", "\"maxParticipants\": 9")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1402\"") }
+            .andDo(documentApi("createRoom-e1402-max-participants", createSummary, createDescription, errorResponseFields()))
+    }
 
     @Test
     fun createRoom() {
@@ -142,7 +184,8 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
                         fieldWithPath("title").type(JsonFieldType.STRING).description("룸 제목 (필수, 최대 60자)"),
                         fieldWithPath("description").type(JsonFieldType.STRING).optional().description("룸 설명 (선택, 최대 1000자)"),
-                        fieldWithPath("resumeId").type(JsonFieldType.NUMBER).description("방장이 제출할 보관 이력서 id (회원 보관함)"),
+                        fieldWithPath("resumeId").type(JsonFieldType.STRING)
+                            .description("방장이 제출할 보관 이력서 id (UUID, /v1/members/me/resumes)"),
                         fieldWithPath("resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성, 기본 false)"),
                     ),
                     responseFields(
