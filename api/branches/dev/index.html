@@ -902,8 +902,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-08-01",
-    "datetime" : "2026-08-01T16:34:57.506197998",
+    "date" : "2026-08-02",
+    "datetime" : "2026-08-02T17:16:39.837074158",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1016,8 +1016,8 @@ Content-Length: 237
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-08-01",
-    "datetime" : "2026-08-01T16:34:57.692175893",
+    "date" : "2026-08-02",
+    "datetime" : "2026-08-02T17:16:40.038419644",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1176,7 +1176,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sat, 1 Aug 2026 17:04:56 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sun, 2 Aug 2026 17:46:38 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1382,7 +1382,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "f6ff8759-148b-4d65-aa30-cf9b65a5a453",
+      "termsId" : "7951c424-c435-4d00-b648-9cd2d4af9a77",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1390,7 +1390,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "ab8ef9b3-7d44-4d8a-87d2-d16f161d4f93",
+      "termsId" : "30351591-e2fb-4124-852c-0239c487a690",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1495,12 +1495,12 @@ Content-Length: 454
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "0d7e992f-be0f-43e8-bdcb-2e02279bc00d",
+    "memberId" : "b7867e67-19e0-43cb-98df-d4ec68fd3eca",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "0d7e992f-be0f-43e8-bdcb-2e02279bc00d",
+      "memberId" : "b7867e67-19e0-43cb-98df-d4ec68fd3eca",
       "interestJobRoleIds" : [ ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2286,7 +2286,7 @@ Content-Length: 443
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "d6736b3d-f033-4d15-8176-cbed81f2047f",
+    "memberId" : "482ed40d-4dc4-417a-838e-596a3bd15826",
     "interestJobRoleIds" : [ 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4047,7 +4047,7 @@ Content-Length: 268
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>round</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 (FIRST | SECOND | THIRD | FINAL)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 (FIRST | SECOND | THIRD | ETC)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
@@ -4230,73 +4230,35 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 2271
+Content-Length: 845
 
 {
   "result" : "SUCCESS",
   "data" : {
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "status" : "RECRUITING",
-    "statusLabel" : "모집 중",
+    "jobPostingId" : 1,
+    "jobRoleId" : 1,
     "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
-    "company" : {
-      "companyId" : 1,
-      "name" : "달빛페이"
-    },
-    "jobPosting" : {
-      "jobPostingId" : 1,
-      "postingName" : "프론트엔드 개발자 (결제플랫폼)"
-    },
-    "jobRole" : {
-      "jobRoleId" : 1,
-      "code" : "FRONTEND_DEVELOPER",
-      "displayName" : "프론트엔드 개발"
-    },
+    "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
     "round" : "FIRST",
-    "roundLabel" : "1차 면접",
+    "roundLabel" : "1차",
     "type" : "JOB",
     "typeLabel" : "직무 면접",
     "method" : "OFFLINE",
-    "methodLabel" : "오프라인",
-    "region" : {
-      "sigunguId" : 1,
-      "label" : "서울 강남구"
-    },
+    "sigunguId" : 1,
     "schedule" : {
-      "date" : "2026-08-01",
-      "dayOfWeekLabel" : "토",
-      "startTime" : "14:00",
-      "startTimeLabel" : "오후 2:00",
-      "durationMinutes" : 90,
-      "durationLabel" : "90분",
-      "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+      "startAt" : "2026-08-03T17:16:42.618694741",
+      "durationMinutes" : 90
     },
-    "description" : "실제 1차 면접 형식 그대로 진행해요. 한 사람씩 30분 모의면접을 보고, 끝나면 다 같이 피드백을 나눠요. 결제·정산 도메인 질문 위주로 준비할게요.",
-    "resumePublic" : true,
-    "resumePolicyLabel" : "이력서 원본 공개 (진행 확정 후 확정 참여자끼리)",
-    "notice" : "신청할 땐 보관한 이력서를 골라요. 확정 후 취소·노쇼는 활동 이력에 남아요.",
     "recruit" : {
       "current" : 1,
       "min" : 3,
       "max" : 6,
-      "confirmable" : false,
-      "remainingToConfirm" : 2,
-      "progressRatio" : 0.17,
-      "message" : "2명이 더 모이면 확정할 수 있어요"
+      "recruitStatus" : "RECRUITING"
     },
-    "host" : {
-      "memberId" : "00000000-0000-0000-0000-000000000001",
-      "nickname" : "성실한 사슴 03",
-      "jobTitle" : "백엔드 개발",
-      "isHost" : true,
-      "stats" : {
-        "completedRoomCount" : 4,
-        "attendanceRate" : 100,
-        "averageRating" : 4.7
-      },
-      "aiSummary" : "백엔드 개발자. 서버 개발과 시스템 설계 이야기를 나누는 걸 좋아해요."
-    },
-    "viewerRole" : "HOST"
+    "resumePublic" : false,
+    "hostMemberId" : "a67583a4-b6d3-4280-a854-69ebf9364b12"
   },
   "error" : null
 }</code></pre>
@@ -4335,9 +4297,14 @@ Content-Length: 2271
 <td class="tableblock halign-left valign-top"><p class="tableblock">룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.statusLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">상태 표시명 (모집 중)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostingId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id (회사는 공고에서 파생)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRoleId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 id</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.title</code></p></td>
@@ -4345,49 +4312,14 @@ Content-Length: 2271
 <td class="tableblock halign-left valign-top"><p class="tableblock">룸 제목</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.company.companyId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.company.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.description</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">회사명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 (없으면 null)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.jobPostingId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPosting.postingName</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRole.jobRoleId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">직무 id</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRole.code</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">직무 코드</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRole.displayName</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">직무 표시명</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 설명 (선택)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.round</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 코드</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 (FIRST | SECOND | THIRD | ETC)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.roundLabel</code></p></td>
@@ -4397,7 +4329,7 @@ Content-Length: 2271
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.type</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 유형 코드 (선택)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 유형 (선택)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.typeLabel</code></p></td>
@@ -4407,47 +4339,17 @@ Content-Length: 2271
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.method</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 코드 (ONLINE | OFFLINE)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 (ONLINE | OFFLINE)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.methodLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 표시명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이면 null)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region.sigunguId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sigunguId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">지역 시군구 id (OFFLINE 일 때)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 시군구 id (온라인이면 null)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region.label</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.startAt</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">지역 표시명 (서울 강남구)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.date</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.dayOfWeekLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">요일 표시명 (토)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.startTime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 (HH:mm)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.startTimeLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 표시명 (오후 2:00)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 시작 일시 (ISO-8601)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.durationMinutes</code></p></td>
@@ -4455,39 +4357,9 @@ Content-Length: 2271
 <td class="tableblock halign-left valign-top"><p class="tableblock">예상 소요 시간(분)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.durationLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">소요 시간 표시명 (90분)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.displayLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">일정 전체 표시 문구</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.description</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">룸 설명 (선택)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePublic</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (룸 속성)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePolicyLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 공유 정책 표시명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.notice</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">신청 전 안내 문구</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.current</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원 (방장 겸 참여자 포함)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원 (활성 참여 수, 방장 포함)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.min</code></p></td>
@@ -4500,69 +4372,19 @@ Content-Length: 2271
 <td class="tableblock halign-left valign-top"><p class="tableblock">최대 인원</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.confirmable</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">확정 가능 여부 (최소 인원 충족)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.remainingToConfirm</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">확정까지 남은 인원</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.progressRatio</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">모집 진행률 (0.0~1.0)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.message</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatus</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 안내 문구</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePublic</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (룸 속성)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.hostMemberId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">방장 회원 식별자 (UUID)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.nickname</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 닉네임</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.jobTitle</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 직무 (선택)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.isHost</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자가 방장인지 여부</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.completedRoomCount</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 완료 룸 수</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.attendanceRate</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 출석률 (%)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.stats.averageRating</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 평균 별점</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.host.aiSummary</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">방장 이력 AI 요약</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewerRole</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자 역할 (HOST | PARTICIPANT | APPLICANT | GUEST)</p></td>
 </tr>
 </tbody>
 </table>
@@ -5368,7 +5190,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-01 16:34:02 UTC
+Last updated 2026-08-02 17:15:25 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
