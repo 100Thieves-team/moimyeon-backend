@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-02",
-                        "datetime" : "2026-08-02T17:46:21.839314042",
+                        "datetime" : "2026-08-02T18:32:21.929459723",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-02",
-                        "datetime" : "2026-08-02T17:46:22.0549",
+                        "datetime" : "2026-08-02T18:32:22.166708886",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -613,7 +613,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "dca33f50-98dd-4475-8e34-7d558c730b48",
+                          "termsId" : "96de789f-d57d-4c39-8b51-c6846c488712",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -621,7 +621,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "5010a7a6-6e53-4fc4-b4d0-f48fe4d3f542",
+                          "termsId" : "84546b70-6cfb-4180-84f5-dad265cc064c",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -828,12 +828,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "5e84b74e-9abc-4994-abb2-57d90db02cfa",
+                        "memberId" : "a03e1915-7d7b-4695-a7d1-fe80fb69a51b",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "5e84b74e-9abc-4994-abb2-57d90db02cfa",
+                          "memberId" : "a03e1915-7d7b-4695-a7d1-fe80fb69a51b",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1084,7 +1084,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-03T17:46:24.550362624",
+                          "startAt" : "2026-08-03T18:32:24.621628167",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1094,7 +1094,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "abb39f76-36e0-4527-b1ca-15d1dffe033c"
+                        "hostMemberId" : "fc4ecf4a-86f9-4bfa-a591-f35d3749cc87"
                       },
                       "error" : null
                     }
@@ -1399,7 +1399,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "6412ef5b-1691-4cfa-a303-d07de7551c88",
+                        "memberId" : "a0083e69-8069-4ade-a434-77bfa6685bc5",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1786,9 +1786,10 @@ paths:
       tags:
       - v1
       summary: 참가 신청 목록 조회 (방장)
-      description: "방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자의 공개 정보·전달 사항·이력\
-        서 AI 요약·처리 상태를 함께 내려준다. AI 요약이 아직 없으면 status=PROCESSING('요약 준비 중')으로 표시된다\
-        . 전달 사항·요약은 방장 외 비공개이며, 이력서 원본으로 가는 경로는 없다(§6). (모킹: 고정 신청 2건(대기)을 반환한다)"
+      description: "방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자의 공개 정보·전달 사항·처리\
+        \ 상태를 신청 시각 오름차순으로 내려준다. 철회된 신청은 제외된다. 전달 사항은 방장 외 비공개이며, 이력서 원본으로 가는 경로는\
+        \ 없다(§6). 방장만 조회할 수 있다(E1406). 이력서 AI 요약(J5)·신청자 직무·활동 정보는 연동 전까지 null 로 내\
+        려간다."
       operationId: roomApplications
       parameters:
       - name: roomId
@@ -1803,7 +1804,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-applications-1743114874"
+                $ref: "#/components/schemas/v1-rooms-roomId-applications186415359"
               examples:
                 roomApplications:
                   value: |-
@@ -1815,33 +1816,14 @@ paths:
                           "applicant" : {
                             "memberId" : "00000000-0000-0000-0000-000000000002",
                             "nickname" : "성실한 다람쥐 12",
-                            "jobTitle" : "프론트엔드 개발",
-                            "activitySummary" : "완료한 모의면접 8회"
+                            "jobTitle" : null,
+                            "activitySummary" : null
                           },
                           "note" : "결제 도메인 1차 면접을 앞두고 있어요. 실전처럼 연습하고 싶어 신청합니다.",
-                          "aiSummary" : {
-                            "status" : "DONE",
-                            "text" : "프론트엔드 2년 차. React·TypeScript, 결제 위젯 연동 경험."
-                          },
+                          "aiSummary" : null,
                           "status" : "PENDING",
                           "statusLabel" : "대기",
                           "appliedAt" : "2026-07-31T10:20:00"
-                        }, {
-                          "applicationId" : 3002,
-                          "applicant" : {
-                            "memberId" : "00000000-0000-0000-0000-000000000003",
-                            "nickname" : "꼼꼼한 고슴도치 03",
-                            "jobTitle" : "프론트엔드 개발",
-                            "activitySummary" : null
-                          },
-                          "note" : null,
-                          "aiSummary" : {
-                            "status" : "PROCESSING",
-                            "text" : null
-                          },
-                          "status" : "PENDING",
-                          "statusLabel" : "대기",
-                          "appliedAt" : "2026-07-31T11:05:00"
                         } ]
                       },
                       "error" : null
@@ -2039,9 +2021,10 @@ paths:
       tags:
       - v1
       summary: 참가 신청 수락
-      description: "방장이 대기 중인 신청을 수락한다(§4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인\
-        원을 증가시킨다. 정원에 도달하면 모집 상태가 마감(CLOSED)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도 1건만 성공한\
-        다(동시성). (모킹: 정원 검사 없이 성공 결과(current+1)를 고정 반환한다)"
+      description: "방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록\
+        하고 현재 인원을 증가시킨다. 정원에 도달하면 모집 상태가 마감(CLOSED)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도\
+        \ 1건만 성공한다(룸 행 잠금). 방장만 처리할 수 있고(E1406), 이미 처리된 신청(E1409)·모집 중이 아닌 방(E1410)·\
+        정원 초과(E1411)는 거부된다."
       operationId: acceptApplication
       parameters:
       - name: roomId
@@ -2086,8 +2069,8 @@ paths:
       tags:
       - v1
       summary: 참가 신청 반려
-      description: "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택이며, 반려는 정원·참여자 목록에 영향이 없다. 반려된\
-        \ 사용자는 같은 룸에 재신청할 수 없다. (모킹: 성공 결과를 고정 반환한다)"
+      description: "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택(최대 50자)이며, 반려는 정원·참여자 목록에 영향이\
+        \ 없다. 반려된 사용자는 같은 룸에 재신청할 수 없다. 방장만 처리할 수 있다(E1406)."
       operationId: rejectApplication
       parameters:
       - name: roomId
@@ -2106,7 +2089,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-reject-1248448091"
+              $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-reject2120301028"
             examples:
               rejectApplication:
                 value: |-
@@ -2168,6 +2151,13 @@ components:
                   name:
                     type: string
                     description: 회사명
+    v1-rooms-roomId-applications-applicationId-reject2120301028:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: "반려 사유 (선택, 최대 50자)"
+          nullable: true
     v1-nicknames-availability-1805856748:
       required:
       - result
@@ -2549,78 +2539,6 @@ components:
             status:
               type: string
               description: 신청 상태 (ACCEPTED)
-    v1-rooms-roomId-applications-1743114874:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applications
-          type: object
-          properties:
-            applications:
-              type: array
-              description: 참가 신청 목록
-              items:
-                required:
-                - applicationId
-                - appliedAt
-                - status
-                - statusLabel
-                type: object
-                properties:
-                  note:
-                    type: string
-                    description: "전달 사항 (선택, 방장 외 비공개)"
-                    nullable: true
-                  aiSummary:
-                    required:
-                    - status
-                    type: object
-                    properties:
-                      text:
-                        type: string
-                        description: AI 요약 본문 (준비 중이면 null)
-                        nullable: true
-                      status:
-                        type: string
-                        description: 이력서 AI 요약 상태 (PROCESSING | DONE | FAILED)
-                  applicationId:
-                    type: number
-                    description: 신청 id (수락·반려의 입력)
-                  appliedAt:
-                    type: string
-                    description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
-                  statusLabel:
-                    type: string
-                    description: 신청 상태 표시명
-                  status:
-                    type: string
-                    description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN)
-                  applicant:
-                    required:
-                    - memberId
-                    - nickname
-                    type: object
-                    properties:
-                      jobTitle:
-                        type: string
-                        description: 신청자 직무 (선택)
-                        nullable: true
-                      nickname:
-                        type: string
-                        description: 신청자 닉네임
-                      activitySummary:
-                        type: string
-                        description: "공개 가능한 활동 정보 (선택, trust 격벽 전까지 자리만)"
-                        nullable: true
-                      memberId:
-                        type: string
-                        description: 신청자 회원 식별자 (UUID)
     v1-nicknames-suggestion679533277:
       required:
       - result
@@ -2745,6 +2663,70 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
+    v1-rooms-roomId-applications186415359:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applications
+          type: object
+          properties:
+            applications:
+              type: array
+              description: "참가 신청 목록 (신청 시각 오름차순, 철회 제외)"
+              items:
+                required:
+                - applicationId
+                - appliedAt
+                - status
+                - statusLabel
+                type: object
+                properties:
+                  note:
+                    type: string
+                    description: "전달 사항 (선택, 방장 외 비공개)"
+                    nullable: true
+                  aiSummary:
+                    type: object
+                    description: 이력서 AI 요약 (연동(J5) 전까지 null)
+                    nullable: true
+                  applicationId:
+                    type: number
+                    description: 신청 id (수락·반려의 입력)
+                  appliedAt:
+                    type: string
+                    description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
+                  statusLabel:
+                    type: string
+                    description: 신청 상태 표시명
+                  status:
+                    type: string
+                    description: 신청 상태 (PENDING | ACCEPTED | REJECTED)
+                  applicant:
+                    required:
+                    - memberId
+                    - nickname
+                    type: object
+                    properties:
+                      jobTitle:
+                        type: string
+                        description: 신청자 직무 (연동 전까지 null)
+                        nullable: true
+                      nickname:
+                        type: string
+                        description: 신청자 닉네임
+                      activitySummary:
+                        type: string
+                        description: 공개 가능한 활동 정보 (trust 격벽 전까지 null)
+                        nullable: true
+                      memberId:
+                        type: string
+                        description: 신청자 회원 식별자 (UUID)
     v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result
@@ -3306,13 +3288,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-rooms-roomId-applications-applicationId-reject-1248448091:
-      type: object
-      properties:
-        reason:
-          type: string
-          description: "반려 사유 (선택, 최대 200자)"
-          nullable: true
     v1-job-roles-search-1966453570:
       required:
       - result
