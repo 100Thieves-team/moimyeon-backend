@@ -32,6 +32,7 @@ locals {
       GOOGLE_OAUTH_CLIENT_ID            = var.oauth_google_client_id
       AWS_REGION                        = data.aws_region.current.name
       AWS_DEFAULT_REGION                = data.aws_region.current.name
+      STORAGE_OBJECTSTORAGE_S3_BUCKET   = aws_s3_bucket.uploads.bucket
     },
     var.jwt_issuer == null ? {} : { JWT_ISSUER = var.jwt_issuer },
     var.additional_environment,

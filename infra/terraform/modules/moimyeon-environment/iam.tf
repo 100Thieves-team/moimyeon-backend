@@ -90,6 +90,15 @@ data "aws_iam_policy_document" "task" {
   }
 
   statement {
+    sid     = "SummarizeResumeWithBedrock"
+    actions = ["bedrock:InvokeModel"]
+    resources = [
+      "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-5",
+      "arn:aws:bedrock:*:*:inference-profile/global.anthropic.claude-sonnet-5",
+    ]
+  }
+
+  statement {
     sid = "EcsExecChannels"
     actions = [
       "ssmmessages:CreateControlChannel",

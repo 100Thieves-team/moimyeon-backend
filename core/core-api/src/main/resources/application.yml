@@ -7,6 +7,8 @@ spring:
       - monitoring.yml
       - logging.yml
       - db-core.yml
+      - object-storage.yml
+      - client-ai.yml
       - client-example.yml
       - security-core.yml
   servlet:

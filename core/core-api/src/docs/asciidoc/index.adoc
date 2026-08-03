@@ -332,12 +332,12 @@ include::{snippets}/publicProfile-withdrawn/http-response.adoc[]
 않으며, 등록된 이력서는 이후 마이페이지와 다른 신청에서도 다시 선택할 수 있다.
 
 최신 「회원 및 프로필」 PRD 기준 최대 보관 개수는 10개다. 등록한 이력서는 수정하지 않고 새 이력서를
-등록하며, 삭제 요청은 이후 선택 목록에서 숨기되 이미 제출한 룸의 기록에는 영향을 주지 않는다.
+등록하며, 삭제한 이력서는 이후 선택 목록에서 제외하되 이미 제출한 룸의 기록에는 영향을 주지 않는다.
 목 API는 `local`·`local-dev`·`dev`에서만 활성화되며 고정 예시를 반환한다.
 
 === 보관 이력서 목록 조회
 기본 이력서를 먼저 보여주며, AI 요약 완료(`DONE`)와 준비 중(`PROCESSING`) 예시를 함께 반환한다.
-숨긴 이력서는 목록에 포함하지 않는다. 마이페이지·룸 생성·참가 신청 화면에서 이력서 선택지를 열 때
+삭제한 이력서는 목록에 포함하지 않는다. 마이페이지·룸 생성·참가 신청 화면에서 이력서 선택지를 열 때
 사용하며, 개별 AI 요약 상태를 확인하기 위한 반복 호출에는 아래 단건 조회 API를 사용한다.
 
 ==== Curl Request
@@ -358,6 +358,7 @@ include::{snippets}/resumes/response-fields.adoc[]
 === 보관 이력서 단건 조회
 회원이 소유한 이력서 한 건을 조회한다. 이력서 등록 응답이나 조회 결과의 `aiSummary.status`가
 `PROCESSING`이면 클라이언트는 이 API를 일정 간격으로 폴링하고, `DONE` 또는 `FAILED`가 되면 중단한다.
+처리 시작 후 1분을 넘기면 AI를 자동으로 다시 호출하지 않고 `FAILED`로 확정한다.
 현재 SSE 스트림은 제공하지 않는다.
 
 [NOTE]
@@ -386,10 +387,10 @@ include::{snippets}/resume/response-fields.adoc[]
 '''
 
 === 이력서 등록
-사용자가 식별할 이름과 PDF 파일을 `multipart/form-data`로 등록한다. PDF는 10MB 이하여야 하며,
-등록 직후 AI 요약은 `PROCESSING`, 본문은 `null`이다. 클라이언트가 생성 진행 상태를 표시해야 한다면
-응답의 `resumeId`로 위의 단건 조회 API를 폴링한다. AI 요약 완료를 기다리지 않고 등록 응답을 반환하며,
-룸 생성·참가 신청도 이 `resumeId`로 계속 진행할 수 있다.
+PDF 파일만 `multipart/form-data`로 등록하며 이력서 이름은 업로드한 원본 파일명으로 정한다.
+파일은 10MB 이하여야 하고 확장자·미디어 타입·PDF 시그니처가 모두 유효해야 한다.
+V1은 S3 원본 저장과 AI 요약을 동기 처리한 뒤 응답한다. 요약 성공 시 `DONE`과 요약문을,
+Bedrock 장애 시에도 등록은 유지하고 `FAILED`와 `null` 요약문을 반환한다.
 ==== Curl Request
 include::{snippets}/createResume/curl-request.adoc[]
 ==== Request Parts
@@ -402,22 +403,24 @@ include::{snippets}/createResume/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 필수 파트 누락, 빈 이름, PDF가 아닌 파일, 빈 파일, 10MB 초과
+| 400 | E400 | 필수 파일 누락, 유효하지 않은 파일명, PDF가 아닌 파일, 빈 파일, 10MB 초과
 | 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
 |===
 
 '''
 
 === 보관 이력서 삭제
-사용자 관점의 삭제 요청이며 실제 의미는 보관 목록 숨김이다. 반복 요청도 성공하는 멱등 계약이다.
+삭제는 소프트 삭제로 처리하며 반복 요청도 성공하는 멱등 계약이다. 기본 이력서를 삭제하고 다른
+이력서가 남아 있으면 가장 최근에 등록한 이력서를 새 기본으로 지정한다. 남은 이력서가 없으면 빈
+보관함이 된다.
 ==== Curl Request
-include::{snippets}/hideResume/curl-request.adoc[]
+include::{snippets}/deleteResume/curl-request.adoc[]
 ==== Path Parameters
-include::{snippets}/hideResume/path-parameters.adoc[]
+include::{snippets}/deleteResume/path-parameters.adoc[]
 ==== Http Response
-include::{snippets}/hideResume/http-response.adoc[]
+include::{snippets}/deleteResume/http-response.adoc[]
 ==== Response Fields
-include::{snippets}/hideResume/response-fields.adoc[]
+include::{snippets}/deleteResume/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
