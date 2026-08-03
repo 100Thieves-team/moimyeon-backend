@@ -3,6 +3,7 @@ package io.plady.moimyeon.storage.objectstorage
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 
@@ -13,6 +14,12 @@ internal class S3ObjectStorageConfig {
     fun s3Client(properties: S3ObjectStorageProperties): S3Client {
         return S3Client.builder()
             .region(Region.of(properties.region))
+            .overrideConfiguration(
+                ClientOverrideConfiguration.builder()
+                    .apiCallTimeout(properties.apiCallTimeout)
+                    .apiCallAttemptTimeout(properties.apiCallAttemptTimeout)
+                    .build(),
+            )
             .build()
     }
 }

@@ -85,6 +85,9 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - Spring AI, 모델 제공자와 프롬프트를 소유하고 `core-domain`의 `DocumentSummarizer`를 구현한다.
 - 현재 구현은 서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필에 PDF 바이트를
   문서 입력으로 전달한다. Sonnet 5는 현재 서울 In-Region 추론을 지원하지 않는다.
+- 글로벌 추론 프로필은 요청을 다른 AWS 상용 리전에서 처리할 수 있으므로 한국 내 처리만을 보장하지 않는다.
+  이력서에는 개인정보가 포함될 수 있어 운영 활성화 전에 국외 처리 고지, 적법한 처리 근거, 보존·삭제 기준과
+  조직의 개인정보·보안 승인을 확정해야 한다. 이 조건을 충족하지 못하면 글로벌 프로필을 사용하지 않는다.
 - `Resume`이나 DB 식별자를 알지 않으며 `PDF 바이트 → 요약문` 포트만 구현한다.
 - `core-api`는 이 모듈을 `runtimeOnly`로 조립하므로 특정 AI 구현에 컴파일 의존하지 않는다.
 - Spring AI·Bedrock·PDF 읽기의 예상 가능한 실패는 `DocumentSummarizationException`으로 변환한다.

@@ -16,13 +16,25 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectResponse
+import java.time.Duration
 
 class S3ObjectStorageTest {
     private val s3Client = mockk<S3Client>()
     private val objectStorage = S3ObjectStorage(
         s3Client,
-        S3ObjectStorageProperties(bucket = "resume-bucket", region = "ap-northeast-2"),
+        properties(),
     )
+
+    @Test
+    fun `S3 호출 전체와 개별 시도에 제한 시간을 적용한다`() {
+        val client = S3ObjectStorageConfig().s3Client(properties())
+
+        client.use {
+            val override = it.serviceClientConfiguration().overrideConfiguration()
+            assertThat(override.apiCallTimeout()).contains(Duration.ofSeconds(30))
+            assertThat(override.apiCallAttemptTimeout()).contains(Duration.ofSeconds(10))
+        }
+    }
 
     @Test
     fun `지정한 키와 콘텐츠 정보로 비공개 버킷에 객체를 저장한다`() {
@@ -64,4 +76,11 @@ class S3ObjectStorageTest {
             .isInstanceOf(ObjectStorageException::class.java)
             .hasCause(cause)
     }
+
+    private fun properties() = S3ObjectStorageProperties(
+        bucket = "resume-bucket",
+        region = "ap-northeast-2",
+        apiCallTimeout = Duration.ofSeconds(30),
+        apiCallAttemptTimeout = Duration.ofSeconds(10),
+    )
 }

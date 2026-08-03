@@ -388,7 +388,7 @@ CREATE TABLE resume (
     is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at      DATETIME(6)  NOT NULL,
     updated_at      DATETIME(6)  NOT NULL,
-    deleted_at      DATETIME     NULL,
+    deleted_at      DATETIME(6)  NULL,
     _default_member_id BINARY(16) GENERATED ALWAYS AS (
         CASE WHEN is_default = TRUE AND deleted_at IS NULL THEN member_id ELSE NULL END
     ),

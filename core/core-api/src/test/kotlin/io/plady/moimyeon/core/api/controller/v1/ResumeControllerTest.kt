@@ -173,6 +173,22 @@ class ResumeControllerTest : RestDocsTest() {
     }
 
     @Test
+    fun `PDF로 위장한 파일은 E400 을 반환한다`() {
+        val disguisedFile = MockMultipartFile(
+            "file",
+            "resume.pdf",
+            MediaType.APPLICATION_PDF_VALUE,
+            "plain text resume".toByteArray(),
+        )
+
+        performCreateResume(disguisedFile)
+            .andExpect(status().isBadRequest)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString).contains("\"code\":\"E400\"")
+            }
+    }
+
+    @Test
     fun `10MB를 초과한 파일은 E400 을 반환한다`() {
         val oversizedPdf = MockMultipartFile(
             "file",
@@ -202,7 +218,7 @@ class ResumeControllerTest : RestDocsTest() {
             "file",
             "resume.pdf",
             MediaType.APPLICATION_PDF_VALUE,
-            ByteArray(MAX_FILE_SIZE_BYTES),
+            pdfContent(MAX_FILE_SIZE_BYTES),
         )
 
         performCreateResume(maximumSizePdf)
@@ -457,6 +473,10 @@ class ResumeControllerTest : RestDocsTest() {
         )
     }
 
+    private fun pdfContent(size: Int): ByteArray {
+        return ByteArray(size).also { PDF_SIGNATURE.copyInto(it) }
+    }
+
     private fun resumePathParameters() = pathParameters(
         parameterWithName("resumeId").description("이력서 식별자 (UUID)"),
     )
@@ -477,3 +497,4 @@ class ResumeControllerTest : RestDocsTest() {
 }
 
 private const val MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+private val PDF_SIGNATURE = "%PDF-".toByteArray()

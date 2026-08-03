@@ -37,7 +37,13 @@ class ResumeManagerTest {
             resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId)
         } returns null
 
-        resumeManager.completeSummary(memberId, resume.id, "Kotlin Spring 백엔드 개발자", startedAt.plusSeconds(59))
+        resumeManager.completeSummary(
+            memberId,
+            resume.id,
+            "Kotlin Spring 백엔드 개발자",
+            startedAt,
+            startedAt.plusSeconds(59),
+        )
 
         assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.DONE)
         assertThat(resume.summaryContent).isEqualTo("Kotlin Spring 백엔드 개발자")
@@ -57,7 +63,7 @@ class ResumeManagerTest {
             resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId)
         } returns currentDefault
 
-        resumeManager.completeSummary(memberId, resume.id, "새 이력서 요약", startedAt.plusSeconds(59))
+        resumeManager.completeSummary(memberId, resume.id, "새 이력서 요약", startedAt, startedAt.plusSeconds(59))
 
         assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.DONE)
         assertThat(resume.isDefault).isFalse()
@@ -67,11 +73,12 @@ class ResumeManagerTest {
     @Test
     fun `AI 요약에 실패하면 요약문 없이 실패 상태로 변경한다`() {
         val resume = resumeEntity("요약 실패", isDefault = false)
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
         every {
             resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resume.id, memberId)
         } returns resume
 
-        resumeManager.failSummary(memberId, resume.id)
+        resumeManager.failSummary(memberId, resume.id, resume.summaryStartedAt)
 
         assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
         assertThat(resume.summaryContent).isNull()
@@ -81,11 +88,12 @@ class ResumeManagerTest {
     @Test
     fun `이미 실패로 확정된 AI 요약을 다시 실패 처리해도 상태를 유지한다`() {
         val resume = resumeEntity("이미 실패", isDefault = false, summaryStatus = ResumeSummaryStatus.FAILED)
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
         every {
             resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resume.id, memberId)
         } returns resume
 
-        resumeManager.failSummary(memberId, resume.id)
+        resumeManager.failSummary(memberId, resume.id, resume.summaryStartedAt)
 
         assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
         assertThat(resume.summaryContent).isNull()
@@ -100,7 +108,7 @@ class ResumeManagerTest {
             resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resume.id, memberId)
         } returns resume
 
-        resumeManager.completeSummary(memberId, resume.id, "늦게 도착한 요약", startedAt.plusMinutes(1))
+        resumeManager.completeSummary(memberId, resume.id, "늦게 도착한 요약", startedAt, startedAt.plusMinutes(1))
 
         assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
         assertThat(resume.summaryContent).isNull()
@@ -128,6 +136,47 @@ class ResumeManagerTest {
         assertThat(expiredCount).isEqualTo(2)
         assertThat(first.summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
         assertThat(second.summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
+    }
+
+    @Test
+    fun `이전 요약 시도의 늦은 성공은 새 재시도 상태를 변경하지 않는다`() {
+        val previousAttempt = LocalDateTime.of(2026, 8, 3, 12, 0)
+        val currentAttempt = previousAttempt.plusMinutes(2)
+        val resume = resumeEntity("재시도 중", isDefault = false, summaryStartedAt = currentAttempt)
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
+        every {
+            resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resume.id, memberId)
+        } returns resume
+
+        resumeManager.completeSummary(
+            memberId,
+            resume.id,
+            "이전 시도의 늦은 요약",
+            previousAttempt,
+            currentAttempt.plusSeconds(10),
+        )
+
+        assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.PROCESSING)
+        assertThat(resume.summaryContent).isNull()
+        verify(exactly = 0) {
+            resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(any())
+        }
+    }
+
+    @Test
+    fun `이전 요약 시도의 늦은 실패는 새 재시도 상태를 변경하지 않는다`() {
+        val previousAttempt = LocalDateTime.of(2026, 8, 3, 12, 0)
+        val currentAttempt = previousAttempt.plusMinutes(2)
+        val resume = resumeEntity("재시도 중", isDefault = false, summaryStartedAt = currentAttempt)
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
+        every {
+            resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resume.id, memberId)
+        } returns resume
+
+        resumeManager.failSummary(memberId, resume.id, previousAttempt)
+
+        assertThat(resume.summaryStatus).isEqualTo(ResumeSummaryStatus.PROCESSING)
+        assertThat(resume.summaryContent).isNull()
     }
 
     @Test

@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -86,11 +87,11 @@ class ResumeServiceTest {
     fun `이력서를 삭제한다`() {
         val memberId = UUID.randomUUID()
         val resumeId = UUID.randomUUID()
-        every { resumeManager.delete(memberId, resumeId, any()) } just Runs
+        every { resumeManager.delete(memberId, resumeId, now) } just Runs
 
         resumeService.delete(memberId, resumeId)
 
-        verify(exactly = 1) { resumeManager.delete(memberId, resumeId, any()) }
+        verify(exactly = 1) { resumeManager.delete(memberId, resumeId, now) }
     }
 
     @Test
@@ -111,10 +112,10 @@ class ResumeServiceTest {
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
-        every { resumeRegistrar.register(memberId, newResume) } returns resumeId
+        every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every { documentSummarizer.summarizePdf(upload.content) } returns "Kotlin Spring 백엔드 개발자"
         every {
-            resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now)
+            resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         } just Runs
 
         val registeredResumeId = resumeService.register(memberId, upload)
@@ -123,9 +124,9 @@ class ResumeServiceTest {
         verifyOrder {
             resumeRegistrar.validateCapacity(memberId)
             fileStorage.store(memberId, upload)
-            resumeRegistrar.register(memberId, newResume)
+            resumeRegistrar.register(memberId, newResume, now)
             documentSummarizer.summarizePdf(upload.content)
-            resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now)
+            resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         }
     }
 
@@ -138,11 +139,11 @@ class ResumeServiceTest {
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
-        every { resumeRegistrar.register(memberId, newResume) } returns resumeId
+        every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every {
             documentSummarizer.summarizePdf(upload.content)
         } throws DocumentSummarizationException(IllegalStateException("bedrock unavailable"))
-        every { resumeManager.failSummary(memberId, resumeId) } just Runs
+        every { resumeManager.failSummary(memberId, resumeId, now) } just Runs
 
         val registeredResumeId = resumeService.register(memberId, upload)
 
@@ -150,11 +151,11 @@ class ResumeServiceTest {
         verifyOrder {
             resumeRegistrar.validateCapacity(memberId)
             fileStorage.store(memberId, upload)
-            resumeRegistrar.register(memberId, newResume)
+            resumeRegistrar.register(memberId, newResume, now)
             documentSummarizer.summarizePdf(upload.content)
-            resumeManager.failSummary(memberId, resumeId)
+            resumeManager.failSummary(memberId, resumeId, now)
         }
-        verify(exactly = 0) { resumeManager.completeSummary(any(), any(), any(), any()) }
+        verify(exactly = 0) { resumeManager.completeSummary(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -168,7 +169,7 @@ class ResumeServiceTest {
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
         every { fileStorage.read(file) } returns content
         every { documentSummarizer.summarizePdf(content) } returns "재생성한 요약"
-        every { resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now) } just Runs
+        every { resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now) } just Runs
 
         val retriedResumeId = resumeService.retrySummary(memberId, resumeId)
 
@@ -179,7 +180,7 @@ class ResumeServiceTest {
             resumeManager.startSummaryRetry(memberId, resumeId, now)
             fileStorage.read(file)
             documentSummarizer.summarizePdf(content)
-            resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now)
+            resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now)
         }
     }
 
@@ -196,13 +197,13 @@ class ResumeServiceTest {
         every {
             documentSummarizer.summarizePdf(content)
         } throws DocumentSummarizationException(IllegalStateException("bedrock unavailable"))
-        every { resumeManager.failSummary(memberId, resumeId) } just Runs
+        every { resumeManager.failSummary(memberId, resumeId, now) } just Runs
 
         val retriedResumeId = resumeService.retrySummary(memberId, resumeId)
 
         assertThat(retriedResumeId).isEqualTo(resumeId)
-        verify(exactly = 1) { resumeManager.failSummary(memberId, resumeId) }
-        verify(exactly = 0) { resumeManager.completeSummary(any(), any(), any(), any()) }
+        verify(exactly = 1) { resumeManager.failSummary(memberId, resumeId, now) }
+        verify(exactly = 0) { resumeManager.completeSummary(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -214,13 +215,13 @@ class ResumeServiceTest {
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
-        every { resumeRegistrar.register(memberId, newResume) } returns resumeId
+        every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every { documentSummarizer.summarizePdf(upload.content) } throws IllegalStateException("implementation bug")
 
         assertThatThrownBy { resumeService.register(memberId, upload) }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessage("implementation bug")
-        verify(exactly = 0) { resumeManager.failSummary(any(), any()) }
+        verify(exactly = 0) { resumeManager.failSummary(any(), any(), any()) }
     }
 
     @Test
@@ -240,7 +241,7 @@ class ResumeServiceTest {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_LIMIT_EXCEEDED)
             }
         verify(exactly = 0) { fileStorage.store(any(), any()) }
-        verify(exactly = 0) { resumeRegistrar.register(any(), any()) }
+        verify(exactly = 0) { resumeRegistrar.register(any(), any(), any()) }
         verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
     }
 
@@ -253,7 +254,7 @@ class ResumeServiceTest {
 
         assertThatThrownBy { resumeService.register(memberId, upload) }
             .isInstanceOf(IllegalStateException::class.java)
-        verify(exactly = 0) { resumeRegistrar.register(any(), any()) }
+        verify(exactly = 0) { resumeRegistrar.register(any(), any(), any()) }
         verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
     }
 
@@ -266,7 +267,7 @@ class ResumeServiceTest {
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
         every {
-            resumeRegistrar.register(memberId, newResume)
+            resumeRegistrar.register(memberId, newResume, now)
         } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         assertThatThrownBy { resumeService.register(memberId, upload) }
@@ -298,9 +299,9 @@ class ResumeServiceTest {
             id = resumeId,
             name = file.originalName,
             file = file,
-            summary = ResumeSummary(io.plady.moimyeon.core.enums.ResumeSummaryStatus.FAILED, null),
+            summary = ResumeSummary(ResumeSummaryStatus.FAILED, null),
             isDefault = false,
-            registeredAt = java.time.LocalDateTime.of(2026, 8, 3, 12, 0),
+            registeredAt = now,
         )
     }
 }

@@ -1,3 +1,5 @@
 storage.object-storage.s3:
   bucket: ${STORAGE_OBJECTSTORAGE_S3_BUCKET}
   region: ${AWS_REGION:ap-northeast-2}
+  api-call-timeout: ${STORAGE_OBJECTSTORAGE_S3_API_CALL_TIMEOUT:30s}
+  api-call-attempt-timeout: ${STORAGE_OBJECTSTORAGE_S3_API_CALL_ATTEMPT_TIMEOUT:10s}

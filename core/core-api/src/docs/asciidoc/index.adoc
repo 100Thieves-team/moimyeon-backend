@@ -387,10 +387,10 @@ include::{snippets}/resume/response-fields.adoc[]
 '''
 
 === 이력서 등록
-사용자가 식별할 이름과 PDF 파일을 `multipart/form-data`로 등록한다. PDF는 10MB 이하여야 하며,
-등록 직후 AI 요약은 `PROCESSING`, 본문은 `null`이다. 클라이언트가 생성 진행 상태를 표시해야 한다면
-응답의 `resumeId`로 위의 단건 조회 API를 폴링한다. AI 요약 완료를 기다리지 않고 등록 응답을 반환하며,
-룸 생성·참가 신청도 이 `resumeId`로 계속 진행할 수 있다.
+PDF 파일만 `multipart/form-data`로 등록하며 이력서 이름은 업로드한 원본 파일명으로 정한다.
+파일은 10MB 이하여야 하고 확장자·미디어 타입·PDF 시그니처가 모두 유효해야 한다.
+V1은 S3 원본 저장과 AI 요약을 동기 처리한 뒤 응답한다. 요약 성공 시 `DONE`과 요약문을,
+Bedrock 장애 시에도 등록은 유지하고 `FAILED`와 `null` 요약문을 반환한다.
 ==== Curl Request
 include::{snippets}/createResume/curl-request.adoc[]
 ==== Request Parts
@@ -403,7 +403,7 @@ include::{snippets}/createResume/response-fields.adoc[]
 |===
 | HTTP | error.code | 케이스
 
-| 400 | E400 | 필수 파트 누락, 빈 이름, PDF가 아닌 파일, 빈 파일, 10MB 초과
+| 400 | E400 | 필수 파일 누락, 유효하지 않은 파일명, PDF가 아닌 파일, 빈 파일, 10MB 초과
 | 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
 |===
 

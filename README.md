@@ -160,6 +160,9 @@ OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 클라이언트 
 서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필을 호출하며
 `core-api`에는 런타임으로만 조립된다.
 
+> 글로벌 추론은 PDF를 한국 외 AWS 상용 리전에서 처리할 수 있다. 운영 활성화 전에 개인정보 국외 처리 고지,
+> 적법한 처리 근거, 보존·삭제 기준과 조직 승인을 확정해야 하며, 승인 전에는 글로벌 프로필을 사용하지 않는다.
+
 - 의존성: `core-domain`, `spring-ai-starter-model-bedrock-converse`, `pdfbox`
 
 ---

@@ -29,6 +29,15 @@ class ResumeRegistrar(
 
     @Transactional
     fun register(memberId: UUID, resume: NewResume): UUID {
+        return register(memberId, resume, LocalDateTime.now(clock))
+    }
+
+    @Transactional
+    fun register(
+        memberId: UUID,
+        resume: NewResume,
+        summaryStartedAt: LocalDateTime,
+    ): UUID {
         lockMember(memberId)
 
         val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)
@@ -44,7 +53,7 @@ class ResumeRegistrar(
                 sizeBytes = resume.file.sizeBytes,
                 contentType = resume.file.contentType,
                 summaryStatus = ResumeSummaryStatus.PROCESSING,
-                summaryStartedAt = LocalDateTime.now(clock),
+                summaryStartedAt = summaryStartedAt,
                 isDefault = false,
             ),
         ).id

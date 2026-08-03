@@ -35,10 +35,18 @@ class ResumeManager(
     }
 
     @Transactional
-    fun completeSummary(memberId: UUID, resumeId: UUID, summary: String, completedAt: LocalDateTime) {
+    fun completeSummary(
+        memberId: UUID,
+        resumeId: UUID,
+        summary: String,
+        attemptStartedAt: LocalDateTime,
+        completedAt: LocalDateTime,
+    ) {
         lockMember(memberId)
         val resume = getSelectableResume(memberId, resumeId)
-        if (!completedAt.isBefore(resume.summaryStartedAt.plusMinutes(SUMMARY_PROCESSING_TIMEOUT_MINUTES))) {
+        if (resume.summaryStatus != ResumeSummaryStatus.PROCESSING || resume.summaryStartedAt != attemptStartedAt) return
+
+        if (!completedAt.isBefore(attemptStartedAt.plusMinutes(SUMMARY_PROCESSING_TIMEOUT_MINUTES))) {
             resume.failSummary()
             return
         }
@@ -50,8 +58,10 @@ class ResumeManager(
     }
 
     @Transactional
-    fun failSummary(memberId: UUID, resumeId: UUID) {
+    fun failSummary(memberId: UUID, resumeId: UUID, attemptStartedAt: LocalDateTime) {
+        lockMember(memberId)
         val resume = getSelectableResume(memberId, resumeId)
+        if (resume.summaryStatus != ResumeSummaryStatus.PROCESSING || resume.summaryStartedAt != attemptStartedAt) return
         resume.failSummary()
     }
 

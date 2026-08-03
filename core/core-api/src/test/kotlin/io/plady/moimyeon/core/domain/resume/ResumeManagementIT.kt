@@ -168,7 +168,7 @@ class ResumeManagementIT(
     private fun registerDone(memberId: UUID, originalName: String): UUID {
         val resumeId = resumeRegistrar.register(memberId, newResume(memberId, originalName))
         val startedAt = resumeRepository.findById(resumeId).orElseThrow().summaryStartedAt
-        resumeManager.completeSummary(memberId, resumeId, "$originalName 요약", startedAt.plusSeconds(1))
+        resumeManager.completeSummary(memberId, resumeId, "$originalName 요약", startedAt, startedAt.plusSeconds(1))
         return resumeId
     }
 
