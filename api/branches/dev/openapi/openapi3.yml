@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-03",
-                        "datetime" : "2026-08-03T07:43:29.043615182",
+                        "datetime" : "2026-08-03T09:01:16.812553818",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-03",
-                        "datetime" : "2026-08-03T07:43:29.293798044",
+                        "datetime" : "2026-08-03T09:01:17.015939471",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -663,7 +663,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "b11b9fd8-e777-44ca-bf0f-155a4f56f31d",
+                          "termsId" : "c2b42221-5422-4cef-8e44-13671bd3b18c",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -671,7 +671,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "72bb7f74-dd5c-4b74-8e95-e26cd48c374f",
+                          "termsId" : "bb4ae2b8-dc47-4c82-be9a-6048461bc100",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -906,12 +906,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "95a17b69-1cfc-416b-aa20-9523c415adcd",
+                        "memberId" : "64b92eab-375c-48db-bf8f-4f98159072ae",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "95a17b69-1cfc-416b-aa20-9523c415adcd",
+                          "memberId" : "64b92eab-375c-48db-bf8f-4f98159072ae",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1162,7 +1162,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-04T07:43:32.047796137",
+                          "startAt" : "2026-08-04T09:01:19.813398156",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1172,7 +1172,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "520b2eaf-d391-4a16-91c5-505f102a3b6a"
+                        "hostMemberId" : "624d7eda-960b-4655-b399-4cf2f370e9bd"
                       },
                       "error" : null
                     }
@@ -1477,7 +1477,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "3c4500b2-81e8-4111-83f7-e36c3ff5a6ff",
+                        "memberId" : "c4154058-42f9-4dcb-a564-c8181745dab3",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1534,10 +1534,11 @@ paths:
       - v1
       summary: 보관 이력서 목록 조회
       description: "인증 회원의 보관 이력서를 마이페이지·룸 생성·참가 신청에서 함께 사용할 수 있는 동일한 자원 형태로 반환한다\
-        . 숨긴 이력서는 목록에서 제외되며, 기본 이력서를 먼저 보여준다. 최대 보관 개수는 최신 PRD 기준 10개다. 신청 화면에서는 선\
-        택지를 열 때 조회하며 개별 AI 요약 상태를 확인하는 폴링에는 단건 조회 API를 사용한다. AI 요약은 DONE·PROCESSING·\
-        FAILED 상태를 가지며 준비 중이면 text가 null이다. 인증 정보가 없으면 401(E1102)로 응답한다. 목 API는 고정\
-        \ 이력서 3건(DONE 2건, PROCESSING 1건)을 반환한다."
+        . 삭제한 이력서는 목록에서 제외되며, 기본 이력서를 먼저 보여준다. 최대 보관 개수는 최신 PRD 기준 10개다. 신청 화면에서는\
+        \ 선택지를 열 때 조회하며 개별 AI 요약 상태를 확인하는 폴링에는 단건 조회 API를 사용한다. AI 요약은 DONE·PROCESSING·\
+        FAILED 상태를 가지며 준비 중이면 text가 null이다. PROCESSING은 시작 후 최대 1분이며, 시간이 지나면 AI를\
+        \ 자동 재호출하지 않고 FAILED로 확정한다. 인증 정보가 없으면 401(E1102)로 응답한다. 목 API는 고정 이력서 4건\
+        (DONE 2건, PROCESSING 1건, FAILED 1건)을 반환한다."
       operationId: resumes
       responses:
         "401":
@@ -1563,7 +1564,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-resumes258595286"
+                $ref: "#/components/schemas/v1-members-me-resumes893966422"
               examples:
                 resumes:
                   value: |-
@@ -1573,7 +1574,7 @@ paths:
                         "maxCount" : 10,
                         "resumes" : [ {
                           "resumeId" : "01920000-0000-7000-8000-000000000101",
-                          "name" : "백엔드 개발 이력서",
+                          "name" : "든든한곰_이력서.pdf",
                           "file" : {
                             "originalName" : "든든한곰_이력서.pdf",
                             "sizeBytes" : 217088,
@@ -1587,7 +1588,7 @@ paths:
                           "registeredAt" : "2026-07-12T09:30:00"
                         }, {
                           "resumeId" : "01920000-0000-7000-8000-000000000102",
-                          "name" : "커머스 프로젝트 이력서",
+                          "name" : "든든한곰_이력서_커머스.pdf",
                           "file" : {
                             "originalName" : "든든한곰_이력서_커머스.pdf",
                             "sizeBytes" : 202752,
@@ -1601,7 +1602,7 @@ paths:
                           "registeredAt" : "2026-06-28T18:10:00"
                         }, {
                           "resumeId" : "01920000-0000-7000-8000-000000000103",
-                          "name" : "시스템 설계 이력서",
+                          "name" : "든든한곰_이력서_시스템설계.pdf",
                           "file" : {
                             "originalName" : "든든한곰_이력서_시스템설계.pdf",
                             "sizeBytes" : 229376,
@@ -1613,6 +1614,20 @@ paths:
                           },
                           "isDefault" : false,
                           "registeredAt" : "2026-08-01T14:20:00"
+                        }, {
+                          "resumeId" : "01920000-0000-7000-8000-000000000105",
+                          "name" : "든든한곰_이력서_재시도.pdf",
+                          "file" : {
+                            "originalName" : "든든한곰_이력서_재시도.pdf",
+                            "sizeBytes" : 211968,
+                            "contentType" : "application/pdf"
+                          },
+                          "aiSummary" : {
+                            "status" : "FAILED",
+                            "text" : null
+                          },
+                          "isDefault" : false,
+                          "registeredAt" : "2026-08-01T14:30:00"
                         } ]
                       },
                       "error" : null
@@ -1621,11 +1636,11 @@ paths:
       tags:
       - v1
       summary: 이력서 등록
-      description: "사용자가 식별할 이름과 PDF 파일을 이력서 보관함에 등록한다. PDF만 허용하고 파일 크기는 10MB 이하여야\
-        \ 한다. 등록한 이력서는 수정하지 않으며 내용 변경은 새 등록으로 처리한다. 등록 직후 AI 요약은 PROCESSING이고 text는\
-        \ null이다. AI 요약 완료를 기다리지 않고 응답하며, 클라이언트는 반환된 resumeId로 단건 조회 API를 폴링해 DONE\
-        \ 또는 FAILED 전이를 확인한다. 필수 파트 누락·빈 이름·PDF가 아닌 파일·빈 파일·10MB 초과는 400(E400), 인증\
-        \ 정보 없음은 401(E1102)로 응답한다."
+      description: "PDF 파일을 이력서 보관함에 등록하며 이력서 이름은 업로드한 원본 파일명을 사용한다. PDF만 허용하고 파일\
+        \ 크기는 10MB 이하여야 한다. 등록한 이력서는 수정하지 않으며 내용 변경은 새 등록으로 처리한다. V1은 S3 저장과 AI 요약\
+        을 동기 처리한 뒤 응답한다. 요약 성공 시 DONE과 요약문, Bedrock 장애 시에도 등록은 유지하고 FAILED와 null 요\
+        약문을 반환한다. 필수 파일 누락·유효하지 않은 파일명·PDF가 아닌 파일·빈 파일·10MB 초과는 400(E400), 인증 정보 없\
+        음은 401(E1102)로 응답한다."
       operationId: createResume
       responses:
         "400":
@@ -1693,23 +1708,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-resumes-1278253126"
+                $ref: "#/components/schemas/v1-members-me-resumes-resumeId1190069423"
               examples:
                 createResume:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "resumeId" : "01920000-0000-7000-8000-000000000103",
-                        "name" : "백엔드 지원용 이력서",
+                        "resumeId" : "01920000-0000-7000-8000-000000000106",
+                        "name" : "backend-resume.pdf",
                         "file" : {
                           "originalName" : "backend-resume.pdf",
                           "sizeBytes" : 20,
                           "contentType" : "application/pdf"
                         },
                         "aiSummary" : {
-                          "status" : "PROCESSING",
-                          "text" : null
+                          "status" : "DONE",
+                          "text" : "Kotlin·Spring 기반 백엔드 개발 경험과 결제 도메인 프로젝트를 중심으로 한 이력서."
                         },
                         "isDefault" : false,
                         "registeredAt" : "2026-08-01T15:30:00"
@@ -1723,19 +1738,13 @@ paths:
             schema:
               type: object
               required:
-              - name
               - file
               properties:
-                name:
-                  type: string
-                  description: 사용자가 이력서를 구분할 이름 (공백 불가)
                 file:
                   type: string
                   format: binary
                   description: "PDF 이력서 파일 (application/pdf, 1byte~10MB)"
             encoding:
-              name:
-                contentType: text/plain; charset=utf-8
               file:
                 contentType: application/pdf
   /v1/members/{memberId}/profile:
@@ -1912,8 +1921,9 @@ paths:
       - v1
       summary: 보관 이력서 단건 조회
       description: "인증 회원이 소유한 이력서 한 건을 조회한다. AI 요약이 PROCESSING이면 클라이언트는 이 API를 일정\
-        \ 간격으로 폴링하고 DONE 또는 FAILED가 되면 중단한다. SSE는 제공하지 않는다. 식별자 형식 오류는 400(E400),\
-        \ 존재하지 않거나 본인 소유가 아닌 이력서는 404(E1010), 인증 정보 없음은 401(E1102)로 응답한다."
+        \ 간격으로 폴링하고 DONE 또는 FAILED가 되면 중단한다. PROCESSING은 시작 후 최대 1분이며 시간 초과 시 자동 재\
+        처리 없이 FAILED가 된다. SSE는 제공하지 않는다. 식별자 형식 오류는 400(E400), 존재하지 않거나 본인 소유가 아닌\
+        \ 이력서는 404(E1010), 인증 정보 없음은 401(E1102)로 응답한다."
       operationId: resume
       parameters:
       - name: resumeId
@@ -1948,7 +1958,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-resumes-1278253126"
+                $ref: "#/components/schemas/v1-members-me-resumes-resumeId1190069423"
               examples:
                 resume:
                   value: |-
@@ -1956,7 +1966,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "resumeId" : "01920000-0000-7000-8000-000000000103",
-                        "name" : "시스템 설계 이력서",
+                        "name" : "든든한곰_이력서_시스템설계.pdf",
                         "file" : {
                           "originalName" : "든든한곰_이력서_시스템설계.pdf",
                           "sizeBytes" : 229376,
@@ -2011,11 +2021,10 @@ paths:
       tags:
       - v1
       summary: 보관 이력서 삭제
-      description: "사용자 관점에서는 이력서를 삭제하지만 서버는 보관 목록에서 숨긴다. 숨긴 이력서는 이후 룸 생성·참가 신청에서\
-        \ 선택되지 않으며, 이미 제출된 룸의 기록에는 영향을 주지 않는다. 같은 요청을 반복해도 성공하는 멱등 계약이다. 식별자 형식 오류\
-        는 400(E400), 존재하지 않거나 본인 소유가 아닌 이력서는 404(E1010), 인증 정보 없음은 401(E1102)로 응답한\
-        다."
-      operationId: hideResume
+      description: "삭제한 이력서는 이후 룸 생성·참가 신청에서 선택되지 않으며, 이미 제출된 룸의 기록에는 영향을 주지 않는다.\
+        \ 같은 요청을 반복해도 성공하는 멱등 계약이다. 식별자 형식 오류는 400(E400), 존재하지 않거나 본인 소유가 아닌 이력서는\
+        \ 404(E1010), 인증 정보 없음은 401(E1102)로 응답한다."
+      operationId: deleteResume
       parameters:
       - name: resumeId
         in: path
@@ -2024,6 +2033,20 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deleteResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
         "404":
           description: "404"
           content:
@@ -2031,7 +2054,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                hideResume-e1010:
+                deleteResume-e1010:
                   value: |-
                     {
                       "result" : "ERROR",
@@ -2042,38 +2065,6 @@ paths:
                         "data" : null
                       }
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                hideResume-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                hideResume:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
         "400":
           description: "400"
           content:
@@ -2081,7 +2072,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                hideResume-e400:
+                deleteResume-e400:
                   value: |-
                     {
                       "result" : "ERROR",
@@ -2093,6 +2084,88 @@ paths:
                           "resumeId" : "type mismatch"
                         }
                       }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                deleteResume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+  /v1/members/me/resumes/{resumeId}/summary-retries:
+    post:
+      tags:
+      - v1
+      summary: AI 이력서 요약 재시도
+      description: "AI 요약이 FAILED인 이력서만 재시도한다. 저장된 S3 원본으로 Bedrock 요약을 동기 실행하고 DONE\
+        \ 또는 FAILED 결과를 반환한다. 1분을 넘긴 PROCESSING은 먼저 FAILED로 확정하며 백그라운드에서 자동 재시도하지\
+        \ 않는다. 이미 PROCESSING이거나 DONE인 요약은 409(E1013), 존재하지 않거나 본인 소유가 아닌 이력서는 404(E1010)로\
+        \ 응답한다."
+      operationId: retryResumeSummary
+      parameters:
+      - name: resumeId
+        in: path
+        description: 이력서 식별자 (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                retryResumeSummary-e1013:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1013",
+                        "message" : "실패한 AI 요약만 재시도할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-resumes-resumeId1190069423"
+              examples:
+                retryResumeSummary:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "resumeId" : "01920000-0000-7000-8000-000000000105",
+                        "name" : "든든한곰_이력서_재시도.pdf",
+                        "file" : {
+                          "originalName" : "든든한곰_이력서_재시도.pdf",
+                          "sizeBytes" : 211968,
+                          "contentType" : "application/pdf"
+                        },
+                        "aiSummary" : {
+                          "status" : "DONE",
+                          "text" : "재시도에 성공해 생성한 백엔드 이력서 요약."
+                        },
+                        "isDefault" : false,
+                        "registeredAt" : "2026-08-01T14:30:00"
+                      },
+                      "error" : null
                     }
   /v1/rooms/{roomId}/applications/{applicationId}/accept:
     post:
@@ -2201,6 +2274,63 @@ paths:
                     }
 components:
   schemas:
+    v1-members-me-resumes-resumeId1190069423:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - isDefault
+          - name
+          - registeredAt
+          - resumeId
+          type: object
+          properties:
+            isDefault:
+              type: boolean
+              description: 기본 이력서 여부
+            file:
+              required:
+              - contentType
+              - originalName
+              - sizeBytes
+              type: object
+              properties:
+                originalName:
+                  type: string
+                  description: 업로드 당시 원본 파일명
+                contentType:
+                  type: string
+                  description: 파일 미디어 타입 (application/pdf)
+                sizeBytes:
+                  type: number
+                  description: 파일 크기 (byte)
+            resumeId:
+              type: string
+              description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
+            aiSummary:
+              required:
+              - status
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: AI 요약 본문 (준비 중·실패면 null)
+                  nullable: true
+                status:
+                  type: string
+                  description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
+                    단건 조회를 폴링하고 최대 1분 뒤 DONE·FAILED에서 중단
+            registeredAt:
+              type: string
+              description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
+            name:
+              type: string
+              description: 업로드 당시 원본 파일명과 동일한 이력서 이름
     v1-companies1839974379:
       required:
       - result
@@ -2718,6 +2848,75 @@ components:
             nickname:
               type: string
               description: 추천 닉네임 (중복 아님 보장)
+    v1-members-me-resumes893966422:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - maxCount
+          - resumes
+          type: object
+          properties:
+            resumes:
+              type: array
+              description: 삭제되지 않은 보관 이력서 목록 (기본 이력서 우선)
+              items:
+                required:
+                - isDefault
+                - name
+                - registeredAt
+                - resumeId
+                type: object
+                properties:
+                  isDefault:
+                    type: boolean
+                    description: 기본 이력서 여부
+                  file:
+                    required:
+                    - contentType
+                    - originalName
+                    - sizeBytes
+                    type: object
+                    properties:
+                      originalName:
+                        type: string
+                        description: 업로드 당시 원본 파일명
+                      contentType:
+                        type: string
+                        description: 파일 미디어 타입 (application/pdf)
+                      sizeBytes:
+                        type: number
+                        description: 파일 크기 (byte)
+                  resumeId:
+                    type: string
+                    description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
+                  aiSummary:
+                    required:
+                    - status
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                        description: AI 요약 본문 (준비 중·실패면 null)
+                        nullable: true
+                      status:
+                        type: string
+                        description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
+                          단건 조회를 폴링하고 최대 1분 뒤 DONE·FAILED에서 중단
+                  registeredAt:
+                    type: string
+                    description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
+                  name:
+                    type: string
+                    description: 업로드 당시 원본 파일명과 동일한 이력서 이름
+            maxCount:
+              type: number
+              description: 최대 보관 가능 개수 (10)
     v1-rooms-form-options-38619118:
       required:
       - result
@@ -3479,63 +3678,6 @@ components:
                       displayName:
                         type: string
                         description: 상위 직군 표시명
-    v1-members-me-resumes-1278253126:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - isDefault
-          - name
-          - registeredAt
-          - resumeId
-          type: object
-          properties:
-            isDefault:
-              type: boolean
-              description: 기본 이력서 여부
-            file:
-              required:
-              - contentType
-              - originalName
-              - sizeBytes
-              type: object
-              properties:
-                originalName:
-                  type: string
-                  description: 업로드 당시 원본 파일명
-                contentType:
-                  type: string
-                  description: 파일 미디어 타입 (application/pdf)
-                sizeBytes:
-                  type: number
-                  description: 파일 크기 (byte)
-            resumeId:
-              type: string
-              description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
-            aiSummary:
-              required:
-              - status
-              type: object
-              properties:
-                text:
-                  type: string
-                  description: AI 요약 본문 (준비 중·실패면 null)
-                  nullable: true
-                status:
-                  type: string
-                  description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
-                    목록 조회를 폴링하고 DONE·FAILED에서 중단
-            registeredAt:
-              type: string
-              description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
-            name:
-              type: string
-              description: 사용자가 붙인 이력서 이름
     v1-members-me-nickname910352763:
       required:
       - result
@@ -3562,75 +3704,6 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
-    v1-members-me-resumes258595286:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - maxCount
-          - resumes
-          type: object
-          properties:
-            resumes:
-              type: array
-              description: 숨김되지 않은 보관 이력서 목록 (기본 이력서 우선)
-              items:
-                required:
-                - isDefault
-                - name
-                - registeredAt
-                - resumeId
-                type: object
-                properties:
-                  isDefault:
-                    type: boolean
-                    description: 기본 이력서 여부
-                  file:
-                    required:
-                    - contentType
-                    - originalName
-                    - sizeBytes
-                    type: object
-                    properties:
-                      originalName:
-                        type: string
-                        description: 업로드 당시 원본 파일명
-                      contentType:
-                        type: string
-                        description: 파일 미디어 타입 (application/pdf)
-                      sizeBytes:
-                        type: number
-                        description: 파일 크기 (byte)
-                  resumeId:
-                    type: string
-                    description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
-                  aiSummary:
-                    required:
-                    - status
-                    type: object
-                    properties:
-                      text:
-                        type: string
-                        description: AI 요약 본문 (준비 중·실패면 null)
-                        nullable: true
-                      status:
-                        type: string
-                        description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
-                          목록 조회를 폴링하고 DONE·FAILED에서 중단
-                  registeredAt:
-                    type: string
-                    description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
-                  name:
-                    type: string
-                    description: 사용자가 붙인 이력서 이름
-            maxCount:
-              type: number
-              description: 최대 보관 가능 개수 (10)
   securitySchemes:
     oauth2:
       type: oauth2
