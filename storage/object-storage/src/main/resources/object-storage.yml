@@ -1,0 +1,3 @@
+storage.object-storage.s3:
+  bucket: ${STORAGE_OBJECTSTORAGE_S3_BUCKET}
+  region: ${AWS_REGION:ap-northeast-2}

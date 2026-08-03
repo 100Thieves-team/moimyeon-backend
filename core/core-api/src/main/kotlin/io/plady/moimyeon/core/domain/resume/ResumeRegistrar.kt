@@ -9,12 +9,15 @@ import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
 class ResumeRegistrar(
     private val memberRepository: MemberRepository,
     private val resumeRepository: ResumeRepository,
+    private val clock: Clock,
 ) {
     fun validateCapacity(memberId: UUID) {
         val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)
@@ -41,7 +44,8 @@ class ResumeRegistrar(
                 sizeBytes = resume.file.sizeBytes,
                 contentType = resume.file.contentType,
                 summaryStatus = ResumeSummaryStatus.PROCESSING,
-                isDefault = resumeCount == 0L,
+                summaryStartedAt = LocalDateTime.now(clock),
+                isDefault = false,
             ),
         ).id
 

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.resume
 
+import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireFound
@@ -19,15 +20,61 @@ class ResumeManager(
     fun makeDefault(memberId: UUID, resumeId: UUID) {
         lockMember(memberId)
         val selected = getSelectableResume(memberId, resumeId)
+        if (selected.summaryStatus != ResumeSummaryStatus.DONE) {
+            throw CoreException(CoreErrorType.RESUME_NOT_READY)
+        }
         if (selected.isDefault) return
 
-        val current = checkNotNull(
-            resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId),
-        ) { "이력서가 있는 보관함에는 기본 이력서가 하나 있어야 합니다." }
-        current.releaseDefault()
-        // 회원별 기본 이력서 유니크를 해제한 뒤 새 기본을 지정한다.
-        resumeRepository.flush()
+        val current = resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId)
+        if (current != null) {
+            current.releaseDefault()
+            // 회원별 기본 이력서 유니크를 해제한 뒤 새 기본을 지정한다.
+            resumeRepository.flush()
+        }
         selected.makeDefault()
+    }
+
+    @Transactional
+    fun completeSummary(memberId: UUID, resumeId: UUID, summary: String, completedAt: LocalDateTime) {
+        lockMember(memberId)
+        val resume = getSelectableResume(memberId, resumeId)
+        if (!completedAt.isBefore(resume.summaryStartedAt.plusMinutes(SUMMARY_PROCESSING_TIMEOUT_MINUTES))) {
+            resume.failSummary()
+            return
+        }
+        resume.completeSummary(summary)
+
+        if (resumeRepository.findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId) == null) {
+            resume.makeDefault()
+        }
+    }
+
+    @Transactional
+    fun failSummary(memberId: UUID, resumeId: UUID) {
+        val resume = getSelectableResume(memberId, resumeId)
+        resume.failSummary()
+    }
+
+    @Transactional
+    fun startSummaryRetry(memberId: UUID, resumeId: UUID, startedAt: LocalDateTime) {
+        lockMember(memberId)
+        val resume = getSelectableResume(memberId, resumeId)
+        if (resume.summaryStatus != ResumeSummaryStatus.FAILED) {
+            throw CoreException(CoreErrorType.RESUME_SUMMARY_NOT_RETRYABLE)
+        }
+        resume.retrySummary(startedAt)
+    }
+
+    @Transactional
+    fun failExpiredSummaries(memberId: UUID, now: LocalDateTime): Int {
+        val expiredSummaries = resumeRepository
+            .findByMemberIdAndSummaryStatusAndSummaryStartedAtLessThanEqualAndDeletedAtIsNull(
+                memberId = memberId,
+                summaryStatus = ResumeSummaryStatus.PROCESSING,
+                startedAt = now.minusMinutes(SUMMARY_PROCESSING_TIMEOUT_MINUTES),
+            )
+        expiredSummaries.forEach { it.failSummary() }
+        return expiredSummaries.size
     }
 
     @Transactional
@@ -46,7 +93,11 @@ class ResumeManager(
         if (resume.isDeleted()) return
 
         val replacement = if (resume.isDefault) {
-            resumeRepository.findFirstByMemberIdAndIdNotAndDeletedAtIsNullOrderByCreatedAtDesc(memberId, resumeId)
+            resumeRepository.findFirstByMemberIdAndIdNotAndSummaryStatusAndDeletedAtIsNullOrderByCreatedAtDesc(
+                memberId,
+                resumeId,
+                ResumeSummaryStatus.DONE,
+            )
         } else {
             null
         }
@@ -70,3 +121,5 @@ class ResumeManager(
         CoreErrorType.RESUME_NOT_FOUND,
     )
 }
+
+private const val SUMMARY_PROCESSING_TIMEOUT_MINUTES = 1L

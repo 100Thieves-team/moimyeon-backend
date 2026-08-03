@@ -29,7 +29,10 @@ tasks.named<Jar>("jar").configure {
 
 dependencies {
     runtimeOnly(project(":admin:admin-api"))
+    runtimeOnly(project(":clients:client-ai"))
+    runtimeOnly(project(":storage:object-storage"))
 
+    implementation(project(":core:core-domain"))
     implementation(project(":core:core-enum"))
     implementation(project(":security:security-core"))
     implementation(project(":support:monitoring"))
@@ -159,12 +162,8 @@ fun patchResumeMultipartRequest(root: JsonNode, mapper: ObjectMapper): Boolean {
 
     val schema = mapper.createObjectNode().apply {
         put("type", "object")
-        putArray("required").add("name").add("file")
+        putArray("required").add("file")
         putObject("properties").apply {
-            putObject("name").apply {
-                put("type", "string")
-                put("description", "사용자가 이력서를 구분할 이름 (공백 불가)")
-            }
             putObject("file").apply {
                 put("type", "string")
                 put("format", "binary")
@@ -175,7 +174,6 @@ fun patchResumeMultipartRequest(root: JsonNode, mapper: ObjectMapper): Boolean {
     val multipart = mapper.createObjectNode().apply {
         set<ObjectNode>("schema", schema)
         putObject("encoding").apply {
-            putObject("name").put("contentType", "text/plain; charset=utf-8")
             putObject("file").put("contentType", "application/pdf")
         }
     }

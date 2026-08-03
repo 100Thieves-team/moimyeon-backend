@@ -14,6 +14,8 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1009, "프로필을 찾을 수 없습니다.", LogLevel.WARN),
     RESUME_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1010, "이력서를 찾을 수 없습니다.", LogLevel.WARN),
     RESUME_LIMIT_EXCEEDED(HttpStatus.CONFLICT, ErrorCode.E1011, "이력서는 최대 10개까지 등록할 수 있습니다.", LogLevel.WARN),
+    RESUME_NOT_READY(HttpStatus.CONFLICT, ErrorCode.E1012, "AI 요약이 완료된 이력서만 사용할 수 있습니다.", LogLevel.WARN),
+    RESUME_SUMMARY_NOT_RETRYABLE(HttpStatus.CONFLICT, ErrorCode.E1013, "실패한 AI 요약만 재시도할 수 있습니다.", LogLevel.WARN),
     INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
 
     TERMS_NOT_AGREED(HttpStatus.CONFLICT, ErrorCode.E1201, "필수 약관에 동의해야 이용할 수 있습니다.", LogLevel.WARN),

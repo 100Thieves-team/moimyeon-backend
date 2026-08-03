@@ -1,12 +1,19 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import io.plady.moimyeon.core.domain.resume.Resume
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class ResumesResponse(
     val maxCount: Int,
     val resumes: List<ResumeResponse>,
-)
+) {
+    companion object {
+        fun from(resumes: List<Resume>): ResumesResponse {
+            return ResumesResponse(MAX_RESUME_COUNT, resumes.map(ResumeResponse::from))
+        }
+    }
+}
 
 data class ResumeResponse(
     val resumeId: UUID,
@@ -15,7 +22,27 @@ data class ResumeResponse(
     val aiSummary: ResumeAiSummaryResponse,
     val isDefault: Boolean,
     val registeredAt: LocalDateTime,
-)
+) {
+    companion object {
+        fun from(resume: Resume): ResumeResponse {
+            return ResumeResponse(
+                resumeId = resume.id,
+                name = resume.name,
+                file = ResumeFileResponse(
+                    originalName = resume.file.originalName,
+                    sizeBytes = resume.file.sizeBytes,
+                    contentType = resume.file.contentType,
+                ),
+                aiSummary = ResumeAiSummaryResponse(
+                    status = ResumeAiSummaryStatus.valueOf(resume.summary.status.name),
+                    text = resume.summary.content,
+                ),
+                isDefault = resume.isDefault,
+                registeredAt = resume.registeredAt,
+            )
+        }
+    }
+}
 
 data class ResumeFileResponse(
     val originalName: String,
@@ -33,3 +60,5 @@ enum class ResumeAiSummaryStatus {
     DONE,
     FAILED,
 }
+
+private const val MAX_RESUME_COUNT = 10

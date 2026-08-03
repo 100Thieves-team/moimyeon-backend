@@ -3,6 +3,7 @@ rootProject.name = "moimyeon"
 include(
     "admin:admin-api",
     "batch:batch-app",
+    "core:core-domain",
     "core:core-enum",
     "core:core-api",
     "storage:db-core",
@@ -10,7 +11,9 @@ include(
     "tests:api-docs",
     "support:logging",
     "support:monitoring",
-    "clients:client-example"
+    "clients:client-example",
+    "clients:client-ai",
+    "storage:object-storage"
 )
 
 pluginManagement {

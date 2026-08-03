@@ -14,12 +14,17 @@ import io.plady.moimyeon.storage.db.core.ResumeRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class ResumeRegistrarTest {
     private val memberRepository = mockk<MemberRepository>()
     private val resumeRepository = mockk<ResumeRepository>()
-    private val resumeRegistrar = ResumeRegistrar(memberRepository, resumeRepository)
+    private val clock = Clock.fixed(Instant.parse("2026-08-03T12:00:00Z"), ZoneOffset.UTC)
+    private val resumeRegistrar = ResumeRegistrar(memberRepository, resumeRepository, clock)
 
     private val memberId = UUID.randomUUID()
     private val file = ResumeFile(
@@ -53,7 +58,7 @@ class ResumeRegistrarTest {
     }
 
     @Test
-    fun `첫 이력서를 기본 이력서이자 요약 처리 중 상태로 등록한다`() {
+    fun `첫 이력서도 기본으로 노출하지 않고 요약 처리 중 상태로 등록한다`() {
         val savedResume = slot<ResumeEntity>()
         every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
         every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 0
@@ -71,7 +76,8 @@ class ResumeRegistrarTest {
         assertThat(entity.contentType).isEqualTo(file.contentType)
         assertThat(entity.summaryStatus).isEqualTo(ResumeSummaryStatus.PROCESSING)
         assertThat(entity.summaryContent).isNull()
-        assertThat(entity.isDefault).isTrue()
+        assertThat(entity.summaryStartedAt).isEqualTo(LocalDateTime.of(2026, 8, 3, 12, 0))
+        assertThat(entity.isDefault).isFalse()
     }
 
     @Test

@@ -7,6 +7,7 @@ import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ResumeFinderTest {
@@ -54,6 +55,7 @@ class ResumeFinderTest {
             sizeBytes = 1_024,
             contentType = "application/pdf",
             summaryStatus = ResumeSummaryStatus.PROCESSING,
+            summaryStartedAt = LocalDateTime.of(2026, 8, 3, 12, 0),
             isDefault = isDefault,
         )
     }

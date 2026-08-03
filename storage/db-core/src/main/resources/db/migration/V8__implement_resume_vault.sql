@@ -32,6 +32,7 @@ CREATE TABLE resume (
     content_type    VARCHAR(100) NOT NULL,
     summary_content TEXT         NULL,
     summary_status  VARCHAR(20)  NOT NULL,
+    summary_started_at DATETIME(6) NOT NULL,
     is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at      DATETIME(6)  NOT NULL,
     updated_at      DATETIME(6)  NOT NULL,

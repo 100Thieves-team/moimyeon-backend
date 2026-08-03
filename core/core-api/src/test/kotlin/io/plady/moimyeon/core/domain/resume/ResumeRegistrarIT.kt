@@ -16,7 +16,7 @@ class ResumeRegistrarIT(
     private val resumeRepository: ResumeRepository,
 ) : ContextTest() {
     @Test
-    fun `첫 이력서는 기본이 되고 두 번째 이력서는 기본이 되지 않는다`() {
+    fun `요약 처리 중인 이력서는 기본으로 지정하지 않는다`() {
         val memberId = socialAuthService.authenticate(
             SocialLoginProvider.GOOGLE,
             "resume-registrar-1",
@@ -30,7 +30,7 @@ class ResumeRegistrarIT(
         val second = resumeRepository.findById(secondResumeId).orElseThrow()
         assertThat(first.memberId).isEqualTo(memberId)
         assertThat(first.summaryStatus).isEqualTo(ResumeSummaryStatus.PROCESSING)
-        assertThat(first.isDefault).isTrue()
+        assertThat(first.isDefault).isFalse()
         assertThat(second.memberId).isEqualTo(memberId)
         assertThat(second.summaryStatus).isEqualTo(ResumeSummaryStatus.PROCESSING)
         assertThat(second.isDefault).isFalse()
