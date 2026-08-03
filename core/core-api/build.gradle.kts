@@ -17,6 +17,7 @@ buildscript {
 
 plugins {
     id("com.epages.restdocs-api-spec")
+    kotlin("kapt")
 }
 
 tasks.named<Jar>("bootJar").configure {
@@ -45,6 +46,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    // 채용 링크 즉시 추가(BE-03/MOI-334): 서버측 OG 태그 fetch·파싱. HTML 스크래핑이라 Feign(JSON) 대신 Jsoup 을 쓴다.
+    implementation("org.jsoup:jsoup:${property("jsoupVersion")}")
+    testImplementation(kotlin("test"))
 }
 
 configure<OpenApi3Extension> {
@@ -197,4 +201,7 @@ fun patchNumberIdArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSe
     } else if (node.isArray) {
         node.forEach { patchNumberIdArrays(it, mapper, patched) }
     }
+}
+repositories {
+    mavenCentral()
 }

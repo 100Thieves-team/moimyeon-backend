@@ -46,6 +46,32 @@ class JobCatalogFinderIT(
         assertThat(jobCatalogFinder.getJobCatalog().map { it.id }).doesNotContain(group.id)
     }
 
+    @Test
+    fun `직무명으로 유효 직무를 상위 직군과 함께 검색한다`() {
+        val group = saveGroup("TEST_SEARCH_GROUP", 30_000)
+        val backend = jobRoleRepository.saveAndFlush(JobRoleEntity(group.id, "TEST_SEARCH_BE", "테스트 백엔드 개발", 1))
+        jobRoleRepository.saveAndFlush(JobRoleEntity(group.id, "TEST_SEARCH_FE", "테스트 프론트 개발", 2))
+        val deleted = jobRoleRepository.saveAndFlush(JobRoleEntity(group.id, "TEST_SEARCH_DEL", "테스트 백엔드 폐기", 3))
+        deleted.delete(LocalDateTime.of(2026, 8, 1, 0, 0))
+        jobRoleRepository.flush()
+
+        val found = jobCatalogFinder.searchJobRoles("테스트 백엔드")
+
+        assertThat(found.map { it.id }).containsExactly(backend.id)
+        assertThat(found.first().displayName).isEqualTo("테스트 백엔드 개발")
+        assertThat(found.first().groupCode).isEqualTo("TEST_SEARCH_GROUP")
+    }
+
+    @Test
+    fun `폐기된 직군의 직무는 검색에서 제외한다`() {
+        val group = saveGroup("TEST_SEARCH_DEL_GROUP", 30_000)
+        jobRoleRepository.saveAndFlush(JobRoleEntity(group.id, "TEST_SEARCH_ORPHAN", "테스트 고아 직무", 1))
+        group.delete(LocalDateTime.of(2026, 8, 1, 0, 0))
+        jobGroupRepository.flush()
+
+        assertThat(jobCatalogFinder.searchJobRoles("테스트 고아")).isEmpty()
+    }
+
     private fun saveGroup(code: String, sortOrder: Short): JobGroupEntity {
         return jobGroupRepository.saveAndFlush(JobGroupEntity(code, code, sortOrder))
     }
