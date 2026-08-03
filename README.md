@@ -26,6 +26,7 @@ moimyeon/
 │   └── batch-app       배치 실행 모듈 (독립 bootJar)
 │
 ├── core/
+│   ├── core-domain     외부 구현이 따르는 도메인 포트
 │   ├── core-enum       공통 Enum 정의
 │   └── core-api        API 서버 실행 모듈 (bootJar) — admin-api 조립 호스트
 │
@@ -33,13 +34,15 @@ moimyeon/
 │   └── security-core   인증/인가 — AuthUser 리졸버 · 소셜 로그인 예정
 │
 ├── storage/
-│   └── db-core         JPA/MySQL 영속성 — DataSource · JPA 설정 소유
+│   ├── db-core         JPA/MySQL 영속성 — DataSource · JPA 설정 소유
+│   └── object-storage  AWS SDK S3 객체 저장·조회
 │
 ├── support/
 │   ├── logging         환경별 Logback 설정 (OpenTelemetry · Sentry)
 │   └── monitoring      Actuator + Prometheus
 │
 ├── clients/
+│   ├── client-ai       Spring AI · Bedrock 모델 클라이언트
 │   └── client-example  OpenFeign 기반 외부 HTTP 클라이언트 예시
 │
 └── tests/
@@ -49,6 +52,13 @@ moimyeon/
 ---
 
 ## 모듈별 상세
+
+### `core:core-domain`
+외부 연동 구현이 따라야 하는 도메인 포트를 정의한다. 프레임워크나 외부 SDK를 참조하지 않는다.
+
+- 현재 포트: 이력서 PDF를 요약하는 `DocumentSummarizer`, 키로 바이트를 저장·조회하는 `ObjectStorage`
+
+---
 
 ### `core:core-enum`
 모든 모듈에서 공유하는 Enum 클래스를 정의한다. 외부 모듈에 노출되어야 하는 열거형만 포함한다.
@@ -60,11 +70,11 @@ moimyeon/
 ### `core:core-api`
 API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한다.
 
-- 의존성 (compile): `core-enum`, `security/security-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
-- 의존성 (runtime): `storage/db-core`, `admin/admin-api`
+- 의존성 (compile): `core-domain`, `core-enum`, `security/security-core`, `storage/db-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
+- 의존성 (runtime): `admin/admin-api`, `clients/client-ai`, `storage/object-storage`
 - 포함: Controller, Request/Response DTO, 도메인 서비스, `ApiControllerAdvice`, AsyncConfig
 
-> Storage 와 admin 모듈은 `runtimeOnly`로 선언되어 컴파일 시점에 서로의 구현이 노출되지 않는다. `ApiControllerAdvice`는 `basePackages = ["io.plady.moimyeon.core"]`로 범위를 제한해, 함께 조립되는 admin 컨트롤러의 예외를 가로채지 않는다.
+> admin 모듈은 `runtimeOnly`로 선언되어 core와 컴파일 시점에 격리된다. `ApiControllerAdvice`는 `basePackages = ["io.plady.moimyeon.core"]`로 범위를 제한해, 함께 조립되는 admin 컨트롤러의 예외를 가로채지 않는다.
 
 ---
 
@@ -145,6 +155,15 @@ OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 클라이언트 
 
 ---
 
+### `clients:client-ai`
+`core-domain`의 `DocumentSummarizer` 포트를 구현하는 외부 AI 클라이언트. Spring AI를 통해
+서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필을 호출하며
+`core-api`에는 런타임으로만 조립된다.
+
+- 의존성: `core-domain`, `spring-ai-starter-model-bedrock-converse`, `pdfbox`
+
+---
+
 ### `tests:api-docs`
 Spring REST Docs 기반 API 문서화를 지원하는 테스트 전용 모듈.
 
@@ -157,9 +176,14 @@ Spring REST Docs 기반 API 문서화를 지원하는 테스트 전용 모듈.
 
 ```
 core-enum ──────────────── core-api (implementation)
+core-domain ────────────── core-api (implementation)
+core-domain ────────────── client-ai (implementation)
+core-domain ────────────── object-storage (implementation)
 
 admin-api ──────────────── core-api (runtimeOnly)   # 컴파일 격리, 런타임 조립
-db-core   ──────────────── core-api (runtimeOnly)
+client-ai ──────────────── core-api (runtimeOnly)   # 도메인 포트 구현체 런타임 조립
+object-storage ─────────── core-api (runtimeOnly)   # 도메인 포트 구현체 런타임 조립
+db-core   ──────────────── core-api (implementation)
 db-core   ──────────────── batch-app (implementation)
 
 security-core ──────────── core-api (implementation)
