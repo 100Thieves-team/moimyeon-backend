@@ -1,5 +1,7 @@
 package io.plady.moimyeon.core.domain.jobposting
 
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.JobPostingRepository
 import io.plady.moimyeon.storage.db.core.JobPostingRoleRepository
 import io.plady.moimyeon.storage.db.core.JobRoleRepository
@@ -11,6 +13,24 @@ class JobPostingFinder(
     private val jobPostingRoleRepository: JobPostingRoleRepository,
     private val jobRoleRepository: JobRoleRepository,
 ) {
+    // 단건 조회(생성 직후 응답을 저장된 값으로 재조립하는 용도). 직무 힌트는 링크 생성 공고엔 없어 채우지 않는다.
+    // 링크 생성 공고는 회사가 항상 지정돼 있으므로 companyId 는 non-null 이 보장된다.
+    fun getById(jobPostingId: Long): JobPosting {
+        val posting = requireFound(
+            jobPostingRepository.findByIdAndDeletedAtIsNull(jobPostingId),
+            CoreErrorType.JOB_POSTING_NOT_FOUND,
+        )
+        return JobPosting(
+            id = posting.id,
+            companyId = checkNotNull(posting.companyId) { "링크 생성 공고에는 companyId 가 있어야 합니다. jobPostingId=${posting.id}" },
+            postingName = posting.title,
+            jobRoleId = null,
+            jobRoleName = null,
+            sourceUrl = posting.sourceUrl,
+            verified = posting.verified,
+        )
+    }
+
     // 회사에 속한 활성 공고를 공고명으로 검색하고, 각 공고에 대표 직무(가장 작은 직무 id)를 얹어 반환한다.
     fun search(companyId: Long, query: String): List<JobPosting> {
         val postings =

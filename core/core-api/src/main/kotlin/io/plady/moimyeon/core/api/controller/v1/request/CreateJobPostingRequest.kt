@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.api.controller.v1.request
 
+import io.plady.moimyeon.core.domain.jobposting.JobPostingCreationCommand
 import io.plady.moimyeon.core.support.error.CoreApiErrorType
 import io.plady.moimyeon.core.support.error.CoreApiException
 
@@ -11,12 +12,19 @@ data class CreateJobPostingRequest(
     val url: String,
     val postingName: String,
 ) {
-    // 목킹 단계라 변환할 개념 객체가 아직 없다. 도메인이 붙으면 toXxx() 안으로 옮긴다.
-    fun validate() {
-        if (url.isBlank() || url.length > URL_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
-        if (postingName.isBlank() || postingName.length > POSTING_NAME_MAX_LENGTH) {
+    // 형식 검증 후 생성 커맨드로 변환한다. companyId 양수·url(http/https)·postingName 규칙 위반은 400(E400).
+    // companyId 의 실제 존재 여부는 도메인(CompanyValidator)이 검증한다.
+    fun toCommand(): JobPostingCreationCommand {
+        val trimmedUrl = url.trim()
+        val trimmedName = postingName.trim()
+        if (companyId <= 0) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        if (trimmedUrl.isBlank() || trimmedUrl.length > URL_MAX_LENGTH || !trimmedUrl.isHttpUrl()) {
             throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
         }
+        if (trimmedName.isBlank() || trimmedName.length > POSTING_NAME_MAX_LENGTH) {
+            throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        }
+        return JobPostingCreationCommand(companyId = companyId, url = trimmedUrl, postingName = trimmedName)
     }
 
     companion object {
