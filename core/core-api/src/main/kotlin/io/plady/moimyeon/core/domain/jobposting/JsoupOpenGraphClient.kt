@@ -9,11 +9,12 @@ import java.net.InetAddress
 import java.net.URI
 
 // OG 메타데이터를 Jsoup 으로 fetch·파싱한다. 사용자가 준 임의 URL 을 서버가 대신 여는 만큼,
-// (1) 사설·루프백·링크로컬(클라우드 메타데이터 169.254.169.254 포함) 대상은 SSRF 방어로 fetch 전 차단하고,
-// (2) 3초 타임아웃·본문 크기 상한으로 외부 사이트가 우리 응답을 늘어지게 하지 못하게 막으며,
-// (3) 어떤 실패(차단·타임아웃·봇 차단 4xx·비HTML·파싱 오류)도 예외로 전파하지 않고 빈 메타로 흡수한다.
+// (1) 사설·루프백·링크로컬(클라우드 메타데이터 169.254.169.254 포함) 대상은 SSRF 방어로 연결 전 차단하고,
+// (2) 리다이렉트를 Jsoup 에 맡기지 않고 직접 따라가며 매 홉을 다시 검증한다(Location 을 통한 내부 대상 우회 차단),
+// (3) 3초 타임아웃·본문 크기 상한으로 외부 사이트가 우리 응답을 늘어지게 하지 못하게 막으며,
+// (4) 어떤 실패(차단·타임아웃·봇 차단 4xx·비HTML·파싱 오류)도 예외로 전파하지 않고 빈 메타로 흡수한다.
 //
-// 한계: fetch 전 IP 검사와 Jsoup 의 실제 연결 사이에는 DNS 재바인딩 창이 남는다(TOCTOU). 완전한 차단은
+// 한계: 홉별 IP 검사와 Jsoup 의 실제 연결 사이에는 DNS 재바인딩 창이 남는다(TOCTOU). 완전한 차단은
 // 연결 시점에 해석된 IP 를 고정해야 하며, 그건 후속 과제로 둔다. 여기서는 명백한 내부 대상만 막는다.
 @Component
 class JsoupOpenGraphClient : OpenGraphClient {
@@ -21,18 +22,8 @@ class JsoupOpenGraphClient : OpenGraphClient {
 
     override fun fetch(url: String): LinkMetadata {
         val empty = LinkMetadata(postingName = null, imageUrl = null, description = null, sourceUrl = url)
-        if (!isFetchable(url)) {
-            log.info("OG fetch 차단(SSRF·스킴) url={}", url)
-            return empty
-        }
         return try {
-            val document = Jsoup.connect(url)
-                .userAgent(USER_AGENT)
-                .timeout(TIMEOUT_MILLIS)
-                .maxBodySize(MAX_BODY_BYTES)
-                .followRedirects(true)
-                .ignoreHttpErrors(false) // 4xx/5xx(봇 차단 등)는 예외 → 아래 catch 에서 빈 메타
-                .get()
+            val document = fetchFollowingRedirects(url) ?: return empty
             LinkMetadata(
                 postingName = document.metaContent("og:title") ?: document.title().trimToNull(),
                 imageUrl = document.metaContent("og:image", asUrl = true),
@@ -43,6 +34,46 @@ class JsoupOpenGraphClient : OpenGraphClient {
             log.info("OG fetch 실패 url={} cause={}", url, e.message)
             empty
         }
+    }
+
+    // 리다이렉트를 Jsoup 에 맡기지 않고 직접 따라간다 — followRedirects(true) 면 최초 URL 만 검사한 SSRF 가드가
+    // Location 을 통해 내부 대상(169.254.169.254·127.0.0.1 등)으로 우회될 수 있기 때문이다.
+    // 매 홉마다 연결 전에 isFetchable 로 재검증하고, 고정 횟수까지만 따라간다. 실패·한도초과는 null(빈 메타).
+    private fun fetchFollowingRedirects(startUrl: String): Document? {
+        var current = startUrl
+        repeat(MAX_REDIRECTS + 1) {
+            if (!isFetchable(current)) {
+                log.info("OG fetch 차단(SSRF·스킴) url={}", current)
+                return null
+            }
+            val response = Jsoup.connect(current)
+                .userAgent(USER_AGENT)
+                .timeout(TIMEOUT_MILLIS)
+                .maxBodySize(MAX_BODY_BYTES)
+                .followRedirects(false) // 리다이렉트는 매 홉 직접 검증한다
+                .ignoreHttpErrors(true)
+                .ignoreContentType(true) // 콘텐츠 타입 판정도 아래에서 직접(3xx 본문 타입에 execute 가 걸리지 않게)
+                .execute()
+            when {
+                response.statusCode() in 300..399 -> {
+                    val location = response.header("Location")?.trimToNull() ?: return null
+                    // 상대·프로토콜상대 Location 을 현재 URL 기준 절대 URL 로 해석한 뒤 다음 홉에서 다시 검증한다.
+                    current = try {
+                        URI(current).resolve(location).toString()
+                    } catch (e: Exception) {
+                        return null
+                    }
+                }
+                response.statusCode() >= 400 -> return null // 봇 차단(4xx)·서버 오류(5xx) → 빈 메타
+                else -> {
+                    val contentType = response.contentType()
+                    if (contentType == null || !contentType.contains("html", ignoreCase = true)) return null // 비HTML
+                    return response.parse()
+                }
+            }
+        }
+        log.info("OG fetch 리다이렉트 한도 초과 startUrl={}", startUrl)
+        return null
     }
 
     // og:* 는 표준상 property 지만 name 으로 쓰는 사이트도 있어 둘 다 본다. 빈 content 는 없는 것으로 취급한다.
@@ -97,5 +128,6 @@ class JsoupOpenGraphClient : OpenGraphClient {
                 "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
         private const val TIMEOUT_MILLIS = 3_000
         private const val MAX_BODY_BYTES = 1 * 1024 * 1024 // 1MB — 헤드의 OG 태그만 필요해 본문 전체는 받지 않는다
+        private const val MAX_REDIRECTS = 5 // 매 홉 SSRF 재검증하며 이 횟수까지만 따라간다
     }
 }
