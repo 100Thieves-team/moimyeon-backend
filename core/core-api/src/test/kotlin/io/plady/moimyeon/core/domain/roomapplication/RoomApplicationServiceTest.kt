@@ -5,26 +5,33 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.domain.resume.ResumeSummary
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
+import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationSubmissionServiceTest {
+class RoomApplicationServiceTest {
     private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>()
     private val resumeValidator = mockk<ResumeValidator>()
-    private val service = RoomApplicationSubmissionService(
+    private val roomApplicationFinder = mockk<RoomApplicationFinder>()
+    private val service = RoomApplicationService(
         roomApplicationSubmissionManager,
         resumeValidator,
+        roomApplicationFinder,
     )
 
     private val applicantMemberId = UUID.randomUUID()
     private val roomId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val applicationForm = RoomApplicationForm(resumeId, "백엔드 면접을 실전처럼 연습하고 싶어요.")
+    private val appliedAt = LocalDateTime.of(2026, 8, 5, 14, 30)
     private val sourceFile = ResumeFile(
         key = "resumes/$applicantMemberId/source.pdf",
         originalName = "backend.pdf",
@@ -77,6 +84,29 @@ class RoomApplicationSubmissionServiceTest {
         } throws CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
 
         assertSubmissionFails(CoreErrorType.ROOM_NOT_RECRUITING)
+    }
+
+    @Test
+    fun `신청자는 해당 룸에 제출한 자신의 신청을 조회한다`() {
+        val application = RoomApplication(
+            id = 1L,
+            roomId = roomId,
+            applicantMemberId = applicantMemberId,
+            note = applicationForm.note,
+            resumeSubmission = ResumeSubmission(resumeId, sourceFile),
+            resumeSummary = ResumeSummary(
+                status = ResumeSummaryStatus.DONE,
+                content = "백엔드 개발 경험과 결제 도메인 경험이 있습니다.",
+            ),
+            status = RoomApplicationStatus.PENDING,
+            appliedAt = appliedAt,
+        )
+        every { roomApplicationFinder.get(applicantMemberId, roomId) } returns application
+
+        val result = service.get(applicantMemberId, roomId)
+
+        assertThat(result).isEqualTo(application)
+        verify(exactly = 1) { roomApplicationFinder.get(applicantMemberId, roomId) }
     }
 
     private fun givenValidApplicantAndResume() {

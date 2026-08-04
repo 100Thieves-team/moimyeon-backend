@@ -47,6 +47,7 @@ class RoomApplicationSubmissionManager(
         val application = saveApplication(roomId, applicantMemberId, note, now)
         resumeSubmissionRepository.save(
             ResumeSubmissionEntity(
+                roomApplicationId = application.id,
                 roomId = roomId,
                 memberId = applicantMemberId,
                 sourceResumeId = resumeSubmission.sourceResumeId,

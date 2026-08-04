@@ -83,6 +83,7 @@ class RoomApplicationSubmissionManagerTest {
         assertThat(applicationSlot.captured.note).isEqualTo(applicationForm.note)
         assertThat(applicationSlot.captured.status).isEqualTo(RoomApplicationStatus.PENDING)
         assertThat(applicationSlot.captured.appliedAt).isEqualTo(now)
+        assertThat(submissionSlot.captured.roomApplicationId).isEqualTo(savedApplication.id)
         assertThat(submissionSlot.captured.sourceResumeId).isEqualTo(resumeId)
         assertThat(submissionSlot.captured.fileKey).isEqualTo(resumeSubmission.file.key)
         assertThat(submissionSlot.captured.originalName).isEqualTo(resumeSubmission.file.originalName)

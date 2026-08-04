@@ -543,25 +543,25 @@ CREATE TABLE participation (
 );
 CREATE INDEX ix_participation_member_id ON participation (member_id);
 
--- 어떤 룸에 어떤 이력서를 냈는가. V1은 불변 원본 파일 키와 메타데이터를 제출 시점 값으로 보존한다.
--- 베이스 상속: 룸당 1건이라 교체는 UPDATE 이고, 철회만 삭제다. 제출 기록이 사라지면
---   "원본 공개 룸에서 누가 무엇을 봤는가"를 되짚을 수 없어 개인정보 문의에 답할 수 없다.
+-- 각 참가 신청에 어떤 이력서를 냈는가. V1은 불변 원본 파일 키와 메타데이터를 제출 시점 값으로 보존한다.
+-- 철회 후 재신청은 새 신청과 새 제출 행을 만든다. 철회해도 기존 제출은 지우지 않아 신청 당시 기록을 유지한다.
+-- deleted_at 은 운영이 잘못 생성된 제출을 무효화할 때만 사용한다.
 CREATE TABLE resume_submission (
-    id           BIGINT     NOT NULL AUTO_INCREMENT,
-    room_id      BINARY(16) NOT NULL,
-    member_id    BINARY(16) NOT NULL,
+    id                  BIGINT     NOT NULL AUTO_INCREMENT,
+    room_application_id BIGINT     NOT NULL,
+    room_id             BINARY(16) NOT NULL,
+    member_id           BINARY(16) NOT NULL,
     source_resume_id BINARY(16)   NOT NULL,
     file_key        VARCHAR(500) NOT NULL,
     original_name   VARCHAR(255) NOT NULL,
     size_bytes      BIGINT       NOT NULL,
     content_type    VARCHAR(100) NOT NULL,
-    submitted_at DATETIME   NOT NULL,
-    created_at   DATETIME   NOT NULL,
-    updated_at   DATETIME   NOT NULL,
-    deleted_at   DATETIME   NULL,
-    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+    submitted_at        DATETIME   NOT NULL,
+    created_at          DATETIME   NOT NULL,
+    updated_at          DATETIME   NOT NULL,
+    deleted_at          DATETIME   NULL,
     PRIMARY KEY (id),
-    CONSTRAINT uk_resume_submission_room_member_active UNIQUE (room_id, member_id, _active_check)
+    CONSTRAINT uk_resume_submission_room_application UNIQUE (room_application_id)
 );
 CREATE INDEX ix_resume_submission_member_id ON resume_submission (member_id);
 
