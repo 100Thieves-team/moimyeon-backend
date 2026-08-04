@@ -37,4 +37,14 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     APPLICATION_ALREADY_HANDLED(HttpStatus.CONFLICT, ErrorCode.E1409, "이미 처리된 신청입니다.", LogLevel.WARN),
     ROOM_NOT_RECRUITING(HttpStatus.CONFLICT, ErrorCode.E1410, "모집 중인 방이 아닙니다.", LogLevel.WARN),
     ROOM_CAPACITY_FULL(HttpStatus.CONFLICT, ErrorCode.E1411, "모집 정원이 가득 차 수락할 수 없습니다.", LogLevel.WARN),
+    ROOM_APPLICATION_SCHEDULE_PASSED(HttpStatus.CONFLICT, ErrorCode.E1412, "이미 진행 일정이 지난 방에는 신청할 수 없습니다.", LogLevel.WARN),
+    ROOM_APPLICATION_DUPLICATED(HttpStatus.CONFLICT, ErrorCode.E1413, "이미 신청했거나 참여 중인 방입니다.", LogLevel.WARN),
+    ROOM_HOST_CANNOT_APPLY(HttpStatus.CONFLICT, ErrorCode.E1414, "방장은 자신의 방에 참가 신청할 수 없습니다.", LogLevel.WARN),
+    ROOM_REAPPLICATION_NOT_ALLOWED(HttpStatus.CONFLICT, ErrorCode.E1415, "반려되거나 내보내진 방에는 다시 신청할 수 없습니다.", LogLevel.WARN),
+    ROOM_APPLICATION_PENDING_LIMIT_EXCEEDED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1416,
+        "동시에 대기할 수 있는 참가 신청은 최대 3건입니다.",
+        LogLevel.WARN,
+    ),
 }
