@@ -5,6 +5,22 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long> {
+    fun countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): Long
+
+    fun existsByRoomIdAndPendingMemberIdAndDeletedAtIsNull(
+        roomId: UUID,
+        pendingMemberId: UUID,
+    ): Boolean
+
+    fun existsByRoomIdAndApplicantMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): Boolean
+
     // 수락·반려 대상 로드. 신청이 해당 룸 소속이고 운영이 걷어내지 않았을 때만 처리한다.
     fun findByIdAndRoomIdAndDeletedAtIsNull(id: Long, roomId: UUID): RoomApplicationEntity?
 
