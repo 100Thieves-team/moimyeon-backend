@@ -543,14 +543,18 @@ CREATE TABLE participation (
 );
 CREATE INDEX ix_participation_member_id ON participation (member_id);
 
--- 어떤 룸에 어떤 이력서를 냈는가. 원본 공개 여부는 룸의 속성(room.resume_public)이므로 여기에 두지 않는다.
+-- 어떤 룸에 어떤 이력서를 냈는가. V1은 불변 원본 파일 키와 메타데이터를 제출 시점 값으로 보존한다.
 -- 베이스 상속: 룸당 1건이라 교체는 UPDATE 이고, 철회만 삭제다. 제출 기록이 사라지면
 --   "원본 공개 룸에서 누가 무엇을 봤는가"를 되짚을 수 없어 개인정보 문의에 답할 수 없다.
 CREATE TABLE resume_submission (
     id           BIGINT     NOT NULL AUTO_INCREMENT,
     room_id      BINARY(16) NOT NULL,
     member_id    BINARY(16) NOT NULL,
-    resume_id    BINARY(16) NOT NULL,
+    source_resume_id BINARY(16)   NOT NULL,
+    file_key        VARCHAR(500) NOT NULL,
+    original_name   VARCHAR(255) NOT NULL,
+    size_bytes      BIGINT       NOT NULL,
+    content_type    VARCHAR(100) NOT NULL,
     submitted_at DATETIME   NOT NULL,
     created_at   DATETIME   NOT NULL,
     updated_at   DATETIME   NOT NULL,
