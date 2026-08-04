@@ -73,4 +73,11 @@ class RoomApplicationEntity(
         this.handlerMemberId = handlerMemberId
         this.handledAt = now
     }
+
+    // 철회는 신청의 결말이다. 제출 당시 기록은 보존하고 대기 유니크 자리만 해제한다.
+    fun withdraw(now: LocalDateTime) {
+        this.status = RoomApplicationStatus.WITHDRAWN
+        this.pendingMemberId = null
+        this.handledAt = now
+    }
 }

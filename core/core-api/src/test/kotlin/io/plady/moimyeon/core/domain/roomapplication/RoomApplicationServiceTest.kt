@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -18,11 +19,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class RoomApplicationServiceTest {
-    private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>()
+    private val roomApplicationManager = mockk<RoomApplicationManager>()
     private val resumeValidator = mockk<ResumeValidator>()
     private val roomApplicationFinder = mockk<RoomApplicationFinder>()
     private val service = RoomApplicationService(
-        roomApplicationSubmissionManager,
+        roomApplicationManager,
         resumeValidator,
         roomApplicationFinder,
     )
@@ -43,7 +44,7 @@ class RoomApplicationServiceTest {
     fun `보관 이력서를 선택하면 제출 시점 파일 참조와 함께 참가 신청을 제출한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationSubmissionManager.submit(
+            roomApplicationManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -56,7 +57,7 @@ class RoomApplicationServiceTest {
         assertThat(applicationId).isEqualTo(1L)
         verifyOrder {
             resumeValidator.validateOwnedBy(applicantMemberId, resumeId)
-            roomApplicationSubmissionManager.submit(
+            roomApplicationManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -73,14 +74,14 @@ class RoomApplicationServiceTest {
 
         assertSubmissionFails(CoreErrorType.RESUME_NOT_FOUND)
 
-        verify(exactly = 0) { roomApplicationSubmissionManager.submit(any(), any(), any(), any()) }
+        verify(exactly = 0) { roomApplicationManager.submit(any(), any(), any(), any()) }
     }
 
     @Test
     fun `신청 조건 때문에 신청 저장이 실패하면 실패를 그대로 전달한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationSubmissionManager.submit(any(), any(), any(), any())
+            roomApplicationManager.submit(any(), any(), any(), any())
         } throws CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
 
         assertSubmissionFails(CoreErrorType.ROOM_NOT_RECRUITING)
@@ -109,6 +110,33 @@ class RoomApplicationServiceTest {
         verify(exactly = 1) { roomApplicationFinder.get(applicantMemberId, roomId) }
     }
 
+    @Test
+    fun `신청자는 방장이 처리하기 전 자신의 참가 신청을 철회한다`() {
+        justRun { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+
+        service.withdraw(applicantMemberId, roomId)
+
+        verify(exactly = 1) { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+    }
+
+    @Test
+    fun `해당 룸에 자신의 신청이 없으면 철회 실패를 그대로 전달한다`() {
+        every {
+            roomApplicationManager.withdraw(applicantMemberId, roomId)
+        } throws CoreException(CoreErrorType.APPLICATION_NOT_FOUND)
+
+        assertWithdrawalFails(CoreErrorType.APPLICATION_NOT_FOUND)
+    }
+
+    @Test
+    fun `이미 처리된 신청이면 철회 실패를 그대로 전달한다`() {
+        every {
+            roomApplicationManager.withdraw(applicantMemberId, roomId)
+        } throws CoreException(CoreErrorType.APPLICATION_ALREADY_HANDLED)
+
+        assertWithdrawalFails(CoreErrorType.APPLICATION_ALREADY_HANDLED)
+    }
+
     private fun givenValidApplicantAndResume() {
         every { resumeValidator.validateOwnedBy(applicantMemberId, resumeId) } returns sourceFile
     }
@@ -116,6 +144,14 @@ class RoomApplicationServiceTest {
     private fun assertSubmissionFails(errorType: CoreErrorType) {
         assertThatThrownBy {
             service.submit(applicantMemberId, roomId, applicationForm)
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(errorType)
+        }
+    }
+
+    private fun assertWithdrawalFails(errorType: CoreErrorType) {
+        assertThatThrownBy {
+            service.withdraw(applicantMemberId, roomId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(errorType)
         }

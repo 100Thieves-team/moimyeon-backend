@@ -6,7 +6,7 @@ import java.util.UUID
 
 @Service("applicantRoomApplicationService")
 class RoomApplicationService(
-    private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
+    private val roomApplicationManager: RoomApplicationManager,
     private val resumeValidator: ResumeValidator,
     private val roomApplicationFinder: RoomApplicationFinder,
 ) {
@@ -16,7 +16,7 @@ class RoomApplicationService(
         applicationForm: RoomApplicationForm,
     ): Long {
         val submittedFile = resumeValidator.validateOwnedBy(applicantMemberId, applicationForm.resumeId)
-        return roomApplicationSubmissionManager.submit(
+        return roomApplicationManager.submit(
             applicantMemberId,
             roomId,
             applicationForm.note,
@@ -26,5 +26,9 @@ class RoomApplicationService(
 
     fun get(applicantMemberId: UUID, roomId: UUID): RoomApplication {
         return roomApplicationFinder.get(applicantMemberId, roomId)
+    }
+
+    fun withdraw(applicantMemberId: UUID, roomId: UUID) {
+        roomApplicationManager.withdraw(applicantMemberId, roomId)
     }
 }

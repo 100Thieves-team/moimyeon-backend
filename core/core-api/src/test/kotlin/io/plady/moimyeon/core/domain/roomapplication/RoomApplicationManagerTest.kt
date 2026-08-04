@@ -29,14 +29,14 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class RoomApplicationSubmissionManagerTest {
+class RoomApplicationManagerTest {
     private val memberValidator = mockk<MemberValidator>()
     private val roomValidator = mockk<RoomValidator>()
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
-    private val manager = RoomApplicationSubmissionManager(
+    private val manager = RoomApplicationManager(
         memberValidator,
         roomValidator,
         participationValidator,
@@ -222,6 +222,67 @@ class RoomApplicationSubmissionManagerTest {
         verify(exactly = 0) { resumeSubmissionRepository.save(any()) }
     }
 
+    @Test
+    fun `본인의 대기 신청을 잠근 뒤 철회하고 신청과 제출 기록은 보존한다`() {
+        val application = application(RoomApplicationStatus.PENDING)
+        every {
+            roomApplicationRepository
+                .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                    roomId,
+                    applicantMemberId,
+                )
+        } returns application
+
+        manager.withdraw(applicantMemberId, roomId)
+
+        assertThat(application.status).isEqualTo(RoomApplicationStatus.WITHDRAWN)
+        assertThat(application.pendingMemberId).isNull()
+        assertThat(application.handledAt).isEqualTo(now)
+        assertThat(application.handlerMemberId).isNull()
+        assertThat(application.isActive()).isTrue()
+        verify(exactly = 1) {
+            roomApplicationRepository
+                .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                    roomId,
+                    applicantMemberId,
+                )
+        }
+        verify(exactly = 0) { roomApplicationRepository.delete(any()) }
+        verify(exactly = 0) { resumeSubmissionRepository.delete(any()) }
+    }
+
+    @Test
+    fun `해당 룸에 본인의 신청이 없으면 APPLICATION_NOT_FOUND를 던진다`() {
+        every {
+            roomApplicationRepository
+                .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                    roomId,
+                    applicantMemberId,
+                )
+        } returns null
+
+        assertWithdrawalFails(CoreErrorType.APPLICATION_NOT_FOUND)
+    }
+
+    @Test
+    fun `최신 신청이 이미 처리되었으면 APPLICATION_ALREADY_HANDLED를 던진다`() {
+        listOf(
+            RoomApplicationStatus.ACCEPTED,
+            RoomApplicationStatus.REJECTED,
+            RoomApplicationStatus.WITHDRAWN,
+        ).forEach { status ->
+            every {
+                roomApplicationRepository
+                    .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                        roomId,
+                        applicantMemberId,
+                    )
+            } returns application(status)
+
+            assertWithdrawalFails(CoreErrorType.APPLICATION_ALREADY_HANDLED)
+        }
+    }
+
     private fun givenEligibleApplication() {
         justRun { memberValidator.validateActive(applicantMemberId) }
         every {
@@ -246,11 +307,29 @@ class RoomApplicationSubmissionManagerTest {
         } returns false
     }
 
+    private fun application(status: RoomApplicationStatus): RoomApplicationEntity {
+        return RoomApplicationEntity(
+            roomId = roomId,
+            applicantMemberId = applicantMemberId,
+            note = applicationForm.note,
+            appliedAt = now.minusHours(1),
+            status = status,
+            pendingMemberId = applicantMemberId.takeIf { status == RoomApplicationStatus.PENDING },
+        )
+    }
+
     private fun assertSubmissionFails(errorType: CoreErrorType) {
         assertThatThrownBy { manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
         verify(exactly = 0) { resumeSubmissionRepository.save(any()) }
+    }
+
+    private fun assertWithdrawalFails(errorType: CoreErrorType) {
+        assertThatThrownBy { manager.withdraw(applicantMemberId, roomId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
     }
 }
