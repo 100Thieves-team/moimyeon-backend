@@ -82,6 +82,7 @@ class RoomApplicationSubmissionManagerTest {
         assertThat(applicationSlot.captured.applicantMemberId).isEqualTo(applicantMemberId)
         assertThat(applicationSlot.captured.note).isEqualTo(applicationForm.note)
         assertThat(applicationSlot.captured.status).isEqualTo(RoomApplicationStatus.PENDING)
+        assertThat(applicationSlot.captured.appliedAt).isEqualTo(now)
         assertThat(submissionSlot.captured.sourceResumeId).isEqualTo(resumeId)
         assertThat(submissionSlot.captured.fileKey).isEqualTo(resumeSubmission.file.key)
         assertThat(submissionSlot.captured.originalName).isEqualTo(resumeSubmission.file.originalName)
@@ -89,13 +90,14 @@ class RoomApplicationSubmissionManagerTest {
         assertThat(submissionSlot.captured.contentType).isEqualTo(resumeSubmission.file.contentType)
         assertThat(submissionSlot.captured.roomId).isEqualTo(roomId)
         assertThat(submissionSlot.captured.memberId).isEqualTo(applicantMemberId)
+        assertThat(submissionSlot.captured.submittedAt).isEqualTo(now)
         verifyOrder {
             memberValidator.validateActive(applicantMemberId)
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
                 applicantMemberId,
                 RoomApplicationStatus.PENDING,
             )
-            roomValidator.validateAcceptingApplications(roomId, now)
+            roomValidator.validateAcceptingApplications(roomId)
             participationValidator.validateNotHost(roomId, applicantMemberId)
             participationValidator.validateNotParticipating(roomId, applicantMemberId)
             roomApplicationRepository.existsByRoomIdAndPendingMemberIdAndDeletedAtIsNull(
@@ -124,7 +126,7 @@ class RoomApplicationSubmissionManagerTest {
         verify(exactly = 0) {
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(any(), any())
         }
-        verify(exactly = 0) { roomValidator.validateAcceptingApplications(any(), any()) }
+        verify(exactly = 0) { roomValidator.validateAcceptingApplications(any()) }
     }
 
     @Test
@@ -157,13 +159,13 @@ class RoomApplicationSubmissionManagerTest {
 
         assertSubmissionFails(CoreErrorType.ROOM_APPLICATION_PENDING_LIMIT_EXCEEDED)
 
-        verify(exactly = 0) { roomValidator.validateAcceptingApplications(any(), any()) }
+        verify(exactly = 0) { roomValidator.validateAcceptingApplications(any()) }
     }
 
     @Test
     fun `룸이 신청을 받을 수 없으면 이후 신청자 조건을 확인하지 않는다`() {
         every {
-            roomValidator.validateAcceptingApplications(roomId, now)
+            roomValidator.validateAcceptingApplications(roomId)
         } throws CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
 
         assertSubmissionFails(CoreErrorType.ROOM_NOT_RECRUITING)
@@ -227,7 +229,7 @@ class RoomApplicationSubmissionManagerTest {
                 RoomApplicationStatus.PENDING,
             )
         } returns 0L
-        justRun { roomValidator.validateAcceptingApplications(roomId, now) }
+        justRun { roomValidator.validateAcceptingApplications(roomId) }
         justRun { participationValidator.validateNotHost(roomId, applicantMemberId) }
         justRun { participationValidator.validateNotParticipating(roomId, applicantMemberId) }
         justRun { participationValidator.validateNoRemovalHistory(roomId, applicantMemberId) }

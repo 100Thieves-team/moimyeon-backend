@@ -37,13 +37,13 @@ class RoomApplicationSubmissionManager(
         note: String?,
         resumeSubmission: ResumeSubmission,
     ): Long {
-        val now = LocalDateTime.now(clock)
         memberValidator.validateActive(applicantMemberId)
         validatePendingApplicationCount(applicantMemberId)
 
-        roomValidator.validateAcceptingApplications(roomId, now)
+        roomValidator.validateAcceptingApplications(roomId)
         validateApplicant(roomId, applicantMemberId)
 
+        val now = LocalDateTime.now(clock)
         val application = saveApplication(roomId, applicantMemberId, note, now)
         resumeSubmissionRepository.save(
             ResumeSubmissionEntity(
