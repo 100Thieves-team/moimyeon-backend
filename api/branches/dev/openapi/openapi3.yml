@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-03",
-                        "datetime" : "2026-08-03T09:01:16.812553818",
+                        "date" : "2026-08-04",
+                        "datetime" : "2026-08-04T15:52:25.922092338",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-03",
-                        "datetime" : "2026-08-03T09:01:17.015939471",
+                        "date" : "2026-08-04",
+                        "datetime" : "2026-08-04T15:52:26.124484625",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -663,7 +663,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "c2b42221-5422-4cef-8e44-13671bd3b18c",
+                          "termsId" : "9b7ec59d-0440-4ee9-9f89-5071dd044325",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -671,7 +671,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "bb4ae2b8-dc47-4c82-be9a-6048461bc100",
+                          "termsId" : "359f33a5-f5cd-4a0a-9ba6-7c73fdef6180",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -906,12 +906,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "64b92eab-375c-48db-bf8f-4f98159072ae",
+                        "memberId" : "5ceb0bba-8348-421f-95ca-1756bc247bff",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "64b92eab-375c-48db-bf8f-4f98159072ae",
+                          "memberId" : "5ceb0bba-8348-421f-95ca-1756bc247bff",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1162,7 +1162,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-04T09:01:19.813398156",
+                          "startAt" : "2026-08-05T15:52:28.902890122",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1172,7 +1172,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "624d7eda-960b-4655-b399-4cf2f370e9bd"
+                        "hostMemberId" : "11a9484a-19bd-4e02-86a7-4eb32fe02766"
                       },
                       "error" : null
                     }
@@ -1477,7 +1477,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "c4154058-42f9-4dcb-a564-c8181745dab3",
+                        "memberId" : "d3c2e085-f56e-4f8a-9cf3-3eeb38579c5d",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -2623,7 +2623,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -3187,54 +3187,6 @@ components:
         jobRoleId:
           type: number
           description: "직무 id (필수, /v1/job-roles)"
-    v1-companies-companyId-job-postings1890921117:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - jobPostings
-          type: object
-          properties:
-            jobPostings:
-              type: array
-              description: 채용 공고 목록 (최대 20건)
-              items:
-                required:
-                - companyId
-                - jobPostingId
-                - postingName
-                - verified
-                type: object
-                properties:
-                  sourceUrl:
-                    type: string
-                    description: 원본 공고 링크 (선택)
-                    nullable: true
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  jobPostingId:
-                    type: number
-                    description: 채용 공고 id (룸 생성에 사용)
-                  verified:
-                    type: boolean
-                    description: 운영 검수 여부 (링크 생성분은 false)
-                  jobRoleId:
-                    type: number
-                    description: "대표 직무 id (선택, 직무 셀렉트 자동 채움)"
-                    nullable: true
-                  postingName:
-                    type: string
-                    description: 공고명
-                  jobRoleName:
-                    type: string
-                    description: 대표 직무명 (선택)
-                    nullable: true
     v1-rooms-roomId-1541252470:
       required:
       - result
@@ -3335,6 +3287,54 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+    v1-companies-companyId-job-postings1890921117:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - jobPostings
+          type: object
+          properties:
+            jobPostings:
+              type: array
+              description: 채용 공고 목록 (최대 20건)
+              items:
+                required:
+                - companyId
+                - jobPostingId
+                - postingName
+                - verified
+                type: object
+                properties:
+                  sourceUrl:
+                    type: string
+                    description: 원본 공고 링크 (선택)
+                    nullable: true
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  jobPostingId:
+                    type: number
+                    description: 채용 공고 id (룸 생성에 사용)
+                  verified:
+                    type: boolean
+                    description: 운영 검수 여부 (링크 생성분은 false)
+                  jobRoleId:
+                    type: number
+                    description: "대표 직무 id (선택, 직무 셀렉트 자동 채움)"
+                    nullable: true
+                  postingName:
+                    type: string
+                    description: 공고명
+                  jobRoleName:
+                    type: string
+                    description: 대표 직무명 (선택)
+                    nullable: true
     v1-members-me-nickname-346517390:
       required:
       - nickname
