@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-04",
-                        "datetime" : "2026-08-04T15:52:25.922092338",
+                        "date" : "2026-08-05",
+                        "datetime" : "2026-08-05T05:39:19.306491293",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-04",
-                        "datetime" : "2026-08-04T15:52:26.124484625",
+                        "date" : "2026-08-05",
+                        "datetime" : "2026-08-05T05:39:19.534944886",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -663,7 +663,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "9b7ec59d-0440-4ee9-9f89-5071dd044325",
+                          "termsId" : "5a0b553c-1cac-410e-8d9f-e2bfd61ca3bf",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -671,7 +671,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "359f33a5-f5cd-4a0a-9ba6-7c73fdef6180",
+                          "termsId" : "547a2ed2-76a9-4018-aff7-5b057206ba52",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -906,12 +906,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "5ceb0bba-8348-421f-95ca-1756bc247bff",
+                        "memberId" : "f623cb7e-507c-4f99-b554-38f9859f1fce",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "5ceb0bba-8348-421f-95ca-1756bc247bff",
+                          "memberId" : "f623cb7e-507c-4f99-b554-38f9859f1fce",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1162,7 +1162,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-05T15:52:28.902890122",
+                          "startAt" : "2026-08-06T05:39:22.271491625",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1172,7 +1172,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "11a9484a-19bd-4e02-86a7-4eb32fe02766"
+                        "hostMemberId" : "05d70310-3108-4a85-a291-5d1aad8b7320"
                       },
                       "error" : null
                     }
@@ -1477,7 +1477,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "d3c2e085-f56e-4f8a-9cf3-3eeb38579c5d",
+                        "memberId" : "8cdd253c-90f6-4166-8e0c-d26719b9b296",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -3187,6 +3187,54 @@ components:
         jobRoleId:
           type: number
           description: "직무 id (필수, /v1/job-roles)"
+    v1-companies-companyId-job-postings1890921117:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - jobPostings
+          type: object
+          properties:
+            jobPostings:
+              type: array
+              description: 채용 공고 목록 (최대 20건)
+              items:
+                required:
+                - companyId
+                - jobPostingId
+                - postingName
+                - verified
+                type: object
+                properties:
+                  sourceUrl:
+                    type: string
+                    description: 원본 공고 링크 (선택)
+                    nullable: true
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  jobPostingId:
+                    type: number
+                    description: 채용 공고 id (룸 생성에 사용)
+                  verified:
+                    type: boolean
+                    description: 운영 검수 여부 (링크 생성분은 false)
+                  jobRoleId:
+                    type: number
+                    description: "대표 직무 id (선택, 직무 셀렉트 자동 채움)"
+                    nullable: true
+                  postingName:
+                    type: string
+                    description: 공고명
+                  jobRoleName:
+                    type: string
+                    description: 대표 직무명 (선택)
+                    nullable: true
     v1-rooms-roomId-1541252470:
       required:
       - result
@@ -3287,54 +3335,6 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
-    v1-companies-companyId-job-postings1890921117:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - jobPostings
-          type: object
-          properties:
-            jobPostings:
-              type: array
-              description: 채용 공고 목록 (최대 20건)
-              items:
-                required:
-                - companyId
-                - jobPostingId
-                - postingName
-                - verified
-                type: object
-                properties:
-                  sourceUrl:
-                    type: string
-                    description: 원본 공고 링크 (선택)
-                    nullable: true
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  jobPostingId:
-                    type: number
-                    description: 채용 공고 id (룸 생성에 사용)
-                  verified:
-                    type: boolean
-                    description: 운영 검수 여부 (링크 생성분은 false)
-                  jobRoleId:
-                    type: number
-                    description: "대표 직무 id (선택, 직무 셀렉트 자동 채움)"
-                    nullable: true
-                  postingName:
-                    type: string
-                    description: 공고명
-                  jobRoleName:
-                    type: string
-                    description: 대표 직무명 (선택)
-                    nullable: true
     v1-members-me-nickname-346517390:
       required:
       - nickname
