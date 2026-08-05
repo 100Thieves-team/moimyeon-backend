@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
+import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionEntity
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
@@ -21,8 +22,8 @@ import java.util.UUID
 private const val ROOM_APPLICATION_PENDING_UNIQUE_CONSTRAINT = "uk_room_application_room_pending_active"
 private const val MAX_PENDING_ROOM_APPLICATION_COUNT = 3L
 
-@Component
-class RoomApplicationSubmissionManager(
+@Component("applicantRoomApplicationManager")
+class RoomApplicationManager(
     private val memberValidator: MemberValidator,
     private val roomValidator: RoomValidator,
     private val participationValidator: ParticipationValidator,
@@ -47,6 +48,7 @@ class RoomApplicationSubmissionManager(
         val application = saveApplication(roomId, applicantMemberId, note, now)
         resumeSubmissionRepository.save(
             ResumeSubmissionEntity(
+                roomApplicationId = application.id,
                 roomId = roomId,
                 memberId = applicantMemberId,
                 sourceResumeId = resumeSubmission.sourceResumeId,
@@ -58,6 +60,21 @@ class RoomApplicationSubmissionManager(
             ),
         )
         return application.id
+    }
+
+    @Transactional
+    fun withdraw(applicantMemberId: UUID, roomId: UUID) {
+        val application = requireFound(
+            roomApplicationRepository
+                .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                    roomId,
+                    applicantMemberId,
+                ),
+            CoreErrorType.APPLICATION_NOT_FOUND,
+        )
+        requireBusiness(application.isPending(), CoreErrorType.APPLICATION_ALREADY_HANDLED)
+
+        application.withdraw(LocalDateTime.now(clock))
     }
 
     private fun validatePendingApplicationCount(applicantMemberId: UUID) {

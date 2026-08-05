@@ -13,12 +13,13 @@ import java.util.UUID
     name = "resume_submission",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_resume_submission_room_member_active",
-            columnNames = ["room_id", "member_id", "_active_check"],
+            name = "uk_resume_submission_room_application",
+            columnNames = ["room_application_id"],
         ),
     ],
 )
 class ResumeSubmissionEntity(
+    val roomApplicationId: Long,
     @JdbcTypeCode(SqlTypes.BINARY)
     val roomId: UUID,
     @JdbcTypeCode(SqlTypes.BINARY)

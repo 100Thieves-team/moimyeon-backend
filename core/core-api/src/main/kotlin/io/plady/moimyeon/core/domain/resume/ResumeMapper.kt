@@ -13,12 +13,16 @@ object ResumeMapper {
                 sizeBytes = entity.sizeBytes,
                 contentType = entity.contentType,
             ),
-            summary = ResumeSummary(
-                status = entity.summaryStatus,
-                content = entity.summaryContent,
-            ),
+            summary = toSummary(entity),
             isDefault = entity.isDefault,
             registeredAt = entity.createdAt,
+        )
+    }
+
+    fun toSummary(entity: ResumeEntity): ResumeSummary {
+        return ResumeSummary(
+            status = entity.summaryStatus,
+            content = entity.summaryContent,
         )
     }
 }

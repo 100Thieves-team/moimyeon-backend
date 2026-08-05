@@ -23,4 +23,12 @@ class ResumeFinder(
             .findByMemberIdAndDeletedAtIsNullOrderByIsDefaultDescCreatedAtDesc(memberId)
             .map(ResumeMapper::toDomain)
     }
+
+    fun getSummary(memberId: UUID, resumeId: UUID): ResumeSummary {
+        val entity = requireFound(
+            resumeRepository.findByIdAndMemberId(resumeId, memberId),
+            CoreErrorType.RESUME_NOT_FOUND,
+        )
+        return ResumeMapper.toSummary(entity)
+    }
 }
