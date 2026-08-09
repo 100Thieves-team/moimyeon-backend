@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -9,6 +10,8 @@ class RoomApplicationService(
     private val roomApplicationManager: RoomApplicationManager,
     private val resumeValidator: ResumeValidator,
     private val roomApplicationFinder: RoomApplicationFinder,
+    private val participationValidator: ParticipationValidator,
+    private val roomApplicationDetailsReader: RoomApplicationDetailsReader,
 ) {
     fun submit(
         applicantMemberId: UUID,
@@ -24,8 +27,13 @@ class RoomApplicationService(
         )
     }
 
-    fun get(applicantMemberId: UUID, roomId: UUID): RoomApplication {
-        return roomApplicationFinder.get(applicantMemberId, roomId)
+    fun getMyApplication(applicantMemberId: UUID, roomId: UUID): RoomApplication {
+        return roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId)
+    }
+
+    fun getApplications(hostMemberId: UUID, roomId: UUID): List<RoomApplicationDetails> {
+        participationValidator.validateHost(roomId, hostMemberId)
+        return roomApplicationDetailsReader.getAllByRoom(roomId)
     }
 
     fun withdraw(applicantMemberId: UUID, roomId: UUID) {

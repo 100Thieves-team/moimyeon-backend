@@ -4,5 +4,5 @@ import java.util.UUID
 
 data class RoomApplicationForm(
     val resumeId: UUID,
-    val note: String?,
+    val note: String,
 )

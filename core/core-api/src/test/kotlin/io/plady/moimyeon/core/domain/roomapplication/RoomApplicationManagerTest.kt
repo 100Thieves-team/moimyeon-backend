@@ -117,6 +117,20 @@ class RoomApplicationManagerTest {
     }
 
     @Test
+    fun `전달 사항이 없으면 빈 문자열로 신청을 저장한다`() {
+        val savedApplication = mockk<RoomApplicationEntity> {
+            every { id } returns 1L
+        }
+        val applicationSlot = slot<RoomApplicationEntity>()
+        every { roomApplicationRepository.saveAndFlush(capture(applicationSlot)) } returns savedApplication
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+
+        manager.submit(applicantMemberId, roomId, "", resumeSubmission)
+
+        assertThat(applicationSlot.captured.note).isEmpty()
+    }
+
+    @Test
     fun `활성 회원이 아니면 신청 가능 건수를 확인하지 않는다`() {
         every {
             memberValidator.validateActive(applicantMemberId)

@@ -12,6 +12,18 @@ import java.util.UUID
 class ParticipationValidator(
     private val participationRepository: ParticipationRepository,
 ) {
+    fun validateHost(roomId: UUID, memberId: UUID) {
+        requireBusiness(
+            participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+                roomId,
+                memberId,
+                ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
+            ),
+            CoreErrorType.ROOM_FORBIDDEN,
+        )
+    }
+
     fun validateNotHost(roomId: UUID, memberId: UUID) {
         requireBusiness(
             !participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(

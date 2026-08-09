@@ -16,6 +16,11 @@ class MemberFinder(
         return MemberMapper.toDomain(requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND))
     }
 
+    fun getAllByIds(memberIds: Collection<UUID>): List<Member> {
+        if (memberIds.isEmpty()) return emptyList()
+        return memberRepository.findByIdInAndDeletedAtIsNull(memberIds).map(MemberMapper::toDomain)
+    }
+
     fun existsById(memberId: UUID): Boolean {
         return memberRepository.existsByIdAndDeletedAtIsNull(memberId)
     }

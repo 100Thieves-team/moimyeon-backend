@@ -36,6 +36,14 @@ class MemberFinderTest {
     }
 
     @Test
+    fun `회원 목록 조회는 탈퇴한 회원을 제외한다`() {
+        val memberId = UUID.randomUUID()
+        every { memberRepository.findByIdInAndDeletedAtIsNull(listOf(memberId)) } returns emptyList()
+
+        assertThat(memberFinder.getAllByIds(listOf(memberId))).isEmpty()
+    }
+
+    @Test
     fun `살아있는 회원의 소셜 계정 존재 여부를 반환한다`() {
         // given
         every {

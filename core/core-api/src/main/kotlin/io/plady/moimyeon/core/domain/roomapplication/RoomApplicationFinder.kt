@@ -15,7 +15,7 @@ class RoomApplicationFinder(
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val resumeFinder: ResumeFinder,
 ) {
-    fun get(applicantMemberId: UUID, roomId: UUID): RoomApplication {
+    fun getLatestByApplicant(applicantMemberId: UUID, roomId: UUID): RoomApplication {
         val application = requireFound(
             roomApplicationRepository
                 .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(

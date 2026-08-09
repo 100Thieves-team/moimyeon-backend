@@ -81,6 +81,27 @@ class ResumeFinderTest {
         }
     }
 
+    @Test
+    fun `여러 제출 기록의 이력서 요약을 한 번에 조회한다`() {
+        val memberId = UUID.randomUUID()
+        val first = resumeEntity(memberId, "백엔드 지원용", isDefault = false)
+        val second = resumeEntity(memberId, "데이터 지원용", isDefault = false)
+        first.completeSummary("백엔드 개발 경험")
+        second.completeSummary("데이터 파이프라인 경험")
+        every { resumeRepository.findByIdIn(listOf(first.id, second.id)) } returns listOf(first, second)
+
+        val summaries = resumeFinder.getSummaries(listOf(first.id, second.id))
+
+        assertThat(summaries).containsEntry(
+            first.id,
+            ResumeSummary(ResumeSummaryStatus.DONE, "백엔드 개발 경험"),
+        ).containsEntry(
+            second.id,
+            ResumeSummary(ResumeSummaryStatus.DONE, "데이터 파이프라인 경험"),
+        )
+        verify(exactly = 1) { resumeRepository.findByIdIn(listOf(first.id, second.id)) }
+    }
+
     private fun resumeEntity(memberId: UUID, name: String, isDefault: Boolean): ResumeEntity {
         return ResumeEntity(
             id = UUID.randomUUID(),

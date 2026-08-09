@@ -25,5 +25,29 @@ class ProfileFinder(
         )
     }
 
+    @Transactional(readOnly = true)
+    fun getAllByMemberIds(memberIds: Collection<UUID>): List<MemberProfile> {
+        if (memberIds.isEmpty()) return emptyList()
+        val profileEntitiesByMemberId = memberProfileRepository
+            .findByMemberIdInAndDeletedAtIsNull(memberIds)
+            .associateBy { it.memberId }
+        val profileIds = profileEntitiesByMemberId.values.map { it.id }
+        val jobRoleIdsByProfileId = interestJobRoleRepository
+            .findByProfileIdInAndDeletedAtIsNull(profileIds)
+            .groupBy({ it.profileId }, { it.jobRoleId })
+        val companyIdsByProfileId = interestCompanyRepository
+            .findByProfileIdInAndDeletedAtIsNull(profileIds)
+            .groupBy({ it.profileId }, { it.companyId })
+
+        return memberIds.distinct().map { memberId ->
+            val entity = requireFound(profileEntitiesByMemberId[memberId], CoreErrorType.PROFILE_NOT_FOUND)
+            ProfileMapper.toDomain(
+                entity,
+                interestJobRoleIds = jobRoleIdsByProfileId[entity.id].orEmpty(),
+                interestCompanyIds = companyIdsByProfileId[entity.id].orEmpty(),
+            )
+        }
+    }
+
     fun exists(memberId: UUID): Boolean = memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
 }

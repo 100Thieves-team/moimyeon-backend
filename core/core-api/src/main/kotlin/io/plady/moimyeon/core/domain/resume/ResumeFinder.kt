@@ -31,4 +31,13 @@ class ResumeFinder(
         )
         return ResumeMapper.toSummary(entity)
     }
+
+    fun getSummaries(resumeIds: Collection<UUID>): Map<UUID, ResumeSummary> {
+        if (resumeIds.isEmpty()) return emptyMap()
+        val entitiesById = resumeRepository.findByIdIn(resumeIds).associateBy { it.id }
+        return resumeIds.distinct().associateWith { resumeId ->
+            val entity = requireFound(entitiesById[resumeId], CoreErrorType.RESUME_NOT_FOUND)
+            ResumeMapper.toSummary(entity)
+        }
+    }
 }

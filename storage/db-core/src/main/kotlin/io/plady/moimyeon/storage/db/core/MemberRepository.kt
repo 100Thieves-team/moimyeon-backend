@@ -9,6 +9,8 @@ import java.util.UUID
 interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     fun findByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?
 
+    fun findByIdInAndDeletedAtIsNull(memberIds: Collection<UUID>): List<MemberEntity>
+
     fun existsByIdAndDeletedAtIsNull(memberId: UUID): Boolean
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

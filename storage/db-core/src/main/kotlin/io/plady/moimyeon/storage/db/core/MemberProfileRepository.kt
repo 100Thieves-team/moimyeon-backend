@@ -8,6 +8,8 @@ import java.util.UUID
 interface MemberProfileRepository : JpaRepository<MemberProfileEntity, UUID> {
     fun findByMemberIdAndDeletedAtIsNull(memberId: UUID): MemberProfileEntity?
 
+    fun findByMemberIdInAndDeletedAtIsNull(memberIds: Collection<UUID>): List<MemberProfileEntity>
+
     fun existsByMemberIdAndDeletedAtIsNull(memberId: UUID): Boolean
 
     // 쓰기 경로 전용. 프로필 행을 잠가 같은 회원의 동시 저장을 직렬화한다.
