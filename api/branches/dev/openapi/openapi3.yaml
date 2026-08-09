@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T11:55:42.392164127",
+                        "datetime" : "2026-08-09T12:16:54.254723839",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T11:55:42.562777966",
+                        "datetime" : "2026-08-09T12:16:54.487909498",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "2c34694a-d5fc-440b-9852-593d44cc4113",
+                          "termsId" : "4b7dec3e-fbfd-4725-b91e-acd68e1eb144",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "a0c9a10d-c649-4d63-ba40-52b2424bf89e",
+                          "termsId" : "2278127f-c25b-4b34-b6e4-65d78712f963",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
+                        "memberId" : "aca910ff-c56a-40d1-b520-b08e30698ca0",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
+                          "memberId" : "aca910ff-c56a-40d1-b520-b08e30698ca0",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-10T11:55:45.298040707",
+                          "startAt" : "2026-08-10T12:16:57.950915003",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1278,7 +1278,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "59478045-b1ba-49fa-8bb8-0284150fa3c8"
+                        "hostMemberId" : "375eb32e-ce3a-4522-8539-f0756a9f5af7"
                       },
                       "error" : null
                     }
@@ -1583,7 +1583,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "fbc8a8f2-d7f7-4ca5-ac62-530a1f356d04",
+                        "memberId" : "267871c5-ee08-466b-ba75-fe5738eed294",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1981,8 +1981,8 @@ paths:
       summary: 참가 신청 목록 조회 (방장)
       description: "방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자의 공개 정보·전달 사항·처리\
         \ 상태를 신청 시각 오름차순으로 내려준다. 철회된 신청은 제외된다. 전달 사항은 방장 외 비공개이며, 이력서 원본으로 가는 경로는\
-        \ 없다(§6). 방장만 조회할 수 있다(E1406). 이력서 AI 요약(J5)·신청자 직무·활동 정보는 연동 전까지 null 로 내\
-        려간다."
+        \ 없다(§6). 방장만 조회할 수 있다(E1406). 관심 직무는 목록으로 제공하고, 공개 활동 정보는 trust 격벽 구현 전까지\
+        \ null 로 내려간다."
       operationId: roomApplications
       parameters:
       - name: roomId
@@ -1997,7 +1997,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-applications186415359"
+                $ref: "#/components/schemas/v1-rooms-roomId-applications1231421410"
               examples:
                 roomApplications:
                   value: |-
@@ -2009,11 +2009,20 @@ paths:
                           "applicant" : {
                             "memberId" : "00000000-0000-0000-0000-000000000002",
                             "nickname" : "성실한 다람쥐 12",
-                            "jobTitle" : null,
+                            "jobRoles" : [ {
+                              "jobRoleId" : 101,
+                              "name" : "백엔드 개발"
+                            }, {
+                              "jobRoleId" : 102,
+                              "name" : "데이터 엔지니어"
+                            } ],
                             "activitySummary" : null
                           },
                           "note" : "결제 도메인 1차 면접을 앞두고 있어요. 실전처럼 연습하고 싶어 신청합니다.",
-                          "aiSummary" : null,
+                          "aiSummary" : {
+                            "status" : "DONE",
+                            "text" : "결제 도메인 경험이 있는 백엔드 개발자"
+                          },
                           "status" : "PENDING",
                           "statusLabel" : "대기",
                           "appliedAt" : "2026-07-31T10:20:00"
@@ -2472,6 +2481,92 @@ components:
           type: string
           description: "반려 사유 (선택, 최대 50자)"
           nullable: true
+    v1-rooms-roomId-applications1231421410:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applications
+          type: object
+          properties:
+            applications:
+              type: array
+              description: "참가 신청 목록 (신청 시각 오름차순, 철회 제외)"
+              items:
+                required:
+                - aiSummary
+                - applicationId
+                - appliedAt
+                - note
+                - status
+                - statusLabel
+                type: object
+                properties:
+                  note:
+                    type: string
+                    description: "전달 사항 (미입력 시 빈 문자열, 방장 외 비공개)"
+                  aiSummary:
+                    required:
+                    - status
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                        description: AI 요약 내용 (DONE일 때 제공)
+                        nullable: true
+                      status:
+                        type: string
+                        description: AI 요약 상태 (PROCESSING | DONE)
+                    description: 이력서 AI 요약 상태와 내용
+                  applicationId:
+                    type: number
+                    description: 신청 id (수락·반려의 입력)
+                  appliedAt:
+                    type: string
+                    description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
+                  statusLabel:
+                    type: string
+                    description: 신청 상태 표시명
+                  status:
+                    type: string
+                    description: 신청 상태 (PENDING | ACCEPTED | REJECTED)
+                  applicant:
+                    required:
+                    - jobRoles
+                    - memberId
+                    - nickname
+                    type: object
+                    properties:
+                      jobRoles:
+                        type: array
+                        description: 신청자의 관심 직무 목록 (없으면 빈 배열)
+                        items:
+                          required:
+                          - jobRoleId
+                          - name
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: 관심 직무명
+                            jobRoleId:
+                              type: number
+                              description: 관심 직무 id
+                      nickname:
+                        type: string
+                        description: 신청자 닉네임
+                      activitySummary:
+                        type: string
+                        description: 공개 가능한 활동 정보 (trust 격벽 전까지 null)
+                        nullable: true
+                      memberId:
+                        type: string
+                        description: 신청자 회원 식별자 (UUID)
     v1-job-postings1538643122:
       required:
       - result
@@ -2565,7 +2660,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -3107,70 +3202,6 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
-    v1-rooms-roomId-applications186415359:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applications
-          type: object
-          properties:
-            applications:
-              type: array
-              description: "참가 신청 목록 (신청 시각 오름차순, 철회 제외)"
-              items:
-                required:
-                - applicationId
-                - appliedAt
-                - status
-                - statusLabel
-                type: object
-                properties:
-                  note:
-                    type: string
-                    description: "전달 사항 (선택, 방장 외 비공개)"
-                    nullable: true
-                  aiSummary:
-                    type: object
-                    description: 이력서 AI 요약 (연동(J5) 전까지 null)
-                    nullable: true
-                  applicationId:
-                    type: number
-                    description: 신청 id (수락·반려의 입력)
-                  appliedAt:
-                    type: string
-                    description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
-                  statusLabel:
-                    type: string
-                    description: 신청 상태 표시명
-                  status:
-                    type: string
-                    description: 신청 상태 (PENDING | ACCEPTED | REJECTED)
-                  applicant:
-                    required:
-                    - memberId
-                    - nickname
-                    type: object
-                    properties:
-                      jobTitle:
-                        type: string
-                        description: 신청자 직무 (연동 전까지 null)
-                        nullable: true
-                      nickname:
-                        type: string
-                        description: 신청자 닉네임
-                      activitySummary:
-                        type: string
-                        description: 공개 가능한 활동 정보 (trust 격벽 전까지 null)
-                        nullable: true
-                      memberId:
-                        type: string
-                        description: 신청자 회원 식별자 (UUID)
     v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result

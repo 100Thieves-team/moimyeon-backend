@@ -903,7 +903,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-09",
-    "datetime" : "2026-08-09T11:55:42.392164127",
+    "datetime" : "2026-08-09T12:16:54.254723839",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1017,7 +1017,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-09",
-    "datetime" : "2026-08-09T11:55:42.562777966",
+    "datetime" : "2026-08-09T12:16:54.487909498",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1176,7 +1176,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sun, 9 Aug 2026 12:25:41 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sun, 9 Aug 2026 12:46:53 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1382,7 +1382,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "2c34694a-d5fc-440b-9852-593d44cc4113",
+      "termsId" : "4b7dec3e-fbfd-4725-b91e-acd68e1eb144",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1390,7 +1390,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "a0c9a10d-c649-4d63-ba40-52b2424bf89e",
+      "termsId" : "2278127f-c25b-4b34-b6e4-65d78712f963",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1495,12 +1495,12 @@ Content-Length: 454
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
+    "memberId" : "aca910ff-c56a-40d1-b520-b08e30698ca0",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
+      "memberId" : "aca910ff-c56a-40d1-b520-b08e30698ca0",
       "interestJobRoleIds" : [ ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2286,7 +2286,7 @@ Content-Length: 443
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "fbc8a8f2-d7f7-4ca5-ac62-530a1f356d04",
+    "memberId" : "267871c5-ee08-466b-ba75-fe5738eed294",
     "interestJobRoleIds" : [ 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4264,7 +4264,7 @@ Content-Length: 845
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-10T11:55:45.298040707",
+      "startAt" : "2026-08-10T12:16:57.950915003",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4274,7 +4274,7 @@ Content-Length: 845
       "recruitStatus" : "RECRUITING"
     },
     "resumePublic" : false,
-    "hostMemberId" : "59478045-b1ba-49fa-8bb8-0284150fa3c8"
+    "hostMemberId" : "375eb32e-ce3a-4522-8539-f0756a9f5af7"
   },
   "error" : null
 }</code></pre>
@@ -4774,7 +4774,7 @@ Content-Length: 1256
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 573
+Content-Length: 842
 
 {
   "result" : "SUCCESS",
@@ -4784,11 +4784,20 @@ Content-Length: 573
       "applicant" : {
         "memberId" : "00000000-0000-0000-0000-000000000002",
         "nickname" : "성실한 다람쥐 12",
-        "jobTitle" : null,
+        "jobRoles" : [ {
+          "jobRoleId" : 101,
+          "name" : "백엔드 개발"
+        }, {
+          "jobRoleId" : 102,
+          "name" : "데이터 엔지니어"
+        } ],
         "activitySummary" : null
       },
       "note" : "결제 도메인 1차 면접을 앞두고 있어요. 실전처럼 연습하고 싶어 신청합니다.",
-      "aiSummary" : null,
+      "aiSummary" : {
+        "status" : "DONE",
+        "text" : "결제 도메인 경험이 있는 백엔드 개발자"
+      },
       "status" : "PENDING",
       "statusLabel" : "대기",
       "appliedAt" : "2026-07-31T10:20:00"
@@ -4841,9 +4850,19 @@ Content-Length: 573
 <td class="tableblock halign-left valign-top"><p class="tableblock">신청자 닉네임</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.jobTitle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.jobRoles</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">신청자의 관심 직무 목록 (없으면 빈 배열)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.jobRoles[].jobRoleId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">관심 직무 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.jobRoles[].name</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">신청자 직무 (연동 전까지 null)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">관심 직무명</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].applicant.activitySummary</code></p></td>
@@ -4853,12 +4872,22 @@ Content-Length: 573
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].note</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">전달 사항 (선택, 방장 외 비공개)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">전달 사항 (미입력 시 빈 문자열, 방장 외 비공개)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].aiSummary</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 AI 요약 (연동(J5) 전까지 null)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이력서 AI 요약 상태와 내용</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].aiSummary.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 상태 (PROCESSING | DONE)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].aiSummary.text</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AI 요약 내용 (DONE일 때 제공)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.applications[].status</code></p></td>
@@ -5162,7 +5191,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-09 11:54:46 UTC
+Last updated 2026-08-09 12:15:49 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
