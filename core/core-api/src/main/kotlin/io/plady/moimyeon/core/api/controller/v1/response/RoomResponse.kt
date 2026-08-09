@@ -2,8 +2,12 @@ package io.plady.moimyeon.core.api.controller.v1.response
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.plady.moimyeon.core.domain.room.RoomSchedule
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import java.util.UUID
 
 // 룸 생성(POST /v1/rooms)의 응답. 생성 성공 시 상세로 이동하기 위한 최소 식별자.
@@ -61,7 +65,29 @@ data class RoomScheduleResponse(
     val durationMinutes: Int,
     val durationLabel: String, // 90분
     val displayLabel: String, // 8월 1일 (토) 오후 2:00 · 90분
-)
+) {
+    companion object {
+        private val DATE_LABEL = DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN)
+        private val TIME_LABEL = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN)
+
+        // 화면이 그대로 쓰는 문자열까지 서버가 만든다(기존 계약 유지).
+        fun from(schedule: RoomSchedule): RoomScheduleResponse {
+            val startAt = schedule.startAt
+            val dayOfWeekLabel = startAt.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
+            val startTimeLabel = TIME_LABEL.format(startAt)
+            val durationLabel = "${schedule.durationMinutes}분"
+            return RoomScheduleResponse(
+                date = startAt.toLocalDate(),
+                dayOfWeekLabel = dayOfWeekLabel,
+                startTime = startAt.toLocalTime(),
+                startTimeLabel = startTimeLabel,
+                durationMinutes = schedule.durationMinutes,
+                durationLabel = durationLabel,
+                displayLabel = "${DATE_LABEL.format(startAt)} ($dayOfWeekLabel) $startTimeLabel · $durationLabel",
+            )
+        }
+    }
+}
 
 // 상세 화면의 모집 현황. 방장이 확정 가능한지(최소 인원 충족)를 함께 계산해 내려준다(「룸 생성」 §4.3).
 data class RoomRecruitResponse(

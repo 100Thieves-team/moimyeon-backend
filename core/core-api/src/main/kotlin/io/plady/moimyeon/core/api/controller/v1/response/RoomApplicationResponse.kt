@@ -41,5 +41,15 @@ data class ApplicationDecisionResponse(
     val applicationId: Long,
     val status: String, // ACCEPTED | REJECTED
     val statusLabel: String, // 수락 | 반려
-    val recruit: RoomRecruitSummaryResponse,
+    val recruit: ApplicationRecruitResponse,
+)
+
+// 수락/반려 응답의 모집 현황. 필드가 목록 카드와 같아 보이지만 쓰임이 다르다 —
+// 목록은 신청 대기 수까지 보여주고(§4.1), 여기는 방금 내린 결정의 결과만 확인시킨다.
+// 같은 나열이라고 한 클래스로 묶으면 한쪽이 필드를 늘릴 때 다른 쪽이 끌려간다.
+data class ApplicationRecruitResponse(
+    val current: Int,
+    val max: Int,
+    val recruitStatus: String, // RECRUITING | CLOSED (정원 충족 시 CLOSED)
+    val recruitStatusLabel: String, // 모집 중 | 모집 마감
 )

@@ -64,6 +64,9 @@ interface JobPostingRepository : JpaRepository<JobPostingEntity, Long> {
     // 생성 직후 응답을 저장된 값으로 재조립하기 위한 단건 조회(폐기분 제외).
     fun findByIdAndDeletedAtIsNull(id: Long): JobPostingEntity?
 
+    // 탐색 목록의 공고 표시명 배치 조회(MOI-383). 폐기된 공고는 표시명을 채우지 않는다.
+    fun findByIdInAndDeletedAtIsNull(ids: Collection<Long>): List<JobPostingEntity>
+
     // 룸 탐색의 회사 필터(MOI-383). 룸은 회사를 직접 알지 못해(room → job_posting → company)
     // 회사 id 를 공고 id 목록으로 바꿔 넘긴다.
     // is_open 은 보지 않는다 — 공고가 닫혀도 그 공고로 만든 룸의 모집은 계속되고,
