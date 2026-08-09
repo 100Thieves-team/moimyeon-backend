@@ -2,7 +2,7 @@ rootProject.name = "moimyeon"
 
 include(
     "admin:admin-api",
-    "batch:batch-app",
+    "core:core-batch",
     "core:core-domain",
     "core:core-enum",
     "core:core-api",

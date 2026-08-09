@@ -1,4 +1,4 @@
-spring.application.name: batch-app
+spring.application.name: core-batch
 spring.profiles.active: local
 
 spring:
