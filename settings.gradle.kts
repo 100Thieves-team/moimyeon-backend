@@ -3,7 +3,6 @@ rootProject.name = "moimyeon"
 include(
     "admin:admin-api",
     "core:core-batch",
-    "core:core-domain",
     "core:core-enum",
     "core:core-api",
     "storage:db-core",
@@ -12,7 +11,7 @@ include(
     "support:logging",
     "support:monitoring",
     "clients:client-example",
-    "clients:client-ai",
+    "clients:bedrock-client",
     "storage:object-storage"
 )
 

@@ -1,6 +1,5 @@
 package io.plady.moimyeon.core.domain.resume
 
-import io.plady.moimyeon.core.domain.storage.ObjectStorageException
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -13,10 +12,10 @@ import java.util.UUID
 @Service
 class ResumeService(
     private val resumeFinder: ResumeFinder,
-    private val fileStorage: ResumeFileStorage,
+    private val fileStorage: ResumeFileStore,
     private val resumeManager: ResumeManager,
     private val resumeRegistrar: ResumeRegistrar,
-    private val documentSummarizer: DocumentSummarizer,
+    private val summaryGenerator: ResumeSummaryGenerator,
     private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -50,8 +49,8 @@ class ResumeService(
         val attemptStartedAt = now()
         val resumeId = resumeRegistrar.register(memberId, newResume, attemptStartedAt)
         val summary = try {
-            documentSummarizer.summarizePdf(upload.content)
-        } catch (exception: DocumentSummarizationException) {
+            summaryGenerator.generate(upload.content)
+        } catch (exception: ResumeSummaryGenerationException) {
             log.warn("Resume summarization failed: memberId={}, resumeId={}", memberId, resumeId, exception)
             resumeManager.failSummary(memberId, resumeId, attemptStartedAt)
             return resumeId
@@ -67,12 +66,12 @@ class ResumeService(
         resumeManager.startSummaryRetry(memberId, resumeId, attemptStartedAt)
         val summary = try {
             val content = fileStorage.read(resume.file)
-            documentSummarizer.summarizePdf(content)
-        } catch (exception: DocumentSummarizationException) {
+            summaryGenerator.generate(content)
+        } catch (exception: ResumeSummaryGenerationException) {
             log.warn("Resume summarization retry failed: memberId={}, resumeId={}", memberId, resumeId, exception)
             resumeManager.failSummary(memberId, resumeId, attemptStartedAt)
             return resumeId
-        } catch (exception: ObjectStorageException) {
+        } catch (exception: ResumeFileStorageException) {
             log.warn("Resume source read failed: memberId={}, resumeId={}", memberId, resumeId, exception)
             resumeManager.failSummary(memberId, resumeId, attemptStartedAt)
             return resumeId
