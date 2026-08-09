@@ -41,6 +41,12 @@ class RoomManager(
     @Transactional
     fun update(roomId: UUID, hostMemberId: UUID, command: RoomUpdateCommand) {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
+
+        // 정원 범위는 RoomCapacity 가 보지만 그 값 객체는 DB 를 모른다. 이미 들어와 있는 사람과의 비교는 여기서 한다.
+        // 최소 인원은 현재 인원보다 커도 된다 — 확정이 미뤄질 뿐 지금 상태를 깨지 않는다(「진행 확정」§4.3).
+        val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
+        requireBusiness(command.capacity.max >= current, CoreErrorType.ROOM_CAPACITY_BELOW_PARTICIPANTS)
+
         val (meetingType, sigunguId) = command.meetingPlace.toEntityValues()
         room.update(
             title = command.title.value,

@@ -47,4 +47,10 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "동시에 대기할 수 있는 참가 신청은 최대 3건입니다.",
         LogLevel.WARN,
     ),
+    ROOM_CAPACITY_BELOW_PARTICIPANTS(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1417,
+        "이미 참여 중인 인원보다 적게 모집 인원을 줄일 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
