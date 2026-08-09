@@ -201,12 +201,14 @@ CREATE INDEX ix_job_role_job_group_id ON job_role (job_group_id);
 -- 크롤러가 채우는 것이 기본이지만, 카탈로그에 없는 회사는 사용자가 룸을 만들며 즉시 등록할 수 있다.
 -- 그때는 corp_code 가 비고 verified = FALSE 로 들어간다. 운영이 사후 검증하거나 중복이면 병합한다.
 -- 미검증 회사는 탐색 필터의 선택 목록에서만 숨기고, 그 회사의 공고로 만들어진 룸은 정상 노출한다.
+-- verified 기본값은 TRUE 다(job_posting 과 다르다). 컬럼을 생략하는 크롤러 적재분이 검색에서
+-- 사라지지 않게 하려는 것이고, 앱이 만드는 행은 JPA 가 값을 명시하므로 여전히 FALSE 다.
 CREATE TABLE company (
     id                   BIGINT       NOT NULL AUTO_INCREMENT,
     corp_code            CHAR(8)      NULL,
     name_kr              VARCHAR(200) NOT NULL,
     name_normalized      VARCHAR(200) NULL,
-    verified             BOOLEAN      NOT NULL DEFAULT FALSE,
+    verified             BOOLEAN      NOT NULL DEFAULT TRUE,
     created_by_member_id BINARY(16)   NULL,
     created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
