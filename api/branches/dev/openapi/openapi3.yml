@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T08:58:33.649195578",
+                        "datetime" : "2026-08-09T11:55:42.392164127",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T08:58:33.828200276",
+                        "datetime" : "2026-08-09T11:55:42.562777966",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -119,7 +119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 searchCompanies-e400-length:
                   value: |-
@@ -194,7 +194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 createJobPosting-e400:
                   value: |-
@@ -212,7 +212,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 createJobPosting-e1102:
                   value: |-
@@ -322,13 +322,21 @@ paths:
       - v1
       summary: 룸 탐색 목록 조회
       description: "조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있다. 필터는\
-        \ AND 로 결합하고, 완료·취소·일정 경과 룸은 제외된다. (모킹: 필터·정렬을 실제 적용하지 않고 고정 목록을 반환하되 요청 sort\
-        \ 는 그대로 되돌려준다)"
+        \ AND 로 결합하고, 완료·취소·일정 경과 룸은 제외된다. 커서 페이지네이션이며 nextCursor 가 null 이면 마지막 페이\
+        지다. 커서는 불투명 토큰이라 해석하지 말고 그대로 다시 보낸다. 잘못된 필터·정렬 값은 그 값만 무시하고 나머지 조건으로 조회한다\
+        . 회사·공고·직무·지역 표시명은 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 룸 자체는 목록에 남\
+        는다."
       operationId: rooms
       parameters:
       - name: companyId
         in: query
-        description: 회사 id 필터 (선택)
+        description: 회사 id 필터 (선택). 그 회사의 공고로 만든 룸만 남는다
+        required: false
+        schema:
+          type: string
+      - name: jobPostingId
+        in: query
+        description: 채용 공고 id 필터 (선택). 회사와 함께 주면 둘을 모두 만족하는 공고만 남는다
         required: false
         schema:
           type: string
@@ -340,19 +348,32 @@ paths:
           type: string
       - name: round
         in: query
-        description: 면접 차수 필터 (선택)
+        description: "면접 단계 필터 (FIRST | SECOND | THIRD | ETC, 선택). 지원하지 않는 값은 이 조건\
+          만 무시한다"
         required: false
         schema:
           type: string
       - name: method
         in: query
-        description: "진행 방식 필터 (ONLINE | OFFLINE, 선택)"
+        description: "진행 방식 필터 (ONLINE | OFFLINE, 선택). 지원하지 않는 값은 이 조건만 무시한다"
         required: false
         schema:
           type: string
       - name: sigunguId
         in: query
         description: 오프라인 지역 시군구 id 필터 (선택)
+        required: false
+        schema:
+          type: string
+      - name: startFrom
+        in: query
+        description: "조회 시작 일시 (ISO-8601, 선택). 시간까지 포함한 한 구간이다"
+        required: false
+        schema:
+          type: string
+      - name: startTo
+        in: query
+        description: "조회 종료 일시 (ISO-8601, 선택). 시작보다 앞서면 400 이다"
         required: false
         schema:
           type: string
@@ -364,7 +385,20 @@ paths:
           type: string
       - name: sort
         in: query
-        description: "정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순 | CLOSING 마감 임박순, 기본 SCHEDULE)"
+        description: "정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순, 기본 SCHEDULE). 지원하지 않는\
+          \ 값은 기본 정렬로 처리한다"
+        required: false
+        schema:
+          type: string
+      - name: cursor
+        in: query
+        description: 이전 응답의 nextCursor (선택). 정렬을 바꾸면 버리고 처음부터 조회한다
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다"
         required: false
         schema:
           type: string
@@ -374,7 +408,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-126398339"
+                $ref: "#/components/schemas/v1-rooms-1267570971"
               examples:
                 rooms:
                   value: |-
@@ -398,7 +432,7 @@ paths:
                             "displayName" : "프론트엔드 개발"
                           },
                           "round" : "FIRST",
-                          "roundLabel" : "1차 면접",
+                          "roundLabel" : "1차",
                           "type" : "JOB",
                           "typeLabel" : "직무 면접",
                           "method" : "OFFLINE",
@@ -408,63 +442,41 @@ paths:
                             "label" : "서울 강남구"
                           },
                           "schedule" : {
-                            "date" : "2026-08-01",
-                            "dayOfWeekLabel" : "토",
+                            "date" : "2026-09-05",
                             "startTime" : "14:00",
-                            "startTimeLabel" : "오후 2:00",
-                            "durationMinutes" : 90,
-                            "durationLabel" : "90분",
-                            "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+                            "durationMinutes" : 90
                           },
                           "recruit" : {
-                            "current" : 1,
-                            "max" : 6,
+                            "current" : 3,
+                            "max" : 8,
+                            "pending" : 5,
                             "recruitStatus" : "RECRUITING",
                             "recruitStatusLabel" : "모집 중"
                           }
-                        }, {
-                          "roomId" : "01920000-0000-7000-8000-000000000002",
-                          "title" : "정산 백엔드 최종 면접 같이 대비해요",
-                          "company" : {
-                            "companyId" : 1,
-                            "name" : "달빛페이"
-                          },
-                          "jobPosting" : {
-                            "jobPostingId" : 2,
-                            "postingName" : "백엔드 개발자 (정산)"
-                          },
-                          "jobRole" : {
-                            "jobRoleId" : 2,
-                            "code" : "BACKEND_DEVELOPER",
-                            "displayName" : "백엔드 개발"
-                          },
-                          "round" : "FINAL",
-                          "roundLabel" : "최종 면접",
-                          "type" : null,
-                          "typeLabel" : null,
-                          "method" : "ONLINE",
-                          "methodLabel" : "온라인",
-                          "region" : null,
-                          "schedule" : {
-                            "date" : "2026-08-03",
-                            "dayOfWeekLabel" : "월",
-                            "startTime" : "20:00",
-                            "startTimeLabel" : "오후 8:00",
-                            "durationMinutes" : 60,
-                            "durationLabel" : "60분",
-                            "displayLabel" : "8월 3일 (월) 오후 8:00 · 60분"
-                          },
-                          "recruit" : {
-                            "current" : 4,
-                            "max" : 4,
-                            "recruitStatus" : "CLOSED",
-                            "recruitStatusLabel" : "모집 마감"
-                          }
                         } ],
                         "sort" : "SCHEDULE",
-                        "totalCount" : 2
+                        "totalCount" : 1,
+                        "nextCursor" : "djE6U0NIRURVTEU6MjAyNi0wOS0wNVQxNDowMDowMTIzNA"
                       },
                       "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms910352763"
+              examples:
+                rooms-e400-cursor:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
                     }
     post:
       tags:
@@ -570,7 +582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 createRoom-e1402:
                   value: |-
@@ -653,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "046aee6c-9a80-4b6e-bd8e-a4eada387d90",
+                          "termsId" : "2c34694a-d5fc-440b-9852-593d44cc4113",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -661,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "4e7ad02b-f22a-4ea1-a5c7-3edd64da5146",
+                          "termsId" : "a0c9a10d-c649-4d63-ba40-52b2424bf89e",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -733,7 +745,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -801,7 +813,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 jobPostingLinkMetadata-e400:
                   value: |-
@@ -846,7 +858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 searchJobPostings-e400-length:
                   value: |-
@@ -964,7 +976,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 searchJobRoles-e400-blank:
                   value: |-
@@ -1000,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9eea5ac6-3bf0-4470-9d01-b27a8d084b90",
+                        "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "9eea5ac6-3bf0-4470-9d01-b27a8d084b90",
+                          "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1020,7 +1032,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -1038,7 +1050,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -1072,7 +1084,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -1256,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-10T08:58:36.736720734",
+                          "startAt" : "2026-08-10T11:55:45.298040707",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1266,7 +1278,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "4d6f6f9b-d662-44fb-9151-e731fa919339"
+                        "hostMemberId" : "59478045-b1ba-49fa-8bb8-0284150fa3c8"
                       },
                       "error" : null
                     }
@@ -1331,7 +1343,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 jobPostings-e400-length:
                   value: |-
@@ -1398,7 +1410,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateNickname-e1005:
                   value: |-
@@ -1416,7 +1428,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateNickname-e1102:
                   value: |-
@@ -1434,7 +1446,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateNickname-e1007:
                   value: |-
@@ -1524,7 +1536,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateProfile-e1301:
                   value: |-
@@ -1571,7 +1583,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "3b873534-89f1-47f5-8353-70d5becfd46a",
+                        "memberId" : "fbc8a8f2-d7f7-4ca5-ac62-530a1f356d04",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1591,7 +1603,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -1609,7 +1621,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -1640,7 +1652,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 resumes-e1102:
                   value: |-
@@ -1742,7 +1754,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 createResume-e400-file-size:
                   value: |-
@@ -1784,7 +1796,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 createResume-e1102:
                   value: |-
@@ -1929,7 +1941,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 publicProfile-e400:
                   value: |-
@@ -1949,7 +1961,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 publicProfile-e1006:
                   value: |-
@@ -2032,7 +2044,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 resume-e400:
                   value: |-
@@ -2080,7 +2092,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 resume-e1010:
                   value: |-
@@ -2098,7 +2110,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 resume-e1102:
                   value: |-
@@ -2146,7 +2158,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 deleteResume-e1010:
                   value: |-
@@ -2164,7 +2176,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 deleteResume-e400:
                   value: |-
@@ -2184,7 +2196,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 deleteResume-e1102:
                   value: |-
@@ -2220,7 +2232,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-rooms910352763"
               examples:
                 retryResumeSummary-e1013:
                   value: |-
@@ -2541,170 +2553,6 @@ components:
               description: "공고명 후보 (og:title, 사용자가 확인·수정). fetch 실패·OG 없음이면 null →\
                 \ 직접 입력"
               nullable: true
-    v1-rooms-126398339:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - rooms
-          - sort
-          - totalCount
-          type: object
-          properties:
-            rooms:
-              type: array
-              description: 룸 목록
-              items:
-                required:
-                - method
-                - methodLabel
-                - roomId
-                - round
-                - roundLabel
-                - title
-                type: object
-                properties:
-                  method:
-                    type: string
-                    description: 진행 방식 코드 (ONLINE | OFFLINE)
-                  jobPosting:
-                    type: object
-                    properties:
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 id
-                        nullable: true
-                      postingName:
-                        type: string
-                        description: 채용 공고명
-                        nullable: true
-                    description: 채용 공고 (없으면 null)
-                  type:
-                    type: string
-                    description: 면접 유형 코드 (선택)
-                    nullable: true
-                  title:
-                    type: string
-                    description: 룸 제목
-                  roomId:
-                    type: string
-                    description: 룸 id (UUID)
-                  schedule:
-                    required:
-                    - date
-                    - dayOfWeekLabel
-                    - displayLabel
-                    - durationLabel
-                    - durationMinutes
-                    - startTime
-                    - startTimeLabel
-                    type: object
-                    properties:
-                      displayLabel:
-                        type: string
-                        description: 일정 전체 표시 문구
-                      date:
-                        type: string
-                        description: 진행 날짜 (yyyy-MM-dd)
-                      durationMinutes:
-                        type: number
-                        description: 예상 소요 시간(분)
-                      startTimeLabel:
-                        type: string
-                        description: 시작 시각 표시명
-                      startTime:
-                        type: string
-                        description: 시작 시각 (HH:mm)
-                      dayOfWeekLabel:
-                        type: string
-                        description: 요일 표시명
-                      durationLabel:
-                        type: string
-                        description: 소요 시간 표시명
-                  round:
-                    type: string
-                    description: 면접 회차 코드
-                  recruit:
-                    required:
-                    - current
-                    - max
-                    - recruitStatus
-                    - recruitStatusLabel
-                    type: object
-                    properties:
-                      current:
-                        type: number
-                        description: 현재 인원
-                      max:
-                        type: number
-                        description: 최대 인원
-                      recruitStatus:
-                        type: string
-                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
-                      recruitStatusLabel:
-                        type: string
-                        description: 모집 상태 표시명
-                  methodLabel:
-                    type: string
-                    description: 진행 방식 표시명
-                  jobRole:
-                    required:
-                    - code
-                    - displayName
-                    - jobRoleId
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        description: 직무 코드
-                      displayName:
-                        type: string
-                        description: 직무 표시명
-                      jobRoleId:
-                        type: number
-                        description: 직무 id
-                  typeLabel:
-                    type: string
-                    description: 면접 유형 표시명 (선택)
-                    nullable: true
-                  company:
-                    required:
-                    - companyId
-                    - name
-                    type: object
-                    properties:
-                      companyId:
-                        type: number
-                        description: 회사 id
-                      name:
-                        type: string
-                        description: 회사명
-                  region:
-                    type: object
-                    properties:
-                      sigunguId:
-                        type: number
-                        description: 지역 시군구 id
-                        nullable: true
-                      label:
-                        type: string
-                        description: 지역 표시명
-                        nullable: true
-                    description: 오프라인 지역 (온라인이면 null)
-                  roundLabel:
-                    type: string
-                    description: 면접 회차 표시명
-            sort:
-              type: string
-              description: 적용된 정렬 (요청 값 에코)
-            totalCount:
-              type: number
-              description: 전체 결과 수
     v1-job-postings-link-metadata34312967:
       required:
       - companyId
@@ -2717,7 +2565,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -2789,6 +2637,162 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING)
+    v1-rooms-1267570971:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - rooms
+          - sort
+          - totalCount
+          type: object
+          properties:
+            nextCursor:
+              type: string
+              description: 다음 페이지 커서. 마지막 페이지면 null
+              nullable: true
+            rooms:
+              type: array
+              description: 룸 목록
+              items:
+                required:
+                - method
+                - methodLabel
+                - roomId
+                - round
+                - roundLabel
+                - title
+                type: object
+                properties:
+                  method:
+                    type: string
+                    description: 진행 방식 코드 (ONLINE | OFFLINE)
+                  jobPosting:
+                    type: object
+                    properties:
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 id
+                        nullable: true
+                      postingName:
+                        type: string
+                        description: 채용 공고명
+                        nullable: true
+                    description: 채용 공고 (폐기됐으면 null)
+                  type:
+                    type: string
+                    description: 면접 유형 코드 (선택)
+                    nullable: true
+                  title:
+                    type: string
+                    description: 룸 제목
+                  roomId:
+                    type: string
+                    description: 룸 id (UUID)
+                  schedule:
+                    required:
+                    - date
+                    - durationMinutes
+                    - startTime
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        description: 진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다
+                      durationMinutes:
+                        type: number
+                        description: 예상 소요 시간(분)
+                      startTime:
+                        type: string
+                        description: 시작 시각 (HH:mm)
+                  round:
+                    type: string
+                    description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
+                  recruit:
+                    required:
+                    - current
+                    - max
+                    - pending
+                    - recruitStatus
+                    - recruitStatusLabel
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                        description: 현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)
+                      max:
+                        type: number
+                        description: 최대 인원
+                      pending:
+                        type: number
+                        description: 대기 중인 참가 신청 수
+                      recruitStatus:
+                        type: string
+                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                      recruitStatusLabel:
+                        type: string
+                        description: 모집 상태 표시명
+                  methodLabel:
+                    type: string
+                    description: 진행 방식 표시명
+                  jobRole:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: 직무 코드
+                        nullable: true
+                      displayName:
+                        type: string
+                        description: 직무 표시명
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 id
+                        nullable: true
+                    description: 직무 (폐기됐으면 null)
+                  typeLabel:
+                    type: string
+                    description: 면접 유형 표시명 (선택)
+                    nullable: true
+                  company:
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                        nullable: true
+                      name:
+                        type: string
+                        description: 회사명
+                        nullable: true
+                    description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                  region:
+                    type: object
+                    properties:
+                      sigunguId:
+                        type: number
+                        description: 지역 시군구 id
+                        nullable: true
+                      label:
+                        type: string
+                        description: 지역 표시명
+                        nullable: true
+                    description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                  roundLabel:
+                    type: string
+                    description: 면접 단계 표시명
+            sort:
+              type: string
+              description: 실제로 적용된 정렬
+            totalCount:
+              type: number
+              description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
     v1-job-postings-1848070641:
       required:
       - companyId
@@ -3848,7 +3852,7 @@ components:
                       displayName:
                         type: string
                         description: 상위 직군 표시명
-    v1-members-me-nickname910352763:
+    v1-rooms910352763:
       required:
       - result
       type: object

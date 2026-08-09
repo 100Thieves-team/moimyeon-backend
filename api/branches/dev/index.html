@@ -903,7 +903,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-09",
-    "datetime" : "2026-08-09T08:58:33.649195578",
+    "datetime" : "2026-08-09T11:55:42.392164127",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1017,7 +1017,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-09",
-    "datetime" : "2026-08-09T08:58:33.828200276",
+    "datetime" : "2026-08-09T11:55:42.562777966",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1176,7 +1176,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sun, 9 Aug 2026 09:28:32 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sun, 9 Aug 2026 12:25:41 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1382,7 +1382,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "046aee6c-9a80-4b6e-bd8e-a4eada387d90",
+      "termsId" : "2c34694a-d5fc-440b-9852-593d44cc4113",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1390,7 +1390,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "4e7ad02b-f22a-4ea1-a5c7-3edd64da5146",
+      "termsId" : "a0c9a10d-c649-4d63-ba40-52b2424bf89e",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1495,12 +1495,12 @@ Content-Length: 454
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "9eea5ac6-3bf0-4470-9d01-b27a8d084b90",
+    "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "9eea5ac6-3bf0-4470-9d01-b27a8d084b90",
+      "memberId" : "9fe10454-af2e-4b4a-b690-4b8c2cb32a43",
       "interestJobRoleIds" : [ ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2286,7 +2286,7 @@ Content-Length: 443
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "3b873534-89f1-47f5-8353-70d5becfd46a",
+    "memberId" : "fbc8a8f2-d7f7-4ca5-ac62-530a1f356d04",
     "interestJobRoleIds" : [ 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4264,7 +4264,7 @@ Content-Length: 845
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-10T08:58:36.736720734",
+      "startAt" : "2026-08-10T11:55:45.298040707",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4274,7 +4274,7 @@ Content-Length: 845
       "recruitStatus" : "RECRUITING"
     },
     "resumePublic" : false,
-    "hostMemberId" : "4d6f6f9b-d662-44fb-9151-e731fa919339"
+    "hostMemberId" : "59478045-b1ba-49fa-8bb8-0284150fa3c8"
   },
   "error" : null
 }</code></pre>
@@ -4416,7 +4416,7 @@ Content-Length: 845
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms?method=OFFLINE&amp;availableOnly=true&amp;sort=SCHEDULE' -i -X GET</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms?method=OFFLINE&amp;availableOnly=true&amp;sort=SCHEDULE&amp;size=20' -i -X GET</code></pre>
 </div>
 </div>
 <div class="sect3">
@@ -4435,7 +4435,11 @@ Content-Length: 845
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>companyId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id 필터 (선택)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 id 필터 (선택). 그 회사의 공고로 만든 룸만 남는다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>jobPostingId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id 필터 (선택). 회사와 함께 주면 둘을 모두 만족하는 공고만 남는다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>jobRoleId</code></p></td>
@@ -4443,15 +4447,23 @@ Content-Length: 845
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>round</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 차수 필터 (선택)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 단계 필터 (FIRST | SECOND | THIRD | ETC, 선택). 지원하지 않는 값은 이 조건만 무시한다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>method</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 필터 (ONLINE | OFFLINE, 선택)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 필터 (ONLINE | OFFLINE, 선택). 지원하지 않는 값은 이 조건만 무시한다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>sigunguId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 시군구 id 필터 (선택)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>startFrom</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회 시작 일시 (ISO-8601, 선택). 시간까지 포함한 한 구간이다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>startTo</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회 종료 일시 (ISO-8601, 선택). 시작보다 앞서면 400 이다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>availableOnly</code></p></td>
@@ -4459,7 +4471,15 @@ Content-Length: 845
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>sort</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순 | CLOSING 마감 임박순, 기본 SCHEDULE)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순, 기본 SCHEDULE). 지원하지 않는 값은 기본 정렬로 처리한다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cursor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이전 응답의 nextCursor (선택). 정렬을 바꾸면 버리고 처음부터 조회한다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다</p></td>
 </tr>
 </tbody>
 </table>
@@ -4470,7 +4490,7 @@ Content-Length: 845
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 2466
+Content-Length: 1256
 
 {
   "result" : "SUCCESS",
@@ -4492,7 +4512,7 @@ Content-Length: 2466
         "displayName" : "프론트엔드 개발"
       },
       "round" : "FIRST",
-      "roundLabel" : "1차 면접",
+      "roundLabel" : "1차",
       "type" : "JOB",
       "typeLabel" : "직무 면접",
       "method" : "OFFLINE",
@@ -4502,61 +4522,21 @@ Content-Length: 2466
         "label" : "서울 강남구"
       },
       "schedule" : {
-        "date" : "2026-08-01",
-        "dayOfWeekLabel" : "토",
+        "date" : "2026-09-05",
         "startTime" : "14:00",
-        "startTimeLabel" : "오후 2:00",
-        "durationMinutes" : 90,
-        "durationLabel" : "90분",
-        "displayLabel" : "8월 1일 (토) 오후 2:00 · 90분"
+        "durationMinutes" : 90
       },
       "recruit" : {
-        "current" : 1,
-        "max" : 6,
+        "current" : 3,
+        "max" : 8,
+        "pending" : 5,
         "recruitStatus" : "RECRUITING",
         "recruitStatusLabel" : "모집 중"
       }
-    }, {
-      "roomId" : "01920000-0000-7000-8000-000000000002",
-      "title" : "정산 백엔드 최종 면접 같이 대비해요",
-      "company" : {
-        "companyId" : 1,
-        "name" : "달빛페이"
-      },
-      "jobPosting" : {
-        "jobPostingId" : 2,
-        "postingName" : "백엔드 개발자 (정산)"
-      },
-      "jobRole" : {
-        "jobRoleId" : 2,
-        "code" : "BACKEND_DEVELOPER",
-        "displayName" : "백엔드 개발"
-      },
-      "round" : "FINAL",
-      "roundLabel" : "최종 면접",
-      "type" : null,
-      "typeLabel" : null,
-      "method" : "ONLINE",
-      "methodLabel" : "온라인",
-      "region" : null,
-      "schedule" : {
-        "date" : "2026-08-03",
-        "dayOfWeekLabel" : "월",
-        "startTime" : "20:00",
-        "startTimeLabel" : "오후 8:00",
-        "durationMinutes" : 60,
-        "durationLabel" : "60분",
-        "displayLabel" : "8월 3일 (월) 오후 8:00 · 60분"
-      },
-      "recruit" : {
-        "current" : 4,
-        "max" : 4,
-        "recruitStatus" : "CLOSED",
-        "recruitStatusLabel" : "모집 마감"
-      }
     } ],
     "sort" : "SCHEDULE",
-    "totalCount" : 2
+    "totalCount" : 1,
+    "nextCursor" : "djE6U0NIRURVTEU6MjAyNi0wOS0wNVQxNDowMDowMTIzNA"
   },
   "error" : null
 }</code></pre>
@@ -4600,6 +4580,11 @@ Content-Length: 2466
 <td class="tableblock halign-left valign-top"><p class="tableblock">룸 제목</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].company</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회사 (공고에서 파생. 회사를 알 수 없으면 null)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].company.companyId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">회사 id</p></td>
@@ -4612,7 +4597,7 @@ Content-Length: 2466
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 (없으면 null)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 (폐기됐으면 null)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting.jobPostingId</code></p></td>
@@ -4623,6 +4608,11 @@ Content-Length: 2466
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobPosting.postingName</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고명</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobRole</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">직무 (폐기됐으면 null)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].jobRole.jobRoleId</code></p></td>
@@ -4642,12 +4632,12 @@ Content-Length: 2466
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].round</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 코드</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 단계 코드 (FIRST | SECOND | THIRD | ETC)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].roundLabel</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">면접 회차 표시명</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 단계 표시명</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].type</code></p></td>
@@ -4672,7 +4662,7 @@ Content-Length: 2466
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].region</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이면 null)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이거나 폐기된 지역이면 null)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].region.sigunguId</code></p></td>
@@ -4687,12 +4677,7 @@ Content-Length: 2466
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.date</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.dayOfWeekLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">요일 표시명</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.startTime</code></p></td>
@@ -4700,34 +4685,24 @@ Content-Length: 2466
 <td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 (HH:mm)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.startTimeLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">시작 시각 표시명</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.durationMinutes</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">예상 소요 시간(분)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.durationLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">소요 시간 표시명</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.displayLabel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">일정 전체 표시 문구</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.current</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.max</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">최대 인원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.pending</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 중인 참가 신청 수</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.recruitStatus</code></p></td>
@@ -4742,12 +4717,17 @@ Content-Length: 2466
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sort</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">적용된 정렬 (요청 값 에코)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제로 적용된 정렬</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.totalCount</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">전체 결과 수</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조건에 맞는 전체 룸 수 (페이지 크기와 무관)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.nextCursor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">다음 페이지 커서. 마지막 페이지면 null</p></td>
 </tr>
 </tbody>
 </table>
@@ -5182,7 +5162,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-09 08:57:08 UTC
+Last updated 2026-08-09 11:54:46 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
