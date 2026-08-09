@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-05",
-                        "datetime" : "2026-08-05T05:39:19.306491293",
+                        "date" : "2026-08-09",
+                        "datetime" : "2026-08-09T06:18:58.98321275",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-05",
-                        "datetime" : "2026-08-05T05:39:19.534944886",
+                        "date" : "2026-08-09",
+                        "datetime" : "2026-08-09T06:18:59.149340917",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -102,14 +102,15 @@ paths:
       tags:
       - v1
       summary: 회사 검색
-      description: 관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 검증 완료된 유효(미폐기) 회사를 최대 20건 반환한다.
-        검색어가 없거나 공백이거나 1~50자를 벗어나면 400(E400)으로 응답한다.
+      description: "관심 회사 태그 입력의 검색 소스. 정규화된 회사명의 접두 일치로 검증 완료된 유효(미폐기) 회사를 최대 20건\
+        \ 반환한다. 접두로 찾지 못하면 부분 일치로 다시 찾는다(예: '올리브영' 으로 'CJ올리브영'). 타이핑 중 호출을 전제로 하므로\
+        \ 빈 검색어는 빈 배열 200 이고, 50자 초과만 400(E400)이다."
       operationId: searchCompanies
       parameters:
       - name: query
         in: query
-        description: "검색어 (회사명 부분 일치, 공백 불가, 1~50자)"
-        required: true
+        description: "검색어 (정규화 회사명 접두 일치, 최대 50자. 비면 빈 배열)"
+        required: false
         schema:
           type: string
       responses:
@@ -121,17 +122,6 @@ paths:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
                 searchCompanies-e400-length:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
-                searchCompanies-e400-blank:
                   value: |-
                     {
                       "result" : "ERROR",
@@ -663,7 +653,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "5a0b553c-1cac-410e-8d9f-e2bfd61ca3bf",
+                          "termsId" : "4f40bfe2-cf48-412c-9f52-5ea1d2ab1e16",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -671,7 +661,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "547a2ed2-76a9-4018-aff7-5b057206ba52",
+                          "termsId" : "10b717cc-e73a-40f8-844f-24947f8f788e",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -824,6 +814,110 @@ paths:
                         "data" : null
                       }
                     }
+  /v1/job-postings/search:
+    get:
+      tags:
+      - v1
+      summary: 회사·공고 통합 검색
+      description: "회사와 공고를 하나의 검색 바로 찾는다(MOI-390). 탐색 필터와 룸 생성이 같은 응답을 쓰고, 화면이 회사\
+        \ 행을 다르게 해석한다. 회사명이 맞아도 공고명이 맞아도 결과는 `회사 | 공고명` 형태의 공고 행으로 통일되며, 회사가 매치되면\
+        \ 회사 행도 함께 내려간다. '네이버 백엔드' 처럼 회사와 공고를 함께 친 검색어는 회사로 좁힌 뒤 나머지로 공고를 거른다. 회사가\
+        \ 잡히지 않으면 공고명에서 토큰을 AND 로 찾는다(어순 무관). 미검증 공고와 룸이 없는 공고도 포함되고, 결과 수 상한은 서버가\
+        \ 고정한다. 타이핑 중 호출을 전제로 하므로 빈 입력·최소 길이 미만은 400 이 아니라 빈 배열 200 이며, 50자 초과만 400(E400)이\
+        다. 요청 query 를 그대로 echo 하므로 늦게 도착한 이전 응답을 클라이언트가 버릴 수 있다. 붙여 쓴 검색어('네이버백엔드\
+        ')는 분해되지 않아 결과가 없을 수 있다."
+      operationId: searchJobPostings
+      parameters:
+      - name: query
+        in: query
+        description: 검색어 (최대 50자. 비거나 짧으면 빈 배열)
+        required: false
+        schema:
+          type: string
+      - name: companyId
+        in: query
+        description: 회사 좁히기 (선택). 주면 회사 검색을 건너뛰고 그 회사 안에서만 찾는다
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                searchJobPostings-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          headers:
+            Cache-Control:
+              description: "개인화가 없는 응답이라 캐시를 허용한다 (public, max-age=60)"
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-job-postings-search1628359421"
+              examples:
+                searchJobPostings-empty:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "query" : "",
+                        "companies" : [ ],
+                        "jobPostings" : [ ]
+                      },
+                      "error" : null
+                    }
+                searchJobPostings:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "query" : "네이버 백엔드",
+                        "companies" : [ {
+                          "companyId" : 91221,
+                          "name" : "네이버"
+                        } ],
+                        "jobPostings" : [ {
+                          "jobPostingId" : 2029,
+                          "company" : {
+                            "companyId" : 91221,
+                            "name" : "네이버"
+                          },
+                          "postingName" : "백엔드 개발자 (정산)",
+                          "jobRoleId" : 1,
+                          "jobRoleName" : "백엔드 개발",
+                          "sourceUrl" : "https://naver.example.com/careers/be",
+                          "verified" : true
+                        }, {
+                          "jobPostingId" : 2036,
+                          "company" : {
+                            "companyId" : 91222,
+                            "name" : "플레이스앤"
+                          },
+                          "postingName" : "[네이버 계열사] 백엔드 엔지니어",
+                          "jobRoleId" : null,
+                          "jobRoleName" : null,
+                          "sourceUrl" : null,
+                          "verified" : false
+                        } ]
+                      },
+                      "error" : null
+                    }
   /v1/job-roles/search:
     get:
       tags:
@@ -906,12 +1000,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "f623cb7e-507c-4f99-b554-38f9859f1fce",
+                        "memberId" : "3968bf80-c490-4641-8393-8583278193db",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "f623cb7e-507c-4f99-b554-38f9859f1fce",
+                          "memberId" : "3968bf80-c490-4641-8393-8583278193db",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1162,7 +1256,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-06T05:39:22.271491625",
+                          "startAt" : "2026-08-10T06:19:01.698099648",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1172,7 +1266,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "05d70310-3108-4a85-a291-5d1aad8b7320"
+                        "hostMemberId" : "9e34d5c4-6415-40a2-af4f-6f7ac88cfc93"
                       },
                       "error" : null
                     }
@@ -1477,7 +1571,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "8cdd253c-90f6-4166-8e0c-d26719b9b296",
+                        "memberId" : "590c5136-b13e-48a1-8436-cc579216483d",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -3634,6 +3728,82 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+    v1-job-postings-search1628359421:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - companies
+          - jobPostings
+          - query
+          type: object
+          properties:
+            jobPostings:
+              type: array
+              description: 공고 행 (회사명 매치가 공고명 매치보다 앞에 온다)
+              items:
+                required:
+                - jobPostingId
+                - postingName
+                - verified
+                type: object
+                properties:
+                  sourceUrl:
+                    type: string
+                    description: 원본 공고 링크 (선택)
+                    nullable: true
+                  jobPostingId:
+                    type: number
+                    description: 채용 공고 id (룸 생성에 사용)
+                  verified:
+                    type: boolean
+                    description: 운영 검수 여부 (링크 생성분은 false)
+                  jobRoleId:
+                    type: number
+                    description: 대표 직무 id (선택)
+                    nullable: true
+                  company:
+                    required:
+                    - companyId
+                    - name
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 공고가 속한 회사 id
+                      name:
+                        type: string
+                        description: 공고가 속한 회사명 (행 앞에 표시)
+                  postingName:
+                    type: string
+                    description: 공고명
+                  jobRoleName:
+                    type: string
+                    description: 대표 직무명 (선택)
+                    nullable: true
+            companies:
+              type: array
+              description: 회사 행. 화면이 '전체 보기' 또는 '좁히기'로 해석한다
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  name:
+                    type: string
+                    description: 회사명
+            query:
+              type: string
+              description: 요청 검색어 echo (stale 응답 판별용)
     v1-job-roles-search-1966453570:
       required:
       - result
