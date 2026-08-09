@@ -13,7 +13,7 @@ import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.domain.roomapplication.ApplicationApplicant
 import io.plady.moimyeon.core.domain.roomapplication.ApplicationResumeSummary
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationDetails
-import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationService
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
 import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import org.assertj.core.api.Assertions.assertThat
@@ -22,11 +22,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class RoomApplicationFacadeTest {
-    private val roomApplicationService = mockk<RoomApplicationService>()
+    private val roomApplicationSubmissionService = mockk<RoomApplicationSubmissionService>()
     private val profileService = mockk<ProfileService>()
     private val catalogService = mockk<CatalogService>()
     private val facade = RoomApplicationFacade(
-        roomApplicationService = roomApplicationService,
+        roomApplicationSubmissionService = roomApplicationSubmissionService,
         profileService = profileService,
         catalogService = catalogService,
     )
@@ -38,7 +38,7 @@ class RoomApplicationFacadeTest {
 
     @Test
     fun `새 참가 신청 검토 흐름에 프로필의 관심 직무 목록을 조립한다`() {
-        every { roomApplicationService.getApplications(hostMemberId, roomId) } returns listOf(details())
+        every { roomApplicationSubmissionService.getApplications(hostMemberId, roomId) } returns listOf(details())
         every { profileService.getProfiles(listOf(applicantMemberId)) } returns listOf(profile(listOf(102L, 101L)))
         every { catalogService.getJobCatalog() } returns listOf(
             JobGroup(
@@ -68,7 +68,7 @@ class RoomApplicationFacadeTest {
     @Test
     fun `탈퇴한 신청자는 프로필을 조회하지 않고 익명화한다`() {
         every {
-            roomApplicationService.getApplications(hostMemberId, roomId)
+            roomApplicationSubmissionService.getApplications(hostMemberId, roomId)
         } returns listOf(details(ApplicationApplicant.Withdrawn(applicantMemberId)))
 
         val applicant = facade.getApplications(hostMemberId, roomId).applications.single().applicant

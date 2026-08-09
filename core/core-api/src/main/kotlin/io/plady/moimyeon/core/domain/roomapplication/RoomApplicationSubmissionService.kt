@@ -5,11 +5,11 @@ import io.plady.moimyeon.core.domain.resume.ResumeValidator
 import org.springframework.stereotype.Service
 import java.util.UUID
 
-@Service("applicantRoomApplicationService")
-class RoomApplicationService(
-    private val roomApplicationManager: RoomApplicationManager,
+@Service
+class RoomApplicationSubmissionService(
+    private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
     private val resumeValidator: ResumeValidator,
-    private val roomApplicationFinder: RoomApplicationFinder,
+    private val roomApplicationSubmissionFinder: RoomApplicationSubmissionFinder,
     private val participationValidator: ParticipationValidator,
     private val roomApplicationDetailsReader: RoomApplicationDetailsReader,
 ) {
@@ -19,7 +19,7 @@ class RoomApplicationService(
         applicationForm: RoomApplicationForm,
     ): Long {
         val submittedFile = resumeValidator.validateOwnedBy(applicantMemberId, applicationForm.resumeId)
-        return roomApplicationManager.submit(
+        return roomApplicationSubmissionManager.submit(
             applicantMemberId,
             roomId,
             applicationForm.note,
@@ -28,7 +28,7 @@ class RoomApplicationService(
     }
 
     fun getMyApplication(applicantMemberId: UUID, roomId: UUID): RoomApplication {
-        return roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId)
+        return roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId)
     }
 
     fun getApplications(hostMemberId: UUID, roomId: UUID): List<RoomApplicationDetails> {
@@ -37,6 +37,6 @@ class RoomApplicationService(
     }
 
     fun withdraw(applicantMemberId: UUID, roomId: UUID) {
-        roomApplicationManager.withdraw(applicantMemberId, roomId)
+        roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
     }
 }

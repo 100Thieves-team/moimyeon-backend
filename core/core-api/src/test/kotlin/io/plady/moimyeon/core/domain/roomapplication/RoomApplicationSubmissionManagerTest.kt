@@ -29,14 +29,14 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class RoomApplicationManagerTest {
+class RoomApplicationSubmissionManagerTest {
     private val memberValidator = mockk<MemberValidator>()
     private val roomValidator = mockk<RoomValidator>()
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
-    private val manager = RoomApplicationManager(
+    private val manager = RoomApplicationSubmissionManager(
         memberValidator,
         roomValidator,
         participationValidator,

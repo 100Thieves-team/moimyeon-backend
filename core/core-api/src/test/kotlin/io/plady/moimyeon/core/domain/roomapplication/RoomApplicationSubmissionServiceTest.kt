@@ -19,16 +19,16 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationServiceTest {
-    private val roomApplicationManager = mockk<RoomApplicationManager>()
+class RoomApplicationSubmissionServiceTest {
+    private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>()
     private val resumeValidator = mockk<ResumeValidator>()
-    private val roomApplicationFinder = mockk<RoomApplicationFinder>()
+    private val roomApplicationSubmissionFinder = mockk<RoomApplicationSubmissionFinder>()
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationDetailsReader = mockk<RoomApplicationDetailsReader>()
-    private val service = RoomApplicationService(
-        roomApplicationManager,
+    private val service = RoomApplicationSubmissionService(
+        roomApplicationSubmissionManager,
         resumeValidator,
-        roomApplicationFinder,
+        roomApplicationSubmissionFinder,
         participationValidator,
         roomApplicationDetailsReader,
     )
@@ -50,7 +50,7 @@ class RoomApplicationServiceTest {
     fun `보관 이력서를 선택하면 제출 시점 파일 참조와 함께 참가 신청을 제출한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationManager.submit(
+            roomApplicationSubmissionManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -63,7 +63,7 @@ class RoomApplicationServiceTest {
         assertThat(applicationId).isEqualTo(1L)
         verifyOrder {
             resumeValidator.validateOwnedBy(applicantMemberId, resumeId)
-            roomApplicationManager.submit(
+            roomApplicationSubmissionManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -80,14 +80,14 @@ class RoomApplicationServiceTest {
 
         assertSubmissionFails(CoreErrorType.RESUME_NOT_FOUND)
 
-        verify(exactly = 0) { roomApplicationManager.submit(any(), any(), any(), any()) }
+        verify(exactly = 0) { roomApplicationSubmissionManager.submit(any(), any(), any(), any()) }
     }
 
     @Test
     fun `신청 조건 때문에 신청 저장이 실패하면 실패를 그대로 전달한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationManager.submit(any(), any(), any(), any())
+            roomApplicationSubmissionManager.submit(any(), any(), any(), any())
         } throws CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
 
         assertSubmissionFails(CoreErrorType.ROOM_NOT_RECRUITING)
@@ -108,12 +108,12 @@ class RoomApplicationServiceTest {
             status = RoomApplicationStatus.PENDING,
             appliedAt = appliedAt,
         )
-        every { roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
+        every { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
 
         val result = service.getMyApplication(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(application)
-        verify(exactly = 1) { roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId) }
+        verify(exactly = 1) { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) }
     }
 
     @Test
@@ -147,17 +147,17 @@ class RoomApplicationServiceTest {
 
     @Test
     fun `신청자는 방장이 처리하기 전 자신의 참가 신청을 철회한다`() {
-        justRun { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+        justRun { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
 
         service.withdraw(applicantMemberId, roomId)
 
-        verify(exactly = 1) { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+        verify(exactly = 1) { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
     }
 
     @Test
     fun `해당 룸에 자신의 신청이 없으면 철회 실패를 그대로 전달한다`() {
         every {
-            roomApplicationManager.withdraw(applicantMemberId, roomId)
+            roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
         } throws CoreException(CoreErrorType.APPLICATION_NOT_FOUND)
 
         assertWithdrawalFails(CoreErrorType.APPLICATION_NOT_FOUND)
@@ -166,7 +166,7 @@ class RoomApplicationServiceTest {
     @Test
     fun `이미 처리된 신청이면 철회 실패를 그대로 전달한다`() {
         every {
-            roomApplicationManager.withdraw(applicantMemberId, roomId)
+            roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
         } throws CoreException(CoreErrorType.APPLICATION_ALREADY_HANDLED)
 
         assertWithdrawalFails(CoreErrorType.APPLICATION_ALREADY_HANDLED)

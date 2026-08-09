@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationFinderTest {
+class RoomApplicationSubmissionFinderTest {
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val resumeFinder = mockk<ResumeFinder>()
-    private val finder = RoomApplicationFinder(
+    private val finder = RoomApplicationSubmissionFinder(
         roomApplicationRepository,
         resumeSubmissionRepository,
         resumeFinder,
@@ -160,11 +160,11 @@ class RoomApplicationFinderTest {
     ): RoomApplicationEntity {
         return mockk {
             every { id } returns applicationId
-            every { roomId } returns this@RoomApplicationFinderTest.roomId
-            every { applicantMemberId } returns this@RoomApplicationFinderTest.applicantMemberId
+            every { roomId } returns this@RoomApplicationSubmissionFinderTest.roomId
+            every { applicantMemberId } returns this@RoomApplicationSubmissionFinderTest.applicantMemberId
             every { note } returns applicationNote
             every { status } returns RoomApplicationStatus.PENDING
-            every { appliedAt } returns this@RoomApplicationFinderTest.appliedAt
+            every { appliedAt } returns this@RoomApplicationSubmissionFinderTest.appliedAt
         }
     }
 
