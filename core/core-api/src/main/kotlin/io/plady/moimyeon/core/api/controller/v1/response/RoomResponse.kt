@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.api.controller.v1.response
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.plady.moimyeon.core.domain.room.RoomSchedule
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -51,17 +52,23 @@ data class RoomRegionResponse(
     val label: String, // 서울 강남구
 )
 
+// 목록 카드의 일정. 서버는 값만 내려주고 표시 문구는 화면이 만든다.
+// (요일·오전/오후·"90분" 같은 문구를 서버가 조립하면 i18n·디자인 변경이 서버 배포를 요구하게 된다.)
 data class RoomScheduleResponse(
     val date: LocalDate,
-    val dayOfWeekLabel: String, // 토
     // Jackson 기본 LocalTime 직렬화는 "14:00:00"(ISO) → FE 계약(HH:mm)에 맞춰 "14:00"으로 고정.
     @get:JsonFormat(pattern = "HH:mm")
     val startTime: LocalTime,
-    val startTimeLabel: String, // 오후 2:00
     val durationMinutes: Int,
-    val durationLabel: String, // 90분
-    val displayLabel: String, // 8월 1일 (토) 오후 2:00 · 90분
-)
+) {
+    companion object {
+        fun from(schedule: RoomSchedule): RoomScheduleResponse = RoomScheduleResponse(
+            date = schedule.startAt.toLocalDate(),
+            startTime = schedule.startAt.toLocalTime(),
+            durationMinutes = schedule.durationMinutes,
+        )
+    }
+}
 
 // 상세 화면의 모집 현황. 방장이 확정 가능한지(최소 인원 충족)를 함께 계산해 내려준다(「룸 생성」 §4.3).
 data class RoomRecruitResponse(

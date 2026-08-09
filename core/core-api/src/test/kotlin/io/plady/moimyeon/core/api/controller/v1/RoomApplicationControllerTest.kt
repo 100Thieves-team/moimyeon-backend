@@ -7,9 +7,9 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.RejectApplicationRequest
 import io.plady.moimyeon.core.api.controller.v1.response.ApplicantResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ApplicationDecisionResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ApplicationRecruitResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationsResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomRecruitSummaryResponse
 import io.plady.moimyeon.core.api.facade.RoomApplicationFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -120,7 +120,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
             applicationId = 3001L,
             status = "ACCEPTED",
             statusLabel = "수락",
-            recruit = RoomRecruitSummaryResponse(
+            recruit = ApplicationRecruitResponse(
                 current = 2,
                 max = 6,
                 recruitStatus = "RECRUITING",
@@ -163,7 +163,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
             applicationId = 3001L,
             status = "REJECTED",
             statusLabel = "반려",
-            recruit = RoomRecruitSummaryResponse(
+            recruit = ApplicationRecruitResponse(
                 current = 1,
                 max = 6,
                 recruitStatus = "RECRUITING",

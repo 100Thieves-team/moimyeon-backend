@@ -2,8 +2,18 @@ package io.plady.moimyeon.core.api.controller.v1
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.CompanyResponse
+import io.plady.moimyeon.core.api.controller.v1.response.JobRoleResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomJobPostingResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomRecruitSummaryResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomRegionResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomScheduleResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomSummaryResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.api.facade.RoomFacade
+import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
@@ -11,7 +21,9 @@ import io.plady.moimyeon.core.domain.room.RoomCapacity
 import io.plady.moimyeon.core.domain.room.RoomDescription
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomSchedule
+import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
+import io.plady.moimyeon.core.domain.room.RoomSortOrder
 import io.plady.moimyeon.core.domain.room.RoomTitle
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
@@ -37,6 +49,7 @@ import java.util.UUID
 
 class RoomControllerTest : RestDocsTest() {
     private lateinit var roomService: RoomService
+    private lateinit var roomSearchFacade: RoomSearchFacade
     private val hostMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { hostMemberId.toString() }
     private val createdRoomId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000001")
@@ -55,7 +68,9 @@ class RoomControllerTest : RestDocsTest() {
     private val listDescription =
         "조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있다. " +
             "필터는 AND 로 결합하고, 완료·취소·일정 경과 룸은 제외된다. " +
-            "(모킹: 필터·정렬을 실제 적용하지 않고 고정 목록을 반환하되 요청 sort 는 그대로 되돌려준다)"
+            "커서 페이지네이션이며 nextCursor 가 null 이면 마지막 페이지다. 커서는 불투명 토큰이라 해석하지 말고 그대로 다시 보낸다. " +
+            "잘못된 필터·정렬 값은 그 값만 무시하고 나머지 조건으로 조회한다. " +
+            "회사·공고·직무·지역 표시명은 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 룸 자체는 목록에 남는다."
     private val detailSummary = "룸 단건 조회"
     private val detailDescription =
         "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자를 반환한다(§6 공개 데이터). 현재 인원 = 활성 참여 수, " +
@@ -88,12 +103,46 @@ class RoomControllerTest : RestDocsTest() {
     @BeforeEach
     fun setUp() {
         roomService = mockk()
+        roomSearchFacade = mockk()
         mockMvc = mockController(
-            RoomController(RoomFacade(roomService)),
+            RoomController(RoomFacade(roomService), roomSearchFacade),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
     }
+
+    // 목록 응답은 Facade 가 조립을 끝내고 오므로, 컨트롤러 문서화는 그 결과를 고정값으로 둔다.
+    private fun sampleRoomsResponse(): RoomsResponse = RoomsResponse(
+        rooms = listOf(
+            RoomSummaryResponse(
+                roomId = createdRoomId,
+                title = "달빛페이 프론트 1차, 실전처럼 봐요",
+                company = CompanyResponse(companyId = 1L, name = "달빛페이"),
+                jobPosting = RoomJobPostingResponse(jobPostingId = 1L, postingName = "프론트엔드 개발자 (결제플랫폼)"),
+                jobRole = JobRoleResponse(jobRoleId = 1L, code = "FRONTEND_DEVELOPER", displayName = "프론트엔드 개발"),
+                round = InterviewStage.FIRST.name,
+                roundLabel = InterviewStage.FIRST.label,
+                type = InterviewType.JOB.name,
+                typeLabel = InterviewType.JOB.label,
+                method = "OFFLINE",
+                methodLabel = "오프라인",
+                region = RoomRegionResponse(sigunguId = 1L, label = "서울 강남구"),
+                schedule = RoomScheduleResponse.from(RoomSchedule(LocalDateTime.of(2026, 9, 5, 14, 0), 90)),
+                recruit = RoomRecruitSummaryResponse(
+                    current = 3,
+                    max = 8,
+                    pending = 5,
+                    recruitStatus = "RECRUITING",
+                    recruitStatusLabel = "모집 중",
+                ),
+            ),
+        ),
+        sort = RoomSortOrder.SCHEDULE.name,
+        totalCount = 1,
+        nextCursor = "djE6U0NIRURVTEU6MjAyNi0wOS0wNVQxNDowMDowMTIzNA",
+    )
+
+    private fun emptyRoomsResponse(): RoomsResponse = RoomsResponse(rooms = emptyList(), sort = RoomSortOrder.SCHEDULE.name, totalCount = 0, nextCursor = null)
 
     // 생성 응답은 도메인 Room(id·status)만 쓰므로, 서비스는 목으로 두고 고정 Room 을 돌려준다.
     private fun sampleRoom(): Room = Room.create(
@@ -232,11 +281,14 @@ class RoomControllerTest : RestDocsTest() {
 
     @Test
     fun rooms() {
+        every { roomSearchFacade.search(any(), any(), any(), any()) } returns sampleRoomsResponse()
+
         mockMvc.perform(
             get("/v1/rooms")
                 .param("method", "OFFLINE")
                 .param("availableOnly", "true")
-                .param("sort", "SCHEDULE"),
+                .param("sort", "SCHEDULE")
+                .param("size", "20"),
         )
             .andExpect(status().isOk)
             .andDo(
@@ -245,53 +297,122 @@ class RoomControllerTest : RestDocsTest() {
                     listSummary,
                     listDescription,
                     queryParameters(
-                        parameterWithName("companyId").optional().description("회사 id 필터 (선택)"),
+                        parameterWithName("companyId").optional().description("회사 id 필터 (선택). 그 회사의 공고로 만든 룸만 남는다"),
+                        parameterWithName("jobPostingId").optional().description("채용 공고 id 필터 (선택). 회사와 함께 주면 둘을 모두 만족하는 공고만 남는다"),
                         parameterWithName("jobRoleId").optional().description("직무 id 필터 (선택)"),
-                        parameterWithName("round").optional().description("면접 차수 필터 (선택)"),
-                        parameterWithName("method").optional().description("진행 방식 필터 (ONLINE | OFFLINE, 선택)"),
+                        parameterWithName("round").optional().description("면접 단계 필터 (FIRST | SECOND | THIRD | ETC, 선택). 지원하지 않는 값은 이 조건만 무시한다"),
+                        parameterWithName("method").optional().description("진행 방식 필터 (ONLINE | OFFLINE, 선택). 지원하지 않는 값은 이 조건만 무시한다"),
                         parameterWithName("sigunguId").optional().description("오프라인 지역 시군구 id 필터 (선택)"),
+                        parameterWithName("startFrom").optional().description("조회 시작 일시 (ISO-8601, 선택). 시간까지 포함한 한 구간이다"),
+                        parameterWithName("startTo").optional().description("조회 종료 일시 (ISO-8601, 선택). 시작보다 앞서면 400 이다"),
                         parameterWithName("availableOnly").optional().description("참여 가능한 룸만 보기 토글 (기본 false)"),
-                        parameterWithName("sort").optional().description("정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순 | CLOSING 마감 임박순, 기본 SCHEDULE)"),
+                        parameterWithName("sort").optional().description("정렬 (SCHEDULE 일정 빠른 순 | RECENT 최근 생성순, 기본 SCHEDULE). 지원하지 않는 값은 기본 정렬로 처리한다"),
+                        parameterWithName("cursor").optional().description("이전 응답의 nextCursor (선택). 정렬을 바꾸면 버리고 처음부터 조회한다"),
+                        parameterWithName("size").optional().description("페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다"),
                     ),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.rooms").type(JsonFieldType.ARRAY).description("룸 목록"),
                         fieldWithPath("data.rooms[].roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
                         fieldWithPath("data.rooms[].title").type(JsonFieldType.STRING).description("룸 제목"),
-                        fieldWithPath("data.rooms[].company.companyId").type(JsonFieldType.NUMBER).description("회사 id"),
-                        fieldWithPath("data.rooms[].company.name").type(JsonFieldType.STRING).description("회사명"),
-                        fieldWithPath("data.rooms[].jobPosting").type(JsonFieldType.OBJECT).optional().description("채용 공고 (없으면 null)"),
+                        fieldWithPath("data.rooms[].company").type(JsonFieldType.OBJECT).optional().description("회사 (공고에서 파생. 회사를 알 수 없으면 null)"),
+                        fieldWithPath("data.rooms[].company.companyId").type(JsonFieldType.NUMBER).optional().description("회사 id"),
+                        fieldWithPath("data.rooms[].company.name").type(JsonFieldType.STRING).optional().description("회사명"),
+                        fieldWithPath("data.rooms[].jobPosting").type(JsonFieldType.OBJECT).optional().description("채용 공고 (폐기됐으면 null)"),
                         fieldWithPath("data.rooms[].jobPosting.jobPostingId").type(JsonFieldType.NUMBER).optional().description("채용 공고 id"),
                         fieldWithPath("data.rooms[].jobPosting.postingName").type(JsonFieldType.STRING).optional().description("채용 공고명"),
-                        fieldWithPath("data.rooms[].jobRole.jobRoleId").type(JsonFieldType.NUMBER).description("직무 id"),
-                        fieldWithPath("data.rooms[].jobRole.code").type(JsonFieldType.STRING).description("직무 코드"),
-                        fieldWithPath("data.rooms[].jobRole.displayName").type(JsonFieldType.STRING).description("직무 표시명"),
-                        fieldWithPath("data.rooms[].round").type(JsonFieldType.STRING).description("면접 회차 코드"),
-                        fieldWithPath("data.rooms[].roundLabel").type(JsonFieldType.STRING).description("면접 회차 표시명"),
+                        fieldWithPath("data.rooms[].jobRole").type(JsonFieldType.OBJECT).optional().description("직무 (폐기됐으면 null)"),
+                        fieldWithPath("data.rooms[].jobRole.jobRoleId").type(JsonFieldType.NUMBER).optional().description("직무 id"),
+                        fieldWithPath("data.rooms[].jobRole.code").type(JsonFieldType.STRING).optional().description("직무 코드"),
+                        fieldWithPath("data.rooms[].jobRole.displayName").type(JsonFieldType.STRING).optional().description("직무 표시명"),
+                        fieldWithPath("data.rooms[].round").type(JsonFieldType.STRING).description("면접 단계 코드 (FIRST | SECOND | THIRD | ETC)"),
+                        fieldWithPath("data.rooms[].roundLabel").type(JsonFieldType.STRING).description("면접 단계 표시명"),
                         fieldWithPath("data.rooms[].type").type(JsonFieldType.STRING).optional().description("면접 유형 코드 (선택)"),
                         fieldWithPath("data.rooms[].typeLabel").type(JsonFieldType.STRING).optional().description("면접 유형 표시명 (선택)"),
                         fieldWithPath("data.rooms[].method").type(JsonFieldType.STRING).description("진행 방식 코드 (ONLINE | OFFLINE)"),
                         fieldWithPath("data.rooms[].methodLabel").type(JsonFieldType.STRING).description("진행 방식 표시명"),
-                        fieldWithPath("data.rooms[].region").type(JsonFieldType.OBJECT).optional().description("오프라인 지역 (온라인이면 null)"),
+                        fieldWithPath("data.rooms[].region").type(JsonFieldType.OBJECT).optional().description("오프라인 지역 (온라인이거나 폐기된 지역이면 null)"),
                         fieldWithPath("data.rooms[].region.sigunguId").type(JsonFieldType.NUMBER).optional().description("지역 시군구 id"),
                         fieldWithPath("data.rooms[].region.label").type(JsonFieldType.STRING).optional().description("지역 표시명"),
-                        fieldWithPath("data.rooms[].schedule.date").type(JsonFieldType.STRING).description("진행 날짜 (yyyy-MM-dd)"),
-                        fieldWithPath("data.rooms[].schedule.dayOfWeekLabel").type(JsonFieldType.STRING).description("요일 표시명"),
+                        fieldWithPath("data.rooms[].schedule.date").type(JsonFieldType.STRING).description("진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다"),
                         fieldWithPath("data.rooms[].schedule.startTime").type(JsonFieldType.STRING).description("시작 시각 (HH:mm)"),
-                        fieldWithPath("data.rooms[].schedule.startTimeLabel").type(JsonFieldType.STRING).description("시작 시각 표시명"),
                         fieldWithPath("data.rooms[].schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
-                        fieldWithPath("data.rooms[].schedule.durationLabel").type(JsonFieldType.STRING).description("소요 시간 표시명"),
-                        fieldWithPath("data.rooms[].schedule.displayLabel").type(JsonFieldType.STRING).description("일정 전체 표시 문구"),
-                        fieldWithPath("data.rooms[].recruit.current").type(JsonFieldType.NUMBER).description("현재 인원"),
+                        fieldWithPath("data.rooms[].recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)"),
                         fieldWithPath("data.rooms[].recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
+                        fieldWithPath("data.rooms[].recruit.pending").type(JsonFieldType.NUMBER).description("대기 중인 참가 신청 수"),
                         fieldWithPath("data.rooms[].recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
                         fieldWithPath("data.rooms[].recruit.recruitStatusLabel").type(JsonFieldType.STRING).description("모집 상태 표시명"),
-                        fieldWithPath("data.sort").type(JsonFieldType.STRING).description("적용된 정렬 (요청 값 에코)"),
-                        fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("전체 결과 수"),
+                        fieldWithPath("data.sort").type(JsonFieldType.STRING).description("실제로 적용된 정렬"),
+                        fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("조건에 맞는 전체 룸 수 (페이지 크기와 무관)"),
+                        fieldWithPath("data.nextCursor").type(JsonFieldType.STRING).optional().description("다음 페이지 커서. 마지막 페이지면 null"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `지원하지 않는 정렬 값을 보내면 기본 정렬로 조회한다`() {
+        val sort = slot<RoomSortOrder>()
+        every { roomSearchFacade.search(any(), capture(sort), any(), any()) } returns sampleRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms").param("sort", "POPULAR"))
+            .andExpect(status().isOk)
+
+        assertThat(sort.captured).isEqualTo(RoomSortOrder.SCHEDULE)
+    }
+
+    @Test
+    fun `잘못된 면접 단계 값은 그 조건만 무시하고 조회한다`() {
+        val condition = slot<RoomSearchCondition>()
+        every { roomSearchFacade.search(capture(condition), any(), any(), any()) } returns sampleRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms").param("round", "FOURTH").param("jobRoleId", "2"))
+            .andExpect(status().isOk)
+
+        assertThat(condition.captured.interviewStage).isNull()
+        assertThat(condition.captured.jobRoleId).isEqualTo(2L)
+    }
+
+    @Test
+    fun `페이지 크기가 허용 범위를 벗어나면 기본 크기로 조회한다`() {
+        val size = slot<Int>()
+        every { roomSearchFacade.search(any(), any(), any(), capture(size)) } returns sampleRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms").param("size", "1000"))
+            .andExpect(status().isOk)
+
+        assertThat(size.captured).isEqualTo(20)
+    }
+
+    @Test
+    fun `존재하지 않는 직무로 좁히면 조건을 무시하지 않고 그대로 조회한다`() {
+        val condition = slot<RoomSearchCondition>()
+        every { roomSearchFacade.search(capture(condition), any(), any(), any()) } returns emptyRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms").param("jobRoleId", "99999"))
+            .andExpect(status().isOk)
+
+        assertThat(condition.captured.jobRoleId).isEqualTo(99999L)
+    }
+
+    @Test
+    fun `깨진 커서를 보내면 E400 을 반환한다`() {
+        mockMvc.perform(get("/v1/rooms").param("cursor", "broken-token"))
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
+            .andDo(documentApi("rooms-e400-cursor", listSummary, listDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `조회 범위의 시작이 끝보다 늦으면 E400 을 반환한다`() {
+        mockMvc.perform(
+            get("/v1/rooms")
+                .param("startFrom", "2026-08-20T19:00:00")
+                .param("startTo", "2026-08-10T19:00:00"),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
     }
 
     @Test

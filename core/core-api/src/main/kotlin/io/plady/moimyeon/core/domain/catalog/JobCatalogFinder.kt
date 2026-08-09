@@ -24,6 +24,12 @@ class JobCatalogFinder(
         }
     }
 
+    // 탐색 목록의 직무 표시명 배치 조회(MOI-383). 폐기된 직무는 돌려주지 않고, 그 룸은 직무 없이 내려간다.
+    fun getJobRolesByIds(ids: Collection<Long>): List<JobRole> {
+        if (ids.isEmpty()) return emptyList()
+        return jobRoleRepository.findByIdInAndDeletedAtIsNull(ids).map { JobRole(it.id, it.code, it.displayName) }
+    }
+
     // 직무명으로 유효 직무를 검색하고 상위 직군을 얹어 반환한다(룸 생성 직무 검색). 폐기된 직군의 직무는 제외한다.
     @Transactional(readOnly = true)
     fun searchJobRoles(query: String): List<JobRoleSearchResult> {

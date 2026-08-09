@@ -474,6 +474,10 @@ CREATE TABLE room (
 CREATE INDEX ix_room_job_posting_id ON room (job_posting_id);
 CREATE INDEX ix_room_job_role_id ON room (job_role_id);
 CREATE INDEX ix_room_sigungu_id ON room (sigungu_id);
+-- 탐색 목록의 정렬 2종(일정 빠른 순·최근 생성순). 정렬 키 뒤의 id 는 커서 비교가 (정렬 키, id) 복합이라
+-- 필요하다 — 없으면 동점 구간마다 정렬이 다시 붙는다.
+CREATE INDEX ix_room_status_start_at_id ON room (status, start_at, id);
+CREATE INDEX ix_room_status_created_at_id ON room (status, created_at, id);
 
 -- 룸의 상태를 바꾼 사람과 시각. 비즈니스 로직이 읽는 값이 아니라 분쟁 대응·지표용이다.
 -- 방장이 위임되면 확정자와 완료자가 달라질 수 있어 룸의 컬럼으로 두지 않았다.

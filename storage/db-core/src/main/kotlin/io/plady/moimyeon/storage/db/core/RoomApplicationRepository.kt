@@ -4,6 +4,8 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long> {
@@ -43,4 +45,18 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         roomId: UUID,
         status: RoomApplicationStatus,
     ): List<RoomApplicationEntity>
+
+    // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1, 2026-08-04 PRD 갱신). 정렬에 쓰이지 않는 표시용이라
+    // 한 페이지 분량의 roomId 에만 IN 으로 건다. 대기 신청이 없는 룸은 결과에 없으므로 0 은 호출자가 채운다.
+    @Query(
+        """
+        select new io.plady.moimyeon.storage.db.core.RoomCount(a.roomId, count(a))
+        from RoomApplicationEntity a
+        where a.roomId in :roomIds
+          and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+          and a.deletedAt is null
+        group by a.roomId
+        """,
+    )
+    fun countPendingByRoomIds(@Param("roomIds") roomIds: Collection<UUID>): List<RoomCount>
 }

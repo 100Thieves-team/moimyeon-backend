@@ -2,9 +2,9 @@ package io.plady.moimyeon.core.api.facade
 
 import io.plady.moimyeon.core.api.controller.v1.response.ApplicantResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ApplicationDecisionResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ApplicationRecruitResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationsResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomRecruitSummaryResponse
 import io.plady.moimyeon.core.domain.room.ApplicationDecision
 import io.plady.moimyeon.core.domain.room.RoomApplicationService
 import io.plady.moimyeon.core.domain.room.RoomApplicationView
@@ -31,7 +31,7 @@ class RoomApplicationFacade(
             applicationId = applicationId,
             status = status.name,
             statusLabel = status.label(),
-            recruit = RoomRecruitSummaryResponse(
+            recruit = ApplicationRecruitResponse(
                 current = currentParticipants,
                 max = maxCapacity,
                 recruitStatus = if (closed) "CLOSED" else "RECRUITING",

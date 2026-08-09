@@ -84,6 +84,22 @@ class RoomApplicationManagerIT(
             .isEqualTo(RoomApplicationStatus.PENDING)
     }
 
+    // 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다. 이 술어는 탐색 목록의 "자리 남음"과 같아야 하고,
+    // 갈리면 목록에서는 자리가 있어 보이는데 수락 단계에서 정원 초과가 나는 상태가 된다.
+    @Test
+    fun `나간 참여자의 자리는 정원 판정에서 비어 있는 것으로 본다`() {
+        // given — 정원 2, 방장 + 나간 참여자 1명. 나간 자리를 세면 가득 찬 것으로 오판한다
+        seedRoom(maxCapacity = 2)
+        seedHost()
+        seedParticipant(UUID.randomUUID(), status = ParticipationStatus.LEFT)
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        assertThat(roomApplicationRepository.findById(applicationId).orElseThrow().status)
+            .isEqualTo(RoomApplicationStatus.ACCEPTED)
+    }
+
     @Test
     fun `방장이 아니면 수락은 ROOM_FORBIDDEN 으로 거부된다`() {
         seedRoom(maxCapacity = 6)
@@ -162,13 +178,13 @@ class RoomApplicationManagerIT(
         )
     }
 
-    private fun seedParticipant(memberId: UUID) {
+    private fun seedParticipant(memberId: UUID, status: ParticipationStatus = ParticipationStatus.JOINED) {
         participationRepository.save(
             ParticipationEntity(
                 roomId = roomId,
                 memberId = memberId,
                 participationRole = ParticipationRole.PARTICIPANT,
-                status = ParticipationStatus.JOINED,
+                status = status,
                 joinedAt = now,
             ),
         )
