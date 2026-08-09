@@ -10,8 +10,11 @@ class JobPostingService(
     private val jobPostingManager: JobPostingManager,
     private val openGraphClient: OpenGraphClient,
     private val companyValidator: CompanyValidator,
+    private val jobPostingSearchReader: JobPostingSearchReader,
 ) {
     fun search(companyId: Long, query: String): List<JobPosting> = jobPostingFinder.search(companyId, query)
+
+    fun search(condition: JobPostingSearchCondition): List<JobPostingSearchItem> = jobPostingSearchReader.search(condition)
 
     // 링크의 OG 메타데이터로 공고명 후보·미리보기를 만든다(「룸 생성」 §4.1).
     // 외부 fetch 라 쓰기 트랜잭션 밖에서 수행한다(하드 룰: 외부 호출은 트랜잭션에 두지 않는다).

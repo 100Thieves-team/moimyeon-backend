@@ -6,6 +6,10 @@ import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.CreateJobPostingRequest
 import io.plady.moimyeon.core.api.controller.v1.request.JobPostingLinkMetadataRequest
+import io.plady.moimyeon.core.api.controller.v1.response.CompanyResponse
+import io.plady.moimyeon.core.api.controller.v1.response.JobPostingSearchItemResponse
+import io.plady.moimyeon.core.api.controller.v1.response.JobPostingSearchResponse
+import io.plady.moimyeon.core.api.facade.JobPostingSearchFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.jobposting.JobPosting
 import io.plady.moimyeon.core.domain.jobposting.JobPostingCreationCommand
@@ -16,6 +20,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
+import org.springframework.restdocs.headers.HeaderDocumentation.headerWithName
+import org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post
 import org.springframework.restdocs.payload.JsonFieldType
@@ -31,6 +37,7 @@ import java.util.UUID
 
 class JobPostingControllerTest : RestDocsTest() {
     private lateinit var jobPostingService: JobPostingService
+    private lateinit var jobPostingSearchFacade: JobPostingSearchFacade
     private val memberId: UUID = UUID.randomUUID()
     private val principal = Principal { memberId.toString() }
 
@@ -39,6 +46,17 @@ class JobPostingControllerTest : RestDocsTest() {
         "기본 정보(「룸 생성」 §4.1)에서 회사를 고르면 그 회사에 속한 활성 공고 목록이 최신순 최대 20건 채워진다. " +
             "공고명(query)으로 부분 검색할 수 있고, 공고를 고르면 회사가 확정되며 대표 직무로 직무 셀렉트가 자동 채워질 수 있다. " +
             "미검증 공고(verified=false)도 목록에는 포함된다(탐색 필터에서만 숨김, BE-03). query 가 50자를 초과하면 400(E400)."
+
+    private val searchSummary = "회사·공고 통합 검색"
+    private val searchDescription =
+        "회사와 공고를 하나의 검색 바로 찾는다(MOI-390). 탐색 필터와 룸 생성이 같은 응답을 쓰고, 화면이 회사 행을 다르게 해석한다. " +
+            "회사명이 맞아도 공고명이 맞아도 결과는 `회사 | 공고명` 형태의 공고 행으로 통일되며, 회사가 매치되면 회사 행도 함께 내려간다. " +
+            "'네이버 백엔드' 처럼 회사와 공고를 함께 친 검색어는 회사로 좁힌 뒤 나머지로 공고를 거른다. " +
+            "회사가 잡히지 않으면 공고명에서 토큰을 AND 로 찾는다(어순 무관). " +
+            "미검증 공고와 룸이 없는 공고도 포함되고, 결과 수 상한은 서버가 고정한다. " +
+            "타이핑 중 호출을 전제로 하므로 빈 입력·최소 길이 미만은 400 이 아니라 빈 배열 200 이며, 50자 초과만 400(E400)이다. " +
+            "요청 query 를 그대로 echo 하므로 늦게 도착한 이전 응답을 클라이언트가 버릴 수 있다. " +
+            "붙여 쓴 검색어('네이버백엔드')는 분해되지 않아 결과가 없을 수 있다."
 
     private val linkMetadataSummary = "채용 공고 링크 메타데이터 조회"
     private val linkMetadataDescription =
@@ -57,8 +75,9 @@ class JobPostingControllerTest : RestDocsTest() {
     @BeforeEach
     fun setUp() {
         jobPostingService = mockk()
+        jobPostingSearchFacade = mockk()
         mockMvc = mockController(
-            JobPostingController(jobPostingService),
+            JobPostingController(jobPostingService, jobPostingSearchFacade),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -130,6 +149,84 @@ class JobPostingControllerTest : RestDocsTest() {
         mockMvc.perform(get("/v1/companies/{companyId}/job-postings", 43429L).param("query", "가".repeat(51)))
             .andExpect(status().isBadRequest)
             .andDo(documentApi("jobPostings-e400-length", jobPostingsSummary, jobPostingsDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `회사와 공고를 하나의 검색어로 찾는다`() {
+        every { jobPostingSearchFacade.search("네이버 백엔드", null) } returns JobPostingSearchResponse(
+            query = "네이버 백엔드",
+            companies = listOf(CompanyResponse(91221L, "네이버")),
+            jobPostings = listOf(
+                JobPostingSearchItemResponse(
+                    jobPostingId = 2029L,
+                    company = CompanyResponse(91221L, "네이버"),
+                    postingName = "백엔드 개발자 (정산)",
+                    jobRoleId = 1L,
+                    jobRoleName = "백엔드 개발",
+                    sourceUrl = "https://naver.example.com/careers/be",
+                    verified = true,
+                ),
+                JobPostingSearchItemResponse(
+                    jobPostingId = 2036L,
+                    company = CompanyResponse(91222L, "플레이스앤"),
+                    postingName = "[네이버 계열사] 백엔드 엔지니어",
+                    jobRoleId = null,
+                    jobRoleName = null,
+                    sourceUrl = null,
+                    verified = false,
+                ),
+            ),
+        )
+
+        mockMvc.perform(get("/v1/job-postings/search").param("query", "네이버 백엔드"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "searchJobPostings",
+                    searchSummary,
+                    searchDescription,
+                    queryParameters(
+                        parameterWithName("query").optional().description("검색어 (최대 50자. 비거나 짧으면 빈 배열)"),
+                        parameterWithName("companyId").optional().description("회사 좁히기 (선택). 주면 회사 검색을 건너뛰고 그 회사 안에서만 찾는다"),
+                    ),
+                    responseHeaders(
+                        headerWithName("Cache-Control").description("개인화가 없는 응답이라 캐시를 허용한다 (public, max-age=60)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.query").type(JsonFieldType.STRING).description("요청 검색어 echo (stale 응답 판별용)"),
+                        fieldWithPath("data.companies").type(JsonFieldType.ARRAY).description("회사 행. 화면이 '전체 보기' 또는 '좁히기'로 해석한다"),
+                        fieldWithPath("data.companies[].companyId").type(JsonFieldType.NUMBER).description("회사 id"),
+                        fieldWithPath("data.companies[].name").type(JsonFieldType.STRING).description("회사명"),
+                        fieldWithPath("data.jobPostings").type(JsonFieldType.ARRAY).description("공고 행 (회사명 매치가 공고명 매치보다 앞에 온다)"),
+                        fieldWithPath("data.jobPostings[].jobPostingId").type(JsonFieldType.NUMBER).description("채용 공고 id (룸 생성에 사용)"),
+                        fieldWithPath("data.jobPostings[].company.companyId").type(JsonFieldType.NUMBER).description("공고가 속한 회사 id"),
+                        fieldWithPath("data.jobPostings[].company.name").type(JsonFieldType.STRING).description("공고가 속한 회사명 (행 앞에 표시)"),
+                        fieldWithPath("data.jobPostings[].postingName").type(JsonFieldType.STRING).description("공고명"),
+                        fieldWithPath("data.jobPostings[].jobRoleId").type(JsonFieldType.NUMBER).optional().description("대표 직무 id (선택)"),
+                        fieldWithPath("data.jobPostings[].jobRoleName").type(JsonFieldType.STRING).optional().description("대표 직무명 (선택)"),
+                        fieldWithPath("data.jobPostings[].sourceUrl").type(JsonFieldType.STRING).optional().description("원본 공고 링크 (선택)"),
+                        fieldWithPath("data.jobPostings[].verified").type(JsonFieldType.BOOLEAN).description("운영 검수 여부 (링크 생성분은 false)"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `검색어가 비어 있으면 빈 배열과 함께 200 을 반환한다`() {
+        every { jobPostingSearchFacade.search("", null) } returns JobPostingSearchResponse.empty("")
+
+        mockMvc.perform(get("/v1/job-postings/search"))
+            .andExpect(status().isOk)
+            .andDo(documentApi("searchJobPostings-empty", searchSummary, searchDescription))
+    }
+
+    @Test
+    fun `통합 검색어가 50자를 초과하면 E400 을 반환한다`() {
+        mockMvc.perform(get("/v1/job-postings/search").param("query", "가".repeat(51)))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("searchJobPostings-e400-length", searchSummary, searchDescription, errorResponseFields()))
     }
 
     @Test

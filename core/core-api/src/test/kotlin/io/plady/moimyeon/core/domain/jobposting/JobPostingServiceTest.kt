@@ -17,7 +17,14 @@ class JobPostingServiceTest {
     private val jobPostingManager = mockk<JobPostingManager>()
     private val openGraphClient = mockk<OpenGraphClient>()
     private val companyValidator = mockk<CompanyValidator>(relaxed = true)
-    private val service = JobPostingService(jobPostingFinder, jobPostingManager, openGraphClient, companyValidator)
+    private val jobPostingSearchReader = mockk<JobPostingSearchReader>()
+    private val service = JobPostingService(
+        jobPostingFinder,
+        jobPostingManager,
+        openGraphClient,
+        companyValidator,
+        jobPostingSearchReader,
+    )
 
     private val memberId: UUID = UUID.randomUUID()
     private val command = JobPostingCreationCommand(
