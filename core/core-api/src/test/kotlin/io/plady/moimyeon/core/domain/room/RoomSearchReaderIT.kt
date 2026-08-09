@@ -213,7 +213,7 @@ class RoomSearchReaderIT(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = applicantMemberId,
-                note = null,
+                note = "",
                 appliedAt = now,
                 status = RoomApplicationStatus.PENDING,
                 pendingMemberId = applicantMemberId,

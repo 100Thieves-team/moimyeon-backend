@@ -35,7 +35,7 @@ class RoomApplicationManager(
     fun submit(
         applicantMemberId: UUID,
         roomId: UUID,
-        note: String?,
+        note: String,
         resumeSubmission: ResumeSubmission,
     ): Long {
         memberValidator.validateActive(applicantMemberId)
@@ -110,7 +110,7 @@ class RoomApplicationManager(
     private fun saveApplication(
         roomId: UUID,
         applicantMemberId: UUID,
-        note: String?,
+        note: String,
         appliedAt: LocalDateTime,
     ): RoomApplicationEntity {
         try {

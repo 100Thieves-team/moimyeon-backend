@@ -63,7 +63,7 @@ class RoomApplicationRepositoryIT(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = applicantMemberId,
-                note = null,
+                note = "",
                 appliedAt = now,
                 status = status,
                 pendingMemberId = applicantMemberId.takeIf { status == RoomApplicationStatus.PENDING },

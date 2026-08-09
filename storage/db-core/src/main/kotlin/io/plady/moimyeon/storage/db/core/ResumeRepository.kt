@@ -16,6 +16,8 @@ interface ResumeRepository : JpaRepository<ResumeEntity, UUID> {
 
     fun findByIdAndMemberId(resumeId: UUID, memberId: UUID): ResumeEntity?
 
+    fun findByIdIn(resumeIds: Collection<UUID>): List<ResumeEntity>
+
     fun findByMemberIdAndIsDefaultTrueAndDeletedAtIsNull(memberId: UUID): ResumeEntity?
 
     fun findFirstByMemberIdAndIdNotAndSummaryStatusAndDeletedAtIsNullOrderByCreatedAtDesc(

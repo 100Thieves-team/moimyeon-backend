@@ -5,4 +5,6 @@ import java.util.UUID
 
 interface MemberProfileInterestCompanyRepository : JpaRepository<MemberProfileInterestCompanyEntity, Long> {
     fun findByProfileIdAndDeletedAtIsNull(profileId: UUID): List<MemberProfileInterestCompanyEntity>
+
+    fun findByProfileIdInAndDeletedAtIsNull(profileIds: Collection<UUID>): List<MemberProfileInterestCompanyEntity>
 }

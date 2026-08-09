@@ -5,6 +5,7 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeSummary
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
@@ -22,13 +23,18 @@ class RoomApplicationServiceTest {
     private val roomApplicationManager = mockk<RoomApplicationManager>()
     private val resumeValidator = mockk<ResumeValidator>()
     private val roomApplicationFinder = mockk<RoomApplicationFinder>()
+    private val participationValidator = mockk<ParticipationValidator>()
+    private val roomApplicationDetailsReader = mockk<RoomApplicationDetailsReader>()
     private val service = RoomApplicationService(
         roomApplicationManager,
         resumeValidator,
         roomApplicationFinder,
+        participationValidator,
+        roomApplicationDetailsReader,
     )
 
     private val applicantMemberId = UUID.randomUUID()
+    private val hostMemberId = UUID.randomUUID()
     private val roomId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val applicationForm = RoomApplicationForm(resumeId, "백엔드 면접을 실전처럼 연습하고 싶어요.")
@@ -102,12 +108,41 @@ class RoomApplicationServiceTest {
             status = RoomApplicationStatus.PENDING,
             appliedAt = appliedAt,
         )
-        every { roomApplicationFinder.get(applicantMemberId, roomId) } returns application
+        every { roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
 
-        val result = service.get(applicantMemberId, roomId)
+        val result = service.getMyApplication(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(application)
-        verify(exactly = 1) { roomApplicationFinder.get(applicantMemberId, roomId) }
+        verify(exactly = 1) { roomApplicationFinder.getLatestByApplicant(applicantMemberId, roomId) }
+    }
+
+    @Test
+    fun `방장 권한을 확인한 뒤 참가 신청 검토 목록을 조회한다`() {
+        val applications = listOf(details())
+        justRun { participationValidator.validateHost(roomId, hostMemberId) }
+        every { roomApplicationDetailsReader.getAllByRoom(roomId) } returns applications
+
+        val result = service.getApplications(hostMemberId, roomId)
+
+        assertThat(result).containsExactlyElementsOf(applications)
+        verifyOrder {
+            participationValidator.validateHost(roomId, hostMemberId)
+            roomApplicationDetailsReader.getAllByRoom(roomId)
+        }
+    }
+
+    @Test
+    fun `방장이 아니면 참가 신청 검토 목록을 조회하지 않는다`() {
+        every {
+            participationValidator.validateHost(roomId, hostMemberId)
+        } throws CoreException(CoreErrorType.ROOM_FORBIDDEN)
+
+        assertThatThrownBy { service.getApplications(hostMemberId, roomId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
+            }
+
+        verify(exactly = 0) { roomApplicationDetailsReader.getAllByRoom(any()) }
     }
 
     @Test
@@ -139,6 +174,20 @@ class RoomApplicationServiceTest {
 
     private fun givenValidApplicantAndResume() {
         every { resumeValidator.validateOwnedBy(applicantMemberId, resumeId) } returns sourceFile
+    }
+
+    private fun details(): RoomApplicationDetails {
+        return RoomApplicationDetails(
+            applicationId = 1L,
+            applicant = ApplicationApplicant.Active(
+                memberId = applicantMemberId,
+                nickname = "성실한 다람쥐 12",
+            ),
+            note = applicationForm.note,
+            resumeSummary = ApplicationResumeSummary.Ready("결제 도메인 경험이 있는 백엔드 개발자"),
+            status = RoomApplicationStatus.PENDING,
+            appliedAt = appliedAt,
+        )
     }
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {
