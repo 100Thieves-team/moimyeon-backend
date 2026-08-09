@@ -17,7 +17,7 @@ class JobPostingService(
     fun search(condition: JobPostingSearchCondition): List<JobPostingSearchItem> = jobPostingSearchReader.search(condition)
 
     // 탐색 목록의 공고 표시명 배치 조회(MOI-383).
-    fun getLabels(ids: Collection<Long>): List<JobPostingLabel> = jobPostingFinder.getLabelsByIds(ids)
+    fun getRefs(ids: Collection<Long>): List<JobPostingRef> = jobPostingFinder.getRefsByIds(ids)
 
     // 링크의 OG 메타데이터로 공고명 후보·미리보기를 만든다(「룸 생성」 §4.1).
     // 외부 fetch 라 쓰기 트랜잭션 밖에서 수행한다(하드 룰: 외부 호출은 트랜잭션에 두지 않는다).

@@ -33,10 +33,10 @@ class JobPostingFinder(
 
     // 탐색 목록의 공고 표시명 배치 조회(MOI-383). 폐기된 공고는 돌려주지 않고, 그 룸은 공고명 없이 내려간다.
     // 회사가 없는 공고도 그대로 돌려준다 — 그 룸도 목록에는 나와야 하고 회사 자리만 비운다.
-    fun getLabelsByIds(ids: Collection<Long>): List<JobPostingLabel> {
+    fun getRefsByIds(ids: Collection<Long>): List<JobPostingRef> {
         if (ids.isEmpty()) return emptyList()
         return jobPostingRepository.findByIdInAndDeletedAtIsNull(ids)
-            .map { JobPostingLabel(id = it.id, companyId = it.companyId, postingName = it.title) }
+            .map { JobPostingRef(id = it.id, companyId = it.companyId, postingName = it.title) }
     }
 
     // 회사에 속한 공고 id 목록(룸 탐색의 회사 필터). 룸이 회사를 직접 알지 못해 id 변환이 필요하다.

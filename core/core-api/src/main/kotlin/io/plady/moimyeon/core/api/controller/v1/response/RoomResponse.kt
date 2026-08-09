@@ -5,9 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.plady.moimyeon.core.domain.room.RoomSchedule
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 import java.util.UUID
 
 // 룸 생성(POST /v1/rooms)의 응답. 생성 성공 시 상세로 이동하기 위한 최소 식별자.
@@ -55,37 +52,21 @@ data class RoomRegionResponse(
     val label: String, // 서울 강남구
 )
 
+// 목록 카드의 일정. 서버는 값만 내려주고 표시 문구는 화면이 만든다.
+// (요일·오전/오후·"90분" 같은 문구를 서버가 조립하면 i18n·디자인 변경이 서버 배포를 요구하게 된다.)
 data class RoomScheduleResponse(
     val date: LocalDate,
-    val dayOfWeekLabel: String, // 토
     // Jackson 기본 LocalTime 직렬화는 "14:00:00"(ISO) → FE 계약(HH:mm)에 맞춰 "14:00"으로 고정.
     @get:JsonFormat(pattern = "HH:mm")
     val startTime: LocalTime,
-    val startTimeLabel: String, // 오후 2:00
     val durationMinutes: Int,
-    val durationLabel: String, // 90분
-    val displayLabel: String, // 8월 1일 (토) 오후 2:00 · 90분
 ) {
     companion object {
-        private val DATE_LABEL = DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN)
-        private val TIME_LABEL = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN)
-
-        // 화면이 그대로 쓰는 문자열까지 서버가 만든다(기존 계약 유지).
-        fun from(schedule: RoomSchedule): RoomScheduleResponse {
-            val startAt = schedule.startAt
-            val dayOfWeekLabel = startAt.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
-            val startTimeLabel = TIME_LABEL.format(startAt)
-            val durationLabel = "${schedule.durationMinutes}분"
-            return RoomScheduleResponse(
-                date = startAt.toLocalDate(),
-                dayOfWeekLabel = dayOfWeekLabel,
-                startTime = startAt.toLocalTime(),
-                startTimeLabel = startTimeLabel,
-                durationMinutes = schedule.durationMinutes,
-                durationLabel = durationLabel,
-                displayLabel = "${DATE_LABEL.format(startAt)} ($dayOfWeekLabel) $startTimeLabel · $durationLabel",
-            )
-        }
+        fun from(schedule: RoomSchedule): RoomScheduleResponse = RoomScheduleResponse(
+            date = schedule.startAt.toLocalDate(),
+            startTime = schedule.startAt.toLocalTime(),
+            durationMinutes = schedule.durationMinutes,
+        )
     }
 }
 

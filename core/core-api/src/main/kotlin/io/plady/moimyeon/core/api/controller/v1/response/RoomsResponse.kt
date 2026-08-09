@@ -3,7 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1.response
 import io.plady.moimyeon.core.domain.catalog.JobRole
 import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
-import io.plady.moimyeon.core.domain.jobposting.JobPostingLabel
+import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomCard
@@ -43,7 +43,7 @@ data class RoomSummaryResponse(
     companion object {
         fun from(
             card: RoomCard,
-            jobPosting: JobPostingLabel?,
+            jobPosting: JobPostingRef?,
             company: Company?,
             jobRole: JobRole?,
             region: RegionLabel?,

@@ -34,7 +34,7 @@ class RoomSearchFacade(
     ): RoomsResponse {
         val page = roomService.searchRooms(condition, sort, cursor, size)
 
-        val jobPostings = jobPostingService.getLabels(page.cards.map { it.room.jobPostingId }.toSet())
+        val jobPostings = jobPostingService.getRefs(page.cards.map { it.room.jobPostingId }.toSet())
             .associateBy { it.id }
         val companies = companyService.getCompanies(jobPostings.values.mapNotNull { it.companyId }.toSet())
             .associateBy { it.id }
