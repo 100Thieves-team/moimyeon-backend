@@ -21,8 +21,9 @@ class CompanyControllerTest : RestDocsTest() {
 
     private val searchSummary = "회사 검색"
     private val searchDescription =
-        "관심 회사 태그 입력의 검색 소스. 회사명 부분 일치로 검증 완료된 유효(미폐기) 회사를 최대 20건 반환한다. " +
-            "검색어가 없거나 공백이거나 1~50자를 벗어나면 400(E400)으로 응답한다."
+        "관심 회사 태그 입력의 검색 소스. 정규화된 회사명의 접두 일치로 검증 완료된 유효(미폐기) 회사를 최대 20건 반환한다. " +
+            "접두로 찾지 못하면 부분 일치로 다시 찾는다(예: '올리브영' 으로 'CJ올리브영'). " +
+            "타이핑 중 호출을 전제로 하므로 빈 검색어는 빈 배열 200 이고, 50자 초과만 400(E400)이다."
 
     @BeforeEach
     fun setUp() {
@@ -45,7 +46,7 @@ class CompanyControllerTest : RestDocsTest() {
                     searchSummary,
                     searchDescription,
                     queryParameters(
-                        parameterWithName("query").description("검색어 (회사명 부분 일치, 공백 불가, 1~50자)"),
+                        parameterWithName("query").optional().description("검색어 (정규화 회사명 접두 일치, 최대 50자. 비면 빈 배열)"),
                     ),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
@@ -59,10 +60,11 @@ class CompanyControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `검색어가 공백이면 E400 을 반환한다`() {
-        mockMvc.perform(get("/v1/companies").param("query", " "))
-            .andExpect(status().isBadRequest)
-            .andDo(documentApi("searchCompanies-e400-blank", searchSummary, searchDescription, errorResponseFields()))
+    fun `검색어가 비어 있으면 빈 배열과 함께 200 을 반환한다`() {
+        every { companyService.search("") } returns emptyList()
+
+        mockMvc.perform(get("/v1/companies"))
+            .andExpect(status().isOk)
     }
 
     @Test
