@@ -11,19 +11,19 @@ import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.domain.roomapplication.ApplicationApplicant
 import io.plady.moimyeon.core.domain.roomapplication.ApplicationResumeSummary
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationDetails
-import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationService
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
 class RoomApplicationFacade(
-    private val roomApplicationService: RoomApplicationService,
+    private val roomApplicationSubmissionService: RoomApplicationSubmissionService,
     private val profileService: ProfileService,
     private val catalogService: CatalogService,
 ) {
     fun getApplications(requesterMemberId: UUID, roomId: UUID): RoomApplicationsResponse {
-        val applications = roomApplicationService.getApplications(requesterMemberId, roomId)
+        val applications = roomApplicationSubmissionService.getApplications(requesterMemberId, roomId)
         val activeMemberIds = applications
             .mapNotNull { (it.applicant as? ApplicationApplicant.Active)?.memberId }
             .distinct()
