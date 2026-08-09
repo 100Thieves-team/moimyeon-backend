@@ -18,6 +18,20 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
     // 현재 인원 = 활성 참여 수.
     fun countByRoomIdAndDeletedAtIsNull(roomId: UUID): Long
 
+    // 탐색 목록의 표시용 일괄 집계(MOI-383 §4.1). 한 페이지 분량의 roomId 에만 IN 으로 걸어
+    // 룸 수에 비례해 쿼리가 늘지 않게 한다. 기준은 단건 조회·정원 확정과 같은 "활성 참여"다.
+    // 참여가 없는 룸은 GROUP BY 결과에 아예 없으므로 0 으로 채우는 것은 호출자의 몫이다.
+    @Query(
+        """
+        select new io.plady.moimyeon.storage.db.core.RoomCount(p.roomId, count(p))
+        from ParticipationEntity p
+        where p.roomId in :roomIds
+          and p.deletedAt is null
+        group by p.roomId
+        """,
+    )
+    fun countActiveByRoomIds(@Param("roomIds") roomIds: Collection<UUID>): List<RoomCount>
+
     fun countByRoomIdAndStatusAndDeletedAtIsNull(
         roomId: UUID,
         status: ParticipationStatus,
