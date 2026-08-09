@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -41,6 +42,10 @@ class RoomManager(
     @Transactional
     fun update(roomId: UUID, hostMemberId: UUID, command: RoomUpdateCommand) {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
+
+        // 확정 이후에는 일정을 바꿀 수 없다(「진행 확정」§4.3). 참여자가 그 시각에 모이기로 약속한 뒤라,
+        // 푸는 경로는 CS 문의뿐이다. 취소·완료된 룸도 같은 이유로 손대지 않는다.
+        requireBusiness(room.status == RoomStatus.RECRUITING, CoreErrorType.ROOM_NOT_EDITABLE)
 
         // 정원 범위는 RoomCapacity 가 보지만 그 값 객체는 DB 를 모른다. 이미 들어와 있는 사람과의 비교는 여기서 한다.
         // 최소 인원은 현재 인원보다 커도 된다 — 확정이 미뤄질 뿐 지금 상태를 깨지 않는다(「진행 확정」§4.3).

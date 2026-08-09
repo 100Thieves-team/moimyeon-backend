@@ -6,16 +6,19 @@ import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -24,6 +27,8 @@ class RoomManagerIT(
     val roomManager: RoomManager,
     val roomRepository: RoomRepository,
     val participationRepository: ParticipationRepository,
+    val entityManager: EntityManager,
+    val transactionTemplate: TransactionTemplate,
 ) : ContextTest() {
     private val roomId: UUID = UUID.randomUUID()
     private val hostId: UUID = UUID.randomUUID()
@@ -97,6 +102,79 @@ class RoomManagerIT(
         roomManager.update(roomId, hostId, updateCommand(min = 2, max = 2))
 
         assertThat(roomRepository.findById(roomId).orElseThrow().maxCapacity).isEqualTo(2)
+    }
+
+    // 확정 이후에는 일정을 바꿀 수 없다(「진행 확정」§4.3). 참여자가 그 시각에 모이기로 약속한 뒤다.
+    @Test
+    fun `확정된 룸은 수정할 수 없다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        forceStatus(RoomStatus.CONFIRMED)
+
+        assertThatThrownBy { roomManager.update(roomId, hostId, updateCommand(title = "확정 뒤에 바꾼 제목입니다")) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_EDITABLE)
+            }
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().title).isEqualTo("테스트 룸")
+    }
+
+    @Test
+    fun `취소된 룸은 수정할 수 없다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        forceStatus(RoomStatus.CANCELED)
+
+        assertThatThrownBy { roomManager.update(roomId, hostId, updateCommand()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_EDITABLE)
+            }
+    }
+
+    @Test
+    fun `끝난 룸은 수정할 수 없다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        forceStatus(RoomStatus.COMPLETED)
+
+        assertThatThrownBy { roomManager.update(roomId, hostId, updateCommand()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_EDITABLE)
+            }
+    }
+
+    // 방장이 아닌 것 · 룸 상태 · 정원은 방장이 화면에서 서로 다르게 안내받아야 하는 세 가지 원인이다.
+    @Test
+    fun `수정을 거부하는 세 원인은 서로 다른 에러로 구분된다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        repeat(4) { seedParticipant(UUID.randomUUID()) }
+
+        assertThatThrownBy { roomManager.update(roomId, UUID.randomUUID(), updateCommand()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
+            }
+        assertThatThrownBy { roomManager.update(roomId, hostId, updateCommand(min = 2, max = 3)) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_CAPACITY_BELOW_PARTICIPANTS)
+            }
+
+        forceStatus(RoomStatus.CONFIRMED)
+        assertThatThrownBy { roomManager.update(roomId, hostId, updateCommand()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_EDITABLE)
+            }
+    }
+
+    // status 는 protected set 이고 상태 전이 메서드가 아직 없다(취소·확정은 MOI-396·398).
+    // 앱 경로로는 만들 수 없는 상태라 벌크 업데이트로 만든다. 이 클래스는 트랜잭션 밖에서 돌아 직접 트랜잭션을 연다.
+    private fun forceStatus(status: RoomStatus) {
+        transactionTemplate.executeWithoutResult {
+            entityManager.createQuery("UPDATE RoomEntity r SET r.status = :value WHERE r.id = :id")
+                .setParameter("value", status)
+                .setParameter("id", roomId)
+                .executeUpdate()
+        }
     }
 
     private fun updateCommand(
