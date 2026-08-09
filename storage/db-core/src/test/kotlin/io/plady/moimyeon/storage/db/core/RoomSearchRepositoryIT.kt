@@ -196,9 +196,17 @@ class RoomSearchRepositoryIT(
         assertThat(searchBySchedule(availableOnly = true)).containsExactly(open)
     }
 
-    // "자리 남음"의 기준은 정원 확정(RoomApplicationManager)과 같은 활성 참여 수여야 한다.
-    // 두 기준이 갈리면 목록에서 자리 있다고 보고 신청했는데 수락 단계에서 정원 초과가 난다.
-    // 퇴장(status=LEFT)은 아직 만들어지는 경로가 없어 여기서도 빼지 않는다 — 생기면 정원 판정 세 곳을 함께 고친다.
+    // "자리 남음"의 기준은 정원 확정(RoomApplicationManager)·단건 조회(RoomFinder)와 같아야 한다.
+    // 갈리면 목록에서 자리 있다고 보고 신청했는데 수락 단계에서 정원 초과가 난다.
+    @Test
+    fun `나간 참여는 자리 계산에서 제외한다`() {
+        val room = saveRoom(startAt = future(1), maxCapacity = 2)
+        join(room)
+        join(room, status = ParticipationStatus.LEFT)
+
+        assertThat(searchBySchedule(availableOnly = true)).containsExactly(room)
+    }
+
     @Test
     fun `삭제된 참여는 자리 계산에서 제외한다`() {
         val room = saveRoom(startAt = future(1), maxCapacity = 2)
@@ -337,12 +345,15 @@ class RoomSearchRepositoryIT(
         return roomRepository.saveAndFlush(room).id
     }
 
-    private fun join(roomId: UUID): ParticipationEntity = participationRepository.saveAndFlush(
+    private fun join(
+        roomId: UUID,
+        status: ParticipationStatus = ParticipationStatus.JOINED,
+    ): ParticipationEntity = participationRepository.saveAndFlush(
         ParticipationEntity(
             roomId = roomId,
             memberId = UUID.randomUUID(),
             participationRole = ParticipationRole.PARTICIPANT,
-            status = ParticipationStatus.JOINED,
+            status = status,
             joinedAt = now,
         ),
     )

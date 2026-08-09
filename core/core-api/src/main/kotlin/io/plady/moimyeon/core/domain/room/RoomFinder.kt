@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.enums.ParticipationRole
+import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
@@ -13,7 +14,10 @@ class RoomFinder(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
 ) {
-    // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 현재 인원 = 활성 참여 수, 방장 = HOST 참여 행.
+    // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.
+    // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
+    // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는
+    // 자리가 있어 보이는데 수락 단계에서 정원 초과가 나는 상태가 된다.
     fun getRoom(roomId: UUID): RoomDetail {
         val entity = requireFound(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
@@ -26,7 +30,7 @@ class RoomFinder(
             ),
             CoreErrorType.ROOM_NOT_FOUND,
         )
-        val currentParticipants = participationRepository.countByRoomIdAndDeletedAtIsNull(roomId).toInt()
+        val currentParticipants = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
         return RoomDetail(
             room = RoomMapper.toDomain(entity),
             hostMemberId = host.memberId,

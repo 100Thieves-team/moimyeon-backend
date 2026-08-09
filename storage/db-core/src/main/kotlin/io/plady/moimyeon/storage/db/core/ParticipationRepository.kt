@@ -26,6 +26,7 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         select new io.plady.moimyeon.storage.db.core.RoomCount(p.roomId, count(p))
         from ParticipationEntity p
         where p.roomId in :roomIds
+          and p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
           and p.deletedAt is null
         group by p.roomId
         """,

@@ -29,6 +29,16 @@ class ParticipationRepositoryIT(
         assertThat(counts).containsExactlyInAnyOrderEntriesOf(mapOf(busy to 3L, quiet to 1L))
     }
 
+    // 현재 인원은 정원 확정·탐색 목록과 같은 술어여야 한다. 나간 사람의 자리는 비워진 것으로 본다.
+    @Test
+    fun `나간 참여는 집계에서 제외한다`() {
+        val roomId = UUID.randomUUID()
+        join(roomId)
+        join(roomId, status = ParticipationStatus.LEFT)
+
+        assertThat(participationRepository.countActiveByRoomIds(listOf(roomId)).single().count).isEqualTo(1)
+    }
+
     @Test
     fun `삭제된 참여는 집계에서 제외한다`() {
         val roomId = UUID.randomUUID()
@@ -59,12 +69,15 @@ class ParticipationRepositoryIT(
         assertThat(participationRepository.countActiveByRoomIds(listOf(empty))).isEmpty()
     }
 
-    private fun join(roomId: UUID): ParticipationEntity = participationRepository.saveAndFlush(
+    private fun join(
+        roomId: UUID,
+        status: ParticipationStatus = ParticipationStatus.JOINED,
+    ): ParticipationEntity = participationRepository.saveAndFlush(
         ParticipationEntity(
             roomId = roomId,
             memberId = UUID.randomUUID(),
             participationRole = ParticipationRole.PARTICIPANT,
-            status = ParticipationStatus.JOINED,
+            status = status,
             joinedAt = now,
         ),
     )

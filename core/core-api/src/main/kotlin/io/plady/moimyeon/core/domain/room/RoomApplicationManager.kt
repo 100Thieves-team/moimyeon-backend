@@ -33,7 +33,7 @@ class RoomApplicationManager(
         val application = loadPendingApplication(roomId, applicationId)
 
         val now = LocalDateTime.now()
-        val current = participationRepository.countByRoomIdAndDeletedAtIsNull(roomId).toInt()
+        val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
         requireBusiness(current < room.maxCapacity, CoreErrorType.ROOM_CAPACITY_FULL)
 
         participationRepository.save(
@@ -63,7 +63,7 @@ class RoomApplicationManager(
 
         application.reject(hostMemberId, reason, LocalDateTime.now())
 
-        val current = participationRepository.countByRoomIdAndDeletedAtIsNull(roomId).toInt()
+        val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
         return ApplicationDecision(
             applicationId = application.id,
             status = application.status,

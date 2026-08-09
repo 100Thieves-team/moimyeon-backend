@@ -43,7 +43,9 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
           AND (:startTo IS NULL OR r.startAt <= :startTo)
           AND (:availableOnly = FALSE
                OR (SELECT COUNT(p) FROM ParticipationEntity p
-                    WHERE p.roomId = r.id AND p.deletedAt IS NULL) < r.maxCapacity)
+                    WHERE p.roomId = r.id
+                      AND p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+                      AND p.deletedAt IS NULL) < r.maxCapacity)
           AND (:cursorStartAt IS NULL
                OR r.startAt > :cursorStartAt
                OR (r.startAt = :cursorStartAt AND r.id > :cursorId))
@@ -81,7 +83,9 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
           AND (:startTo IS NULL OR r.startAt <= :startTo)
           AND (:availableOnly = FALSE
                OR (SELECT COUNT(p) FROM ParticipationEntity p
-                    WHERE p.roomId = r.id AND p.deletedAt IS NULL) < r.maxCapacity)
+                    WHERE p.roomId = r.id
+                      AND p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+                      AND p.deletedAt IS NULL) < r.maxCapacity)
           AND (:cursorCreatedAt IS NULL
                OR r.createdAt < :cursorCreatedAt
                OR (r.createdAt = :cursorCreatedAt AND r.id < :cursorId))
@@ -120,7 +124,9 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
           AND (:startTo IS NULL OR r.startAt <= :startTo)
           AND (:availableOnly = FALSE
                OR (SELECT COUNT(p) FROM ParticipationEntity p
-                    WHERE p.roomId = r.id AND p.deletedAt IS NULL) < r.maxCapacity)
+                    WHERE p.roomId = r.id
+                      AND p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+                      AND p.deletedAt IS NULL) < r.maxCapacity)
         """,
     )
     fun countSearchTargets(
