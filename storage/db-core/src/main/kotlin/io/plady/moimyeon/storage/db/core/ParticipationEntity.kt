@@ -12,9 +12,9 @@ import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
-// 룸 참여. 방장은 role=HOST row 가 유일한 진실 원천이다(룸에 host FK 없음).
-// 대기/신청(room_application)과 달리 이 테이블은 "확정 참여자"만 담는다.
-// 생성 이후의 참여 상태 전이(퇴장 등)는 이 스프린트 밖이라, 지금은 방장 등록(HOST/JOINED)만 쓴다.
+// 신청 수락으로 룸 명단에 들어온 참여. 방장은 role=HOST row 가 유일한 진실 원천이다(룸에 host FK 없음).
+// 룸 확정 전 취소·내보내기도 이력으로 남으므로, 확정 참여자 명단은 room_status_log 의 확정 시각과
+// joinedAt/leftAt 구간을 비교해 판정한다.
 @Entity
 @Table(
     name = "participation",

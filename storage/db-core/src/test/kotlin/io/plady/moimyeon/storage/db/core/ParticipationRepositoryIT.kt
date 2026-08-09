@@ -69,16 +69,127 @@ class ParticipationRepositoryIT(
         assertThat(participationRepository.countActiveByRoomIds(listOf(empty))).isEmpty()
     }
 
+    @Test
+    fun `확정 후 이탈한 참여자는 확정 명단에 남아 있다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        recordConfirmation(roomId, now)
+        join(
+            roomId = roomId,
+            memberId = memberId,
+            status = ParticipationStatus.LEFT,
+            joinedAt = now.minusDays(1),
+            leftAt = now.plusHours(1),
+        )
+
+        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isTrue()
+    }
+
+    @Test
+    fun `확정 전에 이탈한 참여자는 확정 명단에서 제외한다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        recordConfirmation(roomId, now)
+        join(
+            roomId = roomId,
+            memberId = memberId,
+            status = ParticipationStatus.LEFT,
+            joinedAt = now.minusDays(1),
+            leftAt = now.minusHours(1),
+        )
+
+        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isFalse()
+    }
+
+    @Test
+    fun `운영상 삭제된 참여 행은 확정 명단에서 제외한다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        recordConfirmation(roomId, now)
+        join(
+            roomId = roomId,
+            memberId = memberId,
+            status = ParticipationStatus.JOINED,
+            joinedAt = now.minusDays(1),
+        ).also { it.delete(now.plusHours(1)) }
+        entityManager.flush()
+
+        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isFalse()
+    }
+
+    @Test
+    fun `확정 참여자 목록은 확정 순간 참여자만 가입 순서로 반환한다`() {
+        val roomId = UUID.randomUUID()
+        val first = join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.LEFT,
+            joinedAt = now.minusDays(2),
+            leftAt = now.plusHours(1),
+        )
+        val second = join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.JOINED,
+            joinedAt = now.minusDays(1),
+        )
+        join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.LEFT,
+            joinedAt = now.minusDays(3),
+            leftAt = now.minusHours(1),
+        )
+        join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.JOINED,
+            joinedAt = now.plusHours(1),
+        )
+        recordConfirmation(roomId, now)
+
+        val result = participationRepository.findAllAtRoomConfirmation(roomId)
+
+        assertThat(result.map { it.memberId }).containsExactly(first.memberId, second.memberId)
+    }
+
     private fun join(
         roomId: UUID,
         status: ParticipationStatus = ParticipationStatus.JOINED,
+    ): ParticipationEntity = join(roomId, UUID.randomUUID(), status)
+
+    private fun join(
+        roomId: UUID,
+        memberId: UUID,
+        status: ParticipationStatus,
+        joinedAt: LocalDateTime = now,
+        leftAt: LocalDateTime? = null,
     ): ParticipationEntity = participationRepository.saveAndFlush(
         ParticipationEntity(
             roomId = roomId,
-            memberId = UUID.randomUUID(),
+            memberId = memberId,
             participationRole = ParticipationRole.PARTICIPANT,
             status = status,
-            joinedAt = now,
+            joinedAt = joinedAt,
+            leftAt = leftAt,
         ),
     )
+
+    private fun recordConfirmation(roomId: UUID, occurredAt: LocalDateTime) {
+        entityManager.createNativeQuery(
+            """
+            insert into room_status_log (
+                room_id, transition_type, handler_member_id, occurred_at,
+                created_at, updated_at, deleted_at
+            ) values (
+                :roomId, 'CONFIRMED', :handlerMemberId, :occurredAt,
+                :occurredAt, :occurredAt, null
+            )
+            """.trimIndent(),
+        )
+            .setParameter("roomId", roomId)
+            .setParameter("handlerMemberId", UUID.randomUUID())
+            .setParameter("occurredAt", occurredAt)
+            .executeUpdate()
+    }
 }
