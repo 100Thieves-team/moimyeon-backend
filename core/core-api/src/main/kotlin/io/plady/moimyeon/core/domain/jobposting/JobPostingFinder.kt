@@ -31,6 +31,10 @@ class JobPostingFinder(
         )
     }
 
+    // 회사에 속한 공고 id 목록(룸 탐색의 회사 필터). 룸이 회사를 직접 알지 못해 id 변환이 필요하다.
+    // 비어 있으면 "그 회사의 공고가 없다"는 뜻이고, 호출자는 조회 없이 빈 결과로 끝낼 수 있다.
+    fun getIdsByCompanyId(companyId: Long): List<Long> = jobPostingRepository.findIdsByCompanyId(companyId)
+
     // 회사에 속한 활성 공고를 공고명으로 검색하고, 각 공고에 대표 직무(가장 작은 직무 id)를 얹어 반환한다.
     fun search(companyId: Long, query: String): List<JobPosting> {
         val postings =

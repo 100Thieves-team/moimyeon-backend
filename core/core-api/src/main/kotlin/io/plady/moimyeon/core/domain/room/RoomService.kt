@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
+import io.plady.moimyeon.core.domain.jobposting.JobPostingFinder
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.UUID
@@ -10,6 +11,8 @@ class RoomService(
     private val catalogRefValidator: CatalogRefValidator,
     private val roomManager: RoomManager,
     private val roomFinder: RoomFinder,
+    private val roomSearchReader: RoomSearchReader,
+    private val jobPostingFinder: JobPostingFinder,
 ) {
     // 방(룸) 생성. 카탈로그 참조 검증은 쓰기 트랜잭션 밖에서(profile 패턴과 동일),
     // 실제 등록은 RoomManager 트랜잭션에서 한다.
@@ -50,4 +53,20 @@ class RoomService(
 
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.
     fun getRoom(roomId: UUID): RoomDetail = roomFinder.getRoom(roomId)
+
+    // 룸 탐색 목록(읽기). 룸은 회사를 직접 알지 못하므로(room → job_posting → company)
+    // 회사 필터만 공고 id 목록으로 바꿔 넘기고, 나머지는 Reader 가 그대로 조회한다.
+    // 좁힌 결과가 비면 조회할 것이 없다 — 빈 IN 목록이 쿼리에 들어가지 않게 여기서 끝낸다.
+    fun searchRooms(
+        condition: RoomSearchCondition,
+        sort: RoomSortOrder,
+        cursor: RoomCursor?,
+        size: Int,
+    ): RoomCardPage {
+        val companyPostingIds = condition.companyId?.let { jobPostingFinder.getIdsByCompanyId(it) }
+        val jobPostingIds = condition.resolveJobPostingTargets(companyPostingIds)
+        if (jobPostingIds != null && jobPostingIds.isEmpty()) return RoomCardPage.EMPTY
+
+        return roomSearchReader.search(condition, jobPostingIds, sort, cursor, size)
+    }
 }
