@@ -64,4 +64,30 @@ class RoomApplicationManagerIT(
             resumeSubmissionRepository.findByRoomApplicationIdAndDeletedAtIsNull(application.id),
         ).isNotNull()
     }
+
+    // §4.8 이 막는 것은 방장이 반려한 경우뿐이다. 룸이 취소·확정돼 끝난 신청은 재신청 판정에서 걸리면 안 된다.
+    // 판정이 보는 것이 REJECTED 하나라는 사실을 여기서 고정한다 — "끝난 신청 전부"로 넓히면 이 테스트가 깨진다.
+    @Test
+    fun `룸 취소나 확정으로 끝난 신청은 재신청 차단 판정에 걸리지 않는다`() {
+        listOf(RoomApplicationStatus.ROOM_CANCELED, RoomApplicationStatus.ROOM_CONFIRMED).forEach { status ->
+            roomApplicationRepository.save(
+                RoomApplicationEntity(
+                    roomId = roomId,
+                    applicantMemberId = applicantMemberId,
+                    note = null,
+                    appliedAt = LocalDateTime.of(2026, 8, 5, 12, 0),
+                    status = status,
+                    pendingMemberId = null,
+                ),
+            )
+        }
+
+        val blocked = roomApplicationRepository.existsByRoomIdAndApplicantMemberIdAndStatusAndDeletedAtIsNull(
+            roomId,
+            applicantMemberId,
+            RoomApplicationStatus.REJECTED,
+        )
+
+        assertThat(blocked).isFalse()
+    }
 }

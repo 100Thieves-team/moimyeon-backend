@@ -66,6 +66,23 @@ class RoomApplicationFinderIT(
         assertThat(views).noneMatch { it.applicantMemberId == withdrawn }
     }
 
+    // 룸이 취소·확정돼 끝난 신청도 목록에 남는다. 지우면 몇 명이 기다리고 있었는지가 사라진다(MOI-394).
+    @Test
+    fun `룸 취소나 확정으로 끝난 신청도 목록에 남는다`() {
+        seedRoom()
+        seedHost()
+        val canceled = seedApplicant("룸 취소로 끝난 신청자")
+        val confirmed = seedApplicant("확정으로 끝난 신청자")
+        seedApplication(canceled, RoomApplicationStatus.ROOM_CANCELED, appliedAt = now)
+        seedApplication(confirmed, RoomApplicationStatus.ROOM_CONFIRMED, appliedAt = now.plusMinutes(5))
+
+        val views = roomApplicationFinder.getApplications(roomId, hostId)
+
+        assertThat(views.map { it.applicantMemberId }).containsExactly(canceled, confirmed)
+        assertThat(views.map { it.status })
+            .containsExactly(RoomApplicationStatus.ROOM_CANCELED, RoomApplicationStatus.ROOM_CONFIRMED)
+    }
+
     @Test
     fun `방장이 아니면 신청 목록 조회는 ROOM_FORBIDDEN`() {
         seedRoom()
