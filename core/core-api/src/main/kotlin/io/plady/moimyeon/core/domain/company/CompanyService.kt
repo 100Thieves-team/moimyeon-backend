@@ -8,5 +8,7 @@ class CompanyService(
 ) {
     fun search(query: String): List<Company> = companyFinder.search(query)
 
+    fun searchByPrefixes(candidates: List<String>): CompanyNameMatch = companyFinder.searchByPrefixes(candidates)
+
     fun getCompanies(companyIds: Collection<Long>): List<Company> = companyFinder.getByIds(companyIds)
 }
