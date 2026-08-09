@@ -22,13 +22,10 @@ moimyeon/
 ├── admin/
 │   └── admin-api       어드민 API — core-api 런타임에 조립되는 비부트 모듈
 │
-├── batch/
-│   └── batch-app       배치 실행 모듈 (독립 bootJar)
-│
 ├── core/
-│   ├── core-domain     외부 구현이 따르는 도메인 포트
+│   ├── core-batch      배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum       공통 Enum 정의
-│   └── core-api        API 서버 실행 모듈 (bootJar) — admin-api 조립 호스트
+│   └── core-api        API 서버 실행 모듈 — 외부 연동 계약과 런타임 조립 소유
 │
 ├── security/
 │   └── security-core   인증/인가 — AuthUser 리졸버 · 소셜 로그인 예정
@@ -42,7 +39,7 @@ moimyeon/
 │   └── monitoring      Actuator + Prometheus
 │
 ├── clients/
-│   ├── client-ai       Spring AI · Bedrock 모델 클라이언트
+│   ├── bedrock-client  Spring AI · Bedrock 모델 클라이언트
 │   └── client-example  OpenFeign 기반 외부 HTTP 클라이언트 예시
 │
 └── tests/
@@ -52,13 +49,6 @@ moimyeon/
 ---
 
 ## 모듈별 상세
-
-### `core:core-domain`
-외부 연동 구현이 따라야 하는 도메인 포트를 정의한다. 프레임워크나 외부 SDK를 참조하지 않는다.
-
-- 현재 포트: 이력서 PDF를 요약하는 `DocumentSummarizer`, 키로 바이트를 저장·조회하는 `ObjectStorage`
-
----
 
 ### `core:core-enum`
 모든 모듈에서 공유하는 Enum 클래스를 정의한다. 외부 모듈에 노출되어야 하는 열거형만 포함한다.
@@ -70,9 +60,10 @@ moimyeon/
 ### `core:core-api`
 API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한다.
 
-- 의존성 (compile): `core-domain`, `core-enum`, `security/security-core`, `storage/db-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
-- 의존성 (runtime): `admin/admin-api`, `clients/client-ai`, `storage/object-storage`
-- 포함: Controller, Request/Response DTO, 도메인 서비스, `ApiControllerAdvice`, AsyncConfig
+- 의존성 (compile): `core-enum`, `security/security-core`, `storage/db-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
+- 의존성 (runtime): `admin/admin-api`, `clients/bedrock-client`, `storage/object-storage`
+- 포함: Controller, Request/Response DTO, 도메인 서비스, 이력서 영역의 외부 연동 계약, `ApiControllerAdvice`, AsyncConfig
+- 산출물: 실행용 `bootJar`와 저수준 모듈의 계약 참조용 plain `jar`
 
 > admin 모듈은 `runtimeOnly`로 선언되어 core와 컴파일 시점에 격리된다. `ApiControllerAdvice`는 `basePackages = ["io.plady.moimyeon.core"]`로 범위를 제한해, 함께 조립되는 admin 컨트롤러의 예외를 가로채지 않는다.
 
@@ -95,7 +86,7 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 
 ---
 
-### `batch:batch-app`
+### `core:core-batch`
 스케줄 기반 배치 실행 모듈. core-api 와 별개의 독립 부트 앱이다.
 
 - 의존성: `support/*`, `storage/db-core` (implementation)
@@ -149,21 +140,22 @@ Spring Actuator와 Prometheus 메트릭 엔드포인트를 제공한다.
 ---
 
 ### `clients:client-example`
-OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 클라이언트 모듈의 참고 템플릿.
+OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 HTTP 클라이언트 모듈의 참고 템플릿.
 
 - 의존성: `spring-cloud-starter-openfeign`, `feign-hc5`, `feign-micrometer`
 
 ---
 
-### `clients:client-ai`
-`core-domain`의 `DocumentSummarizer` 포트를 구현하는 외부 AI 클라이언트. Spring AI를 통해
+### `clients:bedrock-client`
+`core-api`의 `ResumeSummaryGenerator`를 구현하는 Bedrock 전용 클라이언트. Spring AI를 통해
 서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필을 호출하며
 `core-api`에는 런타임으로만 조립된다.
 
 > 글로벌 추론은 PDF를 한국 외 AWS 상용 리전에서 처리할 수 있다. 운영 활성화 전에 개인정보 국외 처리 고지,
 > 적법한 처리 근거, 보존·삭제 기준과 조직 승인을 확정해야 하며, 승인 전에는 글로벌 프로필을 사용하지 않는다.
 
-- 의존성: `core-domain`, `spring-ai-starter-model-bedrock-converse`, `pdfbox`
+- 의존성: `core-api`, `spring-ai-starter-model-bedrock-converse`, `pdfbox`
+- 참조 제한: `ResumeSummaryGenerator`와 `ResumeSummaryGenerationException`만 사용하며 빌드에서 검사한다.
 
 ---
 
@@ -179,26 +171,25 @@ Spring REST Docs 기반 API 문서화를 지원하는 테스트 전용 모듈.
 
 ```
 core-enum ──────────────── core-api (implementation)
-core-domain ────────────── core-api (implementation)
-core-domain ────────────── client-ai (implementation)
-core-domain ────────────── object-storage (implementation)
+core-api ──────────────── bedrock-client (implementation, ResumeSummaryGenerator 계약만 참조)
+core-api ──────────────── object-storage (implementation, ResumeFileStore 계약만 참조)
 
 admin-api ──────────────── core-api (runtimeOnly)   # 컴파일 격리, 런타임 조립
-client-ai ──────────────── core-api (runtimeOnly)   # 도메인 포트 구현체 런타임 조립
-object-storage ─────────── core-api (runtimeOnly)   # 도메인 포트 구현체 런타임 조립
+bedrock-client ─────────── core-api (runtimeOnly)   # AI 계약 구현체 런타임 조립
+object-storage ─────────── core-api (runtimeOnly)   # S3 계약 구현체 런타임 조립
 db-core   ──────────────── core-api (implementation)
-db-core   ──────────────── batch-app (implementation)
+db-core   ──────────────── core-batch (implementation)
 
 security-core ──────────── core-api (implementation)
 
-support/logging    ─────── core-api, batch-app (implementation)
-support/monitoring ─────── core-api, batch-app (implementation)
+support/logging    ─────── core-api, core-batch (implementation)
+support/monitoring ─────── core-api, core-batch (implementation)
 clients/client-example ─── core-api (implementation)
 tests/api-docs ─────────── core-api, admin-api (testImplementation)
 ```
 
 핵심 설계 원칙:
-- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트)와 `batch-app`(배치) 둘뿐이다.
+- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트)와 `core-batch`(배치) 둘뿐이다.
 - `admin ↔ core`는 컴파일 타임 완전 격리. 어드민은 도메인 객체·에러 체계·설정을 전부 자체 보유하고, 접점은 런타임 조립(컴포넌트 스캔 + split package 엔티티 스캔)뿐이다.
 - 배치는 시간 주도 워크로드라 조립하지 않고 독립 앱으로 둔다 (스케일 아웃 시 잡 중복 방지).
 - security 는 presentation 앞단 모듈로, 서비스 레이어에는 인증 컨텍스트가 아닌 평범한 값(`userId`)만 흘러 들어간다.
@@ -225,7 +216,7 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 
 | 변수/프로퍼티 | 사용 모듈 | 설명 |
 |------|-----------|------|
-| `SPRING_PROFILES_ACTIVE` | core-api, batch-app | 기본값 `local` (H2 부팅, 외부 의존 없음) |
+| `SPRING_PROFILES_ACTIVE` | core-api, core-batch | 기본값 `local` (H2 부팅, 외부 의존 없음) |
 | `storage.database.core-db.url` / `.username` / `.password` | storage/db-core | dev 이상 MySQL 접속 정보 (외부 설정 주입) |
 | `security.perf-auth.enabled` | security/security-core | perf 프로파일에서 `X-Test-User-Id` 헤더 인증 활성화 (이중 게이트) |
 

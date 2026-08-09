@@ -25,15 +25,14 @@ tasks.named<Jar>("bootJar").configure {
 }
 
 tasks.named<Jar>("jar").configure {
-    enabled = false
+    enabled = true
 }
 
 dependencies {
     runtimeOnly(project(":admin:admin-api"))
-    runtimeOnly(project(":clients:client-ai"))
+    runtimeOnly(project(":clients:bedrock-client"))
     runtimeOnly(project(":storage:object-storage"))
 
-    implementation(project(":core:core-domain"))
     implementation(project(":core:core-enum"))
     implementation(project(":security:security-core"))
     implementation(project(":support:monitoring"))

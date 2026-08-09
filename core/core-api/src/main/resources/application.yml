@@ -8,7 +8,7 @@ spring:
       - logging.yml
       - db-core.yml
       - object-storage.yml
-      - client-ai.yml
+      - bedrock-client.yml
       - client-example.yml
       - security-core.yml
   servlet:

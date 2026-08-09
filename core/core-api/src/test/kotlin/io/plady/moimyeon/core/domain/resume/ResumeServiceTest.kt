@@ -20,14 +20,14 @@ import java.util.UUID
 
 class ResumeServiceTest {
     private val resumeFinder = mockk<ResumeFinder>()
-    private val fileStorage = mockk<ResumeFileStorage>()
+    private val fileStorage = mockk<ResumeFileStore>()
     private val resumeManager = mockk<ResumeManager>()
     private val resumeRegistrar = mockk<ResumeRegistrar>()
-    private val documentSummarizer = mockk<DocumentSummarizer>()
+    private val summaryGenerator = mockk<ResumeSummaryGenerator>()
     private val now = LocalDateTime.of(2026, 8, 3, 12, 0)
     private val clock = Clock.fixed(Instant.parse("2026-08-03T12:00:00Z"), ZoneOffset.UTC)
     private val resumeService =
-        ResumeService(resumeFinder, fileStorage, resumeManager, resumeRegistrar, documentSummarizer, clock)
+        ResumeService(resumeFinder, fileStorage, resumeManager, resumeRegistrar, summaryGenerator, clock)
 
     @Test
     fun `회원의 이력서 목록을 조회한다`() {
@@ -43,7 +43,7 @@ class ResumeServiceTest {
             resumeManager.failExpiredSummaries(memberId, now)
             resumeFinder.getAll(memberId)
         }
-        verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
+        verify(exactly = 0) { summaryGenerator.generate(any()) }
     }
 
     @Test
@@ -113,7 +113,7 @@ class ResumeServiceTest {
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
-        every { documentSummarizer.summarizePdf(upload.content) } returns "Kotlin Spring 백엔드 개발자"
+        every { summaryGenerator.generate(upload.content) } returns "Kotlin Spring 백엔드 개발자"
         every {
             resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         } just Runs
@@ -125,7 +125,7 @@ class ResumeServiceTest {
             resumeRegistrar.validateCapacity(memberId)
             fileStorage.store(memberId, upload)
             resumeRegistrar.register(memberId, newResume, now)
-            documentSummarizer.summarizePdf(upload.content)
+            summaryGenerator.generate(upload.content)
             resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         }
     }
@@ -141,8 +141,8 @@ class ResumeServiceTest {
         every { fileStorage.store(memberId, upload) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every {
-            documentSummarizer.summarizePdf(upload.content)
-        } throws DocumentSummarizationException(IllegalStateException("bedrock unavailable"))
+            summaryGenerator.generate(upload.content)
+        } throws ResumeSummaryGenerationException(IllegalStateException("bedrock unavailable"))
         every { resumeManager.failSummary(memberId, resumeId, now) } just Runs
 
         val registeredResumeId = resumeService.register(memberId, upload)
@@ -152,7 +152,7 @@ class ResumeServiceTest {
             resumeRegistrar.validateCapacity(memberId)
             fileStorage.store(memberId, upload)
             resumeRegistrar.register(memberId, newResume, now)
-            documentSummarizer.summarizePdf(upload.content)
+            summaryGenerator.generate(upload.content)
             resumeManager.failSummary(memberId, resumeId, now)
         }
         verify(exactly = 0) { resumeManager.completeSummary(any(), any(), any(), any(), any()) }
@@ -168,7 +168,7 @@ class ResumeServiceTest {
         every { resumeFinder.get(memberId, resumeId) } returns resume(resumeId, file)
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
         every { fileStorage.read(file) } returns content
-        every { documentSummarizer.summarizePdf(content) } returns "재생성한 요약"
+        every { summaryGenerator.generate(content) } returns "재생성한 요약"
         every { resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now) } just Runs
 
         val retriedResumeId = resumeService.retrySummary(memberId, resumeId)
@@ -179,7 +179,7 @@ class ResumeServiceTest {
             resumeFinder.get(memberId, resumeId)
             resumeManager.startSummaryRetry(memberId, resumeId, now)
             fileStorage.read(file)
-            documentSummarizer.summarizePdf(content)
+            summaryGenerator.generate(content)
             resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now)
         }
     }
@@ -195,8 +195,8 @@ class ResumeServiceTest {
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
         every { fileStorage.read(file) } returns content
         every {
-            documentSummarizer.summarizePdf(content)
-        } throws DocumentSummarizationException(IllegalStateException("bedrock unavailable"))
+            summaryGenerator.generate(content)
+        } throws ResumeSummaryGenerationException(IllegalStateException("bedrock unavailable"))
         every { resumeManager.failSummary(memberId, resumeId, now) } just Runs
 
         val retriedResumeId = resumeService.retrySummary(memberId, resumeId)
@@ -216,7 +216,7 @@ class ResumeServiceTest {
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
         every { fileStorage.store(memberId, upload) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
-        every { documentSummarizer.summarizePdf(upload.content) } throws IllegalStateException("implementation bug")
+        every { summaryGenerator.generate(upload.content) } throws IllegalStateException("implementation bug")
 
         assertThatThrownBy { resumeService.register(memberId, upload) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -242,7 +242,7 @@ class ResumeServiceTest {
             }
         verify(exactly = 0) { fileStorage.store(any(), any()) }
         verify(exactly = 0) { resumeRegistrar.register(any(), any(), any()) }
-        verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
+        verify(exactly = 0) { summaryGenerator.generate(any()) }
     }
 
     @Test
@@ -255,7 +255,7 @@ class ResumeServiceTest {
         assertThatThrownBy { resumeService.register(memberId, upload) }
             .isInstanceOf(IllegalStateException::class.java)
         verify(exactly = 0) { resumeRegistrar.register(any(), any(), any()) }
-        verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
+        verify(exactly = 0) { summaryGenerator.generate(any()) }
     }
 
     @Test
@@ -274,7 +274,7 @@ class ResumeServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
-        verify(exactly = 0) { documentSummarizer.summarizePdf(any()) }
+        verify(exactly = 0) { summaryGenerator.generate(any()) }
     }
 
     private fun resumeUpload(): ResumeUpload {
