@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.api.facade
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.company.CompanyService
@@ -35,6 +36,21 @@ class JobPostingSearchFacadeTest {
     }
 
     @Test
+    fun `companyId 가 주어지면 그 회사 밖의 공고를 찾지 않는다`() {
+        val condition = slot<JobPostingSearchCondition>()
+        every { companyService.getCompanies(listOf(91221L)) } returns listOf(Company(91221L, "쿠팡"))
+        every { companyService.getCompanies(emptySet()) } returns emptyList()
+        every { jobPostingService.search(capture(condition)) } returns emptyList()
+
+        facade.search("개발", companyId = 91221L)
+
+        assertThat(condition.captured.matchedCompanyIds).containsExactly(91221L)
+        // 공고명 폴백은 회사를 보지 않는다. 켜두면 좁힌 회사 밖의 공고가 섞인다
+        assertThat(condition.captured.tokens).isEmpty()
+        assertThat(condition.captured.remainder).isEqualTo("개발")
+    }
+
+    @Test
     fun `검색어가 최소 길이 미만이면 조회를 시작하지 않는다`() {
         val response = facade.search("네", companyId = null)
 
@@ -43,6 +59,20 @@ class JobPostingSearchFacadeTest {
         assertThat(response.query).isEqualTo("네")
         assertThat(response.companies).isEmpty()
         assertThat(response.jobPostings).isEmpty()
+    }
+
+    @Test
+    fun `companyId 가 있으면 검색어가 비어도 그 회사의 공고를 조회한다`() {
+        val condition = slot<JobPostingSearchCondition>()
+        every { companyService.getCompanies(listOf(91221L)) } returns listOf(Company(91221L, "쿠팡"))
+        every { companyService.getCompanies(emptySet()) } returns emptyList()
+        every { jobPostingService.search(capture(condition)) } returns emptyList()
+
+        // 회사 행을 눌러 좁힌 직후의 상태. 회사 자체가 조회 조건이라 검색어가 없어도 목록이 채워져야 한다
+        facade.search("", companyId = 91221L)
+
+        assertThat(condition.captured.matchedCompanyIds).containsExactly(91221L)
+        assertThat(condition.captured.remainder).isEmpty()
     }
 
     @Test
