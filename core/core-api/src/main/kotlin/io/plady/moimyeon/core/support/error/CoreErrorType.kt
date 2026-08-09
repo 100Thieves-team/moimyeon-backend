@@ -47,4 +47,23 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "동시에 대기할 수 있는 참가 신청은 최대 3건입니다.",
         LogLevel.WARN,
     ),
+
+    QUESTION_CARD_SET_NOT_OPEN(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1501,
+        "진행이 확정되었거나 완료된 방에서만 질문 카드셋을 조회할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_CARD_SET_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1502,
+        "질문 카드셋을 조회할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_CARD_SET_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1503,
+        "질문 카드셋을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
