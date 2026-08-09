@@ -27,7 +27,7 @@
 
 ## 1. 한 장 요약
 
-- **모듈**: 실행 모듈은 `core:core-api`(+`batch:batch-app`) 뿐. `admin:admin-api` 는 별도 배포 없이
+- **모듈**: 실행 모듈은 `core:core-api`(+`core:core-batch`) 뿐. `admin:admin-api` 는 별도 배포 없이
   core-api 프로세스에 **runtimeOnly 로 함께 조립**되고, 서로의 코드는 컴파일 타임에 모른다.
   인증 기술(spring-security)은 security 모듈에 격리되어 api 코드에는 등장하지 않는다.
   → [modules.md](modules.md)
