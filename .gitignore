@@ -30,3 +30,6 @@ _workspace/
 .claude/settings.local.json
 CLAUDE.local.md
 .local/
+
+# review-swarm run artefacts
+.review-swarm/
