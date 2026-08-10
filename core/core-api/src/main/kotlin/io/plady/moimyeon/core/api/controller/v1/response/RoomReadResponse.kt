@@ -10,7 +10,7 @@ import java.util.UUID
 // 회사·공고·직무 표시명, 방장 프로필/신뢰 지표, 진행 방식 라벨 enrich 는 별도 이슈다(docs/room-progress.md).
 data class RoomReadResponse(
     val roomId: UUID,
-    val status: String, // RoomStatus (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+    val status: String, // RoomStatus (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)
     val jobPostingId: Long,
     val jobRoleId: Long,
     val title: String,

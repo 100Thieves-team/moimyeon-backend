@@ -72,6 +72,13 @@ class RoomEntity(
     var status: RoomStatus = RoomStatus.RECRUITING
         protected set
 
+    fun canStartProgress(): Boolean = status == RoomStatus.CONFIRMED
+
+    fun startProgress() {
+        check(canStartProgress())
+        status = RoomStatus.IN_PROGRESS
+    }
+
     // 편집 가능한 필드 전체 교체. 저장은 변경 감지에 맡긴다(save 호출 없음).
     fun update(
         title: String,
