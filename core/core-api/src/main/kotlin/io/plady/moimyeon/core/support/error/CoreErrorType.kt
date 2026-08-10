@@ -103,4 +103,11 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
+
+    INVALID_WEB_PUSH_REGISTRATION(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1601,
+        "웹 푸시 등록 정보가 올바르지 않습니다.",
+        LogLevel.WARN,
+    ),
 }

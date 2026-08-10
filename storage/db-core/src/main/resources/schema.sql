@@ -109,6 +109,7 @@ DROP TABLE IF EXISTS room_status_log;
 DROP TABLE IF EXISTS room;
 DROP TABLE IF EXISTS resume;
 DROP TABLE IF EXISTS refresh_token;
+DROP TABLE IF EXISTS web_push_subscription;
 DROP TABLE IF EXISTS terms_agreement;
 DROP TABLE IF EXISTS member_profile_interest_job_role;
 DROP TABLE IF EXISTS member_profile_interest_company;
@@ -322,6 +323,22 @@ CREATE TABLE refresh_token (
 );
 CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
+
+-- 베이스 미상속: 브라우저의 현재 푸시 전달 경로다. 해지는 복원할 업무 삭제가 아니라
+-- 더 이상 사용하지 않을 외부 등록 식별자의 제거이므로 물리 삭제한다.
+-- 긴 등록 식별자 전체를 인덱싱하지 않고 SHA-256 해시로 동일 브라우저 등록을 식별한다.
+CREATE TABLE web_push_subscription (
+    id                BIGINT      NOT NULL AUTO_INCREMENT,
+    member_id         BINARY(16)  NOT NULL,
+    registration      TEXT        NOT NULL,
+    registration_hash CHAR(64)    NOT NULL,
+    registered_at     DATETIME    NOT NULL,
+    created_at        DATETIME    NOT NULL,
+    updated_at        DATETIME    NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_web_push_subscription_registration_hash UNIQUE (registration_hash)
+);
+CREATE INDEX ix_web_push_subscription_member_id ON web_push_subscription (member_id);
 
 -- 소개 정보(전부 선택 입력). 행 존재 = 온보딩(최초 소개 작성) 제출 완료라는 파생 사실의 근거.
 -- 관심 회사·관심 직무는 다건이라 별도 조인 엔티티로 뺐다(아래) — 값 컬렉션이 아니다.
