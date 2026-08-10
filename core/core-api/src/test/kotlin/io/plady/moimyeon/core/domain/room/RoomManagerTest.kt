@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
+import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -29,68 +30,70 @@ class RoomManagerTest {
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
 
-    // 가드를 넣다가 정상 경로를 막는 것이 이 변경에서 가장 그럴듯한 실수다.
+    // 수정 계약을 이 테스트가 들고 있다. 무엇이 바뀌고 무엇이 안 바뀌는지를 한자리에서 단언한다.
     @Test
-    fun `모집 중인 룸은 편집 가능한 필드가 수정된다`() {
-        val room = givenRoom()
+    fun `모집 중인 룸은 편집 가능한 필드만 수정된다`() {
+        val room = givenRecruitingRoom()
         givenHost()
         givenParticipants(3)
 
-        manager.update(roomId, hostId, updateCommand(title = "다시 정한 백엔드 모의면접 준비 룸"))
+        manager.update(roomId, hostId, updateCommand(title = "다시 정한 백엔드 모의면접 준비 룸", min = 3, max = 5))
 
-        verify {
-            room.update(
-                title = "다시 정한 백엔드 모의면접 준비 룸",
-                description = null,
-                interviewStage = InterviewStage.FIRST,
-                interviewType = InterviewType.JOB,
-                meetingType = any(),
-                sigunguId = null,
-                minCapacity = 2,
-                maxCapacity = 6,
-                startAt = now.plusDays(5),
-                durationMinutes = 60,
-            )
-        }
+        assertThat(room.title).isEqualTo("다시 정한 백엔드 모의면접 준비 룸")
+        assertThat(room.description).isNull()
+        assertThat(room.interviewStage).isEqualTo(InterviewStage.FIRST)
+        assertThat(room.interviewType).isEqualTo(InterviewType.JOB)
+        assertThat(room.meetingType).isEqualTo(MeetingType.ONLINE)
+        assertThat(room.sigunguId).isNull()
+        assertThat(room.minCapacity).isEqualTo(3)
+        assertThat(room.maxCapacity).isEqualTo(5)
+        assertThat(room.startAt).isEqualTo(now.plusDays(5))
+        assertThat(room.durationMinutes).isEqualTo(60)
+
+        // 식별 참조와 이력서 원본 공개 여부는 수정 대상이 아니다. 공고를 바꾸면 다른 룸이 된다.
+        assertThat(room.jobPostingId).isEqualTo(1L)
+        assertThat(room.jobRoleId).isEqualTo(2L)
+        assertThat(room.resumePublic).isFalse()
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
     }
 
     @Test
     fun `최대 인원을 현재 참여 인원보다 작게 낮추면 E1417 을 던진다`() {
-        val room = givenRoom()
+        val room = givenRecruitingRoom()
         givenHost()
         givenParticipants(5)
 
         assertFails(CoreErrorType.ROOM_CAPACITY_BELOW_PARTICIPANTS) { updateCommand(min = 2, max = 3) }
-        verify(exactly = 0) { room.update(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+        assertThat(room.maxCapacity).isEqualTo(6)
     }
 
     // 여기서 막으면 정원을 정확히 맞춘 방장이 갇힌다.
     @Test
     fun `최대 인원을 현재 참여 인원과 같게 낮추는 것은 허용된다`() {
-        val room = givenRoom()
+        val room = givenRecruitingRoom()
         givenHost()
         givenParticipants(3)
 
         manager.update(roomId, hostId, updateCommand(min = 2, max = 3))
 
-        verify { room.update(any(), any(), any(), any(), any(), any(), any(), 3, any(), any()) }
+        assertThat(room.maxCapacity).isEqualTo(3)
     }
 
     @Test
     fun `최소 인원은 현재 참여 인원보다 크게 올릴 수 있다`() {
-        val room = givenRoom()
+        val room = givenRecruitingRoom()
         givenHost()
         givenParticipants(2)
 
         manager.update(roomId, hostId, updateCommand(min = 5, max = 8))
 
-        verify { room.update(any(), any(), any(), any(), any(), any(), 5, any(), any(), any()) }
+        assertThat(room.minCapacity).isEqualTo(5)
     }
 
     // 수락 쪽 정원 판정과 같은 기준을 써야 한다. 나간 사람의 자리는 비워진 것으로 본다.
     @Test
     fun `정원 판정은 참여 중인 인원만 센다`() {
-        givenRoom()
+        givenRecruitingRoom()
         givenHost()
         givenParticipants(1)
 
@@ -103,7 +106,7 @@ class RoomManagerTest {
 
     @Test
     fun `확정된 룸을 수정하면 E1418 을 던진다`() {
-        givenRoom(RoomStatus.CONFIRMED)
+        givenRoomWithStatus(RoomStatus.CONFIRMED)
         givenHost()
 
         assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
@@ -111,7 +114,7 @@ class RoomManagerTest {
 
     @Test
     fun `취소된 룸을 수정하면 E1418 을 던진다`() {
-        givenRoom(RoomStatus.CANCELED)
+        givenRoomWithStatus(RoomStatus.CANCELED)
         givenHost()
 
         assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
@@ -119,7 +122,7 @@ class RoomManagerTest {
 
     @Test
     fun `끝난 룸을 수정하면 E1418 을 던진다`() {
-        givenRoom(RoomStatus.COMPLETED)
+        givenRoomWithStatus(RoomStatus.COMPLETED)
         givenHost()
 
         assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
@@ -127,15 +130,16 @@ class RoomManagerTest {
 
     @Test
     fun `방장이 아니면 E1406 을 던진다`() {
-        givenRoom()
+        val room = givenRecruitingRoom()
         givenHost(isHost = false)
 
         assertFails(CoreErrorType.ROOM_FORBIDDEN) { updateCommand() }
+        assertThat(room.title).isEqualTo("처음 정한 제목입니다")
     }
 
     @Test
     fun `내려간 룸을 수정하면 E1405 를 던진다`() {
-        givenRoom(active = false)
+        givenRecruitingRoom().delete(now)
 
         assertFails(CoreErrorType.ROOM_NOT_FOUND) { updateCommand() }
     }
@@ -147,10 +151,32 @@ class RoomManagerTest {
             }
     }
 
-    // status 는 protected set 이고 상태 전이 메서드가 아직 없어(MOI-396·398) 실제 엔티티로는 만들 수 없는 상태다.
-    private fun givenRoom(status: RoomStatus = RoomStatus.RECRUITING, active: Boolean = true): RoomEntity {
+    // 수정 전 값을 명령과 전부 다르게 둬야 "무엇이 바뀌었나"가 단언으로 드러난다.
+    private fun givenRecruitingRoom(): RoomEntity {
+        val room = RoomEntity(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 2L,
+            resumePublic = false,
+            sigunguId = 5L,
+            title = "처음 정한 제목입니다",
+            description = "처음 적은 설명입니다.",
+            interviewStage = InterviewStage.ETC,
+            interviewType = null,
+            meetingType = MeetingType.OFFLINE,
+            minCapacity = 2,
+            maxCapacity = 6,
+            startAt = now.plusDays(3),
+            durationMinutes = 30,
+        )
+        every { roomRepository.findById(roomId) } returns Optional.of(room)
+        return room
+    }
+
+    // status 는 protected set 이고 전이 메서드가 아직 없어(MOI-396·398) 실제 엔티티로는 만들 수 없는 상태다.
+    private fun givenRoomWithStatus(status: RoomStatus): RoomEntity {
         val room = mockk<RoomEntity>(relaxed = true)
-        every { room.isActive() } returns active
+        every { room.isActive() } returns true
         every { room.status } returns status
         every { roomRepository.findById(roomId) } returns Optional.of(room)
         return room
