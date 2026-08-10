@@ -30,7 +30,8 @@
 --   그 밖(컬럼명·유니크명·인덱스명·타입)은 이 파일이 정본이고 dev/live 도 여기에 맞춘다.
 --
 -- 식별자 정책
--- - 외부에 노출되는 식별자만 BINARY(16) UUID: member, resume, room, terms, terms_agreement.
+-- - 외부에 노출되는 식별자와 분산 전달 식별자는 BINARY(16) UUID:
+--   member, resume, room, terms, terms_agreement, outbox.
 --   UUID 는 시간 정렬(UUIDv7)로 생성한다 — 무작위 v4 는 InnoDB 클러스터 인덱스를 파편화시킨다.
 -- - 그 밖에는 BIGINT AUTO_INCREMENT.
 -- - PK 컬럼명은 테이블 안에서 항상 id, 참조 컬럼명은 <테이블>_id.
@@ -40,10 +41,12 @@
 --   상속한다. 물리 삭제 대신 delete(now) 로 처리하고, 조회 제외는 각 Finder 의 파생 쿼리가 담당한다.
 --   운영에서 데이터를 되살려야 하는 일이 생각보다 잦다 — 잘못 지운 것, 신고로 내렸다가 복원하는 것,
 --   분쟁이 나서 지워진 내용을 확인해야 하는 것. 지워진 행이 남아 있으면 전부 SQL 한 줄로 끝난다.
--- - 상속하지 않는 것은 둘뿐이다. 둘 다 무효화 수단이 이미 있고, 그 수단이 삭제보다 정확하다.
+-- - 별도 라이프사이클이 있는 엔티티는 상속하지 않는다. 업무 데이터가 아니거나 별도 무효화 수단이
+--   있어 deleted_at 보다 정확하기 때문이다. 대표 사례는 다음과 같다.
 --     social_account — 재가입 차단이 (provider, provider_id) 유니크 점유에 의존한다.
 --                      지운 표식을 남기면 그 점유가 풀려 차단이 뚫린다.
 --     refresh_token  — 삭제가 아니라 무효화이며 revoked_at 이 그 시각을 갖는다.
+--     outbox — 외부 전달 전까지의 내구성 작업 기록이며 전달 생명주기와 보존 정책을 따른다.
 --   각 테이블의 사유는 아래 테이블 주석에 적어 두었다. 엔티티를 만들 때 그 문장을 파일 상단으로 옮긴다 —
 --   어느 쪽인지의 원본은 문서가 아니라 각 엔티티 파일이다(docs/conventions/storage.md).
 -- - 값 컬렉션(@ElementCollection)은 엔티티가 아니므로 id·타임스탬프·deleted_at 을 두지 않는다.
@@ -85,6 +88,7 @@
 -- 코딩 규약은 docs/conventions/storage.md 참고.
 
 DROP TABLE IF EXISTS chat_message;
+DROP TABLE IF EXISTS outbox;
 DROP TABLE IF EXISTS chat_room;
 DROP TABLE IF EXISTS review_tag;
 DROP TABLE IF EXISTS review;
@@ -848,6 +852,22 @@ CREATE TABLE chat_message (
 CREATE INDEX ix_chat_message_chat_room_id ON chat_message (chat_room_id);
 
 -- ── 스캐폴딩 ────────────────────────────────────────────────────────────
+
+-- 외부 전달 전까지 보관하는 범용 내구성 작업 기록. 업무 데이터의 소프트 삭제 정책이 아니라
+-- 전달 생명주기와 별도 보존 정책을 따르므로 deleted_at 없이 처리 완료 후 물리 삭제한다.
+CREATE TABLE outbox (
+    id           BINARY(16)   NOT NULL,
+    event_type   VARCHAR(100) NOT NULL,
+    payload      TEXT         NOT NULL,
+    relay_status VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
+    claim_token  VARCHAR(36)  NULL,
+    lease_until  DATETIME     NULL,
+    created_at   DATETIME     NOT NULL,
+    updated_at   DATETIME     NOT NULL,
+    PRIMARY KEY (id)
+);
+CREATE INDEX ix_outbox_created_at ON outbox (created_at);
+CREATE INDEX ix_outbox_relay_status_created_at ON outbox (relay_status, created_at);
 
 CREATE TABLE example_entity (
     id             BIGINT       NOT NULL AUTO_INCREMENT,
