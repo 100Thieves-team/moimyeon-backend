@@ -66,7 +66,7 @@ class RoomApplicationFinderIT(
         assertThat(views).noneMatch { it.applicantMemberId == withdrawn }
     }
 
-    // 룸이 취소·확정돼 끝난 신청도 목록에 남는다. 지우면 몇 명이 기다리고 있었는지가 사라진다(MOI-394).
+    // 지우면 몇 명이 기다리고 있었는지가 사라진다(MOI-394).
     @Test
     fun `룸 취소나 확정으로 끝난 신청도 목록에 남는다`() {
         seedRoom()

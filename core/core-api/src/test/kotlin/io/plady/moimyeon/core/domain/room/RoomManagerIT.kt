@@ -41,7 +41,7 @@ class RoomManagerIT(
         roomRepository.deleteById(roomId)
     }
 
-    // 정원 가드를 넣다가 정상 경로를 막는 것이 이 변경에서 가장 그럴듯한 실수라, 그물을 먼저 친다.
+    // 가드를 넣다가 정상 경로를 막는 것이 이 변경에서 가장 그럴듯한 실수다.
     @Test
     fun `모집 중인 룸의 제목과 일정은 그대로 수정된다`() {
         seedRoom(maxCapacity = 6)
@@ -68,7 +68,7 @@ class RoomManagerIT(
         assertThat(roomRepository.findById(roomId).orElseThrow().maxCapacity).isEqualTo(6)
     }
 
-    // 경계 — 이미 들어와 있는 사람 수만큼은 남겨둘 수 있어야 한다. 여기서 막으면 정원을 정확히 맞춘 방장이 갇힌다.
+    // 여기서 막으면 정원을 정확히 맞춘 방장이 갇힌다.
     @Test
     fun `최대 인원을 현재 참여자 수와 같게 낮추는 것은 허용된다`() {
         seedRoom(maxCapacity = 6)
@@ -80,7 +80,6 @@ class RoomManagerIT(
         assertThat(roomRepository.findById(roomId).orElseThrow().maxCapacity).isEqualTo(3)
     }
 
-    // 최소 인원은 확정 조건일 뿐이라 현재 인원보다 커도 된다. 확정이 미뤄질 뿐 지금 상태를 깨지 않는다.
     @Test
     fun `최소 인원은 현재 참여자 수보다 크게 올릴 수 있다`() {
         seedRoom(maxCapacity = 8)
@@ -92,7 +91,7 @@ class RoomManagerIT(
         assertThat(roomRepository.findById(roomId).orElseThrow().minCapacity).isEqualTo(5)
     }
 
-    // 나간 사람의 자리는 비워지므로 정원 판정에서 세지 않는다. 수락 쪽 판정과 같아야 한다.
+    // 수락 쪽 정원 판정과 같은 기준을 써야 한다.
     @Test
     fun `나간 참여자는 정원 판정에서 세지 않는다`() {
         seedRoom(maxCapacity = 6)
@@ -104,7 +103,6 @@ class RoomManagerIT(
         assertThat(roomRepository.findById(roomId).orElseThrow().maxCapacity).isEqualTo(2)
     }
 
-    // 확정 이후에는 일정을 바꿀 수 없다(「진행 확정」§4.3). 참여자가 그 시각에 모이기로 약속한 뒤다.
     @Test
     fun `확정된 룸은 수정할 수 없다`() {
         seedRoom(maxCapacity = 6)
@@ -143,7 +141,6 @@ class RoomManagerIT(
             }
     }
 
-    // 방장이 아닌 것 · 룸 상태 · 정원은 방장이 화면에서 서로 다르게 안내받아야 하는 세 가지 원인이다.
     @Test
     fun `수정을 거부하는 세 원인은 서로 다른 에러로 구분된다`() {
         seedRoom(maxCapacity = 6)
@@ -166,8 +163,8 @@ class RoomManagerIT(
             }
     }
 
-    // status 는 protected set 이고 상태 전이 메서드가 아직 없다(취소·확정은 MOI-396·398).
-    // 앱 경로로는 만들 수 없는 상태라 벌크 업데이트로 만든다. 이 클래스는 트랜잭션 밖에서 돌아 직접 트랜잭션을 연다.
+    // 상태 전이 메서드가 아직 없어(MOI-396·398) 앱 경로로는 만들 수 없는 상태다.
+    // 이 클래스는 트랜잭션 밖에서 돌아 벌크 업데이트가 직접 트랜잭션을 연다.
     private fun forceStatus(status: RoomStatus) {
         transactionTemplate.executeWithoutResult {
             entityManager.createQuery("UPDATE RoomEntity r SET r.status = :value WHERE r.id = :id")
