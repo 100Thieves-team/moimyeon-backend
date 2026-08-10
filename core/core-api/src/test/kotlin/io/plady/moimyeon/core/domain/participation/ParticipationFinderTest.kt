@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.participation
 
 import io.mockk.every
 import io.mockk.mockk
+import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -52,5 +53,19 @@ class ParticipationFinderTest {
 
         assertThat(participationFinder.getConfirmedParticipantIds(roomId))
             .containsExactly(firstMemberId, secondMemberId)
+    }
+
+    @Test
+    fun `방장 식별자는 삭제되지 않은 HOST 참여 행에서 조회한다`() {
+        val roomId = UUID.randomUUID()
+        val hostMemberId = UUID.randomUUID()
+        every {
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+                roomId,
+                ParticipationRole.HOST,
+            )
+        } returns mockk { every { memberId } returns hostMemberId }
+
+        assertThat(participationFinder.getHostMemberId(roomId)).isEqualTo(hostMemberId)
     }
 }

@@ -104,6 +104,13 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    INVALID_WEB_PUSH_REGISTRATION(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1601,
+        "웹 푸시 등록 정보가 올바르지 않습니다.",
+        LogLevel.WARN,
+    ),
+
     ROOM_PROGRESS_NOT_STARTABLE(
         HttpStatus.CONFLICT,
         ErrorCode.E1701,
@@ -138,13 +145,6 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         HttpStatus.BAD_REQUEST,
         ErrorCode.E1706,
         "출석 대상이 확정 참여자와 일치하지 않습니다.",
-        LogLevel.WARN,
-    ),
-
-    INVALID_WEB_PUSH_REGISTRATION(
-        HttpStatus.BAD_REQUEST,
-        ErrorCode.E1601,
-        "웹 푸시 등록 정보가 올바르지 않습니다.",
         LogLevel.WARN,
     ),
 }

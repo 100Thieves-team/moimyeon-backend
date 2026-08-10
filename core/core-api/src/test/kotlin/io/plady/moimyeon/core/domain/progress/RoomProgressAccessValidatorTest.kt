@@ -26,11 +26,12 @@ class RoomProgressAccessValidatorTest {
 
     @Test
     fun `확정 룸의 확정 참여자는 진행을 시작할 수 있다`() {
-        givenRoom(RoomStatus.CONFIRMED)
+        val room = givenRoom(RoomStatus.CONFIRMED)
         every { participationFinder.wasConfirmedParticipant(roomId, memberId) } returns true
 
         assertThatCode { validator.validateStarter(roomId, memberId) }
             .doesNotThrowAnyException()
+        verify(exactly = 1) { room.canStartProgress() }
     }
 
     @Test
@@ -127,12 +128,14 @@ class RoomProgressAccessValidatorTest {
         }
     }
 
-    private fun givenRoom(status: RoomStatus, isActive: Boolean = true) {
+    private fun givenRoom(status: RoomStatus, isActive: Boolean = true): RoomEntity {
         val room = mockk<RoomEntity> {
             every { this@mockk.status } returns status
             every { this@mockk.isActive() } returns isActive
+            every { this@mockk.canStartProgress() } returns (status == RoomStatus.CONFIRMED)
         }
         every { roomRepository.findById(roomId) } returns Optional.of(room)
+        return room
     }
 
     private fun assertValidationFails(errorType: CoreErrorType, action: () -> Unit) {

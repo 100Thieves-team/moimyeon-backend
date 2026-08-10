@@ -1,14 +1,12 @@
 package io.plady.moimyeon.core.domain.progress
 
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
-import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.AttendanceEntity
 import io.plady.moimyeon.storage.db.core.AttendanceRepository
-import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
@@ -18,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class RoomProgressManager(
     private val roomRepository: RoomRepository,
-    private val participationRepository: ParticipationRepository,
     private val participationFinder: ParticipationFinder,
     private val attendanceRepository: AttendanceRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
@@ -40,13 +37,7 @@ class RoomProgressManager(
                 attendanceMemberIds.toSet() == confirmedParticipantIds.toSet(),
             CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH,
         )
-        val hostMemberId = requireFound(
-            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
-                command.roomId,
-                ParticipationRole.HOST,
-            ),
-            CoreErrorType.ROOM_NOT_FOUND,
-        ).memberId
+        val hostMemberId = participationFinder.getHostMemberId(command.roomId)
 
         room.startProgress()
         attendanceRepository.saveAllAndFlush(

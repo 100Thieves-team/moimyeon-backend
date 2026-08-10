@@ -5,6 +5,7 @@ import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
+import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -16,7 +17,7 @@ class RoomProgressAccessValidator(
 ) {
     fun validateStarter(roomId: UUID, memberId: UUID) {
         requireBusiness(
-            findActiveRoomStatus(roomId) == RoomStatus.CONFIRMED,
+            findActiveRoom(roomId).canStartProgress(),
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
         )
         validateConfirmedParticipant(
@@ -28,7 +29,7 @@ class RoomProgressAccessValidator(
 
     fun validateAttendanceViewer(roomId: UUID, memberId: UUID) {
         requireBusiness(
-            findActiveRoomStatus(roomId) in ATTENDANCE_VIEWABLE_STATUSES,
+            findActiveRoom(roomId).status in ATTENDANCE_VIEWABLE_STATUSES,
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
         )
         validateConfirmedParticipant(roomId, memberId, CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
@@ -36,19 +37,19 @@ class RoomProgressAccessValidator(
 
     fun validateRailViewer(roomId: UUID, memberId: UUID) {
         requireBusiness(
-            findActiveRoomStatus(roomId) == RoomStatus.IN_PROGRESS,
+            findActiveRoom(roomId).status == RoomStatus.IN_PROGRESS,
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
         )
         validateConfirmedParticipant(roomId, memberId, CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
     }
 
-    private fun findActiveRoomStatus(roomId: UUID): RoomStatus {
+    private fun findActiveRoom(roomId: UUID): RoomEntity {
         val room = requireFound(
             roomRepository.findById(roomId).orElse(null),
             CoreErrorType.ROOM_NOT_FOUND,
         )
         requireBusiness(room.isActive(), CoreErrorType.ROOM_NOT_FOUND)
-        return room.status
+        return room
     }
 
     private fun validateConfirmedParticipant(
