@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":support:monitoring"))
     implementation(project(":support:logging"))
     runtimeOnly(project(":clients:email-client"))
+    runtimeOnly(project(":clients:web-push-client"))
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

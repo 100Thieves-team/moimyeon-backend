@@ -15,6 +15,7 @@ include(
     "clients:client-example",
     "clients:bedrock-client",
     "clients:email-client",
+    "clients:web-push-client",
     "storage:object-storage"
 )
 
