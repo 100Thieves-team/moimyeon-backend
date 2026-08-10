@@ -1,0 +1,3 @@
+notification.web-push.fcm:
+  project-id: ${FIREBASE_PROJECT_ID}
+  action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL}

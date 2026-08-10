@@ -28,15 +28,15 @@ class OAuth2LoginSuccessHandler(
 
         // 가입 커밋(resolve)과 세션 저장(open)은 의도적으로 별도 트랜잭션이다 — 세션 저장이
         // 실패해도 재로그인이 기존 회원 경로로 흘러 복구되므로 원자성을 요구하지 않는다.
-        val memberId = socialMemberResolver.resolve(
+        val member = socialMemberResolver.resolve(
             provider = SocialLoginProvider.GOOGLE,
             providerId = subject,
             email = oidcUser.email,
         )
 
         // Access Token + Refresh Token 둘 다 발급
-        val accessToken = jwtTokenProvider.issue(memberId)
-        val session = sessionIssuer.open(memberId)
+        val accessToken = jwtTokenProvider.issue(member.id, member.role)
+        val session = sessionIssuer.open(member.id)
         response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createAccess(accessToken).toString())
         response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createRefresh(session).toString())
         response.sendRedirect(FRONTEND_CALLBACK_URL)

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import org.assertj.core.api.Assertions.assertThat
@@ -25,6 +26,7 @@ class MemberTest {
 
             // then
             assertThat(member.status).isEqualTo(MemberStatus.ACTIVE)
+            assertThat(member.role).isEqualTo(MemberRole.USER)
             assertThat(member.lastLoginAt).isEqualTo(now)
             assertThat(member.socialAccounts).hasSize(1)
 

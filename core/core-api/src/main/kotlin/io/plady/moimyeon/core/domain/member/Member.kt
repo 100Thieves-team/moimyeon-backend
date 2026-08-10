@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import java.time.LocalDateTime
@@ -12,6 +13,7 @@ data class Member(
     val status: MemberStatus,
     val socialAccounts: List<SocialAccount>,
     val lastLoginAt: LocalDateTime,
+    val role: MemberRole = MemberRole.USER,
 ) {
     init {
         require(socialAccounts.isNotEmpty()) {
@@ -36,6 +38,7 @@ data class Member(
             status = MemberStatus.ACTIVE,
             socialAccounts = listOf(SocialAccount(provider, providerId, linkedEmail = email)),
             lastLoginAt = now,
+            role = MemberRole.USER,
         )
     }
 }

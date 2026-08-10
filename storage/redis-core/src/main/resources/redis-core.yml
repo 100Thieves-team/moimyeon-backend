@@ -1,0 +1,21 @@
+spring:
+  data:
+    redis:
+      url: ${STORAGE_REDIS_URL:redis://localhost:6379}
+      connect-timeout: 1s
+      timeout: 1s
+
+storage.redis.notification:
+  stream-key: ${STORAGE_REDIS_NOTIFICATION_STREAM_KEY:notification-events}
+  dead-letter-stream-key: ${STORAGE_REDIS_NOTIFICATION_DEAD_LETTER_STREAM_KEY:notification-dead-letters}
+  consumer:
+    group-name: ${STORAGE_REDIS_NOTIFICATION_CONSUMER_GROUP:notification-workers}
+    consumer-name: ${STORAGE_REDIS_NOTIFICATION_CONSUMER_NAME:${HOSTNAME:core-worker-local}}
+    batch-size: ${STORAGE_REDIS_NOTIFICATION_CONSUMER_BATCH_SIZE:10}
+    pending-min-idle: ${STORAGE_REDIS_NOTIFICATION_PENDING_MIN_IDLE:1m}
+    retry-max-delay: ${STORAGE_REDIS_NOTIFICATION_RETRY_MAX_DELAY:15m}
+    max-attempts: ${STORAGE_REDIS_NOTIFICATION_MAX_ATTEMPTS:5}
+    pending-scan-size: ${STORAGE_REDIS_NOTIFICATION_PENDING_SCAN_SIZE:100}
+  outbox-relay:
+    lock-key: ${STORAGE_REDIS_NOTIFICATION_OUTBOX_RELAY_LOCK_KEY:notification-outbox-relay}
+    lock-duration: ${STORAGE_REDIS_NOTIFICATION_OUTBOX_RELAY_LOCK_DURATION:2m}

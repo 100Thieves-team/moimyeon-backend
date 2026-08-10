@@ -106,38 +106,45 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
 
     ROOM_PROGRESS_NOT_STARTABLE(
         HttpStatus.CONFLICT,
-        ErrorCode.E1601,
+        ErrorCode.E1701,
         "진행을 시작할 수 없는 룸입니다.",
         LogLevel.WARN,
     ),
     ROOM_PROGRESS_START_FORBIDDEN(
         HttpStatus.FORBIDDEN,
-        ErrorCode.E1602,
+        ErrorCode.E1702,
         "룸 진행을 시작할 권한이 없습니다.",
         LogLevel.WARN,
     ),
     ROOM_PROGRESS_FORBIDDEN(
         HttpStatus.FORBIDDEN,
-        ErrorCode.E1603,
+        ErrorCode.E1703,
         "룸 진행에 접근할 권한이 없습니다.",
         LogLevel.WARN,
     ),
     ROOM_PROGRESS_NOT_AVAILABLE(
         HttpStatus.CONFLICT,
-        ErrorCode.E1604,
+        ErrorCode.E1704,
         "룸 진행 정보를 조회할 수 없는 상태입니다.",
         LogLevel.WARN,
     ),
     ROOM_PROGRESS_ATTENDANCE_NOT_FOUND(
         HttpStatus.NOT_FOUND,
-        ErrorCode.E1605,
+        ErrorCode.E1705,
         "출석 기록을 찾을 수 없습니다.",
         LogLevel.WARN,
     ),
     ROOM_PROGRESS_PARTICIPANT_MISMATCH(
         HttpStatus.BAD_REQUEST,
-        ErrorCode.E1606,
+        ErrorCode.E1706,
         "출석 대상이 확정 참여자와 일치하지 않습니다.",
+        LogLevel.WARN,
+    ),
+
+    INVALID_WEB_PUSH_REGISTRATION(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1601,
+        "웹 푸시 등록 정보가 올바르지 않습니다.",
         LogLevel.WARN,
     ),
 }
