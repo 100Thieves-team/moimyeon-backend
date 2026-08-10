@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-10",
-                        "datetime" : "2026-08-10T08:25:58.939349529",
+                        "datetime" : "2026-08-10T17:47:04.092848001",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-10",
-                        "datetime" : "2026-08-10T08:25:59.11153171",
+                        "datetime" : "2026-08-10T17:47:04.322448455",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "7bb3f421-e663-4a68-a2cf-17eb79f43599",
+                          "termsId" : "defd51ae-35e1-4e1a-b82a-3b805d7a848e",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "95d82dc6-5026-41b3-8b79-d68ff332ba04",
+                          "termsId" : "32483d57-b94c-4e41-bc2d-b2c3c02cf42e",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "e90254e5-33f1-4062-8d38-c76cdad28925",
+                        "memberId" : "1966fc11-a86a-4925-9b30-75b388b3c0b9",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "e90254e5-33f1-4062-8d38-c76cdad28925",
+                          "memberId" : "1966fc11-a86a-4925-9b30-75b388b3c0b9",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-11T08:26:02.375943114",
+                          "startAt" : "2026-08-11T17:47:07.463586769",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1278,7 +1278,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "3c0a452f-f0c9-4643-b012-e231e3b4fa12"
+                        "hostMemberId" : "0a8e0c1f-15ef-4d41-9bef-a2ff945cd144"
                       },
                       "error" : null
                     }
@@ -1583,7 +1583,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "127ae7fa-a217-47d9-aba6-1cd7050cfb42",
+                        "memberId" : "3ad913f7-b86a-4bee-9995-cc04e8d03b80",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -1853,6 +1853,73 @@ paths:
             encoding:
               file:
                 contentType: application/pdf
+  /v1/members/me/web-push-subscriptions:
+    put:
+      tags:
+      - v1
+      summary: 웹 푸시 등록
+      description: "인증 회원의 현재 브라우저에서 발급받은 웹 푸시 등록 식별자를 저장한다. 같은 값을 다시 보내면 마지막 동기화\
+        \ 시각을 갱신하며, 다른 회원으로 로그인한 브라우저라면 현재 회원에게 이전한다."
+      operationId: registerWebPushSubscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-members-me-web-push-subscriptions1250153706"
+            examples:
+              registerWebPushSubscription:
+                value: |-
+                  {
+                    "registration" : "fcm-registration-id"
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                registerWebPushSubscription:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+    delete:
+      tags:
+      - v1
+      summary: 웹 푸시 등록 해지
+      description: 현재 회원이 소유한 브라우저 등록을 물리 삭제한다. 이미 없거나 다른 회원이 소유한 등록이면 성공으로 끝나는 멱등
+        요청이다.
+      operationId: unregisterWebPushSubscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-members-me-web-push-subscriptions615785551"
+            examples:
+              unregisterWebPushSubscription:
+                value: |-
+                  {
+                    "registration" : "fcm-registration-id"
+                  }
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                unregisterWebPushSubscription:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
   /v1/members/{memberId}/profile:
     get:
       tags:
@@ -2660,7 +2727,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -3464,6 +3531,14 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+    v1-members-me-web-push-subscriptions1250153706:
+      required:
+      - registration
+      type: object
+      properties:
+        registration:
+          type: string
+          description: FCM 웹 클라이언트가 발급한 등록 식별자
     v1-members-me-nickname-346517390:
       required:
       - nickname
@@ -3909,6 +3984,14 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
+    v1-members-me-web-push-subscriptions615785551:
+      required:
+      - registration
+      type: object
+      properties:
+        registration:
+          type: string
+          description: 해지할 웹 푸시 등록 식별자
   securitySchemes:
     oauth2:
       type: oauth2
