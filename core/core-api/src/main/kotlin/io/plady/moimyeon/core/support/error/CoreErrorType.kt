@@ -128,4 +128,10 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "룸 진행 정보를 조회할 수 없는 상태입니다.",
         LogLevel.WARN,
     ),
+    ROOM_PROGRESS_ATTENDANCE_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1605,
+        "출석 기록을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
