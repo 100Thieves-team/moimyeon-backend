@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-10",
-                        "datetime" : "2026-08-10T06:00:50.843571738",
+                        "datetime" : "2026-08-10T08:25:58.939349529",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-10",
-                        "datetime" : "2026-08-10T06:00:51.025360812",
+                        "datetime" : "2026-08-10T08:25:59.11153171",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "bfad74b8-69a6-407d-a84e-efe74a326304",
+                          "termsId" : "7bb3f421-e663-4a68-a2cf-17eb79f43599",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "e43845e8-2784-4284-b676-55f118f02f01",
+                          "termsId" : "95d82dc6-5026-41b3-8b79-d68ff332ba04",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "feeaf195-ad29-4cbb-befa-850386a8044d",
+                        "memberId" : "e90254e5-33f1-4062-8d38-c76cdad28925",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "feeaf195-ad29-4cbb-befa-850386a8044d",
+                          "memberId" : "e90254e5-33f1-4062-8d38-c76cdad28925",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-11T06:00:54.500826279",
+                          "startAt" : "2026-08-11T08:26:02.375943114",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1278,7 +1278,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "218cc23b-f9f2-4eea-ac33-786989d7bf5a"
+                        "hostMemberId" : "3c0a452f-f0c9-4643-b012-e231e3b4fa12"
                       },
                       "error" : null
                     }
@@ -1583,7 +1583,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "473b93d3-5fd0-4ab3-bf58-2a42326b2aad",
+                        "memberId" : "127ae7fa-a217-47d9-aba6-1cd7050cfb42",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
