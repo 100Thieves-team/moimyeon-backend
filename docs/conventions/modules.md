@@ -9,12 +9,14 @@ moimyeon/
 ├── core/
 │   ├── core-batch       배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum        도메인 전역 공유 Enum 만 격리 (최하위 모듈)
+│   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, 현재 notification 패키지)
 │   └── core-api         API 서버 실행 모듈. 도메인 + api + 영역이 소유하는 외부 연동 계약
 ├── security/
 │   └── security-core    Spring Security 필터 체인·JWT·OAuth (인증 기술 격벽)
 ├── storage/
 │   ├── db-core          JPA Entity / Repository / schema.sql (RDB 접근)
-│   └── object-storage   AWS SDK S3 객체 저장·조회 격벽
+│   ├── object-storage   AWS SDK S3 객체 저장·조회 격벽
+│   └── redis-core       Redis 기반 저장·동기화 기술 격벽
 ├── clients/
 │   ├── bedrock-client   Spring AI · Bedrock 외부 모델 클라이언트
 │   └── client-example   외부 HTTP 클라이언트 (HTTP Interface)
@@ -27,19 +29,27 @@ moimyeon/
 
 ## 의존 규칙
 
-- 실행 가능한 산출물(bootJar)은 `core:core-api` 와 `core:core-batch` 뿐이다. `core-api`는 외부 구현이
+- 실행 가능한 산출물(bootJar)은 `core:core-api`, `core:core-batch`, `core:core-worker`이다. `core-api`는 외부 구현이
   계약을 참조할 수 있도록 plain `jar`도 함께 만들고, 나머지는 `jar`만 만든다.
 - 컴파일 타임 의존 방향:
   - `core-api` → `core-enum`, `security:security-core`, `storage:db-core`, `clients:client-example`, `support:*`
-  - `core-api` → `admin:admin-api`, `clients:bedrock-client`, `storage:object-storage` 는 **`runtimeOnly`**
+  - `core-worker` → `core-enum`, `storage:redis-core`, `support:monitoring`, `support:logging`
+  - `core-api` → `admin:admin-api`, `clients:bedrock-client`, `storage:object-storage`, `storage:redis-core` 는 **`runtimeOnly`**
   - `clients:bedrock-client`, `storage:object-storage` → `core-api`: 이력서 영역 계약 구현
+  - `storage:redis-core` → `core-api`, `core-enum`: 알림 Relay 전달 계약과 이벤트 카탈로그 구현
   - `storage:db-core` → `core-enum`
   - `security:security-core` → `core-enum`
 - `storage:db-core` 는 JPA starter 를 노출해 core-api 의 Implement 레이어가 Repository 인터페이스를
   직접 주입받는다. 단, **Entity 는 Implement(Mapper) 밖으로 나가지 않는다** ([layers.md](layers.md)).
-- 설정은 `spring.config.import` 로 모듈별 yml(`db-core.yml`, `object-storage.yml`, `bedrock-client.yml`,
+- 설정은 `spring.config.import` 로 모듈별 yml(`db-core.yml`, `object-storage.yml`, `redis-core.yml`, `bedrock-client.yml`,
   `client-example.yml`, `security-core.yml`, `logging.yml`, `monitoring.yml`)을 합성한다. 프로파일: `local`, `local-dev`, `dev`, `live`
   (+`test` 는 프로파일 그룹으로 local 상속 — [storage.md](storage.md)).
+
+## core-worker: 백그라운드 작업 조립
+
+- 현재는 `worker.notification` 패키지만 두고 알림 작업을 실행한다.
+- 다른 워커가 추가되더라도 처음부터 실행 모듈을 나누지 않는다.
+- 작업별 실행 주기·확장 단위 또는 커넥션 풀을 독립적으로 운영해야 할 때 모듈이나 자원 풀을 분리한다.
 
 ## admin-api: 런타임 조립
 
@@ -77,6 +87,34 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - `object-storage`는 `ResumeFileStore` 계약 구현을 위해 core-api를 compile-time에 의존한다.
 - `core-api`에는 `runtimeOnly`로 조립한다.
 - AWS SDK 실패는 구현체에서 이력서 영역의 `ResumeFileStorageException`으로 바로 변환한다.
+
+## storage:db-core: Outbox 전달 생명주기
+
+- Outbox는 `PENDING`, `PROCESSING`, 선점 토큰과 lease 만료 시각을 저장한다. 이 값은 알림 도메인 상태가 아니라
+  DB Outbox에서 메시지 저장소로 전달되는 작업의 영속 생명주기다.
+- `core-api`의 `OutboxClaimManager`가 짧은 트랜잭션에서 `FOR UPDATE SKIP LOCKED`로 배치를 조회하고
+  `PROCESSING`으로 선점한다. Redis 발행은 이 트랜잭션이 커밋된 뒤 수행한다.
+- 발행 성공 시 현재 선점 토큰이 일치하는 행만 삭제하고, 발행 실패 시 같은 토큰의 행만 `PENDING`으로 되돌린다.
+  프로세스가 종료되면 lease가 만료된 뒤 다른 실행이 다시 선점한다.
+- `SKIP LOCKED`와 처리 상태는 중복 가능성을 줄이지만 exactly once를 만들지 않는다. 발행 성공 후 완료 기록 전 종료되면
+  같은 `outboxId`가 다시 발행될 수 있으며, 이 동작이 현재 단계의 at least once 경계다.
+
+## storage:redis-core: Redis 기반 저장·동기화 기술 격벽
+
+- Spring Data Redis와 Redis 연결 설정을 소유하고 core-api의 `NotificationMessagePublisher` 계약을 구현한다.
+- core-api의 `OutboxRelayCoordinator` 계약도 구현해 여러 API 인스턴스 중 한 곳만 미처리 Outbox 재전달 폴링을 시작하게 한다.
+  Redis 락은 동일한 DB 스캔을 줄이는 실행 조정 수단이며 Outbox 전달 정확성의 최종 기준으로 사용하지 않는다.
+- `local`, `local-dev`, `dev`, `staging`, `live`에서는 Redis 구현체가 조정 계약을 담당하고,
+  `test`에서만 core-api의 `DirectOutboxRelayCoordinator`가 재전달을 바로 실행한다. `test` 프로파일이 `local`을 상속하므로
+  Redis 구현체는 `local & !test` 조건으로 테스트에서 제외한다. 스케줄러는 환경과 무관하게 계약을 필수로 주입받는다.
+- `RelayMessage`를 `eventId`, `eventType`, `payload` 필드로 `notification-events` Stream에 추가한다.
+- Redis 명령과 직렬화 형식은 이 모듈 밖으로 노출하지 않는다.
+- Redis 저장 실패는 삼키지 않고 호출자에게 전달한다. 생산자 `MessageRelay`가 이 실패를 기준으로 Outbox를 보존한다.
+- 재전달 실행 권한은 TTL이 있는 소유자 토큰으로 획득하고, 해제할 때 현재 토큰이 일치하는 락만 삭제한다.
+- `core-api`에는 `runtimeOnly`로 조립한다. 실제 어댑터 빈은 `local`, `local-dev`, `dev`, `staging`, `live` 프로파일에서 활성화한다.
+- Consumer Group을 만들고 신규 메시지를 Worker별로 분배한다. 처리에 실패한 메시지는 ACK하지 않고 Pending으로 남기며,
+  최소 유휴 시간이 지난 Pending 메시지는 다른 Worker가 다시 선점한다.
+- Stream 보존 길이와 외부 발송 완료 이후의 채널별 멱등성 정책은 아직 확정 범위가 아니다.
 
 ## clients:bedrock-client: AI 모델 격벽
 
