@@ -73,4 +73,34 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "질문 카드셋을 찾을 수 없습니다.",
         LogLevel.WARN,
     ),
+    QUESTION_PREPARATION_NOT_OPEN(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1504,
+        "진행이 확정된 방에서만 질문을 준비할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_PREPARATION_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1505,
+        "질문을 작성하거나 삭제할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_TARGET_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1506,
+        "질문을 남길 대상을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1507,
+        "질문을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_HAS_OTHER_FOLLOW_UP(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1508,
+        "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
