@@ -41,7 +41,7 @@ moimyeon/
   - `clients:bedrock-client`, `storage:object-storage` → `core-api`: 이력서 영역 계약 구현
   - `clients:email-client` → `core-worker`, `core-enum`: 이메일 발송 계약과 알림 메시지 구현
   - `clients:web-push-client` → `core-worker`, `core-enum`: 웹 푸시 발송 계약과 알림 메시지 구현
-  - `storage:redis-core` → `core-api`, `core-enum`: 알림 Relay 전달 계약과 이벤트 카탈로그 구현
+  - `storage:redis-core` → `core-api`, `admin-api`, `core-enum`: 알림 Relay·운영 조회 계약과 이벤트 카탈로그 구현
   - `storage:db-core` → `core-enum`
   - `security:security-core` → `core-enum`
 - `storage:db-core` 는 JPA starter 를 노출해 core-api 의 Implement 레이어가 Repository 인터페이스를
@@ -85,6 +85,13 @@ moimyeon/
   admin 컨트롤러·서비스는 컴포넌트 스캔으로 발견될 뿐, core 코드에서 admin 타입을 참조할 수 없다(역방향도 동일).
 - admin 의 모든 클래스는 `Admin` 접두사를 붙인다(`AdminExampleService`, `AdminControllerAdvice`).
   같은 프로세스에 조립되므로 빈 이름·클래스명 충돌을 접두사로 예방한다.
+- 알림 운영 화면은 Thymeleaf SSR로 렌더링한다. Page Controller가 같은 프로세스의 `AdminNotificationOperationsReader`를 직접
+  호출하며 자기 REST API를 다시 HTTP로 호출하지 않는다. JSON 소비자가 생기면 같은 Reader 위에 별도 Controller를 추가한다.
+- Redis 구현은 Pending 요약과 최신 DLQ 50건을 읽기 전용으로 제공한다. 재전달·삭제는 감사와 중복 정책이 확정될 때까지 제외한다.
+- 회원과 관리자는 같은 `member` 테이블을 사용하고 `MemberRole`로 권한을 구분한다.
+  `/admin/**`는 JWT의 `ROLE_ADMIN`만 접근하며, 대시보드와 Redis Reader는 전 실행 프로파일에서 사용하되 `test`에서만 제외한다.
+- 초기 화면은 Bootstrap 5.3 CSS CDN을 사용한다. 외부 CDN 접근이 제한되는 운영망 요구가 생기면 정적 자산을 애플리케이션에
+  포함하는 방식으로 교체한다.
 - 전역 어드바이스 충돌 방지: `ApiControllerAdvice` 는 `basePackages = ["io.plady.moimyeon.core"]`,
   admin 은 자체 `AdminControllerAdvice` 를 갖는다.
 - admin 이 커지거나 배포 주기가 달라지면 독립 bootJar 로 분리한다(그 전까지는 조립 유지).
@@ -182,7 +189,23 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - 영구 실패와 재시도 상한 초과 메시지는 `notification-dead-letters` Stream에 원본·실패 문맥을 보존한다.
 - DLQ `XADD`와 원본 `XACK`은 하나의 Lua 스크립트에서 순서대로 실행한다. DLQ 기록이 실패하면 ACK가 실행되지 않아 원본은
   Pending에 남는다.
+- Redis의 최종 처리 결과를 `notification.worker.messages` Counter로 기록한다. `success`는 ACK 성공 후,
+  `dead_letter`는 DLQ 기록과 원본 ACK 성공 후에만 증가하고, Pending에 남은 처리 시도는 `retry`로 기록한다.
+- Counter의 `event_type`, `channel`, `outcome` 라벨은 유한한 Enum·결과 값만 사용한다. 손상된 Stream의 임의 값은
+  `UNKNOWN`으로 합쳐 Prometheus 라벨 카디널리티 증가를 막는다.
+- `notification.worker.pending.messages` Gauge는 한 소비 주기의 마지막에 Consumer Group의 `XPENDING` 요약값으로
+  갱신한다. 여러 Worker 인스턴스가 같은 Group 전체 값을 노출하므로 Grafana에서는 합계가 아닌 `max by (consumer_group)`로 조회한다.
+- admin-api의 `AdminNotificationOperationsReader`를 구현해 Consumer Group Pending 수, DLQ 전체 건수와 최신 메시지를 조회한다.
+  Redis Stream 필드는 Admin 전용 읽기 모델로 변환하며 Admin Controller에 Redis 타입을 노출하지 않는다.
 - DLQ re-drive, 보존 길이와 운영 알람 임계치는 아직 확정 범위가 아니다.
+
+## support:monitoring: 운영 관측 격벽
+
+- Actuator와 Prometheus Registry를 조립해 `/actuator/health`와 `/actuator/prometheus`를 노출한다.
+- 개별 메트릭의 이름·라벨·증가 시점은 처리 결과를 소유한 `redis-core`에 두고, `support:monitoring`은
+  알림 업무를 모르는 공통 Exporter 설정으로 유지한다.
+- Admin SSR은 Redis의 현재 상태와 DLQ 원문을 조회하고, Prometheus·Grafana는 Worker 처리량과 Pending의 시간에 따른 변화를 담당한다.
+- 알람 임계치와 Grafana Dashboard JSON은 실제 처리량·재시도율 기준선을 측정한 뒤 확정한다.
 
 ## clients:bedrock-client: AI 모델 격벽
 
