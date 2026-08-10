@@ -16,4 +16,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-jackson")
+    implementation("tools.jackson.module:jackson-module-kotlin")
+
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:${property("testcontainersVersion")}")
+    testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
 }

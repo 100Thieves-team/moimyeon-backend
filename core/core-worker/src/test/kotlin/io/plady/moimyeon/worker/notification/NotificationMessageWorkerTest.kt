@@ -1,7 +1,11 @@
 package io.plady.moimyeon.worker.notification
 
+import io.mockk.every
+import io.mockk.mockk
 import io.plady.moimyeon.core.enums.EventType
+import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.storage.redis.NotificationStreamConsumer
+import io.plady.moimyeon.storage.redis.NotificationStreamHandlingResult
 import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -9,7 +13,7 @@ import java.util.UUID
 
 class NotificationMessageWorkerTest {
     @Test
-    fun `등록된 이벤트 처리기로 Pending과 새 메시지를 전달한다`() {
+    fun `등록된 알림 처리기로 Pending과 새 메시지를 전달한다`() {
         val firstEventId = eventId(31)
         val secondEventId = eventId(32)
         val message = message(firstEventId)
@@ -18,11 +22,11 @@ class NotificationMessageWorkerTest {
             newMessages = listOf(message.copy(eventId = secondEventId)),
         )
         val handled = mutableListOf<UUID>()
+        val handler = mockk<NotificationMessageHandler>()
+        every { handler.handle(any()) } answers { handled += firstArg<NotificationStreamMessage>().eventId }
         val worker = NotificationMessageWorker(
             messageConsumer = consumer,
-            handlers = listOf(
-                handler(EventType.ROOM_APPLICATION_ACCEPTED) { handled += it.eventId },
-            ),
+            messageHandler = handler,
         )
 
         worker.consumeMessages()
@@ -33,31 +37,33 @@ class NotificationMessageWorkerTest {
     }
 
     @Test
-    fun `등록된 이벤트 처리기가 없으면 Stream 메시지를 가져오지 않는다`() {
-        val consumer = RecordingNotificationStreamConsumer()
-        val worker = NotificationMessageWorker(
-            messageConsumer = consumer,
-            handlers = emptyList(),
-        )
+    fun `영구 처리 오류를 영구 실패 결과로 변환한다`() {
+        val message = message(eventId(33))
+        val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message))
+        val handler = mockk<NotificationMessageHandler>()
+        every { handler.handle(message) } throws PermanentNotificationProcessingException("잘못된 메시지")
 
-        worker.consumeMessages()
+        NotificationMessageWorker(consumer, handler).consumeMessages()
 
-        assertThat(consumer.recoverPendingCalled).isFalse()
-        assertThat(consumer.consumeNewCalled).isFalse()
+        assertThat(consumer.results.single().isPermanentFailure).isTrue()
     }
 
-    private fun handler(
-        eventType: EventType,
-        handle: (NotificationStreamMessage) -> Unit,
-    ) = object : NotificationMessageHandler {
-        override val eventType: EventType = eventType
+    @Test
+    fun `일시 처리 오류를 재시도 실패 결과로 변환한다`() {
+        val message = message(eventId(34))
+        val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message))
+        val handler = mockk<NotificationMessageHandler>()
+        every { handler.handle(message) } throws RetryableNotificationProcessingException("일시 장애")
 
-        override fun handle(message: NotificationStreamMessage) = handle(message)
+        NotificationMessageWorker(consumer, handler).consumeMessages()
+
+        assertThat(consumer.results.single().isRetryableFailure).isTrue()
     }
 
     private fun message(eventId: UUID) = NotificationStreamMessage(
         eventId = eventId,
         eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+        channel = NotificationChannel.WEB_PUSH,
         payload = "{\"eventId\":\"$eventId\"}",
     )
 
@@ -74,16 +80,17 @@ private class RecordingNotificationStreamConsumer(
         private set
     var consumeNewCalled: Boolean = false
         private set
+    val results = mutableListOf<NotificationStreamHandlingResult>()
 
-    override fun recoverPending(handler: (NotificationStreamMessage) -> Unit): Int {
+    override fun recoverPending(handler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
         recoverPendingCalled = true
-        pendingMessages.forEach(handler)
+        pendingMessages.mapTo(results, handler)
         return pendingMessages.size
     }
 
-    override fun consumeNew(handler: (NotificationStreamMessage) -> Unit): Int {
+    override fun consumeNew(handler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
         consumeNewCalled = true
-        newMessages.forEach(handler)
+        newMessages.mapTo(results, handler)
         return newMessages.size
     }
 }

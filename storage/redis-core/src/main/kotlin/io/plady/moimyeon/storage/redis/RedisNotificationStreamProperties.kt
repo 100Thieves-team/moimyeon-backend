@@ -7,4 +7,5 @@ import org.springframework.context.annotation.Profile
 @Profile("!test")
 data class RedisNotificationStreamProperties(
     val streamKey: String,
+    val deadLetterStreamKey: String = "$streamKey-dead-letter",
 )

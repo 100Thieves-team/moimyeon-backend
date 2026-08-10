@@ -1,6 +1,7 @@
 package io.plady.moimyeon.storage.redis
 
 import io.plady.moimyeon.core.enums.EventType
+import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.core.notification.outbox.RelayMessage
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -46,7 +47,7 @@ class RedisNotificationMessagePublisherIT {
     }
 
     @Test
-    fun `RelayMessage를 Redis Stream의 필드로 저장한다`() {
+    fun `RelayMessage를 이벤트 정책의 채널별 메시지로 한 번에 저장한다`() {
         val publisher = RedisNotificationMessagePublisher(
             redisTemplate = redisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
@@ -61,11 +62,17 @@ class RedisNotificationMessagePublisherIT {
         )
 
         val records = redisTemplate.opsForStream<String, String>().range(STREAM_KEY, Range.unbounded())
-        assertThat(records).hasSize(1)
-        assertThat(records.single().value)
-            .containsEntry("eventId", EVENT_ID.toString())
-            .containsEntry("eventType", "ROOM_APPLICATION_ACCEPTED")
-            .containsEntry("payload", "{\"applicationId\":1}")
+        assertThat(records).hasSize(2)
+        assertThat(records.map { it.value["channel"] }).containsExactly(
+            NotificationChannel.WEB_PUSH.name,
+            NotificationChannel.EMAIL.name,
+        )
+        records.forEach { record ->
+            assertThat(record.value)
+                .containsEntry("eventId", EVENT_ID.toString())
+                .containsEntry("eventType", "ROOM_APPLICATION_ACCEPTED")
+                .containsEntry("payload", "{\"applicationId\":1}")
+        }
     }
 
     @Test
