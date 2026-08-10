@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationFinderTest {
+class RoomApplicationSubmissionFinderTest {
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val resumeFinder = mockk<ResumeFinder>()
-    private val finder = RoomApplicationFinder(
+    private val finder = RoomApplicationSubmissionFinder(
         roomApplicationRepository,
         resumeSubmissionRepository,
         resumeFinder,
@@ -55,7 +55,7 @@ class RoomApplicationFinderTest {
         } returns submission
         every { resumeFinder.getSummary(applicantMemberId, resumeId) } returns summary
 
-        val result = finder.get(applicantMemberId, roomId)
+        val result = finder.getLatestByApplicant(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(
             RoomApplication(
@@ -89,6 +89,27 @@ class RoomApplicationFinderTest {
     }
 
     @Test
+    fun `전달 사항이 없는 신청은 빈 문자열로 조회한다`() {
+        val applicationId = 2L
+        every {
+            roomApplicationRepository
+                .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                    roomId,
+                    applicantMemberId,
+                )
+        } returns applicationEntity(applicationId, "")
+        every {
+            resumeSubmissionRepository.findByRoomApplicationIdAndDeletedAtIsNull(applicationId)
+        } returns submissionEntity()
+        every { resumeFinder.getSummary(applicantMemberId, resumeId) } returns ResumeSummary(
+            ResumeSummaryStatus.DONE,
+            "백엔드 개발자",
+        )
+
+        assertThat(finder.getLatestByApplicant(applicantMemberId, roomId).note).isEmpty()
+    }
+
+    @Test
     fun `해당 룸에 자신의 신청이 없으면 APPLICATION_NOT_FOUND를 던진다`() {
         every {
             roomApplicationRepository
@@ -99,7 +120,7 @@ class RoomApplicationFinderTest {
         } returns null
 
         assertThatThrownBy {
-            finder.get(applicantMemberId, roomId)
+            finder.getLatestByApplicant(applicantMemberId, roomId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.APPLICATION_NOT_FOUND)
         }
@@ -127,20 +148,23 @@ class RoomApplicationFinderTest {
         } returns null
 
         assertThatThrownBy {
-            finder.get(applicantMemberId, roomId)
+            finder.getLatestByApplicant(applicantMemberId, roomId)
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("applicationId=$applicationId")
         verify(exactly = 0) { resumeFinder.getSummary(any(), any()) }
     }
 
-    private fun applicationEntity(applicationId: Long): RoomApplicationEntity {
+    private fun applicationEntity(
+        applicationId: Long,
+        applicationNote: String = "백엔드 면접을 실전처럼 연습하고 싶어요.",
+    ): RoomApplicationEntity {
         return mockk {
             every { id } returns applicationId
-            every { roomId } returns this@RoomApplicationFinderTest.roomId
-            every { applicantMemberId } returns this@RoomApplicationFinderTest.applicantMemberId
-            every { note } returns "백엔드 면접을 실전처럼 연습하고 싶어요."
+            every { roomId } returns this@RoomApplicationSubmissionFinderTest.roomId
+            every { applicantMemberId } returns this@RoomApplicationSubmissionFinderTest.applicantMemberId
+            every { note } returns applicationNote
             every { status } returns RoomApplicationStatus.PENDING
-            every { appliedAt } returns this@RoomApplicationFinderTest.appliedAt
+            every { appliedAt } returns this@RoomApplicationSubmissionFinderTest.appliedAt
         }
     }
 

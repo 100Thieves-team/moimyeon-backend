@@ -30,7 +30,7 @@ class RoomApplicationEntity(
     val roomId: UUID,
     @JdbcTypeCode(SqlTypes.BINARY)
     val applicantMemberId: UUID,
-    val note: String?,
+    val note: String,
     val appliedAt: LocalDateTime,
     status: RoomApplicationStatus,
     pendingMemberId: UUID?,

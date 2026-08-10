@@ -67,6 +67,28 @@ class ParticipationValidatorTest {
     }
 
     @Test
+    fun `현재 방장이면 방장 권한을 확인한다`() {
+        every {
+            participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+                roomId,
+                memberId,
+                ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
+            )
+        } returns true
+
+        assertThatCode { validator.validateHost(roomId, memberId) }
+            .doesNotThrowAnyException()
+    }
+
+    @Test
+    fun `현재 방장이 아니면 ROOM_FORBIDDEN 으로 거부한다`() {
+        assertValidationFails(CoreErrorType.ROOM_FORBIDDEN) {
+            validator.validateHost(roomId, memberId)
+        }
+    }
+
+    @Test
     fun `이미 참여 중이면 ROOM_APPLICATION_DUPLICATED 로 거부한다`() {
         every {
             participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(

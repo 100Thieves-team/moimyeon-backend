@@ -6,6 +6,7 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationsRespons
 import io.plady.moimyeon.core.api.facade.RoomApplicationFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
+import io.plady.moimyeon.core.domain.room.RoomApplicationService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -19,9 +20,10 @@ import java.util.UUID
 @RestController
 class RoomApplicationController(
     private val roomApplicationFacade: RoomApplicationFacade,
+    private val roomApplicationService: RoomApplicationService,
 ) {
     // GET /v1/rooms/{roomId}/applications — 방장용 참가 신청 목록(§4.3). 전달 사항은 방장 외 비공개.
-    // 이력서 AI 요약(J5)·신청자 직무·활동 정보는 연동 전까지 null 로 내려간다.
+    // 이력서 AI 요약과 관심 직무는 각 격벽의 실제 데이터를 조립한다. 공개 활동 정보는 신뢰 정보 구현 전까지 null이다.
     @GetMapping("/v1/rooms/{roomId}/applications")
     fun applications(
         @LoginMember currentMember: CurrentMember,
@@ -37,7 +39,9 @@ class RoomApplicationController(
         @PathVariable roomId: UUID,
         @PathVariable applicationId: Long,
     ): ApiResponse<ApplicationDecisionResponse> {
-        return ApiResponse.success(roomApplicationFacade.accept(currentMember.id, roomId, applicationId))
+        return ApiResponse.success(
+            ApplicationDecisionResponse.from(roomApplicationService.accept(currentMember.id, roomId, applicationId)),
+        )
     }
 
     // POST /v1/rooms/{roomId}/applications/{applicationId}/reject — 신청 반려(§4.4). 사유는 선택. 방장만 가능.
@@ -49,6 +53,8 @@ class RoomApplicationController(
         @RequestBody(required = false) request: RejectApplicationRequest?,
     ): ApiResponse<ApplicationDecisionResponse> {
         val reason = request?.toReason()
-        return ApiResponse.success(roomApplicationFacade.reject(currentMember.id, roomId, applicationId, reason))
+        return ApiResponse.success(
+            ApplicationDecisionResponse.from(roomApplicationService.reject(currentMember.id, roomId, applicationId, reason)),
+        )
     }
 }

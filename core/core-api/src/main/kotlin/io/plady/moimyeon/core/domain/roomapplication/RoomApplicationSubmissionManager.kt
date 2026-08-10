@@ -22,8 +22,8 @@ import java.util.UUID
 private const val ROOM_APPLICATION_PENDING_UNIQUE_CONSTRAINT = "uk_room_application_room_pending_active"
 private const val MAX_PENDING_ROOM_APPLICATION_COUNT = 3L
 
-@Component("applicantRoomApplicationManager")
-class RoomApplicationManager(
+@Component
+class RoomApplicationSubmissionManager(
     private val memberValidator: MemberValidator,
     private val roomValidator: RoomValidator,
     private val participationValidator: ParticipationValidator,
@@ -35,7 +35,7 @@ class RoomApplicationManager(
     fun submit(
         applicantMemberId: UUID,
         roomId: UUID,
-        note: String?,
+        note: String,
         resumeSubmission: ResumeSubmission,
     ): Long {
         memberValidator.validateActive(applicantMemberId)
@@ -110,7 +110,7 @@ class RoomApplicationManager(
     private fun saveApplication(
         roomId: UUID,
         applicantMemberId: UUID,
-        note: String?,
+        note: String,
         appliedAt: LocalDateTime,
     ): RoomApplicationEntity {
         try {

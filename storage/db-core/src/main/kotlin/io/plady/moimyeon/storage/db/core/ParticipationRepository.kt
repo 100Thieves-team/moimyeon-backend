@@ -44,6 +44,43 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         status: ParticipationStatus,
     ): Boolean
 
+    @Query(
+        value = """
+            select case when count(*) > 0 then true else false end
+            from participation p
+            join room_status_log rsl on rsl.room_id = p.room_id
+            where p.room_id = :roomId
+              and p.member_id = :memberId
+              and p.deleted_at is null
+              and rsl.transition_type = 'CONFIRMED'
+              and rsl.deleted_at is null
+              and p.joined_at <= rsl.occurred_at
+              and (p.left_at is null or p.left_at > rsl.occurred_at)
+        """,
+        nativeQuery = true,
+    )
+    fun existsAtRoomConfirmation(
+        @Param("roomId") roomId: UUID,
+        @Param("memberId") memberId: UUID,
+    ): Boolean
+
+    @Query(
+        value = """
+            select p.*
+            from participation p
+            join room_status_log rsl on rsl.room_id = p.room_id
+            where p.room_id = :roomId
+              and p.deleted_at is null
+              and rsl.transition_type = 'CONFIRMED'
+              and rsl.deleted_at is null
+              and p.joined_at <= rsl.occurred_at
+              and (p.left_at is null or p.left_at > rsl.occurred_at)
+            order by p.joined_at asc, p.id asc
+        """,
+        nativeQuery = true,
+    )
+    fun findAllAtRoomConfirmation(@Param("roomId") roomId: UUID): List<ParticipationEntity>
+
     fun existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
         roomId: UUID,
         memberId: UUID,

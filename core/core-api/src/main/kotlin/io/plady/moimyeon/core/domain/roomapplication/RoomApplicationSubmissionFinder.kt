@@ -9,13 +9,13 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-@Component("applicantRoomApplicationFinder")
-class RoomApplicationFinder(
+@Component
+class RoomApplicationSubmissionFinder(
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val resumeFinder: ResumeFinder,
 ) {
-    fun get(applicantMemberId: UUID, roomId: UUID): RoomApplication {
+    fun getLatestByApplicant(applicantMemberId: UUID, roomId: UUID): RoomApplication {
         val application = requireFound(
             roomApplicationRepository
                 .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(

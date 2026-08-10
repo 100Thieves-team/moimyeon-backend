@@ -29,14 +29,14 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class RoomApplicationManagerTest {
+class RoomApplicationSubmissionManagerTest {
     private val memberValidator = mockk<MemberValidator>()
     private val roomValidator = mockk<RoomValidator>()
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
-    private val manager = RoomApplicationManager(
+    private val manager = RoomApplicationSubmissionManager(
         memberValidator,
         roomValidator,
         participationValidator,
@@ -114,6 +114,20 @@ class RoomApplicationManagerTest {
             roomApplicationRepository.saveAndFlush(any())
             resumeSubmissionRepository.save(any())
         }
+    }
+
+    @Test
+    fun `전달 사항이 없으면 빈 문자열로 신청을 저장한다`() {
+        val savedApplication = mockk<RoomApplicationEntity> {
+            every { id } returns 1L
+        }
+        val applicationSlot = slot<RoomApplicationEntity>()
+        every { roomApplicationRepository.saveAndFlush(capture(applicationSlot)) } returns savedApplication
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+
+        manager.submit(applicantMemberId, roomId, "", resumeSubmission)
+
+        assertThat(applicationSlot.captured.note).isEmpty()
     }
 
     @Test

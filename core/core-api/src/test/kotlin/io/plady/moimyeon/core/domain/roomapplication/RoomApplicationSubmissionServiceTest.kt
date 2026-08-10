@@ -5,6 +5,7 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeSummary
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
@@ -18,17 +19,22 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationServiceTest {
-    private val roomApplicationManager = mockk<RoomApplicationManager>()
+class RoomApplicationSubmissionServiceTest {
+    private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>()
     private val resumeValidator = mockk<ResumeValidator>()
-    private val roomApplicationFinder = mockk<RoomApplicationFinder>()
-    private val service = RoomApplicationService(
-        roomApplicationManager,
+    private val roomApplicationSubmissionFinder = mockk<RoomApplicationSubmissionFinder>()
+    private val participationValidator = mockk<ParticipationValidator>()
+    private val roomApplicationDetailsReader = mockk<RoomApplicationDetailsReader>()
+    private val service = RoomApplicationSubmissionService(
+        roomApplicationSubmissionManager,
         resumeValidator,
-        roomApplicationFinder,
+        roomApplicationSubmissionFinder,
+        participationValidator,
+        roomApplicationDetailsReader,
     )
 
     private val applicantMemberId = UUID.randomUUID()
+    private val hostMemberId = UUID.randomUUID()
     private val roomId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val applicationForm = RoomApplicationForm(resumeId, "백엔드 면접을 실전처럼 연습하고 싶어요.")
@@ -44,7 +50,7 @@ class RoomApplicationServiceTest {
     fun `보관 이력서를 선택하면 제출 시점 파일 참조와 함께 참가 신청을 제출한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationManager.submit(
+            roomApplicationSubmissionManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -57,7 +63,7 @@ class RoomApplicationServiceTest {
         assertThat(applicationId).isEqualTo(1L)
         verifyOrder {
             resumeValidator.validateOwnedBy(applicantMemberId, resumeId)
-            roomApplicationManager.submit(
+            roomApplicationSubmissionManager.submit(
                 applicantMemberId,
                 roomId,
                 applicationForm.note,
@@ -74,14 +80,14 @@ class RoomApplicationServiceTest {
 
         assertSubmissionFails(CoreErrorType.RESUME_NOT_FOUND)
 
-        verify(exactly = 0) { roomApplicationManager.submit(any(), any(), any(), any()) }
+        verify(exactly = 0) { roomApplicationSubmissionManager.submit(any(), any(), any(), any()) }
     }
 
     @Test
     fun `신청 조건 때문에 신청 저장이 실패하면 실패를 그대로 전달한다`() {
         givenValidApplicantAndResume()
         every {
-            roomApplicationManager.submit(any(), any(), any(), any())
+            roomApplicationSubmissionManager.submit(any(), any(), any(), any())
         } throws CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
 
         assertSubmissionFails(CoreErrorType.ROOM_NOT_RECRUITING)
@@ -102,27 +108,56 @@ class RoomApplicationServiceTest {
             status = RoomApplicationStatus.PENDING,
             appliedAt = appliedAt,
         )
-        every { roomApplicationFinder.get(applicantMemberId, roomId) } returns application
+        every { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
 
-        val result = service.get(applicantMemberId, roomId)
+        val result = service.getMyApplication(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(application)
-        verify(exactly = 1) { roomApplicationFinder.get(applicantMemberId, roomId) }
+        verify(exactly = 1) { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) }
+    }
+
+    @Test
+    fun `방장 권한을 확인한 뒤 참가 신청 검토 목록을 조회한다`() {
+        val applications = listOf(details())
+        justRun { participationValidator.validateHost(roomId, hostMemberId) }
+        every { roomApplicationDetailsReader.getAllByRoom(roomId) } returns applications
+
+        val result = service.getApplications(hostMemberId, roomId)
+
+        assertThat(result).containsExactlyElementsOf(applications)
+        verifyOrder {
+            participationValidator.validateHost(roomId, hostMemberId)
+            roomApplicationDetailsReader.getAllByRoom(roomId)
+        }
+    }
+
+    @Test
+    fun `방장이 아니면 참가 신청 검토 목록을 조회하지 않는다`() {
+        every {
+            participationValidator.validateHost(roomId, hostMemberId)
+        } throws CoreException(CoreErrorType.ROOM_FORBIDDEN)
+
+        assertThatThrownBy { service.getApplications(hostMemberId, roomId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
+            }
+
+        verify(exactly = 0) { roomApplicationDetailsReader.getAllByRoom(any()) }
     }
 
     @Test
     fun `신청자는 방장이 처리하기 전 자신의 참가 신청을 철회한다`() {
-        justRun { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+        justRun { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
 
         service.withdraw(applicantMemberId, roomId)
 
-        verify(exactly = 1) { roomApplicationManager.withdraw(applicantMemberId, roomId) }
+        verify(exactly = 1) { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
     }
 
     @Test
     fun `해당 룸에 자신의 신청이 없으면 철회 실패를 그대로 전달한다`() {
         every {
-            roomApplicationManager.withdraw(applicantMemberId, roomId)
+            roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
         } throws CoreException(CoreErrorType.APPLICATION_NOT_FOUND)
 
         assertWithdrawalFails(CoreErrorType.APPLICATION_NOT_FOUND)
@@ -131,7 +166,7 @@ class RoomApplicationServiceTest {
     @Test
     fun `이미 처리된 신청이면 철회 실패를 그대로 전달한다`() {
         every {
-            roomApplicationManager.withdraw(applicantMemberId, roomId)
+            roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
         } throws CoreException(CoreErrorType.APPLICATION_ALREADY_HANDLED)
 
         assertWithdrawalFails(CoreErrorType.APPLICATION_ALREADY_HANDLED)
@@ -139,6 +174,20 @@ class RoomApplicationServiceTest {
 
     private fun givenValidApplicantAndResume() {
         every { resumeValidator.validateOwnedBy(applicantMemberId, resumeId) } returns sourceFile
+    }
+
+    private fun details(): RoomApplicationDetails {
+        return RoomApplicationDetails(
+            applicationId = 1L,
+            applicant = ApplicationApplicant.Active(
+                memberId = applicantMemberId,
+                nickname = "성실한 다람쥐 12",
+            ),
+            note = applicationForm.note,
+            resumeSummary = ApplicationResumeSummary.Ready("결제 도메인 경험이 있는 백엔드 개발자"),
+            status = RoomApplicationStatus.PENDING,
+            appliedAt = appliedAt,
+        )
     }
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {

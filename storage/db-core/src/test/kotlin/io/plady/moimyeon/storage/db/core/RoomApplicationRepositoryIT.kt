@@ -56,6 +56,27 @@ class RoomApplicationRepositoryIT(
         assertThat(roomApplicationRepository.countPendingByRoomIds(listOf(roomId))).isEmpty()
     }
 
+    // 지우면 몇 명이 기다리고 있었는지가 사라진다(MOI-394). 목록에서 빼는 것은 철회뿐이다.
+    @Test
+    fun `룸 취소나 확정으로 끝난 신청도 방장 목록에 남는다`() {
+        val roomId = UUID.randomUUID()
+        apply(roomId, RoomApplicationStatus.PENDING)
+        apply(roomId, RoomApplicationStatus.ROOM_CANCELED)
+        apply(roomId, RoomApplicationStatus.ROOM_CONFIRMED)
+        apply(roomId, RoomApplicationStatus.WITHDRAWN)
+
+        val listed = roomApplicationRepository.findByRoomIdAndStatusNotAndDeletedAtIsNullOrderByAppliedAtAsc(
+            roomId,
+            RoomApplicationStatus.WITHDRAWN,
+        )
+
+        assertThat(listed.map { it.status }).containsExactlyInAnyOrder(
+            RoomApplicationStatus.PENDING,
+            RoomApplicationStatus.ROOM_CANCELED,
+            RoomApplicationStatus.ROOM_CONFIRMED,
+        )
+    }
+
     // 대기 신청은 (room_id, pending_member_id) 유니크라 신청자를 매번 다르게 둔다.
     private fun apply(roomId: UUID, status: RoomApplicationStatus): RoomApplicationEntity {
         val applicantMemberId = UUID.randomUUID()
@@ -63,7 +84,7 @@ class RoomApplicationRepositoryIT(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = applicantMemberId,
-                note = null,
+                note = "",
                 appliedAt = now,
                 status = status,
                 pendingMemberId = applicantMemberId.takeIf { status == RoomApplicationStatus.PENDING },

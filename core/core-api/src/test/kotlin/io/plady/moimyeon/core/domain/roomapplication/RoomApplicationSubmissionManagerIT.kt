@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class RoomApplicationManagerIT(
-    private val roomApplicationManager: RoomApplicationManager,
+class RoomApplicationSubmissionManagerIT(
+    private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
 ) : ContextTest() {
@@ -52,7 +52,7 @@ class RoomApplicationManagerIT(
             ),
         )
 
-        roomApplicationManager.withdraw(applicantMemberId, roomId)
+        roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
 
         val withdrawn = roomApplicationRepository.findById(application.id).orElseThrow()
         assertThat(withdrawn.status).isEqualTo(RoomApplicationStatus.WITHDRAWN)
@@ -85,7 +85,7 @@ class RoomApplicationManagerIT(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = applicantMemberId,
-                note = null,
+                note = "",
                 appliedAt = LocalDateTime.of(2026, 8, 5, 12, 0),
                 status = status,
                 pendingMemberId = null,

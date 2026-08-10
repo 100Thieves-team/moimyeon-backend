@@ -4,4 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface ResumeSubmissionRepository : JpaRepository<ResumeSubmissionEntity, Long> {
     fun findByRoomApplicationIdAndDeletedAtIsNull(roomApplicationId: Long): ResumeSubmissionEntity?
+
+    fun findByRoomApplicationIdInAndDeletedAtIsNull(roomApplicationIds: Collection<Long>): List<ResumeSubmissionEntity>
 }

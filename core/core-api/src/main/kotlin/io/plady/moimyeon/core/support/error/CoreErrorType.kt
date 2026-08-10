@@ -54,4 +54,23 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
     ROOM_NOT_EDITABLE(HttpStatus.CONFLICT, ErrorCode.E1418, "모집 중인 룸만 수정할 수 있습니다.", LogLevel.WARN),
+
+    QUESTION_CARD_SET_NOT_OPEN(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1501,
+        "진행이 확정되었거나 완료된 방에서만 질문 카드셋을 조회할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_CARD_SET_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1502,
+        "질문 카드셋을 조회할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_CARD_SET_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1503,
+        "질문 카드셋을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }

@@ -82,4 +82,17 @@ class ProfileServiceTest {
 
         assertUpdateFails(CoreErrorType.PROFILE_NOT_FOUND)
     }
+
+    @Test
+    fun `여러 회원의 프로필을 한 번에 조회한다`() {
+        val otherMemberId = UUID.randomUUID()
+        val profiles = listOf(
+            MemberProfile(memberId, "", MeetingPreference.UNSPECIFIED, null, listOf(1L), emptyList()),
+            MemberProfile(otherMemberId, "", MeetingPreference.UNSPECIFIED, null, listOf(2L), emptyList()),
+        )
+        every { profileFinder.getAllByMemberIds(listOf(memberId, otherMemberId)) } returns profiles
+
+        assertThat(profileService.getProfiles(listOf(memberId, otherMemberId)))
+            .containsExactlyElementsOf(profiles)
+    }
 }

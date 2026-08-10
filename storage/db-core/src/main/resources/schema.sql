@@ -511,7 +511,7 @@ CREATE TABLE room_application (
     room_id             BINARY(16)  NOT NULL,
     applicant_member_id BINARY(16)  NOT NULL,
     pending_member_id   BINARY(16)  NULL,
-    note                TEXT        NULL,
+    note                TEXT        NOT NULL,
     status              VARCHAR(20) NOT NULL,
     reject_reason       VARCHAR(50) NULL,
     handler_member_id   BINARY(16)  NULL,

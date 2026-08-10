@@ -9,7 +9,7 @@ data class RoomApplication(
     val id: Long,
     val roomId: UUID,
     val applicantMemberId: UUID,
-    val note: String?,
+    val note: String,
     val resumeSubmission: ResumeSubmission,
     val resumeSummary: ResumeSummary,
     val status: RoomApplicationStatus,

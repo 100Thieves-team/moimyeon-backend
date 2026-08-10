@@ -1,60 +1,96 @@
 package io.plady.moimyeon.core.api.facade
 
+import io.plady.moimyeon.core.api.controller.v1.response.ApplicantJobRoleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ApplicantResponse
-import io.plady.moimyeon.core.api.controller.v1.response.ApplicationDecisionResponse
-import io.plady.moimyeon.core.api.controller.v1.response.ApplicationRecruitResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ApplicationAiSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomApplicationsResponse
-import io.plady.moimyeon.core.domain.room.ApplicationDecision
-import io.plady.moimyeon.core.domain.room.RoomApplicationService
-import io.plady.moimyeon.core.domain.room.RoomApplicationView
+import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.domain.catalog.JobRole
+import io.plady.moimyeon.core.domain.profile.ProfileService
+import io.plady.moimyeon.core.domain.roomapplication.ApplicationApplicant
+import io.plady.moimyeon.core.domain.roomapplication.ApplicationResumeSummary
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationDetails
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
 class RoomApplicationFacade(
-    private val roomApplicationService: RoomApplicationService,
+    private val roomApplicationSubmissionService: RoomApplicationSubmissionService,
+    private val profileService: ProfileService,
+    private val catalogService: CatalogService,
 ) {
-    fun getApplications(requesterMemberId: UUID, roomId: UUID): RoomApplicationsResponse = RoomApplicationsResponse(
-        applications = roomApplicationService.getApplications(requesterMemberId, roomId).map { it.toResponse() },
-    )
+    fun getApplications(requesterMemberId: UUID, roomId: UUID): RoomApplicationsResponse {
+        val applications = roomApplicationSubmissionService.getApplications(requesterMemberId, roomId)
+        val activeMemberIds = applications
+            .mapNotNull { (it.applicant as? ApplicationApplicant.Active)?.memberId }
+            .distinct()
+        val profiles = if (activeMemberIds.isEmpty()) emptyList() else profileService.getProfiles(activeMemberIds)
+        val jobRoleIdsByMemberId = profiles
+            .associate { it.memberId to it.interestJobRoleIds.toSet() }
+        val interestedJobRoleIds = jobRoleIdsByMemberId.values.flatten().toSet()
+        val jobRoles = if (interestedJobRoleIds.isEmpty()) {
+            emptyList()
+        } else {
+            catalogService.getJobCatalog()
+                .flatMap { it.roles }
+                .filter { it.id in interestedJobRoleIds }
+        }
 
-    fun accept(hostMemberId: UUID, roomId: UUID, applicationId: Long): ApplicationDecisionResponse = roomApplicationService.accept(hostMemberId, roomId, applicationId).toResponse()
-
-    fun reject(hostMemberId: UUID, roomId: UUID, applicationId: Long, reason: String?): ApplicationDecisionResponse = roomApplicationService.reject(hostMemberId, roomId, applicationId, reason).toResponse()
-
-    // 모집 상태는 정원 충족 여부로 계산한다(저장값 아님). 라벨은 서버가 소유한다.
-    private fun ApplicationDecision.toResponse(): ApplicationDecisionResponse {
-        val closed = currentParticipants >= maxCapacity
-        return ApplicationDecisionResponse(
-            applicationId = applicationId,
-            status = status.name,
-            statusLabel = status.label(),
-            recruit = ApplicationRecruitResponse(
-                current = currentParticipants,
-                max = maxCapacity,
-                recruitStatus = if (closed) "CLOSED" else "RECRUITING",
-                recruitStatusLabel = if (closed) "모집 마감" else "모집 중",
-            ),
+        return RoomApplicationsResponse(
+            applications = applications.map { it.toResponse(jobRoleIdsByMemberId, jobRoles) },
         )
     }
 
-    // 직무·활동 정보(trust 격벽)와 이력서 AI 요약(J5)은 아직 원천이 없어 null 로 내려간다.
-    private fun RoomApplicationView.toResponse(): RoomApplicationResponse = RoomApplicationResponse(
-        applicationId = applicationId,
-        applicant = ApplicantResponse(
-            memberId = applicantMemberId,
-            nickname = applicantNickname,
-            jobTitle = null,
-            activitySummary = null,
-        ),
-        note = note,
-        aiSummary = null,
-        status = status.name,
-        statusLabel = status.label(),
-        appliedAt = appliedAt,
-    )
+    private fun RoomApplicationDetails.toResponse(
+        jobRoleIdsByMemberId: Map<UUID, Set<Long>>,
+        jobRoles: List<JobRole>,
+    ): RoomApplicationResponse {
+        return RoomApplicationResponse(
+            applicationId = applicationId,
+            applicant = applicant.toResponse(jobRoleIdsByMemberId, jobRoles),
+            note = note,
+            aiSummary = resumeSummary.toResponse(),
+            status = status.name,
+            statusLabel = status.label(),
+            appliedAt = appliedAt,
+        )
+    }
+
+    private fun ApplicationApplicant.toResponse(
+        jobRoleIdsByMemberId: Map<UUID, Set<Long>>,
+        jobRoles: List<JobRole>,
+    ): ApplicantResponse {
+        return when (this) {
+            is ApplicationApplicant.Active -> {
+                val interestedJobRoleIds = jobRoleIdsByMemberId.getValue(memberId)
+                ApplicantResponse(
+                    memberId = memberId,
+                    nickname = nickname,
+                    jobRoles = jobRoles
+                        .filter { it.id in interestedJobRoleIds }
+                        .map { ApplicantJobRoleResponse(it.id, it.displayName) },
+                    activitySummary = null,
+                )
+            }
+
+            is ApplicationApplicant.Withdrawn -> ApplicantResponse(
+                memberId = memberId,
+                nickname = WITHDRAWN_MEMBER_NICKNAME,
+                jobRoles = emptyList(),
+                activitySummary = null,
+            )
+        }
+    }
+
+    private fun ApplicationResumeSummary.toResponse(): ApplicationAiSummaryResponse {
+        return when (this) {
+            is ApplicationResumeSummary.Ready -> ApplicationAiSummaryResponse("DONE", content)
+            ApplicationResumeSummary.Preparing -> ApplicationAiSummaryResponse("PROCESSING", null)
+        }
+    }
 
     // 방장이 보는 라벨이다. 신청자에게 보일 문구("룸이 취소됐어요")는 신청자용 응답이 생길 때 정한다.
     private fun RoomApplicationStatus.label(): String = when (this) {
@@ -66,3 +102,5 @@ class RoomApplicationFacade(
         RoomApplicationStatus.ROOM_CONFIRMED -> "진행 확정"
     }
 }
+
+private const val WITHDRAWN_MEMBER_NICKNAME = "탈퇴한 사용자"
