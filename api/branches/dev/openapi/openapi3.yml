@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T17:06:50.044805653",
+                        "date" : "2026-08-10",
+                        "datetime" : "2026-08-10T03:15:01.897731226",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-09",
-                        "datetime" : "2026-08-09T17:06:50.291739155",
+                        "date" : "2026-08-10",
+                        "datetime" : "2026-08-10T03:15:02.081726136",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "781697f3-efb2-4249-941c-3cf224cd0f15",
+                          "termsId" : "e48481c1-efeb-42e5-acd2-6260dbe6aa39",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "aa6c1128-5fb6-44d5-9a08-ef83a3648da5",
+                          "termsId" : "afff6040-7135-4c3e-85bf-0ae829f74696",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "7cac67b9-23c5-47d3-8af5-6b8f7839c191",
+                        "memberId" : "0c10f69f-0309-4b94-877e-918539c10de7",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "7cac67b9-23c5-47d3-8af5-6b8f7839c191",
+                          "memberId" : "0c10f69f-0309-4b94-877e-918539c10de7",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-10T17:06:53.561991905",
+                          "startAt" : "2026-08-11T03:15:05.362311856",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1278,7 +1278,7 @@ paths:
                           "recruitStatus" : "RECRUITING"
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "3ee4b6c1-a16b-4515-9ada-01c27bbd1e67"
+                        "hostMemberId" : "37176159-9364-4d45-9b61-40b017a3c2cb"
                       },
                       "error" : null
                     }
@@ -1583,7 +1583,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9f9e1932-5ea1-407f-8134-9d5299ad17f5",
+                        "memberId" : "4b6bd6d6-7875-4695-8fc0-dd4e592b82de",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -2660,7 +2660,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
