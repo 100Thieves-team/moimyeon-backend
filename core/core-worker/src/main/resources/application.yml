@@ -4,12 +4,15 @@ spring.profiles.active: local
 spring:
   config:
     import:
+      - db-core.yml
       - monitoring.yml
       - logging.yml
       - redis-core.yml
+      - email-client.yml
+      - web-push-client.yml
 
 notification.worker.consumer:
-  enabled: true
+  enabled: false
   fixed-delay: ${NOTIFICATION_WORKER_CONSUMER_FIXED_DELAY:1s}
   initial-delay: ${NOTIFICATION_WORKER_CONSUMER_INITIAL_DELAY:5s}
 
@@ -20,14 +23,22 @@ spring.config.activate.on-profile: local
 ---
 spring.config.activate.on-profile: local-dev
 
+notification.worker.consumer.enabled: true
+
 
 ---
 spring.config.activate.on-profile: dev
+
+notification.worker.consumer.enabled: true
 
 
 ---
 spring.config.activate.on-profile: staging
 
+notification.worker.consumer.enabled: true
+
 
 ---
 spring.config.activate.on-profile: live
+
+notification.worker.consumer.enabled: true

@@ -11,9 +11,18 @@ import org.springframework.context.annotation.Import
     basePackages = [
         "io.plady.moimyeon.worker",
         "io.plady.moimyeon.storage.redis",
+        "io.plady.moimyeon.client.email",
+        "io.plady.moimyeon.client.webpush",
     ],
 )
-@SpringBootApplication(scanBasePackages = ["io.plady.moimyeon.worker"])
+@SpringBootApplication(
+    scanBasePackages = [
+        "io.plady.moimyeon.worker",
+        "io.plady.moimyeon.storage.db.core.config",
+        "io.plady.moimyeon.client.email",
+        "io.plady.moimyeon.client.webpush",
+    ],
+)
 class WorkerApplication
 
 fun main(args: Array<String>) {

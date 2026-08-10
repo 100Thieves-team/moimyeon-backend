@@ -8,6 +8,7 @@ tasks.named<Jar>("jar").configure {
 
 dependencies {
     implementation(project(":core:core-enum"))
+    implementation(project(":storage:db-core"))
     implementation(project(":storage:redis-core")) {
         isTransitive = false
     }
