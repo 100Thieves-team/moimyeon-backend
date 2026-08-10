@@ -58,7 +58,7 @@ jobs:
         # pull-requests:write 권한이 붙으므로, @main 같은 mutable 참조를 쓰면 그 브랜치에
         # 들어간 코드가 다음 PR에서 그대로 self-hosted 러너에서 실행된다.
         # 업데이트할 때는 review-swarm의 새 커밋을 확인한 뒤 이 SHA를 올린다.
-        uses: 100Thieves-team/review-swarm@5827306c08236303bc563992c191a7ddf0a2e609
+        uses: 100Thieves-team/review-swarm@6d586007e5a018c4eedef98b071e3ce24d1f94b5
         with:
           fail-on: never
           upload-artifacts: 'true'
