@@ -27,6 +27,13 @@ server:
       max: 600
       min-spare: 100
 
+notification.outbox.relay:
+  fixed-delay: ${NOTIFICATION_OUTBOX_RELAY_FIXED_DELAY:10s}
+  initial-delay: ${NOTIFICATION_OUTBOX_RELAY_INITIAL_DELAY:5s}
+  stale-after: ${NOTIFICATION_OUTBOX_RELAY_STALE_AFTER:10s}
+  batch-size: ${NOTIFICATION_OUTBOX_RELAY_BATCH_SIZE:100}
+  lease-duration: ${NOTIFICATION_OUTBOX_RELAY_LEASE_DURATION:5m}
+
 ---
 spring.config.activate.on-profile: local
 
