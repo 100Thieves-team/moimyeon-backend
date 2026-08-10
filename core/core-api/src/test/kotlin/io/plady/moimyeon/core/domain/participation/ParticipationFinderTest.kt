@@ -6,6 +6,7 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -67,5 +68,20 @@ class ParticipationFinderTest {
         } returns mockk { every { memberId } returns hostMemberId }
 
         assertThat(participationFinder.getHostMemberId(roomId)).isEqualTo(hostMemberId)
+    }
+
+    @Test
+    fun `방장 참여 행이 없으면 구조 불변식 위반으로 실패한다`() {
+        val roomId = UUID.randomUUID()
+        every {
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+                roomId,
+                ParticipationRole.HOST,
+            )
+        } returns null
+
+        assertThatThrownBy { participationFinder.getHostMemberId(roomId) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining(roomId.toString())
     }
 }

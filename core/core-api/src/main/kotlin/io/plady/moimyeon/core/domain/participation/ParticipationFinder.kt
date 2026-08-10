@@ -2,8 +2,6 @@ package io.plady.moimyeon.core.domain.participation
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
-import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -29,12 +27,13 @@ class ParticipationFinder(
     }
 
     fun getHostMemberId(roomId: UUID): UUID {
-        return requireFound(
+        return checkNotNull(
             participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
                 roomId,
                 ParticipationRole.HOST,
             ),
-            CoreErrorType.ROOM_NOT_FOUND,
-        ).memberId
+        ) {
+            "확정 룸에는 HOST 참여 행이 있어야 합니다. roomId=$roomId"
+        }.memberId
     }
 }
