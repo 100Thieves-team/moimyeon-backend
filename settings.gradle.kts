@@ -14,6 +14,7 @@ include(
     "support:monitoring",
     "clients:client-example",
     "clients:bedrock-client",
+    "clients:email-client",
     "storage:object-storage"
 )
 

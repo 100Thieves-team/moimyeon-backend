@@ -3,7 +3,7 @@ tasks.named<Jar>("bootJar").configure {
 }
 
 tasks.named<Jar>("jar").configure {
-    enabled = false
+    enabled = true
 }
 
 dependencies {
@@ -13,6 +13,7 @@ dependencies {
     }
     implementation(project(":support:monitoring"))
     implementation(project(":support:logging"))
+    runtimeOnly(project(":clients:email-client"))
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
