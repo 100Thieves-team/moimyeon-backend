@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.progress
 
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 class RoomProgressManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val participationFinder: ParticipationFinder,
     private val attendanceRepository: AttendanceRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
 ) {
@@ -28,11 +30,10 @@ class RoomProgressManager(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         requireBusiness(
-            room.status == RoomStatus.CONFIRMED,
+            room.canStartProgress(),
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
         )
-        val confirmedParticipantIds = participationRepository.findAllAtRoomConfirmation(command.roomId)
-            .map { it.memberId }
+        val confirmedParticipantIds = participationFinder.getConfirmedParticipantIds(command.roomId)
         val attendanceMemberIds = command.attendances.map(Attendance::memberId)
         requireBusiness(
             attendanceMemberIds.size == confirmedParticipantIds.size &&

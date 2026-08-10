@@ -72,8 +72,10 @@ class RoomEntity(
     var status: RoomStatus = RoomStatus.RECRUITING
         protected set
 
+    fun canStartProgress(): Boolean = status == RoomStatus.CONFIRMED
+
     fun startProgress() {
-        check(status == RoomStatus.CONFIRMED)
+        check(canStartProgress())
         status = RoomStatus.IN_PROGRESS
     }
 
