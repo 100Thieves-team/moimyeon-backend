@@ -1,0 +1,33 @@
+spring.application.name: core-worker
+spring.profiles.active: local
+
+spring:
+  config:
+    import:
+      - monitoring.yml
+      - logging.yml
+      - redis-core.yml
+
+notification.worker.consumer:
+  enabled: true
+  fixed-delay: ${NOTIFICATION_WORKER_CONSUMER_FIXED_DELAY:1s}
+  initial-delay: ${NOTIFICATION_WORKER_CONSUMER_INITIAL_DELAY:5s}
+
+---
+spring.config.activate.on-profile: local
+
+
+---
+spring.config.activate.on-profile: local-dev
+
+
+---
+spring.config.activate.on-profile: dev
+
+
+---
+spring.config.activate.on-profile: staging
+
+
+---
+spring.config.activate.on-profile: live

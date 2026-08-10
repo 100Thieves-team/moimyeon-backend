@@ -4,6 +4,7 @@ include(
     "admin:admin-api",
     "core:core-batch",
     "core:core-enum",
+    "core:core-worker",
     "core:core-api",
     "storage:db-core",
     "storage:redis-core",
