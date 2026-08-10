@@ -39,11 +39,7 @@ class RoomProgressService(
     fun getRail(memberId: UUID, roomId: UUID): ProgressRail {
         accessValidator.validateRailViewer(roomId, memberId)
         val confirmedParticipantIds = participationFinder.getConfirmedParticipantIds(roomId)
-        return ProgressRail(
-            blocks = listOf(ProgressBlock.Opening) +
-                confirmedParticipantIds.map(ProgressBlock::Round) +
-                ProgressBlock.Closing,
-        )
+        return ProgressRail.from(confirmedParticipantIds)
     }
 
     private fun now(): LocalDateTime = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS)
