@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.session.SessionService
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
@@ -17,6 +18,7 @@ class AuthController(
     private val sessionService: SessionService,
     private val jwtTokenProvider: JwtTokenProvider,
     private val authCookieFactory: AuthCookieFactory,
+    private val memberFinder: MemberFinder,
 ) {
     @PostMapping("/v1/auth/refresh")
     fun refresh(
@@ -25,7 +27,11 @@ class AuthController(
     ): ApiResponse<Any> {
         val credential = requireFound(refreshToken, CoreErrorType.INVALID_SESSION)
         val memberId = sessionService.authenticate(credential)
-        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.createAccess(jwtTokenProvider.issue(memberId)).toString())
+        val member = memberFinder.getById(memberId)
+        response.addHeader(
+            HttpHeaders.SET_COOKIE,
+            authCookieFactory.createAccess(jwtTokenProvider.issue(member.id, member.role)).toString(),
+        )
         return ApiResponse.success()
     }
 

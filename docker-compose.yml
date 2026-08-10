@@ -1,7 +1,10 @@
-# 로컬 개발용 MySQL. schema.sql 을 컨테이너 최초 기동 시 자동 로드한다.
-#   실행:   docker compose up -d
-#   앱 실행: SPRING_PROFILES_ACTIVE=local-dev ./gradlew :core:core-api:bootRun
-#           (local-dev 프로파일 기본값이 아래 접속정보와 일치 → 환경변수 없이 바로 붙음)
+# 로컬 개발용 MySQL과 알림 Redis. MySQL은 schema.sql 을 컨테이너 최초 기동 시 자동 로드하고,
+# Redis는 AOF를 사용해 로컬 재시작 뒤에도 Stream 데이터를 보존한다.
+#   기본 local(H2 + Redis): docker compose up -d notification-redis
+#                          ./gradlew :core:core-api:bootRun
+#   local-dev(MySQL + Redis): docker compose up -d
+#                             SPRING_PROFILES_ACTIVE=local-dev ./gradlew :core:core-api:bootRun
+#                             (프로파일 기본값이 아래 접속정보와 일치 → 환경변수 없이 바로 붙음)
 #   종료:   docker compose down       (데이터까지 초기화하려면 docker compose down -v)
 # 주의: initdb 스크립트는 볼륨 최초 생성 시 1회만 실행된다. 기존 볼륨엔 이후 schema.sql 변경이
 #       반영되지 않으므로, 반영하려면 `docker compose down -v && docker compose up -d`
@@ -31,3 +34,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  notification-redis:
+    image: redis:7.4-alpine
+    container_name: moimyeon-notification-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - notification-redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  notification-redis-data:
