@@ -2,11 +2,10 @@ package io.plady.moimyeon.core.domain.notification
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
+import io.plady.moimyeon.storage.db.core.WebPushRegistrationHash
 import io.plady.moimyeon.storage.db.core.WebPushSubscriptionEntity
 import io.plady.moimyeon.storage.db.core.WebPushSubscriptionRepository
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
@@ -21,36 +20,19 @@ class WebPushSubscriptionManagerTest {
 
     @Test
     fun `처음 업로드된 브라우저 등록을 회원에게 연결한다`() {
-        val saved = slot<WebPushSubscriptionEntity>()
-        every { repository.findByRegistrationHash(any()) } returns null
-        every { repository.save(capture(saved)) } answers { saved.captured }
+        every { repository.upsertRegistration(any(), any(), any(), any()) } returns 1
+        every { repository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
 
         manager.register(MEMBER_A, REGISTRATION)
 
-        assertThat(saved.captured.memberId).isEqualTo(MEMBER_A)
-        assertThat(saved.captured.registration).isEqualTo(REGISTRATION.value)
-        assertThat(saved.captured.registeredAt).isEqualTo(LocalDateTime.ofInstant(clock.instant(), clock.zone))
-    }
-
-    @Test
-    fun `같은 등록을 다시 업로드하면 마지막 동기화 시각을 갱신한다`() {
-        val existing = subscription(MEMBER_A)
-        every { repository.findByRegistrationHash(any()) } returns existing
-
-        manager.register(MEMBER_A, REGISTRATION)
-
-        assertThat(existing.registeredAt).isEqualTo(LocalDateTime.ofInstant(clock.instant(), clock.zone))
-        verify(exactly = 0) { repository.save(any()) }
-    }
-
-    @Test
-    fun `다른 회원이 같은 브라우저 등록을 업로드하면 현재 회원에게 소유권을 이전한다`() {
-        val existing = subscription(MEMBER_A)
-        every { repository.findByRegistrationHash(any()) } returns existing
-
-        manager.register(MEMBER_B, REGISTRATION)
-
-        assertThat(existing.memberId).isEqualTo(MEMBER_B)
+        verify(exactly = 1) {
+            repository.upsertRegistration(
+                memberId = MEMBER_A,
+                registration = REGISTRATION.value,
+                registrationHash = WebPushRegistrationHash.of(REGISTRATION.value),
+                registeredAt = LocalDateTime.ofInstant(clock.instant(), clock.zone),
+            )
+        }
     }
 
     @Test

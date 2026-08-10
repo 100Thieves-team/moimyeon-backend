@@ -50,12 +50,4 @@ class WebPushSubscriptionEntity(
 
     @UpdateTimestamp
     val updatedAt: LocalDateTime = LocalDateTime.MIN
-
-    fun registerFor(
-        memberId: UUID,
-        registeredAt: LocalDateTime,
-    ) {
-        this.memberId = memberId
-        this.registeredAt = registeredAt
-    }
 }

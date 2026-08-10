@@ -1,7 +1,6 @@
 package io.plady.moimyeon.core.domain.notification
 
 import io.plady.moimyeon.storage.db.core.WebPushRegistrationHash
-import io.plady.moimyeon.storage.db.core.WebPushSubscriptionEntity
 import io.plady.moimyeon.storage.db.core.WebPushSubscriptionRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -21,22 +20,15 @@ class WebPushSubscriptionManager(
     ) {
         val registrationHash = WebPushRegistrationHash.of(registration.value)
         val registeredAt = LocalDateTime.now(clock)
-        val existing = repository.findByRegistrationHash(registrationHash)
+        repository.upsertRegistration(
+            memberId = memberId,
+            registration = registration.value,
+            registrationHash = registrationHash,
+            registeredAt = registeredAt,
+        )
 
-        if (existing == null) {
-            repository.save(
-                WebPushSubscriptionEntity(
-                    memberId = memberId,
-                    registration = registration.value,
-                    registrationHash = registrationHash,
-                    registeredAt = registeredAt,
-                ),
-            )
-            return
-        }
-
-        check(existing.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
-        existing.registerFor(memberId, registeredAt)
+        val registered = checkNotNull(repository.findByRegistrationHash(registrationHash))
+        check(registered.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
     }
 
     @Transactional
