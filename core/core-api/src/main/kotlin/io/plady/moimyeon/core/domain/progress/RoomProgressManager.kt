@@ -31,6 +31,14 @@ class RoomProgressManager(
             room.status == RoomStatus.CONFIRMED,
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
         )
+        val confirmedParticipantIds = participationRepository.findAllAtRoomConfirmation(command.roomId)
+            .map { it.memberId }
+        val attendanceMemberIds = command.attendances.map(Attendance::memberId)
+        requireBusiness(
+            attendanceMemberIds.size == confirmedParticipantIds.size &&
+                attendanceMemberIds.toSet() == confirmedParticipantIds.toSet(),
+            CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH,
+        )
         val hostMemberId = requireFound(
             participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
                 command.roomId,

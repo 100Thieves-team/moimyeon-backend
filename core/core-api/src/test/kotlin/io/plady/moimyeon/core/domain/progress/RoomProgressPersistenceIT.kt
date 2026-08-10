@@ -15,13 +15,13 @@ import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
@@ -31,6 +31,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class RoomProgressPersistenceIT(
+    private val progressService: RoomProgressService,
     private val progressManager: RoomProgressManager,
     private val progressReader: RoomProgressReader,
     private val roomRepository: RoomRepository,
@@ -46,6 +47,11 @@ class RoomProgressPersistenceIT(
     private val participantMemberId = UUID.randomUUID()
     private val startedAt = LocalDateTime.of(2026, 8, 11, 0, 0)
 
+    @Test
+    fun `진행 서비스는 애플리케이션 컴포넌트로 제공된다`() {
+        assertThat(progressService).isNotNull()
+    }
+
     @AfterEach
     fun cleanUp() {
         roomStatusLogRepository.deleteAll(roomStatusLogRepository.findAll().filter { it.roomId == roomId })
@@ -55,13 +61,14 @@ class RoomProgressPersistenceIT(
     }
 
     @Test
-    fun `진행을 시작하면 룸 상태와 출석과 시작 로그를 한 트랜잭션에 기록한다`() {
+    fun `확정 참여자가 방장을 불참으로 기록해도 기존 방장을 유지하며 진행을 시작한다`() {
         seedConfirmedRoomAndParticipants()
         val command = command(
             listOf(
-                Attendance(hostMemberId, AttendanceStatus.ATTENDED),
-                Attendance(participantMemberId, AttendanceStatus.ABSENT),
+                Attendance(hostMemberId, AttendanceStatus.ABSENT),
+                Attendance(participantMemberId, AttendanceStatus.ATTENDED),
             ),
+            startedByMemberId = participantMemberId,
         )
 
         val result = progressManager.start(command)
@@ -74,9 +81,9 @@ class RoomProgressPersistenceIT(
         val savedAttendances = attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId)
         assertThat(savedAttendances.map { it.memberId }).containsExactly(hostMemberId, participantMemberId)
         assertThat(savedAttendances.map { it.status })
-            .containsExactly(AttendanceStatus.ATTENDED, AttendanceStatus.ABSENT)
+            .containsExactly(AttendanceStatus.ABSENT, AttendanceStatus.ATTENDED)
         assertThat(savedAttendances).allSatisfy {
-            assertThat(it.recorderMemberId).isEqualTo(hostMemberId)
+            assertThat(it.recorderMemberId).isEqualTo(participantMemberId)
             assertThat(it.recordedAt).isEqualTo(startedAt)
             assertThat(it.changeReason).isNull()
         }
@@ -85,10 +92,10 @@ class RoomProgressPersistenceIT(
             roomId,
             RoomStatus.IN_PROGRESS,
         )!!
-        assertThat(startLog.handlerMemberId).isEqualTo(hostMemberId)
+        assertThat(startLog.handlerMemberId).isEqualTo(participantMemberId)
         assertThat(startLog.occurredAt).isEqualTo(startedAt)
         assertThat(progressReader.getAttendance(roomId, participantMemberId))
-            .isEqualTo(Attendance(participantMemberId, AttendanceStatus.ABSENT))
+            .isEqualTo(Attendance(participantMemberId, AttendanceStatus.ATTENDED))
     }
 
     @Test
@@ -123,20 +130,36 @@ class RoomProgressPersistenceIT(
     }
 
     @Test
-    fun `출석 저장이 실패하면 룸 상태와 시작 로그도 남지 않는다`() {
+    fun `출석 대상이 확정 참여자 집합과 다르면 진행을 시작하지 않는다`() {
         seedConfirmedRoomAndParticipants()
-        val duplicatedAttendances = listOf(
-            Attendance(hostMemberId, AttendanceStatus.ATTENDED),
-            Attendance(hostMemberId, AttendanceStatus.ABSENT),
+        val outsiderMemberId = UUID.randomUUID()
+        val invalidAttendances = listOf(
+            listOf(
+                Attendance(hostMemberId, AttendanceStatus.ATTENDED),
+                Attendance(hostMemberId, AttendanceStatus.ABSENT),
+            ),
+            listOf(Attendance(hostMemberId, AttendanceStatus.ATTENDED)),
+            listOf(
+                Attendance(hostMemberId, AttendanceStatus.ATTENDED),
+                Attendance(outsiderMemberId, AttendanceStatus.ABSENT),
+            ),
         )
 
-        assertThatThrownBy { progressManager.start(command(duplicatedAttendances)) }
-            .isInstanceOf(DataIntegrityViolationException::class.java)
+        invalidAttendances.forEach { attendances ->
+            assertThatThrownBy { progressManager.start(command(attendances)) }
+                .isInstanceOfSatisfying(CoreException::class.java) {
+                    assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH)
+                }
 
-        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
-        assertThat(attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId)).isEmpty()
-        assertThat(roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.IN_PROGRESS))
-            .isZero()
+            assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
+            assertThat(attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId)).isEmpty()
+            assertThat(
+                roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(
+                    roomId,
+                    RoomStatus.IN_PROGRESS,
+                ),
+            ).isZero()
+        }
     }
 
     @Test
@@ -238,6 +261,14 @@ class RoomProgressPersistenceIT(
                     status = ParticipationStatus.JOINED,
                     joinedAt = startedAt.minusDays(1),
                 ),
+            ),
+        )
+        roomStatusLogRepository.saveAndFlush(
+            RoomStatusLogEntity(
+                roomId = roomId,
+                transitionType = RoomStatus.CONFIRMED,
+                handlerMemberId = hostMemberId,
+                occurredAt = startedAt.minusHours(1),
             ),
         )
         transactionTemplate.executeWithoutResult {

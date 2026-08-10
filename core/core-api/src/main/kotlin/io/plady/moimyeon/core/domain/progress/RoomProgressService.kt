@@ -1,11 +1,13 @@
 package io.plady.moimyeon.core.domain.progress
 
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
+@Service
 class RoomProgressService(
     private val accessValidator: RoomProgressAccessValidator,
     private val participationFinder: ParticipationFinder,

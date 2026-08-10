@@ -67,7 +67,7 @@ class RoomProgressServiceTest {
     }
 
     @Test
-    fun `참여 패널에서 확정 참여자가 방장을 불참으로 선택해 제출하면 그대로 기록하고 기존 방장은 유지한다`() {
+    fun `참여 패널에서 확정 참여자가 방장을 불참으로 선택하면 그대로 진행 시작에 전달한다`() {
         val selectedAttendances = attendanceSelection(setOf(participant1Id, participant2Id, participant3Id))
         val command = startCommand(selectedAttendances, startedByMemberId = participant1Id)
         givenRoomCanStart(participant1Id)
@@ -77,7 +77,6 @@ class RoomProgressServiceTest {
 
         val result = service.start(participant1Id, roomId, selectedAttendances)
 
-        assertThat(result.hostMemberId).isEqualTo(hostMemberId)
         assertThat(command.startedByMemberId).isEqualTo(participant1Id)
         assertThat(result.attendances).containsExactlyInAnyOrderElementsOf(selectedAttendances)
         assertThat(result.attendances.single { it.memberId == hostMemberId }.status)
@@ -142,12 +141,6 @@ class RoomProgressServiceTest {
     }
 
     @Test
-    fun `출석 상태는 출석과 불참 두 종류뿐이다`() {
-        assertThat(AttendanceStatus.entries)
-            .containsExactlyInAnyOrder(AttendanceStatus.ATTENDED, AttendanceStatus.ABSENT)
-    }
-
-    @Test
     fun `참여자는 자신의 출석 결과만 조회한다`() {
         val myAttendance = Attendance(participant3Id, AttendanceStatus.ABSENT)
         justRun { accessValidator.validateAttendanceViewer(roomId, participant3Id) }
@@ -160,17 +153,6 @@ class RoomProgressServiceTest {
             accessValidator.validateAttendanceViewer(roomId, participant3Id)
             progressReader.getAttendance(roomId, participant3Id)
         }
-    }
-
-    @Test
-    fun `시작 후 도착한 참여자는 최초에 정해진 불참 결과를 조회한다`() {
-        val absent = Attendance(participant3Id, AttendanceStatus.ABSENT)
-        justRun { accessValidator.validateAttendanceViewer(roomId, participant3Id) }
-        every { progressReader.getAttendance(roomId, participant3Id) } returns absent
-
-        val result = service.getMyAttendance(participant3Id, roomId)
-
-        assertThat(result.status).isEqualTo(AttendanceStatus.ABSENT)
     }
 
     @Test

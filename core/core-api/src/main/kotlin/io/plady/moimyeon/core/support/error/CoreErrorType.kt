@@ -134,4 +134,10 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "출석 기록을 찾을 수 없습니다.",
         LogLevel.WARN,
     ),
+    ROOM_PROGRESS_PARTICIPANT_MISMATCH(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1606,
+        "출석 대상이 확정 참여자와 일치하지 않습니다.",
+        LogLevel.WARN,
+    ),
 }
