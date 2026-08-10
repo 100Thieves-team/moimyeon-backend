@@ -55,10 +55,57 @@ class QuestionRepositoryIT(
         )
     }
 
+    @Test
+    fun `삭제된 질문은 단건 활성 조회와 삭제 잠금 조회에서 찾지 않는다`() {
+        val question = saveQuestion(firstTargetMemberId)
+        question.delete(LocalDateTime.of(2026, 8, 10, 3, 0))
+        questionRepository.flush()
+
+        assertThat(questionRepository.findByIdAndDeletedAtIsNull(question.id)).isNull()
+        assertThat(
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, question.id),
+        ).isNull()
+    }
+
+    @Test
+    fun `작성자별 활성 꼬리질문을 구분하고 다른 작성자의 꼬리질문만 원 질문 삭제를 막는다`() {
+        val root = saveQuestion(firstTargetMemberId)
+        val ownFollowUp = saveQuestion(firstTargetMemberId, parentQuestionId = root.id)
+        val otherAuthorFollowUp = saveQuestion(
+            firstTargetMemberId,
+            parentQuestionId = root.id,
+            authorMemberId = UUID.randomUUID(),
+        )
+
+        assertThat(
+            questionRepository.existsByParentQuestionIdAndAuthorMemberIdNotAndDeletedAtIsNull(
+                root.id,
+                authorMemberId,
+            ),
+        ).isTrue()
+        assertThat(
+            questionRepository.findAllByParentQuestionIdAndAuthorMemberIdAndDeletedAtIsNull(
+                root.id,
+                authorMemberId,
+            ).map { it.id },
+        ).containsExactly(ownFollowUp.id)
+
+        otherAuthorFollowUp.delete(LocalDateTime.of(2026, 8, 10, 3, 0))
+        questionRepository.flush()
+
+        assertThat(
+            questionRepository.existsByParentQuestionIdAndAuthorMemberIdNotAndDeletedAtIsNull(
+                root.id,
+                authorMemberId,
+            ),
+        ).isFalse()
+    }
+
     private fun saveQuestion(
         targetMemberId: UUID,
         roomId: UUID = this.roomId,
         parentQuestionId: Long? = null,
+        authorMemberId: UUID = this.authorMemberId,
     ): QuestionEntity = questionRepository.saveAndFlush(
         QuestionEntity(
             roomId = roomId,
