@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -20,8 +21,6 @@ class RoomManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
 ) {
-    // 룸 생성 트랜잭션. ERD §4.2는 room + 방장 participation + resume_submission + chat_room + room_status_log
-    // 5개를 한 트랜잭션으로 쓴다. 현재 room 과 방장 participation 까지 구현했고, 나머지 3개는 엔티티가 생기면 추가한다.
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID) {
         roomRepository.save(RoomMapper.toEntity(room))
@@ -41,6 +40,15 @@ class RoomManager(
     @Transactional
     fun update(roomId: UUID, hostMemberId: UUID, command: RoomUpdateCommand) {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
+
+        // 확정 이후 변경은 CS 문의로만 푼다(「진행 확정」§4.3).
+        requireBusiness(room.status == RoomStatus.RECRUITING, CoreErrorType.ROOM_NOT_EDITABLE)
+
+        // RoomCapacity 는 DB 를 모르는 값 객체라 현재 인원과의 비교는 여기서 한다.
+        // 최소 인원은 막지 않는다 — 확정이 미뤄질 뿐 지금 상태를 깨지 않는다.
+        val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
+        requireBusiness(command.capacity.max >= current, CoreErrorType.ROOM_CAPACITY_BELOW_PARTICIPANTS)
+
         val (meetingType, sigunguId) = command.meetingPlace.toEntityValues()
         room.update(
             title = command.title.value,
