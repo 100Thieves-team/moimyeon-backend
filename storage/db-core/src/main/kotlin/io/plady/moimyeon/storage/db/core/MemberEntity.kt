@@ -1,5 +1,6 @@
 package io.plady.moimyeon.storage.db.core
 
+import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.core.enums.MemberStatus
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
@@ -24,12 +25,17 @@ class MemberEntity(
     status: MemberStatus,
     lastLoginAt: LocalDateTime,
     socialAccounts: List<SocialAccountEntity> = emptyList(),
+    role: MemberRole = MemberRole.USER,
 ) : UuidBaseEntity(id) {
     var nickname: String = nickname
         protected set
 
     @Enumerated(EnumType.STRING)
     var status: MemberStatus = status
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    var role: MemberRole = role
         protected set
 
     var lastLoginAt: LocalDateTime = lastLoginAt

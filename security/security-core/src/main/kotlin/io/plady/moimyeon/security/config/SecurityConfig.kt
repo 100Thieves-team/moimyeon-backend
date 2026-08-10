@@ -1,6 +1,7 @@
 package io.plady.moimyeon.security.config
 
 import io.plady.moimyeon.security.auth.HeaderOrCookieBearerTokenResolver
+import io.plady.moimyeon.security.auth.MemberRoleJwtGrantedAuthoritiesConverter
 import io.plady.moimyeon.security.auth.OAuth2LoginSuccessHandler
 import io.plady.moimyeon.security.auth.PerfAuthenticationFilter
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.AccessDeniedHandler
@@ -32,6 +34,7 @@ class SecurityConfig(
                 authorize("/v1/auth/refresh", permitAll)
                 authorize("/v1/auth/logout", permitAll)
                 authorize("/v1/terms", permitAll) // 로그인 모달의 약관 링크 — 비로그인 조회 허용
+                authorize("/admin/**", hasRole("ADMIN"))
 
                 // TODO: 인증/인가 정책 확정 후 경로별 규칙 추가
                 authorize(anyRequest, permitAll)
@@ -48,7 +51,11 @@ class SecurityConfig(
                     bearerFreePaths = setOf("/v1/auth/refresh", "/v1/auth/logout"),
                 )
                 apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it }
-                jwt { }
+                jwt {
+                    jwtAuthenticationConverter = JwtAuthenticationConverter().apply {
+                        setJwtGrantedAuthoritiesConverter(MemberRoleJwtGrantedAuthoritiesConverter())
+                    }
+                }
             }
             exceptionHandling {
                 apiAuthenticationEntryPoint?.let { authenticationEntryPoint = it }

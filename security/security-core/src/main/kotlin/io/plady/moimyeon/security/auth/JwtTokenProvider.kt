@@ -1,5 +1,6 @@
 package io.plady.moimyeon.security.auth
 
+import io.plady.moimyeon.core.enums.MemberRole
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.JwsHeader
 import org.springframework.security.oauth2.jwt.JwtClaimsSet
@@ -14,12 +15,13 @@ import java.util.UUID
 class JwtTokenProvider(
     private val jwtEncoder: JwtEncoder,
 ) {
-    fun issue(memberId: UUID): String {
+    fun issue(memberId: UUID, role: MemberRole): String {
         val now = Instant.now()
         val claims = JwtClaimsSet.builder()
             .subject(memberId.toString())
             .issuedAt(now)
             .expiresAt(now.plus(TOKEN_TTL_MINUTES, ChronoUnit.MINUTES))
+            .claim(ROLES_CLAIM, listOf(role.name))
             .build()
         return jwtEncoder
             .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
@@ -28,5 +30,6 @@ class JwtTokenProvider(
 
     companion object {
         private const val TOKEN_TTL_MINUTES = 30L
+        const val ROLES_CLAIM = "roles"
     }
 }

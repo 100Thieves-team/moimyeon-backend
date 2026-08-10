@@ -3,8 +3,8 @@
 -- 테스트 회원 1명: 소개 작성 완료 상태이며 figma 목업 닉네임('집요한 수달 07')을 점유해
 -- FE 가 닉네임 사용 불가(available=false) 플로우를 재현할 수 있다.
 
-INSERT INTO member (id, email, nickname, status, last_login_at, created_at, updated_at)
-VALUES (X'019daf00000070008000000000000101', 'localtest@moimyeon.dev', '집요한 수달 07', 'ACTIVE',
+INSERT INTO member (id, email, nickname, status, role, last_login_at, created_at, updated_at)
+VALUES (X'019daf00000070008000000000000101', 'localtest@moimyeon.dev', '집요한 수달 07', 'ACTIVE', 'ADMIN',
         '2026-07-01 00:00:00', '2026-07-01 00:00:00', '2026-07-01 00:00:00');
 
 INSERT INTO social_account (provider, provider_id, linked_email, member_id, created_at, updated_at)

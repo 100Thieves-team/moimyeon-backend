@@ -9,6 +9,7 @@ object MemberMapper {
         email = Email(entity.email),
         nickname = Nickname(entity.nickname),
         status = entity.status,
+        role = entity.role,
         socialAccounts = entity.socialAccounts().map { SocialAccount(it.provider, it.providerId, it.linkedEmail?.let(::Email)) },
         lastLoginAt = entity.lastLoginAt,
     )
@@ -18,6 +19,7 @@ object MemberMapper {
         email = member.email.value,
         nickname = member.nickname.value,
         status = member.status,
+        role = member.role,
         lastLoginAt = member.lastLoginAt,
         socialAccounts = member.socialAccounts
             .map { SocialAccountEntity(it.provider, it.providerId, it.linkedEmail?.value) },

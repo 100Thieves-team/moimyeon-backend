@@ -285,6 +285,7 @@ CREATE TABLE member (
     email         VARCHAR(320) NOT NULL,
     nickname      VARCHAR(30)  NOT NULL,
     status        VARCHAR(20)  NOT NULL,
+    role          VARCHAR(20)  NOT NULL,
     last_login_at DATETIME     NOT NULL,
     created_at    DATETIME     NOT NULL,
     updated_at    DATETIME     NOT NULL,
