@@ -6,6 +6,7 @@ include(
     "core:core-enum",
     "core:core-api",
     "storage:db-core",
+    "storage:redis-core",
     "security:security-core",
     "tests:api-docs",
     "support:logging",

@@ -8,6 +8,7 @@ spring:
       - logging.yml
       - db-core.yml
       - object-storage.yml
+      - redis-core.yml
       - bedrock-client.yml
       - client-example.yml
       - security-core.yml
