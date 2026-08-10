@@ -1,7 +1,9 @@
 package io.plady.moimyeon.worker.notification.room
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.storage.redis.NotificationStreamMetrics
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamConsumer
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamConsumerProperties
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamProperties
@@ -33,6 +35,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
     private lateinit var connectionFactory: LettuceConnectionFactory
     private lateinit var redisTemplate: StringRedisTemplate
     private lateinit var notificationSender: RecordingNotificationSender
+    private lateinit var meterRegistry: SimpleMeterRegistry
 
     @BeforeEach
     fun setUp() {
@@ -41,12 +44,14 @@ class RoomApplicationAcceptedNotificationFlowIT {
         redisTemplate.delete(STREAM_KEY)
         redisTemplate.delete(DEAD_LETTER_STREAM_KEY)
         notificationSender = RecordingNotificationSender()
+        meterRegistry = SimpleMeterRegistry()
     }
 
     @AfterEach
     fun cleanUp() {
         redisTemplate.delete(STREAM_KEY)
         redisTemplate.delete(DEAD_LETTER_STREAM_KEY)
+        meterRegistry.close()
         connectionFactory.destroy()
     }
 
@@ -106,18 +111,20 @@ class RoomApplicationAcceptedNotificationFlowIT {
     }
 
     private fun worker(): NotificationMessageWorker {
+        val properties = RedisNotificationStreamConsumerProperties(
+            groupName = GROUP_NAME,
+            consumerName = "worker-a",
+            batchSize = 10,
+            pendingMinIdle = Duration.ZERO,
+        )
         val consumer = RedisNotificationStreamConsumer(
             redisTemplate = redisTemplate,
-            properties = RedisNotificationStreamConsumerProperties(
-                groupName = GROUP_NAME,
-                consumerName = "worker-a",
-                batchSize = 10,
-                pendingMinIdle = Duration.ZERO,
-            ),
+            properties = properties,
             streamProperties = RedisNotificationStreamProperties(
                 streamKey = STREAM_KEY,
                 deadLetterStreamKey = DEAD_LETTER_STREAM_KEY,
             ),
+            metrics = NotificationStreamMetrics(meterRegistry, properties),
         )
         val handler = NotificationMessageHandler(
             jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),

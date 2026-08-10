@@ -1,12 +1,13 @@
 package io.plady.moimyeon
 
+import io.plady.moimyeon.storage.redis.NotificationStreamMetrics
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamConsumer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Import
 
-@Import(RedisNotificationStreamConsumer::class)
+@Import(RedisNotificationStreamConsumer::class, NotificationStreamMetrics::class)
 @ConfigurationPropertiesScan(
     basePackages = [
         "io.plady.moimyeon.worker",

@@ -29,6 +29,7 @@ class RedisNotificationStreamConsumer(
     private val redisTemplate: StringRedisTemplate,
     private val properties: RedisNotificationStreamConsumerProperties,
     private val streamProperties: RedisNotificationStreamProperties,
+    private val metrics: NotificationStreamMetrics,
 ) : NotificationStreamConsumer {
     private val groupMonitor = Any()
     private val retryPolicy = NotificationRetryPolicy(
@@ -47,7 +48,9 @@ class RedisNotificationStreamConsumer(
             StreamReadOptions.empty().count(properties.batchSize.toLong()),
             StreamOffset.create(streamProperties.streamKey, ReadOffset.lastConsumed()),
         )
-        return process(records, emptyMap(), handler)
+        val acknowledged = process(records, emptyMap(), handler)
+        refreshPendingMetric()
+        return acknowledged
     }
 
     override fun recoverPending(handler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
@@ -105,6 +108,7 @@ class RedisNotificationStreamConsumer(
                         attemptCount = attemptCount - 1,
                         exhausted = true,
                     )
+                    metrics.deadLetter(record.value[EVENT_TYPE], record.value[CHANNEL])
                     acknowledged++
                     return@forEach
                 }
@@ -113,25 +117,32 @@ class RedisNotificationStreamConsumer(
                 when {
                     result.isSuccess -> {
                         acknowledge(record)
+                        metrics.success(record.value[EVENT_TYPE], record.value[CHANNEL])
                         acknowledged++
                     }
                     result.isPermanentFailure -> {
                         deadLetter(record, result, attemptCount)
+                        metrics.deadLetter(record.value[EVENT_TYPE], record.value[CHANNEL])
                         acknowledged++
                     }
                     !retryPolicy.hasAttemptsRemaining(attemptCount) -> {
                         deadLetter(record, result, attemptCount, exhausted = true)
+                        metrics.deadLetter(record.value[EVENT_TYPE], record.value[CHANNEL])
                         acknowledged++
                     }
-                    else -> log.warn(
-                        "Redis Stream 메시지를 재시도할 수 있도록 Pending으로 유지합니다. recordId={}, attemptCount={}, failureType={}",
-                        record.id.value,
-                        attemptCount,
-                        result.failureType,
-                        result.cause,
-                    )
+                    else -> {
+                        metrics.retry(record.value[EVENT_TYPE], record.value[CHANNEL])
+                        log.warn(
+                            "Redis Stream 메시지를 재시도할 수 있도록 Pending으로 유지합니다. recordId={}, attemptCount={}, failureType={}",
+                            record.id.value,
+                            attemptCount,
+                            result.failureType,
+                            result.cause,
+                        )
+                    }
                 }
             } catch (exception: Exception) {
+                metrics.retry(record.value[EVENT_TYPE], record.value[CHANNEL])
                 log.error(
                     "Redis Stream 메시지 처리에 실패해 Pending으로 유지합니다. recordId={}",
                     record.id.value,
@@ -140,6 +151,19 @@ class RedisNotificationStreamConsumer(
             }
         }
         return acknowledged
+    }
+
+    private fun refreshPendingMetric() {
+        try {
+            metrics.pending(
+                streamOperations.pending(
+                    streamProperties.streamKey,
+                    properties.groupName,
+                ).totalPendingMessages,
+            )
+        } catch (exception: DataAccessException) {
+            log.warn("Redis Stream Pending 메트릭을 갱신하지 못했습니다.", exception)
+        }
     }
 
     private fun handle(

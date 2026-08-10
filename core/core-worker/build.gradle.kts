@@ -24,4 +24,5 @@ dependencies {
 
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:${property("testcontainersVersion")}")
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
+    testImplementation("io.micrometer:micrometer-core")
 }

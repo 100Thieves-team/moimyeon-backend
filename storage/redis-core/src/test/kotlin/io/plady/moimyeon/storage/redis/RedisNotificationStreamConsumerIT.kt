@@ -1,5 +1,6 @@
 package io.plady.moimyeon.storage.redis
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.core.notification.outbox.RelayMessage
@@ -23,6 +24,8 @@ class RedisNotificationStreamConsumerIT {
     private lateinit var connectionFactory: LettuceConnectionFactory
     private lateinit var redisTemplate: StringRedisTemplate
     private lateinit var publisher: RedisNotificationMessagePublisher
+    private lateinit var meterRegistry: SimpleMeterRegistry
+    private lateinit var metrics: NotificationStreamMetrics
 
     @BeforeEach
     fun setUp() {
@@ -31,6 +34,16 @@ class RedisNotificationStreamConsumerIT {
         redisTemplate.delete(STREAM_KEY)
         redisTemplate.delete(DEAD_LETTER_STREAM_KEY)
         redisTemplate.delete(BROKEN_DEAD_LETTER_STREAM_KEY)
+        meterRegistry = SimpleMeterRegistry()
+        metrics = NotificationStreamMetrics(
+            meterRegistry = meterRegistry,
+            properties = RedisNotificationStreamConsumerProperties(
+                groupName = GROUP_NAME,
+                consumerName = "metrics-test",
+                batchSize = 10,
+                pendingMinIdle = Duration.ZERO,
+            ),
+        )
         publisher = RedisNotificationMessagePublisher(
             redisTemplate = redisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
@@ -42,6 +55,7 @@ class RedisNotificationStreamConsumerIT {
         redisTemplate.delete(STREAM_KEY)
         redisTemplate.delete(DEAD_LETTER_STREAM_KEY)
         redisTemplate.delete(BROKEN_DEAD_LETTER_STREAM_KEY)
+        meterRegistry.close()
         connectionFactory.destroy()
     }
 
@@ -62,6 +76,9 @@ class RedisNotificationStreamConsumerIT {
             NotificationChannel.EMAIL,
         )
         assertThat(pendingCount()).isZero()
+        assertThat(messageCount("success", NotificationChannel.WEB_PUSH)).isEqualTo(1.0)
+        assertThat(messageCount("success", NotificationChannel.EMAIL)).isEqualTo(1.0)
+        assertThat(pendingGauge()).isZero()
     }
 
     @Test
@@ -73,6 +90,9 @@ class RedisNotificationStreamConsumerIT {
         }
 
         assertThat(pendingCount()).isEqualTo(2L)
+        assertThat(messageCount("retry", NotificationChannel.WEB_PUSH)).isEqualTo(1.0)
+        assertThat(messageCount("retry", NotificationChannel.EMAIL)).isEqualTo(1.0)
+        assertThat(pendingGauge()).isEqualTo(2.0)
     }
 
     @Test
@@ -127,6 +147,8 @@ class RedisNotificationStreamConsumerIT {
 
         assertThat(pendingCount()).isZero()
         assertThat(deadLetters()).hasSize(2)
+        assertThat(messageCount("dead_letter", NotificationChannel.WEB_PUSH)).isEqualTo(1.0)
+        assertThat(messageCount("dead_letter", NotificationChannel.EMAIL)).isEqualTo(1.0)
         deadLetters().forEach { record ->
             assertThat(record.value)
                 .containsEntry("failureType", "InvalidPayload")
@@ -195,7 +217,22 @@ class RedisNotificationStreamConsumerIT {
             streamKey = STREAM_KEY,
             deadLetterStreamKey = deadLetterStreamKey,
         ),
+        metrics = metrics,
     )
+
+    private fun messageCount(outcome: String, channel: NotificationChannel): Double = meterRegistry
+        .get("notification.worker.messages")
+        .tag("outcome", outcome)
+        .tag("event_type", EventType.ROOM_APPLICATION_ACCEPTED.name)
+        .tag("channel", channel.name)
+        .counter()
+        .count()
+
+    private fun pendingGauge(): Double = meterRegistry
+        .get("notification.worker.pending.messages")
+        .tag("consumer_group", GROUP_NAME)
+        .gauge()
+        .value()
 
     private fun pendingCount(): Long = redisTemplate.opsForStream<String, String>()
         .pending(STREAM_KEY, GROUP_NAME)
