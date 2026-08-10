@@ -36,6 +36,7 @@ class RoomProgressAccessValidator(
     }
 
     fun validateRailViewer(roomId: UUID, memberId: UUID) {
+        // 출석은 완료 후에도 남는 기록이지만, 레일은 진행 중 화면을 위한 도구라 완료와 함께 닫는다.
         requireBusiness(
             findActiveRoom(roomId).status == RoomStatus.IN_PROGRESS,
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
