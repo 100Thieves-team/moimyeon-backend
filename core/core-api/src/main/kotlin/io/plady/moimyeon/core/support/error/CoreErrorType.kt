@@ -103,4 +103,29 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
+
+    ROOM_PROGRESS_NOT_STARTABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1601,
+        "진행을 시작할 수 없는 룸입니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_PROGRESS_START_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1602,
+        "룸 진행을 시작할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_PROGRESS_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1603,
+        "룸 진행에 접근할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_PROGRESS_NOT_AVAILABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1604,
+        "룸 진행 정보를 조회할 수 없는 상태입니다.",
+        LogLevel.WARN,
+    ),
 }
