@@ -24,6 +24,19 @@ class ParticipationValidator(
         )
     }
 
+    // 방장·참여자 공통 게이트. 방장도 JOINED 참여 행을 가지므로 역할은 보지 않는다.
+    // validateHost 와 다르다 — 여기는 참여자도 통과한다(「룸 참여」 §3).
+    fun validateParticipant(roomId: UUID, memberId: UUID) {
+        requireBusiness(
+            participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+                roomId,
+                memberId,
+                ParticipationStatus.JOINED,
+            ),
+            CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN,
+        )
+    }
+
     fun validateNotHost(roomId: UUID, memberId: UUID) {
         requireBusiness(
             !participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
