@@ -222,6 +222,11 @@ data "aws_iam_policy_document" "github_deploy" {
   }
 
   statement {
+    actions   = ["elasticloadbalancing:DescribeTargetHealth"]
+    resources = ["*"]
+  }
+
+  statement {
     actions   = ["ssm:PutParameter"]
     resources = [aws_ssm_parameter.image_uri.arn]
   }

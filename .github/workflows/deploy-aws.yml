@@ -215,6 +215,7 @@ jobs:
             > service-update.json
 
           deadline=$((SECONDS + 1500))
+          requested_deployment_seen=false
           while true; do
             aws ecs describe-services \
               --cluster "${cluster}" \
@@ -223,12 +224,20 @@ jobs:
 
             primary_task_definition="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition' service.json)"
             primary_rollout_state="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .rolloutState // "UNKNOWN"' service.json)"
+            requested_rollout_state="$(jq -r \
+              --arg task_definition "${task_definition}" \
+              '([.services[0].deployments[] | select(.taskDefinition == $task_definition) | (.rolloutState // "UNKNOWN")][0] // "MISSING")' \
+              service.json)"
             deployment_count="$(jq -r '.services[0].deployments | length' service.json)"
             desired_count="$(jq -r '.services[0].desiredCount' service.json)"
             running_count="$(jq -r '.services[0].runningCount' service.json)"
             pending_count="$(jq -r '.services[0].pendingCount' service.json)"
 
             echo "ECS service ${service}: rollout=${primary_rollout_state}, deployments=${deployment_count}, running=${running_count}/${desired_count}, pending=${pending_count}"
+
+            if [ "${requested_rollout_state}" != "MISSING" ]; then
+              requested_deployment_seen=true
+            fi
 
             if [ "${primary_rollout_state}" = "COMPLETED" ] \
               && [ "${primary_task_definition}" = "${task_definition}" ] \
@@ -239,8 +248,16 @@ jobs:
               break
             fi
 
-            if [ "${primary_rollout_state}" = "FAILED" ]; then
+            if [ "${requested_rollout_state}" = "FAILED" ]; then
               echo "::error::ECS deployment failed before the service became stable."
+              jq '.services[0].events[0:10]' service.json
+              exit 1
+            fi
+
+            if [ "${requested_deployment_seen}" = "true" ] \
+              && [ "${requested_rollout_state}" = "MISSING" ] \
+              && [ "${primary_task_definition}" != "${task_definition}" ]; then
+              echo "::error::ECS rolled back from ${task_definition} to ${primary_task_definition}."
               jq '.services[0].events[0:10]' service.json
               exit 1
             fi
@@ -279,10 +296,12 @@ jobs:
           target_group_arn="$(jq -r '.services[0].loadBalancers[0].targetGroupArn // empty' service.json)"
           if [ -n "${target_group_arn}" ]; then
             echo "Target health:"
-            aws elbv2 describe-target-health \
+            if ! aws elbv2 describe-target-health \
               --target-group-arn "${target_group_arn}" \
               --query 'TargetHealthDescriptions[].{target:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason,description:TargetHealth.Description}' \
-              --output json
+              --output json; then
+              echo "::warning::Target health diagnostics failed; continuing with stopped task diagnostics."
+            fi
           fi
 
           task_arns="$(aws ecs list-tasks \
