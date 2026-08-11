@@ -55,6 +55,14 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     ),
     ROOM_NOT_EDITABLE(HttpStatus.CONFLICT, ErrorCode.E1418, "모집 중인 룸만 수정할 수 있습니다.", LogLevel.WARN),
 
+    // 방장 전용인 ROOM_FORBIDDEN(E1406)과 다르다 — 방장과 참여자 모두 통과한다.
+    ROOM_PARTICIPANT_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1419,
+        "룸에 참여한 사람만 볼 수 있습니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,
