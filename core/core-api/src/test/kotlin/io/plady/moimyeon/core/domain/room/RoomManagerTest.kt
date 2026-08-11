@@ -12,6 +12,8 @@ import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -28,11 +30,16 @@ class RoomManagerTest {
 
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>()
+    private val roomApplicationRepository = mockk<RoomApplicationRepository>()
+    private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
+        roomApplicationRepository,
+        resumeSubmissionRepository,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
+
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
 
