@@ -5,7 +5,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.domain.member.Member
+import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.session.SessionService
+import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.security.auth.AuthCookieFactory
 import io.plady.moimyeon.security.auth.JwtTokenProvider
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -30,6 +33,7 @@ class AuthControllerTest : RestDocsTest() {
     private lateinit var sessionService: SessionService
     private lateinit var jwtTokenProvider: JwtTokenProvider
     private lateinit var authCookieFactory: AuthCookieFactory
+    private lateinit var memberFinder: MemberFinder
 
     private val authRefreshSummary = "액세스 토큰 재발급"
     private val authRefreshDescription =
@@ -41,8 +45,9 @@ class AuthControllerTest : RestDocsTest() {
         sessionService = mockk()
         jwtTokenProvider = mockk()
         authCookieFactory = mockk()
+        memberFinder = mockk()
         mockMvc = mockController(
-            AuthController(sessionService, jwtTokenProvider, authCookieFactory),
+            AuthController(sessionService, jwtTokenProvider, authCookieFactory, memberFinder),
             controllerAdvice = ApiControllerAdvice(),
         )
     }
@@ -50,8 +55,12 @@ class AuthControllerTest : RestDocsTest() {
     @Test
     fun authRefresh() {
         val memberId = UUID.randomUUID()
+        val member = mockk<Member>()
         every { sessionService.authenticate("refresh-credential") } returns memberId
-        every { jwtTokenProvider.issue(memberId) } returns "issued-access-token"
+        every { memberFinder.getById(memberId) } returns member
+        every { member.id } returns memberId
+        every { member.role } returns MemberRole.USER
+        every { jwtTokenProvider.issue(memberId, MemberRole.USER) } returns "issued-access-token"
         every { authCookieFactory.createAccess("issued-access-token") } returns
             ResponseCookie.from(AuthCookieFactory.ACCESS_TOKEN, "issued-access-token")
                 .httpOnly(true)

@@ -118,7 +118,7 @@ class ParticipationRepositoryIT(
     }
 
     @Test
-    fun `확정 참여자 목록은 확정 순간 참여자만 가입 순서로 반환한다`() {
+    fun `확정 참여자 목록은 확정 순간 참여자만 joinedAt 오름차순과 id 오름차순으로 반환한다`() {
         val roomId = UUID.randomUUID()
         val first = join(
             roomId = roomId,
@@ -128,6 +128,12 @@ class ParticipationRepositoryIT(
             leftAt = now.plusHours(1),
         )
         val second = join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.JOINED,
+            joinedAt = now.minusDays(1),
+        )
+        val third = join(
             roomId = roomId,
             memberId = UUID.randomUUID(),
             status = ParticipationStatus.JOINED,
@@ -150,7 +156,7 @@ class ParticipationRepositoryIT(
 
         val result = participationRepository.findAllAtRoomConfirmation(roomId)
 
-        assertThat(result.map { it.memberId }).containsExactly(first.memberId, second.memberId)
+        assertThat(result.map { it.memberId }).containsExactly(first.memberId, second.memberId, third.memberId)
     }
 
     private fun join(

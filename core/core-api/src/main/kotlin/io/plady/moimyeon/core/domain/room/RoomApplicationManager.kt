@@ -12,6 +12,7 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -22,6 +23,7 @@ class RoomApplicationManager(
     private val roomRepository: RoomRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val participationRepository: ParticipationRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     // 수락. 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한 뒤(마지막 자리 1건만 성공, §4.4),
     // 방장 권한·신청 상태·모집 여부·정원을 확인하고 신청자를 참여자로 등록한다.
@@ -46,6 +48,13 @@ class RoomApplicationManager(
             ),
         )
         application.accept(hostMemberId, now)
+        applicationEventPublisher.publishEvent(
+            RoomApplicationAcceptedEvent(
+                applicationId = application.id,
+                roomId = roomId,
+                applicantMemberId = application.applicantMemberId,
+            ),
+        )
 
         return ApplicationDecision(
             applicationId = application.id,

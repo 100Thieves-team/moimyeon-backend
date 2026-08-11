@@ -4,14 +4,18 @@ include(
     "admin:admin-api",
     "core:core-batch",
     "core:core-enum",
+    "core:core-worker",
     "core:core-api",
     "storage:db-core",
+    "storage:redis-core",
     "security:security-core",
     "tests:api-docs",
     "support:logging",
     "support:monitoring",
     "clients:client-example",
     "clients:bedrock-client",
+    "clients:email-client",
+    "clients:web-push-client",
     "storage:object-storage"
 )
 

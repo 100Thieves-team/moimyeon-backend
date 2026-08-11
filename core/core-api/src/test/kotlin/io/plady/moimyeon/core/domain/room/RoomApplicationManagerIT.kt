@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.OutboxRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
@@ -20,6 +21,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.jdbc.core.JdbcTemplate
+import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -29,6 +32,9 @@ class RoomApplicationManagerIT(
     val roomRepository: RoomRepository,
     val roomApplicationRepository: RoomApplicationRepository,
     val participationRepository: ParticipationRepository,
+    val outboxRepository: OutboxRepository,
+    val jdbcTemplate: JdbcTemplate,
+    val jsonMapper: JsonMapper,
 ) : ContextTest() {
     private val roomId: UUID = UUID.randomUUID()
     private val hostId: UUID = UUID.randomUUID()
@@ -38,6 +44,7 @@ class RoomApplicationManagerIT(
     // 트랜잭션 롤백이 없으므로 이 테스트가 만든 행을 직접 지운다.
     @AfterEach
     fun cleanUp() {
+        jdbcTemplate.update("DELETE FROM outbox")
         roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
         participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
         roomRepository.deleteById(roomId)
@@ -65,6 +72,33 @@ class RoomApplicationManagerIT(
 
         val participants = participationRepository.findAll().filter { it.roomId == roomId && it.isActive() }
         assertThat(participants).anyMatch { it.memberId == applicantId && it.participationRole == ParticipationRole.PARTICIPANT }
+    }
+
+    @Test
+    fun `수락 이벤트는 커밋 전에 Outbox로 저장되어 수락과 함께 커밋된다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        val recorded = jdbcTemplate.queryForObject(
+            "SELECT event_type, payload FROM outbox",
+        ) { resultSet, _ ->
+            RecordedNotification(
+                eventType = resultSet.getString("event_type"),
+                payload = resultSet.getString("payload"),
+            )
+        }
+        val payload = jsonMapper.readTree(recorded.payload)
+        val outbox = outboxRepository.findAll().single()
+
+        assertThat(recorded.eventType).isEqualTo("ROOM_APPLICATION_ACCEPTED")
+        assertThat(outbox.id.version()).isEqualTo(7)
+        assertThat(payload["eventId"].asString()).isEqualTo(outbox.id.toString())
+        assertThat(payload["applicationId"].asLong()).isEqualTo(applicationId)
+        assertThat(payload["roomId"].asString()).isEqualTo(roomId.toString())
+        assertThat(payload["applicantMemberId"].asString()).isEqualTo(applicantId.toString())
     }
 
     @Test
@@ -200,4 +234,9 @@ class RoomApplicationManagerIT(
             pendingMemberId = applicantId,
         ),
     ).id
+
+    private data class RecordedNotification(
+        val eventType: String,
+        val payload: String,
+    )
 }

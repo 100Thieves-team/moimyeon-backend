@@ -30,7 +30,8 @@
 --   그 밖(컬럼명·유니크명·인덱스명·타입)은 이 파일이 정본이고 dev/live 도 여기에 맞춘다.
 --
 -- 식별자 정책
--- - 외부에 노출되는 식별자만 BINARY(16) UUID: member, resume, room, terms, terms_agreement.
+-- - 외부에 노출되는 식별자와 분산 전달 식별자는 BINARY(16) UUID:
+--   member, resume, room, terms, terms_agreement, outbox.
 --   UUID 는 시간 정렬(UUIDv7)로 생성한다 — 무작위 v4 는 InnoDB 클러스터 인덱스를 파편화시킨다.
 -- - 그 밖에는 BIGINT AUTO_INCREMENT.
 -- - PK 컬럼명은 테이블 안에서 항상 id, 참조 컬럼명은 <테이블>_id.
@@ -40,10 +41,12 @@
 --   상속한다. 물리 삭제 대신 delete(now) 로 처리하고, 조회 제외는 각 Finder 의 파생 쿼리가 담당한다.
 --   운영에서 데이터를 되살려야 하는 일이 생각보다 잦다 — 잘못 지운 것, 신고로 내렸다가 복원하는 것,
 --   분쟁이 나서 지워진 내용을 확인해야 하는 것. 지워진 행이 남아 있으면 전부 SQL 한 줄로 끝난다.
--- - 상속하지 않는 것은 둘뿐이다. 둘 다 무효화 수단이 이미 있고, 그 수단이 삭제보다 정확하다.
+-- - 별도 라이프사이클이 있는 엔티티는 상속하지 않는다. 업무 데이터가 아니거나 별도 무효화 수단이
+--   있어 deleted_at 보다 정확하기 때문이다. 대표 사례는 다음과 같다.
 --     social_account — 재가입 차단이 (provider, provider_id) 유니크 점유에 의존한다.
 --                      지운 표식을 남기면 그 점유가 풀려 차단이 뚫린다.
 --     refresh_token  — 삭제가 아니라 무효화이며 revoked_at 이 그 시각을 갖는다.
+--     outbox — 외부 전달 전까지의 내구성 작업 기록이며 전달 생명주기와 보존 정책을 따른다.
 --   각 테이블의 사유는 아래 테이블 주석에 적어 두었다. 엔티티를 만들 때 그 문장을 파일 상단으로 옮긴다 —
 --   어느 쪽인지의 원본은 문서가 아니라 각 엔티티 파일이다(docs/conventions/storage.md).
 -- - 값 컬렉션(@ElementCollection)은 엔티티가 아니므로 id·타임스탬프·deleted_at 을 두지 않는다.
@@ -85,6 +88,7 @@
 -- 코딩 규약은 docs/conventions/storage.md 참고.
 
 DROP TABLE IF EXISTS chat_message;
+DROP TABLE IF EXISTS outbox;
 DROP TABLE IF EXISTS chat_room;
 DROP TABLE IF EXISTS review_tag;
 DROP TABLE IF EXISTS review;
@@ -105,6 +109,7 @@ DROP TABLE IF EXISTS room_status_log;
 DROP TABLE IF EXISTS room;
 DROP TABLE IF EXISTS resume;
 DROP TABLE IF EXISTS refresh_token;
+DROP TABLE IF EXISTS web_push_subscription;
 DROP TABLE IF EXISTS terms_agreement;
 DROP TABLE IF EXISTS member_profile_interest_job_role;
 DROP TABLE IF EXISTS member_profile_interest_company;
@@ -280,6 +285,7 @@ CREATE TABLE member (
     email         VARCHAR(320) NOT NULL,
     nickname      VARCHAR(30)  NOT NULL,
     status        VARCHAR(20)  NOT NULL,
+    role          VARCHAR(20)  NOT NULL,
     last_login_at DATETIME     NOT NULL,
     created_at    DATETIME     NOT NULL,
     updated_at    DATETIME     NOT NULL,
@@ -318,6 +324,22 @@ CREATE TABLE refresh_token (
 );
 CREATE INDEX ix_refresh_token_member_id ON refresh_token (member_id);
 CREATE INDEX ix_refresh_token_expires_at ON refresh_token (expires_at);
+
+-- 베이스 미상속: 브라우저의 현재 푸시 전달 경로다. 해지는 복원할 업무 삭제가 아니라
+-- 더 이상 사용하지 않을 외부 등록 식별자의 제거이므로 물리 삭제한다.
+-- 긴 등록 식별자 전체를 인덱싱하지 않고 SHA-256 해시로 동일 브라우저 등록을 식별한다.
+CREATE TABLE web_push_subscription (
+    id                BIGINT      NOT NULL AUTO_INCREMENT,
+    member_id         BINARY(16)  NOT NULL,
+    registration      TEXT        NOT NULL,
+    registration_hash CHAR(64)    NOT NULL,
+    registered_at     DATETIME    NOT NULL,
+    created_at        DATETIME    NOT NULL,
+    updated_at        DATETIME    NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_web_push_subscription_registration_hash UNIQUE (registration_hash)
+);
+CREATE INDEX ix_web_push_subscription_member_id ON web_push_subscription (member_id);
 
 -- 소개 정보(전부 선택 입력). 행 존재 = 온보딩(최초 소개 작성) 제출 완료라는 파생 사실의 근거.
 -- 관심 회사·관심 직무는 다건이라 별도 조인 엔티티로 뺐다(아래) — 값 컬렉션이 아니다.
@@ -592,7 +614,7 @@ CREATE TABLE interview_plan (
 
 -- 한 사람의 면접 = 한 라운드.
 -- interviewee_member_id 가 NULL 일 수 있다 — 확정 후 취소로 자리가 비는 상태를 표현한다.
---   노쇼·취소가 나도 타임라인을 자동으로 바꾸지 않고 방장이 정리할 때까지 기다린다.
+--   불참·취소가 나도 타임라인을 자동으로 바꾸지 않고 방장이 정리할 때까지 기다린다.
 -- 「공정하게 배정하기」는 라운드를 지우고 새로 만들지 않고 갱신한다(upsert).
 --   라운드 식별자가 바뀌면 여기에 매달린 피드백이 끊어지기 때문이다.
 -- 예상 시각은 저장하지 않는다 — 룸 시작 시각 + 오프닝 + 앞선 라운드들의 시간으로 계산한다.
@@ -619,10 +641,10 @@ CREATE TABLE interview_round (
 
 -- 라운드별 면접관·관찰자 배정. 면접자는 라운드의 컬럼이라 여기 들어가지 않는다.
 -- 관찰자를 "면접자도 면접관도 아닌 사람"으로 계산하지 않고 명시적으로 배정하는 이유는,
--- 노쇼자를 타임라인에서 빼는 조작(「타임라인에서 제외하기」)을 표현하기 위해서다.
+-- 불참자를 타임라인에서 빼는 조작(「타임라인에서 제외하기」)을 표현하기 위해서다.
 -- 베이스 상속: 「면접관·관찰자 포함·제외」는 소프트 삭제와 되살리기다.
 --   유니크가 (라운드, 회원)이라 제외했다 다시 포함할 때 지워진 행이 자리를 막는데,
---   _active_check 가 그 충돌을 없앤다. 누가 언제 배정에서 빠졌는지가 노쇼 정리의 근거로 남는다.
+--   _active_check 가 그 충돌을 없앤다. 누가 언제 배정에서 빠졌는지가 불참 정리의 근거로 남는다.
 --   「배정하기」는 라운드를 지우고 새로 만들지 않고 갱신하므로 죽은 행이 쌓이지 않는다.
 CREATE TABLE round_assignment (
     id                 BIGINT      NOT NULL AUTO_INCREMENT,
@@ -661,7 +683,7 @@ CREATE TABLE round_feedback (
 -- 준비 단계에서 만들어져 라운드 편집을 넘나들며 살아남아야 하기 때문이다.
 -- (피드백은 반대로 라운드가 진행되어야 생기는 산물이라 라운드에 매단다.)
 -- 꼬리질문은 별도 테이블 없이 parent_question_id 자기 참조로 표현한다 — 구조가 동일하다.
--- 작성자가 노쇼로 교체되어도 질문은 보존된다.
+-- 작성자가 불참으로 교체되어도 질문은 보존된다.
 -- 베이스 상속: 「룸 진행 준비」 4.5 의 "남긴 질문은 삭제 후 재작성할 수 있다" 를 소프트 삭제로 구현한다.
 --   물리 삭제할 수 없는 이유가 둘이다 — parent_question_id 로 매달린 꼬리질문이 고아가 되고,
 --   진행 중 삭제하면 이미 쌓인 답변 요약·댓글·투표가 갈 곳을 잃는다.
@@ -746,11 +768,11 @@ CREATE TABLE closing_response (
     CONSTRAINT uk_closing_response_room_member_active UNIQUE (room_id, member_id, _active_check)
 );
 
--- 출석 기록. 완료 처리 시작 시 전원 '출석'으로 표시하고 예외만 지각·노쇼로 바꾼다.
--- 라운드 배정과 무관하다 — 노쇼가 나도 타임라인은 자동으로 바뀌지 않는다.
--- 변경 이력 테이블은 두지 않는다. 관리자 정정 시 change_reason 을 남기는 것으로 갈음한다.
--- 베이스 상속: 잘못 기록했으면 status 를 고치는 것이 정상 경로다. deleted_at 은 그 사람이 애초에
---   그 룸에 없었어야 할 때만 쓴다 — 출석은 신뢰 통계의 분모라 물리 삭제하면 지난 지표를 재현할 수 없다.
+-- 출석 기록. 진행 시작 시 확정 참여자별 출석·불참 선택을 한 번 저장하며 일반 사용자는 수정하지 않는다.
+-- 라운드 배정과 무관하고, 시작 후 도착해도 최초에 기록된 불참 상태를 유지한다.
+-- 관리자 정정은 현재 제품 범위 밖이다. 향후 운영 정책이 생기면 change_reason 을 사용한다.
+-- deleted_at 은 그 사람이 애초에 해당 룸의 출석 대상이 아니었던 운영 예외에만 사용한다.
+-- 출석은 신뢰 통계의 분모이므로 일반 흐름에서 물리 삭제하지 않는다.
 CREATE TABLE attendance (
     id                 BIGINT       NOT NULL AUTO_INCREMENT,
     room_id            BINARY(16)   NOT NULL,
@@ -848,6 +870,22 @@ CREATE TABLE chat_message (
 CREATE INDEX ix_chat_message_chat_room_id ON chat_message (chat_room_id);
 
 -- ── 스캐폴딩 ────────────────────────────────────────────────────────────
+
+-- 외부 전달 전까지 보관하는 범용 내구성 작업 기록. 업무 데이터의 소프트 삭제 정책이 아니라
+-- 전달 생명주기와 별도 보존 정책을 따르므로 deleted_at 없이 처리 완료 후 물리 삭제한다.
+CREATE TABLE outbox (
+    id           BINARY(16)   NOT NULL,
+    event_type   VARCHAR(100) NOT NULL,
+    payload      TEXT         NOT NULL,
+    relay_status VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
+    claim_token  VARCHAR(36)  NULL,
+    lease_until  DATETIME     NULL,
+    created_at   DATETIME     NOT NULL,
+    updated_at   DATETIME     NOT NULL,
+    PRIMARY KEY (id)
+);
+CREATE INDEX ix_outbox_created_at ON outbox (created_at);
+CREATE INDEX ix_outbox_relay_status_created_at ON outbox (relay_status, created_at);
 
 CREATE TABLE example_entity (
     id             BIGINT       NOT NULL AUTO_INCREMENT,

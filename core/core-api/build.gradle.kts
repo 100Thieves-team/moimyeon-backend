@@ -32,6 +32,7 @@ dependencies {
     runtimeOnly(project(":admin:admin-api"))
     runtimeOnly(project(":clients:bedrock-client"))
     runtimeOnly(project(":storage:object-storage"))
+    runtimeOnly(project(":storage:redis-core"))
 
     implementation(project(":core:core-enum"))
     implementation(project(":security:security-core"))
