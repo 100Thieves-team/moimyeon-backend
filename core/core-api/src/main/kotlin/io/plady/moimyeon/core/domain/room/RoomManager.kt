@@ -71,11 +71,48 @@ class RoomManager(
         room.delete(LocalDateTime.now())
     }
 
+    // 방장이 모집을 접는다. 참여자가 있으면 접을 수 없고 나가기(MOI-397)로 넘겨야 한다.
+    //
+    // 룸 행 잠금이 취소를 수락·신청 제출과 직렬화한다(셋 다 findByIdForUpdate 를 쓴다).
+    // ⚠️ 이 잠금이 빠져도 예외가 나지 않는다: 취소된 룸에 대기 신청이 조용히 남고 그 신청자는
+    //    대기 한도 한 칸을 영원히 물고 있게 된다. 테스트로 드러나지 않으므로 지우지 않는다.
+    @Transactional
+    fun cancel(roomId: UUID, hostMemberId: UUID) {
+        val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
+        requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
+        requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
+
+        room.cancel()
+    }
+
+    // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.
+    private fun hasParticipant(roomId: UUID): Boolean {
+        return participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+            roomId,
+            ParticipationRole.PARTICIPANT,
+            ParticipationStatus.JOINED,
+        )
+    }
+
+    private fun loadRoomForUpdateAsHost(roomId: UUID, memberId: UUID): RoomEntity {
+        val room = requireFound(
+            roomRepository.findByIdForUpdate(roomId)?.takeIf { it.isActive() },
+            CoreErrorType.ROOM_NOT_FOUND,
+        )
+        requireHost(roomId, memberId)
+        return room
+    }
+
     private fun loadActiveRoomAsHost(roomId: UUID, memberId: UUID): RoomEntity {
         val room = requireFound(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
         )
+        requireHost(roomId, memberId)
+        return room
+    }
+
+    private fun requireHost(roomId: UUID, memberId: UUID) {
         requireBusiness(
             participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
                 roomId,
@@ -84,7 +121,6 @@ class RoomManager(
             ),
             CoreErrorType.ROOM_FORBIDDEN,
         )
-        return room
     }
 
     private fun MeetingPlace.toEntityValues(): Pair<MeetingType, Long?> = when (this) {

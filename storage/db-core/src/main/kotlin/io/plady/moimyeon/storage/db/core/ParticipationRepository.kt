@@ -18,6 +18,14 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
     // 현재 인원 = 활성 참여 수.
     fun countByRoomIdAndDeletedAtIsNull(roomId: UUID): Long
 
+    // 룸 취소 가능 여부(MOI-396). 방장도 참여 행을 갖기 때문에 전체 인원으로 재면 "== 1" 을 비교하게 된다.
+    // 질문이 "몇 명인가"가 아니라 "있는가"이므로 세지 않고 첫 행에서 멈춘다.
+    fun existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): Boolean
+
     // 탐색 목록의 표시용 일괄 집계(MOI-383 §4.1). 한 페이지 분량의 roomId 에만 IN 으로 걸어
     // 룸 수에 비례해 쿼리가 늘지 않게 한다. 기준은 단건 조회·정원 확정과 같은 "활성 참여"다.
     // 참여가 없는 룸은 GROUP BY 결과에 아예 없으므로 0 으로 채우는 것은 호출자의 몫이다.

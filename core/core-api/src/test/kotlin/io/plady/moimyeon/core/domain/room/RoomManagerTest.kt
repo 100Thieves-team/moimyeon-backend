@@ -144,6 +144,81 @@ class RoomManagerTest {
         assertFails(CoreErrorType.ROOM_NOT_FOUND) { updateCommand() }
     }
 
+    @Test
+    fun `참여자가 없는 모집 중 룸은 취소되어 CANCELED 가 된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipantExists(false)
+
+        manager.cancel(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
+    }
+
+    // 방장 혼자 남기고 참여자를 버릴 수는 없다. 나가기(MOI-397)로 넘겨야 한다.
+    @Test
+    fun `참여자가 있는 룸을 취소하면 E1420 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipantExists(true)
+
+        assertCancelFails(CoreErrorType.ROOM_HAS_PARTICIPANTS)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    @Test
+    fun `모집 중이 아닌 룸을 취소하면 E1410 을 던진다`() {
+        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED, RoomStatus.CANCELED)
+            .forEach { status ->
+                givenRoomForUpdateWithStatus(status)
+                givenHost()
+
+                assertCancelFails(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    // 나간 자리는 비워진 것으로 본다(수락·수정의 정원 판정과 같은 기준).
+    @Test
+    fun `나가거나 내려간 참여는 취소를 막지 않는다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipantExists(false)
+
+        manager.cancel(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
+        verify {
+            participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+                roomId,
+                ParticipationRole.PARTICIPANT,
+                ParticipationStatus.JOINED,
+            )
+        }
+    }
+
+    @Test
+    fun `방장이 아니면 룸을 취소할 수 없고 E1406 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost(isHost = false)
+
+        assertCancelFails(CoreErrorType.ROOM_FORBIDDEN)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    @Test
+    fun `내려간 룸을 취소하면 E1405 를 던진다`() {
+        givenRecruitingRoomForUpdate().delete(now)
+
+        assertCancelFails(CoreErrorType.ROOM_NOT_FOUND)
+    }
+
+    private fun assertCancelFails(errorType: CoreErrorType) {
+        assertThatThrownBy { manager.cancel(roomId, hostId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
+    }
+
     private fun assertFails(errorType: CoreErrorType, command: () -> RoomUpdateCommand) {
         assertThatThrownBy { manager.update(roomId, hostId, command()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
@@ -173,13 +248,37 @@ class RoomManagerTest {
         return room
     }
 
-    // status 는 protected set 이고 전이 메서드가 아직 없어(MOI-396·398) 실제 엔티티로는 만들 수 없는 상태다.
+    // 취소는 룸 행을 잠그고 읽는다. 수정 경로와 조회 메서드가 다르므로 스텁도 갈린다.
+    private fun givenRecruitingRoomForUpdate(): RoomEntity {
+        val room = givenRecruitingRoom()
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    // status 는 protected set 이고 RECRUITING 에서 출발하므로, 확정·완료 상태는 실제 엔티티로 만들 수 없다.
     private fun givenRoomWithStatus(status: RoomStatus): RoomEntity {
         val room = mockk<RoomEntity>(relaxed = true)
         every { room.isActive() } returns true
         every { room.status } returns status
         every { roomRepository.findById(roomId) } returns Optional.of(room)
         return room
+    }
+
+    private fun givenRoomForUpdateWithStatus(status: RoomStatus): RoomEntity {
+        val room = givenRoomWithStatus(status)
+        every { room.canCancel() } returns false
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    private fun givenParticipantExists(exists: Boolean) {
+        every {
+            participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+                roomId,
+                ParticipationRole.PARTICIPANT,
+                ParticipationStatus.JOINED,
+            )
+        } returns exists
     }
 
     private fun givenHost(isHost: Boolean = true) {
