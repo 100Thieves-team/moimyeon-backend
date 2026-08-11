@@ -12,21 +12,34 @@ import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.Optional
 import java.util.UUID
 
 class RoomManagerTest {
+    private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>()
-    private val manager = RoomManager(roomRepository, participationRepository)
+    private val roomApplicationRepository = mockk<RoomApplicationRepository>()
+    private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
+    private val manager = RoomManager(
+        roomRepository,
+        participationRepository,
+        roomApplicationRepository,
+        resumeSubmissionRepository,
+        Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+    )
 
-    private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
 

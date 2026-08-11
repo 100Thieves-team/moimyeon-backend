@@ -2,24 +2,31 @@ package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
 import io.plady.moimyeon.core.domain.jobposting.JobPostingFinder
+import io.plady.moimyeon.core.domain.resume.ResumeValidator
 import org.springframework.stereotype.Service
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
 class RoomService(
     private val catalogRefValidator: CatalogRefValidator,
+    private val resumeValidator: ResumeValidator,
     private val roomManager: RoomManager,
     private val roomFinder: RoomFinder,
     private val roomSearchReader: RoomSearchReader,
     private val jobPostingFinder: JobPostingFinder,
+    private val clock: Clock,
 ) {
-    // 방(룸) 생성. 카탈로그 참조 검증은 쓰기 트랜잭션 밖에서(profile 패턴과 동일),
+    // 방(룸) 생성. 카탈로그·이력서 참조 검증은 쓰기 트랜잭션 밖에서(profile 패턴과 동일),
     // 실제 등록은 RoomManager 트랜잭션에서 한다.
     fun createRoom(hostMemberId: UUID, command: RoomCreationCommand): Room {
         catalogRefValidator.validateJobRoles(listOf(command.jobRoleId))
         (command.meetingPlace as? MeetingPlace.Offline)?.let { catalogRefValidator.validateSigungu(it.sigunguId) }
         // TODO(BE-02B): job_posting 엔티티/리포지토리가 생기면 postingId 존재·활성 검증을 추가한다.
+
+        // 소유권·존재·미삭제를 한 번에 보고 제출로 복사할 파일 정보를 돌려준다. 신청 경로와 같은 도구다.
+        val resumeFile = resumeValidator.validateOwnedBy(hostMemberId, command.resumeId)
 
         val room = Room.create(
             // TODO: ERD Step 4는 room id 를 시간 정렬 식별자(UUIDv7)로 둔다. 생성기 도입 시 이 한 줄만 교체.
@@ -34,9 +41,9 @@ class RoomService(
             capacity = command.capacity,
             schedule = command.schedule,
             resumeSharingPolicy = command.resumeSharingPolicy,
-            now = LocalDateTime.now(),
+            now = LocalDateTime.now(clock),
         )
-        roomManager.create(room, hostMemberId, command.resumeId)
+        roomManager.create(room, hostMemberId, command.resumeId, resumeFile)
         return room
     }
 

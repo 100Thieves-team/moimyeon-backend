@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
@@ -9,10 +10,15 @@ import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.ResumeSubmissionEntity
+import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -20,9 +26,17 @@ import java.util.UUID
 class RoomManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val roomApplicationRepository: RoomApplicationRepository,
+    private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val clock: Clock,
 ) {
+    // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
+    // 신청 행이 없으면 제출도 없다 — 넷 중 하나라도 실패하면 방장 없는 룸이 남지 않아야 한다.
+    // 네 시각은 "같은 순간"이 곧 명세라 한 번만 찍어 나눠 쓴다.
     @Transactional
-    fun create(room: Room, hostMemberId: UUID, resumeId: UUID) {
+    fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile) {
+        val now = LocalDateTime.now(clock)
+
         roomRepository.save(RoomMapper.toEntity(room))
         participationRepository.save(
             ParticipationEntity(
@@ -30,10 +44,27 @@ class RoomManager(
                 memberId = hostMemberId,
                 participationRole = ParticipationRole.HOST,
                 status = ParticipationStatus.JOINED,
-                joinedAt = LocalDateTime.now(),
+                joinedAt = now,
             ),
         )
-        // TODO(BE-05 잔여): resume_submission(resumeId) · chat_room · room_status_log(생성 전이) — 엔티티 생성 필요.
+        // 제출 행이 참조할 신청 id 를 먼저 확정한다(room_application_id 는 NOT NULL).
+        val application = roomApplicationRepository.saveAndFlush(
+            RoomApplicationEntity.forHost(room.id, hostMemberId, now),
+        )
+        resumeSubmissionRepository.save(
+            ResumeSubmissionEntity(
+                roomApplicationId = application.id,
+                roomId = room.id,
+                memberId = hostMemberId,
+                sourceResumeId = resumeId,
+                fileKey = resumeFile.key,
+                originalName = resumeFile.originalName,
+                sizeBytes = resumeFile.sizeBytes,
+                contentType = resumeFile.contentType,
+                submittedAt = now,
+            ),
+        )
+        // TODO(BE-05 잔여): chat_room · room_status_log(생성 전이) — 엔티티 생성 필요.
     }
 
     // 편집 가능한 필드 수정. 방장만 가능. 오프라인 지역 참조 검증은 RoomService 가 트랜잭션 밖에서 한다.
@@ -68,7 +99,7 @@ class RoomManager(
     @Transactional
     fun delete(roomId: UUID, hostMemberId: UUID) {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
-        room.delete(LocalDateTime.now())
+        room.delete(LocalDateTime.now(clock))
     }
 
     private fun loadActiveRoomAsHost(roomId: UUID, memberId: UUID): RoomEntity {
