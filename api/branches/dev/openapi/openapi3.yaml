@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-11",
-                        "datetime" : "2026-08-11T12:06:23.439020532",
+                        "datetime" : "2026-08-11T12:39:53.79842523",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-11",
-                        "datetime" : "2026-08-11T12:06:23.69125996",
+                        "datetime" : "2026-08-11T12:39:53.931498161",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "33008a4e-c99e-4d46-a8ea-5c8f5105606e",
+                          "termsId" : "4d11864b-c870-4097-94eb-1a27fc27f9f9",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "a23cf7d4-8138-4a6e-8b7e-6f5020753089",
+                          "termsId" : "2dc3fb81-3a2c-4f93-8249-08129a26fd20",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "1a157b76-c6e7-43d7-98f5-e02bcaf433f6",
+                        "memberId" : "e1d5e2cd-e490-4761-864c-e24ae32c03c7",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "1a157b76-c6e7-43d7-98f5-e02bcaf433f6",
+                          "memberId" : "e1d5e2cd-e490-4761-864c-e24ae32c03c7",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-12T12:06:27.020033413",
+                          "startAt" : "2026-08-12T12:39:56.327178525",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1279,7 +1279,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "b9c54911-9805-46b9-94ab-3ca2dbaded82",
+                        "hostMemberId" : "726384f7-fa71-4471-8940-e8423612125b",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1591,7 +1591,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "64e54a80-1dfb-4802-b4c1-e80f00f2812b",
+                        "memberId" : "2a1e293e-b244-4e22-8e61-ac8a94d52056",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -2103,6 +2103,66 @@ paths:
                           "appliedAt" : "2026-07-31T10:20:00"
                         } ]
                       },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}/cancellation:
+    post:
+      tags:
+      - v1
+      summary: 룸 취소
+      description: "방장이 모집을 접는다(「룸 참여」 §4.9). 룸 상태가 CANCELED 가 되고, 남아 있던 대기 신청은 같은\
+        \ 트랜잭션에서 일괄 종료된다. 반려가 아니므로 신청자는 재신청 차단에 걸리지 않는다. 방장 외 참여자가 남아 있으면 취소할 수 없다\
+        (E1420) — 그때는 나가기로 방장을 넘겨야 한다."
+      operationId: cancelRoom
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms910352763"
+              examples:
+                cancelRoom-e1410:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1410",
+                        "message" : "모집 중인 방이 아닙니다.",
+                        "data" : null
+                      }
+                    }
+                cancelRoom-e1420:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1420",
+                        "message" : "참여자가 있는 룸은 취소할 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                cancelRoom:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
                       "error" : null
                     }
   /v1/rooms/{roomId}/participants:
@@ -2818,7 +2878,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
