@@ -896,14 +896,14 @@ Content-Length: 146
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 235
+Content-Length: 236
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-11",
-    "datetime" : "2026-08-11T10:52:08.91190139",
+    "datetime" : "2026-08-11T11:31:46.116241967",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1017,7 +1017,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-11",
-    "datetime" : "2026-08-11T10:52:09.097482527",
+    "datetime" : "2026-08-11T11:31:46.325577711",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1176,7 +1176,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 경로는 Spring Securi
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Tue, 11 Aug 2026 11:22:07 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Tue, 11 Aug 2026 12:01:45 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1382,7 +1382,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "8d5a4ab1-5ade-43fa-af88-d923d46b8780",
+      "termsId" : "8480d38b-9eed-4a9a-a27a-161a6ce393a2",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1390,7 +1390,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "52274ec2-7a29-40b8-86b7-2585b75f5ec5",
+      "termsId" : "226b897a-e80a-411a-b836-fb3f8b1c7a3a",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1495,12 +1495,12 @@ Content-Length: 454
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "1e435f3e-3893-4568-8794-844d1af1f155",
+    "memberId" : "037b1ba9-c1f1-4e21-b2b7-8d4197220d7d",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "1e435f3e-3893-4568-8794-844d1af1f155",
+      "memberId" : "037b1ba9-c1f1-4e21-b2b7-8d4197220d7d",
       "interestJobRoleIds" : [ ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2286,7 +2286,7 @@ Content-Length: 443
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "baaf48ed-239c-4c44-80c7-52f0206715ba",
+    "memberId" : "20052f19-2897-4e97-b3f4-d5e5a9f59177",
     "interestJobRoleIds" : [ 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4246,7 +4246,7 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 845
+Content-Length: 1056
 
 {
   "result" : "SUCCESS",
@@ -4264,17 +4264,25 @@ Content-Length: 845
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-12T10:52:12.174721868",
+      "startAt" : "2026-08-12T11:31:49.567946644",
       "durationMinutes" : 90
     },
     "recruit" : {
       "current" : 1,
       "min" : 3,
       "max" : 6,
-      "recruitStatus" : "RECRUITING"
+      "recruitStatus" : "RECRUITING",
+      "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "05520741-b8d6-4b21-b966-414f629d53de"
+    "hostMemberId" : "1ef4053f-5349-4c40-9f24-5943b46a1d9f",
+    "confirmation" : {
+      "ready" : false,
+      "blockReason" : {
+        "code" : "BELOW_MIN_CAPACITY",
+        "label" : "인원 1 / 6명 (최소 3명)"
+      }
+    }
   },
   "error" : null
 }</code></pre>
@@ -4391,6 +4399,36 @@ Content-Length: 845
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.recruitStatus</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.pendingApplicationCount</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.ready</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 가능 여부 (모집 중 &amp;&amp; 일정 미경과 &amp;&amp; 인원 &gt;= 최소 인원)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정할 수 없는 사유. ready 가 true 면 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason.code</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">사유 코드 (ROOM_CONFIRMED | ROOM_IN_PROGRESS | ROOM_COMPLETED | ROOM_CANCELED | SCHEDULE_PASSED | BELOW_MIN_CAPACITY)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason.label</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePublic</code></p></td>
@@ -5191,7 +5229,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-11 10:50:44 UTC
+Last updated 2026-08-11 11:30:34 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
