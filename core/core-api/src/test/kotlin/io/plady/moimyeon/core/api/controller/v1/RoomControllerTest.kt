@@ -28,6 +28,8 @@ import io.plady.moimyeon.core.domain.room.RoomTitle
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -99,6 +101,12 @@ class RoomControllerTest : RestDocsTest() {
           "resumePublic": true
         }
         """.trimIndent()
+
+    private val cancelSummary = "룸 취소"
+    private val cancelDescription =
+        "방장이 모집을 접는다(「룸 참여」 §4.9). 룸 상태가 CANCELED 가 되고, 남아 있던 대기 신청은 같은 트랜잭션에서 " +
+            "일괄 종료된다. 반려가 아니므로 신청자는 재신청 차단에 걸리지 않는다. " +
+            "방장 외 참여자가 남아 있으면 취소할 수 없다(E1420) — 그때는 나가기로 방장을 넘겨야 한다."
 
     @BeforeEach
     fun setUp() {
@@ -199,6 +207,50 @@ class RoomControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1402\"") }
             .andDo(documentApi("createRoom-e1402-max-participants", createSummary, createDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `cancelRoom 참여자가 없는 모집 중 룸을 취소한다`() {
+        every { roomService.cancelRoom(hostMemberId, createdRoomId) } returns Unit
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "cancelRoom",
+                    cancelSummary,
+                    cancelDescription,
+                    pathParameters(parameterWithName("roomId").description("취소할 룸 식별자")),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `cancelRoom 참여자가 남아 있으면 E1420`() {
+        every { roomService.cancelRoom(hostMemberId, createdRoomId) } throws
+            CoreException(CoreErrorType.ROOM_HAS_PARTICIPANTS)
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
+            .andExpect(status().isConflict)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1420\"") }
+            .andDo(documentApi("cancelRoom-e1420", cancelSummary, cancelDescription, errorResponseFields()))
+    }
+
+    // 이미 취소된 룸에 다시 요청해도 같은 코드다. 취소는 멱등하게 성공하지 않는다.
+    @Test
+    fun `cancelRoom 모집 중이 아니면 E1410`() {
+        every { roomService.cancelRoom(hostMemberId, createdRoomId) } throws
+            CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
+            .andExpect(status().isConflict)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1410\"") }
+            .andDo(documentApi("cancelRoom-e1410", cancelSummary, cancelDescription, errorResponseFields()))
     }
 
     @Test

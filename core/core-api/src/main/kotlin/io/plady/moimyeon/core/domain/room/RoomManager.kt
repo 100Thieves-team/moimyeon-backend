@@ -72,13 +72,6 @@ class RoomManager(
         )
     }
 
-    // 삭제 = 소프트 삭제(deleted_at). 방장만 가능. 그 외 상태·조건 검사는 두지 않는다.
-    @Transactional
-    fun delete(roomId: UUID, hostMemberId: UUID) {
-        val room = loadActiveRoomAsHost(roomId, hostMemberId)
-        room.delete(LocalDateTime.now())
-    }
-
     // 방장이 모집을 접는다. 참여자가 있으면 접을 수 없고 나가기(MOI-397)로 넘겨야 한다.
     //
     // 룸 행 잠금이 취소를 수락·신청 제출과 직렬화한다(셋 다 findByIdForUpdate 를 쓴다).

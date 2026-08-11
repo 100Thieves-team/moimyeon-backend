@@ -12,7 +12,6 @@ import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.support.response.ApiResponse
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -46,13 +45,15 @@ class RoomController(
         return ApiResponse.success()
     }
 
-    // DELETE /v1/rooms/{roomId} — 방장이 룸을 삭제(소프트 삭제)한다. 방장만 가능.
-    @DeleteMapping("/v1/rooms/{roomId}")
-    fun delete(
+    // POST /v1/rooms/{roomId}/cancellation — 방장이 모집을 접는다. 방장만 가능.
+    // DELETE 가 아닌 이유: 취소는 리소스 제거가 아니라 상태 전이이고, 참여자가 있으면 거부되는
+    // 조건부 연산이라 DELETE 의 멱등 기대와 맞지 않는다. 운영이 룸을 내리는 소프트 삭제는 별개다.
+    @PostMapping("/v1/rooms/{roomId}/cancellation")
+    fun cancel(
         @LoginMember currentMember: CurrentMember,
         @PathVariable roomId: UUID,
     ): ApiResponse<Any> {
-        roomFacade.delete(currentMember.id, roomId)
+        roomFacade.cancel(currentMember.id, roomId)
         return ApiResponse.success()
     }
 

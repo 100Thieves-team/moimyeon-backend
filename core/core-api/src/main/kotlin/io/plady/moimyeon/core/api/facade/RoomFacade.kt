@@ -21,8 +21,8 @@ class RoomFacade(
         roomService.updateRoom(hostMemberId, roomId, command)
     }
 
-    fun delete(hostMemberId: UUID, roomId: UUID) {
-        roomService.deleteRoom(hostMemberId, roomId)
+    fun cancel(hostMemberId: UUID, roomId: UUID) {
+        roomService.cancelRoom(hostMemberId, roomId)
     }
 
     fun getRoom(roomId: UUID): RoomReadResponse = RoomReadResponse.from(roomService.getRoom(roomId))
