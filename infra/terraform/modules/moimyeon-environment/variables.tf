@@ -108,6 +108,40 @@ variable "enable_s3_gateway_endpoint" {
   default     = true
 }
 
+variable "enable_notification_redis" {
+  description = "Provision the private ElastiCache Valkey replication group used by notification relay and workers."
+  type        = bool
+  default     = false
+}
+
+variable "notification_redis_node_type" {
+  description = "ElastiCache node type for the notification Valkey replication group."
+  type        = string
+  default     = "cache.t4g.micro"
+}
+
+variable "notification_redis_node_count" {
+  description = "Number of nodes in the notification Valkey replication group. Use at least 2 in live for automatic failover."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.notification_redis_node_count >= 1 && var.notification_redis_node_count <= 6
+    error_message = "notification_redis_node_count must be between 1 and 6."
+  }
+}
+
+variable "notification_redis_snapshot_retention_days" {
+  description = "Number of days to retain automatic notification Valkey snapshots."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.notification_redis_snapshot_retention_days >= 0 && var.notification_redis_snapshot_retention_days <= 35
+    error_message = "notification_redis_snapshot_retention_days must be between 0 and 35."
+  }
+}
+
 # Security group descriptions are immutable in AWS (changing forces replacement).
 # Override to the existing value when importing a hand-built SG.
 variable "alb_sg_description" {

@@ -39,6 +39,13 @@ module "live" {
 
   enable_db_bastion = true
 
+  # Live is intentionally scaled to zero. Turn this on together with the ECS
+  # capacity; the module rejects a live cache with fewer than two nodes.
+  enable_notification_redis                  = false
+  notification_redis_node_type               = "cache.t4g.micro"
+  notification_redis_node_count              = 2
+  notification_redis_snapshot_retention_days = 7
+
   oauth_google_client_id     = var.oauth_google_client_id
   oauth_google_client_secret = var.oauth_google_client_secret
 

@@ -131,3 +131,31 @@ resource "aws_security_group" "rds" {
     Name = "${local.name}-rds-sg"
   })
 }
+
+resource "aws_security_group" "notification_redis" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis"
+  description = "Notification Valkey access from ECS tasks"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "ECS tasks to notification Valkey over TLS"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_task.id]
+  }
+
+  egress {
+    description = "Valkey node communication"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-sg"
+  })
+}

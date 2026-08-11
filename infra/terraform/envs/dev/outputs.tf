@@ -43,6 +43,16 @@ output "rds_endpoint" {
   value       = module.dev.rds_endpoint
 }
 
+output "notification_redis_primary_endpoint" {
+  description = "Notification Valkey primary endpoint."
+  value       = module.dev.notification_redis_primary_endpoint
+}
+
+output "notification_redis_url_parameter_name" {
+  description = "SSM parameter containing the notification Valkey URL."
+  value       = module.dev.notification_redis_url_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.dev.upload_bucket_name

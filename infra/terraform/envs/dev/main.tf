@@ -64,6 +64,13 @@ module "dev" {
   # (Import or rebuild it under Terraform as a later follow-up.)
   enable_db_bastion = false
 
+  # Dev keeps a single node to limit cost. Live requires at least two nodes and
+  # automatic failover when the notification Redis switch is enabled there.
+  enable_notification_redis                  = true
+  notification_redis_node_type               = "cache.t4g.micro"
+  notification_redis_node_count              = 1
+  notification_redis_snapshot_retention_days = 1
+
   # Transitional (blue/green): keep the existing app-host SG (moimyeon-dev-sg-app)
   # and the existing bastion SG (moimyeon-dev-sg-db-access) able to reach RDS so
   # the current container/tunnel keep working during the absorb. Drop after cutover.

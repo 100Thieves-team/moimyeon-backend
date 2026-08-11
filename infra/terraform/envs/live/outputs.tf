@@ -43,6 +43,16 @@ output "rds_endpoint" {
   value       = module.live.rds_endpoint
 }
 
+output "notification_redis_primary_endpoint" {
+  description = "Notification Valkey primary endpoint when enabled."
+  value       = module.live.notification_redis_primary_endpoint
+}
+
+output "notification_redis_url_parameter_name" {
+  description = "SSM parameter containing the notification Valkey URL when enabled."
+  value       = module.live.notification_redis_url_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.live.upload_bucket_name

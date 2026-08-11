@@ -50,24 +50,35 @@ locals {
 
   # Injected into the container as `secrets` (valueFrom SSM). The `name` is the
   # runtime env var the app reads; these match moimyeon's config contract.
-  container_secrets = [
-    {
-      name      = "STORAGE_DATABASE_CORE_DB_PASSWORD"
-      valueFrom = local.db_password_ssm_arn
-    },
-    {
-      name      = "JWT_SECRET"
-      valueFrom = aws_ssm_parameter.jwt_secret.arn
-    },
-    {
-      name      = "GOOGLE_OAUTH_CLIENT_SECRET"
-      valueFrom = aws_ssm_parameter.oauth_google_client_secret.arn
-    },
-  ]
+  container_secrets = concat(
+    [
+      {
+        name      = "STORAGE_DATABASE_CORE_DB_PASSWORD"
+        valueFrom = local.db_password_ssm_arn
+      },
+      {
+        name      = "JWT_SECRET"
+        valueFrom = aws_ssm_parameter.jwt_secret.arn
+      },
+      {
+        name      = "GOOGLE_OAUTH_CLIENT_SECRET"
+        valueFrom = aws_ssm_parameter.oauth_google_client_secret.arn
+      },
+    ],
+    var.enable_notification_redis ? [
+      {
+        name      = "STORAGE_REDIS_URL"
+        valueFrom = aws_ssm_parameter.notification_redis_url[0].arn
+      },
+    ] : [],
+  )
 
-  ssm_parameter_arns = [
-    local.db_password_ssm_arn,
-    aws_ssm_parameter.jwt_secret.arn,
-    aws_ssm_parameter.oauth_google_client_secret.arn,
-  ]
+  ssm_parameter_arns = concat(
+    [
+      local.db_password_ssm_arn,
+      aws_ssm_parameter.jwt_secret.arn,
+      aws_ssm_parameter.oauth_google_client_secret.arn,
+    ],
+    var.enable_notification_redis ? [aws_ssm_parameter.notification_redis_url[0].arn] : [],
+  )
 }
