@@ -166,12 +166,7 @@ jobs:
           image_uri="${repo}:${sha_tag}"
 
           echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
-          {
-            echo "tags<<EOF"
-            echo "${image_uri}"
-            echo "${repo}:${env_tag}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -349,7 +344,10 @@ jobs:
             > service-update.json
 
           deadline=$((SECONDS + 1500))
-          requested_deployment_seen=false
+          requested_deployment_seen="$(jq -r \
+            --arg task_definition "${task_definition}" \
+            'any(.service.deployments[]?; .taskDefinition == $task_definition)' \
+            service-update.json)"
           while true; do
             aws ecs describe-services \
               --cluster "${cluster}" \
@@ -433,7 +431,10 @@ jobs:
           fi
 
           deadline=$((SECONDS + 1500))
-          requested_deployment_seen=false
+          requested_deployment_seen="$(jq -r \
+            --arg task_definition "${task_definition}" \
+            'any(.service.deployments[]?; .taskDefinition == $task_definition)' \
+            worker-service-update.json)"
           while true; do
             aws ecs describe-services \
               --cluster "${cluster}" \

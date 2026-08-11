@@ -28,8 +28,9 @@ Each app environment creates:
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).
 - S3 private upload bucket for the MOI-361 presigned-URL flow.
 - Separate ECR repositories for core-api and core-worker Docker images.
-- SSM parameters for generated DB password / JWT secret / Google OAuth secret,
-  notification Redis password and URL, and the last deployed image URI.
+- SSM parameters for generated DB password / JWT secret / Google OAuth secret
+  and the last deployed image URI. Redis and vendor credentials are pre-created
+  SecureStrings so their values do not enter Terraform state.
 - IAM: ECS task role (S3 uploads + ECS Exec), task execution role (SSM secrets),
   ECS instance role, and a GitHub Actions deploy role restricted to the env branch.
 - Optional SSM DB-access bastion (developer RDS port-forward).
@@ -104,15 +105,34 @@ Non-secret env: `SPRING_PROFILES_ACTIVE`, `SERVER_PORT`,
 `STORAGE_DATABASE_CORE_DB_URL` (host:port/db), `STORAGE_DATABASE_CORE_DB_USERNAME`,
 `GOOGLE_OAUTH_CLIENT_ID`, `AWS_REGION`.
 
-Secrets via SSM SecureString `valueFrom` (hybrid model). All three are required —
-the app will not boot without them:
+Secrets via SSM SecureString `valueFrom` (hybrid model). The first three are
+always required. `STORAGE_REDIS_URL` is required when notification Redis is enabled:
 
 | Secret | Source | Rotates on apply? |
 | --- | --- | --- |
 | `STORAGE_DATABASE_CORE_DB_PASSWORD` | **pre-existing SSM** (`generate_db_password = false`) — dev references it by ARN; the RDS master password is left untouched | No (preserved) |
 | `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
-| `STORAGE_REDIS_URL` | Terraform-created private Redis Cloud Map endpoint and AUTH token → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Redis password rotation |
+| `STORAGE_REDIS_URL` | Pre-created private Redis URL → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Manual |
+
+Before enabling Redis, create its password and URL without passing either value
+through Terraform:
+
+```bash
+REDIS_PASSWORD="$(openssl rand -hex 32)"
+
+aws ssm put-parameter --region ap-northeast-2 \
+  --name /moimyeon/dev/notification-redis/PASSWORD \
+  --type SecureString --value "${REDIS_PASSWORD}" --overwrite
+
+aws ssm put-parameter --region ap-northeast-2 \
+  --name /moimyeon/dev/shared/STORAGE_REDIS_URL \
+  --type SecureString \
+  --value "redis://:${REDIS_PASSWORD}@notification-redis.moimyeon-dev.internal:6379" \
+  --overwrite
+
+unset REDIS_PASSWORD
+```
 
 The worker additionally expects two pre-created SecureStrings. Terraform references their ARNs without reading the secret values into state:
 
@@ -145,11 +165,12 @@ Terraform creates the parameter and the RDS master password itself.
   Container-level HEALTHCHECK is off by default because the `eclipse-temurin` JRE
   image has no `wget`/`curl` — set `enable_container_health_check = true` only if
   you add one to the image.
-- **Notification Redis:** dev runs one pinned Redis container on the existing ECS capacity provider. AOF uses `appendfsync always` and `/data` is mounted from encrypted EFS, so a task or EC2 replacement can recover the persisted Stream. Cloud Map provides the stable private DNS name. This is still a single Redis process: ECS restarts it after failure, but there is a temporary outage and no automatic replica promotion. Live remains disabled while ECS capacity is zero; high availability requires a separate replication/Sentinel slice before live activation.
+- **Notification Redis:** dev runs one pinned Redis container on the existing ECS capacity provider. AOF uses `appendfsync always` and `/data` is mounted from encrypted EFS, so a task or EC2 replacement can recover the persisted Stream. Cloud Map provides the stable private DNS name. `appendfsync always` intentionally trades write throughput for the relay contract: the DB Outbox is deleted after `XADD` returns, so `everysec` would reopen an acknowledged-message loss window. Benchmark this before live; changing it safely requires changing the relay durability protocol too. This is still a single Redis process: ECS restarts it after failure, but there is a temporary outage and no automatic replica promotion. Live remains disabled while ECS capacity is zero; high availability requires a separate replication/Sentinel slice before live activation.
 - **DB name/username** default to `moimyeondev` / `moimyeon` — confirm against the
   existing dev RDS master user before adopting/importing it.
-- **Schema:** moimyeon has no Flyway; `dev`/`live` use `ddl-auto: validate`, so the
-  schema must still be applied out-of-band (`schema.sql`).
+- **Schema:** `core-api` applies `storage:db-core` Flyway migrations in `dev`,
+  `staging`, and `live`; `core-worker` keeps Flyway disabled. Persistent databases
+  must not receive `schema.sql` directly.
 
 ## Terraform State Backend
 

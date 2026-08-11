@@ -229,7 +229,7 @@ data "aws_iam_policy_document" "notification_redis_execution_ssm" {
       "ssm:GetParameter",
       "ssm:GetParameters",
     ]
-    resources = [aws_ssm_parameter.notification_redis_password[0].arn]
+    resources = [local.notification_redis_password_ssm_arn]
   }
 
   statement {

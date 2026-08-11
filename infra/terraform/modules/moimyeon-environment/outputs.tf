@@ -72,7 +72,12 @@ output "notification_redis_endpoint" {
 
 output "notification_redis_url_parameter_name" {
   description = "SSM parameter containing the private notification Redis URL, if enabled."
-  value       = var.enable_notification_redis ? aws_ssm_parameter.notification_redis_url[0].name : null
+  value       = var.enable_notification_redis ? local.notification_redis_url_param_name : null
+}
+
+output "notification_redis_password_parameter_name" {
+  description = "Pre-created SSM SecureString expected to contain the notification Redis password."
+  value       = local.notification_redis_password_param_name
 }
 
 output "upload_bucket_name" {

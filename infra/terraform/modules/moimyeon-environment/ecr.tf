@@ -38,7 +38,7 @@ resource "aws_ecr_lifecycle_policy" "app" {
 
 resource "aws_ecr_repository" "notification_worker" {
   name                 = coalesce(var.notification_worker_ecr_repository_name, "${local.name}-core-worker")
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true

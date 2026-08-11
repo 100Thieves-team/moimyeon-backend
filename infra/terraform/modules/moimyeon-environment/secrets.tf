@@ -61,10 +61,14 @@ locals {
     : "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.db_password_param_name}"
   )
 
-  firebase_service_account_param_name = "/${var.project}/${var.environment}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON"
-  gmail_app_password_param_name       = "/${var.project}/${var.environment}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD"
-  firebase_service_account_ssm_arn    = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.firebase_service_account_param_name}"
-  gmail_app_password_ssm_arn          = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.gmail_app_password_param_name}"
+  firebase_service_account_param_name    = "/${var.project}/${var.environment}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON"
+  gmail_app_password_param_name          = "/${var.project}/${var.environment}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD"
+  firebase_service_account_ssm_arn       = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.firebase_service_account_param_name}"
+  gmail_app_password_ssm_arn             = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.gmail_app_password_param_name}"
+  notification_redis_password_param_name = "/${var.project}/${var.environment}/notification-redis/PASSWORD"
+  notification_redis_url_param_name      = "/${var.project}/${var.environment}/shared/STORAGE_REDIS_URL"
+  notification_redis_password_ssm_arn    = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_password_param_name}"
+  notification_redis_url_ssm_arn         = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_url_param_name}"
 
   # Injected into the container as `secrets` (valueFrom SSM). The `name` is the
   # runtime env var the app reads; these match moimyeon's config contract.
@@ -86,7 +90,7 @@ locals {
     var.enable_notification_redis ? [
       {
         name      = "STORAGE_REDIS_URL"
-        valueFrom = aws_ssm_parameter.notification_redis_url[0].arn
+        valueFrom = local.notification_redis_url_ssm_arn
       },
     ] : [],
   )
@@ -97,7 +101,7 @@ locals {
       aws_ssm_parameter.jwt_secret.arn,
       aws_ssm_parameter.oauth_google_client_secret.arn,
     ],
-    var.enable_notification_redis ? [aws_ssm_parameter.notification_redis_url[0].arn] : [],
+    var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
   )
 
 
@@ -119,7 +123,7 @@ locals {
     var.enable_notification_redis ? [
       {
         name      = "STORAGE_REDIS_URL"
-        valueFrom = aws_ssm_parameter.notification_redis_url[0].arn
+        valueFrom = local.notification_redis_url_ssm_arn
       },
     ] : [],
   )
@@ -130,6 +134,6 @@ locals {
       local.firebase_service_account_ssm_arn,
       local.gmail_app_password_ssm_arn,
     ],
-    var.enable_notification_redis ? [aws_ssm_parameter.notification_redis_url[0].arn] : [],
+    var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
   )
 }

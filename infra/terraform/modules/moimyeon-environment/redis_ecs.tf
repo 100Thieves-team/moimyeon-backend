@@ -1,13 +1,3 @@
-resource "random_password" "notification_redis_auth" {
-  count = var.enable_notification_redis ? 1 : 0
-
-  length      = 48
-  special     = false
-  min_lower   = 2
-  min_numeric = 2
-  min_upper   = 2
-}
-
 resource "aws_efs_file_system" "notification_redis" {
   count = var.enable_notification_redis ? 1 : 0
 
@@ -103,7 +93,10 @@ resource "aws_cloudwatch_log_group" "notification_redis" {
 }
 
 locals {
-  notification_redis_host          = "notification-redis.${local.name}.internal"
+  notification_redis_host = "notification-redis.${local.name}.internal"
+  # The relay deletes its DB Outbox after XADD returns. `everysec` could acknowledge
+  # a message that disappears in a Redis crash before the next fsync, so durability
+  # takes precedence over write throughput until that protocol changes.
   notification_redis_start_command = <<-EOT
     set -eu
     umask 077
@@ -171,7 +164,7 @@ resource "aws_ecs_task_definition" "notification_redis" {
       secrets = [
         {
           name      = "REDIS_PASSWORD"
-          valueFrom = aws_ssm_parameter.notification_redis_password[0].arn
+          valueFrom = local.notification_redis_password_ssm_arn
         },
       ]
 
@@ -268,28 +261,6 @@ resource "aws_ecs_service" "notification_redis" {
       error_message = "Notification Redis on ECS requires non-zero ECS EC2 capacity."
     }
   }
-
-  tags = local.tags
-}
-
-resource "aws_ssm_parameter" "notification_redis_password" {
-  count = var.enable_notification_redis ? 1 : 0
-
-  name        = "/${var.project}/${var.environment}/notification-redis/PASSWORD"
-  description = "Authentication password for the notification Redis ECS service in ${local.name}"
-  type        = "SecureString"
-  value       = random_password.notification_redis_auth[0].result
-
-  tags = local.tags
-}
-
-resource "aws_ssm_parameter" "notification_redis_url" {
-  count = var.enable_notification_redis ? 1 : 0
-
-  name        = "/${var.project}/${var.environment}/shared/STORAGE_REDIS_URL"
-  description = "Private notification Redis URL shared by core-api and core-worker in ${local.name}"
-  type        = "SecureString"
-  value       = "redis://:${random_password.notification_redis_auth[0].result}@${local.notification_redis_host}:6379"
 
   tags = local.tags
 }

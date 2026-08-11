@@ -64,8 +64,13 @@ output "notification_redis_endpoint" {
 }
 
 output "notification_redis_url_parameter_name" {
-  description = "SSM parameter containing the notification Redis URL when enabled."
+  description = "Pre-created SSM SecureString name expected for the notification Redis URL."
   value       = module.live.notification_redis_url_parameter_name
+}
+
+output "notification_redis_password_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the notification Redis password."
+  value       = module.live.notification_redis_password_parameter_name
 }
 
 output "upload_bucket_name" {
