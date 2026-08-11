@@ -182,21 +182,6 @@ jobs:
           cache-from: type=gha,scope=core-api
           cache-to: type=gha,mode=max,scope=core-api
 
-      - name: Build and push Notification Worker image
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: ${{ steps.worker_image.outputs.tags }}
-          build-args: |
-            GRADLE_BOOT_JAR_TASK=:core:core-worker:bootJar
-            BOOT_JAR_DIRECTORY=core/core-worker
-          cache-from: type=gha,scope=core-worker
-          cache-to: type=gha,mode=max,scope=core-worker
-
       - name: Store deployed image URI in SSM
         shell: bash
         run: |
@@ -205,17 +190,6 @@ jobs:
             --name "${{ steps.env.outputs.image_uri_parameter }}" \
             --type String \
             --value "${{ steps.image.outputs.image_uri }}" \
-            --overwrite
-
-      - name: Store Notification Worker image URI in SSM
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          aws ssm put-parameter \
-            --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
-            --type String \
-            --value "${{ steps.worker_image.outputs.image_uri }}" \
             --overwrite
 
       - name: Register task definition revision
@@ -262,61 +236,6 @@ jobs:
 
           next_task_def_arn="$(aws ecs register-task-definition \
             --cli-input-json file://task-definition-next.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)"
-
-          echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
-
-      - name: Register Notification Worker task definition revision
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
-        id: worker_task_def
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          cluster="${{ steps.env.outputs.ecs_cluster }}"
-          service="${{ steps.env.outputs.worker_ecs_service }}"
-          container="${{ steps.env.outputs.worker_ecs_container }}"
-          image_uri="${{ steps.worker_image.outputs.image_uri }}"
-
-          current_task_def_arn="$(aws ecs describe-services \
-            --cluster "${cluster}" \
-            --services "${service}" \
-            --query 'services[0].taskDefinition' \
-            --output text)"
-
-          aws ecs describe-task-definition \
-            --task-definition "${current_task_def_arn}" \
-            --query taskDefinition \
-            > worker-task-definition.json
-
-          if ! jq -e \
-            --arg container "${container}" \
-            '.containerDefinitions | any(.name == $container)' \
-            worker-task-definition.json > /dev/null; then
-            echo "::error::Container ${container} is absent from Notification Worker task definition."
-            exit 1
-          fi
-
-          jq \
-            --arg container "${container}" \
-            --arg image_uri "${image_uri}" '
-            .containerDefinitions |= map(
-              if .name == $container then .image = $image_uri else . end
-            )
-            | del(
-              .taskDefinitionArn,
-              .revision,
-              .status,
-              .requiresAttributes,
-              .compatibilities,
-              .registeredAt,
-              .registeredBy
-            )
-          ' worker-task-definition.json > worker-task-definition-next.json
-
-          next_task_def_arn="$(aws ecs register-task-definition \
-            --cli-input-json file://worker-task-definition-next.json \
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)"
 
@@ -403,6 +322,89 @@ jobs:
 
             sleep 15
           done
+
+      # Keep the Worker chain after Core API is stable. A Worker build or rollout
+      # failure must not prevent an otherwise valid API revision from deploying.
+      - name: Build and push Notification Worker image
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.worker_image.outputs.tags }}
+          build-args: |
+            GRADLE_BOOT_JAR_TASK=:core:core-worker:bootJar
+            BOOT_JAR_DIRECTORY=core/core-worker
+          cache-from: type=gha,scope=core-worker
+          cache-to: type=gha,mode=max,scope=core-worker
+
+      - name: Store Notification Worker image URI in SSM
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
+            --type String \
+            --value "${{ steps.worker_image.outputs.image_uri }}" \
+            --overwrite
+
+      - name: Register Notification Worker task definition revision
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        id: worker_task_def
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.worker_ecs_service }}"
+          container="${{ steps.env.outputs.worker_ecs_container }}"
+          image_uri="${{ steps.worker_image.outputs.image_uri }}"
+
+          current_task_def_arn="$(aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            --query 'services[0].taskDefinition' \
+            --output text)"
+
+          aws ecs describe-task-definition \
+            --task-definition "${current_task_def_arn}" \
+            --query taskDefinition \
+            > worker-task-definition.json
+
+          if ! jq -e \
+            --arg container "${container}" \
+            '.containerDefinitions | any(.name == $container)' \
+            worker-task-definition.json > /dev/null; then
+            echo "::error::Container ${container} is absent from Notification Worker task definition."
+            exit 1
+          fi
+
+          jq \
+            --arg container "${container}" \
+            --arg image_uri "${image_uri}" '
+            .containerDefinitions |= map(
+              if .name == $container then .image = $image_uri else . end
+            )
+            | del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            )
+          ' worker-task-definition.json > worker-task-definition-next.json
+
+          next_task_def_arn="$(aws ecs register-task-definition \
+            --cli-input-json file://worker-task-definition-next.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)"
+
+          echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Notification Worker ECS service
         if: steps.deployment_config.outputs.worker_enabled == 'true'
