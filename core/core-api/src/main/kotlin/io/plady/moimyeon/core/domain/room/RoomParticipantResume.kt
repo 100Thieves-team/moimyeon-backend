@@ -6,6 +6,7 @@ import java.util.UUID
 data class RoomParticipantResume(
     val roomId: UUID,
     val participantMemberId: UUID,
+    val submissionId: Long,
     val sourceResumeId: UUID,
     val summary: ResumeSummary,
 )
