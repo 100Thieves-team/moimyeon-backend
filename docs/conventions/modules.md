@@ -131,7 +131,8 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - 개별 응답의 `UNREGISTERED` 등록은 `InvalidWebPushRegistrationRemover`를 통해 물리 삭제한다. 클라이언트 모듈은 JPA Repository를
   직접 알지 않으며 DB 구현이 저장 해시와 원문을 함께 확인한다.
 - `INTERNAL`, `QUOTA_EXCEEDED`, `UNAVAILABLE`은 재시도 가능 오류로, 요청·인증 계열 오류는 영구 오류로 변환한다.
-- Application Default Credentials를 사용하며 서비스 계정 키를 소스나 yml에 저장하지 않는다.
+- 기본값은 Application Default Credentials다. AWS ECS에서는 SSM SecureString의 서비스 계정 JSON을
+  `FIREBASE_SERVICE_ACCOUNT_JSON`으로 주입할 수 있으며, 두 방식 모두 키를 소스나 yml에 저장하지 않는다.
 - `local-dev`, `dev`, `staging`, `live`에서만 실제 발송 Bean을 등록한다. `core-worker`는 이 모듈을 `runtimeOnly`로 조립한다.
 
 ## storage:object-storage: 객체 저장소 격벽

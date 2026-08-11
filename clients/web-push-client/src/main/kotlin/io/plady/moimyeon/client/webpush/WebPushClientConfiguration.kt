@@ -1,6 +1,5 @@
 package io.plady.moimyeon.client.webpush
 
-import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
@@ -19,7 +18,7 @@ internal class WebPushClientConfiguration {
     @Bean(destroyMethod = "delete")
     fun webPushFirebaseApp(properties: FcmWebPushProperties): FirebaseApp {
         val options = FirebaseOptions.builder()
-            .setCredentials(GoogleCredentials.getApplicationDefault())
+            .setCredentials(loadFcmCredentials(properties.serviceAccountJson))
             .setProjectId(properties.projectId)
             .build()
         return FirebaseApp.initializeApp(options, FIREBASE_APP_NAME)
@@ -47,6 +46,7 @@ internal class WebPushClientConfiguration {
 internal data class FcmWebPushProperties(
     val projectId: String,
     val actionBaseUrl: String,
+    val serviceAccountJson: String? = null,
 )
 
 private const val FIREBASE_APP_NAME = "moimyeon-web-push"
