@@ -3,16 +3,21 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -20,6 +25,9 @@ import java.util.UUID
 class RoomManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val roomApplicationRepository: RoomApplicationRepository,
+    private val clock: Clock,
 ) {
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID) {
@@ -82,7 +90,19 @@ class RoomManager(
         requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
         requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
 
+        // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
+        // 이 트랜잭션은 RoomApplicationEntity 를 로드하지 않아 벌크 뒤 컨텍스트를 비울 필요가 없다.
+        val now = LocalDateTime.now(clock)
         room.cancel()
+        roomStatusLogRepository.save(
+            RoomStatusLogEntity(
+                roomId = roomId,
+                transitionType = RoomStatus.CANCELED,
+                handlerMemberId = hostMemberId,
+                occurredAt = now,
+            ),
+        )
+        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
     }
 
     // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.

@@ -3,32 +3,55 @@ package io.plady.moimyeon.core.domain.room
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
+import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.Optional
 import java.util.UUID
 
 class RoomManagerTest {
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>()
-    private val manager = RoomManager(roomRepository, participationRepository)
-
+    private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
+    private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+    private val clock = Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val manager = RoomManager(
+        roomRepository,
+        participationRepository,
+        roomStatusLogRepository,
+        roomApplicationRepository,
+        clock,
+    )
+
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
+
+    // relaxed mock 은 제네릭 save 의 반환을 Object 로 만들어 캐스팅에서 터진다. 저장한 것을 그대로 돌려준다.
+    @BeforeEach
+    fun stubStatusLogSave() {
+        every { roomStatusLogRepository.save(any()) } answers { firstArg() }
+    }
 
     // 수정 계약을 이 테스트가 들고 있다. 무엇이 바뀌고 무엇이 안 바뀌는지를 한자리에서 단언한다.
     @Test
@@ -210,6 +233,36 @@ class RoomManagerTest {
         givenRecruitingRoomForUpdate().delete(now)
 
         assertCancelFails(CoreErrorType.ROOM_NOT_FOUND)
+    }
+
+    @Test
+    fun `룸을 취소하면 이력을 남기고 대기 신청을 종료한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipantExists(false)
+
+        manager.cancel(roomId, hostId)
+
+        verifyOrder {
+            roomStatusLogRepository.save(
+                match { it.roomId == roomId && it.transitionType == RoomStatus.CANCELED && it.handlerMemberId == hostId },
+            )
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
+        }
+    }
+
+    // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
+    // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
+    @Test
+    fun `이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipantExists(false)
+        every { roomStatusLogRepository.save(any()) } throws
+            DataIntegrityViolationException("uk_room_status_log_room_transition_active")
+
+        assertThatThrownBy { manager.cancel(roomId, hostId) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     private fun assertCancelFails(errorType: CoreErrorType) {
