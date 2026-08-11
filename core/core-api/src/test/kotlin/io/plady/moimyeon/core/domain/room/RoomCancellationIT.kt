@@ -17,10 +17,13 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -33,7 +36,10 @@ class RoomCancellationIT(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val entityManager: EntityManager,
+    transactionManager: PlatformTransactionManager,
 ) : ContextTest() {
+    private val transactionTemplate = TransactionTemplate(transactionManager)
     private val roomId = UUID.randomUUID()
     private val hostMemberId = UUID.randomUUID()
     private val startAt = LocalDateTime.of(2026, 9, 1, 19, 0)
@@ -79,7 +85,52 @@ class RoomCancellationIT(
             .isNull()
     }
 
+    // RoomEntity 로는 CONFIRMED·IN_PROGRESS·COMPLETED 를 만들 수 없어(전이 메서드가 없다)
+    // 실제 canCancel() 판정을 이 상태들에 대고 확인할 수 있는 자리는 여기뿐이다.
+    @Test
+    fun `모집 중이 아닌 룸은 취소할 수 없다`() {
+        seedRecruitingRoom()
+
+        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED).forEach { status ->
+            forceRoomStatus(status)
+
+            assertThatThrownBy { roomManager.cancel(roomId, hostMemberId) }
+                .isInstanceOfSatisfying(CoreException::class.java) {
+                    assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_RECRUITING)
+                }
+            assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(status)
+        }
+    }
+
+    // 취소는 멱등하게 성공하지 않는다. 두 번째 요청은 거부되고 부작용도 한 번만 남는다.
+    @Test
+    fun `이미 취소된 룸에 다시 취소를 요청하면 E1410 이고 이력은 한 행이다`() {
+        seedRecruitingRoom()
+        seedPendingApplication()
+
+        roomManager.cancel(roomId, hostMemberId)
+
+        assertThatThrownBy { roomManager.cancel(roomId, hostMemberId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+        assertThat(
+            roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CANCELED),
+        ).isEqualTo(1)
+        assertThat(applications().map { it.status }).containsOnly(RoomApplicationStatus.ROOM_CANCELED)
+    }
+
     private fun applications() = roomApplicationRepository.findAll().filter { it.roomId == roomId }
+
+    private fun forceRoomStatus(status: RoomStatus) {
+        transactionTemplate.executeWithoutResult {
+            entityManager.createNativeQuery("update room set status = :status where id = :roomId")
+                .setParameter("status", status.name)
+                .setParameter("roomId", roomId)
+                .executeUpdate()
+            entityManager.clear()
+        }
+    }
 
     private fun seedRecruitingRoom() {
         roomRepository.saveAndFlush(
