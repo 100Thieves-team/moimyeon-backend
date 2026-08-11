@@ -25,8 +25,8 @@ class RoomFacade(
         roomService.updateRoom(hostMemberId, roomId, command)
     }
 
-    fun delete(hostMemberId: UUID, roomId: UUID) {
-        roomService.deleteRoom(hostMemberId, roomId)
+    fun cancel(hostMemberId: UUID, roomId: UUID) {
+        roomService.cancelRoom(hostMemberId, roomId)
     }
 
     // 확정 조건은 이미 조회한 룸 상세에서 파생한다. 판정 자체는 도메인이 갖고 여기서는 호출만 한다.

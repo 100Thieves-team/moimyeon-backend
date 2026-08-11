@@ -4,8 +4,10 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long> {
@@ -51,6 +53,36 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         roomId: UUID,
         status: RoomApplicationStatus,
     ): List<RoomApplicationEntity>
+
+    // 룸이 취소·확정될 때 남은 대기 신청을 한 번에 끝낸다(「룸 참여」 §4.9). status 만 갈아 끼우면
+    // 취소(ROOM_CANCELED)와 확정(ROOM_CONFIRMED)이 같은 쿼리를 쓴다.
+    //
+    // 벌크라서 직접 챙겨야 하는 것이 둘 있다.
+    //   - pendingMemberId 를 비우지 않으면 대기 유니크 자리가 잠긴 채 남아 재신청이 영영 막힌다.
+    //     엔티티의 accept/reject/withdraw 가 지는 책임을 여기서는 쿼리가 진다.
+    //   - updatedAt 은 @UpdateTimestamp 라 벌크에서 돌지 않으므로 set 절에 직접 넣는다.
+    //
+    // clearAutomatically 를 켜지 않는다 — 컨텍스트 전체가 비워지면 호출자가 잡고 있는 RoomEntity 가
+    // 준영속이 되어 상태 전이가 사라진다. 대신 호출 트랜잭션이 RoomApplicationEntity 를 로드하지 않는다는
+    // 것을 전제로 삼는다(RoomCancellationIT 가 이 전제를 지킨다).
+    @Modifying(flushAutomatically = true)
+    @Query(
+        """
+        update RoomApplicationEntity a
+           set a.status = :status,
+               a.pendingMemberId = null,
+               a.handledAt = :now,
+               a.updatedAt = :now
+         where a.roomId = :roomId
+           and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+           and a.deletedAt is null
+        """,
+    )
+    fun closeAllPending(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+        @Param("now") now: LocalDateTime,
+    ): Int
 
     // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1, 2026-08-04 PRD 갱신). 정렬에 쓰이지 않는 표시용이라
     // 한 페이지 분량의 roomId 에만 IN 으로 건다. 대기 신청이 없는 룸은 결과에 없으므로 0 은 호출자가 채운다.

@@ -63,6 +63,14 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 모집 중이 아니라 못 접는 것(E1410)과 사유가 다르다. 화면이 안내를 갈라야 해서 코드도 가른다.
+    ROOM_HAS_PARTICIPANTS(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1420,
+        "참여자가 있는 룸은 취소할 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,

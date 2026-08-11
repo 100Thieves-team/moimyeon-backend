@@ -53,9 +53,9 @@ class RoomService(
         roomManager.update(roomId, memberId, command)
     }
 
-    // 방(룸) 삭제. 방장만 가능(RoomManager 에서 검증). 그 외 조건 검사는 두지 않는다(요청 범위).
-    fun deleteRoom(memberId: UUID, roomId: UUID) {
-        roomManager.delete(roomId, memberId)
+    // 룸 취소. 조건 판정(모집 중인가, 참여자가 남았는가)은 전부 RoomManager 가 자기 트랜잭션 안에서 한다.
+    fun cancelRoom(memberId: UUID, roomId: UUID) {
+        roomManager.cancel(roomId, memberId)
     }
 
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.

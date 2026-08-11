@@ -4,6 +4,7 @@ import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -16,6 +17,8 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -28,6 +31,7 @@ class RoomManager(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val roomStatusLogRepository: RoomStatusLogRepository,
     private val clock: Clock,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
@@ -95,11 +99,48 @@ class RoomManager(
         )
     }
 
-    // 삭제 = 소프트 삭제(deleted_at). 방장만 가능. 그 외 상태·조건 검사는 두지 않는다.
+    // 방장이 모집을 접는다. 참여자가 있으면 접을 수 없고 나가기(MOI-397)로 넘겨야 한다.
+    //
+    // 룸 행 잠금이 취소를 수락·신청 제출과 직렬화한다(셋 다 findByIdForUpdate 를 쓴다).
+    // ⚠️ 이 잠금이 빠져도 예외가 나지 않는다: 취소된 룸에 대기 신청이 조용히 남고 그 신청자는
+    //    대기 한도 한 칸을 영원히 물고 있게 된다. 테스트로 드러나지 않으므로 지우지 않는다.
     @Transactional
-    fun delete(roomId: UUID, hostMemberId: UUID) {
-        val room = loadActiveRoomAsHost(roomId, hostMemberId)
-        room.delete(LocalDateTime.now(clock))
+    fun cancel(roomId: UUID, hostMemberId: UUID) {
+        val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
+        requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
+        requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
+
+        // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
+        // 이 트랜잭션은 RoomApplicationEntity 를 로드하지 않아 벌크 뒤 컨텍스트를 비울 필요가 없다.
+        val now = LocalDateTime.now(clock)
+        room.cancel()
+        roomStatusLogRepository.save(
+            RoomStatusLogEntity(
+                roomId = roomId,
+                transitionType = RoomStatus.CANCELED,
+                handlerMemberId = hostMemberId,
+                occurredAt = now,
+            ),
+        )
+        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
+    }
+
+    // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.
+    private fun hasParticipant(roomId: UUID): Boolean {
+        return participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+            roomId,
+            ParticipationRole.PARTICIPANT,
+            ParticipationStatus.JOINED,
+        )
+    }
+
+    private fun loadRoomForUpdateAsHost(roomId: UUID, memberId: UUID): RoomEntity {
+        val room = requireFound(
+            roomRepository.findByIdForUpdate(roomId)?.takeIf { it.isActive() },
+            CoreErrorType.ROOM_NOT_FOUND,
+        )
+        requireHost(roomId, memberId)
+        return room
     }
 
     private fun loadActiveRoomAsHost(roomId: UUID, memberId: UUID): RoomEntity {
@@ -107,6 +148,11 @@ class RoomManager(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
         )
+        requireHost(roomId, memberId)
+        return room
+    }
+
+    private fun requireHost(roomId: UUID, memberId: UUID) {
         requireBusiness(
             participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
                 roomId,
@@ -115,7 +161,6 @@ class RoomManager(
             ),
             CoreErrorType.ROOM_FORBIDDEN,
         )
-        return room
     }
 
     private fun MeetingPlace.toEntityValues(): Pair<MeetingType, Long?> = when (this) {
