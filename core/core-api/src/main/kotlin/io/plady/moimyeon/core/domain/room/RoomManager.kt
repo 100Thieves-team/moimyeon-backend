@@ -13,6 +13,7 @@ import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -20,9 +21,13 @@ import java.util.UUID
 class RoomManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val clock: Clock,
 ) {
+    // 한 번의 생성에서 쓰는 시각은 한 번만 찍어 나눠 쓴다. 자리마다 now() 를 부르면 미세하게 갈린다.
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID) {
+        val now = LocalDateTime.now(clock)
+
         roomRepository.save(RoomMapper.toEntity(room))
         participationRepository.save(
             ParticipationEntity(
@@ -30,7 +35,7 @@ class RoomManager(
                 memberId = hostMemberId,
                 participationRole = ParticipationRole.HOST,
                 status = ParticipationStatus.JOINED,
-                joinedAt = LocalDateTime.now(),
+                joinedAt = now,
             ),
         )
         // TODO(BE-05 잔여): resume_submission(resumeId) · chat_room · room_status_log(생성 전이) — 엔티티 생성 필요.
@@ -68,7 +73,7 @@ class RoomManager(
     @Transactional
     fun delete(roomId: UUID, hostMemberId: UUID) {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
-        room.delete(LocalDateTime.now())
+        room.delete(LocalDateTime.now(clock))
     }
 
     private fun loadActiveRoomAsHost(roomId: UUID, memberId: UUID): RoomEntity {

@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
 import io.plady.moimyeon.core.domain.jobposting.JobPostingFinder
 import org.springframework.stereotype.Service
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -13,6 +14,7 @@ class RoomService(
     private val roomFinder: RoomFinder,
     private val roomSearchReader: RoomSearchReader,
     private val jobPostingFinder: JobPostingFinder,
+    private val clock: Clock,
 ) {
     // 방(룸) 생성. 카탈로그 참조 검증은 쓰기 트랜잭션 밖에서(profile 패턴과 동일),
     // 실제 등록은 RoomManager 트랜잭션에서 한다.
@@ -34,7 +36,7 @@ class RoomService(
             capacity = command.capacity,
             schedule = command.schedule,
             resumeSharingPolicy = command.resumeSharingPolicy,
-            now = LocalDateTime.now(),
+            now = LocalDateTime.now(clock),
         )
         roomManager.create(room, hostMemberId, command.resumeId)
         return room
