@@ -20,7 +20,7 @@ Each app environment creates:
 - **RDS MySQL** on `db.t4g.micro` by default (moimyeon uses MySQL 8.4).
 - **ECS on EC2** using a `t3.small` launch template, Auto Scaling Group, and ECS
   capacity provider (awsvpc tasks, deployment circuit breaker with rollback).
-- ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health`.
+- ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health/readiness`.
 - ACM DNS-validated certificate when `app_domain_name` is set.
 - Route 53 alias when `dns_management = "route53"`, or manual CNAME outputs when
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).
@@ -121,7 +121,7 @@ Terraform creates the parameter and the RDS master password itself.
   yet on `dev`, so the app-facing upload env vars are left to
   `additional_environment` (bucket + IAM are provisioned). Wire the exact keys
   (e.g. `STORAGE_OBJECTSTORAGE_S3_BUCKET`) once MOI-361 merges.
-- **Health check:** rollout is gated by the ALB target group (`/actuator/health`).
+- **Health check:** rollout is gated by the ALB target group (`/actuator/health/readiness`). The core-api readiness group checks the DB but excludes notification Redis, so a relay dependency failure does not evict an otherwise serviceable API task.
   Container-level HEALTHCHECK is off by default because the `eclipse-temurin` JRE
   image has no `wget`/`curl` — set `enable_container_health_check = true` only if
   you add one to the image.

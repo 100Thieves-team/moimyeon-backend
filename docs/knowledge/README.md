@@ -11,6 +11,7 @@
 | --- | --- |
 | [security.md](security.md) | 인증·인가·비밀값. Kotlin/Spring 프록시 함정, 격벽 구조, 위험도 감각 |
 | [performance.md](performance.md) | 쿼리·인덱스·JPA 로딩. 우리 규모에서 무엇을 근거로 판단하는가 |
+| [operations.md](operations.md) | 배포·헬스 체크·외부 인프라 연결에서 실제로 겪은 장애 |
 
 주제가 늘어나면 파일을 추가하고 이 표에 한 줄 넣는다. 도메인 지식(개념 간 관계, 업무 규칙의
 배경, 왜 이렇게 모델링했는지)도 여기 들어올 자리다.

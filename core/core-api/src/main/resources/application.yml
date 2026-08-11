@@ -35,6 +35,9 @@ notification.outbox.relay:
   batch-size: ${NOTIFICATION_OUTBOX_RELAY_BATCH_SIZE:100}
   lease-duration: ${NOTIFICATION_OUTBOX_RELAY_LEASE_DURATION:5m}
 
+management.endpoint.health.group.readiness:
+  include: readinessState,db
+
 ---
 spring.config.activate.on-profile: local
 

@@ -221,9 +221,9 @@ variable "task_memory" {
 }
 
 variable "health_check_path" {
-  description = "ALB (and optional container) health check path. moimyeon exposes Spring Boot actuator health."
+  description = "ALB (and optional container) readiness path. The core-api group includes its DB but excludes notification Redis."
   type        = string
-  default     = "/actuator/health"
+  default     = "/actuator/health/readiness"
 }
 
 variable "target_group_name" {
