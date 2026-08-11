@@ -26,6 +26,7 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
+import org.hibernate.Session
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -159,7 +160,32 @@ class RoomParticipantReaderIT(
         assertThat(participants.single { it.memberId == participantMemberId }.nickname).isNull()
     }
 
+    // 참여자가 늘어도 조회 쿼리 수가 그대로여야 한다(F15). 요약을 사람마다 하나씩 읽으면 여기서 걸린다.
+    @Test
+    fun `참여자가 늘어도 명부 조회 쿼리 수는 그대로다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.RECRUITING)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+        val twoParticipants = countQueries { roomParticipantReader.getAllByRoom(roomId, hostMemberId) }
+
+        repeat(6) { index ->
+            joinWithResume(UUID.randomUUID(), ParticipationRole.PARTICIPANT, "참여자$index")
+        }
+        val eightParticipants = countQueries { roomParticipantReader.getAllByRoom(roomId, hostMemberId) }
+
+        assertThat(eightParticipants).isEqualTo(twoParticipants)
+    }
+
     // --- 픽스처 -------------------------------------------------------------------
+
+    private fun countQueries(block: () -> Unit): Long {
+        entityManager.flush()
+        val statistics = entityManager.unwrap(Session::class.java).sessionFactory.statistics
+        statistics.isStatisticsEnabled = true
+        statistics.clear()
+        block()
+        return statistics.prepareStatementCount
+    }
 
     private fun givenConfirmedRoom(resumePublic: Boolean) {
         persistRoom(resumePublic = resumePublic, status = RoomStatus.CONFIRMED)

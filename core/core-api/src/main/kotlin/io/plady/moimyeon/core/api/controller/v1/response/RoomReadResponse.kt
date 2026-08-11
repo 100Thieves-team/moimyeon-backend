@@ -1,6 +1,8 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
 import io.plady.moimyeon.core.domain.room.MeetingPlace
+import io.plady.moimyeon.core.domain.room.RoomConfirmation
+import io.plady.moimyeon.core.domain.room.RoomConfirmationBlockReason
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import java.time.LocalDateTime
@@ -25,9 +27,10 @@ data class RoomReadResponse(
     val recruit: RoomReadRecruitResponse,
     val resumePublic: Boolean,
     val hostMemberId: UUID,
+    val confirmation: RoomReadConfirmationResponse,
 ) {
     companion object {
-        fun from(detail: RoomDetail): RoomReadResponse {
+        fun from(detail: RoomDetail, confirmation: RoomConfirmation): RoomReadResponse {
             val room = detail.room
             val (method, sigunguId) = when (val place = room.meetingPlace) {
                 MeetingPlace.Online -> "ONLINE" to null
@@ -56,9 +59,11 @@ data class RoomReadResponse(
                     max = room.capacity.max,
                     // 모집중/마감은 저장값이 아니라 정원 충족 여부로 계산한다(핵심 결정).
                     recruitStatus = if (detail.currentParticipants >= room.capacity.max) "CLOSED" else "RECRUITING",
+                    pendingApplicationCount = detail.pendingApplicationCount,
                 ),
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
                 hostMemberId = detail.hostMemberId,
+                confirmation = RoomReadConfirmationResponse.from(confirmation, detail),
             )
         }
     }
@@ -74,4 +79,44 @@ data class RoomReadRecruitResponse(
     val min: Int,
     val max: Int,
     val recruitStatus: String, // RECRUITING | CLOSED (정원 충족 시 CLOSED)
+    // 「룸 참여」 §4.1·§6 이 공개로 지정한 값이다. 수만 공개하고 대기자 목록은 방장 외 비공개다.
+    val pendingApplicationCount: Int,
 )
+
+// "이 룸이 확정될 준비가 됐나"(「진행 확정」 §4.1). 뷰어와 무관한 룸의 사실이며,
+// "당신이 확정할 수 있나"는 뷰어 관계가 따로 답한다.
+data class RoomReadConfirmationResponse(
+    val ready: Boolean,
+    val blockReason: RoomReadBlockReasonResponse?,
+) {
+    companion object {
+        fun from(confirmation: RoomConfirmation, detail: RoomDetail): RoomReadConfirmationResponse {
+            return RoomReadConfirmationResponse(
+                ready = confirmation.ready,
+                blockReason = confirmation.blockReason?.let { RoomReadBlockReasonResponse.from(it, detail) },
+            )
+        }
+    }
+}
+
+// 라벨은 서버가 소유한다. 인원 미달 문구에는 현재 인원과 최소 인원이 수치로 들어간다.
+data class RoomReadBlockReasonResponse(
+    val code: String,
+    val label: String,
+) {
+    companion object {
+        fun from(reason: RoomConfirmationBlockReason, detail: RoomDetail): RoomReadBlockReasonResponse {
+            val label = when (reason) {
+                RoomConfirmationBlockReason.ROOM_CONFIRMED -> "이미 확정된 룸이에요"
+                RoomConfirmationBlockReason.ROOM_IN_PROGRESS -> "진행 중인 룸이에요"
+                RoomConfirmationBlockReason.ROOM_COMPLETED -> "종료된 룸이에요"
+                RoomConfirmationBlockReason.ROOM_CANCELED -> "취소된 룸이에요"
+                RoomConfirmationBlockReason.SCHEDULE_PASSED -> "진행 일정이 지났어요"
+                RoomConfirmationBlockReason.BELOW_MIN_CAPACITY ->
+                    "인원 ${detail.currentParticipants} / ${detail.room.capacity.max}명 " +
+                        "(최소 ${detail.room.capacity.min}명)"
+            }
+            return RoomReadBlockReasonResponse(reason.name, label)
+        }
+    }
+}
