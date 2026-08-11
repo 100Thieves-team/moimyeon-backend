@@ -26,12 +26,19 @@ class RoomParticipantResumeFinder(
     }
 
     // 참여자 명부용 일괄 조회. 참여자 수에 비례해 쿼리가 늘지 않게 두 번으로 끝낸다.
+    //
+    // 한 회원이 같은 룸에 제출을 여러 번 남길 수 있다 - 철회한 뒤 다시 신청하면 신청마다 제출 행이 생긴다
+    // (room_application 은 재신청을 허용하고, resume_submission 유니크는 신청 단위다).
+    // 참여 중인 사람의 최신 제출이 곧 그 사람이 낸 이력서이므로 제출 시각으로 정렬해 마지막을 남긴다.
+    // 정렬 없이 덮어쓰면 어느 행이 남을지 조회 순서에 달려 철회한 신청의 이력서가 뜰 수 있다.
     fun getAllByRoom(roomId: UUID): Map<UUID, RoomParticipantResume> {
         val submissions = resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(roomId)
         if (submissions.isEmpty()) return emptyMap()
 
         val summaries = resumeFinder.getSummaries(submissions.map { it.sourceResumeId }.distinct())
-        return submissions.associate { it.memberId to it.toParticipantResume(summaries) }
+        return submissions
+            .sortedWith(compareBy({ it.submittedAt }, { it.id }))
+            .associate { it.memberId to it.toParticipantResume(summaries) }
     }
 
     private fun ResumeSubmissionEntity.toParticipantResume(

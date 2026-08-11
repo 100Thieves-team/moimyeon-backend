@@ -26,7 +26,6 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -155,10 +154,8 @@ class RoomParticipantReaderIT(
         // 회원 행 없이 참여만 남은 상태 = 탈퇴로 사라진 회원.
         persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, joinedAt = beforeConfirmation)
 
-        assertThatCode { roomParticipantReader.getAllByRoom(roomId, hostMemberId) }
-            .doesNotThrowAnyException()
-
         val participants = roomParticipantReader.getAllByRoom(roomId, hostMemberId)
+
         assertThat(participants.single { it.memberId == participantMemberId }.nickname).isNull()
     }
 

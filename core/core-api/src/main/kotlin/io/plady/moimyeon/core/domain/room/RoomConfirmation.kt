@@ -19,12 +19,20 @@ data class RoomConfirmation(
         }
 
         // 먼저 걸린 사유 하나만 남긴다. 화면은 사유 하나로 문구를 고른다.
+        // when(status) 로 받아 룸 상태가 늘어나면 컴파일이 먼저 막는다.
         private fun blockReasonOf(detail: RoomDetail, now: LocalDateTime): RoomConfirmationBlockReason? {
+            return when (detail.room.status) {
+                RoomStatus.CONFIRMED -> RoomConfirmationBlockReason.ROOM_CONFIRMED
+                RoomStatus.IN_PROGRESS -> RoomConfirmationBlockReason.ROOM_IN_PROGRESS
+                RoomStatus.COMPLETED -> RoomConfirmationBlockReason.ROOM_COMPLETED
+                RoomStatus.CANCELED -> RoomConfirmationBlockReason.ROOM_CANCELED
+                RoomStatus.RECRUITING -> recruitingBlockReasonOf(detail, now)
+            }
+        }
+
+        private fun recruitingBlockReasonOf(detail: RoomDetail, now: LocalDateTime): RoomConfirmationBlockReason? {
             val room = detail.room
             return when {
-                room.status == RoomStatus.CONFIRMED -> RoomConfirmationBlockReason.ROOM_CONFIRMED
-                room.status == RoomStatus.COMPLETED -> RoomConfirmationBlockReason.ROOM_COMPLETED
-                room.status == RoomStatus.CANCELED -> RoomConfirmationBlockReason.ROOM_CANCELED
                 // 시작 시각과 같아지는 순간부터 지난 것으로 본다.
                 !room.schedule.startAt.isAfter(now) -> RoomConfirmationBlockReason.SCHEDULE_PASSED
                 detail.currentParticipants < room.capacity.min -> RoomConfirmationBlockReason.BELOW_MIN_CAPACITY
@@ -37,6 +45,7 @@ data class RoomConfirmation(
 // 선언 순서가 곧 판정 순서다. 이미 확정된 룸에 인원 미달을 묻지 않는다.
 enum class RoomConfirmationBlockReason {
     ROOM_CONFIRMED,
+    ROOM_IN_PROGRESS,
     ROOM_COMPLETED,
     ROOM_CANCELED,
     SCHEDULE_PASSED,

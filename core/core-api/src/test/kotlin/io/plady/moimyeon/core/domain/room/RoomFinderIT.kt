@@ -51,14 +51,14 @@ class RoomFinderIT(
             RoomApplicationStatus.ROOM_CONFIRMED,
         ).forEach { persistApplication(it) }
 
-        val detail = roomFinder.getRoom(roomId)
+        val detail = roomFinder.getDetail(roomId)
 
         assertThat(detail.pendingApplicationCount).isEqualTo(3)
     }
 
     @Test
     fun `대기 중인 신청이 없으면 대기 신청 수는 0이다`() {
-        val detail = roomFinder.getRoom(roomId)
+        val detail = roomFinder.getDetail(roomId)
 
         assertThat(detail.pendingApplicationCount).isEqualTo(0)
     }

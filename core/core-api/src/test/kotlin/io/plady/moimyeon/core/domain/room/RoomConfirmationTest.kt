@@ -65,11 +65,14 @@ class RoomConfirmationTest {
     fun `모집 중이 아닌 룸은 인원과 일정을 따지지 않고 룸 상태가 사유다`() {
         val blockReasonByStatus = mapOf(
             RoomStatus.CONFIRMED to RoomConfirmationBlockReason.ROOM_CONFIRMED,
+            RoomStatus.IN_PROGRESS to RoomConfirmationBlockReason.ROOM_IN_PROGRESS,
             RoomStatus.COMPLETED to RoomConfirmationBlockReason.ROOM_COMPLETED,
             RoomStatus.CANCELED to RoomConfirmationBlockReason.ROOM_CANCELED,
         )
 
-        blockReasonByStatus.forEach { (status, expected) ->
+        // 모집 중이 아닌 상태를 전부 돈다. 상태가 늘면 getValue 가 터져 이 테스트가 먼저 갱신을 요구한다.
+        (RoomStatus.entries - RoomStatus.RECRUITING).forEach { status ->
+            val expected = blockReasonByStatus.getValue(status)
             // 인원과 일정은 모두 충족시켜 둔다. 룸 상태가 먼저 걸리는지만 본다.
             val confirmation = confirmationOf(
                 currentParticipants = 4,

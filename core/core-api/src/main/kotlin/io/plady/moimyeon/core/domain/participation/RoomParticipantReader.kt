@@ -42,7 +42,7 @@ class RoomParticipantReader(
 
     // 세 조건의 AND 다. 뷰어가 확정 참여자인지를 묻는 것이지 대상자별로 갈리지 않는다(§4.3·§4.5).
     private fun canViewOriginal(roomId: UUID, viewerMemberId: UUID): Boolean {
-        val room = roomFinder.getRoom(roomId).room
+        val room = roomFinder.getRoom(roomId)
         return room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION &&
             room.status == RoomStatus.CONFIRMED &&
             participationFinder.wasConfirmedParticipant(roomId, viewerMemberId)

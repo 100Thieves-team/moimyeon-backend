@@ -52,7 +52,7 @@ class RoomService(
     }
 
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.
-    fun getRoom(roomId: UUID): RoomDetail = roomFinder.getRoom(roomId)
+    fun getRoom(roomId: UUID): RoomDetail = roomFinder.getDetail(roomId)
 
     // 룸 탐색 목록(읽기). 룸은 회사를 직접 알지 못하므로(room → job_posting → company)
     // 회사 필터만 공고 id 목록으로 바꿔 넘기고, 나머지는 Reader 가 그대로 조회한다.

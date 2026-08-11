@@ -21,7 +21,7 @@ class RoomFinder(
     // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
     // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는
     // 자리가 있어 보이는데 수락 단계에서 정원 초과가 나는 상태가 된다.
-    fun getRoom(roomId: UUID): RoomDetail {
+    fun getDetail(roomId: UUID): RoomDetail {
         val entity = requireFound(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
@@ -45,5 +45,14 @@ class RoomFinder(
             currentParticipants = currentParticipants,
             pendingApplicationCount = pendingApplicationCount,
         )
+    }
+
+    // 룸 자체만 필요한 경로용. 인원·대기 수 집계를 건너뛴다 - 상태나 공개 정책만 보는 호출부가 여럿이다.
+    fun getRoom(roomId: UUID): Room {
+        val entity = requireFound(
+            roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
+            CoreErrorType.ROOM_NOT_FOUND,
+        )
+        return RoomMapper.toDomain(entity)
     }
 }
