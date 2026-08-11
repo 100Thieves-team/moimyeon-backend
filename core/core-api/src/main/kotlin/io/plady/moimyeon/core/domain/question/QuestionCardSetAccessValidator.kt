@@ -14,7 +14,7 @@ class QuestionCardSetAccessValidator(
     private val participationFinder: ParticipationFinder,
 ) {
     fun validateViewer(roomId: UUID, memberId: UUID) {
-        val room = roomFinder.getRoom(roomId).room
+        val room = roomFinder.getRoom(roomId)
         requireBusiness(
             room.status == RoomStatus.CONFIRMED || room.status == RoomStatus.COMPLETED,
             CoreErrorType.QUESTION_CARD_SET_NOT_OPEN,

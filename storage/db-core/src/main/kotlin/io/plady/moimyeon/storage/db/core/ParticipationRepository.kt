@@ -105,6 +105,13 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         @Param("memberId") memberId: UUID,
     ): Boolean
 
+    // 참여자 명부(「룸 참여」 §4.5). 참여 중인 사람만, 참여 순서로. 방장 우선은 호출부가 정렬한다
+    // (ParticipationRole 의 알파벳 순서에 기대면 값 이름을 바꿀 때 조용히 깨진다).
+    fun findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+        roomId: UUID,
+        status: ParticipationStatus,
+    ): List<ParticipationEntity>
+
     // 방장 참여 행(방장 회원 식별자 조회용).
     fun findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
         roomId: UUID,

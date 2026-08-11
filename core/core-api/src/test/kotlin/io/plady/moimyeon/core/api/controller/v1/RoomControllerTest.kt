@@ -44,7 +44,9 @@ import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.security.Principal
+import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class RoomControllerTest : RestDocsTest() {
@@ -100,12 +102,18 @@ class RoomControllerTest : RestDocsTest() {
         }
         """.trimIndent()
 
+    // 확정 조건은 일정과 현재 시각을 비교하므로 문서 예시가 흔들리지 않게 시각을 고정한다.
+    private val fixedClock: Clock = Clock.fixed(
+        LocalDateTime.of(2026, 8, 1, 12, 0).toInstant(ZoneOffset.UTC),
+        ZoneOffset.UTC,
+    )
+
     @BeforeEach
     fun setUp() {
         roomService = mockk()
         roomSearchFacade = mockk()
         mockMvc = mockController(
-            RoomController(RoomFacade(roomService), roomSearchFacade),
+            RoomController(RoomFacade(roomService, fixedClock), roomSearchFacade),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -421,6 +429,7 @@ class RoomControllerTest : RestDocsTest() {
             room = sampleRoom(),
             hostMemberId = hostMemberId,
             currentParticipants = 1,
+            pendingApplicationCount = 5,
         )
         mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
             .andExpect(status().isOk)
@@ -452,6 +461,18 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.recruit.min").type(JsonFieldType.NUMBER).description("최소 인원"),
                         fieldWithPath("data.recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
                         fieldWithPath("data.recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
+                        fieldWithPath("data.recruit.pendingApplicationCount").type(JsonFieldType.NUMBER)
+                            .description("대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다"),
+                        fieldWithPath("data.confirmation").type(JsonFieldType.OBJECT)
+                            .description("진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다"),
+                        fieldWithPath("data.confirmation.ready").type(JsonFieldType.BOOLEAN)
+                            .description("확정 가능 여부 (모집 중 && 일정 미경과 && 인원 >= 최소 인원)"),
+                        fieldWithPath("data.confirmation.blockReason").type(JsonFieldType.OBJECT).optional()
+                            .description("확정할 수 없는 사유. ready 가 true 면 null"),
+                        fieldWithPath("data.confirmation.blockReason.code").type(JsonFieldType.STRING).optional()
+                            .description("사유 코드 (ROOM_CONFIRMED | ROOM_IN_PROGRESS | ROOM_COMPLETED | ROOM_CANCELED | SCHEDULE_PASSED | BELOW_MIN_CAPACITY)"),
+                        fieldWithPath("data.confirmation.blockReason.label").type(JsonFieldType.STRING).optional()
+                            .description("화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다"),
                         fieldWithPath("data.resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성)"),
                         fieldWithPath("data.hostMemberId").type(JsonFieldType.STRING).description("방장 회원 식별자 (UUID)"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
