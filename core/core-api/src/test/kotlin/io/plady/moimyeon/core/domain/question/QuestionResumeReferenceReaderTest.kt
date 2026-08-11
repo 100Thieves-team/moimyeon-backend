@@ -114,6 +114,7 @@ class QuestionResumeReferenceReaderTest {
         return RoomParticipantResume(
             roomId = roomId,
             participantMemberId = targetMemberId,
+            submissionId = 1L,
             sourceResumeId = submittedResumeId,
             summary = ResumeSummary(status, content),
         )

@@ -5,7 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.Room
-import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -27,7 +26,7 @@ class QuestionPreparationAccessValidatorTest {
 
     @Test
     fun `확정된 룸의 현재 참여자는 준비 질문을 남길 수 있다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.CONFIRMED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
         every { participationFinder.isParticipating(roomId, authorMemberId) } returns true
 
         assertThatCode {
@@ -37,7 +36,7 @@ class QuestionPreparationAccessValidatorTest {
 
     @Test
     fun `완료된 룸에서는 준비 질문을 새로 남길 수 없고 E1504 를 던진다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.COMPLETED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN) {
             validator.validateAuthor(roomId, authorMemberId)
@@ -48,7 +47,7 @@ class QuestionPreparationAccessValidatorTest {
 
     @Test
     fun `확정 전 룸에서는 준비 질문을 남길 수 없고 E1504 를 던진다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.RECRUITING)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.RECRUITING)
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN) {
             validator.validateAuthor(roomId, authorMemberId)
@@ -59,7 +58,7 @@ class QuestionPreparationAccessValidatorTest {
 
     @Test
     fun `현재 참여자가 아니면 준비 질문을 남길 수 없고 E1505 를 던진다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.CONFIRMED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
         every { participationFinder.isParticipating(roomId, authorMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
@@ -94,10 +93,10 @@ class QuestionPreparationAccessValidatorTest {
         }
     }
 
-    private fun roomDetail(status: RoomStatus): RoomDetail {
+    private fun room(status: RoomStatus): Room {
         val room = mockk<Room>()
         every { room.status } returns status
-        return RoomDetail(room, UUID.randomUUID(), 4)
+        return room
     }
 
     private fun assertValidationFails(errorType: CoreErrorType, block: () -> Unit) {

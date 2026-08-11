@@ -5,7 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.Room
-import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -27,7 +26,7 @@ class QuestionCardSetAccessValidatorTest {
 
     @Test
     fun `확정된 룸의 현재 참여자는 카드셋을 조회할 수 있다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.CONFIRMED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns true
 
         assertThatCode {
@@ -37,7 +36,7 @@ class QuestionCardSetAccessValidatorTest {
 
     @Test
     fun `완료된 룸의 현재 참여자는 카드셋을 조회할 수 있다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.COMPLETED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns true
 
         assertThatCode {
@@ -57,7 +56,7 @@ class QuestionCardSetAccessValidatorTest {
 
     @Test
     fun `확정 전 룸이면 QUESTION_CARD_SET_NOT_OPEN 으로 거부하고 참여 여부는 조회하지 않는다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.RECRUITING)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.RECRUITING)
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_NOT_OPEN) {
             validator.validateViewer(roomId, requesterMemberId)
@@ -67,7 +66,7 @@ class QuestionCardSetAccessValidatorTest {
 
     @Test
     fun `취소된 룸이면 QUESTION_CARD_SET_NOT_OPEN 으로 거부하고 참여 여부는 조회하지 않는다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.CANCELED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CANCELED)
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_NOT_OPEN) {
             validator.validateViewer(roomId, requesterMemberId)
@@ -77,7 +76,7 @@ class QuestionCardSetAccessValidatorTest {
 
     @Test
     fun `확정된 룸의 현재 참여자가 아니면 QUESTION_CARD_SET_FORBIDDEN 으로 거부한다`() {
-        every { roomFinder.getRoom(roomId) } returns roomDetail(RoomStatus.CONFIRMED)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN) {
@@ -123,10 +122,10 @@ class QuestionCardSetAccessValidatorTest {
         }
     }
 
-    private fun roomDetail(status: RoomStatus): RoomDetail {
+    private fun room(status: RoomStatus): Room {
         val room = mockk<Room>()
         every { room.status } returns status
-        return RoomDetail(room, UUID.randomUUID(), 4)
+        return room
     }
 
     private fun assertValidationFails(

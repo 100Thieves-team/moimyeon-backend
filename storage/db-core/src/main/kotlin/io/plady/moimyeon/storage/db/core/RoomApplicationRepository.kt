@@ -27,6 +27,12 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         status: RoomApplicationStatus,
     ): Long
 
+    // 룸 상세의 "신청 대기 수"(「룸 참여」 §4.1·§6). 수만 공개하고 대기자 목록은 방장 외 비공개다.
+    fun countByRoomIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        status: RoomApplicationStatus,
+    ): Long
+
     fun existsByRoomIdAndPendingMemberIdAndDeletedAtIsNull(
         roomId: UUID,
         pendingMemberId: UUID,

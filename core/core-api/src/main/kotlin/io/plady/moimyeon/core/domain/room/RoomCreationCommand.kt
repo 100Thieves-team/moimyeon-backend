@@ -18,6 +18,5 @@ data class RoomCreationCommand(
     val capacity: RoomCapacity,
     val schedule: RoomSchedule,
     val resumeSharingPolicy: ResumeSharingPolicy,
-    // 방장 이력서 참조(UUID, dev와 통일). 이력서 보관함(J3, 준서 트랙) 완성 전까지는 존재·소유 검증 없이 참조값으로만 받는다.
     val resumeId: UUID,
 )

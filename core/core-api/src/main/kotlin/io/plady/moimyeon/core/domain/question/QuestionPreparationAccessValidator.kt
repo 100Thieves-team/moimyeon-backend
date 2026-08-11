@@ -14,7 +14,7 @@ class QuestionPreparationAccessValidator(
     private val participationFinder: ParticipationFinder,
 ) {
     fun validateAuthor(roomId: UUID, authorMemberId: UUID) {
-        val room = roomFinder.getRoom(roomId).room
+        val room = roomFinder.getRoom(roomId)
         requireBusiness(
             room.status == RoomStatus.CONFIRMED,
             CoreErrorType.QUESTION_PREPARATION_NOT_OPEN,
