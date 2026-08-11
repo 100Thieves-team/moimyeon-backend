@@ -2,9 +2,11 @@ package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -13,6 +15,7 @@ import java.util.UUID
 class RoomFinder(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val roomApplicationRepository: RoomApplicationRepository,
 ) {
     // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.
     // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
@@ -31,10 +34,16 @@ class RoomFinder(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         val currentParticipants = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
+        // 대기 신청 수는 수만 공개한다(「룸 참여」 §4.1·§6). 대기자 목록과 신청 내용은 방장 외 비공개다.
+        val pendingApplicationCount = roomApplicationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(
+            roomId,
+            RoomApplicationStatus.PENDING,
+        ).toInt()
         return RoomDetail(
             room = RoomMapper.toDomain(entity),
             hostMemberId = host.memberId,
             currentParticipants = currentParticipants,
+            pendingApplicationCount = pendingApplicationCount,
         )
     }
 }
