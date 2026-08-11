@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # =============================================================================
-# Moimyeon Backend (core:core-api) — deployment image
+# Moimyeon Backend deployment image
 #
 # - Multi-stage build (build stage separate from runtime stage)
 # - Java 25 (matches gradle.properties javaVersion=25 / Spring Boot 4.1.0)
-# - Builds the executable Spring Boot bootJar for the :core:core-api module
+# - Builds an executable Spring Boot bootJar selected by GRADLE_BOOT_JAR_TASK
 #   (NOT the Gradle plain jar, which is disabled for that module anyway)
 # - Runtime image contains only a JRE + the extracted application layers
 # - Runs as a non-root user
@@ -25,17 +25,20 @@ FROM eclipse-temurin:25-jdk AS builder
 
 WORKDIR /workspace
 
+ARG GRADLE_BOOT_JAR_TASK=:core:core-api:bootJar
+ARG BOOT_JAR_DIRECTORY=core/core-api
+
 # Copy the full multi-module project. .dockerignore keeps build outputs,
 # IDE files and secrets out of the build context.
 COPY . .
 
-# Build only the runnable web module's bootJar. Gradle resolves the required
+# Build only the selected runnable module's bootJar. Gradle resolves the required
 # sibling modules automatically. Tests are skipped for the image build.
 # A BuildKit cache mount keeps the Gradle dependency cache warm across builds.
 RUN --mount=type=cache,target=/root/.gradle \
     chmod +x ./gradlew && \
-    ./gradlew :core:core-api:bootJar --no-daemon -x test && \
-    APP_JAR="$(find core/core-api/build/libs -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' | head -n 1)" && \
+    ./gradlew "${GRADLE_BOOT_JAR_TASK}" --no-daemon -x test && \
+    APP_JAR="$(find "${BOOT_JAR_DIRECTORY}/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' | head -n 1)" && \
     echo "Selected boot jar: ${APP_JAR}" && \
     cp "${APP_JAR}" /workspace/app.jar
 
@@ -67,12 +70,12 @@ COPY --from=builder --chown=app:app /workspace/extracted/application/app.jar ./a
 
 USER app
 
-# Spring Boot default port (no server.port override in the project config).
+# Harmless for the non-web Worker image; used by the default Core API image.
 EXPOSE 8080
 
 # Container-aware JVM defaults; override at deploy time as needed.
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
 
 # NOTE: the active profile is intentionally NOT baked in. Provide it at runtime,
-# e.g. `-e SPRING_PROFILES_ACTIVE=dev`. Health endpoint is GET /health.
+# e.g. `-e SPRING_PROFILES_ACTIVE=dev`.
 ENTRYPOINT ["java", "-jar", "app.jar"]

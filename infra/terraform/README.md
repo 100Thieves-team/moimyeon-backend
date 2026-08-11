@@ -87,8 +87,16 @@ will consume (workflow itself is the next step — Pattern A CD):
 | `MOIMYEON_ECS_SERVICE_{ENV}` | `ecs_service_name` |
 | `MOIMYEON_ECS_CONTAINER_NAME_{ENV}` | `ecs_container_name` |
 | `MOIMYEON_IMAGE_URI_PARAMETER_{ENV}` | `image_uri_parameter_name` |
+| `MOIMYEON_WORKER_ECR_REPOSITORY_URL_{ENV}` | `notification_worker_ecr_repository_url` |
+| `MOIMYEON_WORKER_ECS_SERVICE_{ENV}` | `notification_worker_ecs_service_name` |
+| `MOIMYEON_WORKER_ECS_CONTAINER_NAME_{ENV}` | `notification_worker_ecs_container_name` |
+| `MOIMYEON_WORKER_IMAGE_URI_PARAMETER_{ENV}` | `notification_worker_image_uri_parameter_name` |
 
 Push behavior (once the workflow exists): `dev` push → dev, `main` push → live.
+Before the four Worker variables are synced, the workflow keeps deploying only
+Core API. Once they are all present, it also builds and registers the Worker
+image. A Worker service with desired count `0` receives the new task definition
+without starting a task, so vendor credentials can be prepared before activation.
 
 ## App config contract (injected into the ECS task)
 

@@ -1,8 +1,8 @@
 name: Deploy AWS
 
-# Pattern A (ECS on EC2) continuous deploy. Push to dev/main builds the image,
-# pushes it to ECR, registers a new ECS task-definition revision with that image,
-# then rolls the service with the deployment circuit breaker (auto-rollback).
+# Pattern A (ECS on EC2) continuous deploy. Push to dev/main builds the Core API
+# and, once its Terraform outputs are synced, the Notification Worker image.
+# Each image gets its own ECR repository and ECS task-definition revision.
 #
 # Env is chosen by branch: dev -> dev environment, main -> live environment.
 # Each environment assumes its own OIDC deploy role whose trust policy is pinned
@@ -46,6 +46,10 @@ jobs:
               echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
               echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
               echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecr_repository_url=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecs_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecs_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_image_uri_parameter=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
               echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
               ;;
             main)
@@ -57,6 +61,10 @@ jobs:
               echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
               echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
               echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecr_repository_url=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecs_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ecs_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_image_uri_parameter=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
               echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -66,6 +74,7 @@ jobs:
           esac
 
       - name: Validate deployment variables
+        id: deployment_config
         shell: bash
         run: |
           set -euo pipefail
@@ -90,6 +99,30 @@ jobs:
           if [[ ! "${{ steps.env.outputs.ecs_health_check_grace_seconds }}" =~ ^[0-9]+$ ]]; then
             echo "::error::ecs_health_check_grace_seconds must be a positive integer."
             exit 1
+          fi
+
+          worker_values=(
+            "${{ steps.env.outputs.worker_ecr_repository_url }}"
+            "${{ steps.env.outputs.worker_ecs_service }}"
+            "${{ steps.env.outputs.worker_ecs_container }}"
+            "${{ steps.env.outputs.worker_image_uri_parameter }}"
+          )
+          configured_worker_values=0
+          for value in "${worker_values[@]}"; do
+            if [ -n "$value" ]; then
+              configured_worker_values=$((configured_worker_values + 1))
+            fi
+          done
+
+          if [ "${configured_worker_values}" -eq 0 ]; then
+            echo "worker_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Notification Worker deployment is not configured yet; deploying Core API only."
+          elif [ "${configured_worker_values}" -ne "${#worker_values[@]}" ]; then
+            echo "::error::Notification Worker repository variables are only partially configured."
+            echo "::error::Run infra/terraform/scripts/sync-github-variables.sh --env ${{ steps.env.outputs.name }} after terraform apply."
+            exit 1
+          else
+            echo "worker_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Configure AWS credentials
@@ -120,6 +153,26 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Resolve Notification Worker image tags
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        id: worker_image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          repo="${{ steps.env.outputs.worker_ecr_repository_url }}"
+          env_tag="${{ steps.env.outputs.name }}"
+          sha_tag="${env_tag}-${GITHUB_SHA::12}"
+          image_uri="${repo}:${sha_tag}"
+
+          echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
+          {
+            echo "tags<<EOF"
+            echo "${image_uri}"
+            echo "${repo}:${env_tag}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -134,6 +187,21 @@ jobs:
           cache-from: type=gha,scope=core-api
           cache-to: type=gha,mode=max,scope=core-api
 
+      - name: Build and push Notification Worker image
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.worker_image.outputs.tags }}
+          build-args: |
+            GRADLE_BOOT_JAR_TASK=:core:core-worker:bootJar
+            BOOT_JAR_DIRECTORY=core/core-worker
+          cache-from: type=gha,scope=core-worker
+          cache-to: type=gha,mode=max,scope=core-worker
+
       - name: Store deployed image URI in SSM
         shell: bash
         run: |
@@ -142,6 +210,17 @@ jobs:
             --name "${{ steps.env.outputs.image_uri_parameter }}" \
             --type String \
             --value "${{ steps.image.outputs.image_uri }}" \
+            --overwrite
+
+      - name: Store Notification Worker image URI in SSM
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ssm put-parameter \
+            --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
+            --type String \
+            --value "${{ steps.worker_image.outputs.image_uri }}" \
             --overwrite
 
       - name: Register task definition revision
@@ -188,6 +267,61 @@ jobs:
 
           next_task_def_arn="$(aws ecs register-task-definition \
             --cli-input-json file://task-definition-next.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)"
+
+          echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
+
+      - name: Register Notification Worker task definition revision
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        id: worker_task_def
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.worker_ecs_service }}"
+          container="${{ steps.env.outputs.worker_ecs_container }}"
+          image_uri="${{ steps.worker_image.outputs.image_uri }}"
+
+          current_task_def_arn="$(aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            --query 'services[0].taskDefinition' \
+            --output text)"
+
+          aws ecs describe-task-definition \
+            --task-definition "${current_task_def_arn}" \
+            --query taskDefinition \
+            > worker-task-definition.json
+
+          if ! jq -e \
+            --arg container "${container}" \
+            '.containerDefinitions | any(.name == $container)' \
+            worker-task-definition.json > /dev/null; then
+            echo "::error::Container ${container} is absent from Notification Worker task definition."
+            exit 1
+          fi
+
+          jq \
+            --arg container "${container}" \
+            --arg image_uri "${image_uri}" '
+            .containerDefinitions |= map(
+              if .name == $container then .image = $image_uri else . end
+            )
+            | del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            )
+          ' worker-task-definition.json > worker-task-definition-next.json
+
+          next_task_def_arn="$(aws ecs register-task-definition \
+            --cli-input-json file://worker-task-definition-next.json \
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)"
 
@@ -272,6 +406,89 @@ jobs:
             sleep 15
           done
 
+      - name: Deploy Notification Worker ECS service
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        timeout-minutes: 30
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.worker_ecs_service }}"
+          task_definition="${{ steps.worker_task_def.outputs.arn }}"
+          deployment_config='{"minimumHealthyPercent":0,"maximumPercent":200,"deploymentCircuitBreaker":{"enable":true,"rollback":true}}'
+
+          aws ecs update-service \
+            --cluster "${cluster}" \
+            --service "${service}" \
+            --task-definition "${task_definition}" \
+            --deployment-configuration "${deployment_config}" \
+            --force-new-deployment \
+            > worker-service-update.json
+
+          desired_count="$(jq -r '.service.desiredCount' worker-service-update.json)"
+          if [ "${desired_count}" = "0" ]; then
+            echo "Notification Worker desired count is 0; task definition ${task_definition} is staged without starting a task."
+            exit 0
+          fi
+
+          deadline=$((SECONDS + 1500))
+          requested_deployment_seen=false
+          while true; do
+            aws ecs describe-services \
+              --cluster "${cluster}" \
+              --services "${service}" \
+              > worker-service.json
+
+            primary_task_definition="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition' worker-service.json)"
+            primary_rollout_state="$(jq -r '.services[0].deployments[] | select(.status == "PRIMARY") | .rolloutState // "UNKNOWN"' worker-service.json)"
+            requested_rollout_state="$(jq -r \
+              --arg task_definition "${task_definition}" \
+              '([.services[0].deployments[] | select(.taskDefinition == $task_definition) | (.rolloutState // "UNKNOWN")][0] // "MISSING")' \
+              worker-service.json)"
+            deployment_count="$(jq -r '.services[0].deployments | length' worker-service.json)"
+            running_count="$(jq -r '.services[0].runningCount' worker-service.json)"
+            pending_count="$(jq -r '.services[0].pendingCount' worker-service.json)"
+
+            echo "Notification Worker ${service}: rollout=${primary_rollout_state}, deployments=${deployment_count}, running=${running_count}/${desired_count}, pending=${pending_count}"
+
+            if [ "${requested_rollout_state}" != "MISSING" ]; then
+              requested_deployment_seen=true
+            fi
+
+            if [ "${primary_rollout_state}" = "COMPLETED" ] \
+              && [ "${primary_task_definition}" = "${task_definition}" ] \
+              && [ "${deployment_count}" = "1" ] \
+              && [ "${running_count}" = "${desired_count}" ] \
+              && [ "${pending_count}" = "0" ]; then
+              echo "Notification Worker ${service} is stable on ${task_definition}."
+              break
+            fi
+
+            if [ "${requested_rollout_state}" = "FAILED" ]; then
+              echo "::error::Notification Worker deployment failed before the service became stable."
+              jq '.services[0].events[0:10]' worker-service.json
+              exit 1
+            fi
+
+            if [ "${requested_deployment_seen}" = "true" ] \
+              && [ "${requested_rollout_state}" = "MISSING" ] \
+              && [ "${primary_task_definition}" != "${task_definition}" ]; then
+              echo "::error::Notification Worker rolled back from ${task_definition} to ${primary_task_definition}."
+              jq '.services[0].events[0:10]' worker-service.json
+              exit 1
+            fi
+
+            if [ "${SECONDS}" -ge "${deadline}" ]; then
+              echo "::error::Timed out waiting for Notification Worker ${service} to stabilize."
+              jq '.services[0].deployments' worker-service.json
+              jq '.services[0].events[0:10]' worker-service.json
+              exit 1
+            fi
+
+            sleep 15
+          done
+
       - name: Print ECS diagnostics
         if: failure()
         continue-on-error: true
@@ -313,6 +530,43 @@ jobs:
             --output text)"
           if [ -n "${task_arns}" ] && [ "${task_arns}" != "None" ]; then
             echo "Recent stopped tasks:"
+            aws ecs describe-tasks \
+              --cluster "${cluster}" \
+              --tasks ${task_arns} \
+              --query 'tasks[].{taskArn:taskArn,taskDefinitionArn:taskDefinitionArn,lastStatus:lastStatus,stoppedReason:stoppedReason,stoppedAt:stoppedAt,containers:containers[].{name:name,exitCode:exitCode,reason:reason,lastStatus:lastStatus,healthStatus:healthStatus}}' \
+              --output json
+          fi
+
+      - name: Print Notification Worker ECS diagnostics
+        if: failure() && steps.deployment_config.outputs.worker_enabled == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cluster="${{ steps.env.outputs.ecs_cluster }}"
+          service="${{ steps.env.outputs.worker_ecs_service }}"
+
+          aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            > worker-service.json
+
+          echo "Recent Notification Worker deployments:"
+          jq '.services[0].deployments' worker-service.json
+
+          echo "Recent Notification Worker events:"
+          jq '.services[0].events[0:20]' worker-service.json
+
+          task_arns="$(aws ecs list-tasks \
+            --cluster "${cluster}" \
+            --service-name "${service}" \
+            --desired-status STOPPED \
+            --max-items 5 \
+            --query 'taskArns' \
+            --output text)"
+          if [ -n "${task_arns}" ] && [ "${task_arns}" != "None" ]; then
+            echo "Recent stopped Notification Worker tasks:"
             aws ecs describe-tasks \
               --cluster "${cluster}" \
               --tasks ${task_arns} \
