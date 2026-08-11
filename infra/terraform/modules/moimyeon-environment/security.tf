@@ -85,7 +85,7 @@ resource "aws_security_group" "notification_worker_task" {
   vpc_id      = aws_vpc.this.id
 
   egress {
-    description = "Worker outbound to RDS, Valkey, SES, FCM, and Gmail"
+    description = "Worker outbound to RDS, Redis, SES, FCM, and Gmail"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -154,11 +154,11 @@ resource "aws_security_group" "notification_redis" {
   count = var.enable_notification_redis ? 1 : 0
 
   name        = "${local.name}-notification-redis"
-  description = "Notification Valkey access from ECS tasks"
+  description = "Notification Redis ECS task access"
   vpc_id      = aws_vpc.this.id
 
   ingress {
-    description     = "API and worker tasks to notification Valkey over TLS"
+    description     = "API and worker tasks to notification Redis"
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
@@ -166,14 +166,42 @@ resource "aws_security_group" "notification_redis" {
   }
 
   egress {
-    description = "Valkey node communication"
+    description = "Redis task outbound for EFS and AWS services"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    self        = true
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = merge(local.tags, {
     Name = "${local.name}-notification-redis-sg"
+  })
+}
+
+resource "aws_security_group" "notification_redis_efs" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis-efs"
+  description = "EFS mount access from notification Redis ECS task"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "Redis task to EFS over NFS"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.notification_redis[0].id]
+  }
+
+  egress {
+    description = "Return traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-efs-sg"
   })
 }

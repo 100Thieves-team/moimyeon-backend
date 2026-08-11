@@ -202,6 +202,57 @@ resource "aws_iam_role_policy" "notification_worker" {
 }
 
 # ---------------------------------------------------------------------------
+# Notification Redis execution role: ships logs and reads only its password.
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "notification_redis_execution" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name               = "${local.name}-notification-redis-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "notification_redis_execution_managed" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  role       = aws_iam_role.notification_redis_execution[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "notification_redis_execution_ssm" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+    resources = [aws_ssm_parameter.notification_redis_password[0].arn]
+  }
+
+  statement {
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "notification_redis_execution_ssm" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name   = "${local.name}-notification-redis-read-password"
+  role   = aws_iam_role.notification_redis_execution[0].id
+  policy = data.aws_iam_policy_document.notification_redis_execution_ssm[0].json
+}
+
+# ---------------------------------------------------------------------------
 # ECS container instance role (EC2 capacity).
 # ---------------------------------------------------------------------------
 resource "aws_iam_role" "ecs_instance" {

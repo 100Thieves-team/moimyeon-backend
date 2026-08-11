@@ -18,7 +18,7 @@ Each app environment creates:
 - VPC with public ALB subnets, private ECS subnets, private RDS subnets, one NAT
   Gateway, and an S3 Gateway VPC endpoint.
 - **RDS MySQL** on `db.t4g.micro` by default (moimyeon uses MySQL 8.4).
-- Optional private **ElastiCache Valkey** replication group for notification Streams and relay coordination. Dev enables one node; live requires at least two nodes when enabled.
+- Optional private **Redis ECS service** for notification Streams and relay coordination. It uses Cloud Map for private DNS and EFS for AOF persistence across task replacement.
 - **ECS on EC2** using a `t3.small` launch template, Auto Scaling Group, and ECS
   capacity provider (awsvpc tasks, deployment circuit breaker with rollback).
 - Independent `core-worker` ECS service without an ALB. It has its own task Security Group, execution role, runtime role, ECR repository, and CloudWatch log group.
@@ -29,7 +29,7 @@ Each app environment creates:
 - S3 private upload bucket for the MOI-361 presigned-URL flow.
 - Separate ECR repositories for core-api and core-worker Docker images.
 - SSM parameters for generated DB password / JWT secret / Google OAuth secret,
-  notification Valkey TLS URL, and the last deployed image URI.
+  notification Redis password and URL, and the last deployed image URI.
 - IAM: ECS task role (S3 uploads + ECS Exec), task execution role (SSM secrets),
   ECS instance role, and a GitHub Actions deploy role restricted to the env branch.
 - Optional SSM DB-access bastion (developer RDS port-forward).
@@ -112,7 +112,7 @@ the app will not boot without them:
 | `STORAGE_DATABASE_CORE_DB_PASSWORD` | **pre-existing SSM** (`generate_db_password = false`) — dev references it by ARN; the RDS master password is left untouched | No (preserved) |
 | `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
-| `STORAGE_REDIS_URL` | Terraform-created Valkey TLS endpoint and AUTH token → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Valkey replacement/token rotation |
+| `STORAGE_REDIS_URL` | Terraform-created private Redis Cloud Map endpoint and AUTH token → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Redis password rotation |
 
 The worker additionally expects two pre-created SecureStrings. Terraform references their ARNs without reading the secret values into state:
 
@@ -145,7 +145,7 @@ Terraform creates the parameter and the RDS master password itself.
   Container-level HEALTHCHECK is off by default because the `eclipse-temurin` JRE
   image has no `wget`/`curl` — set `enable_container_health_check = true` only if
   you add one to the image.
-- **Notification Valkey:** dev provisions one `cache.t4g.micro` node to limit cost. This has no automatic failover. Live remains disabled while its ECS capacity is zero; enabling it requires at least two nodes and turns on Multi-AZ automatic failover.
+- **Notification Redis:** dev runs one pinned Redis container on the existing ECS capacity provider. AOF uses `appendfsync always` and `/data` is mounted from encrypted EFS, so a task or EC2 replacement can recover the persisted Stream. Cloud Map provides the stable private DNS name. This is still a single Redis process: ECS restarts it after failure, but there is a temporary outage and no automatic replica promotion. Live remains disabled while ECS capacity is zero; high availability requires a separate replication/Sentinel slice before live activation.
 - **DB name/username** default to `moimyeondev` / `moimyeon` — confirm against the
   existing dev RDS master user before adopting/importing it.
 - **Schema:** moimyeon has no Flyway; `dev`/`live` use `ddl-auto: validate`, so the

@@ -58,13 +58,13 @@ output "rds_endpoint" {
   value       = module.live.rds_endpoint
 }
 
-output "notification_redis_primary_endpoint" {
-  description = "Notification Valkey primary endpoint when enabled."
-  value       = module.live.notification_redis_primary_endpoint
+output "notification_redis_endpoint" {
+  description = "Private DNS name of the notification Redis ECS service when enabled."
+  value       = module.live.notification_redis_endpoint
 }
 
 output "notification_redis_url_parameter_name" {
-  description = "SSM parameter containing the notification Valkey URL when enabled."
+  description = "SSM parameter containing the notification Redis URL when enabled."
   value       = module.live.notification_redis_url_parameter_name
 }
 

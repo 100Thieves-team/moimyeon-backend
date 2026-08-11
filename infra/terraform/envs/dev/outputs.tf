@@ -58,13 +58,13 @@ output "rds_endpoint" {
   value       = module.dev.rds_endpoint
 }
 
-output "notification_redis_primary_endpoint" {
-  description = "Notification Valkey primary endpoint."
-  value       = module.dev.notification_redis_primary_endpoint
+output "notification_redis_endpoint" {
+  description = "Private DNS name of the notification Redis ECS service."
+  value       = module.dev.notification_redis_endpoint
 }
 
 output "notification_redis_url_parameter_name" {
-  description = "SSM parameter containing the notification Valkey URL."
+  description = "SSM parameter containing the notification Redis URL."
   value       = module.dev.notification_redis_url_parameter_name
 }
 

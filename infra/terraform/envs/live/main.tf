@@ -39,12 +39,9 @@ module "live" {
 
   enable_db_bastion = true
 
-  # Live is intentionally scaled to zero. Turn this on together with the ECS
-  # capacity; the module rejects a live cache with fewer than two nodes.
-  enable_notification_redis                  = false
-  notification_redis_node_type               = "cache.t4g.micro"
-  notification_redis_node_count              = 2
-  notification_redis_snapshot_retention_days = 7
+  # Live is intentionally scaled to zero. Turn Redis on together with non-zero
+  # ECS capacity; the module rejects Redis without a place to run its task.
+  enable_notification_redis = false
 
   notification_worker_desired_count     = var.notification_worker_desired_count
   firebase_project_id                   = var.firebase_project_id

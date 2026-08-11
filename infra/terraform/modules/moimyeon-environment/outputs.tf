@@ -65,13 +65,13 @@ output "rds_endpoint" {
   value       = aws_db_instance.core.address
 }
 
-output "notification_redis_primary_endpoint" {
-  description = "Primary notification Valkey endpoint, if enabled."
-  value       = var.enable_notification_redis ? aws_elasticache_replication_group.notification[0].primary_endpoint_address : null
+output "notification_redis_endpoint" {
+  description = "Private Cloud Map DNS name of the notification Redis ECS service, if enabled."
+  value       = var.enable_notification_redis ? local.notification_redis_host : null
 }
 
 output "notification_redis_url_parameter_name" {
-  description = "SSM parameter containing the TLS notification Valkey URL, if enabled."
+  description = "SSM parameter containing the private notification Redis URL, if enabled."
   value       = var.enable_notification_redis ? aws_ssm_parameter.notification_redis_url[0].name : null
 }
 

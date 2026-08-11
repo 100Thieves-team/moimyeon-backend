@@ -109,37 +109,27 @@ variable "enable_s3_gateway_endpoint" {
 }
 
 variable "enable_notification_redis" {
-  description = "Provision the private ElastiCache Valkey replication group used by notification relay and workers."
+  description = "Run the private Redis service on the ECS EC2 capacity provider for notification relay and workers."
   type        = bool
   default     = false
 }
 
-variable "notification_redis_node_type" {
-  description = "ElastiCache node type for the notification Valkey replication group."
+variable "notification_redis_image" {
+  description = "Pinned Redis container image used by the notification ECS service."
   type        = string
-  default     = "cache.t4g.micro"
+  default     = "redis:7.4.10-alpine3.21@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2"
 }
 
-variable "notification_redis_node_count" {
-  description = "Number of nodes in the notification Valkey replication group. Use at least 2 in live for automatic failover."
+variable "notification_redis_task_cpu" {
+  description = "Notification Redis ECS task CPU units."
   type        = number
-  default     = 1
-
-  validation {
-    condition     = var.notification_redis_node_count >= 1 && var.notification_redis_node_count <= 6
-    error_message = "notification_redis_node_count must be between 1 and 6."
-  }
+  default     = 256
 }
 
-variable "notification_redis_snapshot_retention_days" {
-  description = "Number of days to retain automatic notification Valkey snapshots."
+variable "notification_redis_task_memory" {
+  description = "Notification Redis ECS task memory in MiB."
   type        = number
-  default     = 1
-
-  validation {
-    condition     = var.notification_redis_snapshot_retention_days >= 0 && var.notification_redis_snapshot_retention_days <= 35
-    error_message = "notification_redis_snapshot_retention_days must be between 0 and 35."
-  }
+  default     = 512
 }
 
 # Security group descriptions are immutable in AWS (changing forces replacement).
