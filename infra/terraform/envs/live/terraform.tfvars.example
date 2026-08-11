@@ -15,3 +15,9 @@ db_username = "moimyeon"
 
 oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
 oauth_google_client_secret = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+
+notification_worker_desired_count     = 0
+firebase_project_id                   = null
+notification_web_push_action_base_url = "https://moimyeon.plady.io"
+notification_email_ses_from_address   = null
+notification_email_gmail_address      = null

@@ -309,6 +309,64 @@ variable "additional_environment" {
 }
 
 # ---------------------------------------------------------------------------
+# Notification worker service / task
+# ---------------------------------------------------------------------------
+
+variable "notification_worker_container_name" {
+  description = "Notification worker ECS container and service name."
+  type        = string
+  default     = "core-worker"
+}
+
+variable "notification_worker_desired_count" {
+  description = "Desired notification worker count. Keep zero until vendor secrets have been created in SSM."
+  type        = number
+  default     = 0
+}
+
+variable "notification_worker_task_cpu" {
+  description = "Notification worker task CPU units."
+  type        = number
+  default     = 256
+}
+
+variable "notification_worker_task_memory" {
+  description = "Notification worker task memory in MiB."
+  type        = number
+  default     = 512
+}
+
+variable "notification_worker_image_tag" {
+  description = "Initial notification worker image tag. GitHub Actions registers SHA-tagged revisions after bootstrap."
+  type        = string
+  default     = null
+}
+
+variable "firebase_project_id" {
+  description = "Firebase project ID used by the notification worker."
+  type        = string
+  default     = null
+}
+
+variable "notification_web_push_action_base_url" {
+  description = "Frontend base URL opened when a web push notification is clicked."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_ses_from_address" {
+  description = "Verified SES sender address used by the notification worker."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_gmail_address" {
+  description = "Gmail or Google Workspace address used as the email fallback."
+  type        = string
+  default     = null
+}
+
+# ---------------------------------------------------------------------------
 # Database (MySQL)
 # ---------------------------------------------------------------------------
 
@@ -443,6 +501,12 @@ variable "force_destroy_upload_bucket" {
 
 variable "ecr_repository_name" {
   description = "ECR repository name. Defaults to moimyeon-<env>-core-api. Set to moimyeon/backend to reuse the pre-existing repo."
+  type        = string
+  default     = null
+}
+
+variable "notification_worker_ecr_repository_name" {
+  description = "ECR repository name for core-worker images. Defaults to moimyeon-<env>-core-worker."
   type        = string
   default     = null
 }

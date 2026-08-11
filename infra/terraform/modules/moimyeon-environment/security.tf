@@ -79,6 +79,24 @@ resource "aws_security_group" "ecs_task" {
   })
 }
 
+resource "aws_security_group" "notification_worker_task" {
+  name        = "${local.name}-notification-worker-task"
+  description = "Notification worker task ENIs"
+  vpc_id      = aws_vpc.this.id
+
+  egress {
+    description = "Worker outbound to RDS, Valkey, SES, FCM, and Gmail"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-worker-task-sg"
+  })
+}
+
 resource "aws_security_group" "rds" {
   name        = "${local.name}-sg-rds"
   description = var.rds_sg_description
@@ -89,7 +107,7 @@ resource "aws_security_group" "rds" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_task.id]
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
   }
 
   # Developer access via the SSM bastion (optional).
@@ -140,11 +158,11 @@ resource "aws_security_group" "notification_redis" {
   vpc_id      = aws_vpc.this.id
 
   ingress {
-    description     = "ECS tasks to notification Valkey over TLS"
+    description     = "API and worker tasks to notification Valkey over TLS"
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_task.id]
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
   }
 
   egress {

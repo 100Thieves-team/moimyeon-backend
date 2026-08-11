@@ -86,6 +86,36 @@ variable "oauth_google_client_secret" {
   sensitive   = true
 }
 
+variable "notification_worker_desired_count" {
+  description = "Desired core-worker count. Keep zero until vendor values and SSM secrets are ready."
+  type        = number
+  default     = 0
+}
+
+variable "firebase_project_id" {
+  description = "Firebase project ID for notification web push."
+  type        = string
+  default     = null
+}
+
+variable "notification_web_push_action_base_url" {
+  description = "Frontend base URL opened by web push notifications."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_ses_from_address" {
+  description = "Verified SES sender address."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_gmail_address" {
+  description = "Gmail or Google Workspace fallback sender address."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Extra tags."
   type        = map(string)

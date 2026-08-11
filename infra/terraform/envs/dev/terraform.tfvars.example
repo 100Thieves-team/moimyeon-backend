@@ -20,3 +20,11 @@ db_username = "moimyeon_admin"
 # Required for the app to boot (security-core.yml has no defaults).
 oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
 oauth_google_client_secret = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+
+# Keep zero until both SSM SecureStrings below exist and the non-secret vendor
+# values have been filled in. Then raise to 1.
+notification_worker_desired_count     = 0
+firebase_project_id                   = null
+notification_web_push_action_base_url = "https://dev.moimyeon.plady.io"
+notification_email_ses_from_address   = null
+notification_email_gmail_address      = null

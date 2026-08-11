@@ -13,6 +13,11 @@ output "ecr_repository_url" {
   value       = module.dev.ecr_repository_url
 }
 
+output "notification_worker_ecr_repository_url" {
+  description = "ECR repository URL for core-worker."
+  value       = module.dev.notification_worker_ecr_repository_url
+}
+
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = module.dev.ecs_cluster_name
@@ -26,6 +31,16 @@ output "ecs_service_name" {
 output "ecs_container_name" {
   description = "ECS container name."
   value       = module.dev.ecs_container_name
+}
+
+output "notification_worker_ecs_service_name" {
+  description = "Notification worker ECS service name."
+  value       = module.dev.notification_worker_ecs_service_name
+}
+
+output "notification_worker_ecs_container_name" {
+  description = "Notification worker ECS container name."
+  value       = module.dev.notification_worker_ecs_container_name
 }
 
 output "app_url" {
@@ -61,6 +76,21 @@ output "upload_bucket_name" {
 output "image_uri_parameter_name" {
   description = "SSM parameter updated by the deploy workflow."
   value       = module.dev.image_uri_parameter_name
+}
+
+output "notification_worker_image_uri_parameter_name" {
+  description = "SSM parameter updated with the deployed core-worker image URI."
+  value       = module.dev.notification_worker_image_uri_parameter_name
+}
+
+output "firebase_service_account_parameter_name" {
+  description = "SSM SecureString name expected for Firebase service account JSON."
+  value       = module.dev.firebase_service_account_parameter_name
+}
+
+output "gmail_app_password_parameter_name" {
+  description = "SSM SecureString name expected for Gmail app password."
+  value       = module.dev.gmail_app_password_parameter_name
 }
 
 output "db_bastion_instance_id" {

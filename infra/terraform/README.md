@@ -21,12 +21,13 @@ Each app environment creates:
 - Optional private **ElastiCache Valkey** replication group for notification Streams and relay coordination. Dev enables one node; live requires at least two nodes when enabled.
 - **ECS on EC2** using a `t3.small` launch template, Auto Scaling Group, and ECS
   capacity provider (awsvpc tasks, deployment circuit breaker with rollback).
+- Independent `core-worker` ECS service without an ALB. It has its own task Security Group, execution role, runtime role, ECR repository, and CloudWatch log group.
 - ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health/readiness`.
 - ACM DNS-validated certificate when `app_domain_name` is set.
 - Route 53 alias when `dns_management = "route53"`, or manual CNAME outputs when
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).
 - S3 private upload bucket for the MOI-361 presigned-URL flow.
-- ECR repository for backend Docker images.
+- Separate ECR repositories for core-api and core-worker Docker images.
 - SSM parameters for generated DB password / JWT secret / Google OAuth secret,
   notification Valkey TLS URL, and the last deployed image URI.
 - IAM: ECS task role (S3 uploads + ECS Exec), task execution role (SSM secrets),
@@ -104,6 +105,15 @@ the app will not boot without them:
 | `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
 | `STORAGE_REDIS_URL` | Terraform-created Valkey TLS endpoint and AUTH token → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Valkey replacement/token rotation |
+
+The worker additionally expects two pre-created SecureStrings. Terraform references their ARNs without reading the secret values into state:
+
+| Worker secret | SSM parameter |
+| --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | `/moimyeon/{env}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON` |
+| `NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` | `/moimyeon/{env}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` |
+
+Keep `notification_worker_desired_count = 0` until those parameters and the non-secret FCM/email values in `terraform.tfvars` are ready. The worker Task Role receives `ses:SendEmail` only when a sender address is configured, and the API Task Role does not receive that permission.
 
 **Before applying dev**, seed the DB password parameter with the value currently
 in the box's `app.env` (this is the one manual secret step of the absorb):

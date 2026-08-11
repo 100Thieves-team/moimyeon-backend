@@ -46,6 +46,12 @@ module "live" {
   notification_redis_node_count              = 2
   notification_redis_snapshot_retention_days = 7
 
+  notification_worker_desired_count     = var.notification_worker_desired_count
+  firebase_project_id                   = var.firebase_project_id
+  notification_web_push_action_base_url = var.notification_web_push_action_base_url
+  notification_email_ses_from_address   = var.notification_email_ses_from_address
+  notification_email_gmail_address      = var.notification_email_gmail_address
+
   oauth_google_client_id     = var.oauth_google_client_id
   oauth_google_client_secret = var.oauth_google_client_secret
 

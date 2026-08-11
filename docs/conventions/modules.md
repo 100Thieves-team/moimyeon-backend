@@ -74,6 +74,10 @@ moimyeon/
   Handler를 nullable로 두지 않으므로 `EmailSender`, `WebPushSender` 또는 Consumer 구현이 빠지면 애플리케이션 시작이 실패한다.
 - 기본 `local`에서는 외부 벤더 자격 증명 없이 개발할 수 있도록 Stream 소비를 끈다. 실제 발송 Bean이 활성화되는 `local-dev`, `dev`,
   `staging`, `live`에서는 소비도 함께 활성화한다.
+- AWS에서는 ALB가 없는 독립 ECS Service로 배포한다. Worker 전용 Security Group과 IAM Role을 사용하고,
+  SES 전송 권한은 API Task Role에 주지 않는다. 외부 비밀값이 SSM에 준비되기 전에는 desired count를 0으로 유지한다.
+- DB 스키마 마이그레이션은 `core-api`가 소유하며 `core-worker`에서는 Flyway를 비활성화한다. 두 실행 단위가
+  배포 중 동시에 같은 마이그레이션 경계를 경쟁하지 않게 하기 위한 선택이다.
 - 다른 워커가 추가되더라도 처음부터 실행 모듈을 나누지 않는다.
 - 작업별 실행 주기·확장 단위 또는 커넥션 풀을 독립적으로 운영해야 할 때 모듈이나 자원 풀을 분리한다.
 

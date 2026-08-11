@@ -71,6 +71,13 @@ module "dev" {
   notification_redis_node_count              = 1
   notification_redis_snapshot_retention_days = 1
 
+  notification_worker_ecr_repository_name = "moimyeon/worker"
+  notification_worker_desired_count       = var.notification_worker_desired_count
+  firebase_project_id                     = var.firebase_project_id
+  notification_web_push_action_base_url   = var.notification_web_push_action_base_url
+  notification_email_ses_from_address     = var.notification_email_ses_from_address
+  notification_email_gmail_address        = var.notification_email_gmail_address
+
   # Transitional (blue/green): keep the existing app-host SG (moimyeon-dev-sg-app)
   # and the existing bastion SG (moimyeon-dev-sg-db-access) able to reach RDS so
   # the current container/tunnel keep working during the absorb. Drop after cutover.

@@ -13,6 +13,11 @@ output "ecr_repository_url" {
   value       = aws_ecr_repository.app.repository_url
 }
 
+output "notification_worker_ecr_repository_url" {
+  description = "ECR repository URL for core-worker images."
+  value       = aws_ecr_repository.notification_worker.repository_url
+}
+
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = aws_ecs_cluster.this.name
@@ -26,6 +31,16 @@ output "ecs_service_name" {
 output "ecs_container_name" {
   description = "ECS container name used by the deploy workflow."
   value       = var.container_name
+}
+
+output "notification_worker_ecs_service_name" {
+  description = "Notification worker ECS service name."
+  value       = aws_ecs_service.notification_worker.name
+}
+
+output "notification_worker_ecs_container_name" {
+  description = "Notification worker ECS container name."
+  value       = var.notification_worker_container_name
 }
 
 output "github_deploy_role_arn" {
@@ -73,6 +88,21 @@ output "ssm_parameter_prefix" {
 output "image_uri_parameter_name" {
   description = "SSM parameter the deploy workflow updates with the last deployed image URI."
   value       = aws_ssm_parameter.image_uri.name
+}
+
+output "notification_worker_image_uri_parameter_name" {
+  description = "SSM parameter updated with the last deployed core-worker image URI."
+  value       = aws_ssm_parameter.notification_worker_image_uri.name
+}
+
+output "firebase_service_account_parameter_name" {
+  description = "Pre-created SSM SecureString expected to contain the Firebase service account JSON."
+  value       = local.firebase_service_account_param_name
+}
+
+output "gmail_app_password_parameter_name" {
+  description = "Pre-created SSM SecureString expected to contain the Gmail app password."
+  value       = local.gmail_app_password_param_name
 }
 
 output "db_bastion_instance_id" {
