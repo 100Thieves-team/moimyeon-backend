@@ -52,3 +52,6 @@ all-open 플러그인이 그 애노테이션을 커버하는지는 `build.gradle
 - 2026-08-13: Google OAuth 인증 뒤 회원 역할을 읽는 과정에서 `LazyInitializationException`이 발생했다.
   원인: Repository 트랜잭션 종료 후 `MemberMapper`가 LAZY `socialAccounts`를 읽었다. 재발 방지:
   OSIV와 기본 LAZY는 유지하고, 완전한 회원 조립 조회만 이름에 연관을 드러낸 JPQL fetch join을 사용한다.
+- 2026-08-13: 공개 ALB에 비밀파일·PHP 경로 약 3,900건을 대입하는 자동 스캔이 유입됐다.
+  노출 파일이나 5xx는 없었지만 ALB 액세스 로그와 WAF가 없어 발신자 추적·선제 차단을 못 했다.
+  재발 방지: ALB 액세스 로그, WAF IP rate limit·관리형 규칙 관찰, 공개 actuator 최소화.
