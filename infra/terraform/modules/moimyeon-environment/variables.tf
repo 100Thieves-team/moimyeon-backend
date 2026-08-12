@@ -317,13 +317,13 @@ variable "notification_worker_desired_count" {
 variable "notification_worker_task_cpu" {
   description = "Notification worker task CPU units."
   type        = number
-  default     = 256
+  default     = 512
 }
 
 variable "notification_worker_task_memory" {
   description = "Notification worker task memory in MiB."
   type        = number
-  default     = 512
+  default     = 768
 }
 
 variable "notification_worker_image_tag" {

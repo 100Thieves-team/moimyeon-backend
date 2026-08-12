@@ -4,6 +4,10 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-12: core-worker가 MySQL 8.4 인증 중 연결 제한 시간을 넘겨 반복 종료됐다.
+  원인: 0.25 vCPU Worker가 `db-core.yml`의 1.1초 연결 제한과 dev Flyway 활성화까지 함께 상속했다.
+  재발 방지: Worker 전용 설정을 마지막에 import해 Flyway를 끄고 연결 대기를 10초로 분리하며,
+  Worker 기본 자원을 0.5 vCPU와 768MB로 올린다.
 - 2026-08-12: 알림 기능 배포 뒤 core-api가 Outbox 스키마 검증에서 종료됐다.
   원인: Hibernate 7이 `@Lob String`을 MySQL `LONGTEXT`로 해석했지만 Flyway는 `TEXT`를 만들었고,
   H2 테스트가 이 방언별 타입 차이를 드러내지 못했다. 재발 방지: `TEXT` 매핑은
