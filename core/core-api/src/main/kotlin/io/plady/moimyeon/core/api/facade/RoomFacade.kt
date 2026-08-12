@@ -29,6 +29,10 @@ class RoomFacade(
         roomService.cancelRoom(hostMemberId, roomId)
     }
 
+    fun confirm(hostMemberId: UUID, roomId: UUID) {
+        roomService.confirmRoom(hostMemberId, roomId)
+    }
+
     // 확정 조건은 이미 조회한 룸 상세에서 파생한다. 판정 자체는 도메인이 갖고 여기서는 호출만 한다.
     fun getRoom(roomId: UUID): RoomReadResponse {
         val detail = roomService.getRoom(roomId)
