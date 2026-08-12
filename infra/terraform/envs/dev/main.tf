@@ -33,7 +33,7 @@ module "dev" {
   ecs_instance_type    = "t3.small"
   ecs_min_size         = 1
   ecs_desired_capacity = 1
-  ecs_max_size         = 2
+  ecs_max_size         = 3
   # Start with a single task for a safe first bring-up on one t3.small; scale later.
   ecs_service_desired_count = 1
   ecs_service_min_count     = 1

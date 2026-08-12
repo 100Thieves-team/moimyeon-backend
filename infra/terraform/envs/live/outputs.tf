@@ -107,3 +107,14 @@ output "external_dns_records" {
   description = "Manual DNS records for dns_management = external."
   value       = module.live.external_dns_records
 }
+
+output "ecs_task_definition_arn" {
+  description = "Terraform-managed Core API task definition template ARN."
+  value       = module.live.ecs_task_definition_arn
+}
+
+output "notification_worker_task_definition_arn" {
+  description = "Terraform-managed Notification Worker task definition template ARN."
+  value       = module.live.notification_worker_task_definition_arn
+}
+

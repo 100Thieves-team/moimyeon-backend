@@ -133,3 +133,13 @@ output "external_dns_records" {
     ]
   } : null
 }
+
+output "ecs_task_definition_arn" {
+  description = "Terraform-managed Core API task definition template ARN."
+  value       = aws_ecs_task_definition.app.arn
+}
+
+output "notification_worker_task_definition_arn" {
+  description = "Terraform-managed Notification Worker task definition template ARN."
+  value       = aws_ecs_task_definition.notification_worker.arn
+}
