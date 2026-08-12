@@ -18,6 +18,9 @@ security:
   session:
     ttl-seconds: 1209600 # 리프레시 토큰(세션) 수명
   auth:
+    oauth2:
+      success-redirect-uri: ${OAUTH_FRONTEND_SUCCESS_REDIRECT_URI:https://moimyeon.plady.io/auth/callback}
+      failure-redirect-uri: ${OAUTH_FRONTEND_FAILURE_REDIRECT_URI:https://moimyeon.plady.io/?authError=login_failed}
     cookie:
       domain: moimyeon.plady.io # api. 와 apex 가 공유
       secure: true
@@ -46,6 +49,9 @@ security:
 spring.config.activate.on-profile: local
 security:
   auth:
+    oauth2:
+      success-redirect-uri: ${OAUTH_FRONTEND_SUCCESS_REDIRECT_URI:http://localhost:3000/auth/callback}
+      failure-redirect-uri: ${OAUTH_FRONTEND_FAILURE_REDIRECT_URI:http://localhost:3000/?authError=login_failed}
     cookie:
       domain: "" # 비워서 Domain 미지정 → localhost 에서 동작
       secure: false

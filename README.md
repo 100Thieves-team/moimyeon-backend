@@ -28,7 +28,7 @@ moimyeon/
 │   └── core-api        API 서버 실행 모듈 — 외부 연동 계약과 런타임 조립 소유
 │
 ├── security/
-│   └── security-core   인증/인가 — AuthUser 리졸버 · 소셜 로그인 예정
+│   └── security-core   인증/인가 — Google OAuth · JWT 세션 · 로그인 회원 주입
 │
 ├── storage/
 │   ├── db-core         JPA/MySQL 영속성 — DataSource · JPA 설정 소유
@@ -97,15 +97,20 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 ---
 
 ### `security:security-core`
-인증/인가 담당 모듈. core-api 에 `implementation`으로 배선되어 있다. 필터체인은 아직 뼈대(permitAll)이고, 컨트롤러 인증 계약(`AuthUser`)과 부하테스트 인증 게이트는 세팅 완료.
+인증/인가 담당 모듈. core-api 에 `implementation`으로 배선되어 있다. Google OAuth 로그인, 자체 JWT 세션 인증,
+컨트롤러 인증 계약과 부하테스트 인증 게이트를 소유한다.
 
 - 의존성: `spring-boot-starter-security`, `spring-boot-starter-oauth2-client`, webmvc (compileOnly — 런타임은 core-api 공급)
-- 포함: `SecurityConfig`, `AuthUser` + `AuthUserArgumentResolver`, `PerfAuthenticationFilter` + `PerfAuthConfig`
-- 예정: 소셜 로그인(OAuth2 Client + JWT)은 security-core 에, 어드민 전용 필터체인(`securityMatcher("/admin/**")` + `@Order`)은 admin-api 에 둔다
+- 포함: `SecurityConfig`, `OAuth2LoginSuccessHandler`, JWT·쿠키 인증, `PerfAuthenticationFilter` + `PerfAuthConfig`
 
-> **컨트롤러 인증 계약.** 컨트롤러가 인증 결과로 받는 타입은 `AuthUser(id: Long)` 하나다 — spring-security import 가 없는 순수 DTO. `SecurityContextHolder` 접근은 `AuthUserArgumentResolver` 한 곳으로 격리되고, 계약은 `Authentication.name = 내부 userId 문자열`이다. provider ID(Google sub, Kakao id)는 인증 어댑터에서 내부 ID 로 번역을 끝내고, 컨트롤러·서비스에는 절대 노출하지 않는다. 테스트에서는 standalone MockMvc 에 가짜 리졸버만 끼우면 되므로 SecurityContext 세팅이 불필요하다.
+> **컨트롤러 인증 계약.** 컨트롤러는 `@LoginMember CurrentMember`를 받고, 표준
+> `Principal.name = 회원 UUID 문자열`만 해석한다. provider ID(Google sub)는 OAuth 어댑터에서 내부 회원 UUID로
+> 번역을 끝내고 컨트롤러·서비스에는 노출하지 않는다.
 
-> **부하테스트 인증.** `PerfAuthenticationFilter`는 `X-Test-User-Id` 헤더를 신뢰해 인증을 세팅한다 (k6/JMeter 용). 인증 우회 백도어이므로 `@Component` 자동 등록 없이 **perf 프로파일 + `security.perf-auth.enabled=true` 이중 게이트**를 통과해야만 빈이 생성되고, `SecurityConfig`가 명시적으로 체인에 넣는다.
+> **부하테스트 인증.** `PerfAuthenticationFilter`는 `X-Test-User-Id`의 회원 UUID를 신뢰해 인증을 세팅한다
+> (k6/JMeter 용). 인증 우회 백도어이므로 `@Component` 자동 등록 없이 **perf 프로파일 +
+> `security.perf-auth.enabled=true` 이중 게이트**를 통과해야만 빈이 생성된다. `live` 프로파일에서는 두 값을
+> 넣어도 등록되지 않는다. 별도 환경은 `SPRING_PROFILES_ACTIVE=dev,perf`로 실행한다.
 
 > **위치 선정 근거.** security 는 presentation 앞단의 횡단 관심사로, 요청을 가로채 동작을 바꾸는 능동적 컴포넌트다. 수동적 계측 인프라인 `support/*` 와 결이 달라 독립 top-level 그룹으로 둔다. 단방향 규칙: `core-api → security-core`, storage/domain 은 security 를 모르며, 서비스 레이어는 `userId`를 평범한 파라미터로 받는다.
 
@@ -218,6 +223,8 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 |------|-----------|------|
 | `SPRING_PROFILES_ACTIVE` | core-api, core-batch | 기본값 `local` (H2 부팅, 외부 의존 없음) |
 | `storage.database.core-db.url` / `.username` / `.password` | storage/db-core | dev 이상 MySQL 접속 정보 (외부 설정 주입) |
-| `security.perf-auth.enabled` | security/security-core | perf 프로파일에서 `X-Test-User-Id` 헤더 인증 활성화 (이중 게이트) |
+| `security.perf-auth.enabled` | security/security-core | `dev,perf` 전용 환경에서 회원 UUID 기반 `X-Test-User-Id` 인증 활성화 (이중 게이트, live 차단) |
+| `OAUTH_FRONTEND_SUCCESS_REDIRECT_URI` | security/security-core | OAuth 성공 후 프론트 콜백 절대 URI (기본 `https://moimyeon.plady.io/auth/callback`) |
+| `OAUTH_FRONTEND_FAILURE_REDIRECT_URI` | security/security-core | OAuth 실패 후 프론트 화면 절대 URI (기본 `https://moimyeon.plady.io/?authError=login_failed`) |
 
-> 소셜 로그인 자격증명(OAuth client-id/secret, JWT secret 등)은 구현 시 추가 예정.
+> Google OAuth client-id/secret과 JWT secret은 실행 환경에서 주입한다.
