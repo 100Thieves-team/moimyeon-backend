@@ -28,9 +28,10 @@ class ParticipationFinder(
 
     fun getHostMemberId(roomId: UUID): UUID {
         return checkNotNull(
-            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
                 ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
             ),
         ) {
             "확정 룸에는 HOST 참여 행이 있어야 합니다. roomId=$roomId"

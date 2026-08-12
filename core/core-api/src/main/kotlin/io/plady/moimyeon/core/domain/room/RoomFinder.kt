@@ -27,9 +27,10 @@ class RoomFinder(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         val host = requireFound(
-            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
                 ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
             ),
             CoreErrorType.ROOM_NOT_FOUND,
         )

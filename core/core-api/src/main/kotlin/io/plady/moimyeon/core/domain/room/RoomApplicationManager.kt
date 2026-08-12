@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -23,6 +24,7 @@ class RoomApplicationManager(
     private val roomRepository: RoomRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val participationRepository: ParticipationRepository,
+    private val participationValidator: ParticipationValidator,
     private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     // 수락. 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한 뒤(마지막 자리 1건만 성공, §4.4),
@@ -108,14 +110,9 @@ class RoomApplicationManager(
         return room
     }
 
+    // 방장 판정은 ParticipationValidator 한 곳이 소유한다 — 상태를 함께 봐야 하는데
+    // 네 곳에 흩어져 있던 것이 셋만 고쳐지고 하나가 남는 사고를 막는다(MOI-397).
     private fun requireHost(roomId: UUID, memberId: UUID) {
-        requireBusiness(
-            participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
-                roomId,
-                memberId,
-                ParticipationRole.HOST,
-            ),
-            CoreErrorType.ROOM_FORBIDDEN,
-        )
+        participationValidator.validateHost(roomId, memberId)
     }
 }

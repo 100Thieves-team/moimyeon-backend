@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
@@ -38,12 +39,14 @@ class RoomManagerTest {
     private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
+    private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
         roomApplicationRepository,
         resumeSubmissionRepository,
         roomStatusLogRepository,
+        participationValidator,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 
@@ -444,14 +447,15 @@ class RoomManagerTest {
         } returns exists
     }
 
+    // 방장 판정은 ParticipationValidator 가 소유한다. 규칙 자체는 그쪽 테스트가 보고,
+    // 여기서는 도구가 던진 예외가 그대로 전파되는지만 본다(testing.md 레이어별 전략).
     private fun givenHost(isHost: Boolean = true) {
-        every {
-            participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
-                roomId,
-                hostId,
-                ParticipationRole.HOST,
-            )
-        } returns isHost
+        if (isHost) {
+            every { participationValidator.validateHost(roomId, hostId) } returns Unit
+        } else {
+            every { participationValidator.validateHost(roomId, hostId) } throws
+                CoreException(CoreErrorType.ROOM_FORBIDDEN)
+        }
     }
 
     private fun givenParticipants(joined: Int) {
