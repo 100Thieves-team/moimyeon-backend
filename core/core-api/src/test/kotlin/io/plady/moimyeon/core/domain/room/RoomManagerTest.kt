@@ -332,6 +332,20 @@ class RoomManagerTest {
         assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
     }
 
+    // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
+    // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
+    @Test
+    fun `확정 이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(4)
+        every { roomStatusLogRepository.save(any()) } throws
+            DataIntegrityViolationException("uk_room_status_log_room_transition_active")
+
+        assertThatThrownBy { manager.confirm(roomId, hostId) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
     private fun assertConfirmFails(errorType: CoreErrorType) {
         assertThatThrownBy { manager.confirm(roomId, hostId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
