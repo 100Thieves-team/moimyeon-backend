@@ -46,6 +46,12 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         status: ParticipationStatus,
     ): Long
 
+    fun findByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
+
     fun existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
         roomId: UUID,
         memberId: UUID,

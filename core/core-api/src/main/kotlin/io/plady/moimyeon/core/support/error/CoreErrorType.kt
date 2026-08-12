@@ -86,6 +86,23 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 확정은 "이 인원으로 진행한다"는 약속이라, 최소까지 내려온 뒤의 이탈은 그 약속을 깬다.
+    // 확정 자체를 막는 E1421 과 반대 방향이라 코드를 가른다 — 안내 문구가 다르다.
+    ROOM_AT_MIN_CAPACITY(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1423,
+        "최소 진행 인원이라 나갈 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
+    // 모집 중이 아니라는 것(E1410)과 다르다 — 확정된 룸에서는 나갈 수 있다.
+    ROOM_ALREADY_CLOSED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1424,
+        "이미 진행이 시작되었거나 끝난 룸입니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,
