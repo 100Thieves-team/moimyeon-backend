@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileJobRoleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTagResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTrustResponse
@@ -57,7 +58,11 @@ class PublicProfileControllerTest : RestDocsTest() {
                 assertThat(result.response.contentAsString)
                     .contains("\"memberId\":\"$memberId\"")
                     .contains("\"nickname\":\"차분한 펭귄 12\"")
-                    .contains("\"interestJobRoleIds\":[1,2]")
+                    .contains(
+                        "\"interestJobRoles\":[" +
+                            "{\"jobRoleId\":1,\"code\":\"BACKEND_DEVELOPER\",\"displayName\":\"백엔드 개발자\"}," +
+                            "{\"jobRoleId\":2,\"code\":\"FRONTEND_DEVELOPER\",\"displayName\":\"프론트엔드 개발자\"}]",
+                    )
                     .contains("\"bio\":\"자기소개\"")
                     .contains("\"meetingPreference\":\"BOTH\"")
                     .contains("\"activityTopPercent\":12")
@@ -76,6 +81,7 @@ class PublicProfileControllerTest : RestDocsTest() {
                     .doesNotContain("\"socialAccounts\"")
                     .doesNotContain("\"termsAgreements\"")
                     .doesNotContain("\"interviewStage\"")
+                    .doesNotContain("\"interestJobRoleIds\"")
             }
             .andDo(
                 documentApi(
@@ -171,7 +177,10 @@ class PublicProfileControllerTest : RestDocsTest() {
         return PublicProfileResponse(
             memberId = memberId,
             nickname = "차분한 펭귄 12",
-            interestJobRoleIds = listOf(1L, 2L),
+            interestJobRoles = listOf(
+                PublicProfileJobRoleResponse(1L, "BACKEND_DEVELOPER", "백엔드 개발자"),
+                PublicProfileJobRoleResponse(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
+            ),
             bio = "자기소개",
             meetingPreference = MeetingPreference.BOTH,
             trust = trust,
@@ -186,7 +195,10 @@ class PublicProfileControllerTest : RestDocsTest() {
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
         fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임"),
-        fieldWithPath("data.interestJobRoleIds").type(JsonFieldType.ARRAY).description("관심 직무 id 목록"),
+        fieldWithPath("data.interestJobRoles").type(JsonFieldType.ARRAY).description("관심 직무 목록"),
+        fieldWithPath("data.interestJobRoles[].jobRoleId").type(JsonFieldType.NUMBER).description("관심 직무 식별자"),
+        fieldWithPath("data.interestJobRoles[].code").type(JsonFieldType.STRING).description("관심 직무 코드"),
+        fieldWithPath("data.interestJobRoles[].displayName").type(JsonFieldType.STRING).description("관심 직무 표시명"),
         fieldWithPath("data.bio").type(JsonFieldType.STRING).description("자기소개 (미지정이면 빈 문자열)"),
         fieldWithPath("data.meetingPreference").type(JsonFieldType.STRING)
             .description("진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),

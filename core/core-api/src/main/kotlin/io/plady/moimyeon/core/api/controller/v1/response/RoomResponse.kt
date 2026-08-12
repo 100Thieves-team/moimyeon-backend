@@ -81,7 +81,7 @@ data class RoomRecruitResponse(
     val message: String, // 2명이 더 모이면 확정할 수 있어요
 )
 
-// 방장 블록. GET /v1/members/{memberId}/profile(PublicProfileController 목)의 신뢰 지표와 동일한 값을 미러링한다.
+// TODO(MOI-378 후속): 룸 상세의 구 방장 통계 계약을 확정된 공개 프로필 신뢰 지표와 동기화한다.
 data class RoomHostResponse(
     val memberId: UUID,
     val nickname: String,

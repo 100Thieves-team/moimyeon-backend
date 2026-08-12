@@ -116,7 +116,7 @@ class RoomParticipantControllerTest : RestDocsTest() {
                         fieldWithPath("data.participants[].jobRoles[].name").type(JsonFieldType.STRING)
                             .description("관심 직무명"),
                         fieldWithPath("data.participants[].activitySummary").type(JsonFieldType.STRING).optional()
-                            .description("공개 가능한 활동 정보 (trust 격벽 전까지 null)"),
+                            .description("공개 가능한 활동 정보 (이 목록에서는 null, 공개 프로필 API에서 조회)"),
                         fieldWithPath("data.participants[].aiSummary").type(JsonFieldType.OBJECT).optional()
                             .description("이력서 AI 요약. 제출 이력서가 없으면 null"),
                         fieldWithPath("data.participants[].aiSummary.status").type(JsonFieldType.STRING).optional()

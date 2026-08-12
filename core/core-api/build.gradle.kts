@@ -2,6 +2,7 @@ import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
 import io.swagger.v3.core.util.Yaml
@@ -122,15 +123,20 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - error.data: "필드명 -> 사유" 맵이라 additionalProperties 스키마가 필요
 // - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
 //   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
+// - 제한 문자열 스칼라 배열도 같은 제약이 있어 아이템 타입과 enum 값을 보강한다.
+// - nullable 로 문서화한 필드는 생성기가 required 에서 빼므로, 항상 키를 반환하는 필드는 다시 넣는다.
 // - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
 // - OAuth 로그인: Spring Security 필터 엔드포인트라 REST Docs 리소스가 없어 경로와 리다이렉트 계약을 보강한다.
 val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
+val stringEnumArrayProperties = mapOf("recentAttendances" to listOf("ATTENDED", "ABSENT"))
 
 fun patchGeneratedSchemas(yamlFile: File) {
     val mapper = Yaml.mapper()
     val root = mapper.readTree(yamlFile)
     var errorDataPatched = 0
     val numberArraysPatched = mutableSetOf<String>()
+    val stringEnumArraysPatched = mutableSetOf<String>()
+    var nullableRequiredPatched = 0
     root.path("components").path("schemas").forEach { schema ->
         val errorData = schema.path("properties").path("error").path("properties").path("data")
         if (errorData is ObjectNode) {
@@ -141,12 +147,17 @@ fun patchGeneratedSchemas(yamlFile: File) {
             errorData.set<ObjectNode>("additionalProperties", mapper.createObjectNode().put("type", "string"))
         }
         patchNumberIdArrays(schema, mapper, numberArraysPatched)
+        patchStringEnumArrays(schema, mapper, stringEnumArraysPatched)
+        nullableRequiredPatched += requireNullableProperty(schema, mapper, "activityTopPercent")
     }
     // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
     // 미보정 스펙이 나가지 않도록 빌드를 실패시킨다.
     check(errorDataPatched > 0) { "error.data 보정 대상을 스펙에서 찾지 못했다" }
     val missing = numberIdArrayProperties - numberArraysPatched
     check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
+    val missingStringEnums = stringEnumArrayProperties.keys - stringEnumArraysPatched
+    check(missingStringEnums.isEmpty()) { "문자열 enum 배열 보정 대상을 스펙에서 찾지 못했다: $missingStringEnums" }
+    check(nullableRequiredPatched == 1) { "nullable 필수 필드 보정 대상이 하나가 아니다: $nullableRequiredPatched" }
     check(patchResumeMultipartRequest(root, mapper)) { "이력서 multipart 요청 보정 대상을 스펙에서 찾지 못했다" }
     check(patchOAuthLoginContract(root, mapper)) { "OAuth 로그인 OpenAPI 계약을 보정하지 못했다" }
     mapper.writeValue(yamlFile, root)
@@ -303,6 +314,46 @@ fun patchNumberIdArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSe
     } else if (node.isArray) {
         node.forEach { patchNumberIdArrays(it, mapper, patched) }
     }
+}
+
+fun patchStringEnumArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSet<String>) {
+    if (node is ObjectNode) {
+        node.fields().forEach { (name, value) ->
+            val enumValues = stringEnumArrayProperties[name]
+            if (enumValues != null && value is ObjectNode && value.path("type").asText() == "array") {
+                patched += name
+                value.set<ObjectNode>(
+                    "items",
+                    mapper.createObjectNode().apply {
+                        put("type", "string")
+                        putArray("enum").apply { enumValues.forEach { add(it) } }
+                    },
+                )
+            }
+            patchStringEnumArrays(value, mapper, patched)
+        }
+    } else if (node.isArray) {
+        node.forEach { patchStringEnumArrays(it, mapper, patched) }
+    }
+}
+
+fun requireNullableProperty(node: JsonNode, mapper: ObjectMapper, propertyName: String): Int {
+    if (node !is ObjectNode) {
+        if (node.isArray) return node.sumOf { requireNullableProperty(it, mapper, propertyName) }
+        return 0
+    }
+
+    var patched = 0
+    val property = node.path("properties").path(propertyName)
+    if (property.path("nullable").asBoolean(false)) {
+        val required = node.get("required") as? ArrayNode ?: mapper.createArrayNode().also {
+            node.set<ArrayNode>("required", it)
+        }
+        if (required.none { it.asText() == propertyName }) required.add(propertyName)
+        patched++
+    }
+    node.forEach { patched += requireNullableProperty(it, mapper, propertyName) }
+    return patched
 }
 repositories {
     mavenCentral()
