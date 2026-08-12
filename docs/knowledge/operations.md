@@ -4,6 +4,11 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-12: Terraform apply가 ECS ASG를 1대로 줄인 직후 Capacity Provider가 3대로 늘려
+  `want exactly 1 ... have 3` 상태로 끝나지 않았다. 원인: Terraform의 `desired_capacity`와
+  ECS managed scaling이 같은 값을 함께 관리했다. 재발 방지: Terraform은 ASG `min_size`와
+  `max_size`만 관리하고 실제 대수는 Capacity Provider가 단독으로 결정한다. 기본 목표 사용률은
+  100%로 두고 ECS 서비스는 CPU 기준 `binpack`으로 빈 용량을 먼저 사용한다.
 - 2026-08-12: core-worker가 MySQL 8.4 인증 중 연결 제한 시간을 넘겨 반복 종료됐다.
   원인: 0.25 vCPU Worker가 `db-core.yml`의 1.1초 연결 제한과 dev Flyway 활성화까지 함께 상속했다.
   재발 방지: Worker 전용 설정을 마지막에 import해 Flyway를 끄고 연결 대기를 10초로 분리하며,

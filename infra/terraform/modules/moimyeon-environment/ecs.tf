@@ -160,10 +160,11 @@ resource "aws_launch_template" "ecs" {
 }
 
 resource "aws_autoscaling_group" "ecs" {
+  # ECS managed scaling owns the runtime desired capacity. Terraform only sets
+  # the allowed range so an apply cannot fight the capacity provider.
   name                = "${local.name}-ecs"
   min_size            = var.ecs_min_size
   max_size            = var.ecs_max_size
-  desired_capacity    = var.ecs_desired_capacity
   vpc_zone_identifier = aws_subnet.private_app[*].id
   health_check_type   = "EC2"
 
@@ -207,8 +208,10 @@ resource "aws_ecs_capacity_provider" "this" {
     managed_termination_protection = "DISABLED"
 
     managed_scaling {
+      # Fill existing instances first. Deployment overlap can still scale out
+      # up to max_size and scales back in after the extra capacity is empty.
       status                    = "ENABLED"
-      target_capacity           = 80
+      target_capacity           = 100
       minimum_scaling_step_size = 1
       maximum_scaling_step_size = 2
     }
@@ -248,6 +251,11 @@ resource "aws_ecs_service" "app" {
     capacity_provider = aws_ecs_capacity_provider.this.name
     weight            = 1
     base              = 1
+  }
+
+  ordered_placement_strategy {
+    type  = "binpack"
+    field = "cpu"
   }
 
   network_configuration {

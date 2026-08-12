@@ -168,12 +168,6 @@ variable "ecs_max_size" {
   default     = 2
 }
 
-variable "ecs_desired_capacity" {
-  description = "Desired ECS EC2 Auto Scaling Group capacity."
-  type        = number
-  default     = 1
-}
-
 variable "ecs_instance_root_volume_size" {
   description = "Root EBS volume size in GiB for ECS EC2 instances."
   type        = number

@@ -24,7 +24,6 @@ module "live" {
   # Provisioned but scaled to zero until live is intentionally brought up.
   # Raise these (e.g. asg 2/2/3, service 2/2/4) when going live.
   ecs_min_size              = 0
-  ecs_desired_capacity      = 0
   ecs_max_size              = 0
   ecs_service_desired_count = 0
   ecs_service_min_count     = 0
