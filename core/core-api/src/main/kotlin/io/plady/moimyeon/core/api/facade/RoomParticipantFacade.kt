@@ -41,6 +41,10 @@ class RoomParticipantFacade(
         )
     }
 
+    fun leave(memberId: UUID, roomId: UUID) {
+        roomParticipantService.leave(memberId, roomId)
+    }
+
     private fun RoomParticipant.toResponse(
         jobRoleIdsByMemberId: Map<UUID, Set<Long>>,
         jobRoles: List<JobRole>,
