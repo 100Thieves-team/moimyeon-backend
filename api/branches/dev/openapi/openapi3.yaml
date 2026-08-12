@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-12",
-                        "datetime" : "2026-08-12T14:35:06.603055705",
+                        "datetime" : "2026-08-12T16:17:32.612781388",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-12",
-                        "datetime" : "2026-08-12T14:35:06.785575116",
+                        "datetime" : "2026-08-12T16:17:32.807085436",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "b959d79a-982f-4089-af03-0698f4a5dfef",
+                          "termsId" : "79a14a15-7bbe-4ad1-9163-3740ef6ce64f",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "1676acb0-0578-478d-bbfd-09125d2352b4",
+                          "termsId" : "d3770ece-62f8-4d83-b1cc-534ef1649c1b",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "fbf099f6-750d-402a-849a-3e329337599e",
+                        "memberId" : "4168f9b0-d945-451b-99f2-82c194d35459",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "fbf099f6-750d-402a-849a-3e329337599e",
+                          "memberId" : "4168f9b0-d945-451b-99f2-82c194d35459",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-13T14:35:09.975915186",
+                          "startAt" : "2026-08-13T16:17:36.122336217",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1279,7 +1279,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "ccdb5f9f-4c2b-4b00-b653-0e2bf6bd1f68",
+                        "hostMemberId" : "5eec70ee-5d22-4760-b545-0f1bcd44096a",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1591,7 +1591,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "6c514155-ed54-40fa-95d9-f9f7c191eacb",
+                        "memberId" : "32a951b3-af88-429c-814f-e79201da63ba",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -4067,6 +4067,54 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
+    v1-terms1673199050:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - terms
+          type: object
+          properties:
+            terms:
+              type: array
+              description: 현재 유효한 약관 목록
+              items:
+                required:
+                - content
+                - effectiveFrom
+                - required
+                - termsId
+                - title
+                - type
+                - version
+                type: object
+                properties:
+                  termsId:
+                    type: string
+                    description: 약관 버전 식별자 (UUID)
+                  title:
+                    type: string
+                    description: 약관 제목
+                  type:
+                    type: string
+                    description: 약관 종류 (SERVICE | PRIVACY)
+                  effectiveFrom:
+                    type: string
+                    description: 시행일
+                  version:
+                    type: string
+                    description: 약관 버전
+                  required:
+                    type: boolean
+                    description: 가입 필수 동의 여부
+                  content:
+                    type: string
+                    description: 약관 본문
     v1-rooms-roomId658060489:
       required:
       - result
@@ -4194,54 +4242,6 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
-    v1-terms1673199050:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - terms
-          type: object
-          properties:
-            terms:
-              type: array
-              description: 현재 유효한 약관 목록
-              items:
-                required:
-                - content
-                - effectiveFrom
-                - required
-                - termsId
-                - title
-                - type
-                - version
-                type: object
-                properties:
-                  termsId:
-                    type: string
-                    description: 약관 버전 식별자 (UUID)
-                  title:
-                    type: string
-                    description: 약관 제목
-                  type:
-                    type: string
-                    description: 약관 종류 (SERVICE | PRIVACY)
-                  effectiveFrom:
-                    type: string
-                    description: 시행일
-                  version:
-                    type: string
-                    description: 약관 버전
-                  required:
-                    type: boolean
-                    description: 가입 필수 동의 여부
-                  content:
-                    type: string
-                    description: 약관 본문
     v1-members-memberId-profile-250325338:
       required:
       - result
