@@ -13,6 +13,11 @@ output "ecr_repository_url" {
   value       = module.live.ecr_repository_url
 }
 
+output "notification_worker_ecr_repository_url" {
+  description = "ECR repository URL for core-worker."
+  value       = module.live.notification_worker_ecr_repository_url
+}
+
 output "ecs_cluster_name" {
   description = "ECS cluster name."
   value       = module.live.ecs_cluster_name
@@ -26,6 +31,16 @@ output "ecs_service_name" {
 output "ecs_container_name" {
   description = "ECS container name."
   value       = module.live.ecs_container_name
+}
+
+output "notification_worker_ecs_service_name" {
+  description = "Notification worker ECS service name."
+  value       = module.live.notification_worker_ecs_service_name
+}
+
+output "notification_worker_ecs_container_name" {
+  description = "Notification worker ECS container name."
+  value       = module.live.notification_worker_ecs_container_name
 }
 
 output "app_url" {
@@ -43,6 +58,21 @@ output "rds_endpoint" {
   value       = module.live.rds_endpoint
 }
 
+output "notification_redis_endpoint" {
+  description = "Private DNS name of the notification Redis ECS service when enabled."
+  value       = module.live.notification_redis_endpoint
+}
+
+output "notification_redis_url_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the notification Redis URL."
+  value       = module.live.notification_redis_url_parameter_name
+}
+
+output "notification_redis_password_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the notification Redis password."
+  value       = module.live.notification_redis_password_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.live.upload_bucket_name
@@ -51,6 +81,21 @@ output "upload_bucket_name" {
 output "image_uri_parameter_name" {
   description = "SSM parameter updated by the deploy workflow."
   value       = module.live.image_uri_parameter_name
+}
+
+output "notification_worker_image_uri_parameter_name" {
+  description = "SSM parameter updated with the deployed core-worker image URI."
+  value       = module.live.notification_worker_image_uri_parameter_name
+}
+
+output "firebase_service_account_parameter_name" {
+  description = "SSM SecureString name expected for Firebase service account JSON."
+  value       = module.live.firebase_service_account_parameter_name
+}
+
+output "gmail_app_password_parameter_name" {
+  description = "SSM SecureString name expected for Gmail app password."
+  value       = module.live.gmail_app_password_parameter_name
 }
 
 output "db_bastion_instance_id" {

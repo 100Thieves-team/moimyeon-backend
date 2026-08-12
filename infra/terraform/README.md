@@ -18,16 +18,19 @@ Each app environment creates:
 - VPC with public ALB subnets, private ECS subnets, private RDS subnets, one NAT
   Gateway, and an S3 Gateway VPC endpoint.
 - **RDS MySQL** on `db.t4g.micro` by default (moimyeon uses MySQL 8.4).
+- Optional private **Redis ECS service** for notification Streams and relay coordination. It uses Cloud Map for private DNS and EFS for AOF persistence across task replacement.
 - **ECS on EC2** using a `t3.small` launch template, Auto Scaling Group, and ECS
   capacity provider (awsvpc tasks, deployment circuit breaker with rollback).
-- ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health`.
+- Independent `core-worker` ECS service without an ALB. It has its own task Security Group, execution role, runtime role, ECR repository, and CloudWatch log group.
+- ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health/readiness`.
 - ACM DNS-validated certificate when `app_domain_name` is set.
 - Route 53 alias when `dns_management = "route53"`, or manual CNAME outputs when
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).
 - S3 private upload bucket for the MOI-361 presigned-URL flow.
-- ECR repository for backend Docker images.
-- SSM parameters for generated DB password / JWT secret / Google OAuth secret and
-  the last deployed image URI.
+- Separate ECR repositories for core-api and core-worker Docker images.
+- SSM parameters for generated DB password / JWT secret / Google OAuth secret
+  and the last deployed image URI. Redis and vendor credentials are pre-created
+  SecureStrings so their values do not enter Terraform state.
 - IAM: ECS task role (S3 uploads + ECS Exec), task execution role (SSM secrets),
   ECS instance role, and a GitHub Actions deploy role restricted to the env branch.
 - Optional SSM DB-access bastion (developer RDS port-forward).
@@ -85,8 +88,16 @@ will consume (workflow itself is the next step — Pattern A CD):
 | `MOIMYEON_ECS_SERVICE_{ENV}` | `ecs_service_name` |
 | `MOIMYEON_ECS_CONTAINER_NAME_{ENV}` | `ecs_container_name` |
 | `MOIMYEON_IMAGE_URI_PARAMETER_{ENV}` | `image_uri_parameter_name` |
+| `MOIMYEON_WORKER_ECR_REPOSITORY_URL_{ENV}` | `notification_worker_ecr_repository_url` |
+| `MOIMYEON_WORKER_ECS_SERVICE_{ENV}` | `notification_worker_ecs_service_name` |
+| `MOIMYEON_WORKER_ECS_CONTAINER_NAME_{ENV}` | `notification_worker_ecs_container_name` |
+| `MOIMYEON_WORKER_IMAGE_URI_PARAMETER_{ENV}` | `notification_worker_image_uri_parameter_name` |
 
 Push behavior (once the workflow exists): `dev` push → dev, `main` push → live.
+Before the four Worker variables are synced, the workflow keeps deploying only
+Core API. Once they are all present, it also builds and registers the Worker
+image. A Worker service with desired count `0` receives the new task definition
+without starting a task, so vendor credentials can be prepared before activation.
 
 ## App config contract (injected into the ECS task)
 
@@ -94,14 +105,43 @@ Non-secret env: `SPRING_PROFILES_ACTIVE`, `SERVER_PORT`,
 `STORAGE_DATABASE_CORE_DB_URL` (host:port/db), `STORAGE_DATABASE_CORE_DB_USERNAME`,
 `GOOGLE_OAUTH_CLIENT_ID`, `AWS_REGION`.
 
-Secrets via SSM SecureString `valueFrom` (hybrid model). All three are required —
-the app will not boot without them:
+Secrets via SSM SecureString `valueFrom` (hybrid model). The first three are
+always required. `STORAGE_REDIS_URL` is required when notification Redis is enabled:
 
 | Secret | Source | Rotates on apply? |
 | --- | --- | --- |
 | `STORAGE_DATABASE_CORE_DB_PASSWORD` | **pre-existing SSM** (`generate_db_password = false`) — dev references it by ARN; the RDS master password is left untouched | No (preserved) |
 | `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
+| `STORAGE_REDIS_URL` | Pre-created private Redis URL → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Manual |
+
+Before enabling Redis, create its password and URL without passing either value
+through Terraform:
+
+```bash
+REDIS_PASSWORD="$(openssl rand -hex 32)"
+
+aws ssm put-parameter --region ap-northeast-2 \
+  --name /moimyeon/dev/notification-redis/PASSWORD \
+  --type SecureString --value "${REDIS_PASSWORD}" --overwrite
+
+aws ssm put-parameter --region ap-northeast-2 \
+  --name /moimyeon/dev/shared/STORAGE_REDIS_URL \
+  --type SecureString \
+  --value "redis://:${REDIS_PASSWORD}@notification-redis.moimyeon-dev.internal:6379" \
+  --overwrite
+
+unset REDIS_PASSWORD
+```
+
+The worker additionally expects two pre-created SecureStrings. Terraform references their ARNs without reading the secret values into state:
+
+| Worker secret | SSM parameter |
+| --- | --- |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | `/moimyeon/{env}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON` |
+| `NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` | `/moimyeon/{env}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` |
+
+Keep `notification_worker_desired_count = 0` until those parameters and the non-secret FCM/email values in `terraform.tfvars` are ready. The worker Task Role receives `ses:SendEmail` only when a sender address is configured, and the API Task Role does not receive that permission.
 
 **Before applying dev**, seed the DB password parameter with the value currently
 in the box's `app.env` (this is the one manual secret step of the absorb):
@@ -121,14 +161,16 @@ Terraform creates the parameter and the RDS master password itself.
   yet on `dev`, so the app-facing upload env vars are left to
   `additional_environment` (bucket + IAM are provisioned). Wire the exact keys
   (e.g. `STORAGE_OBJECTSTORAGE_S3_BUCKET`) once MOI-361 merges.
-- **Health check:** rollout is gated by the ALB target group (`/actuator/health`).
+- **Health check:** rollout is gated by the ALB target group (`/actuator/health/readiness`). The core-api readiness group checks the DB but excludes notification Redis, so a relay dependency failure does not evict an otherwise serviceable API task.
   Container-level HEALTHCHECK is off by default because the `eclipse-temurin` JRE
   image has no `wget`/`curl` — set `enable_container_health_check = true` only if
   you add one to the image.
+- **Notification Redis:** dev runs one pinned Redis container on the existing ECS capacity provider. AOF uses `appendfsync always` and `/data` is mounted from encrypted EFS, so a task or EC2 replacement can recover the persisted Stream. Cloud Map provides the stable private DNS name. `appendfsync always` intentionally trades write throughput for the relay contract: the DB Outbox is deleted after `XADD` returns, so `everysec` would reopen an acknowledged-message loss window. Benchmark this before live; changing it safely requires changing the relay durability protocol too. This is still a single Redis process: ECS restarts it after failure, but there is a temporary outage and no automatic replica promotion. Live remains disabled while ECS capacity is zero; high availability requires a separate replication/Sentinel slice before live activation.
 - **DB name/username** default to `moimyeondev` / `moimyeon` — confirm against the
   existing dev RDS master user before adopting/importing it.
-- **Schema:** moimyeon has no Flyway; `dev`/`live` use `ddl-auto: validate`, so the
-  schema must still be applied out-of-band (`schema.sql`).
+- **Schema:** `core-api` applies `storage:db-core` Flyway migrations in `dev`,
+  `staging`, and `live`; `core-worker` keeps Flyway disabled. Persistent databases
+  must not receive `schema.sql` directly.
 
 ## Terraform State Backend
 

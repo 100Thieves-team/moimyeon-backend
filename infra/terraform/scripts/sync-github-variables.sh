@@ -106,6 +106,10 @@ sync_environment() {
   set_variable "MOIMYEON_ECS_SERVICE_${suffix}" "$(terraform_output "${env_name}" "ecs_service_name")"
   set_variable "MOIMYEON_ECS_CONTAINER_NAME_${suffix}" "$(terraform_output "${env_name}" "ecs_container_name")"
   set_variable "MOIMYEON_IMAGE_URI_PARAMETER_${suffix}" "$(terraform_output "${env_name}" "image_uri_parameter_name")"
+  set_variable "MOIMYEON_WORKER_ECR_REPOSITORY_URL_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecr_repository_url")"
+  set_variable "MOIMYEON_WORKER_ECS_SERVICE_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecs_service_name")"
+  set_variable "MOIMYEON_WORKER_ECS_CONTAINER_NAME_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecs_container_name")"
+  set_variable "MOIMYEON_WORKER_IMAGE_URI_PARAMETER_${suffix}" "$(terraform_output "${env_name}" "notification_worker_image_uri_parameter_name")"
 }
 
 case "${ENVIRONMENT}" in

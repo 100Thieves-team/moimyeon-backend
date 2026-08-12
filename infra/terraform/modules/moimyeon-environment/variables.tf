@@ -108,6 +108,30 @@ variable "enable_s3_gateway_endpoint" {
   default     = true
 }
 
+variable "enable_notification_redis" {
+  description = "Run the private Redis service on the ECS EC2 capacity provider for notification relay and workers."
+  type        = bool
+  default     = false
+}
+
+variable "notification_redis_image" {
+  description = "Pinned Redis container image used by the notification ECS service."
+  type        = string
+  default     = "redis:7.4.10-alpine3.21@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2"
+}
+
+variable "notification_redis_task_cpu" {
+  description = "Notification Redis ECS task CPU units."
+  type        = number
+  default     = 256
+}
+
+variable "notification_redis_task_memory" {
+  description = "Notification Redis ECS task memory in MiB."
+  type        = number
+  default     = 512
+}
+
 # Security group descriptions are immutable in AWS (changing forces replacement).
 # Override to the existing value when importing a hand-built SG.
 variable "alb_sg_description" {
@@ -221,9 +245,9 @@ variable "task_memory" {
 }
 
 variable "health_check_path" {
-  description = "ALB (and optional container) health check path. moimyeon exposes Spring Boot actuator health."
+  description = "ALB (and optional container) readiness path. The core-api group includes its DB but excludes notification Redis."
   type        = string
-  default     = "/actuator/health"
+  default     = "/actuator/health/readiness"
 }
 
 variable "target_group_name" {
@@ -272,6 +296,64 @@ variable "additional_environment" {
   description = "Additional non-sensitive container environment variables (e.g. MOI-361 STORAGE_OBJECTSTORAGE_S3_* keys once merged)."
   type        = map(string)
   default     = {}
+}
+
+# ---------------------------------------------------------------------------
+# Notification worker service / task
+# ---------------------------------------------------------------------------
+
+variable "notification_worker_container_name" {
+  description = "Notification worker ECS container and service name."
+  type        = string
+  default     = "core-worker"
+}
+
+variable "notification_worker_desired_count" {
+  description = "Desired notification worker count. Keep zero until vendor secrets have been created in SSM."
+  type        = number
+  default     = 0
+}
+
+variable "notification_worker_task_cpu" {
+  description = "Notification worker task CPU units."
+  type        = number
+  default     = 256
+}
+
+variable "notification_worker_task_memory" {
+  description = "Notification worker task memory in MiB."
+  type        = number
+  default     = 512
+}
+
+variable "notification_worker_image_tag" {
+  description = "Initial notification worker image tag. GitHub Actions registers SHA-tagged revisions after bootstrap."
+  type        = string
+  default     = null
+}
+
+variable "firebase_project_id" {
+  description = "Firebase project ID used by the notification worker."
+  type        = string
+  default     = null
+}
+
+variable "notification_web_push_action_base_url" {
+  description = "Frontend base URL opened when a web push notification is clicked."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_ses_from_address" {
+  description = "Verified SES sender address used by the notification worker."
+  type        = string
+  default     = null
+}
+
+variable "notification_email_gmail_address" {
+  description = "Gmail or Google Workspace address used as the email fallback."
+  type        = string
+  default     = null
 }
 
 # ---------------------------------------------------------------------------
@@ -409,6 +491,12 @@ variable "force_destroy_upload_bucket" {
 
 variable "ecr_repository_name" {
   description = "ECR repository name. Defaults to moimyeon-<env>-core-api. Set to moimyeon/backend to reuse the pre-existing repo."
+  type        = string
+  default     = null
+}
+
+variable "notification_worker_ecr_repository_name" {
+  description = "ECR repository name for core-worker images. Defaults to moimyeon-<env>-core-worker."
   type        = string
   default     = null
 }

@@ -117,6 +117,142 @@ resource "aws_iam_role_policy" "task" {
 }
 
 # ---------------------------------------------------------------------------
+# Notification worker roles: vendor delivery is isolated from the API task.
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "notification_worker_execution" {
+  name               = "${local.name}-notification-worker-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "notification_worker_execution_managed" {
+  role       = aws_iam_role.notification_worker_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "notification_worker_execution_ssm" {
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+    resources = local.notification_worker_ssm_parameter_arns
+  }
+
+  statement {
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "notification_worker_execution_ssm" {
+  name   = "${local.name}-notification-worker-read-secrets"
+  role   = aws_iam_role.notification_worker_execution.id
+  policy = data.aws_iam_policy_document.notification_worker_execution_ssm.json
+}
+
+resource "aws_iam_role" "notification_worker" {
+  name               = "${local.name}-notification-worker-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "notification_worker" {
+  dynamic "statement" {
+    for_each = var.notification_email_ses_from_address == null ? [] : [var.notification_email_ses_from_address]
+
+    content {
+      sid       = "SendNotificationEmail"
+      actions   = ["ses:SendEmail"]
+      resources = ["*"]
+
+      condition {
+        test     = "StringEquals"
+        variable = "ses:FromAddress"
+        values   = [statement.value]
+      }
+    }
+  }
+
+  statement {
+    sid = "EcsExecChannels"
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "notification_worker" {
+  name   = "${local.name}-notification-worker-runtime"
+  role   = aws_iam_role.notification_worker.id
+  policy = data.aws_iam_policy_document.notification_worker.json
+}
+
+# ---------------------------------------------------------------------------
+# Notification Redis execution role: ships logs and reads only its password.
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "notification_redis_execution" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name               = "${local.name}-notification-redis-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "notification_redis_execution_managed" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  role       = aws_iam_role.notification_redis_execution[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "notification_redis_execution_ssm" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+    resources = [local.notification_redis_password_ssm_arn]
+  }
+
+  statement {
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "notification_redis_execution_ssm" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name   = "${local.name}-notification-redis-read-password"
+  role   = aws_iam_role.notification_redis_execution[0].id
+  policy = data.aws_iam_policy_document.notification_redis_execution_ssm[0].json
+}
+
+# ---------------------------------------------------------------------------
 # ECS container instance role (EC2 capacity).
 # ---------------------------------------------------------------------------
 resource "aws_iam_role" "ecs_instance" {
@@ -206,7 +342,10 @@ data "aws_iam_policy_document" "github_deploy" {
       "ecr:PutImage",
       "ecr:UploadLayerPart",
     ]
-    resources = [aws_ecr_repository.app.arn]
+    resources = [
+      aws_ecr_repository.app.arn,
+      aws_ecr_repository.notification_worker.arn,
+    ]
   }
 
   statement {
@@ -222,8 +361,16 @@ data "aws_iam_policy_document" "github_deploy" {
   }
 
   statement {
-    actions   = ["ssm:PutParameter"]
-    resources = [aws_ssm_parameter.image_uri.arn]
+    actions   = ["elasticloadbalancing:DescribeTargetHealth"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = ["ssm:PutParameter"]
+    resources = [
+      aws_ssm_parameter.image_uri.arn,
+      aws_ssm_parameter.notification_worker_image_uri.arn,
+    ]
   }
 
   statement {
@@ -231,6 +378,8 @@ data "aws_iam_policy_document" "github_deploy" {
     resources = [
       aws_iam_role.task.arn,
       aws_iam_role.task_execution.arn,
+      aws_iam_role.notification_worker.arn,
+      aws_iam_role.notification_worker_execution.arn,
     ]
   }
 }

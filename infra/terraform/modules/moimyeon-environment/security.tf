@@ -79,6 +79,54 @@ resource "aws_security_group" "ecs_task" {
   })
 }
 
+resource "aws_security_group" "notification_worker_task" {
+  name        = "${local.name}-notification-worker-task"
+  description = "Notification worker task ENIs"
+  vpc_id      = aws_vpc.this.id
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-worker-task-sg"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_rds" {
+  security_group_id            = aws_security_group.notification_worker_task.id
+  referenced_security_group_id = aws_security_group.rds.id
+  description                  = "Worker to MySQL"
+  ip_protocol                  = "tcp"
+  from_port                    = 3306
+  to_port                      = 3306
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_redis" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  security_group_id            = aws_security_group.notification_worker_task.id
+  referenced_security_group_id = aws_security_group.notification_redis[0].id
+  description                  = "Worker to notification Redis"
+  ip_protocol                  = "tcp"
+  from_port                    = 6379
+  to_port                      = 6379
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_https" {
+  security_group_id = aws_security_group.notification_worker_task.id
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Worker to SES and FCM HTTPS APIs"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_gmail_smtp" {
+  security_group_id = aws_security_group.notification_worker_task.id
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Worker to Gmail SMTP with STARTTLS"
+  ip_protocol       = "tcp"
+  from_port         = 587
+  to_port           = 587
+}
+
 resource "aws_security_group" "rds" {
   name        = "${local.name}-sg-rds"
   description = var.rds_sg_description
@@ -89,7 +137,7 @@ resource "aws_security_group" "rds" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_task.id]
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
   }
 
   # Developer access via the SSM bastion (optional).
@@ -129,5 +177,56 @@ resource "aws_security_group" "rds" {
 
   tags = merge(local.tags, {
     Name = "${local.name}-rds-sg"
+  })
+}
+
+resource "aws_security_group" "notification_redis" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis"
+  description = "Notification Redis ECS task access"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "API and worker tasks to notification Redis"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-sg"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_redis_efs" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  security_group_id            = aws_security_group.notification_redis[0].id
+  referenced_security_group_id = aws_security_group.notification_redis_efs[0].id
+  description                  = "Notification Redis to EFS"
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+}
+
+resource "aws_security_group" "notification_redis_efs" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis-efs"
+  description = "EFS mount access from notification Redis ECS task"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "Redis task to EFS over NFS"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.notification_redis[0].id]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-efs-sg"
   })
 }
