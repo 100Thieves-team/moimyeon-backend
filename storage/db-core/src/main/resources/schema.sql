@@ -552,7 +552,8 @@ CREATE INDEX ix_room_application_applicant_member_id ON room_application (applic
 -- 베이스 상속: 나감·제외는 left_at 과 left_by_member_id 가 갖는 정상 흐름이고,
 --   deleted_at 은 잘못 만들어진 참여를 운영이 걷어낸 표식이다. 명단은 룸의 정원·통계와 직결되므로
 --   물리 삭제하면 무엇이 어긋났는지 되짚을 수 없다.
---   유니크에 _active_check 가 붙어 있어 재참여는 새 행으로 들어간다 — 참여 이력이 겹쳐 쓰이지 않는다.
+--   유니크는 JOINED 인 행에만 걸린다(_joined_check) — 나간 뒤 다시 들어오는 것이 정상 흐름이고,
+--   이력은 겹쳐 쓰지 않고 새 행으로 쌓인다. 이중 참여는 여전히 막힌다.
 CREATE TABLE participation (
     id                 BIGINT      NOT NULL AUTO_INCREMENT,
     room_id            BINARY(16)  NOT NULL,
@@ -565,9 +566,11 @@ CREATE TABLE participation (
     created_at         DATETIME    NOT NULL,
     updated_at         DATETIME    NOT NULL,
     deleted_at         DATETIME    NULL,
-    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+    _joined_check BOOLEAN GENERATED ALWAYS AS (
+        CASE WHEN deleted_at IS NULL AND status = 'JOINED' THEN TRUE ELSE NULL END
+    ),
     PRIMARY KEY (id),
-    CONSTRAINT uk_participation_room_member_active UNIQUE (room_id, member_id, _active_check)
+    CONSTRAINT uk_participation_room_member_joined UNIQUE (room_id, member_id, _joined_check)
 );
 CREATE INDEX ix_participation_member_id ON participation (member_id);
 

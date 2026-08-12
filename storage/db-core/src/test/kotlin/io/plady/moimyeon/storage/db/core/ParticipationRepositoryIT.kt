@@ -5,7 +5,9 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.storage.db.CoreDbContextTest
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
@@ -157,6 +159,30 @@ class ParticipationRepositoryIT(
         val result = participationRepository.findAllAtRoomConfirmation(roomId)
 
         assertThat(result.map { it.memberId }).containsExactly(first.memberId, second.memberId, third.memberId)
+    }
+
+    // 자진 이탈 후 재신청은 정상 흐름이다(MOI-397). 유니크가 상태를 보지 않으면 신청은 받아 놓고
+    // 방장이 수락하는 순간 무결성 위반으로 터진다 — 되돌릴 수 없는 자리에서 실패한다.
+    @Test
+    fun `나간 사람이 같은 룸에 다시 참여할 수 있다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        join(roomId, memberId, ParticipationStatus.LEFT, joinedAt = now.minusDays(1), leftAt = now)
+
+        join(roomId, memberId, ParticipationStatus.JOINED)
+
+        assertThat(participationRepository.countActiveByRoomIds(listOf(roomId)).single().count).isEqualTo(1)
+    }
+
+    // 좁힌 유니크가 여전히 이중 참여는 막는지. 이게 뚫리면 정원이 무너진다.
+    @Test
+    fun `같은 룸에 JOINED 참여를 두 번 만들 수 없다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        join(roomId, memberId, ParticipationStatus.JOINED)
+
+        assertThatThrownBy { join(roomId, memberId, ParticipationStatus.JOINED) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     private fun join(
