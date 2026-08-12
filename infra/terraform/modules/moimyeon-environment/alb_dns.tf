@@ -7,6 +7,13 @@ resource "aws_lb" "app" {
 
   enable_deletion_protection = var.environment == "live"
 
+  access_logs {
+    bucket  = aws_s3_bucket.alb_access_logs.id
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.alb_access_logs]
+
   tags = merge(local.tags, {
     Name = "${local.name}-alb"
   })

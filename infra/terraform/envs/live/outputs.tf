@@ -53,6 +53,21 @@ output "alb_dns_name" {
   value       = module.live.alb_dns_name
 }
 
+output "alb_access_log_bucket_name" {
+  description = "S3 bucket receiving ALB access logs."
+  value       = module.live.alb_access_log_bucket_name
+}
+
+output "waf_web_acl_arn" {
+  description = "Regional WAF web ACL associated with the ALB."
+  value       = module.live.waf_web_acl_arn
+}
+
+output "waf_log_group_name" {
+  description = "CloudWatch Logs group receiving WAF request logs."
+  value       = module.live.waf_log_group_name
+}
+
 output "rds_endpoint" {
   description = "RDS endpoint address."
   value       = module.live.rds_endpoint
@@ -117,4 +132,3 @@ output "notification_worker_task_definition_arn" {
   description = "Terraform-managed Notification Worker task definition template ARN."
   value       = module.live.notification_worker_task_definition_arn
 }
-

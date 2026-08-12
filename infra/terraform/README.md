@@ -23,6 +23,10 @@ Each app environment creates:
   capacity provider (awsvpc tasks, deployment circuit breaker with rollback).
 - Independent `core-worker` ECS service without an ALB. It has its own task Security Group, execution role, runtime role, ECR repository, and CloudWatch log group.
 - ALB target group (`ip`) + HTTP/HTTPS listeners, health check `/actuator/health/readiness`.
+- Dedicated SSE-S3 ALB access-log bucket with 90-day retention.
+- Regional AWS WAF web ACL: per-IP five-minute rate limit blocks, while Common,
+  Known Bad Inputs, and IP Reputation managed groups start in Count mode. WAF
+  request logs go to CloudWatch Logs with authorization and cookie headers redacted.
 - ACM DNS-validated certificate when `app_domain_name` is set.
 - Route 53 alias when `dns_management = "route53"`, or manual CNAME outputs when
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).

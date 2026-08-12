@@ -53,6 +53,21 @@ output "alb_dns_name" {
   value       = aws_lb.app.dns_name
 }
 
+output "alb_access_log_bucket_name" {
+  description = "S3 bucket receiving ALB access logs."
+  value       = aws_s3_bucket.alb_access_logs.bucket
+}
+
+output "waf_web_acl_arn" {
+  description = "Regional WAF web ACL associated with the ALB."
+  value       = aws_wafv2_web_acl.app.arn
+}
+
+output "waf_log_group_name" {
+  description = "CloudWatch Logs group receiving WAF request logs."
+  value       = aws_cloudwatch_log_group.waf.name
+}
+
 output "app_url" {
   description = "Application URL. Custom domain when configured, otherwise ALB HTTP DNS."
   value = local.app_domain_enabled ? (
