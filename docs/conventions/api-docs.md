@@ -15,8 +15,10 @@ RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
 
 - 같은 경로·메서드의 `document()` 호출은 **하나의 OpenAPI 연산으로 병합**된다. 상태 코드별 응답,
   identifier 별 named example 로 정리된다.
-- 로그인 플로우는 컨트롤러가 아니라 필터 체인 처리라 테스트 기반 문서화가 불가 — index.adoc 수기 섹션 +
-  OpenAPI `securityScheme` 으로 선언한다.
+- 로그인 플로우는 컨트롤러가 아니라 필터 체인 처리라 일반 `RestDocsTest` 스니펫을 만들지 않는다.
+  핸들러 단위 테스트와 필터 체인 컨텍스트 테스트로 동작을 고정하고, index.adoc 수기 섹션과
+  OpenAPI 생성 후 보정 경로(`/oauth2/authorization/google`, `/login/oauth2/code/google`)로 문서화한다.
+  OpenAPI에는 웹 쿠키(`AccessTokenCookie`)와 앱 Bearer(`BearerAuth`) securityScheme도 함께 선언한다.
 
 ## 문서화 테스트 작성법
 

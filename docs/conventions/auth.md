@@ -15,6 +15,29 @@
   Resource Server는 이를 `ROLE_USER`, `ROLE_ADMIN` Spring Security 권한으로 변환한다.
 - refresh/logout 경로에서는 액세스 토큰을 해석하지 않는다(만료 토큰이 실려도 401 로 막지 않기 위해).
 
+OAuth 성공·실패 핸들러와 API 401/403 핸들러는 필터 체인의 필수 의존성이다. 환경별 선택 컴포넌트처럼
+nullable 기본값으로 받지 않는다. 성공 핸들러가 빠지면 Spring Security 기본 성공 URL(`/`)로
+리다이렉트되어 세션 쿠키 발급과 프론트 콜백이 모두 건너뛰어진다. 실패 핸들러가 빠지면 Google 거절이나
+state 검증 오류가 백엔드 `/login?error`에 남는다.
+
+- OAuth 성공 리다이렉트는 `security.auth.oauth2.success-redirect-uri`, 실패 리다이렉트는
+  `security.auth.oauth2.failure-redirect-uri` 설정을 사용한다. 둘 다 절대 HTTP(S) URI여야 한다.
+- 회원 확정·JWT·세션·쿠키 생성이 전부 성공한 뒤 ACCESS_TOKEN·REFRESH_TOKEN을 응답에 함께 기록한다.
+  중간 실패에는 일부 쿠키를 발급하지 않는다.
+- Google 오류와 로그인 내부 처리 오류는 모두 고정된 프론트 실패 URI로 보낸다. 공급자 오류 설명과 내부
+  예외 메시지는 리다이렉트 URL이나 응답에 싣지 않는다.
+
+## 부하테스트 인증
+
+- `PerfAuthenticationFilter`는 별도 부하테스트 환경에서만 `X-Test-User-Id`의 회원 UUID를 신뢰해
+  `ROLE_USER` 인증을 만든다. UUID는 부하테스트 DB에 실제로 존재하는 활성 회원이어야 한다.
+- 활성화에는 `perf` 프로파일과 `security.perf-auth.enabled=true`가 모두 필요하다. 배포 시
+  `SPRING_PROFILES_ACTIVE=dev,perf`, `SECURITY_PERF_AUTH_ENABLED=true`로 주입한다.
+- `live` 프로파일이 함께 활성화되면 필터 빈을 만들지 않는다. 부하테스트 환경은 운영 DB·Redis·도메인과
+  연결하지 않는다.
+- 공통 `SecurityConfig`는 OAuth·401·403 컴포넌트를 필수로 받고, 환경에 따라 존재하지 않을 수 있는
+  perf 필터만 `ObjectProvider`로 선택 조립한다.
+
 ## 컨트롤러에서 인증 주체 받기
 
 ```kotlin

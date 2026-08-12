@@ -1,6 +1,5 @@
 import com.epages.restdocs.apispec.gradle.OpenApi3Extension
 import com.epages.restdocs.apispec.gradle.OpenApi3Task
-import com.epages.restdocs.apispec.gradle.PluginOauth2Configuration
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -67,14 +66,6 @@ configure<OpenApi3Extension> {
         "성공 시 ACCESS_TOKEN·REFRESH_TOKEN 쿠키가 발급된다. " +
         "API 인증은 ACCESS_TOKEN 쿠키 또는 Authorization: Bearer 헤더 둘 다 허용한다."
     version = project.version.toString()
-    // 로그인 플로우는 컨트롤러가 아니라 Spring Security 필터 체인이 처리하므로
-    // 테스트 기반 paths 대신 securityScheme 으로 선언한다.
-    // 상대 경로: OpenAPI 3 규격상 선택된 server URL 기준으로 해석되어 환경별 분기가 필요 없다.
-    oauth2SecuritySchemeDefinition = PluginOauth2Configuration().apply {
-        flows = arrayOf("authorizationCode")
-        authorizationUrl = "/oauth2/authorization/google"
-        tokenUrl = "/login/oauth2/code/google"
-    }
     format = "yaml"
     outputDirectory = layout.buildDirectory.dir("api-spec").get().asFile.path
     outputFileNamePrefix = "openapi3"
@@ -102,6 +93,7 @@ fun validateOpenApiSpec(yamlFile: File) {
     val problems = mutableListOf<String>()
     problems += io.swagger.parser.OpenAPIParser().readContents(text, null, null).messages.orEmpty()
     collectNonObjectComposedSchemas(Yaml.mapper().readTree(text), "$", problems)
+    collectMissingOAuthLoginContract(Yaml.mapper().readTree(text), problems)
     if (problems.isNotEmpty()) {
         throw GradleException(
             "생성된 ${yamlFile.name} 이 OpenAPI 3.0 규칙을 위반한다:\n" + problems.joinToString("\n"),
@@ -132,6 +124,7 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
 //   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
 // - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
+// - OAuth 로그인: Spring Security 필터 엔드포인트라 REST Docs 리소스가 없어 경로와 리다이렉트 계약을 보강한다.
 val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
 
 fun patchGeneratedSchemas(yamlFile: File) {
@@ -156,7 +149,133 @@ fun patchGeneratedSchemas(yamlFile: File) {
     val missing = numberIdArrayProperties - numberArraysPatched
     check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
     check(patchResumeMultipartRequest(root, mapper)) { "이력서 multipart 요청 보정 대상을 스펙에서 찾지 못했다" }
+    check(patchOAuthLoginContract(root, mapper)) { "OAuth 로그인 OpenAPI 계약을 보정하지 못했다" }
     mapper.writeValue(yamlFile, root)
+}
+
+fun patchOAuthLoginContract(root: JsonNode, mapper: ObjectMapper): Boolean {
+    val paths = root.path("paths") as? ObjectNode ?: return false
+    val components = root.path("components") as? ObjectNode ?: return false
+    val securitySchemes = components.path("securitySchemes") as? ObjectNode
+        ?: mapper.createObjectNode().also { components.set<ObjectNode>("securitySchemes", it) }
+
+    paths.set<ObjectNode>("/oauth2/authorization/google", googleOAuthStartPath(mapper))
+    paths.set<ObjectNode>("/login/oauth2/code/google", googleOAuthCallbackPath(mapper))
+    securitySchemes.set<ObjectNode>(
+        "AccessTokenCookie",
+        mapper.createObjectNode().apply {
+            put("type", "apiKey")
+            put("in", "cookie")
+            put("name", "ACCESS_TOKEN")
+            put("description", "웹 클라이언트에 발급되는 HttpOnly JWT 액세스 토큰 쿠키")
+        },
+    )
+    securitySchemes.set<ObjectNode>(
+        "BearerAuth",
+        mapper.createObjectNode().apply {
+            put("type", "http")
+            put("scheme", "bearer")
+            put("bearerFormat", "JWT")
+            put("description", "앱 클라이언트용 Authorization: Bearer JWT")
+        },
+    )
+    return true
+}
+
+fun googleOAuthStartPath(mapper: ObjectMapper): ObjectNode = mapper.createObjectNode().apply {
+    putObject("get").apply {
+        put("operationId", "googleOAuthStart")
+        put("summary", "Google OAuth2 로그인 시작")
+        put(
+            "description",
+            "브라우저 전체 페이지 이동으로 호출한다. 서버는 Google 동의 화면으로 302 리다이렉트한다.",
+        )
+        putArray("tags").add("Auth")
+        putArray("security")
+        putObject("responses").putObject("302").apply {
+            put("description", "Google OAuth2 인가 엔드포인트로 이동")
+            putObject("headers").set<ObjectNode>("Location", redirectLocationHeader(mapper))
+        }
+    }
+}
+
+fun googleOAuthCallbackPath(mapper: ObjectMapper): ObjectNode = mapper.createObjectNode().apply {
+    putObject("get").apply {
+        put("operationId", "googleOAuthCallback")
+        put("summary", "Google OAuth2 로그인 콜백")
+        put(
+            "description",
+            "Google 전용 콜백이다. 성공하면 ACCESS_TOKEN·REFRESH_TOKEN 쿠키를 함께 발급한 뒤 프론트 성공 " +
+                "콜백으로 이동한다. Google 거절·state 검증 실패 또는 회원·세션 처리 실패 시 새 인증 쿠키 없이 " +
+                "고정된 프론트 실패 URL로 이동하며 내부 원인은 노출하지 않는다.",
+        )
+        putArray("tags").add("Auth")
+        putArray("security")
+        putArray("parameters").apply {
+            add(oauthCallbackQueryParameter(mapper, "code", "Google 인가 코드. 성공 콜백에서 전달"))
+            add(oauthCallbackQueryParameter(mapper, "state", "로그인 요청 위변조 방지 상태값"))
+            add(oauthCallbackQueryParameter(mapper, "error", "Google 실패 코드. 클라이언트로 전달하지 않음"))
+            add(
+                oauthCallbackQueryParameter(
+                    mapper,
+                    "error_description",
+                    "Google 실패 상세. 로그·프론트 리다이렉트에 원문을 노출하지 않음",
+                ),
+            )
+        }
+        putObject("responses").putObject("302").apply {
+            put("description", "성공 콜백 또는 고정된 실패 화면으로 이동")
+            putObject("headers").apply {
+                set<ObjectNode>("Location", redirectLocationHeader(mapper))
+                putObject("Set-Cookie").apply {
+                    put(
+                        "description",
+                        "성공 시 ACCESS_TOKEN과 REFRESH_TOKEN 두 헤더. 실패 시 발급하지 않음",
+                    )
+                    putObject("schema").apply {
+                        put("type", "array")
+                        putObject("items").put("type", "string")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun oauthCallbackQueryParameter(mapper: ObjectMapper, name: String, description: String): ObjectNode {
+    return mapper.createObjectNode().apply {
+        put("name", name)
+        put("in", "query")
+        put("required", false)
+        put("description", description)
+        putObject("schema").put("type", "string")
+    }
+}
+
+fun redirectLocationHeader(mapper: ObjectMapper): ObjectNode = mapper.createObjectNode().apply {
+    put("description", "리다이렉트 대상 URI")
+    put("required", true)
+    putObject("schema").apply {
+        put("type", "string")
+        put("format", "uri")
+    }
+}
+
+fun collectMissingOAuthLoginContract(root: JsonNode, problems: MutableList<String>) {
+    val requiredOperations = listOf(
+        "/oauth2/authorization/google" to "get",
+        "/login/oauth2/code/google" to "get",
+    )
+    requiredOperations.forEach { (path, method) ->
+        if (root.path("paths").path(path).path(method).isMissingNode) {
+            problems += "OAuth 로그인 계약 누락: $method $path"
+        }
+    }
+    listOf("AccessTokenCookie", "BearerAuth").forEach { scheme ->
+        if (root.path("components").path("securitySchemes").path(scheme).isMissingNode) {
+            problems += "인증 securityScheme 누락: $scheme"
+        }
+    }
 }
 
 fun patchResumeMultipartRequest(root: JsonNode, mapper: ObjectMapper): Boolean {
