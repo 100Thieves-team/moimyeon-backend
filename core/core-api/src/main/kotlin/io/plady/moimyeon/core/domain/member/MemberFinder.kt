@@ -13,13 +13,13 @@ class MemberFinder(
     private val memberRepository: MemberRepository,
 ) {
     fun getById(memberId: UUID): Member {
-        val entity = memberRepository.findByIdAndDeletedAtIsNull(memberId)
+        val entity = memberRepository.findWithSocialAccountsByIdAndDeletedAtIsNull(memberId)
         return MemberMapper.toDomain(requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND))
     }
 
     fun getAllByIds(memberIds: Collection<UUID>): List<Member> {
         if (memberIds.isEmpty()) return emptyList()
-        return memberRepository.findByIdInAndDeletedAtIsNull(memberIds).map(MemberMapper::toDomain)
+        return memberRepository.findAllWithSocialAccountsByIdInAndDeletedAtIsNull(memberIds).map(MemberMapper::toDomain)
     }
 
     fun existsById(memberId: UUID): Boolean {

@@ -26,7 +26,7 @@ class MemberFinderTest {
     fun `id 조회는 소프트 삭제된 회원을 제외하고, 없으면 MEMBER_NOT_FOUND 를 던진다`() {
         // given
         val memberId = UUID.randomUUID()
-        every { memberRepository.findByIdAndDeletedAtIsNull(memberId) } returns null
+        every { memberRepository.findWithSocialAccountsByIdAndDeletedAtIsNull(memberId) } returns null
 
         // when & then
         assertThatThrownBy { memberFinder.getById(memberId) }
@@ -38,7 +38,7 @@ class MemberFinderTest {
     @Test
     fun `회원 목록 조회는 탈퇴한 회원을 제외한다`() {
         val memberId = UUID.randomUUID()
-        every { memberRepository.findByIdInAndDeletedAtIsNull(listOf(memberId)) } returns emptyList()
+        every { memberRepository.findAllWithSocialAccountsByIdInAndDeletedAtIsNull(listOf(memberId)) } returns emptyList()
 
         assertThat(memberFinder.getAllByIds(listOf(memberId))).isEmpty()
     }
@@ -76,7 +76,7 @@ class MemberFinderTest {
             lastLoginAt = now,
             socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "social@example.com")),
         )
-        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+        every { memberRepository.findWithSocialAccountsByIdAndDeletedAtIsNull(id) } returns entity
 
         // when
         val member = memberFinder.getById(id)

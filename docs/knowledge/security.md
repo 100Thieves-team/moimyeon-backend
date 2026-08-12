@@ -49,3 +49,6 @@ all-open 플러그인이 그 애노테이션을 커버하는지는 `build.gradle
 - 2026-08-12: OAuth 성공 핸들러만 지정하면 Google 거절·state 오류는 Spring 기본 `/login?error`로 가고,
   인증 뒤 회원·세션 처리 예외는 백엔드 500으로 남는다. 성공·실패 핸들러를 함께 조립하고 성공 처리 내부
   예외도 부분 쿠키 없이 고정된 프론트 실패 리다이렉트로 닫아야 한다.
+- 2026-08-13: Google OAuth 인증 뒤 회원 역할을 읽는 과정에서 `LazyInitializationException`이 발생했다.
+  원인: Repository 트랜잭션 종료 후 `MemberMapper`가 LAZY `socialAccounts`를 읽었다. 재발 방지:
+  OSIV와 기본 LAZY는 유지하고, 완전한 회원 조립 조회만 이름에 연관을 드러낸 JPQL fetch join을 사용한다.

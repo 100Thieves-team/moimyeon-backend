@@ -3,6 +3,7 @@ package io.plady.moimyeon.storage.db.core
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.storage.db.CoreDbContextTest
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -14,6 +15,7 @@ import java.util.UUID
 @Transactional
 class MemberRepositoryIT(
     val memberRepository: MemberRepository,
+    val entityManager: EntityManager,
 ) : CoreDbContextTest() {
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
 
@@ -49,6 +51,45 @@ class MemberRepositoryIT(
         assertThat(found.createdAt).isNotNull()
         assertThat(found.socialAccounts()).hasSize(1)
         assertThat(found.socialAccounts().first().providerId).isEqualTo("google-sub-1")
+    }
+
+    @Test
+    fun `기본 회원 조회는 소셜 계정을 지연 로딩한다`() {
+        val memberId = memberRepository.saveAndFlush(newMember(providerId = "google-sub-lazy")).id
+        entityManager.clear()
+
+        val found = memberRepository.findByIdAndDeletedAtIsNull(memberId)!!
+
+        assertThat(entityManager.entityManagerFactory.persistenceUnitUtil.isLoaded(found, "socialAccounts")).isFalse()
+    }
+
+    @Test
+    fun `withSocialAccounts 단건 조회는 영속성 컨텍스트 밖에서도 소셜 계정을 제공한다`() {
+        val memberId = memberRepository.saveAndFlush(newMember(providerId = "google-sub-fetch-one")).id
+        entityManager.clear()
+
+        val found = memberRepository.findWithSocialAccountsByIdAndDeletedAtIsNull(memberId)!!
+        entityManager.clear()
+
+        assertThat(found.socialAccounts().map { it.providerId }).containsExactly("google-sub-fetch-one")
+    }
+
+    @Test
+    fun `withSocialAccounts 다건 조회는 영속성 컨텍스트 밖에서도 회원별 소셜 계정을 제공한다`() {
+        val members = memberRepository.saveAllAndFlush(
+            listOf(
+                newMember(providerId = "google-sub-fetch-many-1"),
+                newMember(providerId = "google-sub-fetch-many-2"),
+            ),
+        )
+        entityManager.clear()
+
+        val found = memberRepository.findAllWithSocialAccountsByIdInAndDeletedAtIsNull(members.map { it.id })
+        entityManager.clear()
+
+        assertThat(found.map { it.id }).containsExactlyInAnyOrderElementsOf(members.map { it.id })
+        assertThat(found.flatMap { it.socialAccounts() }.map { it.providerId })
+            .containsExactlyInAnyOrder("google-sub-fetch-many-1", "google-sub-fetch-many-2")
     }
 
     @Test
