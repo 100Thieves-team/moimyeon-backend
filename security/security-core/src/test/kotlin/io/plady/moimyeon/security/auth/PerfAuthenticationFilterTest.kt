@@ -7,6 +7,7 @@ import org.springframework.mock.web.MockFilterChain
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
+import java.util.UUID
 
 class PerfAuthenticationFilterTest {
     private val filter = PerfAuthenticationFilter()
@@ -17,15 +18,16 @@ class PerfAuthenticationFilterTest {
     }
 
     @Test
-    fun `헤더의_userId로_인증을_세팅한다`() {
+    fun `헤더의 회원 UUID로 인증을 세팅한다`() {
+        val memberId = UUID.randomUUID()
         val request = MockHttpServletRequest().apply {
-            addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, "42")
+            addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, memberId.toString())
         }
 
         filter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
 
         val authentication = SecurityContextHolder.getContext().authentication
-        assertThat(authentication?.name).isEqualTo("42")
+        assertThat(authentication?.name).isEqualTo(memberId.toString())
         assertThat(authentication?.authorities?.map { it.authority }).containsExactly("ROLE_USER")
     }
 
@@ -37,9 +39,9 @@ class PerfAuthenticationFilterTest {
     }
 
     @Test
-    fun `헤더가_userId_형식이_아니면_인증을_세팅하지_않는다`() {
+    fun `헤더가 UUID 형식이 아니면 인증을 세팅하지 않는다`() {
         val request = MockHttpServletRequest().apply {
-            addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, "not-a-number")
+            addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, "not-a-uuid")
         }
 
         filter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
