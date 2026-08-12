@@ -79,6 +79,14 @@ class RoomEntity(
         status = RoomStatus.IN_PROGRESS
     }
 
+    // 확정에는 canConfirm() 짝을 두지 않는다. 취소·진행 시작은 상태만 보면 판정이 끝나지만
+    // 확정은 인원·일정까지 봐야 하고 그 판정자가 이미 밖에 있다(RoomConfirmation).
+    // 여기에 상태 판정을 또 두면 F1 버튼 상태와 서버 결과가 갈릴 수 있다.
+    fun confirm() {
+        check(status == RoomStatus.RECRUITING)
+        status = RoomStatus.CONFIRMED
+    }
+
     fun canCancel(): Boolean = status == RoomStatus.RECRUITING
 
     // 방장이 모집을 접는 것. 운영이 룸을 내리는 deleted_at 과 한 컬럼에 섞지 않는다(schema.sql:450).

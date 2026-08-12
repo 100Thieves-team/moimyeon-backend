@@ -71,6 +71,21 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 확정 거부 중 상태 계열(이미 확정·취소·완료·진행 중)은 E1410 을 그대로 쓴다. 화면이 새로고침하면
+    // 정확한 상태를 다시 받으므로 코드를 넷으로 가를 실익이 없다. 아래 둘만 안내가 달라 가른다.
+    ROOM_BELOW_MIN_CAPACITY(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1421,
+        "최소 진행 인원을 채워야 확정할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1422,
+        "진행 일정이 지나 확정할 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,

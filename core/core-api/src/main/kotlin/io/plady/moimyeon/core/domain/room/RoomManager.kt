@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -123,6 +124,52 @@ class RoomManager(
             ),
         )
         roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
+    }
+
+    // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
+    // 수정·신청·수락 게이트가 발효한다.
+    //
+    // 조건 판정은 RoomConfirmation 이 소유한다 — 룸 상세 조회(F1 버튼)와 같은 함수를 타야
+    // 화면 상태와 서버 결과가 어긋나지 않는다. 그래서 여기서 status 를 다시 비교하지 않는다.
+    // 락은 취소와 같은 이유로 잡는다(취소·수락·신청 제출이 모두 같은 룸 행을 잠근다).
+    @Transactional
+    fun confirm(roomId: UUID, hostMemberId: UUID) {
+        val entity = loadRoomForUpdateAsHost(roomId, hostMemberId)
+        val currentParticipants =
+            participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
+
+        val now = LocalDateTime.now(clock)
+        RoomConfirmation.of(
+            status = entity.status,
+            startAt = entity.startAt,
+            minCapacity = entity.minCapacity.toInt(),
+            currentParticipants = currentParticipants,
+            now = now,
+        ).blockReason?.let { throw CoreException(it.toErrorType()) }
+
+        entity.confirm()
+        roomStatusLogRepository.save(
+            RoomStatusLogEntity(
+                roomId = roomId,
+                transitionType = RoomStatus.CONFIRMED,
+                handlerMemberId = hostMemberId,
+                occurredAt = now,
+            ),
+        )
+        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
+    }
+
+    // 상태 계열 넷은 E1410 으로 뭉친다 — 화면이 새로고침하면 정확한 상태를 다시 받으므로
+    // 코드를 넷으로 가를 실익이 없다. 안내가 달라지는 둘만 가른다.
+    private fun RoomConfirmationBlockReason.toErrorType(): CoreErrorType = when (this) {
+        RoomConfirmationBlockReason.ROOM_CONFIRMED,
+        RoomConfirmationBlockReason.ROOM_IN_PROGRESS,
+        RoomConfirmationBlockReason.ROOM_COMPLETED,
+        RoomConfirmationBlockReason.ROOM_CANCELED,
+        -> CoreErrorType.ROOM_NOT_RECRUITING
+
+        RoomConfirmationBlockReason.BELOW_MIN_CAPACITY -> CoreErrorType.ROOM_BELOW_MIN_CAPACITY
+        RoomConfirmationBlockReason.SCHEDULE_PASSED -> CoreErrorType.ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION
     }
 
     // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.
