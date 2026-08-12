@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
@@ -33,6 +34,7 @@ class RoomManager(
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val participationValidator: ParticipationValidator,
     private val clock: Clock,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
@@ -199,15 +201,10 @@ class RoomManager(
         return room
     }
 
+    // 방장 판정은 ParticipationValidator 한 곳이 소유한다 — 상태를 함께 봐야 하는데
+    // 네 곳에 흩어져 있던 것이 셋만 고쳐지고 하나가 남는 사고를 막는다(MOI-397).
     private fun requireHost(roomId: UUID, memberId: UUID) {
-        requireBusiness(
-            participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
-                roomId,
-                memberId,
-                ParticipationRole.HOST,
-            ),
-            CoreErrorType.ROOM_FORBIDDEN,
-        )
+        participationValidator.validateHost(roomId, memberId)
     }
 
     private fun MeetingPlace.toEntityValues(): Pair<MeetingType, Long?> = when (this) {

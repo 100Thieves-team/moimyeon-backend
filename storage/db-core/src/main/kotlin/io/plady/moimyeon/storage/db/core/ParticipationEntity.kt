@@ -20,8 +20,8 @@ import java.util.UUID
     name = "participation",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_participation_room_member_active",
-            columnNames = ["room_id", "member_id", "_active_check"],
+            name = "uk_participation_room_member_joined",
+            columnNames = ["room_id", "member_id", "_joined_check"],
         ),
     ],
 )

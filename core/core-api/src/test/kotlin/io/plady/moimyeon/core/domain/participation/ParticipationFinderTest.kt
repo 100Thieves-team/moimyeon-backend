@@ -57,13 +57,14 @@ class ParticipationFinderTest {
     }
 
     @Test
-    fun `방장 식별자는 삭제되지 않은 HOST 참여 행에서 조회한다`() {
+    fun `방장 식별자는 참여 중인 HOST 행에서 조회한다`() {
         val roomId = UUID.randomUUID()
         val hostMemberId = UUID.randomUUID()
         every {
-            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
                 ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
             )
         } returns mockk { every { memberId } returns hostMemberId }
 
@@ -74,9 +75,10 @@ class ParticipationFinderTest {
     fun `방장 참여 행이 없으면 구조 불변식 위반으로 실패한다`() {
         val roomId = UUID.randomUUID()
         every {
-            participationRepository.findFirstByRoomIdAndParticipationRoleAndDeletedAtIsNull(
+            participationRepository.findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
                 ParticipationRole.HOST,
+                ParticipationStatus.JOINED,
             )
         } returns null
 
