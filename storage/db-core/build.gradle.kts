@@ -18,4 +18,7 @@ dependencies {
     runtimeOnly("org.springframework.boot:spring-boot-flyway")
     runtimeOnly("org.flywaydb:flyway-core")
     runtimeOnly("org.flywaydb:flyway-mysql")
+
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:${property("testcontainersVersion")}")
+    testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
 }
