@@ -31,6 +31,19 @@ class SecurityFilterChainContextTest(
     }
 
     @Test
+    fun `Google 로그인 시작 경로는 실제 필터 체인에서 인가 화면으로 이동한다`() {
+        val request = MockHttpServletRequest("GET", "/oauth2/authorization/google").apply {
+            servletPath = "/oauth2/authorization/google"
+        }
+        val response = MockHttpServletResponse()
+
+        filterChainProxy.doFilter(request, response, MockFilterChain())
+
+        assertThat(response.status).isEqualTo(302)
+        assertThat(response.redirectedUrl).startsWith("https://accounts.google.com/o/oauth2/v2/auth")
+    }
+
+    @Test
     fun `Google 실패 콜백은 실제 필터 체인에서 프론트 실패 화면으로 이동한다`() {
         val request = MockHttpServletRequest("GET", "/login/oauth2/code/google").apply {
             servletPath = "/login/oauth2/code/google"

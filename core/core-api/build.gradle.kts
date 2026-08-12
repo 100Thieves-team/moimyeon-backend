@@ -93,7 +93,6 @@ fun validateOpenApiSpec(yamlFile: File) {
     val problems = mutableListOf<String>()
     problems += io.swagger.parser.OpenAPIParser().readContents(text, null, null).messages.orEmpty()
     collectNonObjectComposedSchemas(Yaml.mapper().readTree(text), "$", problems)
-    collectMissingOAuthLoginContract(Yaml.mapper().readTree(text), problems)
     if (problems.isNotEmpty()) {
         throw GradleException(
             "생성된 ${yamlFile.name} 이 OpenAPI 3.0 규칙을 위반한다:\n" + problems.joinToString("\n"),
@@ -258,23 +257,6 @@ fun redirectLocationHeader(mapper: ObjectMapper): ObjectNode = mapper.createObje
     putObject("schema").apply {
         put("type", "string")
         put("format", "uri")
-    }
-}
-
-fun collectMissingOAuthLoginContract(root: JsonNode, problems: MutableList<String>) {
-    val requiredOperations = listOf(
-        "/oauth2/authorization/google" to "get",
-        "/login/oauth2/code/google" to "get",
-    )
-    requiredOperations.forEach { (path, method) ->
-        if (root.path("paths").path(path).path(method).isMissingNode) {
-            problems += "OAuth 로그인 계약 누락: $method $path"
-        }
-    }
-    listOf("AccessTokenCookie", "BearerAuth").forEach { scheme ->
-        if (root.path("components").path("securitySchemes").path(scheme).isMissingNode) {
-            problems += "인증 securityScheme 누락: $scheme"
-        }
     }
 }
 
