@@ -5,12 +5,40 @@ import io.plady.moimyeon.core.enums.SocialLoginProvider
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     fun findByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?
 
     fun findByIdInAndDeletedAtIsNull(memberIds: Collection<UUID>): List<MemberEntity>
+
+    @Query(
+        """
+        select distinct m
+        from MemberEntity m
+        left join fetch m.socialAccounts
+        where m.id = :memberId
+          and m.deletedAt is null
+        """,
+    )
+    fun findWithSocialAccountsByIdAndDeletedAtIsNull(
+        @Param("memberId") memberId: UUID,
+    ): MemberEntity?
+
+    @Query(
+        """
+        select distinct m
+        from MemberEntity m
+        left join fetch m.socialAccounts
+        where m.id in :memberIds
+          and m.deletedAt is null
+        """,
+    )
+    fun findAllWithSocialAccountsByIdInAndDeletedAtIsNull(
+        @Param("memberIds") memberIds: Collection<UUID>,
+    ): List<MemberEntity>
 
     fun existsByIdAndDeletedAtIsNull(memberId: UUID): Boolean
 
