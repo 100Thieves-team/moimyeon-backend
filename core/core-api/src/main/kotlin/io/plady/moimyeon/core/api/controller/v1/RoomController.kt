@@ -57,6 +57,18 @@ class RoomController(
         return ApiResponse.success()
     }
 
+    // POST /v1/rooms/{roomId}/confirmation — 방장이 진행을 확정한다(「진행 확정」 §4.2).
+    // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 취소와 같은 이유로 POST 다 —
+    // 리소스 생성이 아니라 조건부 상태 전이이고, 두 번째 요청은 409 로 거부된다.
+    @PostMapping("/v1/rooms/{roomId}/confirmation")
+    fun confirm(
+        @LoginMember currentMember: CurrentMember,
+        @PathVariable roomId: UUID,
+    ): ApiResponse<Any> {
+        roomFacade.confirm(currentMember.id, roomId)
+        return ApiResponse.success()
+    }
+
     // GET /v1/rooms/form-options — 폼 선택지(literal 경로가 {roomId} 보다 우선 매칭됨).
     @GetMapping("/v1/rooms/form-options")
     fun formOptions(): ApiResponse<RoomFormOptionsResponse> {

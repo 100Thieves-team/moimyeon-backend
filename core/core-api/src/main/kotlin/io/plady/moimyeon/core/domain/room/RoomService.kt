@@ -58,6 +58,11 @@ class RoomService(
         roomManager.cancel(roomId, memberId)
     }
 
+    // 진행 확정. 조건 판정은 RoomConfirmation 이 소유하고 RoomManager 가 락 안에서 부른다.
+    fun confirmRoom(memberId: UUID, roomId: UUID) {
+        roomManager.confirm(roomId, memberId)
+    }
+
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.
     fun getRoom(roomId: UUID): RoomDetail = roomFinder.getDetail(roomId)
 

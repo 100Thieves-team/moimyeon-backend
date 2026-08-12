@@ -268,6 +268,91 @@ class RoomManagerTest {
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
+    @Test
+    fun `인원과 일정이 조건을 충족하면 확정되어 CONFIRMED 가 된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(4)
+
+        manager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    // 경계를 `>` 로 쓰면 정원을 정확히 맞춘 방장이 확정하지 못하고 갇힌다.
+    @Test
+    fun `현재 인원이 최소 진행 인원과 같으면 확정된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(2)
+
+        manager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
+    fun `인원이 최소 진행 인원보다 적으면 E1421 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(1)
+
+        assertConfirmFails(CoreErrorType.ROOM_BELOW_MIN_CAPACITY)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    // 시작 시각과 같아지는 순간부터 지난 것으로 본다(RoomConfirmation 과 같은 기준).
+    @Test
+    fun `일정이 지난 룸을 확정하면 E1422 를 던진다`() {
+        givenRoomForUpdateStartingAt(now)
+        givenHost()
+        givenParticipants(4)
+
+        assertConfirmFails(CoreErrorType.ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION)
+    }
+
+    @Test
+    fun `모집 중이 아닌 룸을 확정하면 E1410 을 던진다`() {
+        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED, RoomStatus.CANCELED)
+            .forEach { status ->
+                givenRoomForUpdateWithStatus(status)
+                givenHost()
+                givenParticipants(4)
+
+                assertConfirmFails(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    @Test
+    fun `방장이 아니면 확정할 수 없고 E1406 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost(isHost = false)
+
+        assertConfirmFails(CoreErrorType.ROOM_FORBIDDEN)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
+    // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
+    @Test
+    fun `확정 이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(4)
+        every { roomStatusLogRepository.save(any()) } throws
+            DataIntegrityViolationException("uk_room_status_log_room_transition_active")
+
+        assertThatThrownBy { manager.confirm(roomId, hostId) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    private fun assertConfirmFails(errorType: CoreErrorType) {
+        assertThatThrownBy { manager.confirm(roomId, hostId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
+    }
+
     private fun assertCancelFails(errorType: CoreErrorType) {
         assertThatThrownBy { manager.cancel(roomId, hostId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
@@ -304,9 +389,31 @@ class RoomManagerTest {
         return room
     }
 
-    // 취소는 룸 행을 잠그고 읽는다. 수정 경로와 조회 메서드가 다르므로 스텁도 갈린다.
+    // 취소·확정은 룸 행을 잠그고 읽는다. 수정 경로와 조회 메서드가 다르므로 스텁도 갈린다.
     private fun givenRecruitingRoomForUpdate(): RoomEntity {
         val room = givenRecruitingRoom()
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    // 확정은 일정도 본다. 기본 픽스처는 3일 뒤라 일정 경과를 만들려면 시작 시각을 따로 준다.
+    private fun givenRoomForUpdateStartingAt(startAt: LocalDateTime): RoomEntity {
+        val room = RoomEntity(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 2L,
+            resumePublic = false,
+            sigunguId = 5L,
+            title = "처음 정한 제목입니다",
+            description = null,
+            interviewStage = InterviewStage.ETC,
+            interviewType = null,
+            meetingType = MeetingType.OFFLINE,
+            minCapacity = 2,
+            maxCapacity = 6,
+            startAt = startAt,
+            durationMinutes = 30,
+        )
         every { roomRepository.findByIdForUpdate(roomId) } returns room
         return room
     }

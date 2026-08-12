@@ -104,6 +104,14 @@ class RoomControllerTest : RestDocsTest() {
         }
         """.trimIndent()
 
+    private val confirmSummary = "룸 진행 확정"
+    private val confirmDescription =
+        "방장이 진행을 확정한다(「진행 확정」 §4.2). 룸 상태가 CONFIRMED 가 되고 참여자·인원이 고정되며, " +
+            "남아 있던 대기 신청은 같은 트랜잭션에서 일괄 종료된다(반려가 아니므로 재신청 차단에 걸리지 않는다). " +
+            "확정 이후에는 룸 정보 수정·신규 신청·수락이 모두 막힌다(§4.3). " +
+            "조건은 룸 상세의 confirmation 블록과 같은 판정을 쓴다 — 인원 미달은 E1421, 일정 경과는 E1422, " +
+            "이미 확정·취소·완료·진행 중인 룸은 E1410 이다. 같은 요청을 두 번 보내도 한 번만 처리된다."
+
     private val cancelSummary = "룸 취소"
     private val cancelDescription =
         "방장이 모집을 접는다(「룸 참여」 §4.9). 룸 상태가 CANCELED 가 되고, 남아 있던 대기 신청은 같은 트랜잭션에서 " +
@@ -259,6 +267,50 @@ class RoomControllerTest : RestDocsTest() {
             .andExpect(status().isConflict)
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1410\"") }
             .andDo(documentApi("cancelRoom-e1410", cancelSummary, cancelDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `confirmRoom 조건을 충족한 룸을 확정한다`() {
+        every { roomService.confirmRoom(hostMemberId, createdRoomId) } returns Unit
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/confirmation", createdRoomId).principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "confirmRoom",
+                    confirmSummary,
+                    confirmDescription,
+                    pathParameters(parameterWithName("roomId").description("확정할 룸 식별자")),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `confirmRoom 인원이 최소 진행 인원에 미달하면 E1421`() {
+        every { roomService.confirmRoom(hostMemberId, createdRoomId) } throws
+            CoreException(CoreErrorType.ROOM_BELOW_MIN_CAPACITY)
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/confirmation", createdRoomId).principal(principal))
+            .andExpect(status().isConflict)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1421\"") }
+            .andDo(documentApi("confirmRoom-e1421", confirmSummary, confirmDescription, errorResponseFields()))
+    }
+
+    // 이미 확정·취소·완료·진행 중인 룸이 전부 이 코드로 온다. 화면은 새로고침해 정확한 상태를 다시 받는다.
+    @Test
+    fun `confirmRoom 모집 중이 아니면 E1410`() {
+        every { roomService.confirmRoom(hostMemberId, createdRoomId) } throws
+            CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
+
+        mockMvc.perform(post("/v1/rooms/{roomId}/confirmation", createdRoomId).principal(principal))
+            .andExpect(status().isConflict)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1410\"") }
+            .andDo(documentApi("confirmRoom-e1410", confirmSummary, confirmDescription, errorResponseFields()))
     }
 
     @Test
