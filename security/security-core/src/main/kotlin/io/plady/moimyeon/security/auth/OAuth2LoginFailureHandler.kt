@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.AuthenticationException
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException
 import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.stereotype.Component
 
@@ -20,8 +21,9 @@ class OAuth2LoginFailureHandler(
         response: HttpServletResponse,
         exception: AuthenticationException,
     ) {
-        // 외부 OAuth 오류의 상세 설명에는 공급자 응답이 섞일 수 있어 타입만 기록하고 클라이언트에는 노출하지 않는다.
-        log.warn("OAuth2 authentication failed: {}", exception.javaClass.simpleName)
+        // 공급자 상세 설명은 제외하되 안전한 오류 코드는 남겨 정상 거절과 설정 오류를 구분한다.
+        val errorCode = (exception as? OAuth2AuthenticationException)?.error?.errorCode ?: "unknown"
+        log.warn("OAuth2 authentication failed: {} ({})", exception.javaClass.simpleName, errorCode)
         redirectToFailure(response)
     }
 

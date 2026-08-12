@@ -1,8 +1,12 @@
 package io.plady.moimyeon.security.auth
 
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import io.plady.moimyeon.security.config.AuthProperties
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
@@ -33,13 +37,23 @@ class OAuth2LoginFailureHandlerTest {
         val exception = OAuth2AuthenticationException(
             OAuth2Error("access_denied", "sensitive provider description", null),
         )
+        val appender = ListAppender<ILoggingEvent>().apply { start() }
+        val logger = LoggerFactory.getLogger(OAuth2LoginFailureHandler::class.java) as Logger
+        logger.addAppender(appender)
 
-        handler.onAuthenticationFailure(MockHttpServletRequest(), response, exception)
+        try {
+            handler.onAuthenticationFailure(MockHttpServletRequest(), response, exception)
+        } finally {
+            logger.detachAppender(appender)
+        }
 
         assertThat(response.status).isEqualTo(302)
         assertThat(response.redirectedUrl).isEqualTo(authProperties.oauth2.failureRedirectUri.toString())
         assertThat(response.redirectedUrl).doesNotContain("access_denied", "sensitive")
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty()
+        assertThat(appender.list.single().formattedMessage)
+            .contains("OAuth2AuthenticationException", "access_denied")
+            .doesNotContain("sensitive provider description")
     }
 
     @Test
