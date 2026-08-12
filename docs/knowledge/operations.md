@@ -4,6 +4,10 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-12: core-api 새 리비전이 `PROVISIONING`에 머물러 배포 작업이 제한 시간을 넘겼다.
+  원인: API, Worker, Redis가 `t3.small` 3대를 사용한 상태에서 API 롤링 교체용 네 번째 인스턴스가
+  필요했지만 ASG `max_size`가 3이었다. 재발 방지: dev ASG 최대 크기를 4로 두고 정적 검사로
+  하한을 고정한다. 실제 대수 축소는 ECS Capacity Provider가 계속 담당한다.
 - 2026-08-12: Terraform apply가 ECS ASG를 1대로 줄인 직후 Capacity Provider가 3대로 늘려
   `want exactly 1 ... have 3` 상태로 끝나지 않았다. 원인: Terraform의 `desired_capacity`와
   ECS managed scaling이 같은 값을 함께 관리했다. 재발 방지: Terraform은 ASG `min_size`와
