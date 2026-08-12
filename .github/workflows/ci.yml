@@ -31,6 +31,9 @@ jobs:
             exit 1
           fi
 
+      - name: Check ECS capacity ownership
+        run: bash infra/terraform/tests/ecs-capacity-ownership.sh
+
       # gradle.properties 의 javaVersion(toolchain)=25 와 일치시킨다.
       # settings.gradle.kts 에 toolchain 리졸버(foojay)가 없으므로 러너에 JDK 25 를 직접 설치해야 한다.
       - name: Set up JDK

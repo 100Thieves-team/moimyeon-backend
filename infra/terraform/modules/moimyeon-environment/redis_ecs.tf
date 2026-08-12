@@ -240,6 +240,11 @@ resource "aws_ecs_service" "notification_redis" {
     base              = 1
   }
 
+  ordered_placement_strategy {
+    type  = "binpack"
+    field = "cpu"
+  }
+
   network_configuration {
     subnets          = aws_subnet.private_app[*].id
     security_groups  = [aws_security_group.notification_redis[0].id]
