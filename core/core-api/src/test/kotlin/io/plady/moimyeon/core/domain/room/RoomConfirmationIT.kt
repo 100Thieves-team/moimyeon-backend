@@ -21,6 +21,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -33,7 +35,11 @@ class RoomConfirmationIT(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val roomValidator: RoomValidator,
+    private val roomApplicationManager: RoomApplicationManager,
+    transactionManager: PlatformTransactionManager,
 ) : ContextTest() {
+    private val transactionTemplate = TransactionTemplate(transactionManager)
     private val roomId = UUID.randomUUID()
     private val hostMemberId = UUID.randomUUID()
 
@@ -102,6 +108,59 @@ class RoomConfirmationIT(
         assertThat(applications().map { it.status }).containsOnly(RoomApplicationStatus.ROOM_CONFIRMED)
     }
 
+    // MOI-394 가 깔아 둔 게이트가 여기서 처음 발효한다. CONFIRMED 로 가는 전이가 없어서
+    // 지금까지 아무도 그 게이트가 실제로 도는 것을 보지 못했다.
+    @Test
+    fun `확정된 룸은 수정할 수 없다`() {
+        seedRoom()
+        seedParticipant()
+        roomManager.confirm(roomId, hostMemberId)
+
+        assertThatThrownBy { roomManager.update(roomId, hostMemberId, updateCommand()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_EDITABLE)
+            }
+        assertThat(roomRepository.findById(roomId).orElseThrow().title).isEqualTo("진행 확정 원자성 테스트 룸")
+    }
+
+    @Test
+    fun `확정된 룸에는 신청할 수 없다`() {
+        seedRoom()
+        seedParticipant()
+        roomManager.confirm(roomId, hostMemberId)
+
+        // 신청 제출 경로는 룸 행을 잠그므로 트랜잭션 안에서만 돈다. 운영과 같은 경계를 준다.
+        assertThatThrownBy {
+            transactionTemplate.executeWithoutResult { roomValidator.validateAcceptingApplications(roomId) }
+        }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    @Test
+    fun `확정된 룸에서는 대기 신청을 수락할 수 없다`() {
+        seedRoom()
+        seedParticipant()
+        val applicationId = seedPendingApplication()
+        roomManager.confirm(roomId, hostMemberId)
+
+        assertThatThrownBy { roomApplicationManager.accept(roomId, applicationId, hostMemberId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    private fun updateCommand() = RoomUpdateCommand(
+        title = RoomTitle("확정 뒤에는 못 바꾸는 제목"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 4),
+        schedule = RoomSchedule(startAt = startAt, durationMinutes = 60),
+    )
+
     private fun applications() = roomApplicationRepository.findAll().filter { it.roomId == roomId }
 
     private fun seedRoom() {
@@ -146,9 +205,9 @@ class RoomConfirmationIT(
         )
     }
 
-    private fun seedPendingApplication() {
+    private fun seedPendingApplication(): Long {
         val applicantMemberId = UUID.randomUUID()
-        roomApplicationRepository.saveAndFlush(
+        return roomApplicationRepository.saveAndFlush(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = applicantMemberId,
@@ -157,6 +216,6 @@ class RoomConfirmationIT(
                 status = RoomApplicationStatus.PENDING,
                 pendingMemberId = applicantMemberId,
             ),
-        )
+        ).id
     }
 }
