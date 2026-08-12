@@ -174,7 +174,9 @@ class RoomApplicationManagerIT(
         assertThat(application.rejectReason).isEqualTo("이번 방향과 맞지 않아요.")
         assertThat(application.pendingMemberId).isNull()
         // 참여자는 방장 1명 그대로
-        assertThat(participationRepository.countByRoomIdAndDeletedAtIsNull(roomId)).isEqualTo(1)
+        assertThat(
+            participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED),
+        ).isEqualTo(1)
     }
 
     private fun seedRoom(maxCapacity: Int) {
