@@ -2,8 +2,9 @@ management:
   endpoints:
     web:
       exposure:
-        # health -> ALB target-group health check; prometheus -> metrics scrape
-        include: health, prometheus
+        # Public port exposes only ALB health probes. Add a separate protected
+        # management port before enabling prometheus again.
+        include: health
   endpoint:
     health:
       # ALB only needs UP/DOWN; do not leak internal details on the public port

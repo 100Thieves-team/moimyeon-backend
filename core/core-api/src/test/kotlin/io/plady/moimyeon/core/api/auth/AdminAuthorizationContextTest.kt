@@ -67,15 +67,69 @@ class AdminAuthorizationContextTest(
         assertThat(response.status).isEqualTo(200)
     }
 
+    @Test
+    fun `미인증 요청은 기본 보호 경로에 접근할 수 없다`() {
+        val response = mockMvc.perform(get("/security-test")).andReturn().response
+
+        assertThat(response.status).isEqualTo(401)
+    }
+
+    @Test
+    fun `인증 회원은 기본 보호 경로에 접근할 수 있다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `상태 확인 경로는 인증 없이 접근할 수 있다`() {
+        val response = mockMvc.perform(get("/health")).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `공개 조회 API는 인증 없이 접근할 수 있다`() {
+        val response = mockMvc.perform(get("/v1/terms")).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `인증 회원도 prometheus 경로에 접근할 수 없다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/actuator/prometheus")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(403)
+    }
+
     @TestConfiguration(proxyBeanMethods = false)
     class TestConfig {
         @Bean
         fun adminAuthorizationTestController() = AdminAuthorizationTestController()
+
+        @Bean
+        fun authorizationTestController() = AuthorizationTestController()
     }
 
     @RestController
     class AdminAuthorizationTestController {
         @GetMapping("/admin/security-test")
+        fun get(): String = "ok"
+    }
+
+    @RestController
+    class AuthorizationTestController {
+        @GetMapping("/security-test")
         fun get(): String = "ok"
     }
 }
