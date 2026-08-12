@@ -6,7 +6,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
-import jakarta.persistence.Lob
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
@@ -25,7 +24,7 @@ class OutboxEntity(
     val id: UUID,
     @Enumerated(EnumType.STRING)
     val eventType: EventType,
-    @Lob
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     val payload: String,
 ) {
     @CreationTimestamp

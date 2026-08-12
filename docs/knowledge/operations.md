@@ -4,6 +4,10 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-12: 알림 기능 배포 뒤 core-api가 Outbox 스키마 검증에서 종료됐다.
+  원인: Hibernate 7이 `@Lob String`을 MySQL `LONGTEXT`로 해석했지만 Flyway는 `TEXT`를 만들었고,
+  H2 테스트가 이 방언별 타입 차이를 드러내지 못했다. 재발 방지: `TEXT` 매핑은
+  `SqlTypes.LONGVARCHAR`로 명시하고, MySQL 8.4 Testcontainer에서 전체 Flyway 적용 후 JPA 검증을 실행한다.
 - 2026-08-11: 알림 Redis 자원 없이 `redis-core`를 조립한 뒤 ECS 배포가 반복해서 롤백됐다.
   원인: ALB가 모든 HealthContributor를 합산하는 `/actuator/health`를 사용해 Redis 연결 실패를
   API 트래픽 수용 불가로 판단했다. 재발 방지: core-api readiness 그룹에 DB만 포함하고,
