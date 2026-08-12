@@ -113,19 +113,25 @@ class RoomManager(
         requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
         requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
 
-        // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
-        // 이 트랜잭션은 RoomApplicationEntity 를 로드하지 않아 벌크 뒤 컨텍스트를 비울 필요가 없다.
-        val now = LocalDateTime.now(clock)
+        cancelWithoutGuard(room, hostMemberId, LocalDateTime.now(clock))
+    }
+
+    // 취소의 부수효과만. 방장 판정·룸 잠금·취소 가능 여부는 호출부가 이미 봤다는 전제다.
+    // 나가기(MOI-397)가 위임 대상이 없을 때 이것을 공유한다 — 복제하면 셋 중 하나가 빠진다.
+    //
+    // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
+    // 호출 트랜잭션이 RoomApplicationEntity 를 로드했다면 벌크 뒤 그 행을 다시 읽으면 안 된다.
+    fun cancelWithoutGuard(room: RoomEntity, handlerMemberId: UUID, now: LocalDateTime) {
         room.cancel()
         roomStatusLogRepository.save(
             RoomStatusLogEntity(
-                roomId = roomId,
+                roomId = room.id,
                 transitionType = RoomStatus.CANCELED,
-                handlerMemberId = hostMemberId,
+                handlerMemberId = handlerMemberId,
                 occurredAt = now,
             ),
         )
-        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
+        roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
     }
 
     // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔

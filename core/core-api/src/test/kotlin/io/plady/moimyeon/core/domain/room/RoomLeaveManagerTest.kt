@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.room
 
 import io.mockk.every
 import io.mockk.mockk
+import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
@@ -12,6 +13,7 @@ import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -28,9 +30,15 @@ class RoomLeaveManagerTest {
 
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>(relaxed = true)
+    private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
+    private val memberFinder = mockk<MemberFinder>(relaxed = true)
+    private val roomManager = mockk<RoomManager>(relaxed = true)
     private val manager = RoomLeaveManager(
         roomRepository,
         participationRepository,
+        roomApplicationRepository,
+        memberFinder,
+        roomManager,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 

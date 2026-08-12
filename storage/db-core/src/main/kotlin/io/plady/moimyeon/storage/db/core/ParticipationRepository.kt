@@ -126,6 +126,13 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         status: ParticipationStatus,
     ): List<ParticipationEntity>
 
+    // 방장 자동 위임 대상(MOI-397). 가장 먼저 참여한 사람, 동률이면 id 가 작은 쪽.
+    fun findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
+
     // 방장 참여 행(방장 회원 식별자 조회용). 상태를 함께 봐야 한다 — 자동 위임(MOI-397)이 들어오면
     // 전 방장의 LEFT + HOST 행이 남으므로, 역할만 보면 나간 사람이 방장으로 잡힌다.
     // "룸당 HOST + JOINED 는 정확히 1명"이 불변식이라 정렬 없이 findFirst 로 충분하다.

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.storage.db.core
 
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,6 +13,9 @@ interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     fun findByIdInAndDeletedAtIsNull(memberIds: Collection<UUID>): List<MemberEntity>
 
     fun existsByIdAndDeletedAtIsNull(memberId: UUID): Boolean
+
+    // 방장 자동 위임의 자격 판정(MOI-397). 막는 게 아니라 건너뛰는 것이라 예외를 던지지 않는다.
+    fun existsByIdAndStatusAndDeletedAtIsNull(memberId: UUID, status: MemberStatus): Boolean
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?

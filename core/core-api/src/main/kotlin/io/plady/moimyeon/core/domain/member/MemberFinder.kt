@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
@@ -23,6 +24,12 @@ class MemberFinder(
 
     fun existsById(memberId: UUID): Boolean {
         return memberRepository.existsByIdAndDeletedAtIsNull(memberId)
+    }
+
+    // 제재 여부를 예외 없이 묻는다. validateActive 와 달리 막는 게 아니라 건너뛰는 판정이라
+    // 잠금 읽기도 하지 않는다 — 위임 순회에서 후보 수만큼 불린다.
+    fun isActive(memberId: UUID): Boolean {
+        return memberRepository.existsByIdAndStatusAndDeletedAtIsNull(memberId, MemberStatus.ACTIVE)
     }
 
     fun existsBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
