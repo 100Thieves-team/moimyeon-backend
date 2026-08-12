@@ -30,12 +30,41 @@ class ParticipationEntity(
     val roomId: UUID,
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
-    @Enumerated(EnumType.STRING)
-    val participationRole: ParticipationRole,
-    @Enumerated(EnumType.STRING)
-    val status: ParticipationStatus,
+    participationRole: ParticipationRole,
+    status: ParticipationStatus,
     val joinedAt: LocalDateTime,
+    leftByMemberId: UUID? = null,
+    leftAt: LocalDateTime? = null,
+) : BaseEntity() {
+    @Enumerated(EnumType.STRING)
+    var participationRole: ParticipationRole = participationRole
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    var status: ParticipationStatus = status
+        protected set
+
     @JdbcTypeCode(SqlTypes.BINARY)
-    val leftByMemberId: UUID? = null,
-    val leftAt: LocalDateTime? = null,
-) : BaseEntity()
+    var leftByMemberId: UUID? = leftByMemberId
+        protected set
+
+    var leftAt: LocalDateTime? = leftAt
+        protected set
+
+    // 셋을 함께 쓴다. status 만 바꾸고 leftAt 을 빠뜨리면 확정 후 이탈 판정
+    // (left_at > confirmed_at)이 조용히 틀어진다.
+    // leftBy 는 자진 이탈(본인)과 내보내기(방장)를 가른다 — 재신청 차단이 이 값으로 판정한다.
+    fun leave(now: LocalDateTime, leftBy: UUID) {
+        check(status == ParticipationStatus.JOINED)
+        status = ParticipationStatus.LEFT
+        leftAt = now
+        leftByMemberId = leftBy
+    }
+
+    // 방장이 나갈 때의 자동 위임. 전 방장의 role 은 HOST 로 남으므로(MOI-397) 이 시점에
+    // 한 룸에 HOST 행이 둘이 되고, 현재 방장은 status 로 갈린다.
+    fun promoteToHost() {
+        check(status == ParticipationStatus.JOINED)
+        participationRole = ParticipationRole.HOST
+    }
+}

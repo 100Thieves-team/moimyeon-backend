@@ -14,6 +14,7 @@ import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
@@ -29,6 +30,13 @@ class RoomParticipantControllerTest : RestDocsTest() {
     private val roomId = "01920000-0000-7000-8000-000000000001"
     private val viewerMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { viewerMemberId.toString() }
+
+    private val leaveSummary = "룸 나가기"
+    private val leaveDescription =
+        "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에는 자유롭게 나갈 수 있고, 진행이 확정된 뒤에도 " +
+            "현재 인원이 최소 진행 인원보다 많으면 나갈 수 있다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, " +
+            "모집 중이면 같은 룸에 다시 신청할 수 있다. " +
+            "방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도 없으면 룸이 취소된다."
 
     private val participantsSummary = "참여자 명부 조회"
     private val participantsDescription =
@@ -120,6 +128,91 @@ class RoomParticipantControllerTest : RestDocsTest() {
                         fieldWithPath("data.participants[].canViewOriginal").type(JsonFieldType.BOOLEAN)
                             .description("이력서 원본을 열 수 있는지. 원본 공개 룸이고 진행이 확정됐으며 조회자가 확정 참여자일 때만 true"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun leaveRoom() {
+        every { roomParticipantFacade.leave(any(), any()) } returns Unit
+
+        mockMvc.perform(
+            delete("/v1/rooms/{roomId}/participants/me", roomId)
+                .principal(principal),
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "roomLeave",
+                    leaveSummary,
+                    leaveDescription,
+                    pathParameters(
+                        parameterWithName("roomId").description("나갈 룸 id (UUID)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).optional().ignored(),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun leaveRoomAtMinCapacity() {
+        every { roomParticipantFacade.leave(any(), any()) } throws
+            CoreException(CoreErrorType.ROOM_AT_MIN_CAPACITY)
+
+        mockMvc.perform(
+            delete("/v1/rooms/{roomId}/participants/me", roomId)
+                .principal(principal),
+        )
+            .andExpect(status().isConflict)
+            .andDo(
+                documentApi(
+                    "roomLeaveAtMinCapacity",
+                    leaveSummary,
+                    "진행이 확정된 룸에서 현재 인원이 최소 진행 인원과 같으면 나갈 수 없다(E1423). " +
+                        "확정은 그 인원으로 진행한다는 약속이라, 여기서 더 빠지면 룸이 성립하지 않는다.",
+                    pathParameters(
+                        parameterWithName("roomId").description("나갈 룸 id (UUID)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (ERROR)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error.code").type(JsonFieldType.STRING).description("에러 코드 (E1423)"),
+                        fieldWithPath("error.message").type(JsonFieldType.STRING).description("에러 메시지"),
+                        fieldWithPath("error.data").type(JsonFieldType.NULL).optional().ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun leaveRoomNotParticipating() {
+        every { roomParticipantFacade.leave(any(), any()) } throws
+            CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
+
+        mockMvc.perform(
+            delete("/v1/rooms/{roomId}/participants/me", roomId)
+                .principal(principal),
+        )
+            .andExpect(status().isForbidden)
+            .andDo(
+                documentApi(
+                    "roomLeaveNotParticipating",
+                    leaveSummary,
+                    "참여 중이 아니면 나갈 수 없다(E1419). 신청만 넣은 사용자와 이미 나간 사람이 모두 여기에 해당한다.",
+                    pathParameters(
+                        parameterWithName("roomId").description("나갈 룸 id (UUID)"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (ERROR)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error.code").type(JsonFieldType.STRING).description("에러 코드 (E1419)"),
+                        fieldWithPath("error.message").type(JsonFieldType.STRING).description("에러 메시지"),
+                        fieldWithPath("error.data").type(JsonFieldType.NULL).optional().ignored(),
                     ),
                 ),
             )

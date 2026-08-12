@@ -87,6 +87,10 @@ class RoomEntity(
         status = RoomStatus.CONFIRMED
     }
 
+    // 나갈 수 있는 상태를 화이트리스트로 둔다. 못 나가는 쪽을 열거하면 상태가 늘 때
+    // 기본값이 "나갈 수 있음"이 되어 조용히 열린다.
+    fun canLeave(): Boolean = status == RoomStatus.RECRUITING || status == RoomStatus.CONFIRMED
+
     fun canCancel(): Boolean = status == RoomStatus.RECRUITING
 
     // 방장이 모집을 접는 것. 운영이 룸을 내리는 deleted_at 과 한 컬럼에 섞지 않는다(schema.sql:450).

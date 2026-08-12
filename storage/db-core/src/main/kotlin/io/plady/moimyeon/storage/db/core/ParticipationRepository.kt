@@ -15,9 +15,6 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         participationRole: ParticipationRole,
     ): Boolean
 
-    // 현재 인원 = 활성 참여 수.
-    fun countByRoomIdAndDeletedAtIsNull(roomId: UUID): Long
-
     // 룸 취소 가능 여부(MOI-396). 방장도 참여 행을 갖기 때문에 전체 인원으로 재면 "== 1" 을 비교하게 된다.
     // 질문이 "몇 명인가"가 아니라 "있는가"이므로 세지 않고 첫 행에서 멈춘다.
     fun existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
@@ -45,6 +42,12 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         roomId: UUID,
         status: ParticipationStatus,
     ): Long
+
+    fun findByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
 
     fun existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
         roomId: UUID,
@@ -119,6 +122,13 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         roomId: UUID,
         status: ParticipationStatus,
     ): List<ParticipationEntity>
+
+    // 방장 자동 위임 대상(MOI-397). 가장 먼저 참여한 사람, 동률이면 id 가 작은 쪽.
+    fun findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
 
     // 방장 참여 행(방장 회원 식별자 조회용). 상태를 함께 봐야 한다 — 자동 위임(MOI-397)이 들어오면
     // 전 방장의 LEFT + HOST 행이 남으므로, 역할만 보면 나간 사람이 방장으로 잡힌다.
