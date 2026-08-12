@@ -4,6 +4,7 @@ import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.facade.ProfileFacade
+import io.plady.moimyeon.core.api.facade.PublicProfileFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.member.MemberService
@@ -28,6 +29,7 @@ class ProfileControllerValidationTest {
     private val companyService = mockk<CompanyService>()
     private val memberService = mockk<MemberService>()
     private val memberFacade = mockk<MemberFacade>()
+    private val publicProfileFacade = mockk<PublicProfileFacade>()
     private val principal = Principal { UUID.randomUUID().toString() }
 
     @BeforeEach
@@ -35,7 +37,7 @@ class ProfileControllerValidationTest {
         mockMvc = MockMvcBuilders.standaloneSetup(
             ProfileController(ProfileFacade(profileService, companyService)),
             MemberController(memberService, memberFacade),
-            PublicProfileController(),
+            PublicProfileController(publicProfileFacade),
         )
             .setCustomArgumentResolvers(LoginMemberArgumentResolver())
             .setControllerAdvice(ApiControllerAdvice())
