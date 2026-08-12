@@ -4,8 +4,8 @@ import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class TrustService {
-    fun getPublicTrust(memberId: UUID): PublicTrust {
-        return PublicTrust.empty()
-    }
+class TrustService(
+    private val trustFinder: TrustFinder,
+) {
+    fun getPublicTrust(memberId: UUID): PublicTrust = trustFinder.getPublicTrust(memberId)
 }
