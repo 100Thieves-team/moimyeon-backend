@@ -919,14 +919,14 @@ Content-Length: 146
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 235
+Content-Length: 236
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T09:43:35.23881707",
+    "datetime" : "2026-08-13T09:49:04.244888279",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1040,7 +1040,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T09:43:35.435325312",
+    "datetime" : "2026-08-13T09:49:04.429422576",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1228,7 +1228,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 10:13:34 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 10:19:03 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1434,7 +1434,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "a2d5c4a1-f6a9-4a89-9f48-8bd3d1efce2a",
+      "termsId" : "170f1e6b-26bf-411e-b13c-ab013e69441e",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1442,7 +1442,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "f0588975-72b2-4205-91cf-d6e9fc77bcba",
+      "termsId" : "d972dfe8-6e9b-4d32-930f-b8d5e9f0e4fb",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1547,12 +1547,12 @@ Content-Length: 597
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "e46eb5f1-dc17-41b7-a487-88a5e7cae8a8",
+    "memberId" : "d877ceed-4a94-4d75-9489-485f90e64098",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "e46eb5f1-dc17-41b7-a487-88a5e7cae8a8",
+      "memberId" : "d877ceed-4a94-4d75-9489-485f90e64098",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2354,7 +2354,7 @@ Content-Length: 446
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "34b3257a-2ab8-498a-a9d1-cae96838eb21",
+    "memberId" : "aef87ed7-a2c5-46ee-9f5f-c2cf5efb4961",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4285,7 +4285,7 @@ Content-Length: 1056
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-14T09:43:39.057704013",
+      "startAt" : "2026-08-14T09:49:08.308020625",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4296,7 +4296,7 @@ Content-Length: 1056
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "3316f7f5-ea01-49fb-bba6-3ce5f70a09d7",
+    "hostMemberId" : "53e54091-ce7c-4e83-a139-cef2161dfd68",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
@@ -4805,7 +4805,7 @@ Content-Length: 1256
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "30b4da18-4d82-4bc2-8eeb-dbb5415c4679",
+  "resumeId" : "9d1c76b4-a8d2-4476-b8bd-c4be435af657",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5039,7 +5039,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "80ec78f2-df5d-42d2-a877-d79387dfa468",
+      "resumeId" : "55cbc839-d8c8-482e-b963-73ec03b81a80",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -5730,7 +5730,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-13 09:42:18 UTC
+Last updated 2026-08-13 09:47:47 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
