@@ -4,6 +4,7 @@ import io.plady.moimyeon.core.api.controller.v1.request.CreateRoomRequest
 import io.plady.moimyeon.core.api.controller.v1.request.RoomSearchRequest
 import io.plady.moimyeon.core.api.controller.v1.request.UpdateRoomRequest
 import io.plady.moimyeon.core.api.controller.v1.response.RoomCreatedResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomCreationLimitResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomFormOptionsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomReadResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
@@ -11,12 +12,14 @@ import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
+import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -24,6 +27,8 @@ import java.util.UUID
 class RoomController(
     private val roomFacade: RoomFacade,
     private val roomSearchFacade: RoomSearchFacade,
+    // 조합할 것이 없는 단일 Service 호출은 컨트롤러가 직접 한다(layers.md).
+    private val roomService: RoomService,
 ) {
     // POST /v1/rooms — 생성 전 확인의 '이대로 룸 만들기'. 생성 즉시 모집(RECRUITING) 상태로 등록(§4.8).
     @PostMapping("/v1/rooms")
@@ -73,6 +78,20 @@ class RoomController(
     @GetMapping("/v1/rooms/form-options")
     fun formOptions(): ApiResponse<RoomFormOptionsResponse> {
         return ApiResponse.success(RoomFormOptionsResponse.mock())
+    }
+
+    // GET /v1/rooms/creation-limit — 같은 공고·직무로 내가 만든 활성 룸이 몇 개인지(「룸 생성」 §4.7).
+    // 회원의 자원이 아니라 룸 생성의 사전 판정이라 /v1/members/me 가 아니라 여기에 둔다.
+    // 없는 공고·직무 id 도 0개로 답한다 — 참조 검증은 생성 시점의 일이다(RoomFinder 주석).
+    @GetMapping("/v1/rooms/creation-limit")
+    fun creationLimit(
+        @LoginMember currentMember: CurrentMember,
+        @RequestParam jobPostingId: Long,
+        @RequestParam jobRoleId: Long,
+    ): ApiResponse<RoomCreationLimitResponse> {
+        return ApiResponse.success(
+            RoomCreationLimitResponse.from(roomService.getRoomCreationLimit(currentMember.id, jobPostingId, jobRoleId)),
+        )
     }
 
     // GET /v1/rooms — 탐색 목록(「룸 탐색」 §4.1~§4.3). 비로그인도 조회 가능.

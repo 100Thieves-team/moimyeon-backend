@@ -17,6 +17,17 @@ class RoomFinder(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
 ) {
+    // 생성 전 경고(「룸 생성」 §4.7). 막는 쪽(RoomManager.create)과 같은 쿼리·같은 술어를 봐야
+    // 화면이 "만들 수 있다"고 안내한 뒤 서버가 거부하는 일이 없다.
+    //
+    // 공고·직무 참조가 실재하는지는 보지 않는다 — 없는 id 면 0개로 답한다.
+    // 여기서 404 를 내면 화면이 경고 대신 에러를 띄우고, 참조 검증은 어차피 생성 시점에 한다.
+    fun getCreationLimit(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): RoomCreationLimit {
+        return RoomCreationLimit.of(
+            roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES),
+        )
+    }
+
     // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.
     // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
     // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는

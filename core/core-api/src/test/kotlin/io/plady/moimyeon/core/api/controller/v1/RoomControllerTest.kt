@@ -18,6 +18,7 @@ import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
+import io.plady.moimyeon.core.domain.room.RoomCreationLimit
 import io.plady.moimyeon.core.domain.room.RoomDescription
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomSchedule
@@ -68,6 +69,13 @@ class RoomControllerTest : RestDocsTest() {
     private val formOptionsDescription =
         "기본 정보·진행 방식(§4.1·§4.2) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다. " +
             "라벨을 서버가 소유하도록 목으로 제공한다."
+    private val creationLimitSummary = "중복 생성 제한 조회"
+    private val creationLimitDescription =
+        "같은 회사·공고·직무로 내가 이미 만든 활성 룸이 몇 개인지 돌려준다(「룸 생성」 §4.7). 생성 화면이 경고를 띄울지 판단하는 데 쓴다. " +
+            "활성은 모집 중·진행 확정·진행 중이며 취소·완료된 룸은 세지 않는다. " +
+            "1~2개면 경고만 하고 생성은 통과하고, 3개면 생성이 409(E1427)로 거부된다. " +
+            "remaining 은 일정을 여러 개 골라 일괄 생성할 때의 상한이기도 하다(§4.4). " +
+            "존재하지 않는 공고·직무 id 를 보내도 404 가 아니라 0개로 답한다 — 참조 검증은 생성 시점의 일이다."
     private val listSummary = "룸 탐색 목록 조회"
     private val listDescription =
         "조건에 맞는 모집 중인 룸 목록을 조회한다(「룸 탐색」 §4.1~§4.3). 비로그인도 조회할 수 있다. " +
@@ -129,7 +137,7 @@ class RoomControllerTest : RestDocsTest() {
         roomService = mockk()
         roomSearchFacade = mockk()
         mockMvc = mockController(
-            RoomController(RoomFacade(roomService, fixedClock), roomSearchFacade),
+            RoomController(RoomFacade(roomService, fixedClock), roomSearchFacade, roomService),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -389,6 +397,56 @@ class RoomControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun roomCreationLimit() {
+        every { roomService.getRoomCreationLimit(any(), any(), any()) } returns RoomCreationLimit.of(2)
+
+        mockMvc.perform(
+            get("/v1/rooms/creation-limit")
+                .param("jobPostingId", "1")
+                .param("jobRoleId", "1")
+                .principal(principal),
+        )
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "roomCreationLimit",
+                    creationLimitSummary,
+                    creationLimitDescription,
+                    queryParameters(
+                        parameterWithName("jobPostingId").description("채용 공고 id. 회사는 공고에서 파생되므로 따로 받지 않는다"),
+                        parameterWithName("jobRoleId").description("직무 id"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.activeRoomCount").type(JsonFieldType.NUMBER)
+                            .description("같은 공고·직무로 내가 방장인 활성 룸 수 (모집 중 · 진행 확정 · 진행 중). 1 이상이면 경고를 띄운다"),
+                        fieldWithPath("data.limit").type(JsonFieldType.NUMBER).description("허용 개수 (3)"),
+                        fieldWithPath("data.remaining").type(JsonFieldType.NUMBER)
+                            .description("더 만들 수 있는 개수. 0 이면 생성이 E1427 로 거부된다. 음수가 되지 않는다"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `creationLimit 공고 id 가 없으면 E400`() {
+        mockMvc.perform(get("/v1/rooms/creation-limit").param("jobRoleId", "1").principal(principal))
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
+            .andDo(documentApi("roomCreationLimit-e400", creationLimitSummary, creationLimitDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `creationLimit 직무 id 가 숫자가 아니면 E400`() {
+        mockMvc.perform(
+            get("/v1/rooms/creation-limit").param("jobPostingId", "1").param("jobRoleId", "backend").principal(principal),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
     }
 
     @Test

@@ -4,9 +4,12 @@ import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
+import io.plady.moimyeon.core.enums.ParticipationRole
+import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
@@ -25,6 +28,7 @@ import java.util.UUID
 @Import(FixedClockTestConfiguration::class)
 class ActiveRoomLimitIT(
     private val roomManager: RoomManager,
+    private val roomFinder: RoomFinder,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -118,6 +122,57 @@ class ActiveRoomLimitIT(
         assertThat(roomRepository.findById(roomId)).isPresent()
     }
 
+    // --- 생성 전 경고 조회(F4) -------------------------------------------------
+    //
+    // 막는 쪽(create)과 같은 쿼리·같은 술어를 봐야 화면의 경고와 생성 결과가 어긋나지 않는다.
+
+    @Test
+    fun `활성 룸이 없으면 남은 개수는 3이다`() {
+        val limit = roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID)
+
+        assertThat(limit.activeRoomCount).isZero()
+        assertThat(limit.limit).isEqualTo(3)
+        assertThat(limit.remaining).isEqualTo(3)
+    }
+
+    @Test
+    fun `활성 룸이 두 개면 남은 개수는 1이다`() {
+        repeat(2) { createRoom() }
+
+        val limit = roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID)
+
+        assertThat(limit.activeRoomCount).isEqualTo(2)
+        assertThat(limit.remaining).isEqualTo(1)
+    }
+
+    @Test
+    fun `한도를 채우면 남은 개수는 0이다`() {
+        repeat(3) { createRoom() }
+
+        assertThat(roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID).remaining).isZero()
+    }
+
+    // 묻는 쪽이 막는 쪽보다 느슨한 집합을 보면 화면이 "만들 수 있다"고 안내한 뒤 서버가 E1427 로 거부한다.
+    @Test
+    fun `확정된 룸도 남은 개수를 차지한다`() {
+        val roomId = createRoom()
+        joinParticipant(roomId)
+        roomManager.confirm(roomId, hostMemberId)
+
+        assertThat(roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID).remaining).isEqualTo(2)
+    }
+
+    // 사전 조회는 참조 검증을 하지 않는다. 404 를 내면 화면이 경고 대신 에러를 띄운다.
+    @Test
+    fun `존재하지 않는 공고로 물으면 0개로 답한다`() {
+        repeat(3) { createRoom() }
+
+        val limit = roomFinder.getCreationLimit(hostMemberId, UNKNOWN_JOB_POSTING_ID, JOB_ROLE_ID)
+
+        assertThat(limit.activeRoomCount).isZero()
+        assertThat(limit.remaining).isEqualTo(3)
+    }
+
     private fun createRoom(
         memberId: UUID = hostMemberId,
         jobPostingId: Long = JOB_POSTING_ID,
@@ -150,6 +205,19 @@ class ActiveRoomLimitIT(
         return room
     }
 
+    // 확정은 최소 진행 인원(2)을 채워야 통과한다. 방장 혼자면 BELOW_MIN_CAPACITY 다.
+    private fun joinParticipant(roomId: UUID) {
+        participationRepository.saveAndFlush(
+            ParticipationEntity(
+                roomId = roomId,
+                memberId = UUID.randomUUID(),
+                participationRole = ParticipationRole.PARTICIPANT,
+                status = ParticipationStatus.JOINED,
+                joinedAt = FIXED_NOW,
+            ),
+        )
+    }
+
     private fun resumeFile() = ResumeFile(
         key = "resumes/$hostMemberId/backend.pdf",
         originalName = "backend.pdf",
@@ -162,5 +230,6 @@ class ActiveRoomLimitIT(
         private const val OTHER_JOB_POSTING_ID = 42L
         private const val JOB_ROLE_ID = 41L
         private const val OTHER_JOB_ROLE_ID = 42L
+        private const val UNKNOWN_JOB_POSTING_ID = 999_999L
     }
 }
