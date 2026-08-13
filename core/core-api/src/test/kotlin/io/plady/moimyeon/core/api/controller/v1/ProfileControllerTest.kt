@@ -12,7 +12,6 @@ import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileContent
 import io.plady.moimyeon.core.domain.profile.ProfileService
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -38,17 +37,15 @@ class ProfileControllerTest : RestDocsTest() {
     private val updateProfileSummary = "프로필 수정"
     private val updateProfileDescription =
         "프로필 전체 교체 저장. 프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재하므로 별도 생성 API 는 없다. " +
-            "아직 안 채운 값은 null 이 아니라 빈 문자열·UNSPECIFIED 로 오간다(지역만 미선택이 null). " +
-            "관심 직무·지역·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는 검증 완료된 회사만 선택할 수 있다. " +
-            "요청 형태 오류 400(E400), 존재하지 않는 직무/지역 또는 선택할 수 없는 회사 400(E1301/E1302/E1303), " +
+            "아직 작성하지 않은 소개는 빈 문자열로 오간다. " +
+            "관심 직무·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는 검증 완료된 회사만 선택할 수 있다. " +
+            "요청 형태 오류 400(E400), 존재하지 않는 직무 또는 선택할 수 없는 회사 400(E1301/E1303), " +
             "인증 정보 없음·무효 401(E1102), 프로필을 찾을 수 없음 404(E1009)로 응답한다."
 
     private val validUpdateRequest = UpdateProfileRequest(
         interestJobRoleIds = listOf(1L, 2L),
         bio = "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
         interestCompanyIds = listOf(1L, 2L),
-        meetingPreference = MeetingPreference.OFFLINE,
-        sigunguId = 1L,
     )
 
     @BeforeEach
@@ -82,6 +79,8 @@ class ProfileControllerTest : RestDocsTest() {
                 assertThat(result.response.contentAsString)
                     .contains("\"interestJobRoleIds\":[1,2]")
                     .contains("\"interestCompanies\":[{\"companyId\":1,\"name\":\"달빛페이\"},{\"companyId\":2,\"name\":\"한빛커머스\"}]")
+                    .doesNotContain("\"meetingPreference\"")
+                    .doesNotContain("\"sigunguId\"")
                     .doesNotContain("\"interviewStage\"")
             }
             .andDo(
@@ -97,19 +96,12 @@ class ProfileControllerTest : RestDocsTest() {
                         // openapi3 태스크 후처리에서 보정한다 (build.gradle.kts patchGeneratedSchemas)
                         fieldWithPath("interestCompanyIds").type(JsonFieldType.ARRAY).optional()
                             .description("관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"),
-                        fieldWithPath("meetingPreference").type(JsonFieldType.STRING).optional()
-                            .description("진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH, 미지정이면 UNSPECIFIED)"),
-                        fieldWithPath("sigunguId").type(JsonFieldType.NUMBER).optional()
-                            .description("선호 지역 시군구 id (미선택이면 null, /v1/regions)"),
                     ),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
                         fieldWithPath("data.interestJobRoleIds").type(JsonFieldType.ARRAY).description("관심 직무 id 목록 (미지정이면 빈 배열)"),
                         fieldWithPath("data.bio").type(JsonFieldType.STRING).description("자기소개 (미지정이면 빈 문자열)"),
-                        fieldWithPath("data.meetingPreference").type(JsonFieldType.STRING)
-                            .description("진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
-                        fieldWithPath("data.sigunguId").type(JsonFieldType.NUMBER).optional().description("선호 지역 시군구 id (미선택이면 null)"),
                         fieldWithPath("data.interestCompanies").type(JsonFieldType.ARRAY).description("관심 회사 (미지정이면 빈 배열)"),
                         fieldWithPath("data.interestCompanies[].companyId").type(JsonFieldType.NUMBER).description("회사 id"),
                         fieldWithPath("data.interestCompanies[].name").type(JsonFieldType.STRING).description("회사명"),
@@ -168,8 +160,6 @@ class ProfileControllerTest : RestDocsTest() {
     private fun ProfileContent.toProfileFixture(memberId: UUID): MemberProfile = MemberProfile(
         memberId = memberId,
         bio = bio,
-        meetingPreference = meetingPreference,
-        sigunguId = sigunguId,
         interestJobRoleIds = interestJobRoleIds,
         interestCompanyIds = interestCompanyIds,
     )

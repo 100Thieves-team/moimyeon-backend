@@ -354,14 +354,12 @@ CREATE INDEX ix_web_push_subscription_member_id ON web_push_subscription (member
 -- 직무 단일 참조(job_role_id) 컬럼은 두지 않는다 — 관심 직무는 다건이라
 --   member_profile_interest_job_role 로 뺐다.
 CREATE TABLE member_profile (
-    id                 BINARY(16)   NOT NULL,
-    member_id          BINARY(16)   NOT NULL,
-    bio                VARCHAR(500) NOT NULL DEFAULT '',
-    meeting_preference VARCHAR(20)  NOT NULL DEFAULT 'UNSPECIFIED',
-    sigungu_id         BIGINT       NULL,
-    created_at         DATETIME(6)  NOT NULL,
-    updated_at         DATETIME(6)  NOT NULL,
-    deleted_at         DATETIME(6)  NULL,
+    id         BINARY(16)   NOT NULL,
+    member_id  BINARY(16)   NOT NULL,
+    bio        VARCHAR(500) NOT NULL DEFAULT '',
+    created_at DATETIME(6)  NOT NULL,
+    updated_at DATETIME(6)  NOT NULL,
+    deleted_at DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_profile_member UNIQUE (member_id)
 );

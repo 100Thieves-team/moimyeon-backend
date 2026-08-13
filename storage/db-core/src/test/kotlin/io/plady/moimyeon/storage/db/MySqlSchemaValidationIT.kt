@@ -52,6 +52,12 @@ class MySqlSchemaValidationIT(
         }
     }
 
+    @Test
+    fun `회원 프로필 스키마에서 진행 방식 선호와 선호 지역을 제거한다`() {
+        assertThat(columnNamesOf("member_profile"))
+            .doesNotContain("meeting_preference", "sigungu_id")
+    }
+
     private fun secondPrecisionColumns(): List<String> = dataSource.connection.use { connection ->
         connection.prepareStatement(
             """
@@ -74,6 +80,24 @@ class MySqlSchemaValidationIT(
         tableName: String,
         columnName: String,
     ): String = columnOf(tableName, columnName, "DATA_TYPE")
+
+    private fun columnNamesOf(tableName: String): List<String> = dataSource.connection.use { connection ->
+        connection.prepareStatement(
+            """
+            SELECT COLUMN_NAME
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = ?
+              AND TABLE_NAME = ?
+            ORDER BY ORDINAL_POSITION
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, DATABASE_NAME)
+            statement.setString(2, tableName)
+            statement.executeQuery().use { resultSet ->
+                generateSequence { if (resultSet.next()) resultSet.getString("COLUMN_NAME") else null }.toList()
+            }
+        }
+    }
 
     // attribute 는 information_schema.COLUMNS 의 컬럼명이다. 테스트 안의 리터럴만 넘긴다.
     private fun columnOf(

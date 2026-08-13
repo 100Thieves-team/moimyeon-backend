@@ -28,7 +28,7 @@ class ProfileManager(
             memberProfileRepository.findForUpdateByMemberId(memberId)?.takeIf { it.isActive() },
             CoreErrorType.PROFILE_NOT_FOUND,
         )
-        entity.updateProfile(content.bio, content.meetingPreference, content.sigunguId)
+        entity.updateProfile(content.bio)
         profileInterestManager.replaceAll(
             entity.id,
             content.interestCompanyIds,

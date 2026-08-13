@@ -13,7 +13,6 @@ import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileService
 import io.plady.moimyeon.core.domain.trust.PublicTrust
 import io.plady.moimyeon.core.domain.trust.TrustService
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
@@ -39,8 +38,6 @@ class PublicProfileFacadeTest {
         val profile = MemberProfile(
             memberId = member.id,
             bio = "자기소개",
-            meetingPreference = MeetingPreference.BOTH,
-            sigunguId = 2L,
             interestJobRoleIds = listOf(1L, 2L),
             interestCompanyIds = listOf(1L, 2L),
         )
@@ -61,7 +58,6 @@ class PublicProfileFacadeTest {
             tuple(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
         )
         assertThat(response.bio).isEqualTo("자기소개")
-        assertThat(response.meetingPreference).isEqualTo(MeetingPreference.BOTH)
         assertThat(response.trust.activityTopPercent).isNull()
         assertThat(response.trust.recentAttendances).isEmpty()
         assertThat(response.trust.noShowCount).isZero()

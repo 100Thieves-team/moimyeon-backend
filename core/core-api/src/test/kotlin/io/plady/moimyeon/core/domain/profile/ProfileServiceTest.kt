@@ -6,7 +6,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
 import io.plady.moimyeon.core.domain.company.CompanyValidator
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -24,15 +23,12 @@ class ProfileServiceTest {
     private val memberId = UUID.randomUUID()
     private val content = ProfileContent(
         bio = "자기소개",
-        meetingPreference = MeetingPreference.BOTH,
-        sigunguId = 2L,
         interestJobRoleIds = listOf(1L),
         interestCompanyIds = listOf(1L),
     )
 
     private fun givenValidCatalogRefs() {
         every { catalogRefValidator.validateJobRoles(listOf(1L)) } just Runs
-        every { catalogRefValidator.validateSigungu(2L) } just Runs
         every { companyValidator.validateSelectable(listOf(1L)) } just Runs
     }
 
@@ -59,17 +55,8 @@ class ProfileServiceTest {
     }
 
     @Test
-    fun `존재하지 않는 지역을 선택하면 E1302 를 던진다`() {
-        every { catalogRefValidator.validateJobRoles(listOf(1L)) } just Runs
-        every { catalogRefValidator.validateSigungu(2L) } throws CoreException(CoreErrorType.REGION_NOT_FOUND)
-
-        assertUpdateFails(CoreErrorType.REGION_NOT_FOUND)
-    }
-
-    @Test
     fun `선택할 수 없는 회사를 담으면 E1303 을 던진다`() {
         every { catalogRefValidator.validateJobRoles(listOf(1L)) } just Runs
-        every { catalogRefValidator.validateSigungu(2L) } just Runs
         every { companyValidator.validateSelectable(listOf(1L)) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
 
         assertUpdateFails(CoreErrorType.COMPANY_NOT_FOUND)
@@ -87,8 +74,8 @@ class ProfileServiceTest {
     fun `여러 회원의 프로필을 한 번에 조회한다`() {
         val otherMemberId = UUID.randomUUID()
         val profiles = listOf(
-            MemberProfile(memberId, "", MeetingPreference.UNSPECIFIED, null, listOf(1L), emptyList()),
-            MemberProfile(otherMemberId, "", MeetingPreference.UNSPECIFIED, null, listOf(2L), emptyList()),
+            MemberProfile(memberId, "", listOf(1L), emptyList()),
+            MemberProfile(otherMemberId, "", listOf(2L), emptyList()),
         )
         every { profileFinder.getAllByMemberIds(listOf(memberId, otherMemberId)) } returns profiles
 

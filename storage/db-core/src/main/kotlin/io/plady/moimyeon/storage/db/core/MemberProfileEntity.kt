@@ -1,9 +1,6 @@
 package io.plady.moimyeon.storage.db.core
 
-import io.plady.moimyeon.core.enums.MeetingPreference
 import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
@@ -27,27 +24,12 @@ class MemberProfileEntity(
     @JdbcTypeCode(SqlTypes.BINARY)
     val memberId: UUID,
     bio: String = "",
-    meetingPreference: MeetingPreference = MeetingPreference.UNSPECIFIED,
-    sigunguId: Long? = null,
 ) : UuidBaseEntity(id) {
     var bio: String = bio
         protected set
 
-    @Enumerated(EnumType.STRING)
-    var meetingPreference: MeetingPreference = meetingPreference
-        protected set
-
-    var sigunguId: Long? = sigunguId
-        protected set
-
     // 전체 교체 수정. 저장은 변경 감지에 맡긴다(save 호출 없음).
-    fun updateProfile(
-        bio: String,
-        meetingPreference: MeetingPreference,
-        sigunguId: Long?,
-    ) {
+    fun updateProfile(bio: String) {
         this.bio = bio
-        this.meetingPreference = meetingPreference
-        this.sigunguId = sigunguId
     }
 }
