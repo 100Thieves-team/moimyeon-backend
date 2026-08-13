@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T15:34:20.734645079",
+                        "datetime" : "2026-08-13T16:24:14.709544273",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T15:34:20.970867171",
+                        "datetime" : "2026-08-13T16:24:14.900524164",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -672,7 +672,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "2a950434-296f-42cb-ba5a-d67014845af0",
+                          "termsId" : "4619c217-4854-46b6-9bec-4fd685637938",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -680,7 +680,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "63574711-675e-4797-a40d-d3dfb24cc079",
+                          "termsId" : "ac95a39a-5751-4aa4-ae0b-c8fc8b7c7c1d",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1019,12 +1019,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "4d72fe5e-ccd7-4bec-a0fc-1e8b0bf46a1c",
+                        "memberId" : "fa0d7597-dd14-439c-840d-29701d3933b9",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "4d72fe5e-ccd7-4bec-a0fc-1e8b0bf46a1c",
+                          "memberId" : "fa0d7597-dd14-439c-840d-29701d3933b9",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -1341,7 +1341,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-14T15:34:25.07966445",
+                          "startAt" : "2026-08-14T16:24:20.038718463",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1352,7 +1352,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "020973af-7905-4736-bbdf-9d985249602b",
+                        "hostMemberId" : "1f757103-3e03-49fd-85e3-9e82e54a4290",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1656,7 +1656,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "90bcb07c-5475-478a-b4fa-a24324308dfc",
+                        "memberId" : "174e31c1-2b8d-431a-bdab-1690a07362b1",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -2269,18 +2269,18 @@ paths:
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "90d5e7d0-2f3e-4d50-81f0-d3315117d503",
+                    "resumeId" : "e845f0fe-c55b-4d03-9f33-c21f4292eaa1",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "ad951e52-ff35-457f-bd82-205685e69e8b"
+                    "resumeId" : "ee4f36e4-2195-477f-9b50-2a1c519b8efb"
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "9134c976-8a18-4251-8c42-4b6e1150438d",
+                    "resumeId" : "0f5cf6dc-dc22-48e4-ae0f-b5d9eda1b1d4",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -2542,6 +2542,191 @@ paths:
                         "data" : null
                       }
                     }
+  /v1/rooms/{roomId}/question-sets:
+    get:
+      tags:
+      - v1
+      summary: 진행 준비 질문 카드셋 목록 조회
+      description: "CONFIRMED 또는 COMPLETED 룸의 현재 참여자가 확정 시점 참여자별 질문 카드셋을 조회한다(「룸 진\
+        행 준비」 §3, §4.1). 본인 카드셋의 내용은 반환하지 않고 준비 중인 작성자 수만 제공한다."
+      operationId: getQuestionCardSets
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      responses:
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getQuestionCardSets-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getQuestionCardSets-e1502:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1502",
+                        "message" : "질문 카드셋에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-question-sets2052308651"
+              examples:
+                getQuestionCardSets:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "myCardSetPreparerCount" : 2,
+                        "cardSets" : [ {
+                          "target" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000002",
+                            "nickname" : "성실한 사슴 03"
+                          },
+                          "questionCount" : 3,
+                          "followUpQuestionCount" : 5
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}/questions:
+    post:
+      tags:
+      - v1
+      summary: 진행 준비 질문 작성
+      description: CONFIRMED 룸의 현재 참여자가 다른 확정 참여자에게 질문 또는 꼬리질문을 남긴다(「룸 진행 준비」 §4.2).
+        COMPLETED 룸은 읽기 전용이다. 본인이 대상인 원 질문에는 꼬리질문을 남길 수 없으며 E1505로 응답한다.
+      operationId: leavePreparationQuestion
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-roomId-questions-282474051"
+            examples:
+              leavePreparationQuestion-e400-length:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
+                  }
+              leavePreparationQuestion-e1504:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "질문"
+                  }
+              leavePreparationQuestion:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "결제 연동에서 이중 결제를 어떻게 막았나요?"
+                  }
+              leavePreparationQuestion-e400-blank:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : " \t\n"
+                  }
+      responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leavePreparationQuestion-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                leavePreparationQuestion-e400-blank:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leavePreparationQuestion-e1504:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1504",
+                        "message" : "진행이 확정된 방에서만 질문을 준비할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
+              examples:
+                leavePreparationQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "questionId" : 11
+                      },
+                      "error" : null
+                    }
   /v1/members/me/resumes/{resumeId}:
     get:
       tags:
@@ -2762,7 +2947,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "8db54d70-64fb-424e-badc-fd36c881e3c6",
+                          "resumeId" : "c8c29169-f1e1-4d2a-9898-7a07d2e32a5b",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -2875,6 +3060,125 @@ paths:
                         "message" : "최소 진행 인원이라 나갈 수 없습니다.",
                         "data" : null
                       }
+                    }
+  /v1/rooms/{roomId}/question-sets/{targetMemberId}:
+    get:
+      tags:
+      - v1
+      summary: 진행 준비 질문 카드셋 상세 조회
+      description: "CONFIRMED 또는 COMPLETED 룸의 현재 참여자가 확정 시점 참여자별 질문 카드셋을 조회한다(「룸 진\
+        행 준비」 §3, §4.1). 본인 카드셋의 내용은 반환하지 않고 준비 중인 작성자 수만 제공한다. 대상의 제출 이력서 원본은 제공하\
+        지 않고 AI 요약 상태와 내용만 제공한다."
+      operationId: getQuestionCardSet
+      parameters:
+      - name: roomId
+        in: path
+        description: 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      - name: targetMemberId
+        in: path
+        description: 질문 대상 회원 id (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-question-sets-targetMemberId-906553040"
+              examples:
+                getQuestionCardSet:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "target" : {
+                          "memberId" : "00000000-0000-0000-0000-000000000002",
+                          "nickname" : "성실한 사슴 03"
+                        },
+                        "resumeSummary" : {
+                          "status" : "DONE",
+                          "text" : "결제 연동과 배치 처리 경험이 있어요."
+                        },
+                        "questions" : [ {
+                          "questionId" : 11,
+                          "author" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000003",
+                            "nickname" : "든든한 곰 21"
+                          },
+                          "content" : "결제 연동에서 이중 결제를 어떻게 막았나요?",
+                          "source" : "PREPARATION",
+                          "asked" : false,
+                          "followUps" : [ {
+                            "questionId" : 12,
+                            "author" : {
+                              "memberId" : "00000000-0000-0000-0000-000000000003",
+                              "nickname" : "든든한 곰 21"
+                            },
+                            "content" : "멱등 키는 어디에 저장했나요?",
+                            "source" : "PREPARATION",
+                            "asked" : false
+                          } ]
+                        } ]
+                      },
+                      "error" : null
+                    }
+  /v1/rooms/{roomId}/questions/{questionId}:
+    delete:
+      tags:
+      - v1
+      summary: 진행 준비 질문 삭제
+      description: 다른 작성자의 활성 꼬리질문이 달린 원 질문은 삭제하지 않는다.
+      operationId: deletePreparationQuestion
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      - name: questionId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                deletePreparationQuestion-e1508:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1508",
+                        "message" : "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deletePreparationQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
                     }
   /v1/members/me/resumes/{resumeId}/summary-retries:
     post:
@@ -3046,6 +3350,78 @@ paths:
                         }
                       },
                       "error" : null
+                    }
+  /v1/rooms/{roomId}/questions/{questionId}/follow-ups:
+    post:
+      tags:
+      - v1
+      summary: 진행 준비 꼬리질문 작성
+      description: CONFIRMED 룸의 현재 참여자가 다른 확정 참여자에게 질문 또는 꼬리질문을 남긴다(「룸 진행 준비」 §4.2).
+        COMPLETED 룸은 읽기 전용이다. 본인이 대상인 원 질문에는 꼬리질문을 남길 수 없으며 E1505로 응답한다.
+      operationId: leavePreparationFollowUpQuestion
+      parameters:
+      - name: roomId
+        in: path
+        description: 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      - name: questionId
+        in: path
+        description: 원 질문 id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-1317980453"
+            examples:
+              leavePreparationFollowUpQuestion:
+                value: |-
+                  {
+                    "content" : "멱등 키는 어디에 저장했나요?"
+                  }
+              leavePreparationFollowUpQuestion-e1505:
+                value: |-
+                  {
+                    "content" : "꼬리질문"
+                  }
+      responses:
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
+              examples:
+                leavePreparationFollowUpQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "questionId" : 12
+                      },
+                      "error" : null
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leavePreparationFollowUpQuestion-e1505:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1505",
+                        "message" : "질문을 작성하거나 삭제할 권한이 없습니다.",
+                        "data" : null
+                      }
                     }
   /oauth2/authorization/google:
     get:
@@ -3354,6 +3730,114 @@ components:
             postingName:
               type: string
               description: 공고명
+    v1-rooms-roomId-question-sets-targetMemberId-906553040:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - questions
+          type: object
+          properties:
+            questions:
+              type: array
+              description: 원 질문 (안정적인 작성 순)
+              items:
+                required:
+                - asked
+                - content
+                - followUps
+                - questionId
+                - source
+                type: object
+                properties:
+                  followUps:
+                    type: array
+                    description: 꼬리질문 (작성 순)
+                    items:
+                      required:
+                      - asked
+                      - content
+                      - questionId
+                      - source
+                      type: object
+                      properties:
+                        questionId:
+                          type: number
+                          description: 꼬리질문 id
+                        asked:
+                          type: boolean
+                          description: 진행 중 사용 여부
+                        author:
+                          required:
+                          - memberId
+                          - nickname
+                          type: object
+                          properties:
+                            nickname:
+                              type: string
+                              description: 꼬리질문 작성자 닉네임
+                            memberId:
+                              type: string
+                              description: 꼬리질문 작성자 회원 id
+                        source:
+                          type: string
+                          description: 작성 단계 (PREPARATION | IN_PROGRESS)
+                        content:
+                          type: string
+                          description: 꼬리질문 본문
+                  questionId:
+                    type: number
+                    description: 원 질문 id
+                  asked:
+                    type: boolean
+                    description: 진행 중 사용 여부
+                  author:
+                    required:
+                    - memberId
+                    - nickname
+                    type: object
+                    properties:
+                      nickname:
+                        type: string
+                        description: 작성자 닉네임
+                      memberId:
+                        type: string
+                        description: 작성자 회원 id
+                  source:
+                    type: string
+                    description: 작성 단계 (PREPARATION | IN_PROGRESS)
+                  content:
+                    type: string
+                    description: 질문 본문
+            resumeSummary:
+              required:
+              - status
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: AI 요약 내용. DONE이 아니면 null
+                  nullable: true
+                status:
+                  type: string
+                  description: AI 요약 상태 (DONE | PROCESSING | FAILED)
+            target:
+              required:
+              - memberId
+              - nickname
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  description: 질문 대상 닉네임
+                memberId:
+                  type: string
+                  description: 질문 대상 회원 id
     v1-nicknames-availability-1805856748:
       required:
       - result
@@ -3787,6 +4271,18 @@ components:
         data:
           type: string
           description: ExampleBody Data Field
+    v1-rooms-roomId-questions-282474051:
+      required:
+      - content
+      - targetMemberId
+      type: object
+      properties:
+        targetMemberId:
+          type: string
+          description: 질문 대상 회원 id (UUID)
+        content:
+          type: string
+          description: "질문 본문 (공백 불가, 최대 500자)"
     v1-rooms-roomId-1165715694:
       required:
       - result
@@ -4111,6 +4607,22 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
+    v1-rooms-roomId-questions-questionId-follow-ups-36237129:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - questionId
+          type: object
+          properties:
+            questionId:
+              type: number
+              description: 생성된 질문 id
     v1-members-me-profile934225230:
       required:
       - result
@@ -4531,30 +5043,14 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
-    v1-rooms-roomId-applications1651584797:
+    v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
-      - result
+      - content
       type: object
       properties:
-        result:
+        content:
           type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
+          description: "질문 본문 (공백 불가, 최대 500자)"
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -4641,6 +5137,30 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
     v1-rooms1476531183:
       required:
       - result
@@ -4998,6 +5518,50 @@ components:
                       displayName:
                         type: string
                         description: 상위 직군 표시명
+    v1-rooms-roomId-question-sets2052308651:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - cardSets
+          - myCardSetPreparerCount
+          type: object
+          properties:
+            cardSets:
+              type: array
+              description: 본인을 제외한 확정 시점 참여자의 카드셋 요약
+              items:
+                required:
+                - followUpQuestionCount
+                - questionCount
+                type: object
+                properties:
+                  questionCount:
+                    type: number
+                    description: 활성 원 질문 수
+                  followUpQuestionCount:
+                    type: number
+                    description: 활성 꼬리질문 수
+                  target:
+                    required:
+                    - memberId
+                    - nickname
+                    type: object
+                    properties:
+                      nickname:
+                        type: string
+                        description: 질문 대상 닉네임. 탈퇴한 경우 '탈퇴한 회원'
+                      memberId:
+                        type: string
+                        description: 질문 대상 회원 id (UUID)
+            myCardSetPreparerCount:
+              type: number
+              description: 내 카드셋에 활성 질문 또는 꼬리질문을 남긴 참여자 수
     v1-members-me-nickname910352763:
       required:
       - result
