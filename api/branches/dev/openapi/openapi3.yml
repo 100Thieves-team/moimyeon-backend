@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T09:57:56.627075897",
+                        "datetime" : "2026-08-13T10:00:11.741662577",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T09:57:56.850949048",
+                        "datetime" : "2026-08-13T10:00:11.939139901",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "b4187e54-8dd5-4ff8-8f94-9062dbbcf436",
+                          "termsId" : "7ac0884d-1d69-4c84-9729-7b495486a2f5",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "2c3b8b82-a72c-41b7-9bcd-54dc51821a23",
+                          "termsId" : "93ab6781-7e29-4a9c-85f1-40a495469826",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "261abad9-d811-4d40-b51b-66852ba48873",
+                        "memberId" : "d6f4cd25-3d08-4104-a9cd-44b133daae2b",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "261abad9-d811-4d40-b51b-66852ba48873",
+                          "memberId" : "d6f4cd25-3d08-4104-a9cd-44b133daae2b",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1336,7 +1336,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-14T09:58:00.497686599",
+                          "startAt" : "2026-08-14T10:00:16.323462797",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1347,7 +1347,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "4cb4fa77-c927-4783-8c59-59b1796d69af",
+                        "hostMemberId" : "7c240548-aa9e-4369-a523-67259b53f16d",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1659,7 +1659,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "63fcae87-d44b-47dc-ac31-3cd401576ae9",
+                        "memberId" : "f20ba157-3f97-4c5b-9473-05a530b332c7",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -2275,18 +2275,18 @@ paths:
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "0d74d500-c917-483f-8640-002ac418990a",
+                    "resumeId" : "2934f016-0fe5-48fb-8411-2ef22d013e09",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "b376ebee-e17c-4fdd-a939-69f4d3f0ca23"
+                    "resumeId" : "280c44ff-71a8-41dd-9d48-7600d9e3502c"
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "e50c6d81-4c33-40a5-92d4-f67be767eb63",
+                    "resumeId" : "14c3cfe2-1d45-4a05-aa5d-e6baa160027f",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -2768,7 +2768,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "d54c6829-6973-4d81-a0d1-e12a063973fa",
+                          "resumeId" : "ec759702-927f-4dc8-911b-d7477f3251f3",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -2954,7 +2954,9 @@ paths:
       description: "방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록\
         하고 현재 인원을 증가시킨다. 정원에 도달하면 모집 상태가 마감(CLOSED)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도\
         \ 1건만 성공한다(룸 행 잠금). 방장만 처리할 수 있고(E1406), 이미 처리된 신청(E1409)·모집 중이 아닌 방(E1410)·\
-        정원 초과(E1411)는 거부된다."
+        정원 초과(E1411)는 거부된다. 신청자의 참여 슬롯이 이미 차 있으면(참여 중인 룸 3개, 「룸 참여」 §4.1) 참여자로 등록하\
+        지 않고 그 신청을 SLOT_EXCEEDED 로 정리한다. 방장의 요청은 실패하지 않으므로 200 이며, 결과는 status 로 구분\
+        한다."
       operationId: acceptApplication
       parameters:
       - name: roomId
@@ -2975,7 +2977,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-accept1478496507"
+                $ref: "#/components/schemas/v1-rooms-roomId-applications-applicationId-accept-674159690"
               examples:
                 acceptApplication:
                   value: |-
@@ -3150,18 +3152,6 @@ components:
                   name:
                     type: string
                     description: 회사명
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-rooms-roomId-applications-me2061746466:
       required:
       - result
@@ -3235,6 +3225,18 @@ components:
               type: string
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-rooms-roomId-applications-applicationId-reject2120301028:
       type: object
       properties:
@@ -3976,50 +3978,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-    v1-rooms-roomId-applications-applicationId-accept1478496507:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            recruit:
-              required:
-              - current
-              - max
-              - recruitStatus
-              - recruitStatusLabel
-              type: object
-              properties:
-                current:
-                  type: number
-                  description: 수락 반영 후 현재 인원
-                max:
-                  type: number
-                  description: 최대 인원
-                recruitStatus:
-                  type: string
-                  description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
-                recruitStatusLabel:
-                  type: string
-                  description: 모집 상태 표시명
-            applicationId:
-              type: number
-              description: 처리된 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (수락)
-            status:
-              type: string
-              description: 신청 상태 (ACCEPTED)
     v1-members-memberId-profile1061288860:
       required:
       - result
@@ -4350,6 +4308,50 @@ components:
         jobRoleId:
           type: number
           description: "직무 id (필수, /v1/job-roles)"
+    v1-rooms-roomId-applications-applicationId-accept-674159690:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            recruit:
+              required:
+              - current
+              - max
+              - recruitStatus
+              - recruitStatusLabel
+              type: object
+              properties:
+                current:
+                  type: number
+                  description: 수락 반영 후 현재 인원
+                max:
+                  type: number
+                  description: 최대 인원
+                recruitStatus:
+                  type: string
+                  description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                recruitStatusLabel:
+                  type: string
+                  description: 모집 상태 표시명
+            applicationId:
+              type: number
+              description: 처리된 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (수락 | 참여 슬롯 초과)
+            status:
+              type: string
+              description: 신청 상태 (ACCEPTED | SLOT_EXCEEDED)
     v1-companies-companyId-job-postings1890921117:
       required:
       - result
@@ -4462,30 +4464,6 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -4572,6 +4550,30 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
     v1-regions1871099627:
       required:
       - result
