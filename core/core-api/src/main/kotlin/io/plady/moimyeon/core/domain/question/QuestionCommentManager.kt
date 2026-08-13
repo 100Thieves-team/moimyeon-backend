@@ -6,7 +6,6 @@ import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.QuestionCommentEntity
 import io.plady.moimyeon.storage.db.core.QuestionCommentRepository
-import io.plady.moimyeon.storage.db.core.QuestionRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -14,7 +13,7 @@ import java.util.UUID
 
 @Component
 class QuestionCommentManager(
-    private val questionRepository: QuestionRepository,
+    private val targetValidator: QuestionCommentTargetValidator,
     private val questionCommentRepository: QuestionCommentRepository,
 ) {
     @Transactional
@@ -26,7 +25,7 @@ class QuestionCommentManager(
         type: QuestionCommentType,
         content: String,
     ): Long {
-        validateRootQuestion(roomId, targetMemberId, questionId)
+        targetValidator.validate(roomId, targetMemberId, questionId)
         return questionCommentRepository.save(
             QuestionCommentEntity(
                 questionId = questionId,
@@ -46,7 +45,7 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         type: QuestionCommentType,
     ) {
-        validateRootQuestion(roomId, targetMemberId, questionId)
+        targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).toggleType(type)
     }
 
@@ -59,7 +58,7 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         content: String,
     ) {
-        validateRootQuestion(roomId, targetMemberId, questionId)
+        targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).edit(content)
     }
 
@@ -72,21 +71,8 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         deletedAt: LocalDateTime,
     ) {
-        validateRootQuestion(roomId, targetMemberId, questionId)
+        targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).delete(deletedAt)
-    }
-
-    private fun validateRootQuestion(roomId: UUID, targetMemberId: UUID, questionId: Long) {
-        val question = requireFound(
-            questionRepository.findByIdAndDeletedAtIsNull(questionId),
-            CoreErrorType.QUESTION_NOT_FOUND,
-        )
-        requireBusiness(
-            question.roomId == roomId &&
-                question.targetMemberId == targetMemberId &&
-                question.parentQuestionId == null,
-            CoreErrorType.QUESTION_NOT_FOUND,
-        )
     }
 
     private fun getOwnedComment(

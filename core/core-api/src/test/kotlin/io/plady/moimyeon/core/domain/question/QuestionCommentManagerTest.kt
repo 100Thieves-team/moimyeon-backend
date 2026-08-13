@@ -1,17 +1,15 @@
 package io.plady.moimyeon.core.domain.question
 
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.QuestionCommentType
-import io.plady.moimyeon.core.enums.QuestionSource
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.QuestionCommentEntity
 import io.plady.moimyeon.storage.db.core.QuestionCommentRepository
-import io.plady.moimyeon.storage.db.core.QuestionEntity
-import io.plady.moimyeon.storage.db.core.QuestionRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -19,9 +17,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class QuestionCommentManagerTest {
-    private val questionRepository = mockk<QuestionRepository>()
+    private val targetValidator = mockk<QuestionCommentTargetValidator>()
     private val commentRepository = mockk<QuestionCommentRepository>()
-    private val manager = QuestionCommentManager(questionRepository, commentRepository)
+    private val manager = QuestionCommentManager(targetValidator, commentRepository)
 
     private val roomId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -30,7 +28,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `원 질문에 클라이언트가 보낸 MEMO 댓글을 기록한다`() {
         val commentSlot = slot<QuestionCommentEntity>()
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.save(capture(commentSlot)) } returns mockk {
             every { id } returns 2L
         }
@@ -50,10 +48,10 @@ class QuestionCommentManagerTest {
     }
 
     @Test
-    fun `꼬리질문에는 댓글을 기록하지 않고 E1507 을 던진다`() {
+    fun `댓글 대상 검증에 실패하면 댓글을 기록하지 않는다`() {
         every {
-            questionRepository.findByIdAndDeletedAtIsNull(1L)
-        } returns question(parentQuestionId = 9L)
+            targetValidator.validate(roomId, targetMemberId, 1L)
+        } throws CoreException(CoreErrorType.QUESTION_NOT_FOUND)
 
         assertFails(CoreErrorType.QUESTION_NOT_FOUND) {
             manager.record(
@@ -72,7 +70,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `MEMO에서 좋아요를 누르면 GOOD_POINT가 된다`() {
         val comment = comment()
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         manager.toggleType(
@@ -90,7 +88,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `선택된 좋아요를 다시 누르면 MEMO로 돌아간다`() {
         val comment = comment(type = QuestionCommentType.GOOD_POINT)
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         manager.toggleType(
@@ -108,7 +106,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `선택된 싫어요를 다시 누르면 MEMO로 돌아간다`() {
         val comment = comment(type = QuestionCommentType.IMPROVEMENT_POINT)
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         manager.toggleType(
@@ -126,7 +124,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `좋아요 상태에서 싫어요를 누르면 IMPROVEMENT_POINT가 된다`() {
         val comment = comment(type = QuestionCommentType.GOOD_POINT)
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         manager.toggleType(
@@ -144,7 +142,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `작성자는 댓글 본문을 변경하고 삭제한다`() {
         val comment = comment()
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         manager.edit(roomId, targetMemberId, 1L, 2L, authorMemberId, "수정한 댓글")
@@ -164,7 +162,7 @@ class QuestionCommentManagerTest {
     @Test
     fun `다른 작성자의 댓글은 변경하지 않고 E1511 을 던진다`() {
         val comment = comment(authorMemberId = UUID.randomUUID())
-        every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
+        givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         assertFails(CoreErrorType.QUESTION_COMMENT_NOT_FOUND) {
@@ -174,15 +172,8 @@ class QuestionCommentManagerTest {
         assertThat(comment.content).isEqualTo("원문")
     }
 
-    private fun question(parentQuestionId: Long? = null): QuestionEntity {
-        return QuestionEntity(
-            roomId = roomId,
-            targetMemberId = targetMemberId,
-            authorMemberId = authorMemberId,
-            parentQuestionId = parentQuestionId,
-            content = "질문",
-            source = QuestionSource.PREPARATION,
-        )
+    private fun givenValidTarget() {
+        justRun { targetValidator.validate(roomId, targetMemberId, 1L) }
     }
 
     private fun comment(
