@@ -503,6 +503,21 @@ class RoomManagerTest {
         verify(exactly = 0) { roomRepository.save(any()) }
     }
 
+    // Room.create 도 같은 규칙을 보지만 그쪽은 쓰기 트랜잭션 **밖**이다(RoomService).
+    // 요청을 받고 커밋하기까지 사이에 일정이 과거가 되는 경우가 완료 조건이라, 판정이 경계 안에도 있어야 한다.
+    // 밖의 검증만 남기면 이 테스트만 빨간불이 된다 — 다른 테스트로는 안팎을 구분할 수 없다.
+    @Test
+    fun `쓰기 트랜잭션 안에서 일정이 과거면 E1407 로 거부한다`() {
+        givenNoDuplicate()
+        givenActiveHostedRoomCount(0)
+
+        assertThatThrownBy { manager.create(pastRoom(), hostId, resumeId, resumeFile()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_START_AT_NOT_FUTURE)
+            }
+        verify(exactly = 0) { roomRepository.save(any()) }
+    }
+
     private fun givenNoDuplicate() {
         every { roomRepository.findActiveHostedRooms(hostId, any(), any(), any(), any()) } returns emptyList()
     }
@@ -532,6 +547,23 @@ class RoomManagerTest {
         schedule = RoomSchedule(startAt = startAt, durationMinutes = 60),
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
         now = now,
+    )
+
+    // Room.create 는 과거 일정으로는 만들어지지 않는다. 트랜잭션 밖에서 통과한 뒤 일정이 지나간 상태를
+    // 재현해야 해서 영속 룸 복원 경로로 만든다.
+    private fun pastRoom(): Room = Room.reconstitute(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(startAt = now.minusMinutes(1), durationMinutes = 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        status = RoomStatus.RECRUITING,
     )
 
     private fun resumeFile() = ResumeFile(

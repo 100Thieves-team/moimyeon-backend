@@ -68,6 +68,10 @@ class RoomManager(
 
         val now = LocalDateTime.now(clock)
 
+        // Room.create 가 트랜잭션 밖에서 이미 본 규칙을 여기서 다시 본다. 요청을 받고 커밋하기까지
+        // 사이에 일정이 과거가 되는 것이 완료 조건이라, 판정이 커밋 경계 안에 있어야 확정이다.
+        requireBusiness(room.schedule.startAt.isAfter(now), CoreErrorType.ROOM_START_AT_NOT_FUTURE)
+
         roomRepository.save(RoomMapper.toEntity(room))
         participationRepository.save(
             ParticipationEntity(
