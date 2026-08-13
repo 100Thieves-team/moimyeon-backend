@@ -17,8 +17,8 @@ data class RoomApplicationResponse(
     val applicant: ApplicantResponse,
     val note: String, // 전달 사항(미입력 시 빈 문자열). 방장 외 비공개
     val aiSummary: ApplicationAiSummaryResponse,
-    val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED | ROOM_CONFIRMED
-    val statusLabel: String, // 대기 | 수락 | 반려 | 철회 | 룸 취소 | 진행 확정
+    val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED
+    val statusLabel: String, // 대기 | 수락 | 반려 | 철회 | 룸 취소 | 진행 확정 | 참여 슬롯 초과
     @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     val appliedAt: LocalDateTime,
 )
@@ -86,4 +86,5 @@ private fun RoomApplicationStatus.label(): String = when (this) {
     RoomApplicationStatus.WITHDRAWN -> "철회"
     RoomApplicationStatus.ROOM_CANCELED -> "룸 취소"
     RoomApplicationStatus.ROOM_CONFIRMED -> "진행 확정"
+    RoomApplicationStatus.SLOT_EXCEEDED -> "참여 슬롯 초과"
 }
