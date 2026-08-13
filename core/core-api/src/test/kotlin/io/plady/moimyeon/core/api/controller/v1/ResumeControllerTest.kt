@@ -28,6 +28,8 @@ class ResumeControllerTest : RestDocsTest() {
     private val memberId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val principal = Principal { memberId.toString() }
     private val defaultResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000101")
+    private val recentlyUsedResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000102")
+    private val lastUsedRoomId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000201")
     private val processingResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000103")
     private val deletedResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000104")
     private val failedResumeId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000105")
@@ -36,7 +38,8 @@ class ResumeControllerTest : RestDocsTest() {
     private val resumesSummary = "보관 이력서 목록 조회"
     private val resumesDescription =
         "인증 회원의 보관 이력서를 마이페이지·룸 생성·참가 신청에서 함께 사용할 수 있는 동일한 자원 형태로 반환한다. " +
-            "삭제한 이력서는 목록에서 제외되며, 기본 이력서를 먼저 보여준다. 최대 보관 개수는 최신 PRD 기준 10개다. " +
+            "삭제한 이력서는 목록에서 제외하고 최근 사용순으로 보여준다. 기본 이력서 여부는 최근 사용과 별개로 반환한다. " +
+            "최대 보관 개수는 최신 PRD 기준 10개다. " +
             "신청 화면에서는 선택지를 열 때 조회하며 개별 AI 요약 상태를 확인하는 폴링에는 단건 조회 API를 사용한다. " +
             "AI 요약은 DONE·PROCESSING·FAILED 상태를 가지며 준비 중이면 text가 null이다. PROCESSING은 시작 후 최대 1분이며, " +
             "시간이 지나면 AI를 자동 재호출하지 않고 FAILED로 확정한다. 인증 정보가 없으면 401(E1102)로 응답한다. " +
@@ -74,17 +77,24 @@ class ResumeControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `보관 이력서 목록은 삭제한 항목을 제외하고 AI 요약 완료와 준비 중 상태를 함께 반환한다`() {
+    fun `보관 이력서 목록은 삭제한 항목을 제외하고 최근 사용 이력과 AI 요약 상태를 함께 반환한다`() {
         mockMvc.perform(get("/v1/members/me/resumes").principal(principal))
             .andExpect(status().isOk)
             .andExpect { result ->
-                assertThat(result.response.contentAsString)
+                val content = result.response.contentAsString
+                assertThat(content)
                     .contains("\"maxCount\":10")
                     .contains("\"resumeId\":\"$defaultResumeId\"")
+                    .contains("\"resumeId\":\"$recentlyUsedResumeId\"")
                     .contains("\"isDefault\":true")
+                    .contains("\"isDefault\":false")
+                    .contains("\"lastUsed\":{\"roomId\":\"$lastUsedRoomId\",\"roomTitle\":\"달빛페이 백엔드 면접\",\"usedAt\":\"2026-07-12T14:00:00\"}")
+                    .contains("\"lastUsed\":null")
                     .contains("\"status\":\"DONE\"")
                     .contains("\"status\":\"PROCESSING\",\"text\":null")
                     .doesNotContain(deletedResumeId.toString())
+                assertThat(content.indexOf(recentlyUsedResumeId.toString()))
+                    .isLessThan(content.indexOf(defaultResumeId.toString()))
             }
             .andDo(
                 documentApi(
@@ -94,8 +104,17 @@ class ResumeControllerTest : RestDocsTest() {
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.maxCount").type(JsonFieldType.NUMBER).description("최대 보관 가능 개수 (10)"),
-                        fieldWithPath("data.resumes").type(JsonFieldType.ARRAY).description("삭제되지 않은 보관 이력서 목록 (기본 이력서 우선)"),
+                        fieldWithPath("data.resumes").type(JsonFieldType.ARRAY)
+                            .description("삭제되지 않은 보관 이력서 목록 (최근 사용 이력서 우선)"),
                         *resumeFields("data.resumes[]").toTypedArray(),
+                        fieldWithPath("data.resumes[].lastUsed").type(JsonFieldType.OBJECT).optional()
+                            .description("최근 사용 이력 (한 번도 사용하지 않았으면 null)"),
+                        fieldWithPath("data.resumes[].lastUsed.roomId").type(JsonFieldType.STRING).optional()
+                            .description("최근 사용한 룸 식별자 (UUID)"),
+                        fieldWithPath("data.resumes[].lastUsed.roomTitle").type(JsonFieldType.STRING).optional()
+                            .description("최근 사용한 룸 제목 (삭제된 룸이면 '삭제된 면접')"),
+                        fieldWithPath("data.resumes[].lastUsed.usedAt").type(JsonFieldType.STRING).optional()
+                            .description("최근 사용 시각 (yyyy-MM-ddTHH:mm:ss)"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
@@ -491,7 +510,8 @@ class ResumeControllerTest : RestDocsTest() {
             "AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면 단건 조회를 폴링하고 최대 1분 뒤 DONE·FAILED에서 중단",
         ),
         fieldWithPath("$path.aiSummary.text").type(JsonFieldType.STRING).optional().description("AI 요약 본문 (준비 중·실패면 null)"),
-        fieldWithPath("$path.isDefault").type(JsonFieldType.BOOLEAN).description("기본 이력서 여부"),
+        fieldWithPath("$path.isDefault").type(JsonFieldType.BOOLEAN)
+            .description("회원이 지정한 기본 이력서 여부 (최근 사용 여부와 별개)"),
         fieldWithPath("$path.registeredAt").type(JsonFieldType.STRING).description("등록 시각 (yyyy-MM-ddTHH:mm:ss)"),
     )
 }
