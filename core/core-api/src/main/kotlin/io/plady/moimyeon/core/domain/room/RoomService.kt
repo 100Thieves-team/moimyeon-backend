@@ -66,6 +66,11 @@ class RoomService(
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.
     fun getRoom(roomId: UUID): RoomDetail = roomFinder.getDetail(roomId)
 
+    // 중복 생성 제한 조회(읽기, §4.7). 생성 화면이 경고를 띄울지 판단하는 데 쓴다.
+    fun getRoomCreationLimit(memberId: UUID, jobPostingId: Long, jobRoleId: Long): RoomCreationLimit {
+        return roomFinder.getCreationLimit(memberId, jobPostingId, jobRoleId)
+    }
+
     fun getRoomSummaries(roomIds: Collection<UUID>): List<RoomSummary> = roomFinder.getSummaries(roomIds)
 
     fun getRoomSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus = roomFinder.getSummariesByStatus(roomIds)

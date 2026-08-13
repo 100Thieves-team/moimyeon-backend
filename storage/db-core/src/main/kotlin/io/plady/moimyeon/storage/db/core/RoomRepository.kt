@@ -2,6 +2,7 @@ package io.plady.moimyeon.storage.db.core
 
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.MeetingType
+import io.plady.moimyeon.core.enums.RoomStatus
 import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -19,6 +20,32 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RoomEntity r where r.id = :id")
     fun findByIdForUpdate(@Param("id") id: UUID): RoomEntity?
+
+    // 같은 (방장, 공고, 직무) 활성 룸 개수(MOI-330 §4.7). 방장은 room 이 아니라 participation 에 있어
+    // (room 에 방장 컬럼이 없다) 조인이 된다. 구동은 ix_participation_member_id, room 은 PK 조인이다.
+    //
+    // 활성 상태 집합을 파라미터로 받는다 — 그 정의는 ActiveRoomLimit 이 소유해야 한다.
+    // 쿼리 안에 IN ('RECRUITING', ...) 으로 박으면 정책이 storage 에 숨어 다음 사람이 못 찾는다.
+    @Query(
+        """
+        SELECT COUNT(r) FROM RoomEntity r, ParticipationEntity p
+        WHERE p.roomId = r.id
+          AND p.memberId = :hostMemberId
+          AND p.participationRole = io.plady.moimyeon.core.enums.ParticipationRole.HOST
+          AND p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+          AND p.deletedAt IS NULL
+          AND r.jobPostingId = :jobPostingId
+          AND r.jobRoleId = :jobRoleId
+          AND r.status IN :activeStatuses
+          AND r.deletedAt IS NULL
+        """,
+    )
+    fun countActiveHostedRooms(
+        @Param("hostMemberId") hostMemberId: UUID,
+        @Param("jobPostingId") jobPostingId: Long,
+        @Param("jobRoleId") jobRoleId: Long,
+        @Param("activeStatuses") activeStatuses: Collection<RoomStatus>,
+    ): Long
 
     // 탐색 목록 — 일정 빠른 순(MOI-383 §4.3). 정렬 방향이 달라 ORDER BY 를 파라미터로 줄 수 없으므로
     // 최근 생성순과 쿼리를 따로 둔다. 기본 제외 규칙과 필터 절은 세 쿼리가 글자 그대로 같아야 한다.

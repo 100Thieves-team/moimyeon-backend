@@ -103,6 +103,14 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 같은 공고·직무로 이미 활성 룸을 셋 들고 있다(「룸 생성」 §4.7). 1~2개는 경고만 하고 통과시킨다.
+    ACTIVE_ROOM_LIMIT_EXCEEDED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1427,
+        "같은 공고와 직무로 만든 진행 예정인 룸이 3개라 더 만들 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,
