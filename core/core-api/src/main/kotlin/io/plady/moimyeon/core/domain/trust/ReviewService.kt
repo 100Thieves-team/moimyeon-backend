@@ -13,7 +13,6 @@ class ReviewService(
     private val receivedReviewFinder: ReceivedReviewFinder,
 ) {
     fun submit(command: ReviewSubmissionCommand): Long {
-        eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
         return submissionManager.submit(command)
     }
 

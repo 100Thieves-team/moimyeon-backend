@@ -66,9 +66,10 @@ class MySqlSchemaValidationIT(
     }
 
     @Test
-    fun `유저 후기 스키마에는 삭제된 별점과 재참여 여부가 없다`() {
+    fun `레거시 후기 컬럼은 rolling deployment 호환 상태로 유지한다`() {
         assertThat(columnNamesOf("review"))
-            .doesNotContain("rating", "meet_again")
+            .contains("rating", "meet_again")
+        assertThat(columnOf("review", "rating", "COLUMN_DEFAULT")).isEqualTo("0")
     }
 
     @Test

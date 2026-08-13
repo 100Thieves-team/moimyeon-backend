@@ -7,8 +7,12 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.AttendanceEntity
+import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ReviewEntity
 import io.plady.moimyeon.storage.db.core.ReviewRepository
+import io.plady.moimyeon.storage.db.core.RoomEntity
+import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -23,8 +27,17 @@ import java.util.UUID
 
 class ReviewSubmissionManagerTest {
     private val reviewRepository = mockk<ReviewRepository>()
+    private val roomRepository = mockk<RoomRepository>()
+    private val attendanceRepository = mockk<AttendanceRepository>()
+    private val eligibilityValidator = mockk<ReviewEligibilityValidator>()
     private val clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneOffset.UTC)
-    private val manager = ReviewSubmissionManager(reviewRepository, clock)
+    private val manager = ReviewSubmissionManager(
+        reviewRepository,
+        roomRepository,
+        attendanceRepository,
+        eligibilityValidator,
+        clock,
+    )
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -38,6 +51,16 @@ class ReviewSubmissionManagerTest {
 
     @BeforeEach
     fun setUp() {
+        every { roomRepository.findByIdForUpdate(roomId) } returns mockk<RoomEntity> {
+            every { isActive() } returns true
+        }
+        every {
+            attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
+        } returns mockk<AttendanceEntity>()
+        every {
+            attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
+        } returns mockk<AttendanceEntity>()
+        every { eligibilityValidator.validate(roomId, authorMemberId, targetMemberId) } returns Unit
         every {
             reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
                 roomId,
@@ -48,7 +71,7 @@ class ReviewSubmissionManagerTest {
     }
 
     @Test
-    fun `완료 룸의 출석자가 다른 출석자에게 태그와 텍스트 후기를 제출한다`() {
+    fun `룸 행을 잠근 뒤 최신 자격을 확인하고 태그와 텍스트 후기를 제출한다`() {
         val reviewSlot = slot<ReviewEntity>()
         val savedReview = mockk<ReviewEntity> { every { id } returns 1L }
         every { reviewRepository.saveAndFlush(capture(reviewSlot)) } returns savedReview
@@ -63,11 +86,29 @@ class ReviewSubmissionManagerTest {
         assertThat(reviewSlot.captured.content).isEqualTo(command.content)
         assertThat(reviewSlot.captured.visibleAt).isEqualTo(LocalDateTime.of(2026, 8, 14, 6, 0))
         verifyOrder {
+            roomRepository.findByIdForUpdate(roomId)
+            attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
+            attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
+            eligibilityValidator.validate(roomId, authorMemberId, targetMemberId)
             reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
                 roomId,
                 authorMemberId,
                 targetMemberId,
             )
+            reviewRepository.saveAndFlush(any())
+        }
+    }
+
+    @Test
+    fun `잠금 뒤 최신 자격 확인이 실패하면 후기를 저장하지 않는다`() {
+        every {
+            eligibilityValidator.validate(roomId, authorMemberId, targetMemberId)
+        } throws CoreException(CoreErrorType.REVIEW_TARGET_NOT_ATTENDED)
+
+        assertSubmissionFails(CoreErrorType.REVIEW_TARGET_NOT_ATTENDED)
+
+        verify(exactly = 0) {
+            reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(any(), any(), any())
             reviewRepository.saveAndFlush(any())
         }
     }

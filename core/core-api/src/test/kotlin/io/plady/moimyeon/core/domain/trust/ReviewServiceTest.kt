@@ -41,7 +41,6 @@ class ReviewServiceTest {
             tags = tags.toSet(),
             content = "꼬리질문이 날카로워서 실전처럼 연습할 수 있었어요.",
         )
-        givenEligible(command)
         every { submissionManager.submit(command) } returns 1L
 
         val reviewId = service.submit(command)
@@ -54,7 +53,6 @@ class ReviewServiceTest {
     @Test
     fun `태그와 텍스트가 모두 없어도 빈 후기 제출로 기록한다`() {
         val command = command()
-        givenEligible(command)
         every { submissionManager.submit(command) } returns 1L
 
         val reviewId = service.submit(command)
@@ -81,17 +79,13 @@ class ReviewServiceTest {
     @Test
     fun `자기 자신에게 후기를 제출하지 않는다`() {
         val selfCommand = command(targetMemberId = authorMemberId)
-        every {
-            eligibilityValidator.validate(roomId, authorMemberId, authorMemberId)
-        } throws
-            CoreException(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
+        every { submissionManager.submit(selfCommand) } throws CoreException(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
 
         assertThatThrownBy {
             service.submit(selfCommand)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
         }
-        verify(exactly = 0) { submissionManager.submit(any()) }
     }
 
     @Test
@@ -227,7 +221,6 @@ class ReviewServiceTest {
     fun `삭제한 뒤에는 같은 룸의 같은 대상자에게 후기를 다시 제출할 수 있다`() {
         val submission = command()
         every { reviewEditor.delete(authorMemberId, 1L) } just Runs
-        givenEligible(submission)
         every { submissionManager.submit(submission) } returns 2L
 
         service.delete(authorMemberId, 1L)
@@ -254,7 +247,6 @@ class ReviewServiceTest {
         val skip = skipCommand()
         val submission = command()
         givenEligible(skip)
-        givenEligible(submission)
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(submission) } returns 1L
 
@@ -272,7 +264,6 @@ class ReviewServiceTest {
         val skip = skipCommand()
         val remainingSubmission = command(remainingTargetMemberId)
         givenEligible(skip)
-        givenEligible(remainingSubmission)
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(remainingSubmission) } returns 1L
 
@@ -362,7 +353,6 @@ class ReviewServiceTest {
     }
 
     private fun assertSubmissionSucceeds() {
-        givenEligible(command())
         every { submissionManager.submit(command()) } returns 1L
 
         val reviewId = service.submit(command())
@@ -371,7 +361,6 @@ class ReviewServiceTest {
     }
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {
-        givenEligible(command())
         every { submissionManager.submit(command()) } throws CoreException(errorType)
 
         assertThatThrownBy {
@@ -383,21 +372,12 @@ class ReviewServiceTest {
 
     private fun assertEligibilityFails(errorType: CoreErrorType) {
         val command = command()
-        every {
-            eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
-        } throws CoreException(errorType)
+        every { submissionManager.submit(command) } throws CoreException(errorType)
 
         assertThatThrownBy { service.submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
-        verify(exactly = 0) { submissionManager.submit(any()) }
-    }
-
-    private fun givenEligible(command: ReviewSubmissionCommand) {
-        every {
-            eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
-        } just Runs
     }
 
     private fun givenEligible(command: ReviewSkipCommand) {

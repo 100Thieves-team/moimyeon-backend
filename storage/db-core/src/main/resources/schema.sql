@@ -811,7 +811,10 @@ CREATE TABLE review (
     room_id          BINARY(16) NOT NULL,
     author_member_id BINARY(16) NOT NULL,
     target_member_id BINARY(16) NOT NULL,
+    -- rolling deployment 호환용 레거시 컬럼. 구 core-api 태스크 종료 후 별도 contract migration으로 제거한다.
+    rating           SMALLINT   NOT NULL DEFAULT 0,
     content          TEXT       NULL,
+    meet_again       BOOLEAN    NULL,
     visible_at       DATETIME(6) NOT NULL,
     hidden_at        DATETIME(6) NULL,
     reported_at      DATETIME(6) NULL,
