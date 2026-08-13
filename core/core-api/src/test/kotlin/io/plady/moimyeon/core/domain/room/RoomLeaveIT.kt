@@ -20,7 +20,6 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
-import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -140,14 +139,13 @@ class RoomLeaveIT(
 
     // 확정 명단은 left_at 과 확정 시각의 대소로 갈린다. 나가기가 left_at 을 안 쓰면
     // 확정 후 이탈자가 명단에서 사라져 이력서 원본 권한·후기 대상이 조용히 틀어진다.
-    //
-    // 확정을 roomManager.confirm 으로 만들지 않고 이력을 직접 심는다 — DATETIME 이 초 단위라
-    // 같은 초에 일어난 확정과 이탈은 대소를 가릴 수 없다. 시각을 벌려야 판정 자체를 볼 수 있다.
+    // 확정과 이탈을 실제 흐름 그대로 잇는다 — 같은 초 안에 일어나므로 시각 정밀도가 곧 판정이다(MOI-428).
     @Test
     fun `확정 후 이탈자는 확정 참여자 판정에 걸린다`() {
         seedRoom()
         val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
-        recordConfirmation(occurredAt = createdAt.plusDays(1))
+        seedParticipant(joinedAt = createdAt.plusHours(2))
+        roomManager.confirm(roomId, hostMemberId)
 
         roomLeaveManager.leave(roomId, participant)
 
@@ -164,17 +162,6 @@ class RoomLeaveIT(
         roomManager.confirm(roomId, hostMemberId)
 
         assertThat(participationRepository.existsAtRoomConfirmation(roomId, leaver)).isFalse()
-    }
-
-    private fun recordConfirmation(occurredAt: LocalDateTime) {
-        roomStatusLogRepository.save(
-            RoomStatusLogEntity(
-                roomId = roomId,
-                transitionType = RoomStatus.CONFIRMED,
-                handlerMemberId = hostMemberId,
-                occurredAt = occurredAt,
-            ),
-        )
     }
 
     private fun rows() = participationRepository.findAll().filter { it.roomId == roomId }

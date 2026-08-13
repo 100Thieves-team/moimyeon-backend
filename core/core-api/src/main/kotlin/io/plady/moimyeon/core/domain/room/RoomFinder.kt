@@ -3,12 +3,14 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component
@@ -22,9 +24,59 @@ class RoomFinder(
     //
     // 공고·직무 참조가 실재하는지는 보지 않는다 — 없는 id 면 0개로 답한다.
     // 여기서 404 를 내면 화면이 경고 대신 에러를 띄우고, 참조 검증은 어차피 생성 시점에 한다.
+    //
+    // ⚠️ 아래 ACTIVE_ROOM_STATUSES(MOI-436, 면접 현황 화면의 "진행 예정" 묶음)와 값이 같지만
+    // 지금은 별개로 둔다. 한쪽은 생성 한도 정책이고 한쪽은 표시 묶음이라 갈릴 수 있다.
+    // 합칠지는 MOI-330 PR 리뷰에서 정한다.
     fun getCreationLimit(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): RoomCreationLimit {
         return RoomCreationLimit.of(
             roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES),
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        return readSummaries(roomIds)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus {
+        val summaries = readSummaries(roomIds)
+        return RoomSummariesByStatus(
+            active = summaries
+                .filter { it.room.status in ACTIVE_ROOM_STATUSES }
+                .sortedWith(compareBy<RoomSummary> { it.room.schedule.startAt }.thenBy { it.room.id }),
+            completed = summaries
+                .filter { it.room.status == RoomStatus.COMPLETED }
+                .sortedWith(
+                    compareByDescending<RoomSummary> { it.room.schedule.startAt }
+                        .thenByDescending { it.room.id },
+                ),
+        )
+    }
+
+    private fun readSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        if (roomIds.isEmpty()) return emptyList()
+
+        val roomsById = roomRepository.findByIdInAndDeletedAtIsNull(roomIds).associateBy { it.id }
+        val participantsByRoomId = participationRepository.countActiveByRoomIds(roomIds)
+            .associate { it.roomId to Math.toIntExact(it.count) }
+
+        return roomIds.distinct().mapNotNull { roomId ->
+            roomsById[roomId]?.let { room ->
+                RoomSummary(
+                    room = RoomMapper.toDomain(room),
+                    participantCount = participantsByRoomId[roomId] ?: 0,
+                )
+            }
+        }
+    }
+
+    private companion object {
+        val ACTIVE_ROOM_STATUSES = setOf(
+            RoomStatus.RECRUITING,
+            RoomStatus.CONFIRMED,
+            RoomStatus.IN_PROGRESS,
         )
     }
 

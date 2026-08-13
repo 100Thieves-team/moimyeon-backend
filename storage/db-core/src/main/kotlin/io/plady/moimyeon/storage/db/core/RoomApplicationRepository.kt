@@ -11,6 +11,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long> {
+    fun findByApplicantMemberIdAndStatusAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): List<RoomApplicationEntity>
+
     fun findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
         roomId: UUID,
         applicantMemberId: UUID,

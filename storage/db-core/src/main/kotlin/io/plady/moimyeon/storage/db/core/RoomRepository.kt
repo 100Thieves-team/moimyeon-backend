@@ -13,6 +13,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface RoomRepository : JpaRepository<RoomEntity, UUID> {
+    fun findByIdInAndDeletedAtIsNull(ids: Collection<UUID>): List<RoomEntity>
+
     // 수락 시 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한다(「룸 참여」 §4.4 마지막 자리 1건만 성공).
     // 잠금을 잡은 뒤 현재 인원을 세고 정원을 확정하므로, 경쟁하는 수락 트랜잭션은 순서대로만 통과한다.
     @Lock(LockModeType.PESSIMISTIC_WRITE)

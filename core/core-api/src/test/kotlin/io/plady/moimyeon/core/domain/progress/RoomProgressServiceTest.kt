@@ -161,7 +161,7 @@ class RoomProgressServiceTest {
             accessValidator.validateAttendanceViewer(roomId, outsiderMemberId)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
         every {
-            accessValidator.validateRailViewer(roomId, outsiderMemberId)
+            accessValidator.validateInProgressParticipant(roomId, outsiderMemberId)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertProgressFails(CoreErrorType.ROOM_PROGRESS_FORBIDDEN) {
@@ -177,7 +177,7 @@ class RoomProgressServiceTest {
 
     @Test
     fun `참여자는 예상 시각과 소요 시간 없이 오프닝 라운드 클로징 블록 목록을 조회한다`() {
-        justRun { accessValidator.validateRailViewer(roomId, participant1Id) }
+        justRun { accessValidator.validateInProgressParticipant(roomId, participant1Id) }
         every { participationFinder.getConfirmedParticipantIds(roomId) } returns confirmedParticipantIds
 
         val result = service.getRail(participant1Id, roomId)
@@ -187,7 +187,7 @@ class RoomProgressServiceTest {
         assertThat(result.blocks.filterIsInstance<ProgressBlock.Round>().map { it.targetMemberId })
             .containsExactlyElementsOf(confirmedParticipantIds)
         verifyOrder {
-            accessValidator.validateRailViewer(roomId, participant1Id)
+            accessValidator.validateInProgressParticipant(roomId, participant1Id)
             participationFinder.getConfirmedParticipantIds(roomId)
         }
     }

@@ -110,10 +110,28 @@ class RoomApplicationSubmissionServiceTest {
         )
         every { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
 
-        val result = service.getMyApplication(applicantMemberId, roomId)
+        val result = service.getLatestApplication(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(application)
         verify(exactly = 1) { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) }
+    }
+
+    @Test
+    fun `신청자는 처리 대기 중인 참가 신청을 최근 신청 순으로 조회한다`() {
+        val applications = listOf(
+            PendingRoomApplication(
+                id = 1L,
+                roomId = roomId,
+                resumeOriginalName = "backend.pdf",
+                appliedAt = appliedAt,
+            ),
+        )
+        every { roomApplicationSubmissionFinder.getPendingByApplicant(applicantMemberId) } returns applications
+
+        val result = service.getPendingApplications(applicantMemberId)
+
+        assertThat(result).containsExactlyElementsOf(applications)
+        verify(exactly = 1) { roomApplicationSubmissionFinder.getPendingByApplicant(applicantMemberId) }
     }
 
     @Test
