@@ -12,12 +12,28 @@ class RoomProgressReader(
 ) {
     fun getAttendance(roomId: UUID, memberId: UUID): Attendance {
         val attendance = requireFound(
-            attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId),
+            findAttendance(roomId, memberId),
             CoreErrorType.ROOM_PROGRESS_ATTENDANCE_NOT_FOUND,
         )
+        return attendance
+    }
+
+    fun findAttendance(roomId: UUID, memberId: UUID): Attendance? {
+        val attendance = attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
+            ?: return null
         return Attendance(
             memberId = attendance.memberId,
             status = attendance.status,
         )
+    }
+
+    fun getAttendances(roomId: UUID): List<Attendance> {
+        return attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId)
+            .map { attendance ->
+                Attendance(
+                    memberId = attendance.memberId,
+                    status = attendance.status,
+                )
+            }
     }
 }

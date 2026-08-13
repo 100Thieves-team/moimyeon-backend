@@ -65,6 +65,24 @@ class MySqlSchemaValidationIT(
             .doesNotContain("voter_member_id", "deleted_at", "_active_check")
     }
 
+    @Test
+    fun `레거시 후기 컬럼은 rolling deployment 호환 상태로 유지한다`() {
+        assertThat(columnNamesOf("review"))
+            .contains("rating", "meet_again")
+        assertThat(columnOf("review", "rating", "COLUMN_DEFAULT")).isEqualTo("0")
+    }
+
+    @Test
+    fun `후기 건너뛰기는 수정되지 않는 대상별 기록으로 저장한다`() {
+        assertThat(columnNamesOf("review_skip")).containsExactly(
+            "id",
+            "room_id",
+            "author_member_id",
+            "target_member_id",
+            "created_at",
+        )
+    }
+
     private fun secondPrecisionColumns(): List<String> = dataSource.connection.use { connection ->
         connection.prepareStatement(
             """

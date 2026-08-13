@@ -112,7 +112,6 @@ class RoomReviewFinderIT(
                 roomId = roomId,
                 authorMemberId = memberId,
                 targetMemberId = targetMemberId,
-                rating = 5,
                 visibleAt = LocalDateTime.of(2026, 8, 10, 22, 0),
                 tags = listOf("좋은 질문을 해요"),
             ),

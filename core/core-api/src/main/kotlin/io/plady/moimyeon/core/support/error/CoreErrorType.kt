@@ -287,4 +287,53 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "최종 피드백 카드를 찾을 수 없습니다.",
         LogLevel.WARN,
     ),
+
+    REVIEW_NOT_AVAILABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2001,
+        "완료된 룸에서만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_AUTHOR_NOT_ATTENDED(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E2002,
+        "출석한 참여자만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_TARGET_NOT_ATTENDED(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E2003,
+        "출석한 참여자에게만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_SELF_NOT_ALLOWED(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E2004,
+        "자기 자신에게 후기를 작성할 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_DUPLICATED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2005,
+        "이미 후기를 작성한 참여자입니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E2006,
+        "수정하거나 삭제할 후기를 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E2007,
+        "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_EDIT_WINDOW_CLOSED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2008,
+        "공개 기준 시각이 지난 후기는 수정하거나 삭제할 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
