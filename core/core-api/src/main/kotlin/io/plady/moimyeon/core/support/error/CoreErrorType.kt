@@ -109,7 +109,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     PARTICIPATION_SLOT_EXCEEDED(
         HttpStatus.CONFLICT,
         ErrorCode.E1425,
-        "참여 중인 룸이 3개라 더 신청할 수 없습니다.",
+        "참여 중인 룸이 3개라 새 룸에 참여할 수 없습니다.",
         LogLevel.WARN,
     ),
 

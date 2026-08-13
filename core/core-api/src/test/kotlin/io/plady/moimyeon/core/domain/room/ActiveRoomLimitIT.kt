@@ -7,7 +7,6 @@ import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
-import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -26,6 +25,10 @@ import java.util.UUID
 // 같은 (방장, 공고, 직무) 활성 룸 3개 제한(MOI-330 F1~F3).
 // 판정이 쓰기 트랜잭션 안에 있는지도 함께 본다 — 밖에 있으면 거부된 요청의 앞선 쓰기가 남는다.
 // 바깥 테스트 트랜잭션을 두지 않는다(testing.md).
+//
+// 생성 거부(E1427) 자체는 여기서 못 본다 — 참여 슬롯 게이트(MOI-446)가 항상 먼저 걸려 생성
+// 경로에서 E1427 이 도달 불가다(RoomManager 주석). 축 스코프는 사전 조회(getCreationLimit)로,
+// 생성 거부와 순서는 ParticipationSlotCreationIT 가 본다.
 @Import(FixedClockTestConfiguration::class)
 class ActiveRoomLimitIT(
     private val roomManager: RoomManager,
@@ -60,16 +63,6 @@ class ActiveRoomLimitIT(
     }
 
     @Test
-    fun `같은 공고와 직무의 활성 룸이 3개면 E1427 로 생성을 거부한다`() {
-        repeat(3) { createRoom() }
-
-        assertThatThrownBy { createRoom() }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED)
-            }
-    }
-
-    @Test
     fun `활성 룸이 2개면 생성된다`() {
         repeat(2) { createRoom() }
 
@@ -78,22 +71,19 @@ class ActiveRoomLimitIT(
         assertThat(roomRepository.findById(roomId)).isPresent()
     }
 
+    // 한도의 키는 (방장, 공고, 직무)다. 생성으로는 이 축을 관측할 수 없어(위 클래스 주석) 조회로 본다.
     @Test
-    fun `공고가 다르면 활성 룸이 3개여도 생성된다`() {
+    fun `공고가 다르면 남은 개수에 세지 않는다`() {
         repeat(3) { createRoom() }
 
-        val roomId = createRoom(jobPostingId = OTHER_JOB_POSTING_ID)
-
-        assertThat(roomRepository.findById(roomId)).isPresent()
+        assertThat(roomFinder.getCreationLimit(hostMemberId, OTHER_JOB_POSTING_ID, JOB_ROLE_ID).remaining).isEqualTo(3)
     }
 
     @Test
-    fun `직무가 다르면 활성 룸이 3개여도 생성된다`() {
+    fun `직무가 다르면 남은 개수에 세지 않는다`() {
         repeat(3) { createRoom() }
 
-        val roomId = createRoom(jobRoleId = OTHER_JOB_ROLE_ID)
-
-        assertThat(roomRepository.findById(roomId)).isPresent()
+        assertThat(roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, OTHER_JOB_ROLE_ID).remaining).isEqualTo(3)
     }
 
     @Test

@@ -46,9 +46,10 @@ class RoomManager(
     // 중복 생성 제한(MOI-330)은 이 경계 안에서 본다. 밖에서 미리 세면 커밋 밖의 확인이라 확정이 아니고,
     // 거부됐을 때 앞선 쓰기가 남을 자리가 생긴다.
     //
-    // 판정 순서가 곧 사용자가 받는 결과다(MOI-331 D4).
-    // 중복 확인이 3개 게이트보다 **앞**이다 — 뒤집으면 활성 룸이 3개인 방장의 더블클릭이 E1427 을 받는다.
-    // 이미 있는 룸을 돌려주는 것은 새 자원을 만들지 않으므로 한도와 무관하다.
+    // 판정 순서가 곧 사용자가 받는 결과다(MOI-331 D4, MOI-447 D1-1): 멱등 → 참여 슬롯 → 활성 3개.
+    // 중복 확인이 두 한도보다 **앞**이다 — 이미 있는 룸을 돌려주는 것은 새 자원을 만들지 않으므로
+    // 한도와 무관하다. 슬롯이 활성 3개보다 앞인 것은 신청 경로(MOI-427 D8)와 같은 논리다 —
+    // 둘 다 초과면 "참여 중인 룸을 정리하라"가 정확한 안내다.
     //
     // ⚠️ validateActive 가 잡는 방장 회원 행 잠금이 이 방장의 생성을 직렬화한다. 이것이 멱등(F1·F2)과
     //    3개 제한(F3) 둘 다의 동시성 방어선이다. 자연키에는 DB 유니크가 없다(계획서 D1).
@@ -61,6 +62,14 @@ class RoomManager(
 
         findDuplicate(hostMemberId, room)?.let { return RoomCreationResult(it.id, it.status) }
 
+        // 방장 참여도 슬롯을 문다(「룸 참여」 §4.1 "방장 포함", MOI-446). 이게 빠지면
+        // 참여자로 3개 + 방장으로 3개 = 6개가 된다 — 신청·수락 경로(MOI-427)만으로는 못 막는다.
+        participationValidator.validateSlotAvailable(hostMemberId)
+
+        // ⚠️ 같은 공고 활성 룸은 전부 내 점유 슬롯이기도 해서(부분집합) 두 상한이 같은 3 인 지금은
+        //    이 게이트에 걸리기 전에 슬롯 게이트가 항상 먼저 걸린다 — 어떤 테스트도 이 줄을 빨간불로
+        //    만들지 못한다. 그래도 지우지 않는다: 한도가 회원별로 개인화되어 두 상한이 갈라지는 날
+        //    (PRD 예고) 다시 실효하는 정책 축이고, 사전 조회(getCreationLimit)가 이 규칙으로 경고한다.
         requireBusiness(
             !ActiveRoomLimit.isExceeded(countActiveHostedRooms(hostMemberId, room.jobPostingId, room.jobRoleId)),
             CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED,
