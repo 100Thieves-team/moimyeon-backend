@@ -10,8 +10,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
-    fun findByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
 
