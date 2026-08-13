@@ -20,7 +20,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private const val ROOM_APPLICATION_PENDING_UNIQUE_CONSTRAINT = "uk_room_application_room_pending_active"
-private const val MAX_PENDING_ROOM_APPLICATION_COUNT = 3L
 
 @Component
 class RoomApplicationSubmissionManager(
@@ -87,7 +86,7 @@ class RoomApplicationSubmissionManager(
                 RoomApplicationStatus.PENDING,
             )
         requireBusiness(
-            pendingApplicationCount < MAX_PENDING_ROOM_APPLICATION_COUNT,
+            RoomApplicationQuota.isAvailable(pendingApplicationCount),
             CoreErrorType.ROOM_APPLICATION_PENDING_LIMIT_EXCEEDED,
         )
     }

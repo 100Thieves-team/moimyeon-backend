@@ -21,6 +21,14 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         applicantMemberId: UUID,
     ): RoomApplicationEntity?
 
+    // 뷰어 관계 일괄 조회(MOI-387). 룸별 최신 1건은 호출자가 이 순서에서 먼저 만나는 행으로 고른다 —
+    // 위 단건 조회와 정렬이 같아야 목록과 상세가 다른 관계를 말하지 않는다.
+    // 철회 후 재신청이 가능해 한 룸에 이력이 여러 건 쌓이므로 "최신"의 정의가 두 곳에서 갈리면 안 된다.
+    fun findByApplicantMemberIdAndRoomIdInAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        applicantMemberId: UUID,
+        roomIds: Collection<UUID>,
+    ): List<RoomApplicationEntity>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
         roomId: UUID,

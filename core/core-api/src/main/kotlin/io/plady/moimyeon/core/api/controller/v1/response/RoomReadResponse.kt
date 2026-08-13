@@ -4,6 +4,7 @@ import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RoomConfirmation
 import io.plady.moimyeon.core.domain.room.RoomConfirmationBlockReason
 import io.plady.moimyeon.core.domain.room.RoomDetail
+import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,9 +29,11 @@ data class RoomReadResponse(
     val resumePublic: Boolean,
     val hostMemberId: UUID,
     val confirmation: RoomReadConfirmationResponse,
+    // "당신이 지금 무엇을 할 수 있나"(MOI-387). 위 confirmation 은 뷰어와 무관한 룸의 사실이라 축이 다르다.
+    val viewer: RoomViewerResponse,
 ) {
     companion object {
-        fun from(detail: RoomDetail, confirmation: RoomConfirmation): RoomReadResponse {
+        fun from(detail: RoomDetail, confirmation: RoomConfirmation, viewer: RoomViewer): RoomReadResponse {
             val room = detail.room
             val (method, sigunguId) = when (val place = room.meetingPlace) {
                 MeetingPlace.Online -> "ONLINE" to null
@@ -64,6 +67,7 @@ data class RoomReadResponse(
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
                 hostMemberId = detail.hostMemberId,
                 confirmation = RoomReadConfirmationResponse.from(confirmation, detail),
+                viewer = RoomViewerResponse.from(viewer),
             )
         }
     }

@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomCard
+import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
 import java.util.UUID
 
 // 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
@@ -39,6 +40,8 @@ data class RoomSummaryResponse(
     val region: RoomRegionResponse?,
     val schedule: RoomScheduleResponse,
     val recruit: RoomRecruitSummaryResponse,
+    // 보는 사람에 따라 다음 행동이 갈린다(MOI-387). 룸의 공개 정보 자체는 뷰어와 무관하다.
+    val viewer: RoomViewerResponse,
 ) {
     companion object {
         fun from(
@@ -47,6 +50,7 @@ data class RoomSummaryResponse(
             company: Company?,
             jobRole: JobRole?,
             region: RegionLabel?,
+            viewer: RoomViewer,
         ): RoomSummaryResponse {
             val room = card.room
             return RoomSummaryResponse(
@@ -64,6 +68,7 @@ data class RoomSummaryResponse(
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
                 schedule = RoomScheduleResponse.from(room.schedule),
                 recruit = RoomRecruitSummaryResponse.from(card),
+                viewer = RoomViewerResponse.from(viewer),
             )
         }
 

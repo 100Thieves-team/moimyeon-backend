@@ -178,18 +178,53 @@ class RoomApplicationRepositoryIT(
 
     private fun reload(roomId: UUID) = roomApplicationRepository.findAll().filter { it.roomId == roomId }
 
-    // 대기 신청은 (room_id, pending_member_id) 유니크라 신청자를 매번 다르게 둔다.
-    private fun apply(roomId: UUID, status: RoomApplicationStatus): RoomApplicationEntity {
-        val applicantMemberId = UUID.randomUUID()
-        return roomApplicationRepository.saveAndFlush(
-            RoomApplicationEntity(
-                roomId = roomId,
-                applicantMemberId = applicantMemberId,
-                note = "",
-                appliedAt = now,
-                status = status,
-                pendingMemberId = applicantMemberId.takeIf { status == RoomApplicationStatus.PENDING },
-            ),
-        )
+    // 뷰어 관계 일괄 조회(MOI-387). 목록과 상세가 다른 관계를 말하면 안 되므로,
+    // 룸별 "최신 한 건"이 단건 조회 경로와 같은 행이어야 한다.
+    @Test
+    fun `여러 룸의 내 신청을 한 번에 읽고 룸별 최신 한 건이 단건 조회와 같다`() {
+        val applicantId = UUID.randomUUID()
+        val reapplied = UUID.randomUUID()
+        val rejected = UUID.randomUUID()
+        apply(reapplied, RoomApplicationStatus.WITHDRAWN, applicantId, appliedAt = now.minusDays(1))
+        apply(reapplied, RoomApplicationStatus.PENDING, applicantId, appliedAt = now)
+        apply(rejected, RoomApplicationStatus.REJECTED, applicantId, appliedAt = now)
+
+        val latestByRoom = roomApplicationRepository
+            .findByApplicantMemberIdAndRoomIdInAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                applicantId,
+                listOf(reapplied, rejected),
+            )
+            .groupBy { it.roomId }
+            .mapValues { (_, applications) -> applications.first() }
+
+        listOf(reapplied, rejected).forEach { roomId ->
+            val single = roomApplicationRepository
+                .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(roomId, applicantId)
+            assertThat(latestByRoom[roomId]?.id).describedAs("$roomId").isEqualTo(single?.id)
+        }
+        assertThat(latestByRoom[reapplied]?.status).isEqualTo(RoomApplicationStatus.PENDING)
     }
+
+    // 대기 신청은 (room_id, pending_member_id) 유니크라 신청자를 매번 다르게 둔다.
+    private fun apply(roomId: UUID, status: RoomApplicationStatus): RoomApplicationEntity = apply(
+        roomId,
+        status,
+        UUID.randomUUID(),
+    )
+
+    private fun apply(
+        roomId: UUID,
+        status: RoomApplicationStatus,
+        applicantMemberId: UUID,
+        appliedAt: LocalDateTime = now,
+    ): RoomApplicationEntity = roomApplicationRepository.saveAndFlush(
+        RoomApplicationEntity(
+            roomId = roomId,
+            applicantMemberId = applicantMemberId,
+            note = "",
+            appliedAt = appliedAt,
+            status = status,
+            pendingMemberId = applicantMemberId.takeIf { status == RoomApplicationStatus.PENDING },
+        ),
+    )
 }

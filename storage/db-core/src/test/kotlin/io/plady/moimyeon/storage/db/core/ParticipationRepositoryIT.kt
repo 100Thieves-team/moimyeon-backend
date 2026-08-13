@@ -185,6 +185,41 @@ class ParticipationRepositoryIT(
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
+    // 뷰어 관계 일괄 조회(MOI-387). 목록 한 페이지의 룸 전부에 대해 내 참여 행을 한 번에 읽는다.
+    @Test
+    fun `여러 룸의 내 참여 행을 한 번에 읽고 방장과 참여자를 구분한다`() {
+        val viewerId = UUID.randomUUID()
+        val hosted = UUID.randomUUID()
+        val joined = UUID.randomUUID()
+        val stranger = UUID.randomUUID()
+        join(hosted, viewerId, ParticipationStatus.JOINED, participationRole = ParticipationRole.HOST)
+        join(joined, viewerId, ParticipationStatus.JOINED)
+        join(stranger, UUID.randomUUID(), ParticipationStatus.JOINED)
+
+        val rows = participationRepository.findByMemberIdAndRoomIdIn(viewerId, listOf(hosted, joined, stranger))
+
+        assertThat(rows.associate { it.roomId to it.participationRole })
+            .containsExactlyInAnyOrderEntriesOf(
+                mapOf(hosted to ParticipationRole.HOST, joined to ParticipationRole.PARTICIPANT),
+            )
+    }
+
+    // 재신청을 막는 것은 강퇴뿐이다(existsRemovalHistory 와 같은 기준). 호출자가 둘을 갈라야 하므로
+    // 이 조회는 LEFT 행을 걸러내지 않고 그대로 돌려준다.
+    @Test
+    fun `내보내진 이력과 자진 이탈을 구분해 읽는다`() {
+        val viewerId = UUID.randomUUID()
+        val removedFrom = UUID.randomUUID()
+        val leftBySelf = UUID.randomUUID()
+        join(removedFrom, viewerId, ParticipationStatus.LEFT, leftAt = now, leftByMemberId = UUID.randomUUID())
+        join(leftBySelf, viewerId, ParticipationStatus.LEFT, leftAt = now, leftByMemberId = viewerId)
+
+        val rows = participationRepository.findByMemberIdAndRoomIdIn(viewerId, listOf(removedFrom, leftBySelf))
+
+        assertThat(rows.single { it.roomId == removedFrom }.leftByMemberId).isNotEqualTo(viewerId)
+        assertThat(rows.single { it.roomId == leftBySelf }.leftByMemberId).isEqualTo(viewerId)
+    }
+
     private fun join(
         roomId: UUID,
         status: ParticipationStatus = ParticipationStatus.JOINED,
@@ -196,14 +231,17 @@ class ParticipationRepositoryIT(
         status: ParticipationStatus,
         joinedAt: LocalDateTime = now,
         leftAt: LocalDateTime? = null,
+        participationRole: ParticipationRole = ParticipationRole.PARTICIPANT,
+        leftByMemberId: UUID? = null,
     ): ParticipationEntity = participationRepository.saveAndFlush(
         ParticipationEntity(
             roomId = roomId,
             memberId = memberId,
-            participationRole = ParticipationRole.PARTICIPANT,
+            participationRole = participationRole,
             status = status,
             joinedAt = joinedAt,
             leftAt = leftAt,
+            leftByMemberId = leftByMemberId,
         ),
     )
 
