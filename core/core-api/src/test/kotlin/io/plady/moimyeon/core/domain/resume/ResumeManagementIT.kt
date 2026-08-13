@@ -3,6 +3,17 @@ package io.plady.moimyeon.core.domain.resume
 import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.SocialAuthService
+import io.plady.moimyeon.core.domain.room.MeetingPlace
+import io.plady.moimyeon.core.domain.room.Room
+import io.plady.moimyeon.core.domain.room.RoomCapacity
+import io.plady.moimyeon.core.domain.room.RoomManager
+import io.plady.moimyeon.core.domain.room.RoomSchedule
+import io.plady.moimyeon.core.domain.room.RoomTitle
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationForm
+import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
+import io.plady.moimyeon.core.enums.InterviewStage
+import io.plady.moimyeon.core.enums.InterviewType
+import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -21,6 +32,9 @@ class ResumeManagementIT(
     private val resumeManager: ResumeManager,
     private val resumeRegistrar: ResumeRegistrar,
     private val resumeRepository: ResumeRepository,
+    private val storedResumeReader: StoredResumeReader,
+    private val roomManager: RoomManager,
+    private val roomApplicationSubmissionService: RoomApplicationSubmissionService,
 ) : ContextTest() {
     @Test
     fun `처리를 시작한 지 1분 지난 요약만 실패로 확정한다`() {
@@ -48,6 +62,54 @@ class ResumeManagementIT(
         val resumes = resumeFinder.getAll(memberId)
 
         assertThat(resumes).extracting("id").containsExactly(defaultResumeId, newerResumeId, olderResumeId)
+    }
+
+    @Test
+    fun `룸에 사용한 이력서는 최신 사용 룸과 함께 먼저 조회하되 저장된 기본 여부를 유지한다`() {
+        val memberId = signUp("stored-resume-recent-use")
+        val persistedDefaultResumeId = registerDone(memberId, "persisted-default.pdf")
+        val usedResumeId = registerDone(memberId, "used.pdf")
+        val usedResume = resumeFinder.get(memberId, usedResumeId)
+        val olderRoom = room("첫 번째 백엔드 모의 면접 스터디")
+        val latestRoom = room("최근 백엔드 기술 면접 스터디")
+        roomManager.create(olderRoom, memberId, usedResumeId, usedResume.file)
+        roomManager.create(latestRoom, memberId, usedResumeId, usedResume.file)
+
+        val storedResumes = storedResumeReader.getAll(memberId)
+
+        assertThat(storedResumes.map { it.resume.id })
+            .containsExactly(usedResumeId, persistedDefaultResumeId)
+        assertThat(storedResumes.map { it.isDefault }).containsExactly(false, true)
+        assertThat(storedResumes.first().lastUsed?.roomId).isEqualTo(latestRoom.id)
+        assertThat(storedResumes.first().lastUsed?.roomTitle).isEqualTo(latestRoom.title.value)
+        assertThat(storedResumes.first().lastUsed?.usedAt).isNotNull()
+        assertThat(storedResumes.last().lastUsed).isNull()
+    }
+
+    @Test
+    fun `저장 이력서로 참가 신청하면 해당 룸이 최근 사용으로 반영된다`() {
+        val hostMemberId = signUp("stored-resume-application-host")
+        val hostResumeId = registerDone(hostMemberId, "host.pdf")
+        val hostResume = resumeFinder.get(hostMemberId, hostResumeId)
+        val room = room("저장 이력서 참가 신청 면접")
+        roomManager.create(room, hostMemberId, hostResumeId, hostResume.file)
+
+        val applicantMemberId = signUp("stored-resume-application-applicant")
+        val persistedDefaultResumeId = registerDone(applicantMemberId, "applicant-default.pdf")
+        val submittedResumeId = registerDone(applicantMemberId, "applicant-submitted.pdf")
+
+        roomApplicationSubmissionService.submit(
+            applicantMemberId,
+            room.id,
+            RoomApplicationForm(submittedResumeId, "실전처럼 연습하고 싶어요."),
+        )
+
+        val storedResumes = storedResumeReader.getAll(applicantMemberId)
+        assertThat(storedResumes.map { it.resume.id })
+            .containsExactly(submittedResumeId, persistedDefaultResumeId)
+        assertThat(storedResumes.map { it.isDefault }).containsExactly(false, true)
+        assertThat(storedResumes.first().lastUsed?.roomId).isEqualTo(room.id)
+        assertThat(storedResumes.first().lastUsed?.roomTitle).isEqualTo(room.title.value)
     }
 
     @Test
@@ -192,4 +254,19 @@ class ResumeManagementIT(
             ),
         )
     }
+
+    private fun room(title: String): Room = Room.create(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle(title),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(LocalDateTime.of(2099, 8, 13, 12, 0), 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        now = LocalDateTime.of(2026, 8, 13, 12, 0),
+    )
 }
