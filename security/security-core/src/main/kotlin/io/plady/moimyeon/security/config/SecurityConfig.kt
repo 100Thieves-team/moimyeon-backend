@@ -11,6 +11,7 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
@@ -37,11 +38,24 @@ class SecurityConfig(
                 authorize("/login/**", permitAll)
                 authorize("/v1/auth/refresh", permitAll)
                 authorize("/v1/auth/logout", permitAll)
-                authorize("/v1/terms", permitAll) // 로그인 모달의 약관 링크 — 비로그인 조회 허용
+                authorize("/health", permitAll)
+                authorize("/actuator/health", permitAll)
+                authorize("/actuator/health/**", permitAll)
+                authorize(HttpMethod.GET, "/v1/terms", permitAll)
+                authorize(HttpMethod.GET, "/v1/rooms", permitAll)
+                authorize(HttpMethod.GET, "/v1/rooms/*", permitAll)
+                authorize(HttpMethod.GET, "/v1/job-postings/search", permitAll)
+                authorize(HttpMethod.GET, "/v1/companies", permitAll)
+                authorize(HttpMethod.GET, "/v1/companies/*/job-postings", permitAll)
+                authorize(HttpMethod.GET, "/v1/job-roles", permitAll)
+                authorize(HttpMethod.GET, "/v1/job-roles/search", permitAll)
+                authorize(HttpMethod.GET, "/v1/regions", permitAll)
+                authorize(HttpMethod.GET, "/v1/members/*/profile", permitAll)
+                authorize(HttpMethod.GET, "/v1/nicknames/suggestion", permitAll)
+                authorize(HttpMethod.GET, "/v1/nicknames/availability", permitAll)
                 authorize("/admin/**", hasRole("ADMIN"))
-
-                // TODO: 인증/인가 정책 확정 후 경로별 규칙 추가
-                authorize(anyRequest, permitAll)
+                authorize("/actuator/**", denyAll)
+                authorize(anyRequest, authenticated)
             }
             // 자체 /v1/auth/logout 을 쓰므로 스프링 기본 /logout 필터는 비활성화(혼동 방지)
             logout { disable() }

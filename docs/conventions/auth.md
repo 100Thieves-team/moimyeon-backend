@@ -93,11 +93,10 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
   이미 발급된 JWT는 만료 전까지 역할이 남으므로 권한 변경은 최대 Access Token TTL(30분) 뒤에
   완전히 반영된다. 즉시 회수가 필요해지면 세션 폐기·토큰 차단 정책을 별도로 추가한다.
 - 관리자 승격·해제 API와 권한 감사 기록은 아직 제품 요구사항이 없어 범위에서 제외했다.
-- 관리자 외의 현재 필터 체인은 공개 경로(oauth, refresh/logout, terms)만 명시하고 나머지는
-  `permitAll`(TODO) 상태다. 실질 방어선은 ArgumentResolver 의 E1102.
-  이 상태에서는 `@LoginMember` 를 선언하지 않은 핸들러가 익명에게 열리므로, 보호가 필요한
-  엔드포인트는 반드시 `@LoginMember` 를 받아야 한다. 인가 정책 확정 시 `authenticated()` 전환으로
-  이 임시 방어를 대체한다.
+- 필터 체인은 OAuth·refresh/logout·health와 제품상 공개된 조회 API만 `permitAll`로 열고,
+  `/admin/**`는 `ROLE_ADMIN`, 그 외 요청은 `authenticated()`를 요구한다. 관리 엔드포인트는
+  health만 공개하며 `/actuator/**`는 명시적으로 거부한다. 새 공개 API는 HTTP 메서드와 경로를
+  `SecurityConfig`에 함께 추가하고, 그 외 API는 기본 인증 정책을 그대로 따른다.
 - 추가 인가 정책(관리자 외 경로별 규칙)은 확정 시 `SecurityConfig.authorizeHttpRequests` 에 추가하고,
   403(E1103) 케이스를 API 문서에 반영한다 ([api-docs.md](api-docs.md)).
 

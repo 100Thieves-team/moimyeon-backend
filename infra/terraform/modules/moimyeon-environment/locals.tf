@@ -36,6 +36,8 @@ locals {
     "${var.project}-${var.environment}-uploads",
   )
 
+  alb_access_log_bucket_name = "${local.name}-alb-access-logs-${data.aws_caller_identity.current.account_id}"
+
   tags = merge(
     {
       Project     = var.project

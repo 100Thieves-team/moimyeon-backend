@@ -286,6 +286,28 @@ variable "log_retention_days" {
   default     = 30
 }
 
+variable "alb_access_log_retention_days" {
+  description = "Days to retain ALB access logs in the dedicated S3 bucket."
+  type        = number
+  default     = 90
+
+  validation {
+    condition     = var.alb_access_log_retention_days >= 1
+    error_message = "alb_access_log_retention_days must be at least 1."
+  }
+}
+
+variable "waf_rate_limit_per_five_minutes" {
+  description = "Maximum requests allowed from one client IP in a five-minute WAF evaluation window."
+  type        = number
+  default     = 600
+
+  validation {
+    condition     = var.waf_rate_limit_per_five_minutes >= 100
+    error_message = "waf_rate_limit_per_five_minutes must be at least 100."
+  }
+}
+
 variable "additional_environment" {
   description = "Additional non-sensitive container environment variables (e.g. MOI-361 STORAGE_OBJECTSTORAGE_S3_* keys once merged)."
   type        = map(string)

@@ -207,10 +207,12 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 
 ## support:monitoring: 운영 관측 격벽
 
-- Actuator와 Prometheus Registry를 조립해 `/actuator/health`와 `/actuator/prometheus`를 노출한다.
+- Actuator와 Prometheus Registry를 조립하지만 공개 포트에는 ALB 상태 확인용 `/actuator/health`만 노출한다.
+  `/actuator/prometheus`는 별도의 보호된 management 포트를 구성하기 전까지 노출하거나 수집하지 않는다.
 - 개별 메트릭의 이름·라벨·증가 시점은 처리 결과를 소유한 `redis-core`에 두고, `support:monitoring`은
   알림 업무를 모르는 공통 Exporter 설정으로 유지한다.
-- Admin SSR은 Redis의 현재 상태와 DLQ 원문을 조회하고, Prometheus·Grafana는 Worker 처리량과 Pending의 시간에 따른 변화를 담당한다.
+- Admin SSR은 Redis의 현재 상태와 DLQ 원문을 조회한다. 보호된 수집 경로를 마련하면 Prometheus·Grafana가
+  Worker 처리량과 Pending의 시간에 따른 변화를 담당한다.
 - 알람 임계치와 Grafana Dashboard JSON은 실제 처리량·재시도율 기준선을 측정한 뒤 확정한다.
 
 ## clients:bedrock-client: AI 모델 격벽

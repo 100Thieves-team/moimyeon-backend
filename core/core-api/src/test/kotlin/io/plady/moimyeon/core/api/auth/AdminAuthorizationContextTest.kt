@@ -67,15 +67,90 @@ class AdminAuthorizationContextTest(
         assertThat(response.status).isEqualTo(200)
     }
 
+    @Test
+    fun `미인증 요청은 기본 보호 경로에 접근할 수 없다`() {
+        val response = mockMvc.perform(get("/security-test")).andReturn().response
+
+        assertThat(response.status).isEqualTo(401)
+    }
+
+    @Test
+    fun `인증 회원은 기본 보호 경로에 접근할 수 있다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `상태 확인 경로는 인증 없이 접근할 수 있다`() {
+        val response = mockMvc.perform(get("/health")).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `공개 조회 API는 인증 필터를 통과한다`() {
+        val publicPaths =
+            listOf(
+                "/v1/terms",
+                "/v1/rooms",
+                "/v1/rooms/form-options",
+                "/v1/rooms/00000000-0000-0000-0000-000000000001",
+                "/v1/job-postings/search",
+                "/v1/companies",
+                "/v1/companies/1/job-postings",
+                "/v1/job-roles",
+                "/v1/job-roles/search",
+                "/v1/regions",
+                "/v1/members/00000000-0000-0000-0000-000000000001/profile",
+                "/v1/nicknames/suggestion",
+                "/v1/nicknames/availability",
+            )
+
+        publicPaths.forEach { path ->
+            val response = mockMvc.perform(get(path)).andReturn().response
+
+            assertThat(response.status)
+                .describedAs(path)
+                .isNotEqualTo(401)
+        }
+    }
+
+    @Test
+    fun `인증 회원도 prometheus 경로에 접근할 수 없다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/actuator/prometheus")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(403)
+    }
+
     @TestConfiguration(proxyBeanMethods = false)
     class TestConfig {
         @Bean
         fun adminAuthorizationTestController() = AdminAuthorizationTestController()
+
+        @Bean
+        fun authorizationTestController() = AuthorizationTestController()
     }
 
     @RestController
     class AdminAuthorizationTestController {
         @GetMapping("/admin/security-test")
+        fun get(): String = "ok"
+    }
+
+    @RestController
+    class AuthorizationTestController {
+        @GetMapping("/security-test")
         fun get(): String = "ok"
     }
 }
