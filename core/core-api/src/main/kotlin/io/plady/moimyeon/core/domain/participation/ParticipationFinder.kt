@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.participation
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -32,6 +33,24 @@ class ParticipationFinder(
         return ParticipationSlot.isAvailable(countOccupiedSlots(memberId))
     }
 
+    // 룸 목록의 뷰어 관계 판정용(MOI-387). 룸 수에 비례해 쿼리가 늘지 않게 한 번에 읽는다.
+    // 술어는 단건 판정과 같아야 한다 — 참여는 isParticipating, 강퇴는 existsRemovalHistory 와 같다.
+    // 갈리면 목록과 상세가 서로 다른 관계를 말한다.
+    fun getRoomParticipations(memberId: UUID, roomIds: Collection<UUID>): List<MemberRoomParticipation> {
+        if (roomIds.isEmpty()) return emptyList()
+
+        return participationRepository.findByMemberIdAndRoomIdIn(memberId, roomIds)
+            .groupBy { it.roomId }
+            .map { (roomId, rows) ->
+                MemberRoomParticipation(
+                    roomId = roomId,
+                    host = rows.any { it.isJoined() && it.participationRole == ParticipationRole.HOST },
+                    joined = rows.any { it.isJoined() },
+                    removed = rows.any { it.isRemoval(memberId) },
+                )
+            }
+    }
+
     fun isParticipating(roomId: UUID, memberId: UUID): Boolean {
         return participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
             roomId,
@@ -47,6 +66,15 @@ class ParticipationFinder(
     fun getConfirmedParticipantIds(roomId: UUID): List<UUID> {
         return participationRepository.findAllAtRoomConfirmation(roomId).map { it.memberId }
     }
+
+    // 엔티티는 Finder 밖으로 나가지 않으므로 술어도 여기 안에 둔다.
+    private fun ParticipationEntity.isJoined(): Boolean = status == ParticipationStatus.JOINED && isActive()
+
+    // existsRemovalHistory 와 같은 술어다 — LEFT 이고 처리자가 본인이 아니면 방장이 내보낸 것이다.
+    // 그쪽처럼 deletedAt 을 보지 않는다. 강퇴 이력은 지워도 재신청이 열려서는 안 된다.
+    private fun ParticipationEntity.isRemoval(memberId: UUID): Boolean = status == ParticipationStatus.LEFT &&
+        leftByMemberId != null &&
+        leftByMemberId != memberId
 
     fun getHostMemberId(roomId: UUID): UUID {
         return checkNotNull(
