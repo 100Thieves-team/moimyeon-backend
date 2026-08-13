@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-12",
-                        "datetime" : "2026-08-12T16:17:32.612781388",
+                        "date" : "2026-08-13",
+                        "datetime" : "2026-08-13T03:37:43.870495449",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-12",
-                        "datetime" : "2026-08-12T16:17:32.807085436",
+                        "date" : "2026-08-13",
+                        "datetime" : "2026-08-13T03:37:44.07702478",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -665,7 +665,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "79a14a15-7bbe-4ad1-9163-3740ef6ce64f",
+                          "termsId" : "800a5f7c-1af5-45f7-a99c-475fce7002e7",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -673,7 +673,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "d3770ece-62f8-4d83-b1cc-534ef1649c1b",
+                          "termsId" : "20537640-63af-4771-b73d-3fd2b90592cd",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1012,12 +1012,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "4168f9b0-d945-451b-99f2-82c194d35459",
+                        "memberId" : "3b5431a8-cc64-4704-9f78-61d80f7ec012",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "4168f9b0-d945-451b-99f2-82c194d35459",
+                          "memberId" : "3b5431a8-cc64-4704-9f78-61d80f7ec012",
                           "interestJobRoleIds" : [ ],
                           "bio" : "",
                           "meetingPreference" : "UNSPECIFIED",
@@ -1268,7 +1268,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-13T16:17:36.122336217",
+                          "startAt" : "2026-08-14T03:37:47.59781225",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1279,7 +1279,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "5eec70ee-5d22-4760-b545-0f1bcd44096a",
+                        "hostMemberId" : "40783278-8159-475c-9728-03f200d8deb3",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1591,7 +1591,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "32a951b3-af88-429c-814f-e79201da63ba",
+                        "memberId" : "ca95aa2d-5020-4c65-8719-3cbd0a1823e4",
                         "interestJobRoleIds" : [ 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "meetingPreference" : "OFFLINE",
@@ -3076,7 +3076,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -4067,54 +4067,6 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
-    v1-terms1673199050:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - terms
-          type: object
-          properties:
-            terms:
-              type: array
-              description: 현재 유효한 약관 목록
-              items:
-                required:
-                - content
-                - effectiveFrom
-                - required
-                - termsId
-                - title
-                - type
-                - version
-                type: object
-                properties:
-                  termsId:
-                    type: string
-                    description: 약관 버전 식별자 (UUID)
-                  title:
-                    type: string
-                    description: 약관 제목
-                  type:
-                    type: string
-                    description: 약관 종류 (SERVICE | PRIVACY)
-                  effectiveFrom:
-                    type: string
-                    description: 시행일
-                  version:
-                    type: string
-                    description: 약관 버전
-                  required:
-                    type: boolean
-                    description: 가입 필수 동의 여부
-                  content:
-                    type: string
-                    description: 약관 본문
     v1-rooms-roomId658060489:
       required:
       - result
@@ -4242,6 +4194,54 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+    v1-terms1673199050:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - terms
+          type: object
+          properties:
+            terms:
+              type: array
+              description: 현재 유효한 약관 목록
+              items:
+                required:
+                - content
+                - effectiveFrom
+                - required
+                - termsId
+                - title
+                - type
+                - version
+                type: object
+                properties:
+                  termsId:
+                    type: string
+                    description: 약관 버전 식별자 (UUID)
+                  title:
+                    type: string
+                    description: 약관 제목
+                  type:
+                    type: string
+                    description: 약관 종류 (SERVICE | PRIVACY)
+                  effectiveFrom:
+                    type: string
+                    description: 시행일
+                  version:
+                    type: string
+                    description: 약관 버전
+                  required:
+                    type: boolean
+                    description: 가입 필수 동의 여부
+                  content:
+                    type: string
+                    description: 약관 본문
     v1-members-memberId-profile-250325338:
       required:
       - result
