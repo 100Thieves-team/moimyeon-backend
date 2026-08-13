@@ -71,7 +71,7 @@ class ResumeManagementIT(
         val usedResumeId = registerDone(memberId, "used.pdf")
         val usedResume = resumeFinder.get(memberId, usedResumeId)
         val olderRoom = room("첫 번째 백엔드 모의 면접 스터디")
-        val latestRoom = room("최근 백엔드 기술 면접 스터디")
+        val latestRoom = room("최근 백엔드 기술 면접 스터디", LocalDateTime.of(2099, 8, 14, 12, 0))
         roomManager.create(olderRoom, memberId, usedResumeId, usedResume.file)
         roomManager.create(latestRoom, memberId, usedResumeId, usedResume.file)
 
@@ -255,7 +255,9 @@ class ResumeManagementIT(
         )
     }
 
-    private fun room(title: String): Room = Room.create(
+    // 같은 방장이 룸을 둘 만드는 테스트는 startAt 을 갈라야 한다 —
+    // 자연키가 같으면 두 번째가 첫 룸을 그대로 돌려받는다(MOI-331 멱등).
+    private fun room(title: String, startAt: LocalDateTime = LocalDateTime.of(2099, 8, 13, 12, 0)): Room = Room.create(
         id = UUID.randomUUID(),
         jobPostingId = 1L,
         jobRoleId = 1L,
@@ -265,7 +267,7 @@ class ResumeManagementIT(
         interviewType = InterviewType.JOB,
         meetingPlace = MeetingPlace.Online,
         capacity = RoomCapacity(min = 2, max = 6),
-        schedule = RoomSchedule(LocalDateTime.of(2099, 8, 13, 12, 0), 60),
+        schedule = RoomSchedule(startAt, 60),
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
         now = LocalDateTime.of(2026, 8, 13, 12, 0),
     )

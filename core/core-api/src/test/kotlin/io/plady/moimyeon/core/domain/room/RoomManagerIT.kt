@@ -9,6 +9,7 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
@@ -19,6 +20,7 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
 import java.util.UUID
@@ -34,10 +36,21 @@ class RoomManagerIT(
     private val participationRepository: ParticipationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val resumeRepository: ResumeRepository,
+    private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+
+    // 일정을 하나씩 밀어 매번 다른 룸이 되게 한다. 같은 자연키면 두 번째부터 첫 룸이 그대로
+    // 돌아온다(MOI-331 멱등).
+    private var scheduleSeq = 0L
+
+    // 생성 경로가 방장 회원 행을 잠그며 실재를 본다(MOI-331).
+    @BeforeEach
+    fun persistHostMember() {
+        memberRepository.save(activeMember(hostMemberId, "host-moi-manager"))
+    }
 
     @AfterEach
     fun cleanUp() {
@@ -48,6 +61,7 @@ class RoomManagerIT(
             roomRepository.deleteById(roomId)
         }
         resumeRepository.deleteById(resumeId)
+        memberRepository.deleteById(hostMemberId)
     }
 
     @Test
@@ -160,7 +174,7 @@ class RoomManagerIT(
             interviewType = InterviewType.JOB,
             meetingPlace = MeetingPlace.Online,
             capacity = RoomCapacity(min = 2, max = 6),
-            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7), durationMinutes = 60),
+            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7).plusHours(scheduleSeq++), durationMinutes = 60),
             resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
             now = FIXED_NOW,
         )

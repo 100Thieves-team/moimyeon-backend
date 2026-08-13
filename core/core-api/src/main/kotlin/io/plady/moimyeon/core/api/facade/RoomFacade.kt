@@ -17,8 +17,8 @@ class RoomFacade(
     private val clock: Clock,
 ) {
     fun create(hostMemberId: UUID, command: RoomCreationCommand): RoomCreatedResponse {
-        val room = roomService.createRoom(hostMemberId, command)
-        return RoomCreatedResponse(roomId = room.id, status = room.status.name)
+        val result = roomService.createRoom(hostMemberId, command)
+        return RoomCreatedResponse(roomId = result.roomId, status = result.status.name)
     }
 
     fun update(hostMemberId: UUID, roomId: UUID, command: RoomUpdateCommand) {

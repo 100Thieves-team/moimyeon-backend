@@ -6,20 +6,16 @@ import io.plady.moimyeon.core.domain.roomapplication.ResumeSubmission
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionManager
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
-import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
-import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
-import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -47,6 +43,8 @@ class RoomCreationApplicationRegressionIT(
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+    private val createdMemberIds = mutableListOf<UUID>()
+    private var scheduleSeq = 0L
 
     @AfterEach
     fun cleanUp() {
@@ -56,6 +54,8 @@ class RoomCreationApplicationRegressionIT(
             participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
             roomRepository.deleteById(roomId)
         }
+        createdMemberIds.forEach(memberRepository::deleteById)
+        createdMemberIds.clear()
         memberRepository.deleteById(hostMemberId)
     }
 
@@ -191,7 +191,12 @@ class RoomCreationApplicationRegressionIT(
         return applications.single()
     }
 
+    // 일정을 하나씩 밀어 매번 다른 룸이 되게 한다. 같은 자연키면 두 번째부터 첫 룸이 그대로
+    // 돌아와(MOI-331 멱등) "룸 N개를 만든 방장"이라는 전제가 서지 않는다.
+    //
+    // 생성 경로도 방장 회원 행을 잠그며 실재를 본다(MOI-331). 방장이 누구든 행이 있어야 한다.
     private fun createRoom(hostMemberId: UUID = this.hostMemberId): UUID {
+        persistMemberIfAbsent(hostMemberId)
         val room = Room.create(
             id = UUID.randomUUID(),
             jobPostingId = 1L,
@@ -202,7 +207,7 @@ class RoomCreationApplicationRegressionIT(
             interviewType = InterviewType.JOB,
             meetingPlace = MeetingPlace.Online,
             capacity = RoomCapacity(min = 2, max = 6),
-            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7), durationMinutes = 60),
+            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7).plusHours(scheduleSeq++), durationMinutes = 60),
             resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
             now = FIXED_NOW,
         )
@@ -211,24 +216,13 @@ class RoomCreationApplicationRegressionIT(
         return room.id
     }
 
-    // 신청 경로는 회원이 실재해야 통과한다(MemberValidator). 방장이 신청자로 나서는 테스트에서만 필요하다.
-    private fun persistHostMember() {
-        memberRepository.save(
-            MemberEntity(
-                id = hostMemberId,
-                email = "host-moi333@example.com",
-                nickname = "방장333",
-                status = MemberStatus.ACTIVE,
-                lastLoginAt = FIXED_NOW,
-                socialAccounts = listOf(
-                    SocialAccountEntity(
-                        provider = SocialLoginProvider.GOOGLE,
-                        providerId = "host-moi333",
-                        linkedEmail = "host-moi333@example.com",
-                    ),
-                ),
-            ),
-        )
+    // 신청 경로도 생성 경로도 회원이 실재해야 통과한다(MemberValidator).
+    private fun persistHostMember() = persistMemberIfAbsent(hostMemberId)
+
+    private fun persistMemberIfAbsent(memberId: UUID) {
+        if (memberRepository.existsById(memberId)) return
+        memberRepository.save(activeMember(memberId, "host-moi333-${createdMemberIds.size}"))
+        createdMemberIds += memberId
     }
 
     private fun resumeFile() = ResumeFile(

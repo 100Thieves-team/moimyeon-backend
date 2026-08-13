@@ -47,6 +47,36 @@ interface RoomRepository : JpaRepository<RoomEntity, UUID> {
         @Param("activeStatuses") activeStatuses: Collection<RoomStatus>,
     ): Long
 
+    // 중복 생성 판정의 자연키 조회(MOI-331). 바로 위 countActiveHostedRooms 에 start_at 만 더한 것이다 —
+    // ⚠️ 두 쿼리의 나머지 술어는 글자 그대로 같아야 한다. 한쪽만 고치면 세는 것과 막는 것이 갈린다.
+    //
+    // 단건이 아니라 목록인 이유: 이 자연키에는 DB 유니크 제약이 없다(계획서 D1 — 방장 회원 행 락으로 막는다).
+    // 락이 없는 경로가 생겨 중복이 실제로 들어오면 단건 조회는 그때부터 모든 생성을 500 으로 만든다.
+    // 가장 먼저 만들어진 것을 돌려주어 같은 요청이 늘 같은 룸을 받게 한다.
+    @Query(
+        """
+        SELECT r FROM RoomEntity r, ParticipationEntity p
+        WHERE p.roomId = r.id
+          AND p.memberId = :hostMemberId
+          AND p.participationRole = io.plady.moimyeon.core.enums.ParticipationRole.HOST
+          AND p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+          AND p.deletedAt IS NULL
+          AND r.jobPostingId = :jobPostingId
+          AND r.jobRoleId = :jobRoleId
+          AND r.startAt = :startAt
+          AND r.status IN :activeStatuses
+          AND r.deletedAt IS NULL
+        ORDER BY r.createdAt ASC, r.id ASC
+        """,
+    )
+    fun findActiveHostedRooms(
+        @Param("hostMemberId") hostMemberId: UUID,
+        @Param("jobPostingId") jobPostingId: Long,
+        @Param("jobRoleId") jobRoleId: Long,
+        @Param("startAt") startAt: LocalDateTime,
+        @Param("activeStatuses") activeStatuses: Collection<RoomStatus>,
+    ): List<RoomEntity>
+
     // 탐색 목록 — 일정 빠른 순(MOI-383 §4.3). 정렬 방향이 달라 ORDER BY 를 파라미터로 줄 수 없으므로
     // 최근 생성순과 쿼리를 따로 둔다. 기본 제외 규칙과 필터 절은 세 쿼리가 글자 그대로 같아야 한다.
     //
