@@ -11,6 +11,7 @@ import io.plady.moimyeon.core.domain.member.SocialAccount
 import io.plady.moimyeon.core.domain.question.FollowUpQuestion
 import io.plady.moimyeon.core.domain.question.QuestionCard
 import io.plady.moimyeon.core.domain.question.QuestionCardSet
+import io.plady.moimyeon.core.domain.question.QuestionCardSetOverview
 import io.plady.moimyeon.core.domain.question.QuestionCardSetService
 import io.plady.moimyeon.core.domain.question.QuestionResumeReference
 import io.plady.moimyeon.core.domain.question.QuestionResumeReferenceService
@@ -38,8 +39,9 @@ class QuestionPreparationFacadeTest {
     @Test
     fun `카드셋 목록은 대상 닉네임과 질문 수를 붙이고 본인 준비 인원 수를 분리한다`() {
         val cardSets = listOf(cardSet())
-        every { cardSetService.getCardSets(viewerMemberId, roomId) } returns cardSets
-        every { cardSetService.getMyCardSetPreparerCount(viewerMemberId, roomId) } returns 2
+        every {
+            cardSetService.getCardSetOverview(viewerMemberId, roomId)
+        } returns QuestionCardSetOverview(cardSets, 2)
         every { memberService.getMembers(listOf(targetMemberId)) } returns listOf(member(targetMemberId, "성실한 사슴 03"))
 
         val result = facade.getCardSets(viewerMemberId, roomId)
@@ -49,8 +51,7 @@ class QuestionPreparationFacadeTest {
         assertThat(result.cardSets.single().questionCount).isEqualTo(1)
         assertThat(result.cardSets.single().followUpQuestionCount).isEqualTo(1)
         verifyOrder {
-            cardSetService.getCardSets(viewerMemberId, roomId)
-            cardSetService.getMyCardSetPreparerCount(viewerMemberId, roomId)
+            cardSetService.getCardSetOverview(viewerMemberId, roomId)
             memberService.getMembers(listOf(targetMemberId))
         }
     }

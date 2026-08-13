@@ -16,11 +16,10 @@ class QuestionPreparationFacade(
     private val memberService: MemberService,
 ) {
     fun getCardSets(viewerMemberId: UUID, roomId: UUID): QuestionCardSetsResponse {
-        val cardSets = cardSetService.getCardSets(viewerMemberId, roomId)
-        val myCardSetPreparerCount = cardSetService.getMyCardSetPreparerCount(viewerMemberId, roomId)
-        val nicknames = memberService.getMembers(cardSets.map(QuestionCardSet::targetMemberId))
+        val overview = cardSetService.getCardSetOverview(viewerMemberId, roomId)
+        val nicknames = memberService.getMembers(overview.cardSets.map(QuestionCardSet::targetMemberId))
             .associate { it.id to it.nickname.value }
-        return QuestionCardSetsResponse.from(myCardSetPreparerCount, cardSets, nicknames)
+        return QuestionCardSetsResponse.from(overview.myCardSetPreparerCount, overview.cardSets, nicknames)
     }
 
     fun getCardSet(

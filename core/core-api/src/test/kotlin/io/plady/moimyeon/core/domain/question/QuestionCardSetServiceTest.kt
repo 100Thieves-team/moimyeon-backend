@@ -26,7 +26,7 @@ class QuestionCardSetServiceTest {
     private val authorMemberId = UUID.randomUUID()
 
     @Test
-    fun `확정 참여자는 본인을 제외한 전원의 질문 카드셋을 빈 카드셋까지 조회한다`() {
+    fun `확정 참여자는 본인을 제외한 전원의 질문 카드셋과 본인 준비 인원을 한 번의 검증으로 조회한다`() {
         val cardSets = listOf(
             cardSet(targetMemberId, listOf(question())),
             cardSet(emptyTargetMemberId, emptyList()),
@@ -35,17 +35,20 @@ class QuestionCardSetServiceTest {
         every {
             cardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
         } returns cardSets
+        every { cardSetReader.countPreparers(roomId, requesterMemberId) } returns 2
 
-        val result = service.getCardSets(requesterMemberId, roomId)
+        val result = service.getCardSetOverview(requesterMemberId, roomId)
 
-        assertThat(result).containsExactlyElementsOf(cardSets)
-        assertThat(result.map { it.targetMemberId })
+        assertThat(result.cardSets).containsExactlyElementsOf(cardSets)
+        assertThat(result.cardSets.map { it.targetMemberId })
             .containsExactly(targetMemberId, emptyTargetMemberId)
             .doesNotContain(requesterMemberId)
-        assertThat(result.last().questions).isEmpty()
+        assertThat(result.cardSets.last().questions).isEmpty()
+        assertThat(result.myCardSetPreparerCount).isEqualTo(2)
         verifyOrder {
             accessValidator.validateViewer(roomId, requesterMemberId)
             cardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
+            cardSetReader.countPreparers(roomId, requesterMemberId)
         }
     }
 
@@ -55,26 +58,13 @@ class QuestionCardSetServiceTest {
             accessValidator.validateViewer(roomId, requesterMemberId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
-        assertThatThrownBy { service.getCardSets(requesterMemberId, roomId) }
+        assertThatThrownBy { service.getCardSetOverview(requesterMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
             }
 
         verify(exactly = 0) { cardSetReader.getAllByRoomExceptTarget(any(), any()) }
-    }
-
-    @Test
-    fun `본인 카드셋은 내용을 노출하지 않고 준비한 참여자 수만 조회한다`() {
-        justRun { accessValidator.validateViewer(roomId, requesterMemberId) }
-        every { cardSetReader.countPreparers(roomId, requesterMemberId) } returns 2
-
-        val result = service.getMyCardSetPreparerCount(requesterMemberId, roomId)
-
-        assertThat(result).isEqualTo(2)
-        verifyOrder {
-            accessValidator.validateViewer(roomId, requesterMemberId)
-            cardSetReader.countPreparers(roomId, requesterMemberId)
-        }
+        verify(exactly = 0) { cardSetReader.countPreparers(any(), any()) }
     }
 
     @Test
