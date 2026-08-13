@@ -33,13 +33,13 @@ class RoundServiceTest {
 
     @Test
     fun `면접자가 자신의 라운드를 조회하면 질문 카드셋을 읽지 않고 면접자 화면을 본다`() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, intervieweeMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, intervieweeMemberId) }
 
         val result = service.getScreen(intervieweeMemberId, roomId, intervieweeMemberId)
 
         assertThat(result).isEqualTo(RoundScreen.Interviewee(intervieweeMemberId))
         verifyOrder {
-            progressAccessValidator.validateRailViewer(roomId, intervieweeMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, intervieweeMemberId)
         }
         verify(exactly = 0) {
             questionCardSetAccessValidator.validateOtherCardSetTarget(any(), any(), any())
@@ -53,7 +53,7 @@ class RoundServiceTest {
             targetMemberId = intervieweeMemberId,
             questions = emptyList(),
         )
-        justRun { progressAccessValidator.validateRailViewer(roomId, participantMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, participantMemberId) }
         justRun {
             questionCardSetAccessValidator.validateOtherCardSetTarget(
                 roomId,
@@ -74,7 +74,7 @@ class RoundServiceTest {
             ),
         )
         verifyOrder {
-            progressAccessValidator.validateRailViewer(roomId, participantMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, participantMemberId)
             questionCardSetAccessValidator.validateOtherCardSetTarget(
                 roomId,
                 participantMemberId,
@@ -90,7 +90,7 @@ class RoundServiceTest {
             targetMemberId = intervieweeMemberId,
             questions = emptyList(),
         )
-        justRun { progressAccessValidator.validateRailViewer(roomId, participantMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, participantMemberId) }
         justRun {
             questionCardSetAccessValidator.validateOtherCardSetTarget(
                 roomId,
@@ -113,7 +113,7 @@ class RoundServiceTest {
             ),
         )
         verify(exactly = 2) {
-            progressAccessValidator.validateRailViewer(roomId, participantMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, participantMemberId)
         }
         verify(exactly = 1) {
             questionCardSetReader.getByRoomAndTarget(roomId, intervieweeMemberId)
@@ -123,7 +123,7 @@ class RoundServiceTest {
     @Test
     fun `진행 접근 검증에 실패하면 라운드 대상과 질문 카드셋을 조회하지 않는다`() {
         every {
-            progressAccessValidator.validateRailViewer(roomId, outsiderMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, outsiderMemberId)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
@@ -140,7 +140,7 @@ class RoundServiceTest {
 
     @Test
     fun `라운드 대상 검증에 실패하면 질문 카드셋을 조회하지 않는다`() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, participantMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, participantMemberId) }
         every {
             questionCardSetAccessValidator.validateOtherCardSetTarget(
                 roomId,

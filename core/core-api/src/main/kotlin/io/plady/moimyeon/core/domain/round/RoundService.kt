@@ -17,7 +17,7 @@ class RoundService(
         roomId: UUID,
         intervieweeMemberId: UUID,
     ): RoundScreen {
-        progressAccessValidator.validateRailViewer(roomId, memberId)
+        progressAccessValidator.validateInProgressParticipant(roomId, memberId)
         if (memberId == intervieweeMemberId) {
             return RoundScreen.Interviewee(intervieweeMemberId)
         }
