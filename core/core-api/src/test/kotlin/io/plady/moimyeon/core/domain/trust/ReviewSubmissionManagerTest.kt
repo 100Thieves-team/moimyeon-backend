@@ -5,6 +5,8 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.enums.AttendanceStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.AttendanceEntity
@@ -53,14 +55,27 @@ class ReviewSubmissionManagerTest {
     fun setUp() {
         every { roomRepository.findByIdForUpdate(roomId) } returns mockk<RoomEntity> {
             every { isActive() } returns true
+            every { status } returns RoomStatus.COMPLETED
         }
         every {
             attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
-        } returns mockk<AttendanceEntity>()
+        } returns mockk<AttendanceEntity> {
+            every { status } returns AttendanceStatus.ATTENDED
+        }
         every {
             attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
-        } returns mockk<AttendanceEntity>()
-        every { eligibilityValidator.validate(roomId, authorMemberId, targetMemberId) } returns Unit
+        } returns mockk<AttendanceEntity> {
+            every { status } returns AttendanceStatus.ATTENDED
+        }
+        every {
+            eligibilityValidator.validate(
+                RoomStatus.COMPLETED,
+                authorMemberId,
+                targetMemberId,
+                AttendanceStatus.ATTENDED,
+                AttendanceStatus.ATTENDED,
+            )
+        } returns Unit
         every {
             reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
                 roomId,
@@ -89,7 +104,13 @@ class ReviewSubmissionManagerTest {
             roomRepository.findByIdForUpdate(roomId)
             attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
             attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
-            eligibilityValidator.validate(roomId, authorMemberId, targetMemberId)
+            eligibilityValidator.validate(
+                RoomStatus.COMPLETED,
+                authorMemberId,
+                targetMemberId,
+                AttendanceStatus.ATTENDED,
+                AttendanceStatus.ATTENDED,
+            )
             reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
                 roomId,
                 authorMemberId,
@@ -102,7 +123,13 @@ class ReviewSubmissionManagerTest {
     @Test
     fun `잠금 뒤 최신 자격 확인이 실패하면 후기를 저장하지 않는다`() {
         every {
-            eligibilityValidator.validate(roomId, authorMemberId, targetMemberId)
+            eligibilityValidator.validate(
+                RoomStatus.COMPLETED,
+                authorMemberId,
+                targetMemberId,
+                AttendanceStatus.ATTENDED,
+                AttendanceStatus.ATTENDED,
+            )
         } throws CoreException(CoreErrorType.REVIEW_TARGET_NOT_ATTENDED)
 
         assertSubmissionFails(CoreErrorType.REVIEW_TARGET_NOT_ATTENDED)

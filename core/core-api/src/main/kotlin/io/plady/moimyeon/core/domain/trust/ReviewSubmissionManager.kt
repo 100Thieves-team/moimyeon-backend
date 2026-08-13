@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
+import java.util.UUID
 
 private const val REVIEW_ACTIVE_UNIQUE_CONSTRAINT = "uk_review_room_author_target_active"
 
@@ -26,9 +27,20 @@ class ReviewSubmissionManager(
 ) {
     @Transactional
     fun submit(command: ReviewSubmissionCommand): Long {
-        lockRoom(command)
-        lockAttendances(command)
-        eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
+        val room = lockRoom(command)
+        val authorAttendance = lockAttendance(command.roomId, command.authorMemberId)
+        val targetAttendance = if (command.targetMemberId == command.authorMemberId) {
+            null
+        } else {
+            lockAttendance(command.roomId, command.targetMemberId)
+        }
+        eligibilityValidator.validate(
+            roomStatus = room.status,
+            authorMemberId = command.authorMemberId,
+            targetMemberId = command.targetMemberId,
+            authorAttendanceStatus = authorAttendance?.status,
+            targetAttendanceStatus = targetAttendance?.status,
+        )
         requireBusiness(
             !reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
                 command.roomId,
@@ -41,25 +53,13 @@ class ReviewSubmissionManager(
         return save(command, LocalDateTime.now(clock)).id
     }
 
-    private fun lockRoom(command: ReviewSubmissionCommand) {
-        requireFound(
-            roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
-            CoreErrorType.ROOM_NOT_FOUND,
-        )
-    }
+    private fun lockRoom(command: ReviewSubmissionCommand) = requireFound(
+        roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
+        CoreErrorType.ROOM_NOT_FOUND,
+    )
 
-    private fun lockAttendances(command: ReviewSubmissionCommand) {
-        attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(
-            command.roomId,
-            command.authorMemberId,
-        )
-        if (command.targetMemberId != command.authorMemberId) {
-            attendanceRepository.findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(
-                command.roomId,
-                command.targetMemberId,
-            )
-        }
-    }
+    private fun lockAttendance(roomId: UUID, memberId: UUID) = attendanceRepository
+        .findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
 
     private fun save(command: ReviewSubmissionCommand, submittedAt: LocalDateTime): ReviewEntity {
         try {

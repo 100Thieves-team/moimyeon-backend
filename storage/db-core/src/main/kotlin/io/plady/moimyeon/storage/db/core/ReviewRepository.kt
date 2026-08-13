@@ -1,7 +1,9 @@
 package io.plady.moimyeon.storage.db.core
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
@@ -9,6 +11,9 @@ import java.util.UUID
 
 interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
     fun findByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findForUpdateByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
 
     fun existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
         roomId: UUID,

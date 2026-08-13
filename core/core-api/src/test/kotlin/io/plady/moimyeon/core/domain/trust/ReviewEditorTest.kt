@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.trust
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ReviewEntity
@@ -34,7 +35,7 @@ class ReviewEditorTest {
 
     @BeforeEach
     fun setUp() {
-        every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns review
+        every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns review
     }
 
     @Test
@@ -50,6 +51,7 @@ class ReviewEditorTest {
 
         assertThat(review.tags()).containsExactlyInAnyOrderElementsOf(command.tags)
         assertThat(review.content).isEqualTo(command.content)
+        verify(exactly = 1) { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) }
     }
 
     @Test
@@ -72,11 +74,12 @@ class ReviewEditorTest {
         editor.delete(authorMemberId, 1L)
 
         assertThat(review.isDeleted()).isTrue()
+        verify(exactly = 1) { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) }
     }
 
     @Test
     fun `활성 후기가 없으면 E2006 을 던진다`() {
-        every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns null
+        every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns null
 
         assertUpdateFails(authorMemberId, CoreErrorType.REVIEW_NOT_FOUND)
     }
@@ -100,7 +103,7 @@ class ReviewEditorTest {
             visibleAt = now.minusMinutes(1),
             tags = setOf("시간을 잘 지켜요"),
         )
-        every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns expiredReview
+        every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns expiredReview
 
         assertUpdateFails(authorMemberId, CoreErrorType.REVIEW_EDIT_WINDOW_CLOSED)
 
@@ -123,7 +126,7 @@ class ReviewEditorTest {
             targetMemberId = UUID.randomUUID(),
             visibleAt = now.minusMinutes(1),
         )
-        every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns expiredReview
+        every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns expiredReview
 
         assertDeleteFails(authorMemberId, CoreErrorType.REVIEW_EDIT_WINDOW_CLOSED)
 

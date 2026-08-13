@@ -16,15 +16,38 @@ class ReviewEligibilityValidator(
 ) {
     fun validate(roomId: UUID, authorMemberId: UUID, targetMemberId: UUID) {
         val room = roomFinder.getRoom(roomId)
-        requireBusiness(room.status == RoomStatus.COMPLETED, CoreErrorType.REVIEW_NOT_AVAILABLE)
-        requireBusiness(
-            roomProgressReader.findAttendance(roomId, authorMemberId)?.status == AttendanceStatus.ATTENDED,
-            CoreErrorType.REVIEW_AUTHOR_NOT_ATTENDED,
-        )
+        validateRoom(room.status)
+        validateAuthorAttendance(roomProgressReader.findAttendance(roomId, authorMemberId)?.status)
         requireBusiness(authorMemberId != targetMemberId, CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
         requireBusiness(
-            roomProgressReader.findAttendance(roomId, targetMemberId)?.status == AttendanceStatus.ATTENDED,
+            isEligibleAttendance(roomProgressReader.findAttendance(roomId, targetMemberId)?.status),
             CoreErrorType.REVIEW_TARGET_NOT_ATTENDED,
         )
     }
+
+    fun validate(
+        roomStatus: RoomStatus,
+        authorMemberId: UUID,
+        targetMemberId: UUID,
+        authorAttendanceStatus: AttendanceStatus?,
+        targetAttendanceStatus: AttendanceStatus?,
+    ) {
+        validateRoom(roomStatus)
+        validateAuthorAttendance(authorAttendanceStatus)
+        requireBusiness(authorMemberId != targetMemberId, CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
+        requireBusiness(
+            isEligibleAttendance(targetAttendanceStatus),
+            CoreErrorType.REVIEW_TARGET_NOT_ATTENDED,
+        )
+    }
+
+    fun validateRoom(roomStatus: RoomStatus) {
+        requireBusiness(roomStatus == RoomStatus.COMPLETED, CoreErrorType.REVIEW_NOT_AVAILABLE)
+    }
+
+    fun validateAuthorAttendance(attendanceStatus: AttendanceStatus?) {
+        requireBusiness(isEligibleAttendance(attendanceStatus), CoreErrorType.REVIEW_AUTHOR_NOT_ATTENDED)
+    }
+
+    fun isEligibleAttendance(status: AttendanceStatus?): Boolean = status == AttendanceStatus.ATTENDED
 }

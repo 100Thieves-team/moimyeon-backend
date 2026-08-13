@@ -39,7 +39,7 @@ class ReviewEditor(
         now: LocalDateTime,
     ): ReviewEntity {
         val review = requireFound(
-            reviewRepository.findByIdAndDeletedAtIsNull(reviewId),
+            reviewRepository.findForUpdateByIdAndDeletedAtIsNull(reviewId),
             CoreErrorType.REVIEW_NOT_FOUND,
         )
         requireBusiness(review.authorMemberId == authorMemberId, CoreErrorType.REVIEW_FORBIDDEN)
