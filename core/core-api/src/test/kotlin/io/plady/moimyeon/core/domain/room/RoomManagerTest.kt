@@ -4,12 +4,15 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
+import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -40,6 +43,7 @@ class RoomManagerTest {
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
     private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
+    private val memberValidator = mockk<MemberValidator>(relaxed = true)
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
@@ -47,11 +51,13 @@ class RoomManagerTest {
         resumeSubmissionRepository,
         roomStatusLogRepository,
         participationValidator,
+        memberValidator,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
+    private val resumeId = UUID.randomUUID()
 
     // relaxed mock 은 제네릭 save 의 반환을 Object 로 만들어 캐스팅에서 터진다. 저장한 것을 그대로 돌려준다.
     @BeforeEach
@@ -463,6 +469,109 @@ class RoomManagerTest {
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
         } returns joined.toLong()
     }
+
+    // --- 생성 경로(MOI-331) --------------------------------------------------
+    //
+    // 동시 요청은 IT 로 재현하지 않는다(testing.md). 락이 걸리는 자리는 여기서만 관측된다.
+
+    // 잠금이 중복 확인보다 뒤면 두 요청이 같은 "없음"을 읽고 각자 룸을 만든다.
+    // 판정을 아무리 정확히 써도 순서가 틀리면 직렬화가 안 된다.
+    @Test
+    fun `방장 회원 행 잠금이 중복 확인보다 먼저다`() {
+        givenNoDuplicate()
+        givenActiveHostedRoomCount(0)
+        givenCreateWritesSucceed()
+
+        manager.create(newRoom(), hostId, resumeId, resumeFile())
+
+        verifyOrder {
+            memberValidator.validateActive(hostId)
+            roomRepository.findActiveHostedRooms(hostId, any(), any(), any(), any())
+        }
+    }
+
+    // 신청 경로는 막는데 생성 경로는 막지 않던 구멍이다(MOI-331 §0-3).
+    // 규칙 자체는 MemberValidatorTest 가 본다. 여기서는 생성 경로가 그 도구를 타는지만 본다.
+    @Test
+    fun `탈퇴한 회원은 룸을 만들 수 없다`() {
+        every { memberValidator.validateActive(hostId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        assertThatThrownBy { manager.create(newRoom(), hostId, resumeId, resumeFile()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+        verify(exactly = 0) { roomRepository.save(any()) }
+    }
+
+    // Room.create 도 같은 규칙을 보지만 그쪽은 쓰기 트랜잭션 **밖**이다(RoomService).
+    // 요청을 받고 커밋하기까지 사이에 일정이 과거가 되는 경우가 완료 조건이라, 판정이 경계 안에도 있어야 한다.
+    // 밖의 검증만 남기면 이 테스트만 빨간불이 된다 — 다른 테스트로는 안팎을 구분할 수 없다.
+    @Test
+    fun `쓰기 트랜잭션 안에서 일정이 과거면 E1407 로 거부한다`() {
+        givenNoDuplicate()
+        givenActiveHostedRoomCount(0)
+
+        assertThatThrownBy { manager.create(pastRoom(), hostId, resumeId, resumeFile()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_START_AT_NOT_FUTURE)
+            }
+        verify(exactly = 0) { roomRepository.save(any()) }
+    }
+
+    private fun givenNoDuplicate() {
+        every { roomRepository.findActiveHostedRooms(hostId, any(), any(), any(), any()) } returns emptyList()
+    }
+
+    private fun givenActiveHostedRoomCount(count: Long) {
+        every { roomRepository.countActiveHostedRooms(hostId, any(), any(), any()) } returns count
+    }
+
+    // relaxed mock 은 제네릭 save 의 반환을 Object 로 만들어 캐스팅에서 터진다. 저장한 것을 그대로 돌려준다.
+    private fun givenCreateWritesSucceed() {
+        every { roomRepository.save(any()) } answers { firstArg() }
+        every { participationRepository.save(any()) } answers { firstArg() }
+        every { roomApplicationRepository.saveAndFlush(any()) } answers { firstArg() }
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+    }
+
+    private fun newRoom(startAt: LocalDateTime = now.plusDays(7)): Room = Room.create(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(startAt = startAt, durationMinutes = 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        now = now,
+    )
+
+    // Room.create 는 과거 일정으로는 만들어지지 않는다. 트랜잭션 밖에서 통과한 뒤 일정이 지나간 상태를
+    // 재현해야 해서 영속 룸 복원 경로로 만든다.
+    private fun pastRoom(): Room = Room.reconstitute(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(startAt = now.minusMinutes(1), durationMinutes = 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        status = RoomStatus.RECRUITING,
+    )
+
+    private fun resumeFile() = ResumeFile(
+        key = "resumes/$hostId/backend.pdf",
+        originalName = "backend.pdf",
+        sizeBytes = 1024L,
+        contentType = "application/pdf",
+    )
 
     private fun updateCommand(
         title: String = "백엔드 모의면접 함께 준비해요",

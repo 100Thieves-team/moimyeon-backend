@@ -5,6 +5,7 @@ import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
@@ -13,8 +14,10 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
+import java.time.LocalDateTime
 import java.util.UUID
 
 // AI 요약은 이력서 등록 시점에 따로 만들어지고 실패·재시도가 있다(MOI-377).
@@ -28,10 +31,17 @@ class RoomServiceIT(
     private val roomApplicationRepository: RoomApplicationRepository,
     private val participationRepository: ParticipationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+
+    // 생성 경로가 방장 회원 행을 잠그며 실재를 본다(MOI-331).
+    @BeforeEach
+    fun persistHostMember() {
+        memberRepository.save(activeMember(hostMemberId, "host-moi-service"))
+    }
 
     @AfterEach
     fun cleanUp() {
@@ -43,23 +53,26 @@ class RoomServiceIT(
         }
         createdRoomIds.clear()
         resumeRepository.deleteById(resumeId)
+        memberRepository.deleteById(hostMemberId)
     }
 
     @Test
     fun `AI 요약이 아직 없는 이력서로도 룸을 만들 수 있다`() {
-        listOf(ResumeSummaryStatus.PROCESSING, ResumeSummaryStatus.FAILED).forEach { summaryStatus ->
+        // 일정을 갈라 두 번을 서로 다른 룸으로 만든다. 같은 자연키면 두 번째가 첫 룸을 그대로
+        // 돌려받아(MOI-331 멱등) FAILED 쪽이 검증되지 않는다.
+        listOf(ResumeSummaryStatus.PROCESSING, ResumeSummaryStatus.FAILED).forEachIndexed { index, summaryStatus ->
             persistResume(summaryStatus)
 
-            val room = roomService.createRoom(hostMemberId, creationCommand())
-            createdRoomIds += room.id
+            val created = roomService.createRoom(hostMemberId, creationCommand(FIXED_NOW.plusDays(7L + index)))
+            createdRoomIds += created.roomId
 
-            val submission = resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(room.id).single()
+            val submission = resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(created.roomId).single()
             assertThat(submission.sourceResumeId).isEqualTo(resumeId)
             assertThat(submission.memberId).isEqualTo(hostMemberId)
         }
     }
 
-    private fun creationCommand() = RoomCreationCommand(
+    private fun creationCommand(startAt: LocalDateTime = FIXED_NOW.plusDays(7)) = RoomCreationCommand(
         jobPostingId = 1L,
         jobRoleId = 1L,
         title = RoomTitle("백엔드 모의면접 함께 준비해요"),
@@ -68,7 +81,7 @@ class RoomServiceIT(
         interviewType = InterviewType.JOB,
         meetingPlace = MeetingPlace.Online,
         capacity = RoomCapacity(min = 2, max = 6),
-        schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7), durationMinutes = 60),
+        schedule = RoomSchedule(startAt = startAt, durationMinutes = 60),
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
         resumeId = resumeId,
     )

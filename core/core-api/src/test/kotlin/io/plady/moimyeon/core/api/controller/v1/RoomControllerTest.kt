@@ -21,6 +21,7 @@ import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
 import io.plady.moimyeon.core.domain.room.RoomCreationLimit
+import io.plady.moimyeon.core.domain.room.RoomCreationResult
 import io.plady.moimyeon.core.domain.room.RoomDescription
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomSchedule
@@ -35,6 +36,7 @@ import io.plady.moimyeon.core.domain.roomviewer.ViewerRelation
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -71,7 +73,9 @@ class RoomControllerTest : RestDocsTest() {
         "생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받아 룸을 만들고 즉시 모집(RECRUITING) 상태로 등록한다(§4.8). " +
             "공고를 고르면 회사가 함께 확정되므로 룸에는 회사를 따로 저장하지 않는다(공고 → 회사 파생). " +
             "직무·지역·이력서는 카탈로그/보관함 참조 id 를 받는다. " +
-            "(모킹: 도메인 구현 전까지 고정 roomId(UUID)를 반환한다)"
+            "더블클릭·재시도로 같은 요청이 중복 전송되면 룸을 새로 만들지 않고 이미 만들어진 룸을 그대로 돌려준다 — " +
+            "같은 방장의 같은 공고·직무·시각이면 같은 룸으로 본다. " +
+            "이때 status 는 그 룸의 현재 상태라 RECRUITING 이 아닐 수 있다."
     private val formOptionsSummary = "룸 생성 폼 선택지 조회"
     private val formOptionsDescription =
         "기본 정보·진행 방식(§4.1·§4.2) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다. " +
@@ -365,7 +369,8 @@ class RoomControllerTest : RestDocsTest() {
 
     @Test
     fun createRoom() {
-        every { roomService.createRoom(any(), any()) } returns sampleRoom()
+        every { roomService.createRoom(any(), any()) } returns
+            RoomCreationResult(roomId = createdRoomId, status = RoomStatus.RECRUITING)
         mockMvc.perform(
             post("/v1/rooms")
                 .principal(principal)

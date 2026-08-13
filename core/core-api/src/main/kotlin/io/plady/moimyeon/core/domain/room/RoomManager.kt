@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.MeetingType
@@ -35,6 +36,7 @@ class RoomManager(
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val participationValidator: ParticipationValidator,
+    private val memberValidator: MemberValidator,
     private val clock: Clock,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
@@ -43,15 +45,32 @@ class RoomManager(
     //
     // 중복 생성 제한(MOI-330)은 이 경계 안에서 본다. 밖에서 미리 세면 커밋 밖의 확인이라 확정이 아니고,
     // 거부됐을 때 앞선 쓰기가 남을 자리가 생긴다.
-    // 동시 요청까지는 막지 않는다 — 방장 회원 행 락은 MOI-331 이 자연키 유니크와 함께 넣는다.
+    //
+    // 판정 순서가 곧 사용자가 받는 결과다(MOI-331 D4).
+    // 중복 확인이 3개 게이트보다 **앞**이다 — 뒤집으면 활성 룸이 3개인 방장의 더블클릭이 E1427 을 받는다.
+    // 이미 있는 룸을 돌려주는 것은 새 자원을 만들지 않으므로 한도와 무관하다.
+    //
+    // ⚠️ validateActive 가 잡는 방장 회원 행 잠금이 이 방장의 생성을 직렬화한다. 이것이 멱등(F1·F2)과
+    //    3개 제한(F3) 둘 다의 동시성 방어선이다. 자연키에는 DB 유니크가 없다(계획서 D1).
+    //    **이 한 줄이 빠져도 어떤 테스트도 빨간불이 되지 않는다** — 순차 재호출은 아래 중복 확인만으로
+    //    통과하기 때문이다(testing.md: 레이스는 재현하지 않는다). 지우지 않는다.
+    //    새 생성 경로(일괄 생성 등)를 만들면 반드시 이 잠금을 함께 가져간다.
     @Transactional
-    fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile) {
+    fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile): RoomCreationResult {
+        memberValidator.validateActive(hostMemberId)
+
+        findDuplicate(hostMemberId, room)?.let { return RoomCreationResult(it.id, it.status) }
+
         requireBusiness(
             !ActiveRoomLimit.isExceeded(countActiveHostedRooms(hostMemberId, room.jobPostingId, room.jobRoleId)),
             CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED,
         )
 
         val now = LocalDateTime.now(clock)
+
+        // Room.create 가 트랜잭션 밖에서 이미 본 규칙을 여기서 다시 본다. 요청을 받고 커밋하기까지
+        // 사이에 일정이 과거가 되는 것이 완료 조건이라, 판정이 커밋 경계 안에 있어야 확정이다.
+        requireBusiness(room.schedule.startAt.isAfter(now), CoreErrorType.ROOM_START_AT_NOT_FUTURE)
 
         roomRepository.save(RoomMapper.toEntity(room))
         participationRepository.save(
@@ -80,7 +99,10 @@ class RoomManager(
                 submittedAt = now,
             ),
         )
-        // TODO(BE-05 잔여): chat_room · room_status_log(생성 전이) — 엔티티 생성 필요.
+        // TODO(BE-05 잔여): chat_room — 엔티티 생성 필요.
+        // room_status_log 의 생성 전이는 만들지 않는다(MOI-397). 최초 방장은 participation.role=HOST 가
+        // 보존하고, 멱등용으로 되살려도 room_id 를 매번 새로 뽑는 이상 중복 생성을 막지 못한다(MOI-331).
+        return RoomCreationResult(room.id, room.status)
     }
 
     // 편집 가능한 필드 수정. 방장만 가능. 오프라인 지역 참조 검증은 RoomService 가 트랜잭션 밖에서 한다.
@@ -187,6 +209,18 @@ class RoomManager(
 
         RoomConfirmationBlockReason.BELOW_MIN_CAPACITY -> CoreErrorType.ROOM_BELOW_MIN_CAPACITY
         RoomConfirmationBlockReason.SCHEDULE_PASSED -> CoreErrorType.ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION
+    }
+
+    // 중복 생성 판정(MOI-331 F1·F2). 자연키는 (방장, 공고, 직무, 시각) 이고 활성 집합은 3개 제한과 같다 —
+    // 같아야 한다. 취소한 룸을 같은 조건으로 다시 만드는 것은 허용해야 하므로 CANCELED 는 빠져 있다.
+    private fun findDuplicate(hostMemberId: UUID, room: Room): RoomEntity? {
+        return roomRepository.findActiveHostedRooms(
+            hostMemberId,
+            room.jobPostingId,
+            room.jobRoleId,
+            room.schedule.startAt,
+            ActiveRoomLimit.ACTIVE_STATUSES,
+        ).firstOrNull()
     }
 
     // 묻는 쪽(RoomFinder)과 같은 쿼리·같은 술어를 써야 화면의 경고와 생성 결과가 어긋나지 않는다.

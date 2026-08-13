@@ -1,7 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
@@ -65,7 +64,8 @@ class RoomServiceTest {
     @Test
     fun `이력서 검증은 룸 저장보다 먼저 호출된다`() {
         every { resumeValidator.validateOwnedBy(hostMemberId, resumeId) } returns resumeFile()
-        justRun { roomManager.create(any(), any(), any(), any()) }
+        every { roomManager.create(any(), any(), any(), any()) } returns
+            RoomCreationResult(UUID.randomUUID(), RoomStatus.RECRUITING)
 
         service.createRoom(hostMemberId, creationCommand())
 
