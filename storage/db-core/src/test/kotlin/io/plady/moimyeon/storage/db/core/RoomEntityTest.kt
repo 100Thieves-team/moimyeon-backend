@@ -10,9 +10,8 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-// 메모리에서 도달할 수 있는 상태는 RECRUITING 과 CANCELED 둘뿐이다.
-// CONFIRMED·IN_PROGRESS·COMPLETED 로 만드는 전이가 없어(확정은 MOI-398) 그쪽 판정은
-// 실제 DB 상태를 만들 수 있는 RoomCancellationIT 가 본다.
+// 룸이 가진 상태와 일정만으로 끝나는 전이 규칙은 메모리에서 검증한다.
+// 참여 인원처럼 외부 데이터가 필요한 판정과 완료 전이는 해당 흐름의 통합 테스트가 본다.
 class RoomEntityTest {
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
 
@@ -74,10 +73,28 @@ class RoomEntityTest {
     @Test
     fun `모집 중인 룸은 진행을 시작할 수 없고 취소된 룸도 마찬가지다`() {
         val room = recruitingRoom()
-        assertThat(room.canStartProgress()).isFalse()
+        assertThat(room.canStartProgress(now)).isFalse()
 
         room.cancel()
 
-        assertThat(room.canStartProgress()).isFalse()
+        assertThat(room.canStartProgress(now)).isFalse()
+    }
+
+    @Test
+    fun `확정 룸은 예정 시각 전에는 진행을 시작할 수 없다`() {
+        val room = recruitingRoom()
+        room.confirm()
+
+        assertThat(room.canStartProgress(now.plusDays(3).minusNanos(1))).isFalse()
+    }
+
+    @Test
+    fun `확정 룸은 예정 시각부터 5분을 기다리지 않고 진행을 시작할 수 있다`() {
+        val room = recruitingRoom()
+        val startAt = now.plusDays(3)
+        room.confirm()
+
+        assertThat(room.canStartProgress(startAt)).isTrue()
+        assertThat(room.canStartProgress(startAt.plusMinutes(1))).isTrue()
     }
 }

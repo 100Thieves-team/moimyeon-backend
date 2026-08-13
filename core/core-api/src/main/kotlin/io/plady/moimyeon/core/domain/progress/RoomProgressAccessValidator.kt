@@ -8,6 +8,7 @@ import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -15,9 +16,9 @@ class RoomProgressAccessValidator(
     private val roomRepository: RoomRepository,
     private val participationFinder: ParticipationFinder,
 ) {
-    fun validateStarter(roomId: UUID, memberId: UUID) {
+    fun validateStarter(roomId: UUID, memberId: UUID, at: LocalDateTime) {
         requireBusiness(
-            findActiveRoom(roomId).canStartProgress(),
+            findActiveRoom(roomId).canStartProgress(at),
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
         )
         validateConfirmedParticipant(

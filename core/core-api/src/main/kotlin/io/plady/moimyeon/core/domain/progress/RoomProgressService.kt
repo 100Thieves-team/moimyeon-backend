@@ -20,13 +20,14 @@ class RoomProgressService(
         roomId: UUID,
         attendances: List<Attendance>,
     ): RoomProgressStartResult {
-        accessValidator.validateStarter(roomId, startedByMemberId)
+        val startedAt = now()
+        accessValidator.validateStarter(roomId, startedByMemberId, startedAt)
         return progressManager.start(
             RoomProgressStartCommand(
                 roomId = roomId,
                 startedByMemberId = startedByMemberId,
                 attendances = attendances.toList(),
-                startedAt = now(),
+                startedAt = startedAt,
             ),
         )
     }
