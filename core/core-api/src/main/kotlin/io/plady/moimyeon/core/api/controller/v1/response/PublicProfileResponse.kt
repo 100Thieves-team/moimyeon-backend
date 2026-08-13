@@ -5,7 +5,6 @@ import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.trust.PublicTrust
 import io.plady.moimyeon.core.enums.AttendanceStatus
-import io.plady.moimyeon.core.enums.MeetingPreference
 import java.util.UUID
 
 data class PublicProfileResponse(
@@ -13,7 +12,6 @@ data class PublicProfileResponse(
     val nickname: String,
     val interestJobRoles: List<JobRoleResponse>,
     val bio: String,
-    val meetingPreference: MeetingPreference,
     val trust: PublicProfileTrustResponse,
 ) {
     companion object {
@@ -31,7 +29,6 @@ data class PublicProfileResponse(
                     jobRolesById[jobRoleId]?.let(JobRoleResponse::from)
                 },
                 bio = profile.bio,
-                meetingPreference = profile.meetingPreference,
                 trust = PublicProfileTrustResponse.from(trust),
             )
         }

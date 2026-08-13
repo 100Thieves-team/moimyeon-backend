@@ -11,10 +11,9 @@ INSERT INTO social_account (provider, provider_id, linked_email, member_id, crea
 VALUES ('GOOGLE', 'local-test-sub', 'localtest@moimyeon.dev',
         X'019daf00000070008000000000000101', '2026-07-01 00:00:00', '2026-07-01 00:00:00');
 
--- sigungu_id=1(서울 강남구) — seed.sql 의 참조 데이터 id
-INSERT INTO member_profile (member_id, bio, meeting_preference, sigungu_id, created_at, updated_at)
+INSERT INTO member_profile (member_id, bio, created_at, updated_at)
 VALUES (X'019daf00000070008000000000000101',
-        '결제 도메인 3년 차 프론트엔드 개발자예요.', 'OFFLINE', 1,
+        '결제 도메인 3년 차 프론트엔드 개발자예요.',
         '2026-07-01 00:00:00', '2026-07-01 00:00:00');
 
 -- 관심 직무: 프론트엔드(2)·서버·백엔드(1) — 값 컬렉션이 아니라 조인 엔티티라 타임스탬프를 채운다

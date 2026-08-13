@@ -18,7 +18,6 @@ import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileService
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -63,12 +62,10 @@ class MemberControllerTest : RestDocsTest() {
     )
     private val memberId: UUID = member.id
 
-    // 가입 시 만들어지는 빈 프로필 — 미지정은 null 이 아니라 값이다
+    // 가입 시 만들어지는 빈 프로필
     private val profile = MemberProfile(
         memberId = memberId,
         bio = "",
-        meetingPreference = MeetingPreference.UNSPECIFIED,
-        sigunguId = null,
         interestJobRoleIds = listOf(1L, 2L),
         interestCompanyIds = listOf(1L, 2L),
     )
@@ -78,7 +75,7 @@ class MemberControllerTest : RestDocsTest() {
     private val memberMeDescription =
         "인증된 회원의 상태와 프로필을 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. " +
             "프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재한다 — 아직 안 채운 값은 " +
-            "null 이 아니라 빈 문자열·UNSPECIFIED 로 내려간다(지역만 미선택이 null). " +
+            "빈 문자열·빈 배열로 내려간다. " +
             "profile 은 프로필 수정 응답의 data 와 동일한 모양이다. " +
             "액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
     private val updateNicknameSummary = "닉네임 변경"
@@ -120,6 +117,8 @@ class MemberControllerTest : RestDocsTest() {
                 assertThat(result.response.contentAsString)
                     .contains("\"interestJobRoleIds\":[1,2]")
                     .contains("\"interestCompanies\":[{\"companyId\":1,\"name\":\"달빛페이\"},{\"companyId\":2,\"name\":\"한빛커머스\"}]")
+                    .doesNotContain("\"meetingPreference\"")
+                    .doesNotContain("\"sigunguId\"")
                     .doesNotContain("\"interviewStage\"")
             }
             .andDo(
@@ -137,8 +136,6 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("data.profile.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
                         fieldWithPath("data.profile.interestJobRoleIds").type(JsonFieldType.ARRAY).description("관심 직무 id 목록 (미지정이면 빈 배열)"),
                         fieldWithPath("data.profile.bio").type(JsonFieldType.STRING).description("한 줄 소개 (미지정이면 빈 문자열)"),
-                        fieldWithPath("data.profile.meetingPreference").type(JsonFieldType.STRING).description("만남 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
-                        fieldWithPath("data.profile.sigunguId").type(JsonFieldType.NUMBER).optional().description("관심 지역 시군구 id (미선택이면 null)"),
                         fieldWithPath("data.profile.interestCompanies").type(JsonFieldType.ARRAY).description("관심 회사 목록 (미지정이면 빈 배열)"),
                         fieldWithPath("data.profile.interestCompanies[].companyId").type(JsonFieldType.NUMBER).description("회사 id"),
                         fieldWithPath("data.profile.interestCompanies[].name").type(JsonFieldType.STRING).description("회사명"),
