@@ -206,7 +206,7 @@ class PublicProfileControllerTest : RestDocsTest() {
         fieldWithPath("data.trust.activityTopPercent").type(JsonFieldType.NUMBER).optional()
             .description("활동률 상위 퍼센트 (출석한 완료 룸이 없으면 null)"),
         fieldWithPath("data.trust.recentAttendances").type(JsonFieldType.ARRAY)
-            .description("최근 완료 룸 출석 결과, 최신순 최대 3건 (ATTENDED | ABSENT)"),
+            .description("최근 완료 룸 출석 결과, 최신순 최대 3건"),
         fieldWithPath("data.trust.noShowCount").type(JsonFieldType.NUMBER).description("완료 룸 누적 불참 횟수"),
         fieldWithPath("data.trust.representativeTags").type(JsonFieldType.ARRAY)
             .description("대표 평가 태그, 받은 횟수 내림차순·문구 오름차순 최대 3개"),

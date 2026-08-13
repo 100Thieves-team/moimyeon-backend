@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import groovy.lang.Closure
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.servers.Server
+import java.net.URLClassLoader
 
 buildscript {
     dependencies {
@@ -72,14 +73,23 @@ configure<OpenApi3Extension> {
     outputFileNamePrefix = "openapi3"
 }
 
+val openApiRuntimeClasspath = configurations.named("runtimeClasspath")
+
 tasks.withType<OpenApi3Task>().configureEach {
     dependsOn("restDocsTest")
+    dependsOn(":core:core-enum:jar")
+    inputs.files(openApiRuntimeClasspath)
+        .withPropertyName("openApiRuntimeClasspath")
+        .withNormalizer(ClasspathNormalizer::class)
     doLast {
         val yamlFile = layout.buildDirectory.file("api-spec/openapi3.yaml").get().asFile
         val ymlFile = layout.buildDirectory.file("api-spec/openapi3.yml").get().asFile
 
         if (yamlFile.exists()) {
-            patchGeneratedSchemas(yamlFile)
+            patchGeneratedSchemas(
+                yamlFile = yamlFile,
+                stringEnumArrayProperties = resolveStringEnumArrayProperties(openApiRuntimeClasspath.get().files),
+            )
             validateOpenApiSpec(yamlFile)
             yamlFile.copyTo(target = ymlFile, overwrite = true)
         }
@@ -128,9 +138,24 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
 // - OAuth 로그인: Spring Security 필터 엔드포인트라 REST Docs 리소스가 없어 경로와 리다이렉트 계약을 보강한다.
 val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
-val stringEnumArrayProperties = mapOf("recentAttendances" to listOf("ATTENDED", "ABSENT"))
+// 프로젝트 클래스는 Gradle 스크립트 컴파일 클래스패스에 없으므로 문서 생성 시 컴파일 산출물에서 enum 값을 읽는다.
+val stringEnumArrayTypes = mapOf(
+    "recentAttendances" to "io.plady.moimyeon.core.enums.AttendanceStatus",
+)
 
-fun patchGeneratedSchemas(yamlFile: File) {
+fun resolveStringEnumArrayProperties(classpath: Set<File>): Map<String, List<String>> {
+    val urls = classpath.map { it.toURI().toURL() }.toTypedArray()
+    return URLClassLoader(urls, ClassLoader.getPlatformClassLoader()).use { classLoader ->
+        stringEnumArrayTypes.mapValues { (propertyName, className) ->
+            val enumClass = classLoader.loadClass(className)
+            check(enumClass.isEnum) { "$propertyName 보정 타입이 enum이 아니다: $className" }
+            enumClass.enumConstants.map { (it as Enum<*>).name }
+                .also { check(it.isNotEmpty()) { "$propertyName 보정 enum에 값이 없다: $className" } }
+        }
+    }
+}
+
+fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String, List<String>>) {
     val mapper = Yaml.mapper()
     val root = mapper.readTree(yamlFile)
     var errorDataPatched = 0
@@ -147,7 +172,7 @@ fun patchGeneratedSchemas(yamlFile: File) {
             errorData.set<ObjectNode>("additionalProperties", mapper.createObjectNode().put("type", "string"))
         }
         patchNumberIdArrays(schema, mapper, numberArraysPatched)
-        patchStringEnumArrays(schema, mapper, stringEnumArraysPatched)
+        patchStringEnumArrays(schema, mapper, stringEnumArrayProperties, stringEnumArraysPatched)
         nullableRequiredPatched += requireNullableProperty(schema, mapper, "activityTopPercent")
     }
     // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
@@ -316,7 +341,12 @@ fun patchNumberIdArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSe
     }
 }
 
-fun patchStringEnumArrays(node: JsonNode, mapper: ObjectMapper, patched: MutableSet<String>) {
+fun patchStringEnumArrays(
+    node: JsonNode,
+    mapper: ObjectMapper,
+    stringEnumArrayProperties: Map<String, List<String>>,
+    patched: MutableSet<String>,
+) {
     if (node is ObjectNode) {
         node.fields().forEach { (name, value) ->
             val enumValues = stringEnumArrayProperties[name]
@@ -330,10 +360,10 @@ fun patchStringEnumArrays(node: JsonNode, mapper: ObjectMapper, patched: Mutable
                     },
                 )
             }
-            patchStringEnumArrays(value, mapper, patched)
+            patchStringEnumArrays(value, mapper, stringEnumArrayProperties, patched)
         }
     } else if (node.isArray) {
-        node.forEach { patchStringEnumArrays(it, mapper, patched) }
+        node.forEach { patchStringEnumArrays(it, mapper, stringEnumArrayProperties, patched) }
     }
 }
 
