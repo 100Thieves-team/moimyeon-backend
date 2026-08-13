@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T15:10:13.512406727",
+                        "datetime" : "2026-08-13T15:34:20.734645079",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T15:10:13.700672669",
+                        "datetime" : "2026-08-13T15:34:20.970867171",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -672,7 +672,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "bd90bdc3-5727-4fe3-ada4-154a76f1c6d3",
+                          "termsId" : "2a950434-296f-42cb-ba5a-d67014845af0",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -680,7 +680,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "628a785a-61eb-4dc4-93ba-9b6f207d6d5b",
+                          "termsId" : "63574711-675e-4797-a40d-d3dfb24cc079",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1019,12 +1019,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "79bf58de-13ba-4396-950c-a27f1e786bb4",
+                        "memberId" : "4d72fe5e-ccd7-4bec-a0fc-1e8b0bf46a1c",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "79bf58de-13ba-4396-950c-a27f1e786bb4",
+                          "memberId" : "4d72fe5e-ccd7-4bec-a0fc-1e8b0bf46a1c",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -1341,7 +1341,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-14T15:10:17.740294373",
+                          "startAt" : "2026-08-14T15:34:25.07966445",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1352,7 +1352,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "f11bd0d5-c0cc-49b9-8c89-fcb8d8057e56",
+                        "hostMemberId" : "020973af-7905-4736-bbdf-9d985249602b",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1656,7 +1656,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b5c3f948-ffa4-4d3d-a12c-8cb9877b19de",
+                        "memberId" : "90bcb07c-5475-478a-b4fa-a24324308dfc",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -2269,18 +2269,18 @@ paths:
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "c0e9fc0e-7cfb-48b4-9e1d-b968987db4a3",
+                    "resumeId" : "90d5e7d0-2f3e-4d50-81f0-d3315117d503",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "1c351a14-3477-4a17-8ceb-642128527296"
+                    "resumeId" : "ad951e52-ff35-457f-bd82-205685e69e8b"
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "c48b233f-8d1c-4822-b1d9-0f94c873d4c2",
+                    "resumeId" : "9134c976-8a18-4251-8c42-4b6e1150438d",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -2762,7 +2762,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "21434f64-32a9-44f1-962f-61096aba0999",
+                          "resumeId" : "8db54d70-64fb-424e-badc-fd36c881e3c6",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -4403,14 +4403,6 @@ components:
                     type: string
                     description: 대표 직무명 (선택)
                     nullable: true
-    v1-members-me-web-push-subscriptions1250153706:
-      required:
-      - registration
-      type: object
-      properties:
-        registration:
-          type: string
-          description: FCM 웹 클라이언트가 발급한 등록 식별자
     v1-members-me1349704155:
       required:
       - result
@@ -4475,6 +4467,14 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+    v1-members-me-web-push-subscriptions1250153706:
+      required:
+      - registration
+      type: object
+      properties:
+        registration:
+          type: string
+          description: FCM 웹 클라이언트가 발급한 등록 식별자
     v1-members-me-nickname-346517390:
       required:
       - nickname
@@ -4531,6 +4531,30 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -4617,30 +4641,6 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
     v1-rooms1476531183:
       required:
       - result
@@ -5142,6 +5142,25 @@ components:
             maxCount:
               type: number
               description: 최대 보관 가능 개수 (10)
+    v1-members-me-profile608809462:
+      type: object
+      properties:
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-members-me-resumes-resumeId1837465274:
       required:
       - result
@@ -5199,25 +5218,6 @@ components:
             name:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
-    v1-members-me-profile608809462:
-      type: object
-      properties:
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
   securitySchemes:
     AccessTokenCookie:
       type: apiKey
