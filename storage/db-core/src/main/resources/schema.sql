@@ -742,36 +742,29 @@ CREATE TABLE question_comment (
 );
 CREATE INDEX ix_question_comment_question_id ON question_comment (question_id);
 
--- 클로징의 질문 평가(기억에 남아요 / 아쉬워요).
--- 베이스 상속: 유니크가 (질문, 투표자)라 취소 후 재투표 때 지워진 행이 자리를 막는데,
---   _active_check 가 그 충돌을 없앤다. 취소된 표가 남아 있어야 어뷰징 조사에 답할 수 있다.
-CREATE TABLE question_vote (
-    id              BIGINT      NOT NULL AUTO_INCREMENT,
-    question_id     BIGINT      NOT NULL,
-    voter_member_id BINARY(16)  NOT NULL,
-    vote            VARCHAR(20) NOT NULL,
-    created_at      DATETIME(6) NOT NULL,
-    updated_at      DATETIME(6) NOT NULL,
-    deleted_at      DATETIME(6) NULL,
-    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
-    PRIMARY KEY (id),
-    CONSTRAINT uk_question_vote_question_voter_active UNIQUE (question_id, voter_member_id, _active_check)
-);
-
--- 클로징의 시간 배분 체감(짧았어요 / 적당했어요 / 길었어요). 집계로만 품질 루프에 쓴다.
--- 베이스 상속: 제출하면 끝이지만, 집계에서 빼야 할 응답이 나오면(중복 계정·테스트 데이터)
---   지운 뒤에도 무엇을 뺐는지 남아야 지표를 다시 설명할 수 있다.
+-- 참여자별 클로징 제출. created_at 을 제출 시각으로 사용한다.
 CREATE TABLE closing_response (
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     room_id    BINARY(16)  NOT NULL,
     member_id  BINARY(16)  NOT NULL,
-    pacing     VARCHAR(20) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
     deleted_at DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_closing_response_room_member_active UNIQUE (room_id, member_id, _active_check)
+);
+
+-- 클로징 제출에 종속된 원 질문 평가. 참여자와 유효 여부는 부모 closing_response 가 소유한다.
+CREATE TABLE question_vote (
+    id                  BIGINT      NOT NULL AUTO_INCREMENT,
+    closing_response_id BIGINT      NOT NULL,
+    question_id         BIGINT      NOT NULL,
+    vote                VARCHAR(20) NOT NULL,
+    created_at          DATETIME(6) NOT NULL,
+    updated_at          DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_question_vote_closing_response_question UNIQUE (closing_response_id, question_id)
 );
 
 -- 출석 기록. 진행 시작 시 확정 참여자별 출석·불참 선택을 한 번 저장하며 일반 사용자는 수정하지 않는다.
