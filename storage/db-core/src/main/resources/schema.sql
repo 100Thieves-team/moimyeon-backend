@@ -95,6 +95,7 @@
 DROP TABLE IF EXISTS chat_message;
 DROP TABLE IF EXISTS outbox;
 DROP TABLE IF EXISTS chat_room;
+DROP TABLE IF EXISTS review_skip;
 DROP TABLE IF EXISTS review_tag;
 DROP TABLE IF EXISTS review;
 DROP TABLE IF EXISTS attendance;
@@ -797,10 +798,11 @@ CREATE INDEX ix_attendance_member_id ON attendance (member_id);
 
 -- 참여자 상호 평가. 신뢰 정보(완료 횟수·출석률·평균 별점 등)는 별도 테이블 없이
 -- attendance 와 review 의 집계로 만든다 — 원천이 작아 조회 시점 집계로 충분하다.
--- visible_at = 제출 + 3시간. 그 전까지 수정·삭제 가능하고 그 후 통계에 반영된다.
+-- visible_at = 제출 + 3시간. 그 전까지 수정·삭제 가능하고 그 뒤 대상자 노출 기준이 된다.
+-- 실제 노출은 처리 주기에 따라 몇 분 늦을 수 있다.
 -- 작성자 ≠ 대상자는 애플리케이션이 검증한다.
 -- hidden_at: 신고 처리로 운영이 가린 시각(reported_at 과 짝). 작성자에게는 계속 보인다.
--- 베이스 상속: 「유저 후기」 4.6 의 "3시간 직전까지 수정·삭제 허용" 을 소프트 삭제로 구현한다.
+-- 베이스 상속: 「유저 후기」 4.3 의 "제출 후 3시간 동안 수정·삭제 허용" 을 소프트 삭제로 구현한다.
 --   숨김과 삭제는 행위자도 효과도 다르므로 두 컬럼이 공존한다 —
 --   hidden_at 은 운영이 남에게만 가리는 것이고, deleted_at 은 작성자가 통째로 거두는 것이다.
 --   유니크에 _active_check 가 붙어 있어 삭제 후 재작성은 새 행으로 들어간다.
@@ -809,9 +811,7 @@ CREATE TABLE review (
     room_id          BINARY(16) NOT NULL,
     author_member_id BINARY(16) NOT NULL,
     target_member_id BINARY(16) NOT NULL,
-    rating           SMALLINT   NOT NULL,
     content          TEXT       NULL,
-    meet_again       BOOLEAN    NULL,
     visible_at       DATETIME(6) NOT NULL,
     hidden_at        DATETIME(6) NULL,
     reported_at      DATETIME(6) NULL,
@@ -834,6 +834,19 @@ CREATE TABLE review_tag (
     review_id BIGINT      NOT NULL,
     tag       VARCHAR(40) NOT NULL,
     CONSTRAINT uk_review_tag UNIQUE (review_id, tag)
+);
+
+-- 대상별 건너뛰기 퍼널 기록. 건너뛰기는 후기 작성 자격을 소모하는 상태가 아니므로
+-- review 와 연결하거나 삭제하지 않는다. 같은 대상의 반복 동작은 첫 기록 하나로 멱등 처리한다.
+-- 사용자 수정·삭제 대상이 아닌 append-only 사실이라 표준 소프트 삭제 베이스를 쓰지 않는다.
+CREATE TABLE review_skip (
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    room_id          BINARY(16)  NOT NULL,
+    author_member_id BINARY(16)  NOT NULL,
+    target_member_id BINARY(16)  NOT NULL,
+    created_at       DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_review_skip_room_author_target UNIQUE (room_id, author_member_id, target_member_id)
 );
 
 -- ── 채팅 ────────────────────────────────────────────────────────────────

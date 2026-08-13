@@ -290,7 +290,6 @@ class TrustFinderIT(
                 roomId = UUID.randomUUID(),
                 authorMemberId = UUID.randomUUID(),
                 targetMemberId = targetMemberId,
-                rating = 5,
                 visibleAt = visibleAt,
                 hiddenAt = hiddenAt,
                 tags = tags,
