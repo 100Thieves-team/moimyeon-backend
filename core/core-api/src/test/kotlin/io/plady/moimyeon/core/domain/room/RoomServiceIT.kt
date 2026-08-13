@@ -5,6 +5,7 @@ import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
@@ -13,6 +14,7 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
 import java.time.LocalDateTime
@@ -29,10 +31,17 @@ class RoomServiceIT(
     private val roomApplicationRepository: RoomApplicationRepository,
     private val participationRepository: ParticipationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+
+    // 생성 경로가 방장 회원 행을 잠그며 실재를 본다(MOI-331).
+    @BeforeEach
+    fun persistHostMember() {
+        memberRepository.save(activeMember(hostMemberId, "host-moi-service"))
+    }
 
     @AfterEach
     fun cleanUp() {
@@ -44,6 +53,7 @@ class RoomServiceIT(
         }
         createdRoomIds.clear()
         resumeRepository.deleteById(resumeId)
+        memberRepository.deleteById(hostMemberId)
     }
 
     @Test

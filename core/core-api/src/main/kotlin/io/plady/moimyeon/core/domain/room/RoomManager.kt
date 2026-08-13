@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.MeetingType
@@ -35,6 +36,7 @@ class RoomManager(
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val participationValidator: ParticipationValidator,
+    private val memberValidator: MemberValidator,
     private val clock: Clock,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
@@ -47,8 +49,16 @@ class RoomManager(
     // 판정 순서가 곧 사용자가 받는 결과다(MOI-331 D4).
     // 중복 확인이 3개 게이트보다 **앞**이다 — 뒤집으면 활성 룸이 3개인 방장의 더블클릭이 E1427 을 받는다.
     // 이미 있는 룸을 돌려주는 것은 새 자원을 만들지 않으므로 한도와 무관하다.
+    //
+    // ⚠️ validateActive 가 잡는 방장 회원 행 잠금이 이 방장의 생성을 직렬화한다. 이것이 멱등(F1·F2)과
+    //    3개 제한(F3) 둘 다의 동시성 방어선이다. 자연키에는 DB 유니크가 없다(계획서 D1).
+    //    **이 한 줄이 빠져도 어떤 테스트도 빨간불이 되지 않는다** — 순차 재호출은 아래 중복 확인만으로
+    //    통과하기 때문이다(testing.md: 레이스는 재현하지 않는다). 지우지 않는다.
+    //    새 생성 경로(일괄 생성 등)를 만들면 반드시 이 잠금을 함께 가져간다.
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile): RoomCreationResult {
+        memberValidator.validateActive(hostMemberId)
+
         findDuplicate(hostMemberId, room)?.let { return RoomCreationResult(it.id, it.status) }
 
         requireBusiness(

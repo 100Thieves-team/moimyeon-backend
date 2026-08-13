@@ -9,6 +9,7 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
@@ -34,10 +35,12 @@ class ActiveRoomLimitIT(
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+    private val createdMemberIds = mutableListOf<UUID>()
 
     // 일정을 하나씩 밀어 매번 다른 룸이 되게 한다. 같은 자연키면 두 번째부터 첫 룸이 그대로
     // 돌아와(MOI-331 멱등) 한도를 세는 전제 자체가 무너진다. 한도의 키에는 start_at 이 없다.
@@ -52,6 +55,8 @@ class ActiveRoomLimitIT(
             roomStatusLogRepository.deleteAll(roomStatusLogRepository.findAll().filter { it.roomId == roomId })
             if (roomRepository.existsById(roomId)) roomRepository.deleteById(roomId)
         }
+        createdMemberIds.forEach(memberRepository::deleteById)
+        createdMemberIds.clear()
     }
 
     @Test
@@ -177,14 +182,22 @@ class ActiveRoomLimitIT(
         assertThat(limit.remaining).isEqualTo(3)
     }
 
+    // 생성 경로가 방장 회원 행을 잠그며 실재를 본다(MOI-331). 방장이 누구든 행이 있어야 한다.
     private fun createRoom(
         memberId: UUID = hostMemberId,
         jobPostingId: Long = JOB_POSTING_ID,
         jobRoleId: Long = JOB_ROLE_ID,
     ): UUID {
+        persistMemberIfAbsent(memberId)
         val room = newRoom(jobPostingId, jobRoleId)
         roomManager.create(room, memberId, resumeId, resumeFile())
         return room.id
+    }
+
+    private fun persistMemberIfAbsent(memberId: UUID) {
+        if (memberRepository.existsById(memberId)) return
+        memberRepository.save(activeMember(memberId, "host-moi330-${createdMemberIds.size}"))
+        createdMemberIds += memberId
     }
 
     private fun newRoom(

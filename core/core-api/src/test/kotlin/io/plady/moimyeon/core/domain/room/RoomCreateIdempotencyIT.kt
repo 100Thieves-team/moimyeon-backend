@@ -4,13 +4,12 @@ import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
-import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomStatus
-import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.storage.db.core.MemberEntity
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
@@ -18,8 +17,8 @@ import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
-import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -49,22 +48,7 @@ class RoomCreateIdempotencyIT(
 
     @BeforeEach
     fun persistHostMember() {
-        memberRepository.save(
-            MemberEntity(
-                id = hostMemberId,
-                email = "host-moi331@example.com",
-                nickname = "방장331",
-                status = MemberStatus.ACTIVE,
-                lastLoginAt = FIXED_NOW,
-                socialAccounts = listOf(
-                    SocialAccountEntity(
-                        provider = SocialLoginProvider.GOOGLE,
-                        providerId = "host-moi331",
-                        linkedEmail = "host-moi331@example.com",
-                    ),
-                ),
-            ),
-        )
+        memberRepository.save(activeMember(hostMemberId, "host-moi331"))
     }
 
     @AfterEach
@@ -133,6 +117,31 @@ class RoomCreateIdempotencyIT(
 
         assertThat(recreated.roomId).isNotEqualTo(canceled.roomId)
         assertThat(roomRepository.findByIdInAndDeletedAtIsNull(createdRoomIds)).hasSize(2)
+    }
+
+    // 중복 확인이 3개 게이트보다 뒤면 더블클릭한 방장이 자기 룸 대신 E1427 을 받는다.
+    // 아래 둘은 짝이다 — 하나만 두면 게이트를 통째로 지워도 초록이 된다.
+    @Test
+    fun `활성 룸이 3개인 방장이 기존 룸과 같은 요청을 보내면 그 룸을 돌려준다`() {
+        val first = createRoom()
+        createRoom(startAt = FIXED_NOW.plusDays(8))
+        createRoom(startAt = FIXED_NOW.plusDays(9))
+
+        val again = createRoom()
+
+        assertThat(again.roomId).isEqualTo(first.roomId)
+    }
+
+    @Test
+    fun `활성 룸이 3개인 방장이 새 룸을 만들려 하면 E1427 로 거부한다`() {
+        createRoom()
+        createRoom(startAt = FIXED_NOW.plusDays(8))
+        createRoom(startAt = FIXED_NOW.plusDays(9))
+
+        assertThatThrownBy { createRoom(startAt = FIXED_NOW.plusDays(10)) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED)
+            }
     }
 
     @Test
