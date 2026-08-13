@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.room
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
@@ -32,12 +33,14 @@ class RoomLeaveManagerTest {
     private val participationRepository = mockk<ParticipationRepository>(relaxed = true)
     private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
     private val memberFinder = mockk<MemberFinder>(relaxed = true)
+    private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val roomManager = mockk<RoomManager>(relaxed = true)
     private val manager = RoomLeaveManager(
         roomRepository,
         participationRepository,
         roomApplicationRepository,
         memberFinder,
+        participationFinder,
         roomManager,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )

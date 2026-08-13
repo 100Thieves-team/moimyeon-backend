@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
@@ -27,6 +28,7 @@ class RoomLeaveManager(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val memberFinder: MemberFinder,
+    private val participationFinder: ParticipationFinder,
     private val roomManager: RoomManager,
     private val clock: Clock,
 ) {
@@ -74,12 +76,16 @@ class RoomLeaveManager(
         return true
     }
 
-    // 자격은 제재 여부만 본다. 참여 슬롯 제한은 신청 경로에도 없어서, 위임에서만 강제하면
-    // 같은 규칙이 두 곳에서 다르게 존재하게 된다(계획서 E-2). 생기는 날 함께 붙인다.
+    // 자격은 제재와 참여 슬롯을 본다(PRD 「룸 참여」 §3). 둘 다 "막지 않고 묻는" 판정이라 예외 없이 건너뛴다.
+    // 슬롯이 찬 사람을 승격시키면 그 사람의 참여 중인 룸이 넷이 된다(MOI-427).
+    // 건너뛴 신청은 대기로 남긴다 — 방장의 판단이 아니고, 위임에 실패해도 그 룸은 계속 살아 있다.
     private fun promoteEarliestEligibleApplicant(roomId: UUID, leavingHostId: UUID, now: LocalDateTime): Boolean {
         val application = roomApplicationRepository
             .findByRoomIdAndStatusAndDeletedAtIsNullOrderByAppliedAtAscIdAsc(roomId, RoomApplicationStatus.PENDING)
-            .firstOrNull { memberFinder.isActive(it.applicantMemberId) }
+            .firstOrNull {
+                memberFinder.isActive(it.applicantMemberId) &&
+                    participationFinder.hasAvailableSlot(it.applicantMemberId)
+            }
             ?: return false
 
         // 수락 처리자는 나가는 방장이다 — 실제로 그가 넘긴 자리다.
