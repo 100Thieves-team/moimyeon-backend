@@ -40,6 +40,38 @@ class QuestionRecorder(
     }
 
     @Transactional
+    fun recordFollowUp(
+        roomId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long,
+        content: String,
+        source: QuestionSource,
+    ): Long {
+        val parent = requireFound(
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, parentQuestionId),
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+        requireBusiness(
+            parent.parentQuestionId == null,
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+        requireBusiness(
+            parent.targetMemberId != authorMemberId,
+            CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,
+        )
+        return questionRepository.save(
+            QuestionEntity(
+                roomId = roomId,
+                targetMemberId = parent.targetMemberId,
+                authorMemberId = authorMemberId,
+                parentQuestionId = parentQuestionId,
+                content = content,
+                source = source,
+            ),
+        ).id
+    }
+
+    @Transactional
     fun removeOwnedBy(
         roomId: UUID,
         questionId: Long,
