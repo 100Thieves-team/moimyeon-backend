@@ -256,4 +256,35 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "평가 대상 질문이 오늘 사용한 질문과 일치하지 않습니다.",
         LogLevel.WARN,
     ),
+
+    ROUND_FEEDBACK_ALREADY_EXISTS(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1901,
+        "이미 최종 피드백을 등록했습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1902,
+        "라운드 피드백에 접근할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_EDITABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1903,
+        "진행 중인 룸에서만 라운드 피드백을 작성하거나 수정할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_VIEWABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1904,
+        "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1905,
+        "최종 피드백 카드를 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
