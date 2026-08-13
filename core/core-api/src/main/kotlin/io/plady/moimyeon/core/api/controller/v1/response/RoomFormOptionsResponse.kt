@@ -37,34 +37,6 @@ data class RoomFormOptionsResponse(
             MeetingType.ONLINE -> "화상 링크는 진행이 확정되면 만들어져요."
             MeetingType.OFFLINE -> "지역만 정하면 돼요."
         }
-
-        fun mock(): RoomFormOptionsResponse {
-            return RoomFormOptionsResponse(
-                rounds = listOf(
-                    CodeLabelResponse("FIRST", "1차"),
-                    CodeLabelResponse("SECOND", "2차"),
-                    CodeLabelResponse("THIRD", "3차"),
-                    CodeLabelResponse("FINAL", "최종"),
-                ),
-                types = listOf(
-                    CodeLabelResponse("JOB", "직무 면접"),
-                    CodeLabelResponse("CULTURE_FIT", "컬처핏"),
-                    CodeLabelResponse("EXECUTIVE", "임원 면접"),
-                    CodeLabelResponse("TECH_ASSIGNMENT", "기술 과제"),
-                ),
-                methods = listOf(
-                    MethodOptionResponse("ONLINE", "온라인", "화상 링크는 진행이 확정되면 만들어져요."),
-                    MethodOptionResponse("OFFLINE", "오프라인", "지역만 정하면 돼요."),
-                ),
-                durations = listOf(
-                    DurationOptionResponse(30, "30분"),
-                    DurationOptionResponse(60, "60분"),
-                    DurationOptionResponse(90, "90분"),
-                    DurationOptionResponse(120, "120분"),
-                ),
-                participantConstraints = ParticipantConstraintsResponse(min = 2, max = 8),
-            )
-        }
     }
 }
 
