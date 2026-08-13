@@ -26,7 +26,7 @@ class QuestionUsageMarkerTest {
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, 1L)
         } returns question
 
-        marker.markAsked(roomId, targetMemberId, 1L)
+        marker.changeAsked(roomId, targetMemberId, 1L, true)
 
         assertThat(question.asked).isTrue()
     }
@@ -38,7 +38,7 @@ class QuestionUsageMarkerTest {
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, 2L)
         } returns followUp
 
-        marker.markAsked(roomId, targetMemberId, 2L)
+        marker.changeAsked(roomId, targetMemberId, 2L, true)
 
         assertThat(followUp.asked).isTrue()
     }
@@ -50,9 +50,21 @@ class QuestionUsageMarkerTest {
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, 1L)
         } returns question
 
-        marker.markAsked(roomId, targetMemberId, 1L)
+        marker.changeAsked(roomId, targetMemberId, 1L, true)
 
         assertThat(question.asked).isTrue()
+    }
+
+    @Test
+    fun `체크한 질문을 질문하지 않음으로 되돌린다`() {
+        val question = question(asked = true)
+        every {
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, 1L)
+        } returns question
+
+        marker.changeAsked(roomId, targetMemberId, 1L, false)
+
+        assertThat(question.asked).isFalse()
     }
 
     @Test
@@ -63,7 +75,7 @@ class QuestionUsageMarkerTest {
         } returns question
 
         assertThatThrownBy {
-            marker.markAsked(roomId, targetMemberId, 1L)
+            marker.changeAsked(roomId, targetMemberId, 1L, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_NOT_FOUND)
         }
@@ -77,7 +89,7 @@ class QuestionUsageMarkerTest {
         } returns null
 
         assertThatThrownBy {
-            marker.markAsked(roomId, targetMemberId, 1L)
+            marker.changeAsked(roomId, targetMemberId, 1L, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_NOT_FOUND)
         }

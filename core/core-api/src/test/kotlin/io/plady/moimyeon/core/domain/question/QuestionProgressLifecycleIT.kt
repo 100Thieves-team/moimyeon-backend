@@ -70,9 +70,10 @@ class QuestionProgressLifecycleIT(
             question.id,
             "실시간 검증으로 바꾼다면 어디부터 손대나요?",
         )
-        questionProgressService.markAsked(noShowMemberId, roomId, targetMemberId, question.id)
-        questionProgressService.markAsked(noShowMemberId, roomId, targetMemberId, inProgressQuestionId)
-        questionProgressService.markAsked(noShowMemberId, roomId, targetMemberId, followUpId)
+        questionProgressService.changeAsked(noShowMemberId, roomId, targetMemberId, question.id, true)
+        questionProgressService.changeAsked(noShowMemberId, roomId, targetMemberId, inProgressQuestionId, true)
+        questionProgressService.changeAsked(noShowMemberId, roomId, targetMemberId, inProgressQuestionId, false)
+        questionProgressService.changeAsked(noShowMemberId, roomId, targetMemberId, followUpId, true)
         entityManager.flush()
         entityManager.clear()
 
@@ -87,7 +88,7 @@ class QuestionProgressLifecycleIT(
         assertThat(followUp.asked).isTrue()
         assertThat(cards.last().authorMemberId).isEqualTo(noShowMemberId)
         assertThat(cards.last().source).isEqualTo(QuestionSource.IN_PROGRESS)
-        assertThat(cards.last().asked).isTrue()
+        assertThat(cards.last().asked).isFalse()
     }
 
     private fun seedInProgressRoom() {

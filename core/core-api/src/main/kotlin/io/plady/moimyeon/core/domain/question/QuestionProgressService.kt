@@ -49,14 +49,15 @@ class QuestionProgressService(
         )
     }
 
-    fun markAsked(
+    fun changeAsked(
         actorMemberId: UUID,
         roomId: UUID,
         targetMemberId: UUID,
         questionId: Long,
+        asked: Boolean,
     ) {
         progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
         cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
-        questionUsageMarker.markAsked(roomId, targetMemberId, questionId)
+        questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, asked)
     }
 }

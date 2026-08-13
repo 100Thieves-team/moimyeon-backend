@@ -13,7 +13,7 @@ class QuestionUsageMarker(
     private val questionRepository: QuestionRepository,
 ) {
     @Transactional
-    fun markAsked(roomId: UUID, targetMemberId: UUID, questionId: Long) {
+    fun changeAsked(roomId: UUID, targetMemberId: UUID, questionId: Long, asked: Boolean) {
         val question = requireFound(
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, questionId),
             CoreErrorType.QUESTION_NOT_FOUND,
@@ -22,6 +22,6 @@ class QuestionUsageMarker(
             question.targetMemberId == targetMemberId,
             CoreErrorType.QUESTION_NOT_FOUND,
         )
-        question.markAsked()
+        question.changeAsked(asked)
     }
 }

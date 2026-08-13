@@ -123,14 +123,28 @@ class QuestionProgressServiceTest {
     @Test
     fun `면접자 외 확정 참여자는 선택한 대상의 질문을 질문했음으로 표시한다`() {
         givenParticipantCanUseTargetCardSet()
-        justRun { questionUsageMarker.markAsked(roomId, targetMemberId, questionId) }
+        justRun { questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, true) }
 
-        service.markAsked(actorMemberId, roomId, targetMemberId, questionId)
+        service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, true)
 
         verifyOrder {
             progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
-            questionUsageMarker.markAsked(roomId, targetMemberId, questionId)
+            questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, true)
+        }
+    }
+
+    @Test
+    fun `면접 진행 중 체크한 질문을 질문하지 않음으로 되돌린다`() {
+        givenParticipantCanUseTargetCardSet()
+        justRun { questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, false) }
+
+        service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
+
+        verifyOrder {
+            progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
+            cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
+            questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, false)
         }
     }
 
@@ -142,12 +156,12 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.markAsked(targetMemberId, roomId, targetMemberId, questionId)
+            service.changeAsked(targetMemberId, roomId, targetMemberId, questionId, true)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
 
-        verify(exactly = 0) { questionUsageMarker.markAsked(any(), any(), any()) }
+        verify(exactly = 0) { questionUsageMarker.changeAsked(any(), any(), any(), any()) }
     }
 
     @Test
@@ -157,14 +171,14 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
-            service.markAsked(actorMemberId, roomId, targetMemberId, questionId)
+            service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
         }
 
         verify(exactly = 0) {
             cardSetAccessValidator.validateOtherCardSetTarget(any(), any(), any())
-            questionUsageMarker.markAsked(any(), any(), any())
+            questionUsageMarker.changeAsked(any(), any(), any(), any())
         }
     }
 
@@ -176,12 +190,12 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
 
         assertThatThrownBy {
-            service.markAsked(actorMemberId, roomId, targetMemberId, questionId)
+            service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
         }
 
-        verify(exactly = 0) { questionUsageMarker.markAsked(any(), any(), any()) }
+        verify(exactly = 0) { questionUsageMarker.changeAsked(any(), any(), any(), any()) }
     }
 
     private fun givenParticipantCanUseTargetCardSet() {

@@ -27,7 +27,7 @@ class QuestionEntity(
     var asked: Boolean = asked
         protected set
 
-    fun markAsked() {
-        asked = true
+    fun changeAsked(asked: Boolean) {
+        this.asked = asked
     }
 }
