@@ -33,6 +33,11 @@ interface QuestionCommentRepository : JpaRepository<QuestionCommentEntity, Long>
         pageable: Pageable,
     ): List<QuestionCommentEntity>
 
+    fun findAllByQuestionIdInAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
+        questionIds: Collection<Long>,
+        authorMemberId: java.util.UUID,
+    ): List<QuestionCommentEntity>
+
     @Query(
         """
         SELECT c.authorMemberId AS memberId, COUNT(c) AS count

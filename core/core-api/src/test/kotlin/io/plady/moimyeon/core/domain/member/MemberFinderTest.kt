@@ -44,6 +44,27 @@ class MemberFinderTest {
     }
 
     @Test
+    fun `피드백 작성자 표시는 탈퇴한 회원도 탈퇴 여부와 함께 조회한다`() {
+        val memberId = UUID.randomUUID()
+        val withdrawn = MemberEntity(
+            id = memberId,
+            email = "withdrawn@example.com",
+            nickname = "이전 닉네임",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = now,
+        ).also { it.delete(now) }
+        every { memberRepository.findAllById(listOf(memberId)) } returns listOf(withdrawn)
+
+        assertThat(memberFinder.getAttributionsIncludingWithdrawn(listOf(memberId))).containsExactly(
+            MemberAttribution(
+                id = memberId,
+                nickname = "이전 닉네임",
+                withdrawn = true,
+            ),
+        )
+    }
+
+    @Test
     fun `살아있는 회원의 소셜 계정 존재 여부를 반환한다`() {
         // given
         every {

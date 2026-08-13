@@ -22,6 +22,17 @@ class MemberFinder(
         return memberRepository.findAllWithSocialAccountsByIdInAndDeletedAtIsNull(memberIds).map(MemberMapper::toDomain)
     }
 
+    fun getAttributionsIncludingWithdrawn(memberIds: Collection<UUID>): List<MemberAttribution> {
+        if (memberIds.isEmpty()) return emptyList()
+        return memberRepository.findAllById(memberIds).map {
+            MemberAttribution(
+                id = it.id,
+                nickname = it.nickname,
+                withdrawn = it.isDeleted(),
+            )
+        }
+    }
+
     fun existsById(memberId: UUID): Boolean {
         return memberRepository.existsByIdAndDeletedAtIsNull(memberId)
     }

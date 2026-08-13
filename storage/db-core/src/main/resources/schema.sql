@@ -667,22 +667,26 @@ CREATE TABLE round_assignment (
 CREATE INDEX ix_round_assignment_member_id ON round_assignment (member_id);
 
 -- 구두 피드백 단계의 산출물. 면접관·관찰자의 최종 피드백과 면접자의 자가 피드백을 유형으로 구분한다.
--- 대상 면접자를 따로 갖지 않는다 — 라운드가 면접자를 가지므로 파생된다.
--- 베이스 상속: 작성자별 1건이라 수정은 UPDATE 이고, 삭제는 소프트로 남긴다.
+-- 현재 진행 라운드는 별도 엔티티가 아니라 (룸, 면접자)로 식별하므로 피드백도 같은 키를 직접 가진다.
+-- 베이스 상속: 작성자별 1건이다. 최종 피드백은 최초 등록만 허용하고 중복 등록을 거부한다.
+--   자가 피드백은 같은 행의 본문을 수정할 수 있다. 삭제는 소프트로 남긴다.
+-- disclosed_at 은 면접자가 최종 피드백 카드 하나를 열람 확인한 최초 시각이다. 재확인은 멱등이다.
+--   룸 종료는 질문 메모 공개 조건일 뿐 이 가림막을 해제하지 않는다.
 --   피드백은 신고 대상이 되는 텍스트라 운영이 내렸다가 되돌리는 경로가 필요하다.
---   라운드가 지워질 때 여기도 같은 시각으로 함께 소프트 삭제한다 — 무엇이 있었는지가 분쟁의 핵심이다.
 CREATE TABLE round_feedback (
-    id                 BIGINT      NOT NULL AUTO_INCREMENT,
-    interview_round_id BIGINT      NOT NULL,
-    author_member_id   BINARY(16)  NOT NULL,
-    feedback_type      VARCHAR(20) NOT NULL,
-    content            TEXT        NOT NULL,
-    created_at         DATETIME(6) NOT NULL,
-    updated_at         DATETIME(6) NOT NULL,
-    deleted_at         DATETIME(6) NULL,
+    id                    BIGINT      NOT NULL AUTO_INCREMENT,
+    room_id               BINARY(16)  NOT NULL,
+    interviewee_member_id BINARY(16)  NOT NULL,
+    author_member_id      BINARY(16)  NOT NULL,
+    feedback_type         VARCHAR(20) NOT NULL,
+    content               TEXT        NOT NULL,
+    disclosed_at          DATETIME(6) NULL,
+    created_at            DATETIME(6) NOT NULL,
+    updated_at            DATETIME(6) NOT NULL,
+    deleted_at            DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_round_feedback_round_author_active UNIQUE (interview_round_id, author_member_id, _active_check)
+    CONSTRAINT uk_round_feedback_round_author_active UNIQUE (room_id, interviewee_member_id, author_member_id, _active_check)
 );
 
 -- 질문은 라운드가 아니라 (룸, 대상 면접자)에 매단다.
