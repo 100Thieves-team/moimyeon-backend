@@ -103,6 +103,16 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 대기 신청 한도 초과(E1416)와 다른 축이다 — 이쪽은 이미 참여 중인 룸 수다(「룸 참여」 §4.1).
+    // 안내 문구가 갈려야 신청자가 무엇을 정리해야 할지 안다(철회 vs 나가기).
+    // 활성 룸 3개(E1427)와도 다르다 — 그쪽은 내가 만든 룸 수를 센다.
+    PARTICIPATION_SLOT_EXCEEDED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1425,
+        "참여 중인 룸이 3개라 더 신청할 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
     // 같은 공고·직무로 이미 활성 룸을 셋 들고 있다(「룸 생성」 §4.7). 1~2개는 경고만 하고 통과시킨다.
     ACTIVE_ROOM_LIMIT_EXCEEDED(
         HttpStatus.CONFLICT,
