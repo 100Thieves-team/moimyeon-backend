@@ -47,6 +47,7 @@ class RoomCreationApplicationRegressionIT(
 ) : ContextTest() {
     private val hostMemberId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
+    private var scheduleSeq = 0L
 
     @AfterEach
     fun cleanUp() {
@@ -191,6 +192,8 @@ class RoomCreationApplicationRegressionIT(
         return applications.single()
     }
 
+    // 일정을 하나씩 밀어 매번 다른 룸이 되게 한다. 같은 자연키면 두 번째부터 첫 룸이 그대로
+    // 돌아와(MOI-331 멱등) "룸 N개를 만든 방장"이라는 전제가 서지 않는다.
     private fun createRoom(hostMemberId: UUID = this.hostMemberId): UUID {
         val room = Room.create(
             id = UUID.randomUUID(),
@@ -202,7 +205,7 @@ class RoomCreationApplicationRegressionIT(
             interviewType = InterviewType.JOB,
             meetingPlace = MeetingPlace.Online,
             capacity = RoomCapacity(min = 2, max = 6),
-            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7), durationMinutes = 60),
+            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7).plusHours(scheduleSeq++), durationMinutes = 60),
             resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
             now = FIXED_NOW,
         )

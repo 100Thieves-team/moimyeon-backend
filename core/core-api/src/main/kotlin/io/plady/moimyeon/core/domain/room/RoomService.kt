@@ -20,7 +20,10 @@ class RoomService(
 ) {
     // 방(룸) 생성. 카탈로그·이력서 참조 검증은 쓰기 트랜잭션 밖에서(profile 패턴과 동일),
     // 실제 등록은 RoomManager 트랜잭션에서 한다.
-    fun createRoom(hostMemberId: UUID, command: RoomCreationCommand): Room {
+    //
+    // 결과를 여기서 만들지 않고 Manager 것을 그대로 통과시킨다 — 중복 요청이면 여기서 만든 room 이 아니라
+    // 이미 있던 룸이 돌아오기 때문이다(MOI-331). 그 판정은 쓰기 트랜잭션 안에서만 확정된다.
+    fun createRoom(hostMemberId: UUID, command: RoomCreationCommand): RoomCreationResult {
         catalogRefValidator.validateJobRoles(listOf(command.jobRoleId))
         (command.meetingPlace as? MeetingPlace.Offline)?.let { catalogRefValidator.validateSigungu(it.sigunguId) }
         // TODO(BE-02B): job_posting 엔티티/리포지토리가 생기면 postingId 존재·활성 검증을 추가한다.
@@ -43,8 +46,7 @@ class RoomService(
             resumeSharingPolicy = command.resumeSharingPolicy,
             now = LocalDateTime.now(clock),
         )
-        roomManager.create(room, hostMemberId, command.resumeId, resumeFile)
-        return room
+        return roomManager.create(room, hostMemberId, command.resumeId, resumeFile)
     }
 
     // 방(룸) 수정. 방장 검증은 RoomManager 에서(participation 기반). 오프라인이면 지역 참조를 검증한다.

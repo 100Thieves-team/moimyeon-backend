@@ -19,6 +19,7 @@ import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
 import io.plady.moimyeon.core.domain.room.RoomCreationLimit
+import io.plady.moimyeon.core.domain.room.RoomCreationResult
 import io.plady.moimyeon.core.domain.room.RoomDescription
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.room.RoomSchedule
@@ -29,6 +30,7 @@ import io.plady.moimyeon.core.domain.room.RoomTitle
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -323,7 +325,8 @@ class RoomControllerTest : RestDocsTest() {
 
     @Test
     fun createRoom() {
-        every { roomService.createRoom(any(), any()) } returns sampleRoom()
+        every { roomService.createRoom(any(), any()) } returns
+            RoomCreationResult(roomId = createdRoomId, status = RoomStatus.RECRUITING)
         mockMvc.perform(
             post("/v1/rooms")
                 .principal(principal)

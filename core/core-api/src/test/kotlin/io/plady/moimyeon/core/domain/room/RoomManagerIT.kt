@@ -39,6 +39,10 @@ class RoomManagerIT(
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
 
+    // 일정을 하나씩 밀어 매번 다른 룸이 되게 한다. 같은 자연키면 두 번째부터 첫 룸이 그대로
+    // 돌아온다(MOI-331 멱등).
+    private var scheduleSeq = 0L
+
     @AfterEach
     fun cleanUp() {
         createdRoomIds.forEach { roomId ->
@@ -160,7 +164,7 @@ class RoomManagerIT(
             interviewType = InterviewType.JOB,
             meetingPlace = MeetingPlace.Online,
             capacity = RoomCapacity(min = 2, max = 6),
-            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7), durationMinutes = 60),
+            schedule = RoomSchedule(startAt = FIXED_NOW.plusDays(7).plusHours(scheduleSeq++), durationMinutes = 60),
             resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
             now = FIXED_NOW,
         )
