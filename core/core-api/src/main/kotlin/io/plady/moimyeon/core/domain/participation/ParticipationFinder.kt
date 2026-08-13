@@ -27,6 +27,10 @@ class ParticipationFinder(
         )
     }
 
+    // 조회 API 용 조립(MOI-447). 게이트(validateSlotAvailable)와 같은 카운트를 봐야
+    // 안내(remaining=0)와 실제(신청·수락·생성 거부)가 어긋나지 않는다.
+    fun getSlots(memberId: UUID): ParticipationSlots = ParticipationSlots.of(countOccupiedSlots(memberId))
+
     // 막지 않고 묻는다 — MemberFinder.isActive 와 같은 성격이다(MOI-427). 위임 순회는 후보를 건너뛰어야 하고
     // 룸 상세(MOI-387)는 예외 없이 차단 사유만 표시해야 한다. 막는 쪽은 ParticipationValidator 가 갖는다.
     fun hasAvailableSlot(memberId: UUID): Boolean {
