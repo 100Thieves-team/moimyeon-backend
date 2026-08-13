@@ -38,7 +38,10 @@ class RoomApplicationSubmissionManager(
         note: String,
         resumeSubmission: ResumeSubmission,
     ): Long {
+        // 회원 축 판정 둘을 나란히 둔다. 참여 슬롯을 앞에 두는 이유는 더 근본적인 제한이기 때문이다 —
+        // 둘 다 초과면 "참여 중인 룸을 정리하라"가 신청자에게 더 정확한 안내다(MOI-427 D8).
         memberValidator.validateActive(applicantMemberId)
+        participationValidator.validateSlotAvailable(applicantMemberId)
         validatePendingApplicationCount(applicantMemberId)
 
         roomValidator.validateAcceptingApplications(roomId)

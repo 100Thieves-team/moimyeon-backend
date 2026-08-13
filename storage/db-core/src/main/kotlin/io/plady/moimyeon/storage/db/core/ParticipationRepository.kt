@@ -2,6 +2,7 @@ package io.plady.moimyeon.storage.db.core
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -46,6 +47,27 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
     fun countByRoomIdAndStatusAndDeletedAtIsNull(
         roomId: UUID,
         status: ParticipationStatus,
+    ): Long
+
+    // 참여 슬롯 사용량(「룸 참여」 §4.1, MOI-427). 룸 상태를 함께 봐야 한다 — 룸 취소는 참여 행을
+    // 나감으로 바꾸지 않으므로(RoomManager.cancelWithoutGuard) 참여만 세면 취소한 룸이 슬롯을 영구 점유한다.
+    // 어느 상태가 슬롯을 무는지는 도메인이 정해 넘긴다(ParticipationSlot) — 쿼리 문자열에 박으면 정의가 숨는다.
+    // 룸당 회원당 JOINED 는 1건이므로(uk_participation_room_member_joined) 행 수가 곧 룸 수다.
+    @Query(
+        """
+        select count(p)
+        from ParticipationEntity p, RoomEntity r
+        where p.memberId = :memberId
+          and r.id = p.roomId
+          and p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+          and p.deletedAt is null
+          and r.status in :roomStatuses
+          and r.deletedAt is null
+        """,
+    )
+    fun countOccupiedSlotsByMemberId(
+        @Param("memberId") memberId: UUID,
+        @Param("roomStatuses") roomStatuses: Collection<RoomStatus>,
     ): Long
 
     fun findByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(

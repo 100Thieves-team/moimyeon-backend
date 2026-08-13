@@ -17,8 +17,8 @@ data class RoomApplicationResponse(
     val applicant: ApplicantResponse,
     val note: String, // 전달 사항(미입력 시 빈 문자열). 방장 외 비공개
     val aiSummary: ApplicationAiSummaryResponse,
-    val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED | ROOM_CONFIRMED
-    val statusLabel: String, // 대기 | 수락 | 반려 | 철회 | 룸 취소 | 진행 확정
+    val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED
+    val statusLabel: String, // 대기 | 수락 | 반려 | 철회 | 룸 취소 | 진행 확정 | 참여 슬롯 초과
     @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     val appliedAt: LocalDateTime,
 )
@@ -44,10 +44,14 @@ data class ApplicationAiSummaryResponse(
 
 // 수락/반려 결과(POST …/accept · …/reject) — 「룸 참여」 §4.4·§4.9.
 // 모집 현황은 결정 반영 후 상태다. 수락은 current 증가·정원 도달 시 CLOSED, 반려는 정원·참여자에 영향 없음.
+//
+// SLOT_EXCEEDED 는 수락 요청의 세 번째 결과다(MOI-427). 신청자의 참여 슬롯이 차 있어 참여자로 등록하지
+// 못하고 그 신청만 정리한 경우이며, current 는 늘지 않는다. 실패가 아니라 결정으로 내리는 이유는
+// 예외를 던지면 그 정리가 같은 트랜잭션에서 롤백되어 신청이 대기로 남기 때문이다.
 data class ApplicationDecisionResponse(
     val applicationId: Long,
-    val status: String, // ACCEPTED | REJECTED
-    val statusLabel: String, // 수락 | 반려
+    val status: String, // ACCEPTED | REJECTED | SLOT_EXCEEDED
+    val statusLabel: String, // 수락 | 반려 | 참여 슬롯 초과
     val recruit: ApplicationRecruitResponse,
 ) {
     companion object {
@@ -86,4 +90,5 @@ private fun RoomApplicationStatus.label(): String = when (this) {
     RoomApplicationStatus.WITHDRAWN -> "철회"
     RoomApplicationStatus.ROOM_CANCELED -> "룸 취소"
     RoomApplicationStatus.ROOM_CONFIRMED -> "진행 확정"
+    RoomApplicationStatus.SLOT_EXCEEDED -> "참여 슬롯 초과"
 }

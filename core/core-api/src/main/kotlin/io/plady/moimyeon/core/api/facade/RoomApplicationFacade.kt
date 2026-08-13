@@ -100,6 +100,7 @@ class RoomApplicationFacade(
         RoomApplicationStatus.WITHDRAWN -> "철회"
         RoomApplicationStatus.ROOM_CANCELED -> "룸 취소"
         RoomApplicationStatus.ROOM_CONFIRMED -> "진행 확정"
+        RoomApplicationStatus.SLOT_EXCEEDED -> "참여 슬롯 초과"
     }
 }
 

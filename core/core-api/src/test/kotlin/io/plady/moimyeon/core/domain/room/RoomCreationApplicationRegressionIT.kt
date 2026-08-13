@@ -74,9 +74,14 @@ class RoomCreationApplicationRegressionIT(
         assertThat(roomApplicationRepository.countPendingByRoomIds(listOf(roomId))).isEmpty()
     }
 
-    // 개인 대기 한도는 3건이다. 방장 행이 PENDING 이면 룸 세 개를 만든 방장이 신청을 아예 못 하게 된다.
+    // 개인 대기 한도는 3건이다. 방장 행이 PENDING 이면 그 한도가 방장의 룸 수에 먹혀 버린다 — 여기가 원래 가드다.
+    //
+    // 🔄 20260813 (MOI-427) — 이 테스트는 원래 `룸을 3개 만든 방장도 다른 룸에 참가 신청할 수 있다` 였다.
+    // 참여 슬롯(「룸 참여」 §4.1, "참여 중인 룸(방장 포함)이 3개 미만")이 들어오면서 룸 3개를 만든 방장은
+    // 실제로 슬롯 셋을 다 쓴 상태가 되어 신청할 수 없다. 막는 축이 대기 한도(E1416)에서 참여 슬롯(E1425)으로
+    // 바뀐 것이지 원래 가드가 무효가 된 것이 아니다 — 대기 신청 수가 0 이라는 단언은 그대로 지킨다.
     @Test
-    fun `룸을 3개 만든 방장도 다른 룸에 참가 신청할 수 있다`() {
+    fun `룸을 3개 만든 방장이 신청을 못 하는 이유는 대기 한도가 아니라 참여 슬롯이다`() {
         val hostRoomIds = List(3) { createRoom() }
         hostRoomIds.forEach { assertThat(hostApplication(it).status).isEqualTo(RoomApplicationStatus.ACCEPTED) }
 
@@ -86,6 +91,29 @@ class RoomCreationApplicationRegressionIT(
                 RoomApplicationStatus.PENDING,
             ),
         ).isZero()
+
+        persistHostMember()
+        val otherRoomId = createRoom(hostMemberId = UUID.randomUUID())
+
+        assertThatThrownBy {
+            roomApplicationSubmissionManager.submit(
+                hostMemberId,
+                otherRoomId,
+                "참여하고 싶습니다.",
+                ResumeSubmission(UUID.randomUUID(), resumeFile()),
+            )
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED)
+        }
+    }
+
+    // 위 테스트의 짝. 슬롯이 남아 있으면 방장 행은 신청을 막지 않는다 —
+    // 이쪽이 없으면 "방장 행이 PENDING 이 되어 막혔다"와 "슬롯이 차서 막혔다"를 구분하지 못한다.
+    @Test
+    fun `룸을 2개 만든 방장은 다른 룸에 참가 신청할 수 있다`() {
+        List(2) { createRoom() }.forEach {
+            assertThat(hostApplication(it).status).isEqualTo(RoomApplicationStatus.ACCEPTED)
+        }
 
         persistHostMember()
         val otherRoomId = createRoom(hostMemberId = UUID.randomUUID())

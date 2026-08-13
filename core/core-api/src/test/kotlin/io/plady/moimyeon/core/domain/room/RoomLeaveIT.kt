@@ -48,13 +48,18 @@ class RoomLeaveIT(
     private val createdAt: LocalDateTime = LocalDateTime.now().minusDays(5)
     private val seededMemberIds = mutableListOf<UUID>()
 
+    // 후보의 참여 슬롯을 채우려고 만든 다른 룸들(MOI-427).
+    private val slotFillerRoomIds = mutableListOf<UUID>()
+
     @AfterEach
     fun cleanUp() {
-        roomStatusLogRepository.deleteAll(roomStatusLogRepository.findAll().filter { it.roomId == roomId })
-        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
-        participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
-        if (roomRepository.existsById(roomId)) roomRepository.deleteById(roomId)
+        val allRoomIds = slotFillerRoomIds + roomId
+        roomStatusLogRepository.deleteAll(roomStatusLogRepository.findAll().filter { it.roomId in allRoomIds })
+        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId in allRoomIds })
+        participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId in allRoomIds })
+        allRoomIds.forEach { if (roomRepository.existsById(it)) roomRepository.deleteById(it) }
         memberRepository.deleteAllById(seededMemberIds)
+        slotFillerRoomIds.clear()
     }
 
     @Test
@@ -102,6 +107,34 @@ class RoomLeaveIT(
 
         assertThat(hostMemberIdOf(roomId)).isEqualTo(eligible)
         assertThat(applicationOf(restricted).status).isEqualTo(RoomApplicationStatus.PENDING)
+    }
+
+    // PRD 「룸 참여」 §3 — "그 사람이 신청 자격을 잃었으면(참여 슬롯 초과 · 이용 제한) 다음 순번으로 넘어간다".
+    // 제재와 같은 취급이다: 승격시키면 그 사람의 참여 중인 룸이 넷이 된다.
+    @Test
+    fun `참여 슬롯이 찬 신청자는 건너뛰고 다음 순번을 방장으로 세운다`() {
+        seedRoom()
+        val slotFull = seedPendingApplication(appliedAt = createdAt.plusHours(1))
+        occupySlots(slotFull, count = 3)
+        val eligible = seedPendingApplication(appliedAt = createdAt.plusHours(2))
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        assertThat(hostMemberIdOf(roomId)).isEqualTo(eligible)
+        // 건너뛴 신청은 대기로 남는다(D9) — 방장의 판단이 아니고 그 룸은 계속 살아 있다.
+        assertThat(applicationOf(slotFull).status).isEqualTo(RoomApplicationStatus.PENDING)
+    }
+
+    @Test
+    fun `대기 신청자가 모두 참여 슬롯이 차 있으면 룸이 취소된다`() {
+        seedRoom()
+        val slotFull = seedPendingApplication(appliedAt = createdAt.plusHours(1))
+        occupySlots(slotFull, count = 3)
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CANCELED)
+        assertThat(applicationOf(slotFull).status).isEqualTo(RoomApplicationStatus.ROOM_CANCELED)
     }
 
     @Test
@@ -240,6 +273,41 @@ class RoomLeaveIT(
             ),
         )
         return memberId
+    }
+
+    // 이 회원이 다른 모집 중인 룸 count 개에 참여 중인 상태를 만든다(ParticipationSlot).
+    private fun occupySlots(memberId: UUID, count: Int) {
+        repeat(count) { index ->
+            val filler = UUID.randomUUID()
+            slotFillerRoomIds += filler
+            roomRepository.saveAndFlush(
+                RoomEntity(
+                    id = filler,
+                    jobPostingId = 1L,
+                    jobRoleId = 1L,
+                    resumePublic = false,
+                    sigunguId = null,
+                    title = "후보가 참여 중인 룸 $index",
+                    description = null,
+                    interviewStage = InterviewStage.FIRST,
+                    interviewType = InterviewType.JOB,
+                    meetingType = MeetingType.ONLINE,
+                    minCapacity = 2,
+                    maxCapacity = 6,
+                    startAt = startAt,
+                    durationMinutes = 60,
+                ),
+            )
+            participationRepository.saveAndFlush(
+                ParticipationEntity(
+                    roomId = filler,
+                    memberId = memberId,
+                    participationRole = ParticipationRole.PARTICIPANT,
+                    status = ParticipationStatus.JOINED,
+                    joinedAt = createdAt,
+                ),
+            )
+        }
     }
 
     private fun seedMember(memberId: UUID, status: MemberStatus): UUID {

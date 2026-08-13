@@ -94,6 +94,7 @@ class RoomApplicationSubmissionManagerTest {
         assertThat(submissionSlot.captured.submittedAt).isEqualTo(now)
         verifyOrder {
             memberValidator.validateActive(applicantMemberId)
+            participationValidator.validateSlotAvailable(applicantMemberId)
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
                 applicantMemberId,
                 RoomApplicationStatus.PENDING,
@@ -142,6 +143,21 @@ class RoomApplicationSubmissionManagerTest {
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(any(), any())
         }
         verify(exactly = 0) { roomValidator.validateAcceptingApplications(any()) }
+    }
+
+    // 참여 슬롯 3개와 대기 신청 3건은 다른 축이다(「룸 참여」 §4.1). 회원 축 둘을 나란히 두되
+    // 더 근본적인 제한을 앞에 둔다 — 둘 다 초과면 슬롯 사유가 나간다(MOI-427 D8).
+    @Test
+    fun `참여 슬롯이 차 있으면 대기 신청 한도를 확인하지 않는다`() {
+        every {
+            participationValidator.validateSlotAvailable(applicantMemberId)
+        } throws CoreException(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED)
+
+        assertSubmissionFails(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED)
+
+        verify(exactly = 0) {
+            roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(any(), any())
+        }
     }
 
     @Test
@@ -299,6 +315,7 @@ class RoomApplicationSubmissionManagerTest {
 
     private fun givenEligibleApplication() {
         justRun { memberValidator.validateActive(applicantMemberId) }
+        justRun { participationValidator.validateSlotAvailable(applicantMemberId) }
         every {
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
                 applicantMemberId,

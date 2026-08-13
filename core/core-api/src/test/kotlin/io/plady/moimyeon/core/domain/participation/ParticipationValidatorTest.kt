@@ -112,6 +112,32 @@ class ParticipationValidatorTest {
         }
     }
 
+    // 경계는 "3개 미만"이다(「룸 참여」 §4.1). 셋을 허용하면 참여 중인 룸이 넷이 된다.
+    @Test
+    fun `참여 중인 룸이 둘이면 신청 슬롯이 남은 것으로 본다`() {
+        givenOccupiedSlots(2)
+
+        assertThatCode { validator.validateSlotAvailable(memberId) }.doesNotThrowAnyException()
+    }
+
+    @Test
+    fun `참여 중인 룸이 셋이면 PARTICIPATION_SLOT_EXCEEDED 로 거부한다`() {
+        givenOccupiedSlots(3)
+
+        assertValidationFails(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED) {
+            validator.validateSlotAvailable(memberId)
+        }
+    }
+
+    private fun givenOccupiedSlots(count: Long) {
+        every {
+            participationRepository.countOccupiedSlotsByMemberId(
+                memberId,
+                ParticipationSlot.OCCUPYING_ROOM_STATUSES,
+            )
+        } returns count
+    }
+
     private fun assertValidationFails(errorType: CoreErrorType, action: () -> Unit) {
         assertThatThrownBy(action)
             .isInstanceOfSatisfying(CoreException::class.java) {

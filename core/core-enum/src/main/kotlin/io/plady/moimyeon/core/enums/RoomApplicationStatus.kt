@@ -13,4 +13,10 @@ enum class RoomApplicationStatus {
     // 전이는 룸 취소(MOI-396)·진행 확정(MOI-398)이 한다.
     ROOM_CANCELED, // 방장이 룸을 접음
     ROOM_CONFIRMED, // 방장이 진행을 확정해 대기가 정리됨
+
+    // 룸이 아니라 신청자 사정으로 끝난다(MOI-427). 방장이 수락을 눌렀을 때 신청자의 참여 슬롯이
+    // 이미 차 있으면 참여자로 등록하지 않고 이 값으로 끝낸다 — 대기로 남기면 그 행이 방장 목록을
+    // 영원히 막는다. ROOM_* 과 같은 시스템 종료 계열이라 재신청 차단(§4.8)에 걸리지 않는다.
+    // ⚠️ status 컬럼이 VARCHAR(20) 이라 이름을 늘릴 수 없다(PARTICIPATION_SLOT_EXCEEDED 는 27자).
+    SLOT_EXCEEDED,
 }
