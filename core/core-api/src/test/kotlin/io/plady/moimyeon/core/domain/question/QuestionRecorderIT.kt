@@ -22,6 +22,62 @@ class QuestionRecorderIT(
     private val authorMemberId = UUID.randomUUID()
 
     @Test
+    fun `꼬리질문은 원 질문에서 질문 대상을 이어받는다`() {
+        val originalQuestionId = questionRecorder.record(
+            roomId,
+            targetMemberId,
+            authorMemberId,
+            null,
+            "원 질문",
+            QuestionSource.PREPARATION,
+        )
+
+        val followUpQuestionId = questionRecorder.recordFollowUp(
+            roomId,
+            UUID.randomUUID(),
+            originalQuestionId,
+            "꼬리질문",
+            QuestionSource.PREPARATION,
+        )
+        questionRepository.flush()
+
+        val followUp = questionRepository.findByIdAndDeletedAtIsNull(followUpQuestionId)
+        assertThat(followUp?.targetMemberId).isEqualTo(targetMemberId)
+        assertThat(followUp?.parentQuestionId).isEqualTo(originalQuestionId)
+    }
+
+    @Test
+    fun `본인 카드셋의 원 질문에는 꼬리질문을 남길 수 없다`() {
+        val originalQuestionId = questionRecorder.record(
+            roomId,
+            authorMemberId,
+            UUID.randomUUID(),
+            null,
+            "나를 대상으로 한 원 질문",
+            QuestionSource.PREPARATION,
+        )
+
+        assertThatThrownBy {
+            questionRecorder.recordFollowUp(
+                roomId,
+                authorMemberId,
+                originalQuestionId,
+                "본인 카드셋에 남기는 꼬리질문",
+                QuestionSource.PREPARATION,
+            )
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN)
+        }
+
+        assertThat(
+            questionRepository.findByRoomIdAndTargetMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
+                roomId,
+                authorMemberId,
+            ).map { it.id },
+        ).containsExactly(originalQuestionId)
+    }
+
+    @Test
     fun `질문을 삭제한 뒤 같은 대상에게 재작성하면 기존 행은 숨기고 새 질문을 남긴다`() {
         val originalQuestionId = questionRecorder.record(
             roomId,

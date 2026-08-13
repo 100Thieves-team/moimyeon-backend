@@ -101,6 +101,22 @@ class QuestionRepositoryIT(
         ).isFalse()
     }
 
+    @Test
+    fun `본인 카드셋 준비 인원은 원 질문과 꼬리질문의 활성 작성자를 중복 없이 센다`() {
+        val root = saveQuestion(firstTargetMemberId)
+        saveQuestion(firstTargetMemberId, parentQuestionId = root.id)
+        saveQuestion(firstTargetMemberId, authorMemberId = UUID.randomUUID())
+        saveQuestion(secondTargetMemberId, authorMemberId = UUID.randomUUID())
+        saveQuestion(firstTargetMemberId, authorMemberId = UUID.randomUUID())
+            .also { it.delete(LocalDateTime.of(2026, 8, 10, 4, 0)) }
+        questionRepository.flush()
+
+        val result = questionRepository
+            .countDistinctAuthorsByRoomIdAndTargetMemberIdAndDeletedAtIsNull(roomId, firstTargetMemberId)
+
+        assertThat(result).isEqualTo(2)
+    }
+
     private fun saveQuestion(
         targetMemberId: UUID,
         roomId: UUID = this.roomId,

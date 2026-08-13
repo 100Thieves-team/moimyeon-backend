@@ -35,6 +35,20 @@ interface QuestionRepository : JpaRepository<QuestionEntity, Long> {
 
     @Query(
         """
+        SELECT COUNT(DISTINCT q.authorMemberId)
+        FROM QuestionEntity q
+        WHERE q.roomId = :roomId
+          AND q.targetMemberId = :targetMemberId
+          AND q.deletedAt IS NULL
+        """,
+    )
+    fun countDistinctAuthorsByRoomIdAndTargetMemberIdAndDeletedAtIsNull(
+        roomId: UUID,
+        targetMemberId: UUID,
+    ): Long
+
+    @Query(
+        """
         SELECT q.authorMemberId AS memberId, COUNT(q) AS count
         FROM QuestionEntity q, AttendanceEntity a, RoomEntity r
         WHERE a.roomId = q.roomId
