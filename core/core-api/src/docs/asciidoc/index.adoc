@@ -668,3 +668,27 @@ include::{snippets}/rejectApplication/request-fields.adoc[]
 include::{snippets}/rejectApplication/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/rejectApplication/response-fields.adoc[]
+
+'''
+
+=== 이력서 원본 열람 URL 발급
+같은 룸 참여자가 참여자 명부의 `resumeSubmissionId` 로 제출 이력서 원본을 여는 임시 URL 을 받는다(「룸 참여」 §4.5). URL 은 발급 5분 뒤 만료되며, 다시 열 때는 재호출해 새 URL 을 받는다.
+매 발급마다 권한을 재검증하므로 API 경로를 저장해 두어도 룸이 끝나거나 제출자가 나가면 더는 발급되지 않는다. 본인 제출도 같은 게이트를 탄다.
+==== Curl Request
+include::{snippets}/resumeSubmissionViewUrl/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/resumeSubmissionViewUrl/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/resumeSubmissionViewUrl/http-response.adoc[]
+==== Response Fields
+include::{snippets}/resumeSubmissionViewUrl/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 인증 정보 없음
+| 403 | E1419 | 룸에 속하지 않은 사용자 (신청 대기자·나간 참여자 포함)
+| 409 | E1429 | 참여자지만 열 수 없음 (진행 확정 전·원본 비공개 룸·종료된 룸·제출자 이탈로 회수)
+| 404 | E1010 | 존재하지 않거나 이 룸의 것이 아닌 제출 이력서
+| 404 | E1405 | 존재하지 않거나 비활성 상태인 룸
+|===
