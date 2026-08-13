@@ -46,6 +46,7 @@ class TrustFinder(
 
     // TODO: 회원과 완료 룸 규모가 커지면 요청 시 전체 활동 지표 집계를 제거한다.
     // 배치·캐시 또는 반정규화된 회원별 신뢰 통계로 전환하고 공개 프로필은 결과 한 건만 읽게 한다.
+    // 이때 Repository마다 반복된 완료·미삭제 룸과 출석 판정도 신뢰 집계 경계 한 곳으로 모은다.
     private fun activityMetrics(): Map<UUID, ActivityMetric> {
         val attendedRooms = attendanceRepository.countAttendedCompletedRoomsByMember().toCountMap()
         val askedQuestions = questionRepository.countAskedCompletedActivityByMember().toCountMap()
