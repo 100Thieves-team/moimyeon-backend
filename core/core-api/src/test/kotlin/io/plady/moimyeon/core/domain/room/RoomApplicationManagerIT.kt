@@ -21,12 +21,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
 import java.util.UUID
 
 // 수락·반려는 각 매니저 호출이 자체 트랜잭션을 가지므로 클래스 레벨 @Transactional 없이 트랜잭션 밖에서 호출한다.
+// 슬롯 초과 종료(MOI-427)는 예외를 던지지 않고 커밋되어야 하므로, 바깥 트랜잭션이 없다는 것이 특히 중요하다 —
+// 테스트 트랜잭션 안에서 보면 롤백으로 사라지는 구현도 초록으로 보인다.
+@Import(FixedClockTestConfiguration::class)
 class RoomApplicationManagerIT(
     val roomApplicationManager: RoomApplicationManager,
     val roomRepository: RoomRepository,
@@ -40,14 +44,17 @@ class RoomApplicationManagerIT(
     private val hostId: UUID = UUID.randomUUID()
     private val applicantId: UUID = UUID.randomUUID()
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
+    private val occupiedRoomIds: MutableList<UUID> = mutableListOf()
 
     // 트랜잭션 롤백이 없으므로 이 테스트가 만든 행을 직접 지운다.
     @AfterEach
     fun cleanUp() {
         jdbcTemplate.update("DELETE FROM outbox")
-        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
-        participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
-        roomRepository.deleteById(roomId)
+        val createdRoomIds = occupiedRoomIds + roomId
+        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId in createdRoomIds })
+        participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId in createdRoomIds })
+        createdRoomIds.forEach { roomRepository.deleteById(it) }
+        occupiedRoomIds.clear()
     }
 
     @Test
@@ -159,6 +166,67 @@ class RoomApplicationManagerIT(
             }
     }
 
+    // (b) 수락 거부 + 그 신청을 종료(MOI-427 결정 20260813). 예외로 구현하면 이 종료가 함께 롤백되어
+    // 신청이 대기로 남고, 그 행이 방장 목록을 영원히 막는다 — 버린 (a) 로 되돌아간다.
+    @Test
+    fun `슬롯이 찬 신청자를 수락하면 참여자로 등록하지 않고 신청을 SLOT_EXCEEDED 로 끝낸다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        occupyApplicantSlots(3)
+        val applicationId = seedPendingApplication()
+
+        val decision = roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        assertThat(decision.status).isEqualTo(RoomApplicationStatus.SLOT_EXCEEDED)
+        assertThat(decision.currentParticipants).isEqualTo(1) // 방장만. 늘지 않았다
+        assertThat(roomApplicationRepository.findById(applicationId).orElseThrow().status)
+            .isEqualTo(RoomApplicationStatus.SLOT_EXCEEDED)
+        assertThat(participationRepository.findAll())
+            .noneMatch { it.roomId == roomId && it.memberId == applicantId }
+    }
+
+    // 방장이 처리한 것이 아니다. 주체를 남기면 분쟁 대응 때 방장이 정리한 것으로 읽히고,
+    // 대기 자리를 안 풀면 그 룸에 영영 다시 신청할 수 없다(uk_room_application_room_pending_active).
+    @Test
+    fun `슬롯 초과로 끝난 신청은 대기 자리를 풀고 처리 주체를 남기지 않는다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        occupyApplicantSlots(3)
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        val application = roomApplicationRepository.findById(applicationId).orElseThrow()
+        assertThat(application.pendingMemberId).isNull()
+        assertThat(application.handlerMemberId).isNull()
+        assertThat(application.handledAt).isEqualTo(FIXED_NOW)
+    }
+
+    // 수락 알림은 참여자가 됐다는 안내다. 슬롯 초과로 끝난 신청에 보내면 반대 사실을 알린다.
+    @Test
+    fun `슬롯 초과로 끝난 신청에는 수락 알림을 남기지 않는다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        occupyApplicantSlots(3)
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        assertThat(outboxRepository.findAll()).isEmpty()
+    }
+
+    @Test
+    fun `참여 중인 룸이 둘이면 수락되어 참여자가 된다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        occupyApplicantSlots(2)
+        val applicationId = seedPendingApplication()
+
+        val decision = roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        assertThat(decision.status).isEqualTo(RoomApplicationStatus.ACCEPTED)
+    }
+
     @Test
     fun `반려하면 신청이 REJECTED 로 바뀌고 정원과 참여자에는 영향이 없다`() {
         seedRoom(maxCapacity = 6)
@@ -224,6 +292,40 @@ class RoomApplicationManagerIT(
                 joinedAt = now,
             ),
         )
+    }
+
+    // 신청자가 다른 룸 n 개에 참여 중인 상태를 만든다. 모집 중인 룸이라 슬롯을 문다(ParticipationSlot).
+    private fun occupyApplicantSlots(count: Int) {
+        repeat(count) { index ->
+            val occupiedRoomId = UUID.randomUUID()
+            occupiedRoomIds += occupiedRoomId
+            roomRepository.save(
+                RoomEntity(
+                    id = occupiedRoomId,
+                    jobPostingId = 1L,
+                    jobRoleId = 1L,
+                    sigunguId = null,
+                    title = "신청자가 참여 중인 룸 $index",
+                    description = null,
+                    interviewStage = InterviewStage.FIRST,
+                    interviewType = InterviewType.JOB,
+                    meetingType = MeetingType.ONLINE,
+                    minCapacity = 2,
+                    maxCapacity = 4,
+                    startAt = now.plusDays(3),
+                    durationMinutes = 60,
+                ),
+            )
+            participationRepository.save(
+                ParticipationEntity(
+                    roomId = occupiedRoomId,
+                    memberId = applicantId,
+                    participationRole = ParticipationRole.PARTICIPANT,
+                    status = ParticipationStatus.JOINED,
+                    joinedAt = now,
+                ),
+            )
+        }
     }
 
     private fun seedPendingApplication(): Long = roomApplicationRepository.save(

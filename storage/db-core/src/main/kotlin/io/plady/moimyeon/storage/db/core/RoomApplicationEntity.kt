@@ -94,6 +94,14 @@ class RoomApplicationEntity(
         this.handledAt = now
     }
 
+    // 신청자의 참여 슬롯이 차서 시스템이 끝낸다(MOI-427). 방장이 수락을 눌러 촉발되지만 방장의 판단이
+    // 아니므로 handlerMemberId 를 채우지 않는다 — closeAllPending(룸 취소·확정)과 같은 계열이다.
+    fun closeBySlotExceeded(now: LocalDateTime) {
+        this.status = RoomApplicationStatus.SLOT_EXCEEDED
+        this.pendingMemberId = null
+        this.handledAt = now
+    }
+
     // 철회는 신청의 결말이다. 제출 당시 기록은 보존하고 대기 유니크 자리만 해제한다.
     fun withdraw(now: LocalDateTime) {
         this.status = RoomApplicationStatus.WITHDRAWN
