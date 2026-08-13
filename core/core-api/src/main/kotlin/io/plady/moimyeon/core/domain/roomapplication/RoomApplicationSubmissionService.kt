@@ -27,8 +27,12 @@ class RoomApplicationSubmissionService(
         )
     }
 
-    fun getMyApplication(applicantMemberId: UUID, roomId: UUID): RoomApplication {
+    fun getLatestApplication(applicantMemberId: UUID, roomId: UUID): RoomApplication {
         return roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId)
+    }
+
+    fun getPendingApplications(applicantMemberId: UUID): List<PendingRoomApplication> {
+        return roomApplicationSubmissionFinder.getPendingByApplicant(applicantMemberId)
     }
 
     fun getApplications(hostMemberId: UUID, roomId: UUID): List<RoomApplicationDetails> {

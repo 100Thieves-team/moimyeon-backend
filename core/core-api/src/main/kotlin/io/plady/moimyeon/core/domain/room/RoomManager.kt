@@ -40,8 +40,17 @@ class RoomManager(
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
     // 신청 행이 없으면 제출도 없다 — 넷 중 하나라도 실패하면 방장 없는 룸이 남지 않아야 한다.
     // 네 시각은 "같은 순간"이 곧 명세라 한 번만 찍어 나눠 쓴다.
+    //
+    // 중복 생성 제한(MOI-330)은 이 경계 안에서 본다. 밖에서 미리 세면 커밋 밖의 확인이라 확정이 아니고,
+    // 거부됐을 때 앞선 쓰기가 남을 자리가 생긴다.
+    // 동시 요청까지는 막지 않는다 — 방장 회원 행 락은 MOI-331 이 자연키 유니크와 함께 넣는다.
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile) {
+        requireBusiness(
+            !ActiveRoomLimit.isExceeded(countActiveHostedRooms(hostMemberId, room.jobPostingId, room.jobRoleId)),
+            CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED,
+        )
+
         val now = LocalDateTime.now(clock)
 
         roomRepository.save(RoomMapper.toEntity(room))
@@ -178,6 +187,11 @@ class RoomManager(
 
         RoomConfirmationBlockReason.BELOW_MIN_CAPACITY -> CoreErrorType.ROOM_BELOW_MIN_CAPACITY
         RoomConfirmationBlockReason.SCHEDULE_PASSED -> CoreErrorType.ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION
+    }
+
+    // 묻는 쪽(RoomFinder)과 같은 쿼리·같은 술어를 써야 화면의 경고와 생성 결과가 어긋나지 않는다.
+    private fun countActiveHostedRooms(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): Long {
+        return roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES)
     }
 
     // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.

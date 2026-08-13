@@ -29,7 +29,7 @@ class ResumeApiController(
     fun resumes(
         @LoginMember currentMember: CurrentMember,
     ): ApiResponse<ResumesResponse> {
-        return ApiResponse.success(ResumesResponse.from(resumeService.getAll(currentMember.id)))
+        return ApiResponse.success(ResumesResponse.from(resumeService.getStored(currentMember.id)))
     }
 
     @GetMapping("/v1/members/me/resumes/{resumeId}")

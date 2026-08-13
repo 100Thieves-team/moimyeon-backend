@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
+    fun findByMemberIdAndStatusAndDeletedAtIsNull(
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): List<ParticipationEntity>
+
     // 방장 판별: 이 룸에 (회원, HOST) 활성 참여가 있는가.
     fun existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
         roomId: UUID,

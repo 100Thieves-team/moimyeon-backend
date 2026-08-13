@@ -3,12 +3,14 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component
@@ -17,6 +19,67 @@ class RoomFinder(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
 ) {
+    // 생성 전 경고(「룸 생성」 §4.7). 막는 쪽(RoomManager.create)과 같은 쿼리·같은 술어를 봐야
+    // 화면이 "만들 수 있다"고 안내한 뒤 서버가 거부하는 일이 없다.
+    //
+    // 공고·직무 참조가 실재하는지는 보지 않는다 — 없는 id 면 0개로 답한다.
+    // 여기서 404 를 내면 화면이 경고 대신 에러를 띄우고, 참조 검증은 어차피 생성 시점에 한다.
+    //
+    // ⚠️ 아래 ACTIVE_ROOM_STATUSES(MOI-436, 면접 현황 화면의 "진행 예정" 묶음)와 값이 같지만
+    // 지금은 별개로 둔다. 한쪽은 생성 한도 정책이고 한쪽은 표시 묶음이라 갈릴 수 있다.
+    // 합칠지는 MOI-330 PR 리뷰에서 정한다.
+    fun getCreationLimit(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): RoomCreationLimit {
+        return RoomCreationLimit.of(
+            roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES),
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        return readSummaries(roomIds)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus {
+        val summaries = readSummaries(roomIds)
+        return RoomSummariesByStatus(
+            active = summaries
+                .filter { it.room.status in ACTIVE_ROOM_STATUSES }
+                .sortedWith(compareBy<RoomSummary> { it.room.schedule.startAt }.thenBy { it.room.id }),
+            completed = summaries
+                .filter { it.room.status == RoomStatus.COMPLETED }
+                .sortedWith(
+                    compareByDescending<RoomSummary> { it.room.schedule.startAt }
+                        .thenByDescending { it.room.id },
+                ),
+        )
+    }
+
+    private fun readSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        if (roomIds.isEmpty()) return emptyList()
+
+        val roomsById = roomRepository.findByIdInAndDeletedAtIsNull(roomIds).associateBy { it.id }
+        val participantsByRoomId = participationRepository.countActiveByRoomIds(roomIds)
+            .associate { it.roomId to Math.toIntExact(it.count) }
+
+        return roomIds.distinct().mapNotNull { roomId ->
+            roomsById[roomId]?.let { room ->
+                RoomSummary(
+                    room = RoomMapper.toDomain(room),
+                    participantCount = participantsByRoomId[roomId] ?: 0,
+                )
+            }
+        }
+    }
+
+    private companion object {
+        val ACTIVE_ROOM_STATUSES = setOf(
+            RoomStatus.RECRUITING,
+            RoomStatus.CONFIRMED,
+            RoomStatus.IN_PROGRESS,
+        )
+    }
+
     // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.
     // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
     // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는
@@ -55,5 +118,12 @@ class RoomFinder(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         return RoomMapper.toDomain(entity)
+    }
+
+    fun getAllByIds(roomIds: Collection<UUID>): List<Room> {
+        if (roomIds.isEmpty()) return emptyList()
+        return roomRepository.findAllById(roomIds)
+            .filter { it.isActive() }
+            .map(RoomMapper::toDomain)
     }
 }

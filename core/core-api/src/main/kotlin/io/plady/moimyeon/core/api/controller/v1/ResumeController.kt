@@ -4,8 +4,10 @@ import io.plady.moimyeon.core.api.controller.v1.request.CreateResumeRequest
 import io.plady.moimyeon.core.api.controller.v1.response.ResumeAiSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ResumeAiSummaryStatus
 import io.plady.moimyeon.core.api.controller.v1.response.ResumeFileResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ResumeLastUsedResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ResumeResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ResumesResponse
+import io.plady.moimyeon.core.api.controller.v1.response.StoredResumeResponse
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -52,7 +54,7 @@ class ResumeController {
     ): ApiResponse<ResumeResponse> {
         val resume = mockResumes().resumes.find { it.resumeId == resumeId }
             ?: throw CoreException(CoreErrorType.RESUME_NOT_FOUND)
-        return ApiResponse.success(resume)
+        return ApiResponse.success(resume.toResumeResponse())
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -100,7 +102,7 @@ class ResumeController {
                     status = ResumeAiSummaryStatus.DONE,
                     text = "재시도에 성공해 생성한 백엔드 이력서 요약.",
                 ),
-            ),
+            ).toResumeResponse(),
         )
     }
 
@@ -119,22 +121,7 @@ class ResumeController {
         return ResumesResponse(
             maxCount = MAX_RESUME_COUNT,
             resumes = listOf(
-                ResumeResponse(
-                    resumeId = defaultResumeId,
-                    name = "든든한곰_이력서.pdf",
-                    file = ResumeFileResponse(
-                        originalName = "든든한곰_이력서.pdf",
-                        sizeBytes = 217_088,
-                        contentType = MediaType.APPLICATION_PDF_VALUE,
-                    ),
-                    aiSummary = ResumeAiSummaryResponse(
-                        status = ResumeAiSummaryStatus.DONE,
-                        text = "핀테크 백엔드 3년 차. 결제 정산 배치·대사와 Kotlin·Spring 경험.",
-                    ),
-                    isDefault = true,
-                    registeredAt = LocalDateTime.of(2026, 7, 12, 9, 30),
-                ),
-                ResumeResponse(
+                StoredResumeResponse(
                     resumeId = commerceResumeId,
                     name = "든든한곰_이력서_커머스.pdf",
                     file = ResumeFileResponse(
@@ -148,8 +135,29 @@ class ResumeController {
                     ),
                     isDefault = false,
                     registeredAt = LocalDateTime.of(2026, 6, 28, 18, 10),
+                    lastUsed = ResumeLastUsedResponse(
+                        roomId = UUID.fromString("01920000-0000-7000-8000-000000000201"),
+                        roomTitle = "달빛페이 백엔드 면접",
+                        usedAt = LocalDateTime.of(2026, 7, 12, 14, 0),
+                    ),
                 ),
-                ResumeResponse(
+                StoredResumeResponse(
+                    resumeId = defaultResumeId,
+                    name = "든든한곰_이력서.pdf",
+                    file = ResumeFileResponse(
+                        originalName = "든든한곰_이력서.pdf",
+                        sizeBytes = 217_088,
+                        contentType = MediaType.APPLICATION_PDF_VALUE,
+                    ),
+                    aiSummary = ResumeAiSummaryResponse(
+                        status = ResumeAiSummaryStatus.DONE,
+                        text = "핀테크 백엔드 3년 차. 결제 정산 배치·대사와 Kotlin·Spring 경험.",
+                    ),
+                    isDefault = true,
+                    registeredAt = LocalDateTime.of(2026, 7, 12, 9, 30),
+                    lastUsed = null,
+                ),
+                StoredResumeResponse(
                     resumeId = processingResumeId,
                     name = "든든한곰_이력서_시스템설계.pdf",
                     file = ResumeFileResponse(
@@ -163,8 +171,9 @@ class ResumeController {
                     ),
                     isDefault = false,
                     registeredAt = LocalDateTime.of(2026, 8, 1, 14, 20),
+                    lastUsed = null,
                 ),
-                ResumeResponse(
+                StoredResumeResponse(
                     resumeId = failedResumeId,
                     name = "든든한곰_이력서_재시도.pdf",
                     file = ResumeFileResponse(
@@ -178,10 +187,22 @@ class ResumeController {
                     ),
                     isDefault = false,
                     registeredAt = LocalDateTime.of(2026, 8, 1, 14, 30),
+                    lastUsed = null,
                 ),
             ),
         )
     }
+}
+
+private fun StoredResumeResponse.toResumeResponse(): ResumeResponse {
+    return ResumeResponse(
+        resumeId = resumeId,
+        name = name,
+        file = file,
+        aiSummary = aiSummary,
+        isDefault = isDefault,
+        registeredAt = registeredAt,
+    )
 }
 
 private const val MAX_RESUME_COUNT = 10

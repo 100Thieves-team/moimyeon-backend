@@ -20,6 +20,7 @@ import java.util.UUID
 
 class ResumeServiceTest {
     private val resumeFinder = mockk<ResumeFinder>()
+    private val storedResumeReader = mockk<StoredResumeReader>()
     private val fileStorage = mockk<ResumeFileStore>()
     private val resumeManager = mockk<ResumeManager>()
     private val resumeRegistrar = mockk<ResumeRegistrar>()
@@ -27,23 +28,30 @@ class ResumeServiceTest {
     private val now = LocalDateTime.of(2026, 8, 3, 12, 0)
     private val clock = Clock.fixed(Instant.parse("2026-08-03T12:00:00Z"), ZoneOffset.UTC)
     private val resumeService =
-        ResumeService(resumeFinder, fileStorage, resumeManager, resumeRegistrar, summaryGenerator, clock)
+        ResumeService(
+            resumeFinder,
+            storedResumeReader,
+            fileStorage,
+            resumeManager,
+            resumeRegistrar,
+            summaryGenerator,
+            clock,
+        )
 
     @Test
-    fun `회원의 이력서 목록을 조회한다`() {
+    fun `회원의 저장 이력서 목록은 만료된 요약을 정리한 뒤 최근 사용 정보와 함께 조회한다`() {
         val memberId = UUID.randomUUID()
-        val resumes = listOf(mockk<Resume>())
+        val storedResumes = listOf(mockk<StoredResume>())
         every { resumeManager.failExpiredSummaries(memberId, now) } returns 0
-        every { resumeFinder.getAll(memberId) } returns resumes
+        every { storedResumeReader.getAll(memberId) } returns storedResumes
 
-        val result = resumeService.getAll(memberId)
+        val result = resumeService.getStored(memberId)
 
-        assertThat(result).isSameAs(resumes)
+        assertThat(result).isSameAs(storedResumes)
         verifyOrder {
             resumeManager.failExpiredSummaries(memberId, now)
-            resumeFinder.getAll(memberId)
+            storedResumeReader.getAll(memberId)
         }
-        verify(exactly = 0) { summaryGenerator.generate(any()) }
     }
 
     @Test

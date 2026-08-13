@@ -12,6 +12,7 @@ import java.util.UUID
 @Service
 class ResumeService(
     private val resumeFinder: ResumeFinder,
+    private val storedResumeReader: StoredResumeReader,
     private val fileStorage: ResumeFileStore,
     private val resumeManager: ResumeManager,
     private val resumeRegistrar: ResumeRegistrar,
@@ -25,9 +26,9 @@ class ResumeService(
         return resumeFinder.get(memberId, resumeId)
     }
 
-    fun getAll(memberId: UUID): List<Resume> {
+    fun getStored(memberId: UUID): List<StoredResume> {
         resumeManager.failExpiredSummaries(memberId, now())
-        return resumeFinder.getAll(memberId)
+        return storedResumeReader.getAll(memberId)
     }
 
     fun makeDefault(memberId: UUID, resumeId: UUID) {
