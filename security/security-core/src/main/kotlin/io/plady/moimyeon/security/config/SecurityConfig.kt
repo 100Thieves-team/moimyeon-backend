@@ -51,6 +51,8 @@ class SecurityConfig(
                 authorize(HttpMethod.GET, "/v1/job-roles/search", permitAll)
                 authorize(HttpMethod.GET, "/v1/regions", permitAll)
                 authorize(HttpMethod.GET, "/v1/members/*/profile", permitAll)
+                authorize(HttpMethod.GET, "/v1/nicknames/suggestion", permitAll)
+                authorize(HttpMethod.GET, "/v1/nicknames/availability", permitAll)
                 authorize("/admin/**", hasRole("ADMIN"))
                 authorize("/actuator/**", denyAll)
                 authorize(anyRequest, authenticated)
