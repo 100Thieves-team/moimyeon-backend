@@ -11,12 +11,16 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
+import java.time.Duration
 import java.util.UUID
 
 @Profile("local-dev", "dev", "staging", "live")
 @Component
 internal class S3ResumeFileStore(
     private val s3Client: S3Client,
+    private val s3Presigner: S3Presigner,
     private val properties: S3ObjectStorageProperties,
 ) : ResumeFileStore {
     override fun store(memberId: UUID, upload: ResumeUpload): ResumeFile {
@@ -49,6 +53,22 @@ internal class S3ResumeFileStore(
             .build()
         return try {
             s3Client.getObjectAsBytes(request).asByteArray()
+        } catch (exception: SdkException) {
+            throw ResumeFileStorageException(exception)
+        }
+    }
+
+    override fun issueViewUrl(file: ResumeFile, ttl: Duration): String {
+        val request = GetObjectRequest.builder()
+            .bucket(properties.bucket)
+            .key(file.key)
+            .build()
+        val presignRequest = GetObjectPresignRequest.builder()
+            .signatureDuration(ttl)
+            .getObjectRequest(request)
+            .build()
+        return try {
+            s3Presigner.presignGetObject(presignRequest).url().toExternalForm()
         } catch (exception: SdkException) {
             throw ResumeFileStorageException(exception)
         }
