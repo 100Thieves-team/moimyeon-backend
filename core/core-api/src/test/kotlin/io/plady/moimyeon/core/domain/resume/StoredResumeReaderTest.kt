@@ -6,6 +6,7 @@ import io.mockk.verify
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -16,6 +17,16 @@ class StoredResumeReaderTest {
 
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val roomId = UUID.fromString("00000000-0000-0000-0000-000000000101")
+
+    @Test
+    fun `이력서와 최근 사용 이력은 하나의 읽기 전용 트랜잭션에서 조회한다`() {
+        val transaction = StoredResumeReader::class.java
+            .getDeclaredMethod("getAll", UUID::class.java)
+            .getAnnotation(Transactional::class.java)
+
+        assertThat(transaction).isNotNull
+        assertThat(transaction.readOnly).isTrue()
+    }
 
     @Test
     fun `최근 사용순으로 조회하되 저장된 기본 이력서 여부를 유지한다`() {
