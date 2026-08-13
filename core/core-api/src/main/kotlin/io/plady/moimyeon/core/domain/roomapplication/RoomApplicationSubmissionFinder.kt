@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.roomapplication
 
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFinder
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
@@ -15,6 +16,31 @@ class RoomApplicationSubmissionFinder(
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val resumeFinder: ResumeFinder,
 ) {
+    fun getPendingByApplicant(applicantMemberId: UUID): List<PendingRoomApplication> {
+        val applications = roomApplicationRepository
+            .findByApplicantMemberIdAndStatusAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+                applicantMemberId,
+                RoomApplicationStatus.PENDING,
+            )
+        if (applications.isEmpty()) return emptyList()
+
+        val submissionsByApplicationId = resumeSubmissionRepository
+            .findByRoomApplicationIdInAndDeletedAtIsNull(applications.map { it.id })
+            .associateBy { it.roomApplicationId }
+
+        return applications.map { application ->
+            val submission = checkNotNull(submissionsByApplicationId[application.id]) {
+                "참가 신청에는 제출 이력서가 있어야 합니다. applicationId=${application.id}"
+            }
+            PendingRoomApplication(
+                id = application.id,
+                roomId = application.roomId,
+                resumeOriginalName = submission.originalName,
+                appliedAt = application.appliedAt,
+            )
+        }
+    }
+
     fun getLatestByApplicant(applicantMemberId: UUID, roomId: UUID): RoomApplication {
         val application = requireFound(
             roomApplicationRepository

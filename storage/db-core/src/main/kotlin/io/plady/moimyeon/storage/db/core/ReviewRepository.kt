@@ -8,6 +8,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
+    fun findByRoomIdInAndAuthorMemberIdAndDeletedAtIsNull(
+        roomIds: Collection<UUID>,
+        authorMemberId: UUID,
+    ): List<ReviewEntity>
+
     @Query(
         """
         SELECT tag AS label, COUNT(tag) AS count

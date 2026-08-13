@@ -66,6 +66,10 @@ class RoomService(
     // 룸 단건 조회(읽기). RoomFinder 가 룸 + 현재 인원 + 방장을 모아 온다.
     fun getRoom(roomId: UUID): RoomDetail = roomFinder.getDetail(roomId)
 
+    fun getRoomSummaries(roomIds: Collection<UUID>): List<RoomSummary> = roomFinder.getSummaries(roomIds)
+
+    fun getRoomSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus = roomFinder.getSummariesByStatus(roomIds)
+
     // 룸 탐색 목록(읽기). 룸은 회사를 직접 알지 못하므로(room → job_posting → company)
     // 회사 필터만 공고 id 목록으로 바꿔 넘기고, 나머지는 Reader 가 그대로 조회한다.
     // 좁힌 결과가 비면 조회할 것이 없다 — 빈 IN 목록이 쿼리에 들어가지 않게 여기서 끝낸다.

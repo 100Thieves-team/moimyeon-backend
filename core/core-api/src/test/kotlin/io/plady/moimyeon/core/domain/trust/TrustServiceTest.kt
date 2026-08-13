@@ -10,7 +10,8 @@ import java.util.UUID
 
 class TrustServiceTest {
     private val trustFinder = mockk<TrustFinder>()
-    private val trustService = TrustService(trustFinder)
+    private val roomReviewFinder = mockk<RoomReviewFinder>()
+    private val trustService = TrustService(trustFinder, roomReviewFinder)
     private val memberId = UUID.randomUUID()
 
     @Test
@@ -31,5 +32,19 @@ class TrustServiceTest {
 
         assertThatThrownBy { trustService.getPublicTrust(memberId) }
             .isSameAs(exception)
+    }
+
+    @Test
+    fun `완료 룸의 후기 상태와 출석 인원 조회를 위임한다`() {
+        val roomIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        val summaries = roomIds.associateWith { roomId ->
+            RoomReviewSummary(roomId, attendedParticipantCount = 2, status = RoomReviewStatus.WRITABLE)
+        }
+        every { roomReviewFinder.getSummaries(memberId, roomIds) } returns summaries
+
+        val result = trustService.getRoomReviewSummaries(memberId, roomIds)
+
+        assertThat(result).isSameAs(summaries)
+        verify(exactly = 1) { roomReviewFinder.getSummaries(memberId, roomIds) }
     }
 }
