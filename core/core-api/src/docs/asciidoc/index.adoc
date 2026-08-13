@@ -507,6 +507,12 @@ include::{snippets}/createJobPosting/response-fields.adoc[]
 === 룸 생성
 생성 위저드(「룸 생성」 §4.1~§4.8)의 입력을 한 번에 받아 룸을 만들고 즉시 모집(`RECRUITING`) 상태로 등록한다.
 방장은 생성과 동시에 참여 1명으로 등록된다(§4.8). 성공 시 <<_룸_상세_조회,룸 상세>> 로 이동한다.
+
+더블클릭이나 네트워크 재시도로 같은 요청이 중복 전송돼도 룸은 하나만 만들어진다(§4.10).
+같은 방장의 같은 `postingId`·`jobRoleId`·일정이면 같은 룸으로 보고, 두 번째부터는 이미 만들어진 룸을
+그대로 돌려준다. 에러가 아니므로 화면은 응답의 `roomId` 로 그대로 이동하면 된다.
+다만 `status` 는 그 룸의 **현재** 상태라 `RECRUITING` 이 아닐 수 있다(그 사이 확정됐다면 `CONFIRMED`).
+취소된 룸은 같은 조건이어도 새로 만들어진다.
 ==== Curl Request
 include::{snippets}/createRoom/curl-request.adoc[]
 ==== Request Fields
