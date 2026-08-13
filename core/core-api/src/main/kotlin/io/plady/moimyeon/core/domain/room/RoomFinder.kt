@@ -104,4 +104,11 @@ class RoomFinder(
         )
         return RoomMapper.toDomain(entity)
     }
+
+    fun getAllByIds(roomIds: Collection<UUID>): List<Room> {
+        if (roomIds.isEmpty()) return emptyList()
+        return roomRepository.findAllById(roomIds)
+            .filter { it.isActive() }
+            .map(RoomMapper::toDomain)
+    }
 }

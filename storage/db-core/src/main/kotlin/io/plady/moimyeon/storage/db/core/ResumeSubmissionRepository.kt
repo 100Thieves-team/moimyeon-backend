@@ -4,6 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface ResumeSubmissionRepository : JpaRepository<ResumeSubmissionEntity, Long> {
+    fun findByMemberIdAndSourceResumeIdInAndDeletedAtIsNullOrderBySubmittedAtDescIdDesc(
+        memberId: UUID,
+        sourceResumeIds: Collection<UUID>,
+    ): List<ResumeSubmissionEntity>
+
     fun findByRoomApplicationIdAndDeletedAtIsNull(roomApplicationId: Long): ResumeSubmissionEntity?
 
     fun findByRoomApplicationIdInAndDeletedAtIsNull(roomApplicationIds: Collection<Long>): List<ResumeSubmissionEntity>

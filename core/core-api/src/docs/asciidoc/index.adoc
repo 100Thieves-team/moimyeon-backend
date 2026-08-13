@@ -339,9 +339,10 @@ include::{snippets}/publicProfile/response-fields.adoc[]
 목 API는 `local`·`local-dev`·`dev`에서만 활성화되며 고정 예시를 반환한다.
 
 === 보관 이력서 목록 조회
-기본 이력서를 먼저 보여주며, AI 요약 완료(`DONE`)와 준비 중(`PROCESSING`) 예시를 함께 반환한다.
+최근 사용 이력서를 먼저 보여주며, AI 요약 완료(`DONE`)와 준비 중(`PROCESSING`) 예시를 함께 반환한다.
 삭제한 이력서는 목록에 포함하지 않는다. 마이페이지·룸 생성·참가 신청 화면에서 이력서 선택지를 열 때
 사용하며, 개별 AI 요약 상태를 확인하기 위한 반복 호출에는 아래 단건 조회 API를 사용한다.
+`isDefault`는 최근 사용과 별개로 회원이 지정한 기본 이력서 여부를 나타낸다.
 
 ==== Curl Request
 include::{snippets}/resumes/curl-request.adoc[]
