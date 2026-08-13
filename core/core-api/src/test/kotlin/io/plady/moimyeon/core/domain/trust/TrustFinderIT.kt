@@ -6,6 +6,7 @@ import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.MemberStatus
+import io.plady.moimyeon.core.enums.QuestionCommentType
 import io.plady.moimyeon.core.enums.QuestionSource
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
@@ -108,7 +109,7 @@ class TrustFinderIT(
             QuestionCommentEntity(
                 questionId = activeQuestion.id,
                 authorMemberId = targetMemberId,
-                commentType = "GOOD",
+                commentType = QuestionCommentType.GOOD_POINT,
                 content = "삭제된 질문 피드백",
             ),
         )
@@ -272,7 +273,7 @@ class TrustFinderIT(
             QuestionCommentEntity(
                 questionId = questionId,
                 authorMemberId = authorMemberId,
-                commentType = "GOOD",
+                commentType = QuestionCommentType.GOOD_POINT,
                 content = "질문 피드백",
             ),
         )

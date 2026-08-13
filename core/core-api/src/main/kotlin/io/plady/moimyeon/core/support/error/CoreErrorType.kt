@@ -169,6 +169,30 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
+    QUESTION_COMMENT_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1509,
+        "질문 댓글에 접근할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_EDITABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1510,
+        "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1511,
+        "질문 댓글을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_VIEWABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1512,
+        "질문 댓글을 조회할 수 없는 룸 상태입니다.",
+        LogLevel.WARN,
+    ),
 
     INVALID_WEB_PUSH_REGISTRATION(
         HttpStatus.BAD_REQUEST,
