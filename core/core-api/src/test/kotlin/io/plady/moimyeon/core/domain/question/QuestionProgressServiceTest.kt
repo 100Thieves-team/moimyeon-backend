@@ -54,7 +54,7 @@ class QuestionProgressServiceTest {
 
         assertThat(result).isEqualTo(2L)
         verifyOrder {
-            progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
             questionRecorder.record(
                 roomId,
@@ -91,7 +91,7 @@ class QuestionProgressServiceTest {
 
         assertThat(result).isEqualTo(2L)
         verifyOrder {
-            progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
             questionRecorder.record(
                 roomId,
@@ -106,7 +106,7 @@ class QuestionProgressServiceTest {
 
     @Test
     fun `면접자가 자신의 라운드에 진행 중 질문을 추가하려 하면 저장하지 않는다`() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, targetMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, targetMemberId) }
         every {
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, targetMemberId, targetMemberId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
@@ -128,7 +128,7 @@ class QuestionProgressServiceTest {
         service.markAsked(actorMemberId, roomId, targetMemberId, questionId)
 
         verifyOrder {
-            progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
             questionUsageMarker.markAsked(roomId, targetMemberId, questionId)
         }
@@ -136,7 +136,7 @@ class QuestionProgressServiceTest {
 
     @Test
     fun `면접자가 자신의 질문을 표시하려 하면 변경하지 않고 E1502 를 던진다`() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, targetMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, targetMemberId) }
         every {
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, targetMemberId, targetMemberId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
@@ -153,7 +153,7 @@ class QuestionProgressServiceTest {
     @Test
     fun `진행 접근이 거부되면 대상 검증과 질문 변경을 실행하지 않는다`() {
         every {
-            progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+            progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
@@ -170,7 +170,7 @@ class QuestionProgressServiceTest {
 
     @Test
     fun `선택한 대상이 유효하지 않으면 질문을 변경하지 않는다`() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, actorMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId) }
         every {
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
@@ -185,7 +185,7 @@ class QuestionProgressServiceTest {
     }
 
     private fun givenParticipantCanUseTargetCardSet() {
-        justRun { progressAccessValidator.validateRailViewer(roomId, actorMemberId) }
+        justRun { progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId) }
         justRun {
             cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
         }

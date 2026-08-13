@@ -18,7 +18,7 @@ class QuestionProgressService(
         targetMemberId: UUID,
         content: String,
     ): Long {
-        progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+        progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
         cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
         return questionRecorder.record(
             roomId,
@@ -37,7 +37,7 @@ class QuestionProgressService(
         parentQuestionId: Long,
         content: String,
     ): Long {
-        progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+        progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
         cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
         return questionRecorder.record(
             roomId,
@@ -55,7 +55,7 @@ class QuestionProgressService(
         targetMemberId: UUID,
         questionId: Long,
     ) {
-        progressAccessValidator.validateRailViewer(roomId, actorMemberId)
+        progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
         cardSetAccessValidator.validateOtherCardSetTarget(roomId, actorMemberId, targetMemberId)
         questionUsageMarker.markAsked(roomId, targetMemberId, questionId)
     }
