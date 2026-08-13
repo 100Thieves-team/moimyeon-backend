@@ -49,6 +49,17 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         status: ParticipationStatus,
     ): Long
 
+    // 뷰어 관계 일괄 조회(MOI-387). 한 페이지 분량의 roomId 에만 IN 으로 걸어 룸 수에 비례해
+    // 쿼리가 늘지 않게 한다. 기준은 탐색 목록의 집계와 같다.
+    //
+    // ⚠️ status·deletedAt 을 여기서 걸지 않는다. 호출자가 한 결과로 두 가지를 판정하기 때문이다 —
+    // 방장·참여 중은 JOINED + 미삭제로, 강퇴 이력은 LEFT 행의 leftByMemberId 로 본다
+    // (existsRemovalHistory 와 같은 술어). 여기서 걸러 버리면 한 축을 살리려다 다른 축이 죽는다.
+    fun findByMemberIdAndRoomIdIn(
+        memberId: UUID,
+        roomIds: Collection<UUID>,
+    ): List<ParticipationEntity>
+
     // 참여 슬롯 사용량(「룸 참여」 §4.1, MOI-427). 룸 상태를 함께 봐야 한다 — 룸 취소는 참여 행을
     // 나감으로 바꾸지 않으므로(RoomManager.cancelWithoutGuard) 참여만 세면 취소한 룸이 슬롯을 영구 점유한다.
     // 어느 상태가 슬롯을 무는지는 도메인이 정해 넘긴다(ParticipationSlot) — 쿼리 문자열에 박으면 정의가 숨는다.
