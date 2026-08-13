@@ -926,7 +926,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T11:56:21.445558894",
+    "datetime" : "2026-08-13T12:05:42.120962227",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1040,7 +1040,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T11:56:21.641578929",
+    "datetime" : "2026-08-13T12:05:42.341431249",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1228,7 +1228,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 12:26:20 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 12:35:41 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1434,7 +1434,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "dec43738-22c7-4758-b2ba-a4d0ba2bb066",
+      "termsId" : "5758714f-432a-468f-8739-d49c4312b2ef",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1442,7 +1442,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "6f70b721-9f9a-4001-a292-d1c6417dd779",
+      "termsId" : "9a1929c8-8a6a-4f0d-b8c4-18dc6ffe0c14",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1547,12 +1547,12 @@ Content-Length: 597
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "c2451e46-c05f-4d30-9e9c-2b818f397ad7",
+    "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "c2451e46-c05f-4d30-9e9c-2b818f397ad7",
+      "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "meetingPreference" : "UNSPECIFIED",
@@ -2354,7 +2354,7 @@ Content-Length: 446
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "06a716a2-1af8-46fc-8371-63dc3aa64b70",
+    "memberId" : "a693cdb3-1716-4022-b5b4-67fa89b9e407",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "meetingPreference" : "OFFLINE",
@@ -4274,7 +4274,7 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1056
+Content-Length: 1179
 
 {
   "result" : "SUCCESS",
@@ -4292,7 +4292,7 @@ Content-Length: 1056
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-14T11:56:25.482138931",
+      "startAt" : "2026-08-14T12:05:46.502217749",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4303,13 +4303,18 @@ Content-Length: 1056
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "1c4f6bf1-30f2-4fe2-9f28-2741a9f830d1",
+    "hostMemberId" : "b315bbc5-e8fe-4def-8843-4639da919c19",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
         "code" : "BELOW_MIN_CAPACITY",
         "label" : "인원 1 / 6명 (최소 3명)"
       }
+    },
+    "viewer" : {
+      "relation" : "ANONYMOUS",
+      "actions" : [ "LOGIN_REQUIRED" ],
+      "blockReason" : null
     }
   },
   "error" : null
@@ -4468,6 +4473,26 @@ Content-Length: 1056
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">방장 회원 식별자 (UUID)</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계·행동. 목록과 같은 객체다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.relation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST 방장). 배지(<code>참여 중</code>·<code>내가 만든 룸</code>)를 이 값으로 그린다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.actions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.blockReason</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. 정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다</p></td>
+</tr>
 </tbody>
 </table>
 <hr>
@@ -4556,7 +4581,7 @@ Content-Length: 1056
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1256
+Content-Length: 1375
 
 {
   "result" : "SUCCESS",
@@ -4598,6 +4623,11 @@ Content-Length: 1256
         "pending" : 5,
         "recruitStatus" : "RECRUITING",
         "recruitStatusLabel" : "모집 중"
+      },
+      "viewer" : {
+        "relation" : "NONE",
+        "actions" : [ "APPLY" ],
+        "blockReason" : null
       }
     } ],
     "sort" : "SCHEDULE",
@@ -4781,6 +4811,26 @@ Content-Length: 1256
 <td class="tableblock halign-left valign-top"><p class="tableblock">모집 상태 표시명</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계·행동. 상세와 같은 객체라 렌더러를 하나만 만들면 된다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.relation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST 방장). 배지(<code>참여 중</code>·<code>내가 만든 룸</code>)를 이 값으로 그린다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.actions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.blockReason</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. 정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sort</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">실제로 적용된 정렬</p></td>
@@ -4812,7 +4862,7 @@ Content-Length: 1256
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "9fc5ec63-433c-4770-a16e-fe287ad01f10",
+  "resumeId" : "15b5bc42-88a0-451d-aa73-723bc2fd3b78",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5046,7 +5096,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "9d2317c5-3da9-4f44-b605-fe24d2a2a394",
+      "resumeId" : "bd20327a-6ff8-467c-b5fb-e08fc07c0296",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -5737,7 +5787,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-13 11:54:57 UTC
+Last updated 2026-08-13 12:04:19 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
