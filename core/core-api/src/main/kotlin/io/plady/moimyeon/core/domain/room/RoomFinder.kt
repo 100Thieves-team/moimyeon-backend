@@ -3,12 +3,14 @@ package io.plady.moimyeon.core.domain.room
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component
@@ -17,7 +19,28 @@ class RoomFinder(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
 ) {
+    @Transactional(readOnly = true)
     fun getSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        return readSummaries(roomIds)
+    }
+
+    @Transactional(readOnly = true)
+    fun getSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus {
+        val summaries = readSummaries(roomIds)
+        return RoomSummariesByStatus(
+            active = summaries
+                .filter { it.room.status in ACTIVE_ROOM_STATUSES }
+                .sortedWith(compareBy<RoomSummary> { it.room.schedule.startAt }.thenBy { it.room.id }),
+            completed = summaries
+                .filter { it.room.status == RoomStatus.COMPLETED }
+                .sortedWith(
+                    compareByDescending<RoomSummary> { it.room.schedule.startAt }
+                        .thenByDescending { it.room.id },
+                ),
+        )
+    }
+
+    private fun readSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
         if (roomIds.isEmpty()) return emptyList()
 
         val roomsById = roomRepository.findByIdInAndDeletedAtIsNull(roomIds).associateBy { it.id }
@@ -32,6 +55,14 @@ class RoomFinder(
                 )
             }
         }
+    }
+
+    private companion object {
+        val ACTIVE_ROOM_STATUSES = setOf(
+            RoomStatus.RECRUITING,
+            RoomStatus.CONFIRMED,
+            RoomStatus.IN_PROGRESS,
+        )
     }
 
     // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.

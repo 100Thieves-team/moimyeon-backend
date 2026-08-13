@@ -11,24 +11,24 @@ import java.util.UUID
 class RoomParticipantServiceTest {
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomParticipantReader = mockk<RoomParticipantReader>()
-    private val roomParticipationReader = mockk<RoomParticipationReader>()
+    private val participationFinder = mockk<ParticipationFinder>()
     private val roomLeaveManager = mockk<RoomLeaveManager>()
     private val service = RoomParticipantService(
         participationValidator,
         roomParticipantReader,
-        roomParticipationReader,
+        participationFinder,
         roomLeaveManager,
     )
 
     @Test
-    fun `회원이 현재 참여 중이거나 완료한 룸을 참여 이력으로 조회한다`() {
+    fun `회원이 참여 중인 룸 식별자를 조회한다`() {
         val memberId = UUID.randomUUID()
-        val history = RoomParticipationHistory(emptyList(), emptyList())
-        every { roomParticipationReader.getHistory(memberId) } returns history
+        val roomIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        every { participationFinder.getParticipatingRoomIds(memberId) } returns roomIds
 
-        val result = service.getParticipationHistory(memberId)
+        val result = service.getParticipatingRoomIds(memberId)
 
-        assertThat(result).isSameAs(history)
-        verify(exactly = 1) { roomParticipationReader.getHistory(memberId) }
+        assertThat(result).containsExactlyElementsOf(roomIds)
+        verify(exactly = 1) { participationFinder.getParticipatingRoomIds(memberId) }
     }
 }

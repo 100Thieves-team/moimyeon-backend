@@ -6,6 +6,7 @@ import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ReviewEntity
 import io.plady.moimyeon.storage.db.core.ReviewRepository
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Component
@@ -13,6 +14,7 @@ class RoomReviewFinder(
     private val attendanceRepository: AttendanceRepository,
     private val reviewRepository: ReviewRepository,
 ) {
+    @Transactional(readOnly = true)
     fun getSummaries(memberId: UUID, roomIds: Collection<UUID>): Map<UUID, RoomReviewSummary> {
         if (roomIds.isEmpty()) return emptyMap()
 

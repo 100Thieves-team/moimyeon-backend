@@ -87,6 +87,18 @@ class RoomServiceTest {
         verify(exactly = 1) { roomFinder.getSummaries(roomIds) }
     }
 
+    @Test
+    fun `참여 룸을 진행 중과 완료 상태로 구분해 조회한다`() {
+        val roomIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        val summaries = RoomSummariesByStatus(emptyList(), emptyList())
+        every { roomFinder.getSummariesByStatus(roomIds) } returns summaries
+
+        val result = service.getRoomSummariesByStatus(roomIds)
+
+        assertThat(result).isSameAs(summaries)
+        verify(exactly = 1) { roomFinder.getSummariesByStatus(roomIds) }
+    }
+
     private fun creationCommand() = RoomCreationCommand(
         jobPostingId = 1L,
         jobRoleId = 1L,

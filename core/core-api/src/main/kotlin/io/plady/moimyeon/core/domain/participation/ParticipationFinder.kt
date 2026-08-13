@@ -10,6 +10,12 @@ import java.util.UUID
 class ParticipationFinder(
     private val participationRepository: ParticipationRepository,
 ) {
+    fun getParticipatingRoomIds(memberId: UUID): List<UUID> {
+        return participationRepository
+            .findByMemberIdAndStatusAndDeletedAtIsNull(memberId, ParticipationStatus.JOINED)
+            .map { it.roomId }
+    }
+
     fun isParticipating(roomId: UUID, memberId: UUID): Boolean {
         return participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
             roomId,

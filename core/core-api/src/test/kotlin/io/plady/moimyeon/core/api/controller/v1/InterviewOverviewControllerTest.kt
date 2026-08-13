@@ -154,9 +154,11 @@ class InterviewOverviewControllerTest : RestDocsTest() {
         fieldWithPath("$prefix.jobPostingId").type(JsonFieldType.NUMBER).description("채용 공고 식별자"),
         fieldWithPath("$prefix.jobRoleId").type(JsonFieldType.NUMBER).description("직무 식별자"),
         fieldWithPath("$prefix.interviewStage").type(JsonFieldType.STRING).description("면접 단계"),
-        fieldWithPath("$prefix.interviewType").type(JsonFieldType.STRING).optional().description("면접 유형"),
+        fieldWithPath("$prefix.interviewType").type(JsonFieldType.STRING).optional()
+            .description("면접 유형. 값이 없으면 null"),
         fieldWithPath("$prefix.meetingType").type(JsonFieldType.STRING).description("진행 방식 (ONLINE | OFFLINE)"),
-        fieldWithPath("$prefix.sigunguId").type(JsonFieldType.NUMBER).optional().description("오프라인 시군구 식별자"),
+        fieldWithPath("$prefix.sigunguId").type(JsonFieldType.NUMBER).optional()
+            .description("오프라인 시군구 식별자. 값이 없으면 null"),
         fieldWithPath("$prefix.startAt").type(JsonFieldType.STRING).description("시작 예정 시각"),
         fieldWithPath("$prefix.durationMinutes").type(JsonFieldType.NUMBER).description("진행 시간(분)"),
         fieldWithPath("$prefix.participantCount").type(JsonFieldType.NUMBER)

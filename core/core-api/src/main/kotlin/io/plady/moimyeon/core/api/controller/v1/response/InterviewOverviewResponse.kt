@@ -1,12 +1,11 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
-import io.plady.moimyeon.core.domain.participation.CompletedRoomParticipation
-import io.plady.moimyeon.core.domain.participation.ParticipatingRoom
-import io.plady.moimyeon.core.domain.participation.RoomParticipationHistory
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
+import io.plady.moimyeon.core.domain.room.RoomSummariesByStatus
 import io.plady.moimyeon.core.domain.room.RoomSummary
 import io.plady.moimyeon.core.domain.roomapplication.PendingRoomApplication
+import io.plady.moimyeon.core.domain.trust.RoomReviewSummary
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -19,7 +18,8 @@ data class InterviewOverviewResponse(
         fun from(
             pendingApplications: List<PendingRoomApplication>,
             pendingRoomSummaries: Collection<RoomSummary>,
-            participationHistory: RoomParticipationHistory,
+            roomSummariesByStatus: RoomSummariesByStatus,
+            reviewSummaries: Map<UUID, RoomReviewSummary>,
         ): InterviewOverviewResponse {
             val pendingRoomSummariesById = pendingRoomSummaries.associateBy { it.room.id }
             return InterviewOverviewResponse(
@@ -28,8 +28,10 @@ data class InterviewOverviewResponse(
                         PendingRoomApplicationResponse.from(application, roomSummary)
                     }
                 },
-                participatingRooms = participationHistory.participatingRooms.map(ParticipatingRoomResponse::from),
-                completedRooms = participationHistory.completedRooms.map(CompletedRoomResponse::from),
+                participatingRooms = roomSummariesByStatus.active.map(ParticipatingRoomResponse::from),
+                completedRooms = roomSummariesByStatus.completed.map { roomSummary ->
+                    CompletedRoomResponse.from(roomSummary, reviewSummaries.getValue(roomSummary.room.id))
+                },
             )
         }
     }
@@ -57,9 +59,9 @@ data class ParticipatingRoomResponse(
     val room: InterviewRoomResponse,
 ) {
     companion object {
-        fun from(participatingRoom: ParticipatingRoom): ParticipatingRoomResponse {
+        fun from(roomSummary: RoomSummary): ParticipatingRoomResponse {
             return ParticipatingRoomResponse(
-                InterviewRoomResponse.from(participatingRoom.room, participatingRoom.participantCount),
+                InterviewRoomResponse.from(roomSummary.room, roomSummary.participantCount),
             )
         }
     }
@@ -70,10 +72,10 @@ data class CompletedRoomResponse(
     val reviewStatus: String,
 ) {
     companion object {
-        fun from(participation: CompletedRoomParticipation): CompletedRoomResponse {
+        fun from(roomSummary: RoomSummary, reviewSummary: RoomReviewSummary): CompletedRoomResponse {
             return CompletedRoomResponse(
-                room = InterviewRoomResponse.from(participation.room, participation.attendedParticipantCount),
-                reviewStatus = participation.reviewStatus.name,
+                room = InterviewRoomResponse.from(roomSummary.room, reviewSummary.attendedParticipantCount),
+                reviewStatus = reviewSummary.status.name,
             )
         }
     }
