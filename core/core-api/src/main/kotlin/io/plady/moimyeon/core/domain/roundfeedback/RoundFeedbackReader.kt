@@ -1,10 +1,9 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
+import io.plady.moimyeon.core.domain.member.MemberAttribution
+import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.question.QuestionMemoRecordReader
 import io.plady.moimyeon.core.enums.RoundFeedbackType
-import io.plady.moimyeon.storage.db.core.MemberEntity
-import io.plady.moimyeon.storage.db.core.MemberRepository
-import io.plady.moimyeon.storage.db.core.QuestionCommentRepository
-import io.plady.moimyeon.storage.db.core.QuestionRepository
 import io.plady.moimyeon.storage.db.core.RoundFeedbackEntity
 import io.plady.moimyeon.storage.db.core.RoundFeedbackRepository
 import org.springframework.stereotype.Component
@@ -13,10 +12,9 @@ import java.util.UUID
 
 @Component
 class RoundFeedbackReader(
-    private val questionRepository: QuestionRepository,
-    private val questionCommentRepository: QuestionCommentRepository,
+    private val questionMemoRecordReader: QuestionMemoRecordReader,
+    private val memberFinder: MemberFinder,
     private val feedbackRepository: RoundFeedbackRepository,
-    private val memberRepository: MemberRepository,
 ) {
     @Transactional(readOnly = true)
     fun getMyQuestionRecords(
@@ -24,29 +22,18 @@ class RoundFeedbackReader(
         intervieweeMemberId: UUID,
         authorMemberId: UUID,
     ): List<RoundQuestionRecord> {
-        val questions = questionRepository
-            .findByRoomIdAndTargetMemberIdAndAskedTrueAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
-                roomId,
-                intervieweeMemberId,
-            )
-        if (questions.isEmpty()) return emptyList()
-
-        val commentsByQuestionId = questionCommentRepository
-            .findAllByQuestionIdInAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
-                questions.map { it.id },
-                authorMemberId,
-            )
-            .groupBy { it.questionId }
-        return questions.mapNotNull { question ->
-            val comments = commentsByQuestionId[question.id].orEmpty()
-            if (comments.isEmpty()) return@mapNotNull null
+        return questionMemoRecordReader.getAskedRecordsByAuthor(
+            roomId,
+            intervieweeMemberId,
+            authorMemberId,
+        ).map { record ->
             RoundQuestionRecord(
-                questionId = question.id,
-                questionContent = question.content,
-                comments = comments.map { comment ->
+                questionId = record.questionId,
+                questionContent = record.questionContent,
+                comments = record.comments.map { comment ->
                     RoundQuestionComment(
                         id = comment.id,
-                        type = comment.commentType,
+                        type = comment.type,
                         content = comment.content,
                         createdAt = comment.createdAt,
                     )
@@ -66,7 +53,7 @@ class RoundFeedbackReader(
                 intervieweeMemberId,
             )
         val finalFeedbacks = feedbacks.filter { it.feedbackType == RoundFeedbackType.FINAL }
-        val authorsById = memberRepository.findAllById(finalFeedbacks.map { it.authorMemberId })
+        val authorsById = memberFinder.getAttributionsIncludingWithdrawn(finalFeedbacks.map { it.authorMemberId })
             .associateBy { it.id }
         return IntervieweeRoundFeedback(
             selfFeedback = feedbacks.firstOrNull { it.feedbackType == RoundFeedbackType.SELF }
@@ -75,13 +62,13 @@ class RoundFeedbackReader(
         )
     }
 
-    private fun RoundFeedbackEntity.toCard(author: MemberEntity?): FinalFeedbackCard {
+    private fun RoundFeedbackEntity.toCard(author: MemberAttribution?): FinalFeedbackCard {
         val revealed = disclosedAt != null
         return FinalFeedbackCard(
             id = id,
             author = RoundFeedbackAuthor(
                 memberId = authorMemberId,
-                displayName = author?.takeUnless { it.isDeleted() }?.nickname ?: WITHDRAWN_MEMBER_NAME,
+                displayName = author?.takeUnless { it.withdrawn }?.nickname ?: WITHDRAWN_MEMBER_NAME,
                 role = RoundFeedbackAuthorRole.PARTICIPANT,
             ),
             content = content.takeIf { revealed },
