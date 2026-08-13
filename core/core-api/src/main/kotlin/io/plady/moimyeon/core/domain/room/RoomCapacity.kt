@@ -20,6 +20,8 @@ data class RoomCapacity(
         )
     }
     companion object {
-        private val ALLOWED_RANGE = 2..8
+        const val MIN_PARTICIPANTS = 2
+        const val MAX_PARTICIPANTS = 8
+        private val ALLOWED_RANGE = MIN_PARTICIPANTS..MAX_PARTICIPANTS
     }
 }
