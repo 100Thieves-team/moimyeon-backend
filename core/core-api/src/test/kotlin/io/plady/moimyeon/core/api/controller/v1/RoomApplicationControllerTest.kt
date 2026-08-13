@@ -23,6 +23,8 @@ import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationForm
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -137,6 +139,36 @@ class RoomApplicationControllerTest : RestDocsTest() {
     }
 
     @Test
+    fun `본인 소유가 아닌 이력서로 참가 신청하면 E1010을 반환한다`() {
+        every {
+            roomApplicationSubmissionService.submit(
+                applicantMemberId,
+                UUID.fromString(roomId),
+                RoomApplicationForm(resumeId, ""),
+            )
+        } throws CoreException(CoreErrorType.RESUME_NOT_FOUND)
+
+        mockMvc.perform(
+            post("/v1/rooms/{roomId}/applications", roomId)
+                .principal(applicantPrincipal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(mapOf("resumeId" to resumeId))),
+        )
+            .andExpect(status().isNotFound)
+            .andDo(
+                documentApi(
+                    "submitRoomApplication-e1010",
+                    submitSummary,
+                    submitDescription,
+                    pathParameters(
+                        parameterWithName("roomId").description("참가 신청할 룸 id (UUID)"),
+                    ),
+                    errorResponseFields(),
+                ),
+            )
+    }
+
+    @Test
     fun `전달 사항을 생략하면 빈 문자열로 신청한다`() {
         every {
             roomApplicationSubmissionService.submit(
@@ -201,7 +233,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
 
     @Test
     fun `해당 룸에 제출한 내 최신 참가 신청을 조회한다`() {
-        every { roomApplicationSubmissionService.getMyApplication(applicantMemberId, any()) } returns myApplication()
+        every { roomApplicationSubmissionService.getLatestApplication(applicantMemberId, any()) } returns myApplication()
 
         mockMvc.perform(
             get("/v1/rooms/{roomId}/applications/me", roomId)

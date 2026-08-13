@@ -47,7 +47,7 @@ class RoomApplicationController(
         @PathVariable roomId: UUID,
     ): ApiResponse<MyRoomApplicationResponse> {
         return ApiResponse.success(
-            MyRoomApplicationResponse.from(roomApplicationSubmissionService.getMyApplication(currentMember.id, roomId)),
+            MyRoomApplicationResponse.from(roomApplicationSubmissionService.getLatestApplication(currentMember.id, roomId)),
         )
     }
 
