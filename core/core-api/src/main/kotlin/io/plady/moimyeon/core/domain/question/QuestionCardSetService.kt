@@ -13,6 +13,11 @@ class QuestionCardSetService(
         return cardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
     }
 
+    fun getMyCardSetPreparerCount(requesterMemberId: UUID, roomId: UUID): Int {
+        accessValidator.validateViewer(roomId, requesterMemberId)
+        return cardSetReader.countPreparers(roomId, requesterMemberId)
+    }
+
     fun getCardSet(requesterMemberId: UUID, roomId: UUID, targetMemberId: UUID): QuestionCardSet {
         accessValidator.validateViewer(roomId, requesterMemberId)
         accessValidator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)

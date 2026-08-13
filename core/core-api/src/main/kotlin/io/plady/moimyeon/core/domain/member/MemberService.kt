@@ -11,6 +11,8 @@ class MemberService(
 ) {
     fun getMember(memberId: UUID): Member = memberFinder.getById(memberId)
 
+    fun getMembers(memberIds: Collection<UUID>): List<Member> = memberFinder.getAllByIds(memberIds)
+
     fun suggestNickname(): Nickname = nicknameGenerator.generateUnique()
 
     fun isNicknameAvailable(rawNickname: String): Boolean {

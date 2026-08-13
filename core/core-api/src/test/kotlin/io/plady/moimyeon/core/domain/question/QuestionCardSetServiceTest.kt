@@ -64,6 +64,20 @@ class QuestionCardSetServiceTest {
     }
 
     @Test
+    fun `본인 카드셋은 내용을 노출하지 않고 준비한 참여자 수만 조회한다`() {
+        justRun { accessValidator.validateViewer(roomId, requesterMemberId) }
+        every { cardSetReader.countPreparers(roomId, requesterMemberId) } returns 2
+
+        val result = service.getMyCardSetPreparerCount(requesterMemberId, roomId)
+
+        assertThat(result).isEqualTo(2)
+        verifyOrder {
+            accessValidator.validateViewer(roomId, requesterMemberId)
+            cardSetReader.countPreparers(roomId, requesterMemberId)
+        }
+    }
+
+    @Test
     fun `다른 확정 참여자의 카드셋을 조회하면 작성자 출처 꼬리질문을 함께 받는다`() {
         val cardSet = cardSet(targetMemberId, listOf(question()))
         justRun { accessValidator.validateViewer(roomId, requesterMemberId) }
