@@ -8,5 +8,6 @@ data class QuestionCard(
     val authorMemberId: UUID,
     val content: String,
     val source: QuestionSource,
+    val asked: Boolean,
     val followUps: List<FollowUpQuestion>,
 )

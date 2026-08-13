@@ -112,7 +112,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     QUESTION_CARD_SET_FORBIDDEN(
         HttpStatus.FORBIDDEN,
         ErrorCode.E1502,
-        "질문 카드셋을 조회할 권한이 없습니다.",
+        "질문 카드셋에 접근할 권한이 없습니다.",
         LogLevel.WARN,
     ),
     QUESTION_CARD_SET_NOT_FOUND(

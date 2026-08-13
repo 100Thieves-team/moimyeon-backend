@@ -22,5 +22,12 @@ class QuestionEntity(
     val content: String,
     @Enumerated(EnumType.STRING)
     val source: QuestionSource,
-    val asked: Boolean = false,
-) : BaseEntity()
+    asked: Boolean = false,
+) : BaseEntity() {
+    var asked: Boolean = asked
+        protected set
+
+    fun markAsked() {
+        asked = true
+    }
+}

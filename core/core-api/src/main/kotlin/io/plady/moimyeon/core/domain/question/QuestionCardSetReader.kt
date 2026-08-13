@@ -52,6 +52,7 @@ class QuestionCardSetReader(
                     authorMemberId = question.authorMemberId,
                     content = question.content,
                     source = question.source,
+                    asked = question.asked,
                     followUps = followUpsByParentId[question.id]
                         .orEmpty()
                         .map { it.toFollowUp() },
@@ -66,6 +67,7 @@ class QuestionCardSetReader(
             authorMemberId = authorMemberId,
             content = content,
             source = source,
+            asked = asked,
         )
     }
 }
