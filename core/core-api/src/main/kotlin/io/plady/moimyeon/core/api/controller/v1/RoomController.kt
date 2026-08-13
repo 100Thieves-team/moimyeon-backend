@@ -12,6 +12,7 @@ import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
+import io.plady.moimyeon.core.api.security.OptionalLoginMember
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
@@ -98,10 +99,19 @@ class RoomController(
     // 잘못된 필터·정렬 값은 그 값만 무시하고 나머지 조건으로 조회한다(§4.7). 반대로 깨진 커서와
     // 앞뒤가 뒤집힌 조회 범위는 400 이다 — 무시하면 순회 자체가 망가지거나 무엇을 무시할지 정할 수 없다.
     @GetMapping("/v1/rooms")
-    fun list(request: RoomSearchRequest): ApiResponse<RoomsResponse> {
+    fun list(
+        @OptionalLoginMember currentMember: CurrentMember?,
+        request: RoomSearchRequest,
+    ): ApiResponse<RoomsResponse> {
         val sort = request.toSort()
         return ApiResponse.success(
-            roomSearchFacade.search(request.toCondition(), sort, request.toCursor(sort), request.toSize()),
+            roomSearchFacade.search(
+                request.toCondition(),
+                sort,
+                request.toCursor(sort),
+                request.toSize(),
+                currentMember?.id,
+            ),
         )
     }
 
@@ -109,8 +119,9 @@ class RoomController(
     // 회사·공고·직무 표시명, 방장 프로필/신뢰 지표, 탐색 목록 enrich 는 별도 이슈다(docs/room-progress.md).
     @GetMapping("/v1/rooms/{roomId}")
     fun detail(
+        @OptionalLoginMember currentMember: CurrentMember?,
         @PathVariable roomId: UUID,
     ): ApiResponse<RoomReadResponse> {
-        return ApiResponse.success(roomFacade.getRoom(roomId))
+        return ApiResponse.success(roomFacade.getRoom(roomId, currentMember?.id))
     }
 }

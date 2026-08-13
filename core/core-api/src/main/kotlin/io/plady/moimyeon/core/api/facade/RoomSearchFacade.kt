@@ -12,7 +12,10 @@ import io.plady.moimyeon.core.domain.room.RoomCursor
 import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
+import io.plady.moimyeon.core.domain.roomviewer.RoomApplicability
+import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 // 탐색 목록의 표시명 조립 지점. 룸 조회는 room 개념이 끝내고, 여기서는 다른 개념의 이름만 붙인다.
 //
@@ -25,12 +28,14 @@ class RoomSearchFacade(
     private val jobPostingService: JobPostingService,
     private val companyService: CompanyService,
     private val catalogService: CatalogService,
+    private val roomViewerService: RoomViewerService,
 ) {
     fun search(
         condition: RoomSearchCondition,
         sort: RoomSortOrder,
         cursor: RoomCursor?,
         size: Int,
+        viewerMemberId: UUID?,
     ): RoomsResponse {
         val page = roomService.searchRooms(condition, sort, cursor, size)
 
@@ -42,6 +47,11 @@ class RoomSearchFacade(
             .associateBy { it.id }
         val regions = catalogService.getRegionLabels(page.cards.mapNotNull { it.offlineSigunguId() }.toSet())
             .associateBy { it.sigunguId }
+        // 뷰어 관계도 한 페이지 분량을 일괄로 읽는다. 룸마다 물으면 표시명 조립과 같은 문제가 난다.
+        val viewers = roomViewerService.getViewers(
+            viewerMemberId,
+            page.cards.associate { it.room.id to RoomApplicability.of(it) },
+        )
 
         return RoomsResponse(
             rooms = page.cards.map { card ->
@@ -52,6 +62,7 @@ class RoomSearchFacade(
                     company = jobPosting?.companyId?.let { companies[it] },
                     jobRole = jobRoles[card.room.jobRoleId],
                     region = card.offlineSigunguId()?.let { regions[it] },
+                    viewer = viewers.getValue(card.room.id),
                 )
             },
             sort = sort.name,

@@ -11,10 +11,12 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomRecruitSummaryRespo
 import io.plady.moimyeon.core.api.controller.v1.response.RoomRegionResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomScheduleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomSummaryResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomViewerResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
+import io.plady.moimyeon.core.api.security.OptionalLoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
@@ -26,6 +28,10 @@ import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
 import io.plady.moimyeon.core.domain.room.RoomTitle
+import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
+import io.plady.moimyeon.core.domain.roomviewer.ViewerAction
+import io.plady.moimyeon.core.domain.roomviewer.ViewerRelation
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
@@ -55,6 +61,7 @@ import java.util.UUID
 class RoomControllerTest : RestDocsTest() {
     private lateinit var roomService: RoomService
     private lateinit var roomSearchFacade: RoomSearchFacade
+    private lateinit var roomViewerService: RoomViewerService
     private val hostMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { hostMemberId.toString() }
     private val createdRoomId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000001")
@@ -136,14 +143,44 @@ class RoomControllerTest : RestDocsTest() {
     fun setUp() {
         roomService = mockk()
         roomSearchFacade = mockk()
+        roomViewerService = mockk()
+        every { roomViewerService.getViewer(any(), any(), any()) } returns anonymousViewer()
         mockMvc = mockController(
-            RoomController(RoomFacade(roomService, fixedClock), roomSearchFacade, roomService),
+            RoomController(RoomFacade(roomService, roomViewerService, fixedClock), roomSearchFacade, roomService),
             LoginMemberArgumentResolver(),
+            OptionalLoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
     }
 
     // 목록 응답은 Facade 가 조립을 끝내고 오므로, 컨트롤러 문서화는 그 결과를 고정값으로 둔다.
+    private val viewerRelationDescription =
+        "조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | " +
+            "APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | " +
+            "PARTICIPANT 참여 중 | HOST 방장). 배지(`참여 중`·`내가 만든 룸`)를 이 값으로 그린다"
+    private val viewerActionsDescription =
+        "취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 " +
+            "(LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | " +
+            "VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다"
+    private val viewerBlockReasonDescription =
+        "할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | " +
+            "APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | " +
+            "APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. " +
+            "정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다"
+
+    private fun sampleRoomDetail(): RoomDetail = RoomDetail(
+        room = sampleRoom(),
+        hostMemberId = hostMemberId,
+        currentParticipants = 1,
+        pendingApplicationCount = 5,
+    )
+
+    private fun anonymousViewer(): RoomViewer = RoomViewer(
+        relation = ViewerRelation.ANONYMOUS,
+        actions = listOf(ViewerAction.LOGIN_REQUIRED),
+        blockReason = null,
+    )
+
     private fun sampleRoomsResponse(): RoomsResponse = RoomsResponse(
         rooms = listOf(
             RoomSummaryResponse(
@@ -166,6 +203,11 @@ class RoomControllerTest : RestDocsTest() {
                     pending = 5,
                     recruitStatus = "RECRUITING",
                     recruitStatusLabel = "모집 중",
+                ),
+                viewer = RoomViewerResponse(
+                    relation = ViewerRelation.NONE.name,
+                    actions = listOf(ViewerAction.APPLY.name),
+                    blockReason = null,
                 ),
             ),
         ),
@@ -451,7 +493,7 @@ class RoomControllerTest : RestDocsTest() {
 
     @Test
     fun rooms() {
-        every { roomSearchFacade.search(any(), any(), any(), any()) } returns sampleRoomsResponse()
+        every { roomSearchFacade.search(any(), any(), any(), any(), any()) } returns sampleRoomsResponse()
 
         mockMvc.perform(
             get("/v1/rooms")
@@ -512,6 +554,14 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.rooms[].recruit.pending").type(JsonFieldType.NUMBER).description("대기 중인 참가 신청 수"),
                         fieldWithPath("data.rooms[].recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
                         fieldWithPath("data.rooms[].recruit.recruitStatusLabel").type(JsonFieldType.STRING).description("모집 상태 표시명"),
+                        fieldWithPath("data.rooms[].viewer").type(JsonFieldType.OBJECT)
+                            .description("조회자와 이 룸의 관계·행동. 상세와 같은 객체라 렌더러를 하나만 만들면 된다"),
+                        fieldWithPath("data.rooms[].viewer.relation").type(JsonFieldType.STRING)
+                            .description(viewerRelationDescription),
+                        fieldWithPath("data.rooms[].viewer.actions").type(JsonFieldType.ARRAY)
+                            .description(viewerActionsDescription),
+                        fieldWithPath("data.rooms[].viewer.blockReason").type(JsonFieldType.STRING).optional()
+                            .description(viewerBlockReasonDescription),
                         fieldWithPath("data.sort").type(JsonFieldType.STRING).description("실제로 적용된 정렬"),
                         fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("조건에 맞는 전체 룸 수 (페이지 크기와 무관)"),
                         fieldWithPath("data.nextCursor").type(JsonFieldType.STRING).optional().description("다음 페이지 커서. 마지막 페이지면 null"),
@@ -524,7 +574,7 @@ class RoomControllerTest : RestDocsTest() {
     @Test
     fun `지원하지 않는 정렬 값을 보내면 기본 정렬로 조회한다`() {
         val sort = slot<RoomSortOrder>()
-        every { roomSearchFacade.search(any(), capture(sort), any(), any()) } returns sampleRoomsResponse()
+        every { roomSearchFacade.search(any(), capture(sort), any(), any(), any()) } returns sampleRoomsResponse()
 
         mockMvc.perform(get("/v1/rooms").param("sort", "POPULAR"))
             .andExpect(status().isOk)
@@ -535,7 +585,7 @@ class RoomControllerTest : RestDocsTest() {
     @Test
     fun `잘못된 면접 단계 값은 그 조건만 무시하고 조회한다`() {
         val condition = slot<RoomSearchCondition>()
-        every { roomSearchFacade.search(capture(condition), any(), any(), any()) } returns sampleRoomsResponse()
+        every { roomSearchFacade.search(capture(condition), any(), any(), any(), any()) } returns sampleRoomsResponse()
 
         mockMvc.perform(get("/v1/rooms").param("round", "FOURTH").param("jobRoleId", "2"))
             .andExpect(status().isOk)
@@ -547,7 +597,7 @@ class RoomControllerTest : RestDocsTest() {
     @Test
     fun `페이지 크기가 허용 범위를 벗어나면 기본 크기로 조회한다`() {
         val size = slot<Int>()
-        every { roomSearchFacade.search(any(), any(), any(), capture(size)) } returns sampleRoomsResponse()
+        every { roomSearchFacade.search(any(), any(), any(), capture(size), any()) } returns sampleRoomsResponse()
 
         mockMvc.perform(get("/v1/rooms").param("size", "1000"))
             .andExpect(status().isOk)
@@ -558,7 +608,7 @@ class RoomControllerTest : RestDocsTest() {
     @Test
     fun `존재하지 않는 직무로 좁히면 조건을 무시하지 않고 그대로 조회한다`() {
         val condition = slot<RoomSearchCondition>()
-        every { roomSearchFacade.search(capture(condition), any(), any(), any()) } returns emptyRoomsResponse()
+        every { roomSearchFacade.search(capture(condition), any(), any(), any(), any()) } returns emptyRoomsResponse()
 
         mockMvc.perform(get("/v1/rooms").param("jobRoleId", "99999"))
             .andExpect(status().isOk)
@@ -585,14 +635,48 @@ class RoomControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
     }
 
+    // 뷰어 식별자를 넘기는 것을 잊으면 로그인 사용자에게도 계속 ANONYMOUS 가 나간다.
+    // 응답만 보면 정상이라 필드 문서화로는 드러나지 않는다.
+    @Test
+    fun `로그인 목록 조회는 회원 식별자를 뷰어로 넘긴다`() {
+        val viewerMemberId = slot<UUID?>()
+        every {
+            roomSearchFacade.search(any(), any(), any(), any(), captureNullable(viewerMemberId))
+        } returns sampleRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms").principal(principal)).andExpect(status().isOk)
+
+        assertThat(viewerMemberId.captured).isEqualTo(hostMemberId)
+    }
+
+    @Test
+    fun `비로그인 목록 조회도 성공하고 뷰어 없이 조회한다`() {
+        val viewerMemberId = slot<UUID?>()
+        every {
+            roomSearchFacade.search(any(), any(), any(), any(), captureNullable(viewerMemberId))
+        } returns sampleRoomsResponse()
+
+        mockMvc.perform(get("/v1/rooms")).andExpect(status().isOk)
+
+        assertThat(viewerMemberId.captured).isNull()
+    }
+
+    @Test
+    fun `비로그인 상세 조회도 성공하고 뷰어 없이 조회한다`() {
+        every { roomService.getRoom(any()) } returns sampleRoomDetail()
+        val viewerMemberId = slot<UUID?>()
+        every {
+            roomViewerService.getViewer(captureNullable(viewerMemberId), any(), any())
+        } returns anonymousViewer()
+
+        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString())).andExpect(status().isOk)
+
+        assertThat(viewerMemberId.captured).isNull()
+    }
+
     @Test
     fun roomDetail() {
-        every { roomService.getRoom(any()) } returns RoomDetail(
-            room = sampleRoom(),
-            hostMemberId = hostMemberId,
-            currentParticipants = 1,
-            pendingApplicationCount = 5,
-        )
+        every { roomService.getRoom(any()) } returns sampleRoomDetail()
         mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
             .andExpect(status().isOk)
             .andDo(
@@ -637,6 +721,14 @@ class RoomControllerTest : RestDocsTest() {
                             .description("화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다"),
                         fieldWithPath("data.resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성)"),
                         fieldWithPath("data.hostMemberId").type(JsonFieldType.STRING).description("방장 회원 식별자 (UUID)"),
+                        fieldWithPath("data.viewer").type(JsonFieldType.OBJECT)
+                            .description("조회자와 이 룸의 관계·행동. 목록과 같은 객체다"),
+                        fieldWithPath("data.viewer.relation").type(JsonFieldType.STRING)
+                            .description(viewerRelationDescription),
+                        fieldWithPath("data.viewer.actions").type(JsonFieldType.ARRAY)
+                            .description(viewerActionsDescription),
+                        fieldWithPath("data.viewer.blockReason").type(JsonFieldType.STRING).optional()
+                            .description(viewerBlockReasonDescription),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
