@@ -43,7 +43,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
     private val applicationsDescription =
         "방장이 룸 관리 화면에서 참가 신청 목록을 확인한다(「룸 참여」 §4.3). 신청자의 공개 정보·전달 사항·처리 상태를 신청 시각 오름차순으로 내려준다. " +
             "철회된 신청은 제외된다. 전달 사항은 방장 외 비공개이며, 이력서 원본으로 가는 경로는 없다(§6). 방장만 조회할 수 있다(E1406). " +
-            "관심 직무는 목록으로 제공하고, 공개 활동 정보는 trust 격벽 구현 전까지 null 로 내려간다."
+            "관심 직무는 목록으로 제공한다. 공개 활동 정보는 이 목록에서는 null이며 공개 프로필 API에서 조회한다."
     private val acceptSummary = "참가 신청 수락"
     private val acceptDescription =
         "방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인원을 증가시킨다. " +
@@ -115,7 +115,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
                         fieldWithPath("data.applications[].applicant.jobRoles[].jobRoleId").type(JsonFieldType.NUMBER).description("관심 직무 id"),
                         fieldWithPath("data.applications[].applicant.jobRoles[].name").type(JsonFieldType.STRING).description("관심 직무명"),
                         fieldWithPath("data.applications[].applicant.activitySummary").type(JsonFieldType.STRING).optional()
-                            .description("공개 가능한 활동 정보 (trust 격벽 전까지 null)"),
+                            .description("공개 가능한 활동 정보 (이 목록에서는 null, 공개 프로필 API에서 조회)"),
                         fieldWithPath("data.applications[].note").type(JsonFieldType.STRING).description("전달 사항 (미입력 시 빈 문자열, 방장 외 비공개)"),
                         fieldWithPath("data.applications[].aiSummary").type(JsonFieldType.OBJECT).description("이력서 AI 요약 상태와 내용"),
                         fieldWithPath("data.applications[].aiSummary.status").type(JsonFieldType.STRING).description("AI 요약 상태 (PROCESSING | DONE)"),

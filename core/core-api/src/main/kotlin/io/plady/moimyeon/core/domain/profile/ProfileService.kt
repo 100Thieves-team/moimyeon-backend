@@ -25,5 +25,7 @@ class ProfileService(
 
     fun getProfile(memberId: UUID): MemberProfile = profileFinder.getProfile(memberId)
 
+    fun getPublicProfile(memberId: UUID): MemberProfile = profileFinder.getPublicProfile(memberId)
+
     fun getProfiles(memberIds: Collection<UUID>): List<MemberProfile> = profileFinder.getAllByMemberIds(memberIds)
 }

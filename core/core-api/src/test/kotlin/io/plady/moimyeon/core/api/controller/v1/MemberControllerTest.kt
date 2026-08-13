@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.UpdateNicknameRequest
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
+import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
@@ -24,6 +25,7 @@ import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.security.auth.ApiResponseAuthenticationEntryPoint
 import io.plady.moimyeon.security.auth.HeaderOrCookieBearerTokenResolver
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
@@ -67,8 +69,8 @@ class MemberControllerTest : RestDocsTest() {
         bio = "",
         meetingPreference = MeetingPreference.UNSPECIFIED,
         sigunguId = null,
-        interestJobRoleIds = emptyList(),
-        interestCompanyIds = emptyList(),
+        interestJobRoleIds = listOf(1L, 2L),
+        interestCompanyIds = listOf(1L, 2L),
     )
     private val principal = Principal { memberId.toString() }
 
@@ -107,10 +109,19 @@ class MemberControllerTest : RestDocsTest() {
     fun memberMe() {
         every { memberService.getMember(memberId) } returns member
         every { profileService.getProfile(memberId) } returns profile
-        every { companyService.getCompanies(emptyList()) } returns emptyList()
+        every { companyService.getCompanies(listOf(1L, 2L)) } returns listOf(
+            Company(1L, "달빛페이"),
+            Company(2L, "한빛커머스"),
+        )
 
         mockMvc.perform(get("/v1/members/me").principal(principal))
             .andExpect(status().isOk)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString)
+                    .contains("\"interestJobRoleIds\":[1,2]")
+                    .contains("\"interestCompanies\":[{\"companyId\":1,\"name\":\"달빛페이\"},{\"companyId\":2,\"name\":\"한빛커머스\"}]")
+                    .doesNotContain("\"interviewStage\"")
+            }
             .andDo(
                 documentApi(
                     "memberMe",
@@ -129,6 +140,8 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("data.profile.meetingPreference").type(JsonFieldType.STRING).description("만남 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
                         fieldWithPath("data.profile.sigunguId").type(JsonFieldType.NUMBER).optional().description("관심 지역 시군구 id (미선택이면 null)"),
                         fieldWithPath("data.profile.interestCompanies").type(JsonFieldType.ARRAY).description("관심 회사 목록 (미지정이면 빈 배열)"),
+                        fieldWithPath("data.profile.interestCompanies[].companyId").type(JsonFieldType.NUMBER).description("회사 id"),
+                        fieldWithPath("data.profile.interestCompanies[].name").type(JsonFieldType.STRING).description("회사명"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),

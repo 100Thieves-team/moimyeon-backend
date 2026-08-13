@@ -16,6 +16,7 @@ import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -43,7 +44,7 @@ class ProfileControllerTest : RestDocsTest() {
             "인증 정보 없음·무효 401(E1102), 프로필을 찾을 수 없음 404(E1009)로 응답한다."
 
     private val validUpdateRequest = UpdateProfileRequest(
-        interestJobRoleIds = listOf(2L),
+        interestJobRoleIds = listOf(1L, 2L),
         bio = "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
         interestCompanyIds = listOf(1L, 2L),
         meetingPreference = MeetingPreference.OFFLINE,
@@ -77,6 +78,12 @@ class ProfileControllerTest : RestDocsTest() {
 
         performUpdate(request)
             .andExpect(status().isOk)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString)
+                    .contains("\"interestJobRoleIds\":[1,2]")
+                    .contains("\"interestCompanies\":[{\"companyId\":1,\"name\":\"달빛페이\"},{\"companyId\":2,\"name\":\"한빛커머스\"}]")
+                    .doesNotContain("\"interviewStage\"")
+            }
             .andDo(
                 documentApi(
                     "updateProfile",

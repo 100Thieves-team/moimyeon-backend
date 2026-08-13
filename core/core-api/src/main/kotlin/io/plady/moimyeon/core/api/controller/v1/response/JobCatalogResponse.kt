@@ -12,7 +12,7 @@ data class JobCatalogResponse(
                     JobGroupResponse(
                         code = group.code,
                         displayName = group.displayName,
-                        roles = group.roles.map { JobRoleResponse(it.id, it.code, it.displayName) },
+                        roles = group.roles.map(JobRoleResponse::from),
                     )
                 },
             )
@@ -24,10 +24,4 @@ data class JobGroupResponse(
     val code: String,
     val displayName: String,
     val roles: List<JobRoleResponse>,
-)
-
-data class JobRoleResponse(
-    val jobRoleId: Long,
-    val code: String,
-    val displayName: String,
 )

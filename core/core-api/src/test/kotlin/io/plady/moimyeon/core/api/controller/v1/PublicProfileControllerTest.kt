@@ -1,6 +1,17 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.mockk.every
+import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.JobRoleResponse
+import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileResponse
+import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTagResponse
+import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTrustResponse
+import io.plady.moimyeon.core.api.facade.PublicProfileFacade
+import io.plady.moimyeon.core.enums.AttendanceStatus
+import io.plady.moimyeon.core.enums.MeetingPreference
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -15,43 +26,61 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
 class PublicProfileControllerTest : RestDocsTest() {
-    private val activeMemberId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private lateinit var publicProfileFacade: PublicProfileFacade
+    private val memberId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val withdrawnMemberId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000410")
     private val unknownMemberId: UUID = UUID.fromString("00000000-0000-0000-0000-000000000404")
 
     private val publicProfileSummary = "공개 프로필 조회"
     private val publicProfileDescription =
-        "다른 사용자가 보는 공개 프로필로 닉네임·직무·자기소개·공개 활동만 노출하고, " +
-            "이메일·OAuth 식별자·약관 동의 이력·비공개 관심 정보는 담지 않는다. " +
-            "목 API는 활성 회원($activeMemberId)과 탈퇴 회원($withdrawnMemberId)을 고정 예시로 제공하며, " +
-            "그 밖의 회원은 404(E1006)로 응답한다. 신뢰 정보는 목에서만 예시 값을 채우고, " +
-            "실 API는 이번 스프린트에 data.trust를 null로 반환한다. 잘못된 UUID는 400(E400)으로 응답한다."
+        "인증 없이 다른 사용자의 공개 프로필과 신뢰 지표를 조회한다. " +
+            "닉네임·관심 직무·자기소개·진행 방식 선호만 프로필 정보로 노출하며, " +
+            "관심 회사·지역·이메일·OAuth 식별자·약관 동의 이력은 담지 않는다. " +
+            "존재하지 않거나 탈퇴한 회원, 필수 프로필이 없는 회원은 404(E1006), " +
+            "잘못된 UUID는 400(E400)으로 응답한다."
 
     @BeforeEach
     fun setUp() {
+        publicProfileFacade = mockk()
         mockMvc = mockController(
-            PublicProfileController(),
+            PublicProfileController(publicProfileFacade),
             controllerAdvice = ApiControllerAdvice(),
         )
     }
 
     @Test
-    fun `다른 사용자의 공개 프로필을 조회하면 공개 정보와 목 신뢰 지표를 반환한다`() {
-        mockMvc.perform(get("/v1/members/{memberId}/profile", activeMemberId))
+    fun `인증 없이 공개 프로필을 조회하면 공개 필드와 신뢰 지표를 반환한다`() {
+        every { publicProfileFacade.get(memberId) } returns publicProfileResponse()
+
+        mockMvc.perform(get("/v1/members/{memberId}/profile", memberId))
             .andExpect(status().isOk)
             .andExpect { result ->
                 assertThat(result.response.contentAsString)
-                    .contains("\"nickname\":\"성실한 사슴 03\"")
-                    .contains("\"jobTitle\":\"백엔드 개발\"")
-                    .contains("\"completedRoomCount\":4")
-                    .contains("\"attendanceRate\":100")
-                    .contains("\"noShowCount\":0")
-                    .contains("\"averageRating\":4.7")
-                    .contains("\"label\":\"시간을 잘 지켜요\",\"count\":6")
+                    .contains("\"memberId\":\"$memberId\"")
+                    .contains("\"nickname\":\"차분한 펭귄 12\"")
+                    .contains(
+                        "\"interestJobRoles\":[" +
+                            "{\"jobRoleId\":1,\"code\":\"BACKEND_DEVELOPER\",\"displayName\":\"백엔드 개발자\"}," +
+                            "{\"jobRoleId\":2,\"code\":\"FRONTEND_DEVELOPER\",\"displayName\":\"프론트엔드 개발자\"}]",
+                    )
+                    .contains("\"bio\":\"자기소개\"")
+                    .contains("\"meetingPreference\":\"BOTH\"")
+                    .contains("\"activityTopPercent\":12")
+                    .contains("\"recentAttendances\":[\"ATTENDED\",\"ABSENT\",\"ATTENDED\"]")
+                    .contains("\"noShowCount\":2")
+                    .contains("\"label\":\"좋은 질문을 해요\",\"count\":5")
+                    .doesNotContain("\"withdrawn\"")
+                    .doesNotContain("\"jobTitle\"")
+                    .doesNotContain("\"recentActivities\"")
+                    .doesNotContain("\"completedRoomCount\"")
+                    .doesNotContain("\"attendanceRate\"")
+                    .doesNotContain("\"averageRating\"")
+                    .doesNotContain("\"interestCompanies\"")
+                    .doesNotContain("\"sigunguId\"")
                     .doesNotContain("\"email\"")
-                    .doesNotContain("\"socialSubject\"")
+                    .doesNotContain("\"socialAccounts\"")
                     .doesNotContain("\"termsAgreements\"")
-                    .doesNotContain("\"interestCompanyIds\"")
+                    .doesNotContain("\"interviewStage\"")
                     .doesNotContain("\"interestJobRoleIds\"")
             }
             .andDo(
@@ -66,31 +95,32 @@ class PublicProfileControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `탈퇴한 회원은 공개 정보를 숨기고 탈퇴한 사용자로 표시한다`() {
-        mockMvc.perform(get("/v1/members/{memberId}/profile", withdrawnMemberId))
+    fun `활동 이력이 없으면 비어 있는 신뢰 지표를 반환한다`() {
+        every { publicProfileFacade.get(memberId) } returns publicProfileResponse(
+            trust = PublicProfileTrustResponse(
+                activityTopPercent = null,
+                recentAttendances = emptyList(),
+                noShowCount = 0,
+                representativeTags = emptyList(),
+            ),
+        )
+
+        mockMvc.perform(get("/v1/members/{memberId}/profile", memberId))
             .andExpect(status().isOk)
             .andExpect { result ->
                 assertThat(result.response.contentAsString)
-                    .contains("\"withdrawn\":true")
-                    .contains("\"nickname\":\"탈퇴한 사용자\"")
-                    .contains("\"jobTitle\":null")
-                    .contains("\"bio\":null")
-                    .contains("\"trust\":null")
-                    .contains("\"recentActivities\":[]")
+                    .contains("\"trust\":{")
+                    .contains("\"activityTopPercent\":null")
+                    .contains("\"recentAttendances\":[]")
+                    .contains("\"noShowCount\":0")
+                    .contains("\"representativeTags\":[]")
             }
-            .andDo(
-                documentApi(
-                    "publicProfile-withdrawn",
-                    publicProfileSummary,
-                    publicProfileDescription,
-                    publicProfilePathParameters(),
-                    publicProfileResponseFields(),
-                ),
-            )
     }
 
     @Test
     fun `존재하지 않는 회원의 공개 프로필은 E1006 을 반환한다`() {
+        every { publicProfileFacade.get(unknownMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
         mockMvc.perform(get("/v1/members/{memberId}/profile", unknownMemberId))
             .andExpect(status().isNotFound)
             .andExpect { result ->
@@ -105,6 +135,17 @@ class PublicProfileControllerTest : RestDocsTest() {
                     errorResponseFields(),
                 ),
             )
+    }
+
+    @Test
+    fun `탈퇴한 회원의 공개 프로필은 E1006 을 반환한다`() {
+        every { publicProfileFacade.get(withdrawnMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        mockMvc.perform(get("/v1/members/{memberId}/profile", withdrawnMemberId))
+            .andExpect(status().isNotFound)
+            .andExpect { result ->
+                assertThat(result.response.contentAsString).contains("\"code\":\"E1006\"")
+            }
     }
 
     @Test
@@ -125,6 +166,27 @@ class PublicProfileControllerTest : RestDocsTest() {
             )
     }
 
+    private fun publicProfileResponse(
+        trust: PublicProfileTrustResponse = PublicProfileTrustResponse(
+            activityTopPercent = 12,
+            recentAttendances = listOf(AttendanceStatus.ATTENDED, AttendanceStatus.ABSENT, AttendanceStatus.ATTENDED),
+            noShowCount = 2,
+            representativeTags = listOf(PublicProfileTagResponse(label = "좋은 질문을 해요", count = 5)),
+        ),
+    ): PublicProfileResponse {
+        return PublicProfileResponse(
+            memberId = memberId,
+            nickname = "차분한 펭귄 12",
+            interestJobRoles = listOf(
+                JobRoleResponse(1L, "BACKEND_DEVELOPER", "백엔드 개발자"),
+                JobRoleResponse(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
+            ),
+            bio = "자기소개",
+            meetingPreference = MeetingPreference.BOTH,
+            trust = trust,
+        )
+    }
+
     private fun publicProfilePathParameters() = pathParameters(
         parameterWithName("memberId").description("조회할 회원 식별자 (UUID)"),
     )
@@ -132,23 +194,24 @@ class PublicProfileControllerTest : RestDocsTest() {
     private fun publicProfileResponseFields() = responseFields(
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
         fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 식별자 (UUID)"),
-        fieldWithPath("data.withdrawn").type(JsonFieldType.BOOLEAN).description("탈퇴한 회원 여부"),
-        fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임 (탈퇴 회원은 '탈퇴한 사용자')"),
-        fieldWithPath("data.jobTitle").type(JsonFieldType.STRING).optional().description("직무 (선택, 탈퇴 회원은 null)"),
-        fieldWithPath("data.bio").type(JsonFieldType.STRING).optional().description("자기소개 (선택, 탈퇴 회원은 null)"),
-        fieldWithPath("data.trust").type(JsonFieldType.OBJECT).optional()
-            .description("신뢰 정보 (목에서만 제공, 실 API는 이번 스프린트에 null)"),
-        fieldWithPath("data.trust.completedRoomCount").type(JsonFieldType.NUMBER).optional().description("완료한 룸 수"),
-        fieldWithPath("data.trust.attendanceRate").type(JsonFieldType.NUMBER).optional().description("출석률 (%)"),
-        fieldWithPath("data.trust.noShowCount").type(JsonFieldType.NUMBER).optional().description("누적 노쇼 횟수"),
-        fieldWithPath("data.trust.averageRating").type(JsonFieldType.NUMBER).optional().description("평균 별점"),
-        fieldWithPath("data.trust.representativeTags").type(JsonFieldType.ARRAY).optional().description("대표 평가 태그"),
-        fieldWithPath("data.trust.representativeTags[].label").type(JsonFieldType.STRING).optional().description("평가 문구"),
-        fieldWithPath("data.trust.representativeTags[].count").type(JsonFieldType.NUMBER).optional().description("받은 횟수"),
-        fieldWithPath("data.recentActivities").type(JsonFieldType.ARRAY).description("최근 공개 활동 (없으면 빈 배열)"),
-        fieldWithPath("data.recentActivities[].role").type(JsonFieldType.STRING).optional().description("역할 (PARTICIPANT | HOST)"),
-        fieldWithPath("data.recentActivities[].title").type(JsonFieldType.STRING).optional().description("활동 제목"),
-        fieldWithPath("data.recentActivities[].date").type(JsonFieldType.STRING).optional().description("활동 일자 (yyyy-MM-dd)"),
+        fieldWithPath("data.nickname").type(JsonFieldType.STRING).description("닉네임"),
+        fieldWithPath("data.interestJobRoles").type(JsonFieldType.ARRAY).description("관심 직무 목록"),
+        fieldWithPath("data.interestJobRoles[].jobRoleId").type(JsonFieldType.NUMBER).description("관심 직무 식별자"),
+        fieldWithPath("data.interestJobRoles[].code").type(JsonFieldType.STRING).description("관심 직무 코드"),
+        fieldWithPath("data.interestJobRoles[].displayName").type(JsonFieldType.STRING).description("관심 직무 표시명"),
+        fieldWithPath("data.bio").type(JsonFieldType.STRING).description("자기소개 (미지정이면 빈 문자열)"),
+        fieldWithPath("data.meetingPreference").type(JsonFieldType.STRING)
+            .description("진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
+        fieldWithPath("data.trust").type(JsonFieldType.OBJECT).description("신뢰 지표 (활동 이력이 없어도 항상 반환)"),
+        fieldWithPath("data.trust.activityTopPercent").type(JsonFieldType.NUMBER).optional()
+            .description("활동률 상위 퍼센트 (출석한 완료 룸이 없으면 null)"),
+        fieldWithPath("data.trust.recentAttendances").type(JsonFieldType.ARRAY)
+            .description("최근 완료 룸 출석 결과, 최신순 최대 3건"),
+        fieldWithPath("data.trust.noShowCount").type(JsonFieldType.NUMBER).description("완료 룸 누적 불참 횟수"),
+        fieldWithPath("data.trust.representativeTags").type(JsonFieldType.ARRAY)
+            .description("대표 평가 태그, 받은 횟수 내림차순·문구 오름차순 최대 3개"),
+        fieldWithPath("data.trust.representativeTags[].label").type(JsonFieldType.STRING).description("평가 문구"),
+        fieldWithPath("data.trust.representativeTags[].count").type(JsonFieldType.NUMBER).description("받은 횟수"),
         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
     )
 }

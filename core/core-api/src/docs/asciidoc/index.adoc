@@ -298,25 +298,15 @@ include::{snippets}/updateProfile/response-fields.adoc[]
 
 === 공개 프로필 조회
 
-다른 사용자에게 보이는 공개 프로필이다. 닉네임·직무·자기소개·공개 활동만 노출하며,
-이메일·OAuth 식별자·약관 동의 이력·비공개 관심 정보는 응답에 포함하지 않는다.
+인증 없이 다른 사용자에게 보이는 공개 프로필을 조회한다. 닉네임·관심 직무·자기소개·진행 방식
+선호와 공개 가능한 신뢰 지표만 노출하며, 관심 회사·지역·이메일·OAuth 식별자·약관 동의 이력은
+응답에 포함하지 않는다.
 
-목 API는 아래 고정 회원으로 응답 변형을 제공한다. 그 밖의 UUID는 존재하지 않는 회원으로 처리한다.
+`data.trust`는 활동 이력이 없어도 항상 존재한다. 활동률 상위 퍼센트는 완료된 미삭제 룸에 출석한
+회원을 모수로 하며, 질문·꼬리질문·답변 요약·질문 피드백 수를 출석 완료 룸 수로 나눈 평균을
+비교한다. 최근 출석은 시작 시각과 룸 식별자 역순의 최신 3건이고, 대표 태그는 공개된 미숨김·미삭제
+후기에서 받은 횟수 내림차순·문구 오름차순 상위 3개다.
 
-|===
-| memberId | 응답
-
-| `00000000-0000-0000-0000-000000000001`
-| 활성 회원 공개 프로필과 Figma 신뢰 정보 예시
-
-| `00000000-0000-0000-0000-000000000410`
-| `withdrawn=true`, 닉네임 `탈퇴한 사용자`, 나머지 공개 정보 비움
-|===
-
-`data.trust`의 완료 룸 수·출석률·누적 노쇼 횟수·평균 별점·대표 태그는 목에서만 예시 값을 채운다.
-실 API(MOI-378)는 이번 스프린트에 이 영역을 `null`로 반환하고, 신뢰 도메인이 구현되면 같은 응답 모양에 값을 채운다.
-
-==== 활성 회원 예시
 ==== Curl Request
 include::{snippets}/publicProfile/curl-request.adoc[]
 ==== Path Parameters
@@ -326,16 +316,12 @@ include::{snippets}/publicProfile/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/publicProfile/response-fields.adoc[]
 
-==== 탈퇴 회원 예시
-===== Http Response
-include::{snippets}/publicProfile-withdrawn/http-response.adoc[]
-
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
 
 | 400 | E400 | 회원 식별자가 UUID 형식이 아님
-| 404 | E1006 | 존재하지 않는 회원
+| 404 | E1006 | 존재하지 않거나 탈퇴한 회원, 필수 프로필이 없는 회원
 |===
 
 == Resume API
@@ -450,7 +436,6 @@ include::{snippets}/deleteResume/response-fields.adoc[]
 == Room (룸·면접) API
 
 모의면접 룸의 생성·탐색·참가 신청 관리를 위한 API. 데이터·코드에서는 룸(Room), 사용자 화면 표기는 면접이다.
-도메인 구현 전까지 목(`@MockApiProfile`, local/local-dev/dev 에서만 활성)으로 제공하며, 고정 예시 값을 반환한다.
 회사·직무·지역은 <<_catalog_api,Catalog API>> 를 참조 id 로 연결한다. 회사는 공고를 고르면 함께 확정되므로 룸에는 따로 저장하지 않는다.
 룸 id 는 외부 노출 식별자라 UUID(UUIDv7 계열)다.
 

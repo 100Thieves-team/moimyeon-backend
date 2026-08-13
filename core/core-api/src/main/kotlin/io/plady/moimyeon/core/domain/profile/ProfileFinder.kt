@@ -17,7 +17,16 @@ class ProfileFinder(
 ) {
     @Transactional(readOnly = true)
     fun getProfile(memberId: UUID): MemberProfile {
-        val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), CoreErrorType.PROFILE_NOT_FOUND)
+        return getProfile(memberId, CoreErrorType.PROFILE_NOT_FOUND)
+    }
+
+    @Transactional(readOnly = true)
+    fun getPublicProfile(memberId: UUID): MemberProfile {
+        return getProfile(memberId, CoreErrorType.MEMBER_NOT_FOUND)
+    }
+
+    private fun getProfile(memberId: UUID, notFoundError: CoreErrorType): MemberProfile {
+        val entity = requireFound(memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId), notFoundError)
         return ProfileMapper.toDomain(
             entity,
             interestJobRoleIds = interestJobRoleRepository.findByProfileIdAndDeletedAtIsNull(entity.id).map { it.jobRoleId },

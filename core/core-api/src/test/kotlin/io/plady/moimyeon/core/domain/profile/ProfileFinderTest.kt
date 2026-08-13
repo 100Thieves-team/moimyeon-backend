@@ -3,6 +3,8 @@ package io.plady.moimyeon.core.domain.profile
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberProfileEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestCompanyEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestCompanyRepository
@@ -10,6 +12,7 @@ import io.plady.moimyeon.storage.db.core.MemberProfileInterestJobRoleEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestJobRoleRepository
 import io.plady.moimyeon.storage.db.core.MemberProfileRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -22,6 +25,17 @@ class ProfileFinderTest {
         interestCompanyRepository,
         interestJobRoleRepository,
     )
+
+    @Test
+    fun `공개 프로필이 없으면 회원 없음 E1006 으로 번역한다`() {
+        val memberId = UUID.randomUUID()
+        every { memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId) } returns null
+
+        assertThatThrownBy { finder.getPublicProfile(memberId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+    }
 
     @Test
     fun `여러 회원의 프로필과 관심 정보를 배치 조회한다`() {
