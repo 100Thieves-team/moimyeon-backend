@@ -27,16 +27,7 @@ class QuestionRecorder(
         if (parentQuestionId != null) {
             validateParent(roomId, targetMemberId, parentQuestionId)
         }
-        return questionRepository.save(
-            QuestionEntity(
-                roomId = roomId,
-                targetMemberId = targetMemberId,
-                authorMemberId = authorMemberId,
-                parentQuestionId = parentQuestionId,
-                content = content,
-                source = source,
-            ),
-        ).id
+        return save(roomId, targetMemberId, authorMemberId, parentQuestionId, content, source)
     }
 
     @Transactional
@@ -52,10 +43,21 @@ class QuestionRecorder(
             parent.targetMemberId != authorMemberId,
             CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,
         )
+        return save(roomId, parent.targetMemberId, authorMemberId, parentQuestionId, content, source)
+    }
+
+    private fun save(
+        roomId: UUID,
+        targetMemberId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long?,
+        content: String,
+        source: QuestionSource,
+    ): Long {
         return questionRepository.save(
             QuestionEntity(
                 roomId = roomId,
-                targetMemberId = parent.targetMemberId,
+                targetMemberId = targetMemberId,
                 authorMemberId = authorMemberId,
                 parentQuestionId = parentQuestionId,
                 content = content,
