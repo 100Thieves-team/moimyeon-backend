@@ -6,7 +6,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.enums.QuestionCommentType
-import io.plady.moimyeon.core.enums.RoundFeedbackType
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -98,13 +97,12 @@ class RoundFeedbackServiceTest {
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,
             authorMemberId = participantMemberId,
-            type = RoundFeedbackType.FINAL,
             content = "설명 구조가 탄탄했지만 실제 장애 사례를 수치와 함께 준비하면 더 좋아요",
         )
         justRun {
             accessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
         }
-        every { feedbackManager.save(command) } returns feedbackId
+        every { feedbackManager.registerFinalFeedback(command) } returns feedbackId
 
         val result = service.leaveFinalFeedback(
             participantMemberId,
@@ -116,7 +114,7 @@ class RoundFeedbackServiceTest {
         assertThat(result).isEqualTo(feedbackId)
         verifyOrder {
             accessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
-            feedbackManager.save(command)
+            feedbackManager.registerFinalFeedback(command)
         }
     }
 
@@ -126,14 +124,13 @@ class RoundFeedbackServiceTest {
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,
             authorMemberId = participantMemberId,
-            type = RoundFeedbackType.FINAL,
             content = "두 번째 등록은 기존 피드백을 덮어쓰지 않아요",
         )
         justRun {
             accessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
         }
         every {
-            feedbackManager.save(command)
+            feedbackManager.registerFinalFeedback(command)
         } throws CoreException(CoreErrorType.ROUND_FEEDBACK_ALREADY_EXISTS)
 
         assertThatThrownBy {
@@ -154,13 +151,12 @@ class RoundFeedbackServiceTest {
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,
             authorMemberId = intervieweeMemberId,
-            type = RoundFeedbackType.SELF,
             content = "복구 전략을 구체적인 장애 사례로 설명하지 못한 점이 아쉬웠어요",
         )
         justRun {
             accessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
         }
-        every { feedbackManager.save(command) } returns feedbackId
+        every { feedbackManager.upsertSelfFeedback(command) } returns feedbackId
 
         val result = service.leaveSelfFeedback(
             intervieweeMemberId,
@@ -172,7 +168,7 @@ class RoundFeedbackServiceTest {
         assertThat(result).isEqualTo(feedbackId)
         verifyOrder {
             accessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
-            feedbackManager.save(command)
+            feedbackManager.upsertSelfFeedback(command)
         }
     }
 
@@ -182,21 +178,19 @@ class RoundFeedbackServiceTest {
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,
             authorMemberId = intervieweeMemberId,
-            type = RoundFeedbackType.SELF,
             content = "복구 전략 답변이 아쉬웠어요",
         )
         val revisedCommand = RoundFeedbackCommand(
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,
             authorMemberId = intervieweeMemberId,
-            type = RoundFeedbackType.SELF,
             content = "복구 전략을 실제 장애 수치로 설명하지 못한 점이 아쉬웠어요",
         )
         justRun {
             accessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
         }
-        every { feedbackManager.save(initialCommand) } returns feedbackId
-        every { feedbackManager.save(revisedCommand) } returns feedbackId
+        every { feedbackManager.upsertSelfFeedback(initialCommand) } returns feedbackId
+        every { feedbackManager.upsertSelfFeedback(revisedCommand) } returns feedbackId
 
         service.leaveSelfFeedback(
             intervieweeMemberId,
@@ -214,9 +208,9 @@ class RoundFeedbackServiceTest {
         assertThat(result).isEqualTo(feedbackId)
         verifyOrder {
             accessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
-            feedbackManager.save(initialCommand)
+            feedbackManager.upsertSelfFeedback(initialCommand)
             accessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
-            feedbackManager.save(revisedCommand)
+            feedbackManager.upsertSelfFeedback(revisedCommand)
         }
     }
 
@@ -344,7 +338,7 @@ class RoundFeedbackServiceTest {
 
         verify(exactly = 0) {
             feedbackReader.getMyQuestionRecords(any(), any(), any())
-            feedbackManager.save(any())
+            feedbackManager.registerFinalFeedback(any())
         }
     }
 }

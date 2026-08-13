@@ -1,6 +1,5 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
-import io.plady.moimyeon.core.enums.RoundFeedbackType
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -26,12 +25,11 @@ class RoundFeedbackService(
         content: String,
     ): Long {
         accessValidator.validateOtherParticipantWriter(roomId, memberId, intervieweeMemberId)
-        return feedbackManager.save(
+        return feedbackManager.registerFinalFeedback(
             RoundFeedbackCommand(
                 roomId = roomId,
                 intervieweeMemberId = intervieweeMemberId,
                 authorMemberId = memberId,
-                type = RoundFeedbackType.FINAL,
                 content = content,
             ),
         )
@@ -44,12 +42,11 @@ class RoundFeedbackService(
         content: String,
     ): Long {
         accessValidator.validateIntervieweeWriter(roomId, memberId, intervieweeMemberId)
-        return feedbackManager.save(
+        return feedbackManager.upsertSelfFeedback(
             RoundFeedbackCommand(
                 roomId = roomId,
                 intervieweeMemberId = intervieweeMemberId,
                 authorMemberId = memberId,
-                type = RoundFeedbackType.SELF,
                 content = content,
             ),
         )
