@@ -33,6 +33,11 @@ interface QuestionRepository : JpaRepository<QuestionEntity, Long> {
         targetMemberId: UUID,
     ): List<QuestionEntity>
 
+    fun findByRoomIdAndTargetMemberIdAndAskedTrueAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
+        roomId: UUID,
+        targetMemberId: UUID,
+    ): List<QuestionEntity>
+
     @Query(
         """
         SELECT COUNT(DISTINCT q.authorMemberId)
