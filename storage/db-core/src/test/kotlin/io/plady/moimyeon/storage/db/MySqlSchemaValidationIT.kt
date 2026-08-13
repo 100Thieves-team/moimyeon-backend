@@ -58,6 +58,13 @@ class MySqlSchemaValidationIT(
             .doesNotContain("meeting_preference", "sigungu_id")
     }
 
+    @Test
+    fun `질문 평가는 클로징 제출의 소유 키만 가진다`() {
+        assertThat(columnNamesOf("question_vote"))
+            .contains("closing_response_id")
+            .doesNotContain("voter_member_id", "deleted_at", "_active_check")
+    }
+
     private fun secondPrecisionColumns(): List<String> = dataSource.connection.use { connection ->
         connection.prepareStatement(
             """

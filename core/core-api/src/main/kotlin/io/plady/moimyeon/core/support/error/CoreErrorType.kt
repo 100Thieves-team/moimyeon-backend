@@ -237,4 +237,23 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "출석 대상이 확정 참여자와 일치하지 않습니다.",
         LogLevel.WARN,
     ),
+
+    CLOSING_SUBMISSION_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1801,
+        "출석한 참여자만 클로징을 제출할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    CLOSING_NOT_AVAILABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1802,
+        "진행 중인 룸에서만 클로징을 제출할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    CLOSING_QUESTION_MISMATCH(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1803,
+        "평가 대상 질문이 오늘 사용한 질문과 일치하지 않습니다.",
+        LogLevel.WARN,
+    ),
 }
