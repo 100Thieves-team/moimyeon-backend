@@ -26,6 +26,7 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -63,7 +64,9 @@ class RoomApplicationControllerTest : RestDocsTest() {
     private val acceptDescription =
         "방장이 대기 중인 신청을 수락한다(「룸 참여」 §4.4). 서버가 정원을 최종 확인한 뒤 신청자를 참여자로 등록하고 현재 인원을 증가시킨다. " +
             "정원에 도달하면 모집 상태가 마감(CLOSED)으로 계산된다. 마지막 자리를 두고 동시 수락이 몰려도 1건만 성공한다(룸 행 잠금). " +
-            "방장만 처리할 수 있고(E1406), 이미 처리된 신청(E1409)·모집 중이 아닌 방(E1410)·정원 초과(E1411)는 거부된다."
+            "방장만 처리할 수 있고(E1406), 이미 처리된 신청(E1409)·모집 중이 아닌 방(E1410)·정원 초과(E1411)는 거부된다. " +
+            "신청자의 참여 슬롯이 이미 차 있으면(참여 중인 룸 3개, 「룸 참여」 §4.1) 참여자로 등록하지 않고 그 신청을 " +
+            "SLOT_EXCEEDED 로 정리한다. 방장의 요청은 실패하지 않으므로 200 이며, 결과는 status 로 구분한다."
     private val rejectSummary = "참가 신청 반려"
     private val rejectDescription =
         "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택(최대 50자)이며, 반려는 정원·참여자 목록에 영향이 없다. " +
@@ -387,8 +390,8 @@ class RoomApplicationControllerTest : RestDocsTest() {
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.applicationId").type(JsonFieldType.NUMBER).description("처리된 신청 id"),
-                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("신청 상태 (ACCEPTED)"),
-                        fieldWithPath("data.statusLabel").type(JsonFieldType.STRING).description("신청 상태 표시명 (수락)"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("신청 상태 (ACCEPTED | SLOT_EXCEEDED)"),
+                        fieldWithPath("data.statusLabel").type(JsonFieldType.STRING).description("신청 상태 표시명 (수락 | 참여 슬롯 초과)"),
                         fieldWithPath("data.recruit.current").type(JsonFieldType.NUMBER).description("수락 반영 후 현재 인원"),
                         fieldWithPath("data.recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
                         fieldWithPath("data.recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
@@ -397,6 +400,32 @@ class RoomApplicationControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    // 화면이 이 응답으로 무엇을 해야 하는지가 갈린다 — 참여자 목록에 더하지 않고 신청 행만 목록에서 뺀다.
+    // 예외가 아니라 결정으로 내려가므로 FE 가 error 가 아니라 status 를 봐야 한다(MOI-427 D2).
+    @Test
+    fun acceptApplicationSlotExceeded() {
+        every { roomApplicationService.accept(any(), any(), any()) } returns ApplicationDecision(
+            applicationId = 3001L,
+            status = RoomApplicationStatus.SLOT_EXCEEDED,
+            currentParticipants = 1,
+            maxCapacity = 6,
+        )
+
+        val response = mockMvc.perform(
+            post("/v1/rooms/{roomId}/applications/{applicationId}/accept", roomId, 3001L)
+                .principal(principal),
+        )
+            .andExpect(status().isOk)
+            .andReturn().response.contentAsString
+
+        assertThat(response)
+            .contains("\"result\":\"SUCCESS\"")
+            .contains("\"status\":\"SLOT_EXCEEDED\"")
+            .contains("\"statusLabel\":\"참여 슬롯 초과\"")
+            // 참여자로 등록되지 않았으므로 현재 인원은 그대로다.
+            .contains("\"current\":1")
     }
 
     @Test
