@@ -99,6 +99,34 @@ class RoomProgressPersistenceIT(
     }
 
     @Test
+    fun `예정 시각 전에는 진행 상태와 출석과 시작 로그를 남기지 않는다`() {
+        seedConfirmedRoomAndParticipants()
+
+        assertThatThrownBy {
+            progressManager.start(
+                command(
+                    attendances = listOf(
+                        Attendance(hostMemberId, AttendanceStatus.ATTENDED),
+                        Attendance(participantMemberId, AttendanceStatus.ATTENDED),
+                    ),
+                    at = startedAt.minusNanos(1),
+                ),
+            )
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE)
+        }
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId)).isEmpty()
+        assertThat(
+            roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(
+                roomId,
+                RoomStatus.IN_PROGRESS,
+            ),
+        ).isZero()
+    }
+
+    @Test
     fun `진행 중인 룸을 다시 시작하면 최초 결과를 반환하지 않고 거부한다`() {
         seedConfirmedRoomAndParticipants()
         progressManager.start(
@@ -217,12 +245,13 @@ class RoomProgressPersistenceIT(
     private fun command(
         attendances: List<Attendance>,
         startedByMemberId: UUID = hostMemberId,
+        at: LocalDateTime = startedAt,
     ): RoomProgressStartCommand {
         return RoomProgressStartCommand(
             roomId = roomId,
             startedByMemberId = startedByMemberId,
             attendances = attendances,
-            startedAt = startedAt,
+            startedAt = at,
         )
     }
 

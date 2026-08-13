@@ -27,7 +27,7 @@ class RoomProgressManager(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         requireBusiness(
-            room.canStartProgress(),
+            room.canStartProgress(command.startedAt),
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
         )
         val confirmedParticipantIds = participationFinder.getConfirmedParticipantIds(command.roomId)
@@ -39,7 +39,7 @@ class RoomProgressManager(
         )
         val hostMemberId = participationFinder.getHostMemberId(command.roomId)
 
-        room.startProgress()
+        room.startProgress(command.startedAt)
         attendanceRepository.saveAllAndFlush(
             command.attendances.map { attendance ->
                 AttendanceEntity(

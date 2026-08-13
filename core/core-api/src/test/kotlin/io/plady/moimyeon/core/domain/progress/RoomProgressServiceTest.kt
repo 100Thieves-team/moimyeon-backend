@@ -61,7 +61,7 @@ class RoomProgressServiceTest {
         assertThat(result.attendances).containsExactlyInAnyOrderElementsOf(command.attendances)
         assertThat(result.attendances).hasSize(confirmedParticipantIds.size)
         verifyOrder {
-            accessValidator.validateStarter(roomId, hostMemberId)
+            accessValidator.validateStarter(roomId, hostMemberId, currentTime)
             progressManager.start(command)
         }
     }
@@ -82,7 +82,7 @@ class RoomProgressServiceTest {
         assertThat(result.attendances.single { it.memberId == hostMemberId }.status)
             .isEqualTo(AttendanceStatus.ABSENT)
         verifyOrder {
-            accessValidator.validateStarter(roomId, participant1Id)
+            accessValidator.validateStarter(roomId, participant1Id, currentTime)
             progressManager.start(command)
         }
     }
@@ -90,7 +90,7 @@ class RoomProgressServiceTest {
     @Test
     fun `확정 참여자가 아니면 참여 패널의 출석을 제출할 수 없다`() {
         every {
-            accessValidator.validateStarter(roomId, outsiderMemberId)
+            accessValidator.validateStarter(roomId, outsiderMemberId, currentTime)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_START_FORBIDDEN)
 
         assertProgressFails(CoreErrorType.ROOM_PROGRESS_START_FORBIDDEN) {
@@ -108,7 +108,7 @@ class RoomProgressServiceTest {
     @Test
     fun `확정 전 룸은 확정 참여자를 읽거나 진행 기록을 만들지 않는다`() {
         every {
-            accessValidator.validateStarter(roomId, hostMemberId)
+            accessValidator.validateStarter(roomId, hostMemberId, currentTime)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE)
 
         assertProgressFails(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE) {
@@ -126,7 +126,7 @@ class RoomProgressServiceTest {
     @Test
     fun `진행 중인 룸에 다시 시작을 요청하면 최초 결과를 반환하지 않고 거부한다`() {
         every {
-            accessValidator.validateStarter(roomId, hostMemberId)
+            accessValidator.validateStarter(roomId, hostMemberId, currentTime)
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE)
 
         assertProgressFails(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE) {
@@ -193,7 +193,7 @@ class RoomProgressServiceTest {
     }
 
     private fun givenRoomCanStart(starterMemberId: UUID = hostMemberId) {
-        justRun { accessValidator.validateStarter(roomId, starterMemberId) }
+        justRun { accessValidator.validateStarter(roomId, starterMemberId, currentTime) }
     }
 
     private fun attendanceSelection(attendedMemberIds: Set<UUID>): List<Attendance> {

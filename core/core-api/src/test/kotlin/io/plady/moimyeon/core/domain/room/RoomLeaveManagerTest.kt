@@ -136,7 +136,7 @@ class RoomLeaveManagerTest {
             RoomStatus.CONFIRMED -> room.confirm()
             RoomStatus.IN_PROGRESS -> {
                 room.confirm()
-                room.startProgress()
+                room.startProgress(now.plusDays(7))
             }
             RoomStatus.CANCELED -> room.cancel()
             else -> error("메모리에서 만들 수 없는 상태다: $status")

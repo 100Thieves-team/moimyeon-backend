@@ -72,15 +72,15 @@ class RoomEntity(
     var status: RoomStatus = RoomStatus.RECRUITING
         protected set
 
-    fun canStartProgress(): Boolean = status == RoomStatus.CONFIRMED
+    fun canStartProgress(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED && !at.isBefore(startAt)
 
-    fun startProgress() {
-        check(canStartProgress())
+    fun startProgress(at: LocalDateTime) {
+        check(canStartProgress(at))
         status = RoomStatus.IN_PROGRESS
     }
 
-    // 확정에는 canConfirm() 짝을 두지 않는다. 취소·진행 시작은 상태만 보면 판정이 끝나지만
-    // 확정은 인원·일정까지 봐야 하고 그 판정자가 이미 밖에 있다(RoomConfirmation).
+    // 확정에는 canConfirm() 짝을 두지 않는다. 취소와 진행 시작은 룸이 가진 상태·일정으로 판정하지만,
+    // 확정은 참여 인원까지 봐야 하고 그 판정자가 이미 밖에 있다(RoomConfirmation).
     // 여기에 상태 판정을 또 두면 F1 버튼 상태와 서버 결과가 갈릴 수 있다.
     fun confirm() {
         check(status == RoomStatus.RECRUITING)

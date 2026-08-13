@@ -13,6 +13,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.Optional
 import java.util.UUID
 
@@ -23,15 +24,27 @@ class RoomProgressAccessValidatorTest {
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
+    private val startAt = LocalDateTime.of(2026, 8, 13, 20, 0)
 
     @Test
     fun `확정 룸의 확정 참여자는 진행을 시작할 수 있다`() {
         val room = givenRoom(RoomStatus.CONFIRMED)
         every { participationFinder.wasConfirmedParticipant(roomId, memberId) } returns true
 
-        assertThatCode { validator.validateStarter(roomId, memberId) }
+        assertThatCode { validator.validateStarter(roomId, memberId, startAt) }
             .doesNotThrowAnyException()
-        verify(exactly = 1) { room.canStartProgress() }
+        verify(exactly = 1) { room.canStartProgress(startAt) }
+    }
+
+    @Test
+    fun `예정 시각 전에는 확정 참여자도 진행을 시작할 수 없다`() {
+        givenRoom(RoomStatus.CONFIRMED, canStart = false)
+
+        assertValidationFails(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE) {
+            validator.validateStarter(roomId, memberId, startAt.minusNanos(1))
+        }
+
+        verify(exactly = 0) { participationFinder.wasConfirmedParticipant(any(), any()) }
     }
 
     @Test
@@ -39,7 +52,7 @@ class RoomProgressAccessValidatorTest {
         givenRoom(RoomStatus.IN_PROGRESS)
 
         assertValidationFails(CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE) {
-            validator.validateStarter(roomId, memberId)
+            validator.validateStarter(roomId, memberId, startAt)
         }
 
         verify(exactly = 0) { participationFinder.wasConfirmedParticipant(any(), any()) }
@@ -51,7 +64,7 @@ class RoomProgressAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, memberId) } returns false
 
         assertValidationFails(CoreErrorType.ROOM_PROGRESS_START_FORBIDDEN) {
-            validator.validateStarter(roomId, memberId)
+            validator.validateStarter(roomId, memberId, startAt)
         }
     }
 
@@ -128,11 +141,15 @@ class RoomProgressAccessValidatorTest {
         }
     }
 
-    private fun givenRoom(status: RoomStatus, isActive: Boolean = true): RoomEntity {
+    private fun givenRoom(
+        status: RoomStatus,
+        isActive: Boolean = true,
+        canStart: Boolean = status == RoomStatus.CONFIRMED,
+    ): RoomEntity {
         val room = mockk<RoomEntity> {
             every { this@mockk.status } returns status
             every { this@mockk.isActive() } returns isActive
-            every { this@mockk.canStartProgress() } returns (status == RoomStatus.CONFIRMED)
+            every { this@mockk.canStartProgress(any()) } returns canStart
         }
         every { roomRepository.findById(roomId) } returns Optional.of(room)
         return room
