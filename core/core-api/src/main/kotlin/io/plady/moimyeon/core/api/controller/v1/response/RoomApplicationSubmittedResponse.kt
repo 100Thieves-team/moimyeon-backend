@@ -9,10 +9,11 @@ data class RoomApplicationSubmittedResponse(
 ) {
     companion object {
         fun of(applicationId: Long): RoomApplicationSubmittedResponse {
+            val status = RoomApplicationStatus.PENDING
             return RoomApplicationSubmittedResponse(
                 applicationId = applicationId,
-                status = RoomApplicationStatus.PENDING.name,
-                statusLabel = "대기 중",
+                status = status.name,
+                statusLabel = status.toApplicantStatusLabel(),
             )
         }
     }

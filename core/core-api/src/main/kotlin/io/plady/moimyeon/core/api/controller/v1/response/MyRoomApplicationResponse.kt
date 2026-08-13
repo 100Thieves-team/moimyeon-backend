@@ -3,7 +3,6 @@ package io.plady.moimyeon.core.api.controller.v1.response
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplication
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
-import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -36,7 +35,7 @@ data class MyRoomApplicationResponse(
                     ),
                 ),
                 status = application.status.name,
-                statusLabel = application.status.applicantLabel(),
+                statusLabel = application.status.toApplicantStatusLabel(),
                 appliedAt = application.appliedAt,
             )
         }
@@ -54,16 +53,5 @@ private fun ResumeSummaryStatus.toResponseStatus(): ResumeAiSummaryStatus {
         ResumeSummaryStatus.PROCESSING -> ResumeAiSummaryStatus.PROCESSING
         ResumeSummaryStatus.DONE -> ResumeAiSummaryStatus.DONE
         ResumeSummaryStatus.FAILED -> ResumeAiSummaryStatus.FAILED
-    }
-}
-
-private fun RoomApplicationStatus.applicantLabel(): String {
-    return when (this) {
-        RoomApplicationStatus.PENDING -> "대기 중"
-        RoomApplicationStatus.ACCEPTED -> "수락됨"
-        RoomApplicationStatus.REJECTED -> "반려됨"
-        RoomApplicationStatus.WITHDRAWN -> "철회함"
-        RoomApplicationStatus.ROOM_CANCELED -> "룸이 취소됐어요"
-        RoomApplicationStatus.ROOM_CONFIRMED -> "인원이 확정됐어요"
     }
 }
