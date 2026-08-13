@@ -35,13 +35,55 @@ class MySqlSchemaValidationIT(
         assertThat(dataTypeOf("web_push_subscription", "registration")).isEqualTo("text")
     }
 
+    // 컬럼 목록을 손으로 적지 않는다. 초 단위로 들어온 새 테이블도 여기서 걸려야 한다(MOI-428).
+    @Test
+    fun `Flyway로 만든 MySQL 스키마의 시각 컬럼이 전부 마이크로초 정밀도다`() {
+        assertThat(secondPrecisionColumns()).isEmpty()
+    }
+
+    // MODIFY COLUMN 은 컬럼 정의를 통째로 갈아치운다. 크롤러 적재 파이프라인이 기대는 자동 갱신이
+    // 정밀도 변경에 딸려 사라지면 앱은 멀쩡한데 크롤러 쪽 갱신 시각만 조용히 멈춘다(MOI-428).
+    @Test
+    fun `크롤러 테이블의 updated_at 은 자동 갱신을 유지한다`() {
+        listOf("sido", "sigungu", "job_group", "job_role", "company", "job_posting").forEach { table ->
+            assertThat(columnOf(table, "updated_at", "EXTRA"))
+                .describedAs("$table.updated_at")
+                .contains("on update CURRENT_TIMESTAMP(6)")
+        }
+    }
+
+    private fun secondPrecisionColumns(): List<String> = dataSource.connection.use { connection ->
+        connection.prepareStatement(
+            """
+            SELECT CONCAT(TABLE_NAME, '.', COLUMN_NAME) AS column_path
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = ?
+              AND DATA_TYPE = 'datetime'
+              AND DATETIME_PRECISION <> 6
+            ORDER BY TABLE_NAME, COLUMN_NAME
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, DATABASE_NAME)
+            statement.executeQuery().use { resultSet ->
+                generateSequence { if (resultSet.next()) resultSet.getString("column_path") else null }.toList()
+            }
+        }
+    }
+
     private fun dataTypeOf(
         tableName: String,
         columnName: String,
+    ): String = columnOf(tableName, columnName, "DATA_TYPE")
+
+    // attribute 는 information_schema.COLUMNS 의 컬럼명이다. 테스트 안의 리터럴만 넘긴다.
+    private fun columnOf(
+        tableName: String,
+        columnName: String,
+        attribute: String,
     ): String = dataSource.connection.use { connection ->
         connection.prepareStatement(
             """
-            SELECT DATA_TYPE
+            SELECT $attribute
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = ?
               AND TABLE_NAME = ?
@@ -53,7 +95,7 @@ class MySqlSchemaValidationIT(
             statement.setString(3, columnName)
             statement.executeQuery().use { resultSet ->
                 check(resultSet.next()) { "$tableName.$columnName 컬럼을 찾을 수 없습니다." }
-                resultSet.getString("DATA_TYPE")
+                resultSet.getString(attribute)
             }
         }
     }
