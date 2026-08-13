@@ -17,6 +17,23 @@ class RoomFinder(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
 ) {
+    fun getSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        if (roomIds.isEmpty()) return emptyList()
+
+        val roomsById = roomRepository.findByIdInAndDeletedAtIsNull(roomIds).associateBy { it.id }
+        val participantsByRoomId = participationRepository.countActiveByRoomIds(roomIds)
+            .associate { it.roomId to Math.toIntExact(it.count) }
+
+        return roomIds.distinct().mapNotNull { roomId ->
+            roomsById[roomId]?.let { room ->
+                RoomSummary(
+                    room = RoomMapper.toDomain(room),
+                    participantCount = participantsByRoomId[roomId] ?: 0,
+                )
+            }
+        }
+    }
+
     // 룸 단건 조회. 삭제된 룸은 없는 것으로 본다. 방장 = HOST 참여 행.
     // 현재 인원은 참여 중(JOINED)인 사람만 센다 — 나간 사람의 자리는 비워져 다시 채울 수 있어야 한다.
     // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는

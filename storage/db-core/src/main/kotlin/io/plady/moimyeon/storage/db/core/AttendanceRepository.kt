@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface AttendanceRepository : JpaRepository<AttendanceEntity, Long> {
+    fun findByRoomIdInAndDeletedAtIsNull(roomIds: Collection<UUID>): List<AttendanceEntity>
+
     fun findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId: UUID, memberId: UUID): AttendanceEntity?
 
     fun findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId: UUID): List<AttendanceEntity>

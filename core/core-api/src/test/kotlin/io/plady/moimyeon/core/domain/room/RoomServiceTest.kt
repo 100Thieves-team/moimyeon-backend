@@ -12,6 +12,7 @@ import io.plady.moimyeon.core.domain.resume.ResumeValidator
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
+import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -24,7 +25,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 // 소유권·미삭제 규칙 자체는 ResumeValidator 가 갖고 있고 그쪽 테스트가 본다.
-// 여기서 보는 것은 흐름 두 가지뿐이다 — 전파되는가, 쓰기보다 먼저 도는가.
+// 여기서 보는 것은 흐름뿐이다 — 검증·조회 도구가 순서대로 호출되고 실패가 그대로 전파되는가.
 class RoomServiceTest {
     private val catalogRefValidator = mockk<CatalogRefValidator>(relaxed = true)
     private val resumeValidator = mockk<ResumeValidator>()
@@ -74,6 +75,18 @@ class RoomServiceTest {
         }
     }
 
+    @Test
+    fun `식별자로 룸 요약을 일괄 조회한다`() {
+        val roomIds = listOf(UUID.randomUUID(), UUID.randomUUID())
+        val summaries = roomIds.map { roomSummary(it) }
+        every { roomFinder.getSummaries(roomIds) } returns summaries
+
+        val result = service.getRoomSummaries(roomIds)
+
+        assertThat(result).containsExactlyElementsOf(summaries)
+        verify(exactly = 1) { roomFinder.getSummaries(roomIds) }
+    }
+
     private fun creationCommand() = RoomCreationCommand(
         jobPostingId = 1L,
         jobRoleId = 1L,
@@ -96,5 +109,26 @@ class RoomServiceTest {
         originalName = "backend.pdf",
         sizeBytes = 1024L,
         contentType = "application/pdf",
+    )
+
+    private fun roomSummary(roomId: UUID) = RoomSummary(
+        room = Room(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 1L,
+            title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+            description = null,
+            interviewStage = InterviewStage.FIRST,
+            interviewType = InterviewType.JOB,
+            meetingPlace = MeetingPlace.Online,
+            capacity = RoomCapacity(min = 2, max = 6),
+            schedule = RoomSchedule(
+                startAt = LocalDateTime.of(2026, 8, 20, 19, 0),
+                durationMinutes = 60,
+            ),
+            resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+            status = RoomStatus.RECRUITING,
+        ),
+        participantCount = 4,
     )
 }
