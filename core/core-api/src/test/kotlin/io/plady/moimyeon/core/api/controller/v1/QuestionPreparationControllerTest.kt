@@ -50,7 +50,8 @@ class QuestionPreparationControllerTest : RestDocsTest() {
             "(「룸 진행 준비」 §3, §4.1). 본인 카드셋의 내용은 반환하지 않고 준비 중인 작성자 수만 제공한다."
     private val writeDescription =
         "CONFIRMED 룸의 현재 참여자가 다른 확정 참여자에게 질문 또는 꼬리질문을 남긴다" +
-            "(「룸 진행 준비」 §4.2). COMPLETED 룸은 읽기 전용이다."
+            "(「룸 진행 준비」 §4.2). COMPLETED 룸은 읽기 전용이다. " +
+            "본인이 대상인 원 질문에는 꼬리질문을 남길 수 없으며 E1505로 응답한다."
 
     @BeforeEach
     fun setUp() {
@@ -369,6 +370,29 @@ class QuestionPreparationControllerTest : RestDocsTest() {
                 documentApi(
                     "leavePreparationQuestion-e1504",
                     "진행 준비 질문 작성",
+                    writeDescription,
+                    errorResponseFields(),
+                ),
+            )
+    }
+
+    @Test
+    fun `본인이 대상인 원 질문에 꼬리질문을 남기면 E1505`() {
+        every {
+            questionPreparationService.leaveFollowUp(viewerMemberId, roomId, 11L, "꼬리질문")
+        } throws CoreException(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN)
+
+        mockMvc.perform(
+            post("/v1/rooms/{roomId}/questions/{questionId}/follow-ups", roomId, 11L)
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(mapOf("content" to "꼬리질문"))),
+        )
+            .andExpect(status().isForbidden)
+            .andDo(
+                documentApi(
+                    "leavePreparationFollowUpQuestion-e1505",
+                    "진행 준비 꼬리질문 작성",
                     writeDescription,
                     errorResponseFields(),
                 ),
