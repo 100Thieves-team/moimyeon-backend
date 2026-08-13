@@ -18,9 +18,6 @@ data class QuestionCardSetDetailResponse(
             resumeReference: QuestionResumeReference,
             nicknames: Map<UUID, String>,
         ): QuestionCardSetDetailResponse {
-            check(cardSet.targetMemberId == resumeReference.targetMemberId) {
-                "질문 카드셋과 이력서 요약의 대상 회원이 같아야 합니다."
-            }
             return QuestionCardSetDetailResponse(
                 target = QuestionMemberResponse.of(cardSet.targetMemberId, nicknames),
                 resumeSummary = QuestionResumeSummaryResponse.from(resumeReference.summary),
