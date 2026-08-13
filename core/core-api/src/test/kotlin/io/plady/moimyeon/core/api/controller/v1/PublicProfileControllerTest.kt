@@ -3,7 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
-import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileJobRoleResponse
+import io.plady.moimyeon.core.api.controller.v1.response.JobRoleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTagResponse
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTrustResponse
@@ -178,8 +178,8 @@ class PublicProfileControllerTest : RestDocsTest() {
             memberId = memberId,
             nickname = "차분한 펭귄 12",
             interestJobRoles = listOf(
-                PublicProfileJobRoleResponse(1L, "BACKEND_DEVELOPER", "백엔드 개발자"),
-                PublicProfileJobRoleResponse(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
+                JobRoleResponse(1L, "BACKEND_DEVELOPER", "백엔드 개발자"),
+                JobRoleResponse(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
             ),
             bio = "자기소개",
             meetingPreference = MeetingPreference.BOTH,

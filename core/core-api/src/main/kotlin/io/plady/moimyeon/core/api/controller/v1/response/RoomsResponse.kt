@@ -54,7 +54,7 @@ data class RoomSummaryResponse(
                 title = room.title.value,
                 company = company?.let { CompanyResponse(companyId = it.id, name = it.name) },
                 jobPosting = jobPosting?.let { RoomJobPostingResponse(it.id, it.postingName) },
-                jobRole = jobRole?.let { JobRoleResponse(it.id, it.code, it.displayName) },
+                jobRole = jobRole?.let(JobRoleResponse::from),
                 round = room.interviewStage.name,
                 roundLabel = room.interviewStage.label,
                 type = room.interviewType?.name,

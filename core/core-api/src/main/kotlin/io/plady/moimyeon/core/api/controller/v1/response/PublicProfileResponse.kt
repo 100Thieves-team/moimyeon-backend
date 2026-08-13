@@ -11,7 +11,7 @@ import java.util.UUID
 data class PublicProfileResponse(
     val memberId: UUID,
     val nickname: String,
-    val interestJobRoles: List<PublicProfileJobRoleResponse>,
+    val interestJobRoles: List<JobRoleResponse>,
     val bio: String,
     val meetingPreference: MeetingPreference,
     val trust: PublicProfileTrustResponse,
@@ -28,27 +28,11 @@ data class PublicProfileResponse(
                 memberId = member.id,
                 nickname = member.nickname.value,
                 interestJobRoles = profile.interestJobRoleIds.mapNotNull { jobRoleId ->
-                    jobRolesById[jobRoleId]?.let(PublicProfileJobRoleResponse::from)
+                    jobRolesById[jobRoleId]?.let(JobRoleResponse::from)
                 },
                 bio = profile.bio,
                 meetingPreference = profile.meetingPreference,
                 trust = PublicProfileTrustResponse.from(trust),
-            )
-        }
-    }
-}
-
-data class PublicProfileJobRoleResponse(
-    val jobRoleId: Long,
-    val code: String,
-    val displayName: String,
-) {
-    companion object {
-        fun from(jobRole: JobRole): PublicProfileJobRoleResponse {
-            return PublicProfileJobRoleResponse(
-                jobRoleId = jobRole.id,
-                code = jobRole.code,
-                displayName = jobRole.displayName,
             )
         }
     }
