@@ -37,7 +37,7 @@
 -- - PK 컬럼명은 테이블 안에서 항상 id, 참조 컬럼명은 <테이블>_id.
 --
 -- 소프트 삭제 정책 — deleted_at 컬럼의 유무가 곧 엔티티의 베이스 상속 여부다
--- - 기본은 소프트 삭제다. deleted_at DATETIME NULL 을 두고 엔티티는 BaseEntity/UuidBaseEntity 를
+-- - 기본은 소프트 삭제다. deleted_at DATETIME(6) NULL 을 두고 엔티티는 BaseEntity/UuidBaseEntity 를
 --   상속한다. 물리 삭제 대신 delete(now) 로 처리하고, 조회 제외는 각 Finder 의 파생 쿼리가 담당한다.
 --   운영에서 데이터를 되살려야 하는 일이 생각보다 잦다 — 잘못 지운 것, 신고로 내렸다가 복원하는 것,
 --   분쟁이 나서 지워진 내용을 확인해야 하는 것. 지워진 행이 남아 있으면 전부 SQL 한 줄로 끝난다.
@@ -79,6 +79,11 @@
 --                       terms 의 (type, version) 도 같은 버전을 다시 발행하지 않는다.
 -- - member_profile 은 uk_member_profile_member 에 _active_check 를 붙이지 않는다 — 소프트 삭제된
 --   프로필도 유니크를 점유해야 재작성이 새 행이 아니라 되살리기가 된다(프로필은 회원당 하나뿐이다).
+--
+-- 시각 컬럼은 예외 없이 DATETIME(6) 이다 — 초 단위로는 같은 초에 일어난 두 사건의 선후를 못 가린다.
+--   확정 참여자 판정이 실제로 그 대소로 갈린다(participation.left_at vs room_status_log.occurred_at).
+--   비교에 안 쓰는 컬럼만 골라 올리면 그 가정이 다음 기능에서 깨지므로 전부 올린다(MOI-428).
+--   기본값도 CURRENT_TIMESTAMP(6) 으로 같이 올린다 — MySQL 은 컬럼과 기본값의 fsp 가 다르면 거부한다.
 --
 -- created_at/updated_at 은 모든 엔티티 테이블이 갖는다(값 컬렉션인 review_tag 만 제외).
 --   참조 데이터는 갱신 주체인 크롤러가 직접 세팅한다 —
@@ -145,9 +150,9 @@ CREATE TABLE sido (
     short_name VARCHAR(10) NOT NULL,
     is_metro   BOOLEAN     NOT NULL DEFAULT FALSE,
     sort_order SMALLINT    NULL,
-    created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME    NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_sido_sido_code UNIQUE (sido_code),
     CONSTRAINT uk_sido_name UNIQUE (name),
@@ -165,9 +170,9 @@ CREATE TABLE sigungu (
     name         VARCHAR(40) NOT NULL,
     level        VARCHAR(10) NOT NULL,
     sort_order   SMALLINT    NULL,
-    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   DATETIME    NULL,
+    created_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at   DATETIME(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_sigungu_sigungu_code UNIQUE (sigungu_code),
     CONSTRAINT uk_sigungu_sido_name UNIQUE (sido_id, name)
@@ -180,9 +185,9 @@ CREATE TABLE job_group (
     code         VARCHAR(40) NOT NULL,
     display_name VARCHAR(60) NOT NULL,
     sort_order   SMALLINT    NULL,
-    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   DATETIME    NULL,
+    created_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at   DATETIME(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_job_group_code UNIQUE (code)
 );
@@ -194,9 +199,9 @@ CREATE TABLE job_role (
     code         VARCHAR(60) NOT NULL,
     display_name VARCHAR(80) NOT NULL,
     sort_order   SMALLINT    NULL,
-    created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   DATETIME    NULL,
+    created_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at   DATETIME(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_job_role_code UNIQUE (code)
 );
@@ -215,9 +220,9 @@ CREATE TABLE company (
     name_normalized      VARCHAR(200) NULL,
     verified             BOOLEAN      NOT NULL DEFAULT TRUE,
     created_by_member_id BINARY(16)   NULL,
-    created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at           DATETIME     NULL,
+    created_at           DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at           DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at           DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_company_corp_code UNIQUE (corp_code)
 );
@@ -242,8 +247,8 @@ CREATE TABLE job_posting (
     career_max           SMALLINT     NULL,
     employee_types       VARCHAR(60)  NULL,
     educations           VARCHAR(60)  NULL,
-    posted_at            DATETIME     NULL,
-    end_date             DATETIME     NULL,
+    posted_at            DATETIME(6)  NULL,
+    end_date             DATETIME(6)  NULL,
     deadline_type        VARCHAR(20)  NULL,
     is_open              BOOLEAN      NULL,
     source_url           VARCHAR(400) NULL,
@@ -252,9 +257,9 @@ CREATE TABLE job_posting (
     content              TEXT         NULL,
     verified             BOOLEAN      NOT NULL DEFAULT FALSE,
     created_by_member_id BINARY(16)   NULL,
-    created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at           DATETIME     NULL,
+    created_at           DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at           DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at           DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_job_posting_source_uid UNIQUE (source_uid)
 );
@@ -286,10 +291,10 @@ CREATE TABLE member (
     nickname      VARCHAR(30)  NOT NULL,
     status        VARCHAR(20)  NOT NULL,
     role          VARCHAR(20)  NOT NULL,
-    last_login_at DATETIME     NOT NULL,
-    created_at    DATETIME     NOT NULL,
-    updated_at    DATETIME     NOT NULL,
-    deleted_at    DATETIME     NULL,
+    last_login_at DATETIME(6)  NOT NULL,
+    created_at    DATETIME(6)  NOT NULL,
+    updated_at    DATETIME(6)  NOT NULL,
+    deleted_at    DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_nickname UNIQUE (nickname)
 );
@@ -303,8 +308,8 @@ CREATE TABLE social_account (
     provider_id  VARCHAR(100) NOT NULL,
     linked_email VARCHAR(320) NULL,
     member_id    BINARY(16)   NOT NULL,
-    created_at   DATETIME     NOT NULL,
-    updated_at   DATETIME     NOT NULL,
+    created_at   DATETIME(6)  NOT NULL,
+    updated_at   DATETIME(6)  NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_social_account_provider_provider_id UNIQUE (provider, provider_id)
 );
@@ -315,10 +320,10 @@ CREATE TABLE refresh_token (
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     token_hash VARCHAR(64) NOT NULL,
     member_id  BINARY(16)  NOT NULL,
-    expires_at DATETIME    NOT NULL,
-    revoked_at DATETIME    NULL,
-    created_at DATETIME    NOT NULL,
-    updated_at DATETIME    NOT NULL,
+    expires_at DATETIME(6) NOT NULL,
+    revoked_at DATETIME(6) NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_refresh_token_token_hash UNIQUE (token_hash)
 );
@@ -333,9 +338,9 @@ CREATE TABLE web_push_subscription (
     member_id         BINARY(16)  NOT NULL,
     registration      TEXT        NOT NULL,
     registration_hash CHAR(64)    NOT NULL,
-    registered_at     DATETIME    NOT NULL,
-    created_at        DATETIME    NOT NULL,
-    updated_at        DATETIME    NOT NULL,
+    registered_at     DATETIME(6) NOT NULL,
+    created_at        DATETIME(6) NOT NULL,
+    updated_at        DATETIME(6) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_web_push_subscription_registration_hash UNIQUE (registration_hash)
 );
@@ -354,9 +359,9 @@ CREATE TABLE member_profile (
     bio                VARCHAR(500) NOT NULL DEFAULT '',
     meeting_preference VARCHAR(20)  NOT NULL DEFAULT 'UNSPECIFIED',
     sigungu_id         BIGINT       NULL,
-    created_at         DATETIME     NOT NULL,
-    updated_at         DATETIME     NOT NULL,
-    deleted_at         DATETIME     NULL,
+    created_at         DATETIME(6)  NOT NULL,
+    updated_at         DATETIME(6)  NOT NULL,
+    deleted_at         DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_profile_member UNIQUE (member_id)
 );
@@ -369,9 +374,9 @@ CREATE TABLE member_profile_interest_company (
     id            BIGINT     NOT NULL AUTO_INCREMENT,
     profile_id    BINARY(16) NOT NULL,
     company_id    BIGINT     NOT NULL,
-    created_at    DATETIME   NOT NULL,
-    updated_at    DATETIME   NOT NULL,
-    deleted_at    DATETIME   NULL,
+    created_at    DATETIME(6) NOT NULL,
+    updated_at    DATETIME(6) NOT NULL,
+    deleted_at    DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_member_profile_interest_company_active UNIQUE (profile_id, company_id, _active_check)
@@ -384,9 +389,9 @@ CREATE TABLE member_profile_interest_job_role (
     id            BIGINT     NOT NULL AUTO_INCREMENT,
     profile_id    BINARY(16) NOT NULL,
     job_role_id   BIGINT     NOT NULL,
-    created_at    DATETIME   NOT NULL,
-    updated_at    DATETIME   NOT NULL,
-    deleted_at    DATETIME   NULL,
+    created_at    DATETIME(6) NOT NULL,
+    updated_at    DATETIME(6) NOT NULL,
+    deleted_at    DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_member_profile_interest_job_role_active UNIQUE (profile_id, job_role_id, _active_check)
@@ -430,11 +435,11 @@ CREATE TABLE terms (
     title          VARCHAR(200) NOT NULL,
     content        TEXT         NOT NULL,
     required       BOOLEAN      NOT NULL,
-    effective_from DATETIME     NOT NULL,
+    effective_from DATETIME(6)  NOT NULL,
     status         VARCHAR(20)  NOT NULL,
-    created_at     DATETIME     NOT NULL,
-    updated_at     DATETIME     NOT NULL,
-    deleted_at     DATETIME     NULL,
+    created_at     DATETIME(6)  NOT NULL,
+    updated_at     DATETIME(6)  NOT NULL,
+    deleted_at     DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_terms_type_version UNIQUE (type, version)
 );
@@ -448,10 +453,10 @@ CREATE TABLE terms_agreement (
     id            BINARY(16) NOT NULL,
     member_id     BINARY(16) NOT NULL,
     terms_id      BINARY(16) NOT NULL,
-    agreed_at     DATETIME   NOT NULL,
-    created_at    DATETIME   NOT NULL,
-    updated_at    DATETIME   NOT NULL,
-    deleted_at    DATETIME   NULL,
+    agreed_at     DATETIME(6) NOT NULL,
+    created_at    DATETIME(6) NOT NULL,
+    updated_at    DATETIME(6) NOT NULL,
+    deleted_at    DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_terms_agreement_member_terms_active UNIQUE (member_id, terms_id, _active_check)
@@ -484,13 +489,13 @@ CREATE TABLE room (
     meeting_type     VARCHAR(20)  NOT NULL,
     min_capacity     SMALLINT     NOT NULL,
     max_capacity     SMALLINT     NOT NULL,
-    start_at         DATETIME     NOT NULL,
+    start_at         DATETIME(6)  NOT NULL,
     duration_minutes SMALLINT     NOT NULL,
     resume_public    BOOLEAN      NOT NULL DEFAULT FALSE,
     status           VARCHAR(20)  NOT NULL,
-    created_at       DATETIME     NOT NULL,
-    updated_at       DATETIME     NOT NULL,
-    deleted_at       DATETIME     NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NOT NULL,
+    deleted_at       DATETIME(6)  NULL,
     PRIMARY KEY (id)
 );
 CREATE INDEX ix_room_job_posting_id ON room (job_posting_id);
@@ -512,10 +517,10 @@ CREATE TABLE room_status_log (
     room_id           BINARY(16)  NOT NULL,
     transition_type   VARCHAR(20) NOT NULL,
     handler_member_id BINARY(16)  NOT NULL,
-    occurred_at       DATETIME    NOT NULL,
-    created_at        DATETIME    NOT NULL,
-    updated_at        DATETIME    NOT NULL,
-    deleted_at        DATETIME    NULL,
+    occurred_at       DATETIME(6) NOT NULL,
+    created_at        DATETIME(6) NOT NULL,
+    updated_at        DATETIME(6) NOT NULL,
+    deleted_at        DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_room_status_log_room_transition_active UNIQUE (room_id, transition_type, _active_check)
@@ -537,11 +542,11 @@ CREATE TABLE room_application (
     status              VARCHAR(20) NOT NULL,
     reject_reason       VARCHAR(50) NULL,
     handler_member_id   BINARY(16)  NULL,
-    applied_at          DATETIME    NOT NULL,
-    handled_at          DATETIME    NULL,
-    created_at          DATETIME    NOT NULL,
-    updated_at          DATETIME    NOT NULL,
-    deleted_at          DATETIME    NULL,
+    applied_at          DATETIME(6) NOT NULL,
+    handled_at          DATETIME(6) NULL,
+    created_at          DATETIME(6) NOT NULL,
+    updated_at          DATETIME(6) NOT NULL,
+    deleted_at          DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_room_application_room_pending_active UNIQUE (room_id, pending_member_id, _active_check)
@@ -560,12 +565,12 @@ CREATE TABLE participation (
     member_id          BINARY(16)  NOT NULL,
     participation_role VARCHAR(20) NOT NULL,
     status             VARCHAR(20) NOT NULL,
-    joined_at          DATETIME    NOT NULL,
-    left_at            DATETIME    NULL,
+    joined_at          DATETIME(6) NOT NULL,
+    left_at            DATETIME(6) NULL,
     left_by_member_id  BINARY(16)  NULL,
-    created_at         DATETIME    NOT NULL,
-    updated_at         DATETIME    NOT NULL,
-    deleted_at         DATETIME    NULL,
+    created_at         DATETIME(6) NOT NULL,
+    updated_at         DATETIME(6) NOT NULL,
+    deleted_at         DATETIME(6) NULL,
     _joined_check BOOLEAN GENERATED ALWAYS AS (
         CASE WHEN deleted_at IS NULL AND status = 'JOINED' THEN TRUE ELSE NULL END
     ),
@@ -587,10 +592,10 @@ CREATE TABLE resume_submission (
     original_name   VARCHAR(255) NOT NULL,
     size_bytes      BIGINT       NOT NULL,
     content_type    VARCHAR(100) NOT NULL,
-    submitted_at        DATETIME   NOT NULL,
-    created_at          DATETIME   NOT NULL,
-    updated_at          DATETIME   NOT NULL,
-    deleted_at          DATETIME   NULL,
+    submitted_at        DATETIME(6) NOT NULL,
+    created_at          DATETIME(6) NOT NULL,
+    updated_at          DATETIME(6) NOT NULL,
+    deleted_at          DATETIME(6) NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_resume_submission_room_application UNIQUE (room_application_id)
 );
@@ -606,10 +611,10 @@ CREATE TABLE interview_plan (
     room_id          BINARY(16) NOT NULL,
     opening_minutes  SMALLINT   NOT NULL,
     closing_minutes  SMALLINT   NOT NULL,
-    last_assigned_at DATETIME   NULL,
-    created_at       DATETIME   NOT NULL,
-    updated_at       DATETIME   NOT NULL,
-    deleted_at       DATETIME   NULL,
+    last_assigned_at DATETIME(6) NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_interview_plan_room_active UNIQUE (room_id, _active_check)
@@ -634,9 +639,9 @@ CREATE TABLE interview_round (
     interviewee_member_id BINARY(16) NULL,
     interview_minutes     SMALLINT   NOT NULL,
     feedback_minutes      SMALLINT   NOT NULL,
-    created_at            DATETIME   NOT NULL,
-    updated_at            DATETIME   NOT NULL,
-    deleted_at            DATETIME   NULL,
+    created_at            DATETIME(6) NOT NULL,
+    updated_at            DATETIME(6) NOT NULL,
+    deleted_at            DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_interview_round_plan_seq_active UNIQUE (interview_plan_id, seq, _active_check)
@@ -654,9 +659,9 @@ CREATE TABLE round_assignment (
     interview_round_id BIGINT      NOT NULL,
     member_id          BINARY(16)  NOT NULL,
     assignment_role    VARCHAR(20) NOT NULL,
-    created_at         DATETIME    NOT NULL,
-    updated_at         DATETIME    NOT NULL,
-    deleted_at         DATETIME    NULL,
+    created_at         DATETIME(6) NOT NULL,
+    updated_at         DATETIME(6) NOT NULL,
+    deleted_at         DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_round_assignment_round_member_active UNIQUE (interview_round_id, member_id, _active_check)
@@ -674,9 +679,9 @@ CREATE TABLE round_feedback (
     author_member_id   BINARY(16)  NOT NULL,
     feedback_type      VARCHAR(20) NOT NULL,
     content            TEXT        NOT NULL,
-    created_at         DATETIME    NOT NULL,
-    updated_at         DATETIME    NOT NULL,
-    deleted_at         DATETIME    NULL,
+    created_at         DATETIME(6) NOT NULL,
+    updated_at         DATETIME(6) NOT NULL,
+    deleted_at         DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_round_feedback_round_author_active UNIQUE (interview_round_id, author_member_id, _active_check)
@@ -699,9 +704,9 @@ CREATE TABLE question (
     content            TEXT        NOT NULL,
     source             VARCHAR(20) NOT NULL,
     asked              BOOLEAN     NOT NULL DEFAULT FALSE,
-    created_at         DATETIME    NOT NULL,
-    updated_at         DATETIME    NOT NULL,
-    deleted_at         DATETIME    NULL,
+    created_at         DATETIME(6) NOT NULL,
+    updated_at         DATETIME(6) NOT NULL,
+    deleted_at         DATETIME(6) NULL,
     PRIMARY KEY (id)
 );
 CREATE INDEX ix_question_room_target ON question (room_id, target_member_id);
@@ -715,9 +720,9 @@ CREATE TABLE answer_summary (
     question_id      BIGINT     NOT NULL,
     author_member_id BINARY(16) NOT NULL,
     content          TEXT       NOT NULL,
-    created_at       DATETIME   NOT NULL,
-    updated_at       DATETIME   NOT NULL,
-    deleted_at       DATETIME   NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_answer_summary_question_author_active UNIQUE (question_id, author_member_id, _active_check)
@@ -732,9 +737,9 @@ CREATE TABLE question_comment (
     author_member_id BINARY(16)  NOT NULL,
     comment_type     VARCHAR(20) NOT NULL,
     content          TEXT        NOT NULL,
-    created_at       DATETIME    NOT NULL,
-    updated_at       DATETIME    NOT NULL,
-    deleted_at       DATETIME    NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
     PRIMARY KEY (id)
 );
 CREATE INDEX ix_question_comment_question_id ON question_comment (question_id);
@@ -747,9 +752,9 @@ CREATE TABLE question_vote (
     question_id     BIGINT      NOT NULL,
     voter_member_id BINARY(16)  NOT NULL,
     vote            VARCHAR(20) NOT NULL,
-    created_at      DATETIME    NOT NULL,
-    updated_at      DATETIME    NOT NULL,
-    deleted_at      DATETIME    NULL,
+    created_at      DATETIME(6) NOT NULL,
+    updated_at      DATETIME(6) NOT NULL,
+    deleted_at      DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_question_vote_question_voter_active UNIQUE (question_id, voter_member_id, _active_check)
@@ -763,9 +768,9 @@ CREATE TABLE closing_response (
     room_id    BINARY(16)  NOT NULL,
     member_id  BINARY(16)  NOT NULL,
     pacing     VARCHAR(20) NOT NULL,
-    created_at DATETIME    NOT NULL,
-    updated_at DATETIME    NOT NULL,
-    deleted_at DATETIME    NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    deleted_at DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_closing_response_room_member_active UNIQUE (room_id, member_id, _active_check)
@@ -783,10 +788,10 @@ CREATE TABLE attendance (
     status             VARCHAR(20)  NOT NULL,
     change_reason      VARCHAR(200) NULL,
     recorder_member_id BINARY(16)   NOT NULL,
-    recorded_at        DATETIME     NOT NULL,
-    created_at         DATETIME     NOT NULL,
-    updated_at         DATETIME     NOT NULL,
-    deleted_at         DATETIME     NULL,
+    recorded_at        DATETIME(6)  NOT NULL,
+    created_at         DATETIME(6)  NOT NULL,
+    updated_at         DATETIME(6)  NOT NULL,
+    deleted_at         DATETIME(6)  NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_attendance_room_member_active UNIQUE (room_id, member_id, _active_check)
@@ -812,12 +817,12 @@ CREATE TABLE review (
     rating           SMALLINT   NOT NULL,
     content          TEXT       NULL,
     meet_again       BOOLEAN    NULL,
-    visible_at       DATETIME   NOT NULL,
-    hidden_at        DATETIME   NULL,
-    reported_at      DATETIME   NULL,
-    created_at       DATETIME   NOT NULL,
-    updated_at       DATETIME   NOT NULL,
-    deleted_at       DATETIME   NULL,
+    visible_at       DATETIME(6) NOT NULL,
+    hidden_at        DATETIME(6) NULL,
+    reported_at      DATETIME(6) NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_review_room_author_target_active UNIQUE (room_id, author_member_id, target_member_id, _active_check)
@@ -845,10 +850,10 @@ CREATE TABLE review_tag (
 CREATE TABLE chat_room (
     id           BIGINT     NOT NULL AUTO_INCREMENT,
     room_id      BINARY(16) NOT NULL,
-    read_only_at DATETIME   NULL,
-    created_at   DATETIME   NOT NULL,
-    updated_at   DATETIME   NOT NULL,
-    deleted_at   DATETIME   NULL,
+    read_only_at DATETIME(6) NULL,
+    created_at   DATETIME(6) NOT NULL,
+    updated_at   DATETIME(6) NOT NULL,
+    deleted_at   DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_chat_room_room_active UNIQUE (room_id, _active_check)
@@ -865,9 +870,9 @@ CREATE TABLE chat_message (
     author_member_id BINARY(16)  NULL,
     message_type     VARCHAR(20) NOT NULL,
     content          TEXT        NOT NULL,
-    created_at       DATETIME    NOT NULL,
-    updated_at       DATETIME    NOT NULL,
-    deleted_at       DATETIME    NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NOT NULL,
+    deleted_at       DATETIME(6) NULL,
     PRIMARY KEY (id)
 );
 CREATE INDEX ix_chat_message_chat_room_id ON chat_message (chat_room_id);
@@ -882,9 +887,9 @@ CREATE TABLE outbox (
     payload      TEXT         NOT NULL,
     relay_status VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
     claim_token  VARCHAR(36)  NULL,
-    lease_until  DATETIME     NULL,
-    created_at   DATETIME     NOT NULL,
-    updated_at   DATETIME     NOT NULL,
+    lease_until  DATETIME(6)  NULL,
+    created_at   DATETIME(6)  NOT NULL,
+    updated_at   DATETIME(6)  NOT NULL,
     PRIMARY KEY (id)
 );
 CREATE INDEX ix_outbox_created_at ON outbox (created_at);
@@ -893,8 +898,8 @@ CREATE INDEX ix_outbox_relay_status_created_at ON outbox (relay_status, created_
 CREATE TABLE example_entity (
     id             BIGINT       NOT NULL AUTO_INCREMENT,
     example_column VARCHAR(255) NOT NULL,
-    deleted_at     DATETIME     NULL,
-    created_at     DATETIME     NOT NULL,
-    updated_at     DATETIME     NOT NULL,
+    deleted_at     DATETIME(6)  NULL,
+    created_at     DATETIME(6)  NOT NULL,
+    updated_at     DATETIME(6)  NOT NULL,
     PRIMARY KEY (id)
 );
