@@ -134,7 +134,7 @@ class CatalogControllerTest : RestDocsTest() {
                         fieldWithPath("data.sidos[].name").type(JsonFieldType.STRING).description("시도 정식명칭"),
                         fieldWithPath("data.sidos[].shortName").type(JsonFieldType.STRING).description("시도 축약명 (표시용, 예: 서울)"),
                         fieldWithPath("data.sidos[].sigungus").type(JsonFieldType.ARRAY).description("시군구 목록"),
-                        fieldWithPath("data.sidos[].sigungus[].sigunguId").type(JsonFieldType.NUMBER).description("시군구 id (프로필 저장에 사용)"),
+                        fieldWithPath("data.sidos[].sigungus[].sigunguId").type(JsonFieldType.NUMBER).description("시군구 id (오프라인 룸 지역 선택에 사용)"),
                         fieldWithPath("data.sidos[].sigungus[].name").type(JsonFieldType.STRING).description("시군구 명칭"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
