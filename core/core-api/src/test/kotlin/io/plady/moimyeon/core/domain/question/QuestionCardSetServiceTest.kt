@@ -146,12 +146,14 @@ class QuestionCardSetServiceTest {
             authorMemberId = authorMemberId,
             content = "프로젝트에서 가장 어려웠던 기술적 결정은 무엇이었나요?",
             source = QuestionSource.PREPARATION,
+            asked = false,
             followUps = listOf(
                 FollowUpQuestion(
                     id = 2L,
                     authorMemberId = authorMemberId,
                     content = "다시 선택한다면 같은 결정을 하시겠어요?",
                     source = QuestionSource.IN_PROGRESS,
+                    asked = false,
                 ),
             ),
         )

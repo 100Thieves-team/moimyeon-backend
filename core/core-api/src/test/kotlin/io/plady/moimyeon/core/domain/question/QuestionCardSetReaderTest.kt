@@ -76,12 +76,13 @@ class QuestionCardSetReaderTest {
                 firstTargetMemberId,
             )
         } returns listOf(
-            question(id = 1L, targetMemberId = firstTargetMemberId),
+            question(id = 1L, targetMemberId = firstTargetMemberId, asked = true),
             question(
                 id = 2L,
                 targetMemberId = firstTargetMemberId,
                 parentQuestionId = 1L,
                 source = QuestionSource.IN_PROGRESS,
+                asked = true,
             ),
         )
 
@@ -93,7 +94,9 @@ class QuestionCardSetReaderTest {
         assertThat(question.authorMemberId).isEqualTo(authorMemberId)
         assertThat(question.content).isEqualTo("질문 1")
         assertThat(question.source).isEqualTo(QuestionSource.PREPARATION)
+        assertThat(question.asked).isTrue()
         assertThat(question.followUps.single().source).isEqualTo(QuestionSource.IN_PROGRESS)
+        assertThat(question.followUps.single().asked).isTrue()
     }
 
     @Test
@@ -131,6 +134,7 @@ class QuestionCardSetReaderTest {
         targetMemberId: UUID,
         parentQuestionId: Long? = null,
         source: QuestionSource = QuestionSource.PREPARATION,
+        asked: Boolean = false,
     ): QuestionEntity = mockk {
         every { this@mockk.id } returns id
         every { this@mockk.roomId } returns this@QuestionCardSetReaderTest.roomId
@@ -139,5 +143,6 @@ class QuestionCardSetReaderTest {
         every { this@mockk.parentQuestionId } returns parentQuestionId
         every { this@mockk.content } returns "질문 $id"
         every { this@mockk.source } returns source
+        every { this@mockk.asked } returns asked
     }
 }

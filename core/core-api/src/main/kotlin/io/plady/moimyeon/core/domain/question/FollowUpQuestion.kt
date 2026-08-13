@@ -8,4 +8,5 @@ data class FollowUpQuestion(
     val authorMemberId: UUID,
     val content: String,
     val source: QuestionSource,
+    val asked: Boolean,
 )
