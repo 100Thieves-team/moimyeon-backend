@@ -84,6 +84,10 @@ class RoomApplicationControllerTest : RestDocsTest() {
     private val withdrawSummary = "참가 신청 철회"
     private val withdrawDescription =
         "로그인 회원이 방장 처리 전 PENDING 신청을 철회한다. 신청이 없으면 E1408, 이미 처리됐으면 E1409를 반환한다."
+    private val rejectReasonsSummary = "반려 사유 선택지 목록"
+    private val rejectReasonsDescription =
+        "반려 모달(D·03)의 사유 선택지를 코드와 라벨로 내려준다. 라벨은 서버 소유이며 순서가 곧 화면 순서다. " +
+            "사유 없이 반려하는 선택지는 목록에 없다. 반려 요청에 null 을 보내는 것이 그 표현이다."
 
     @BeforeEach
     fun setUp() {
@@ -472,6 +476,34 @@ class RoomApplicationControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `반려 사유 선택지 목록을 코드와 라벨로 내려준다`() {
+        val response = mockMvc.perform(get("/v1/rooms/reject-reasons"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "rejectReasons",
+                    rejectReasonsSummary,
+                    rejectReasonsDescription,
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.reasons[].code").type(JsonFieldType.STRING)
+                            .description("반려 사유 코드 (ROLE_MISMATCH | CAPACITY_FILLED | DIRECTION_MISMATCH)"),
+                        fieldWithPath("data.reasons[].label").type(JsonFieldType.STRING).description("화면 표시 문구"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+            .andReturn().response.contentAsString
+
+        // 코드·라벨·순서까지 D·03 모달과 1:1 이다.
+        assertThat(response).contains(
+            "{\"code\":\"ROLE_MISMATCH\",\"label\":\"직무·면접 단계가 맞지 않아요\"}," +
+                "{\"code\":\"CAPACITY_FILLED\",\"label\":\"정원을 다른 분들로 채웠어요\"}," +
+                "{\"code\":\"DIRECTION_MISMATCH\",\"label\":\"설명한 준비 방향과 맞지 않아요\"}",
+        )
     }
 
     // #8·#9 대표 — 자유 텍스트 시절의 문장도 이제 미지의 코드다(계약 전환의 핵심 단절).
