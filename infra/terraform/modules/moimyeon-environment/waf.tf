@@ -32,7 +32,7 @@ resource "aws_wafv2_web_acl" "app" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${local.name}-rate-limit"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
@@ -56,7 +56,7 @@ resource "aws_wafv2_web_acl" "app" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${local.name}-common-rules"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
@@ -78,7 +78,7 @@ resource "aws_wafv2_web_acl" "app" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${local.name}-known-bad-inputs"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
@@ -100,14 +100,14 @@ resource "aws_wafv2_web_acl" "app" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${local.name}-ip-reputation"
-      sampled_requests_enabled   = true
+      sampled_requests_enabled   = false
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${local.name}-web-acl"
-    sampled_requests_enabled   = true
+    sampled_requests_enabled   = false
   }
 
   tags = local.tags
