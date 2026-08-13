@@ -45,7 +45,7 @@ data class ResumeResponse(
     }
 }
 
-private fun ResumeSummaryStatus.toResponseStatus(): ResumeAiSummaryStatus {
+internal fun ResumeSummaryStatus.toResponseStatus(): ResumeAiSummaryStatus {
     return when (this) {
         ResumeSummaryStatus.PROCESSING -> ResumeAiSummaryStatus.PROCESSING
         ResumeSummaryStatus.DONE -> ResumeAiSummaryStatus.DONE

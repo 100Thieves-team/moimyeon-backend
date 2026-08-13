@@ -2,7 +2,6 @@ package io.plady.moimyeon.core.api.controller.v1.response
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplication
-import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -47,11 +46,3 @@ data class SubmittedResumeResponse(
     val file: ResumeFileResponse,
     val aiSummary: ResumeAiSummaryResponse,
 )
-
-private fun ResumeSummaryStatus.toResponseStatus(): ResumeAiSummaryStatus {
-    return when (this) {
-        ResumeSummaryStatus.PROCESSING -> ResumeAiSummaryStatus.PROCESSING
-        ResumeSummaryStatus.DONE -> ResumeAiSummaryStatus.DONE
-        ResumeSummaryStatus.FAILED -> ResumeAiSummaryStatus.FAILED
-    }
-}
