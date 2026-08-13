@@ -38,7 +38,7 @@ class RoomProgressService(
     }
 
     fun getRail(memberId: UUID, roomId: UUID): ProgressRail {
-        accessValidator.validateRailViewer(roomId, memberId)
+        accessValidator.validateInProgressParticipant(roomId, memberId)
         val confirmedParticipantIds = participationFinder.getConfirmedParticipantIds(roomId)
         return ProgressRail.from(confirmedParticipantIds)
     }

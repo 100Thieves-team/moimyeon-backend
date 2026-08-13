@@ -96,20 +96,20 @@ class RoomProgressAccessValidatorTest {
     }
 
     @Test
-    fun `진행 중인 룸의 확정 참여자는 레일을 조회할 수 있다`() {
+    fun `진행 중인 룸의 확정 참여자는 진행 활동에 접근할 수 있다`() {
         givenRoom(RoomStatus.IN_PROGRESS)
         every { participationFinder.wasConfirmedParticipant(roomId, memberId) } returns true
 
-        assertThatCode { validator.validateRailViewer(roomId, memberId) }
+        assertThatCode { validator.validateInProgressParticipant(roomId, memberId) }
             .doesNotThrowAnyException()
     }
 
     @Test
-    fun `종료된 룸에서는 진행 레일을 조회할 수 없다`() {
+    fun `종료된 룸에서는 진행 활동에 접근할 수 없다`() {
         givenRoom(RoomStatus.COMPLETED)
 
         assertValidationFails(CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE) {
-            validator.validateRailViewer(roomId, memberId)
+            validator.validateInProgressParticipant(roomId, memberId)
         }
     }
 
@@ -119,7 +119,7 @@ class RoomProgressAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, memberId) } returns false
 
         assertValidationFails(CoreErrorType.ROOM_PROGRESS_FORBIDDEN) {
-            validator.validateRailViewer(roomId, memberId)
+            validator.validateInProgressParticipant(roomId, memberId)
         }
     }
 
@@ -128,7 +128,7 @@ class RoomProgressAccessValidatorTest {
         every { roomRepository.findById(roomId) } returns Optional.empty()
 
         assertValidationFails(CoreErrorType.ROOM_NOT_FOUND) {
-            validator.validateRailViewer(roomId, memberId)
+            validator.validateInProgressParticipant(roomId, memberId)
         }
     }
 
@@ -137,7 +137,7 @@ class RoomProgressAccessValidatorTest {
         givenRoom(RoomStatus.IN_PROGRESS, isActive = false)
 
         assertValidationFails(CoreErrorType.ROOM_NOT_FOUND) {
-            validator.validateRailViewer(roomId, memberId)
+            validator.validateInProgressParticipant(roomId, memberId)
         }
     }
 
