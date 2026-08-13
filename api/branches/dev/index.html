@@ -926,7 +926,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T12:05:42.120962227",
+    "datetime" : "2026-08-13T14:28:01.942085684",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1033,14 +1033,14 @@ Content-Length: 236
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 237
+Content-Length: 236
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-13",
-    "datetime" : "2026-08-13T12:05:42.341431249",
+    "datetime" : "2026-08-13T14:28:02.14572524",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1228,7 +1228,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 12:35:41 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 13 Aug 2026 14:58:00 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1434,7 +1434,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "5758714f-432a-468f-8739-d49c4312b2ef",
+      "termsId" : "0ec76045-52a3-4102-86d2-04f7ca7ca7ab",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1442,7 +1442,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "9a1929c8-8a6a-4f0d-b8c4-18dc6ffe0c14",
+      "termsId" : "8e91c1a3-1630-432b-9554-22cd7045160f",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1542,21 +1542,19 @@ Content-Length: 796
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 597
+Content-Length: 528
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
+    "memberId" : "7d1d1ddb-52c8-4746-9f4f-27ffc9a17808",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
+      "memberId" : "7d1d1ddb-52c8-4746-9f4f-27ffc9a17808",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
-      "meetingPreference" : "UNSPECIFIED",
-      "sigunguId" : null,
       "interestCompanies" : [ {
         "companyId" : 1,
         "name" : "달빛페이"
@@ -1631,16 +1629,6 @@ Content-Length: 597
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profile.bio</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">한 줄 소개 (미지정이면 빈 문자열)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profile.meetingPreference</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">만남 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profile.sigunguId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">관심 지역 시군구 id (미선택이면 null)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.profile.interestCompanies</code></p></td>
@@ -2139,7 +2127,7 @@ Content-Length: 304
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sidos[].sigungus[].sigunguId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">시군구 id (프로필 저장에 사용)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">시군구 id (오프라인 룸 지역 선택에 사용)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sidos[].sigungus[].name</code></p></td>
@@ -2279,7 +2267,7 @@ Content-Length: 145
 <div class="sectionbody">
 <div class="paragraph">
 <p>프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재한다. 생성 API 는 없고 수정만 있다.
-아직 안 채운 값은 null 이 아니라 빈 문자열·UNSPECIFIED 로 오간다(지역만 미선택이 null).</p>
+아직 작성하지 않은 소개는 빈 문자열로 오간다.</p>
 </div>
 <div class="sect2">
 <h3 id="_프로필_수정"><a class="link" href="#_프로필_수정">프로필 수정</a></h3>
@@ -2292,9 +2280,7 @@ Content-Length: 145
     -d '{
   "interestJobRoleIds" : [ 1, 2 ],
   "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-  "interestCompanyIds" : [ 1, 2 ],
-  "meetingPreference" : "OFFLINE",
-  "sigunguId" : 1
+  "interestCompanyIds" : [ 1, 2 ]
 }'</code></pre>
 </div>
 </div>
@@ -2330,16 +2316,6 @@ Content-Length: 145
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>meetingPreference</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH, 미지정이면 UNSPECIFIED)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sigunguId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">선호 지역 시군구 id (미선택이면 null, /v1/regions)</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -2349,16 +2325,14 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 446
+Content-Length: 388
 
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "a693cdb3-1716-4022-b5b4-67fa89b9e407",
+    "memberId" : "c01e4bbc-a19a-444b-90b1-99a8b66660cd",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-    "meetingPreference" : "OFFLINE",
-    "sigunguId" : 1,
     "interestCompanies" : [ {
       "companyId" : 1,
       "name" : "달빛페이"
@@ -2409,16 +2383,6 @@ Content-Length: 446
 <td class="tableblock halign-left valign-top"><p class="tableblock">자기소개 (미지정이면 빈 문자열)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.meetingPreference</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sigunguId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">선호 지역 시군구 id (미선택이면 null)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.interestCompanies</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">관심 회사 (미지정이면 빈 배열)</p></td>
@@ -2464,13 +2428,8 @@ Content-Length: 446
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E1302</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 지역(시군구) id</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E1303</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">존재하지 않는 회사 id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">선택할 수 없는 회사 id</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
@@ -2490,8 +2449,8 @@ Content-Length: 446
 <div class="sect2">
 <h3 id="_공개_프로필_조회"><a class="link" href="#_공개_프로필_조회">공개 프로필 조회</a></h3>
 <div class="paragraph">
-<p>인증 없이 다른 사용자에게 보이는 공개 프로필을 조회한다. 닉네임·관심 직무·자기소개·진행 방식
-선호와 공개 가능한 신뢰 지표만 노출하며, 관심 회사·지역·이메일·OAuth 식별자·약관 동의 이력은
+<p>인증 없이 다른 사용자에게 보이는 공개 프로필을 조회한다. 닉네임·관심 직무·자기소개와
+공개 가능한 신뢰 지표만 노출하며, 관심 회사·이메일·OAuth 식별자·약관 동의 이력은
 응답에 포함하지 않는다.</p>
 </div>
 <div class="paragraph">
@@ -2536,7 +2495,7 @@ Content-Length: 446
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 735
+Content-Length: 701
 
 {
   "result" : "SUCCESS",
@@ -2553,7 +2512,6 @@ Content-Length: 735
       "displayName" : "프론트엔드 개발자"
     } ],
     "bio" : "자기소개",
-    "meetingPreference" : "BOTH",
     "trust" : {
       "activityTopPercent" : 12,
       "recentAttendances" : [ "ATTENDED", "ABSENT", "ATTENDED" ],
@@ -2624,11 +2582,6 @@ Content-Length: 735
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.bio</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">자기소개 (미지정이면 빈 문자열)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.meetingPreference</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.trust</code></p></td>
@@ -4292,7 +4245,7 @@ Content-Length: 1179
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-14T12:05:46.502217749",
+      "startAt" : "2026-08-14T14:28:06.407744376",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4303,7 +4256,7 @@ Content-Length: 1179
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "b315bbc5-e8fe-4def-8843-4639da919c19",
+    "hostMemberId" : "b572354a-ef82-48b7-af6a-06c2f3856a8c",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
@@ -4862,7 +4815,7 @@ Content-Length: 1375
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "15b5bc42-88a0-451d-aa73-723bc2fd3b78",
+  "resumeId" : "74c530ff-969a-455d-9b2f-8ef1f8ab5dda",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5096,7 +5049,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "bd20327a-6ff8-467c-b5fb-e08fc07c0296",
+      "resumeId" : "cefe3838-f5f8-4d17-9c29-76710759791a",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -5787,7 +5740,7 @@ Content-Length: 289
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-13 12:04:19 UTC
+Last updated 2026-08-13 14:26:50 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

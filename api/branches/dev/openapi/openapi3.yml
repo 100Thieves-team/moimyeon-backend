@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T12:05:42.120962227",
+                        "datetime" : "2026-08-13T14:28:01.942085684",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-13",
-                        "datetime" : "2026-08-13T12:05:42.341431249",
+                        "datetime" : "2026-08-13T14:28:02.14572524",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -174,14 +174,14 @@ paths:
                     "url" : "https://company.example.com/careers/12345",
                     "postingName" : "   "
                   }
-              createJobPosting-e1102:
+              createJobPosting:
                 value: |-
                   {
                     "companyId" : 43429,
                     "url" : "https://company.example.com/careers/12345",
                     "postingName" : "프론트엔드 개발자 (결제플랫폼)"
                   }
-              createJobPosting:
+              createJobPosting-e1102:
                 value: |-
                   {
                     "companyId" : 43429,
@@ -207,24 +207,6 @@ paths:
                         "data" : null
                       }
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                createJobPosting-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -244,6 +226,24 @@ paths:
                         "verified" : false
                       },
                       "error" : null
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createJobPosting-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
                     }
   /v1/job-roles:
     get:
@@ -286,8 +286,8 @@ paths:
       tags:
       - v1
       summary: 지역 카탈로그 조회
-      description: 프로필 선호 지역 드롭다운 소스. 시도별로 그룹핑된 유효(미폐기) 시군구 목록을 반환한다(법정동 기준). 크롤러가
-        관리하는 참조 데이터다.
+      description: 오프라인 룸 지역 선택 소스. 시도별로 그룹핑된 유효(미폐기) 시군구 목록을 반환한다(법정동 기준). 크롤러가 관리하는
+        참조 데이터다.
       operationId: regions
       responses:
         "200":
@@ -295,7 +295,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-regions1871099627"
+                $ref: "#/components/schemas/v1-regions709600108"
               examples:
                 regions:
                   value: |-
@@ -403,6 +403,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                rooms-e400-cursor:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -464,24 +482,6 @@ paths:
                         "nextCursor" : "djE6U0NIRURVTEU6MjAyNi0wOS0wNVQxNDowMDowMTIzNA"
                       },
                       "error" : null
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                rooms-e400-cursor:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
                     }
     post:
       tags:
@@ -672,7 +672,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "5758714f-432a-468f-8739-d49c4312b2ef",
+                          "termsId" : "0ec76045-52a3-4102-86d2-04f7ca7ca7ab",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -680,7 +680,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "9a1929c8-8a6a-4f0d-b8c4-18dc6ffe0c14",
+                          "termsId" : "8e91c1a3-1630-432b-9554-22cd7045160f",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -728,6 +728,24 @@ paths:
         \ 재발급한다. 쿠키가 없거나 세션이 만료·폐기됐으면 401(E1104)로 응답하며, FE 는 재로그인으로 보낸다."
       operationId: authRefresh
       responses:
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                authRefresh-e1104:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1104",
+                        "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           headers:
@@ -747,24 +765,6 @@ paths:
                       "data" : null,
                       "error" : null
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                authRefresh-e1104:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1104",
-                        "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
-                        "data" : null
-                      }
-                    }
   /v1/job-postings/link-metadata:
     post:
       tags:
@@ -782,19 +782,37 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-job-postings-link-metadata34312967"
             examples:
-              jobPostingLinkMetadata:
-                value: |-
-                  {
-                    "companyId" : 43429,
-                    "url" : "https://company.example.com/careers/12345"
-                  }
               jobPostingLinkMetadata-e400:
                 value: |-
                   {
                     "companyId" : 43429,
                     "url" : "ftp://company.example.com/careers"
                   }
+              jobPostingLinkMetadata:
+                value: |-
+                  {
+                    "companyId" : 43429,
+                    "url" : "https://company.example.com/careers/12345"
+                  }
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                jobPostingLinkMetadata-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -814,24 +832,6 @@ paths:
                         "sourceUrl" : "https://company.example.com/careers/12345"
                       },
                       "error" : null
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                jobPostingLinkMetadata-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
                     }
   /v1/job-postings/search:
     get:
@@ -860,24 +860,6 @@ paths:
         schema:
           type: string
       responses:
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                searchJobPostings-e400-length:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           headers:
@@ -890,17 +872,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-job-postings-search1628359421"
               examples:
-                searchJobPostings-empty:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "query" : "",
-                        "companies" : [ ],
-                        "jobPostings" : [ ]
-                      },
-                      "error" : null
-                    }
                 searchJobPostings:
                   value: |-
                     {
@@ -937,14 +908,41 @@ paths:
                       },
                       "error" : null
                     }
+                searchJobPostings-empty:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "query" : "",
+                        "companies" : [ ],
+                        "jobPostings" : [ ]
+                      },
+                      "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                searchJobPostings-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
   /v1/job-roles/search:
     get:
       tags:
       - v1
       summary: 직무 검색
-      description: 룸 생성 직무 셀렉트의 검색 소스. 직무명 부분 일치로 유효(미폐기) 직무를 상위 직군과 함께 최대 20건 반환한다.
-        직무는 공고와 독립한 평면 카탈로그이므로 공고 선택과 무관하게 고른다. 검색어가 없거나 공백이거나 1~50자를 벗어나면 400(E400)으로
-        응답한다.
+      description: 직무명 부분 일치 검색
       operationId: searchJobRoles
       parameters:
       - name: query
@@ -954,6 +952,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                searchJobRoles-e400-blank:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -978,68 +994,17 @@ paths:
                       },
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                searchJobRoles-e400-blank:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
   /v1/members/me:
     get:
       tags:
       - v1
       summary: 내 상태 조회
       description: "인증된 회원의 상태와 프로필을 반환한다. 닉네임은 가입 시 자동 부여되는 회원 속성이다. 프로필은 가입 시 빈\
-        \ 상태로 함께 만들어져 회원당 항상 하나 존재한다 — 아직 안 채운 값은 null 이 아니라 빈 문자열·UNSPECIFIED 로 내\
-        려간다(지역만 미선택이 null). profile 은 프로필 수정 응답의 data 와 동일한 모양이다. 액세스 토큰이 없거나 유효하지\
-        \ 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
+        \ 상태로 함께 만들어져 회원당 항상 하나 존재한다 — 아직 안 채운 값은 빈 문자열·빈 배열로 내려간다. profile 은 프로필\
+        \ 수정 응답의 data 와 동일한 모양이다. 액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조\
+        회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
       operationId: memberMe
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-321992391"
-              examples:
-                memberMe:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
-                        "email" : "user@example.com",
-                        "nickname" : "차분한 펭귄 12",
-                        "status" : "ACTIVE",
-                        "profile" : {
-                          "memberId" : "22a8c24d-013b-4046-b10e-464aa968102d",
-                          "interestJobRoleIds" : [ 1, 2 ],
-                          "bio" : "",
-                          "meetingPreference" : "UNSPECIFIED",
-                          "sigunguId" : null,
-                          "interestCompanies" : [ {
-                            "companyId" : 1,
-                            "name" : "달빛페이"
-                          }, {
-                            "companyId" : 2,
-                            "name" : "한빛커머스"
-                          } ]
-                        }
-                      },
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -1076,6 +1041,37 @@ paths:
                       },
                       "result" : "ERROR"
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me1349704155"
+              examples:
+                memberMe:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "7d1d1ddb-52c8-4746-9f4f-27ffc9a17808",
+                        "email" : "user@example.com",
+                        "nickname" : "차분한 펭귄 12",
+                        "status" : "ACTIVE",
+                        "profile" : {
+                          "memberId" : "7d1d1ddb-52c8-4746-9f4f-27ffc9a17808",
+                          "interestJobRoleIds" : [ 1, 2 ],
+                          "bio" : "",
+                          "interestCompanies" : [ {
+                            "companyId" : 1,
+                            "name" : "달빛페이"
+                          }, {
+                            "companyId" : 2,
+                            "name" : "한빛커머스"
+                          } ]
+                        }
+                      },
+                      "error" : null
+                    }
   /v1/nicknames/availability:
     get:
       tags:
@@ -1092,6 +1088,22 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-nicknames-availability-1805856748"
+              examples:
+                nicknameAvailability:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "available" : true
+                      },
+                      "error" : null
+                    }
         "400":
           description: "400"
           content:
@@ -1122,22 +1134,6 @@ paths:
                         "message" : "닉네임 형식이 올바르지 않습니다.",
                         "data" : null
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-nicknames-availability-1805856748"
-              examples:
-                nicknameAvailability:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "available" : true
-                      },
-                      "error" : null
                     }
   /v1/nicknames/suggestion:
     get:
@@ -1343,7 +1339,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-14T12:05:46.502217749",
+                          "startAt" : "2026-08-14T14:28:06.407744376",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -1354,7 +1350,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "b315bbc5-e8fe-4def-8843-4639da919c19",
+                        "hostMemberId" : "b572354a-ef82-48b7-af6a-06c2f3856a8c",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -1383,7 +1379,7 @@ paths:
       parameters:
       - name: companyId
         in: path
-        description: 공고를 조회할 회사 id (/v1/companies 검색 결과)
+        description: ""
         required: true
         schema:
           type: string
@@ -1394,6 +1390,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                jobPostings-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -1426,24 +1440,6 @@ paths:
                       },
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                jobPostings-e400-length:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
   /v1/members/me/nickname:
     put:
       tags:
@@ -1463,15 +1459,15 @@ paths:
                   {
                     "nickname" : "명랑한 해달 33"
                   }
-              updateNickname-e1005:
-                value: |-
-                  {
-                    "nickname" : "금지문자!@#"
-                  }
               updateNickname-e1102:
                 value: |-
                   {
                     "nickname" : "명랑한 해달 33"
+                  }
+              updateNickname-e1005:
+                value: |-
+                  {
+                    "nickname" : "금지문자!@#"
                   }
               updateNickname-e1007:
                 value: |-
@@ -1493,24 +1489,6 @@ paths:
                       "data" : null,
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                updateNickname-e1005:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1005",
-                        "message" : "닉네임 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "401":
           description: "401"
           content:
@@ -1526,6 +1504,24 @@ paths:
                       "error" : {
                         "code" : "E1102",
                         "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                updateNickname-e1005:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1005",
+                        "message" : "닉네임 형식이 올바르지 않습니다.",
                         "data" : null
                       }
                     }
@@ -1553,139 +1549,59 @@ paths:
       - v1
       summary: 프로필 수정
       description: "프로필 전체 교체 저장. 프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재하므로 별도 생성 API\
-        \ 는 없다. 아직 안 채운 값은 null 이 아니라 빈 문자열·UNSPECIFIED 로 오간다(지역만 미선택이 null). 관심 직\
-        무·지역·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는 검증 완료된 회사만 선택할 수 있다. 요청 형태 오류 400(E400),\
-        \ 존재하지 않는 직무/지역 또는 선택할 수 없는 회사 400(E1301/E1302/E1303), 인증 정보 없음·무효 401(E1102),\
-        \ 프로필을 찾을 수 없음 404(E1009)로 응답한다."
+        \ 는 없다. 아직 작성하지 않은 소개는 빈 문자열로 오간다. 관심 직무·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는\
+        \ 검증 완료된 회사만 선택할 수 있다. 요청 형태 오류 400(E400), 존재하지 않는 직무 또는 선택할 수 없는 회사 400(E1301/E1303),\
+        \ 인증 정보 없음·무효 401(E1102), 프로필을 찾을 수 없음 404(E1009)로 응답한다."
       operationId: updateProfile
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/v1-members-me-profile928465678"
+              $ref: "#/components/schemas/v1-members-me-profile608809462"
             examples:
-              updateProfile-e1301:
-                value: |-
-                  {
-                    "interestJobRoleIds" : [ 1, 2 ],
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
-                  }
-              updateProfile:
-                value: |-
-                  {
-                    "interestJobRoleIds" : [ 1, 2 ],
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
-                  }
               updateProfile-e1102:
                 value: |-
                   {
                     "interestJobRoleIds" : [ 1, 2 ],
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
-                  }
-              updateProfile-e400:
-                value: |-
-                  {
-                    "interestJobRoleIds" : [ 1, 2 ],
-                    "bio" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "interestCompanyIds" : [ 1, 2 ]
                   }
               updateProfile-e1009:
                 value: |-
                   {
                     "interestJobRoleIds" : [ 1, 2 ],
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "interestCompanyIds" : [ 1, 2 ]
+                  }
+              updateProfile-e400:
+                value: |-
+                  {
+                    "interestJobRoleIds" : [ 1, 2 ],
+                    "bio" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
+                    "interestCompanyIds" : [ 1, 2 ]
+                  }
+              updateProfile:
+                value: |-
+                  {
+                    "interestJobRoleIds" : [ 1, 2 ],
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ]
+                  }
+              updateProfile-e1301:
+                value: |-
+                  {
+                    "interestJobRoleIds" : [ 1, 2 ],
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ]
                   }
               updateProfile-e1303:
                 value: |-
                   {
                     "interestJobRoleIds" : [ 1, 2 ],
                     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ],
-                    "meetingPreference" : "OFFLINE",
-                    "sigunguId" : 1
+                    "interestCompanyIds" : [ 1, 2 ]
                   }
       responses:
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                updateProfile-e1301:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1301",
-                        "message" : "존재하지 않는 직무입니다.",
-                        "data" : null
-                      }
-                    }
-                updateProfile-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
-                updateProfile-e1303:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1303",
-                        "message" : "존재하지 않는 회사입니다.",
-                        "data" : null
-                      }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-profile-1868087811"
-              examples:
-                updateProfile:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "memberId" : "a693cdb3-1716-4022-b5b4-67fa89b9e407",
-                        "interestJobRoleIds" : [ 1, 2 ],
-                        "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                        "meetingPreference" : "OFFLINE",
-                        "sigunguId" : 1,
-                        "interestCompanies" : [ {
-                          "companyId" : 1,
-                          "name" : "달빛페이"
-                        }, {
-                          "companyId" : 2,
-                          "name" : "한빛커머스"
-                        } ]
-                      },
-                      "error" : null
-                    }
         "401":
           description: "401"
           content:
@@ -1722,6 +1638,71 @@ paths:
                         "data" : null
                       }
                     }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                updateProfile-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                updateProfile-e1301:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1301",
+                        "message" : "존재하지 않는 직무입니다.",
+                        "data" : null
+                      }
+                    }
+                updateProfile-e1303:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1303",
+                        "message" : "존재하지 않는 회사입니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-profile934225230"
+              examples:
+                updateProfile:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "c01e4bbc-a19a-444b-90b1-99a8b66660cd",
+                        "interestJobRoleIds" : [ 1, 2 ],
+                        "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                        "interestCompanies" : [ {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        }, {
+                          "companyId" : 2,
+                          "name" : "한빛커머스"
+                        } ]
+                      },
+                      "error" : null
+                    }
   /v1/members/me/resumes:
     get:
       tags:
@@ -1735,24 +1716,6 @@ paths:
         \ 응답한다. 목 API는 고정 이력서 4건(DONE 2건, PROCESSING 1건, FAILED 1건)을 반환한다."
       operationId: resumes
       responses:
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                resumes-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -1834,6 +1797,24 @@ paths:
                       },
                       "error" : null
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resumes-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
     post:
       tags:
       - v1
@@ -1863,17 +1844,6 @@ paths:
                         "data" : null
                       }
                     }
-                createResume-e400-file-type:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
                 createResume-e400-missing-file:
                   value: |-
                     {
@@ -1887,21 +1857,14 @@ paths:
                         }
                       }
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                createResume-e1102:
+                createResume-e400-file-type:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
                         "data" : null
                       }
                     }
@@ -1932,6 +1895,24 @@ paths:
                         "registeredAt" : "2026-08-01T15:30:00"
                       },
                       "error" : null
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createResume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
                     }
       requestBody:
         required: true
@@ -2119,9 +2100,9 @@ paths:
       tags:
       - v1
       summary: 공개 프로필 조회
-      description: "인증 없이 다른 사용자의 공개 프로필과 신뢰 지표를 조회한다. 닉네임·관심 직무·자기소개·진행 방식 선호만 프로\
-        필 정보로 노출하며, 관심 회사·지역·이메일·OAuth 식별자·약관 동의 이력은 담지 않는다. 존재하지 않거나 탈퇴한 회원, 필수 프\
-        로필이 없는 회원은 404(E1006), 잘못된 UUID는 400(E400)으로 응답한다."
+      description: "인증 없이 다른 사용자의 공개 프로필과 신뢰 지표를 조회한다. 닉네임·관심 직무·자기소개만 프로필 정보로 노출하\
+        며, 관심 회사·이메일·OAuth 식별자·약관 동의 이력은 담지 않는다. 존재하지 않거나 탈퇴한 회원, 필수 프로필이 없는 회원은 404(E1006),\
+        \ 잘못된 UUID는 400(E400)으로 응답한다."
       operationId: publicProfile
       parameters:
       - name: memberId
@@ -2131,6 +2112,42 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-memberId-profile655149006"
+              examples:
+                publicProfile:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "00000000-0000-0000-0000-000000000001",
+                        "nickname" : "차분한 펭귄 12",
+                        "interestJobRoles" : [ {
+                          "jobRoleId" : 1,
+                          "code" : "BACKEND_DEVELOPER",
+                          "displayName" : "백엔드 개발자"
+                        }, {
+                          "jobRoleId" : 2,
+                          "code" : "FRONTEND_DEVELOPER",
+                          "displayName" : "프론트엔드 개발자"
+                        } ],
+                        "bio" : "자기소개",
+                        "trust" : {
+                          "activityTopPercent" : 12,
+                          "recentAttendances" : [ "ATTENDED", "ABSENT", "ATTENDED" ],
+                          "noShowCount" : 2,
+                          "representativeTags" : [ {
+                            "label" : "좋은 질문을 해요",
+                            "count" : 5
+                          } ]
+                        }
+                      },
+                      "error" : null
+                    }
         "400":
           description: "400"
           content:
@@ -2150,43 +2167,6 @@ paths:
                           "memberId" : "type mismatch"
                         }
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-memberId-profile1061288860"
-              examples:
-                publicProfile:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "memberId" : "00000000-0000-0000-0000-000000000001",
-                        "nickname" : "차분한 펭귄 12",
-                        "interestJobRoles" : [ {
-                          "jobRoleId" : 1,
-                          "code" : "BACKEND_DEVELOPER",
-                          "displayName" : "백엔드 개발자"
-                        }, {
-                          "jobRoleId" : 2,
-                          "code" : "FRONTEND_DEVELOPER",
-                          "displayName" : "프론트엔드 개발자"
-                        } ],
-                        "bio" : "자기소개",
-                        "meetingPreference" : "BOTH",
-                        "trust" : {
-                          "activityTopPercent" : 12,
-                          "recentAttendances" : [ "ATTENDED", "ABSENT", "ATTENDED" ],
-                          "noShowCount" : 2,
-                          "representativeTags" : [ {
-                            "label" : "좋은 질문을 해요",
-                            "count" : 5
-                          } ]
-                        }
-                      },
-                      "error" : null
                     }
         "404":
           description: "404"
@@ -2284,42 +2264,24 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-rooms-roomId-applications240308819"
             examples:
-              submitRoomApplication:
-                value: |-
-                  {
-                    "resumeId" : "15b5bc42-88a0-451d-aa73-723bc2fd3b78",
-                    "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
-                  }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "210d238a-be5b-4b3a-a7ea-27f3750bfe0b"
+                    "resumeId" : "65387ce6-f5aa-43f3-9465-63b5f4cae28f"
+                  }
+              submitRoomApplication:
+                value: |-
+                  {
+                    "resumeId" : "74c530ff-969a-455d-9b2f-8ef1f8ab5dda",
+                    "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "68ab573f-9e65-4441-a750-8abf77617263",
+                    "resumeId" : "bb49815b-23eb-4671-9699-6196589ee244",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-applications1651584797"
-              examples:
-                submitRoomApplication:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "applicationId" : 3003,
-                        "status" : "PENDING",
-                        "statusLabel" : "대기 중"
-                      },
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -2337,6 +2299,24 @@ paths:
                         "message" : "이력서를 찾을 수 없습니다.",
                         "data" : null
                       }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-applications1651584797"
+              examples:
+                submitRoomApplication:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "applicationId" : 3003,
+                        "status" : "PENDING",
+                        "statusLabel" : "대기 중"
+                      },
+                      "error" : null
                     }
         "400":
           description: "400"
@@ -2368,11 +2348,25 @@ paths:
       parameters:
       - name: roomId
         in: path
-        description: ""
+        description: 취소할 룸 식별자
         required: true
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                cancelRoom:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
         "409":
           description: "409"
           content:
@@ -2402,20 +2396,6 @@ paths:
                         "data" : null
                       }
                     }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                cancelRoom:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
   /v1/rooms/{roomId}/confirmation:
     post:
       tags:
@@ -2429,40 +2409,11 @@ paths:
       parameters:
       - name: roomId
         in: path
-        description: ""
+        description: 확정할 룸 식별자
         required: true
         schema:
           type: string
       responses:
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                confirmRoom-e1410:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1410",
-                        "message" : "모집 중인 방이 아닙니다.",
-                        "data" : null
-                      }
-                    }
-                confirmRoom-e1421:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1421",
-                        "message" : "최소 진행 인원을 채워야 확정할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -2476,6 +2427,35 @@ paths:
                       "result" : "SUCCESS",
                       "data" : null,
                       "error" : null
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                confirmRoom-e1421:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1421",
+                        "message" : "최소 진행 인원을 채워야 확정할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+                confirmRoom-e1410:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1410",
+                        "message" : "모집 중인 방이 아닙니다.",
+                        "data" : null
+                      }
                     }
   /v1/rooms/{roomId}/participants:
     get:
@@ -2578,6 +2558,24 @@ paths:
         schema:
           type: string
       responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resume-e1010:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1010",
+                        "message" : "이력서를 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "400":
           description: "400"
           content:
@@ -2626,24 +2624,6 @@ paths:
                       },
                       "error" : null
                     }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                resume-e1010:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1010",
-                        "message" : "이력서를 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "401":
           description: "401"
           content:
@@ -2678,20 +2658,6 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                deleteResume:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -2748,6 +2714,20 @@ paths:
                         "data" : null
                       }
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deleteResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
   /v1/rooms/{roomId}/applications/me:
     get:
       tags:
@@ -2780,7 +2760,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "bd20327a-6ff8-467c-b5fb-e08fc07c0296",
+                          "resumeId" : "cefe3838-f5f8-4d17-9c29-76710759791a",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -2831,10 +2811,7 @@ paths:
       tags:
       - v1
       summary: 룸 나가기
-      description: "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에는 자유롭게 나갈 수 있고, 진행이 확정된 뒤에\
-        도 현재 인원이 최소 진행 인원보다 많으면 나갈 수 있다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, 모집 중이면 같은\
-        \ 룸에 다시 신청할 수 있다. 방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도 없으면\
-        \ 룸이 취소된다."
+      description: 참여 중이 아니면 나갈 수 없다(E1419). 신청만 넣은 사용자와 이미 나간 사람이 모두 여기에 해당한다.
       operationId: roomLeave
       parameters:
       - name: roomId
@@ -2844,20 +2821,6 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                roomLeave:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
         "403":
           description: "403"
           content:
@@ -2875,6 +2838,20 @@ paths:
                         "message" : "룸에 참여한 사람만 볼 수 있습니다.",
                         "data" : null
                       }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                roomLeave:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
                     }
         "409":
           description: "409"
@@ -3249,6 +3226,90 @@ components:
               type: string
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
+    v1-members-memberId-profile655149006:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - bio
+          - interestJobRoles
+          - memberId
+          - nickname
+          - trust
+          type: object
+          properties:
+            trust:
+              required:
+              - noShowCount
+              - recentAttendances
+              - representativeTags
+              - activityTopPercent
+              type: object
+              properties:
+                representativeTags:
+                  type: array
+                  description: "대표 평가 태그, 받은 횟수 내림차순·문구 오름차순 최대 3개"
+                  items:
+                    required:
+                    - count
+                    - label
+                    type: object
+                    properties:
+                      count:
+                        type: number
+                        description: 받은 횟수
+                      label:
+                        type: string
+                        description: 평가 문구
+                activityTopPercent:
+                  type: number
+                  description: 활동률 상위 퍼센트 (출석한 완료 룸이 없으면 null)
+                  nullable: true
+                recentAttendances:
+                  type: array
+                  description: "최근 완료 룸 출석 결과, 최신순 최대 3건"
+                  items:
+                    type: string
+                    enum:
+                    - ATTENDED
+                    - ABSENT
+                noShowCount:
+                  type: number
+                  description: 완료 룸 누적 불참 횟수
+              description: 신뢰 지표 (활동 이력이 없어도 항상 반환)
+            nickname:
+              type: string
+              description: 닉네임
+            bio:
+              type: string
+              description: 자기소개 (미지정이면 빈 문자열)
+            interestJobRoles:
+              type: array
+              description: 관심 직무 목록
+              items:
+                required:
+                - code
+                - displayName
+                - jobRoleId
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: 관심 직무 코드
+                  displayName:
+                    type: string
+                    description: 관심 직무 표시명
+                  jobRoleId:
+                    type: number
+                    description: 관심 직무 식별자
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
     v1-rooms-roomId-applications-applicationId-reject2120301028:
       type: object
       properties:
@@ -3917,187 +3978,6 @@ components:
         url:
           type: string
           description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
-    v1-members-me-profile928465678:
-      type: object
-      properties:
-        sigunguId:
-          type: number
-          description: "선호 지역 시군구 id (미선택이면 null, /v1/regions)"
-          nullable: true
-        meetingPreference:
-          type: string
-          description: "진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH, 미지정이면 UNSPECIFIED)"
-          nullable: true
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-    v1-members-me-profile-1868087811:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - bio
-          - interestCompanies
-          - interestJobRoleIds
-          - meetingPreference
-          - memberId
-          type: object
-          properties:
-            sigunguId:
-              type: number
-              description: 선호 지역 시군구 id (미선택이면 null)
-              nullable: true
-            meetingPreference:
-              type: string
-              description: 진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)
-            interestCompanies:
-              type: array
-              description: 관심 회사 (미지정이면 빈 배열)
-              items:
-                required:
-                - companyId
-                - name
-                type: object
-                properties:
-                  companyId:
-                    type: number
-                    description: 회사 id
-                  name:
-                    type: string
-                    description: 회사명
-            bio:
-              type: string
-              description: 자기소개 (미지정이면 빈 문자열)
-            interestJobRoleIds:
-              type: array
-              description: 관심 직무 id 목록 (미지정이면 빈 배열)
-              items:
-                type: number
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
-    v1-members-memberId-profile1061288860:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - bio
-          - interestJobRoles
-          - meetingPreference
-          - memberId
-          - nickname
-          - trust
-          type: object
-          properties:
-            trust:
-              required:
-              - noShowCount
-              - recentAttendances
-              - representativeTags
-              - activityTopPercent
-              type: object
-              properties:
-                representativeTags:
-                  type: array
-                  description: "대표 평가 태그, 받은 횟수 내림차순·문구 오름차순 최대 3개"
-                  items:
-                    required:
-                    - count
-                    - label
-                    type: object
-                    properties:
-                      count:
-                        type: number
-                        description: 받은 횟수
-                      label:
-                        type: string
-                        description: 평가 문구
-                activityTopPercent:
-                  type: number
-                  description: 활동률 상위 퍼센트 (출석한 완료 룸이 없으면 null)
-                  nullable: true
-                recentAttendances:
-                  type: array
-                  description: "최근 완료 룸 출석 결과, 최신순 최대 3건"
-                  items:
-                    type: string
-                    enum:
-                    - ATTENDED
-                    - ABSENT
-                noShowCount:
-                  type: number
-                  description: 완료 룸 누적 불참 횟수
-              description: 신뢰 지표 (활동 이력이 없어도 항상 반환)
-            meetingPreference:
-              type: string
-              description: 진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)
-            nickname:
-              type: string
-              description: 닉네임
-            bio:
-              type: string
-              description: 자기소개 (미지정이면 빈 문자열)
-            interestJobRoles:
-              type: array
-              description: 관심 직무 목록
-              items:
-                required:
-                - code
-                - displayName
-                - jobRoleId
-                type: object
-                properties:
-                  code:
-                    type: string
-                    description: 관심 직무 코드
-                  displayName:
-                    type: string
-                    description: 관심 직무 표시명
-                  jobRoleId:
-                    type: number
-                    description: 관심 직무 식별자
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
-    v1-nicknames-suggestion679533277:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - nickname
-          type: object
-          properties:
-            nickname:
-              type: string
-              description: 추천 닉네임 (중복 아님 보장)
     v1-rooms-roomId-participants-me1338856208:
       required:
       - result
@@ -4118,6 +3998,22 @@ components:
             message:
               type: string
               description: 에러 메시지
+    v1-nicknames-suggestion679533277:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - nickname
+          type: object
+          properties:
+            nickname:
+              type: string
+              description: 추천 닉네임 (중복 아님 보장)
     v1-rooms-form-options-38619118:
       required:
       - result
@@ -4210,6 +4106,48 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
+    v1-members-me-profile934225230:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - bio
+          - interestCompanies
+          - interestJobRoleIds
+          - memberId
+          type: object
+          properties:
+            interestCompanies:
+              type: array
+              description: 관심 회사 (미지정이면 빈 배열)
+              items:
+                required:
+                - companyId
+                - name
+                type: object
+                properties:
+                  companyId:
+                    type: number
+                    description: 회사 id
+                  name:
+                    type: string
+                    description: 회사명
+            bio:
+              type: string
+              description: 자기소개 (미지정이면 빈 문자열)
+            interestJobRoleIds:
+              type: array
+              description: 관심 직무 id 목록 (미지정이면 빈 배열)
+              items:
+                type: number
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
     v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result
@@ -4254,6 +4192,50 @@ components:
             status:
               type: string
               description: 신청 상태 (REJECTED)
+    v1-regions709600108:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - sidos
+          type: object
+          properties:
+            sidos:
+              type: array
+              description: 시도 목록
+              items:
+                required:
+                - name
+                - shortName
+                - sigungus
+                type: object
+                properties:
+                  sigungus:
+                    type: array
+                    description: 시군구 목록
+                    items:
+                      required:
+                      - name
+                      - sigunguId
+                      type: object
+                      properties:
+                        sigunguId:
+                          type: number
+                          description: 시군구 id (오프라인 룸 지역 선택에 사용)
+                        name:
+                          type: string
+                          description: 시군구 명칭
+                  name:
+                    type: string
+                    description: 시도 정식명칭
+                  shortName:
+                    type: string
+                    description: "시도 축약명 (표시용, 예: 서울)"
     v1-rooms897804324:
       required:
       - jobRoleId
@@ -4416,6 +4398,70 @@ components:
                     type: string
                     description: 대표 직무명 (선택)
                     nullable: true
+    v1-members-me1349704155:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - email
+          - memberId
+          - nickname
+          - profile
+          - status
+          type: object
+          properties:
+            profile:
+              required:
+              - bio
+              - interestCompanies
+              - interestJobRoleIds
+              - memberId
+              type: object
+              properties:
+                interestCompanies:
+                  type: array
+                  description: 관심 회사 목록 (미지정이면 빈 배열)
+                  items:
+                    required:
+                    - companyId
+                    - name
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                      name:
+                        type: string
+                        description: 회사명
+                bio:
+                  type: string
+                  description: 한 줄 소개 (미지정이면 빈 문자열)
+                interestJobRoleIds:
+                  type: array
+                  description: 관심 직무 id 목록 (미지정이면 빈 배열)
+                  items:
+                    type: number
+                memberId:
+                  type: string
+                  description: 회원 식별자 (UUID)
+              description: 프로필 (프로필 수정 응답의 data 와 동일 모양)
+            nickname:
+              type: string
+              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
+            email:
+              type: string
+              description: 대표 이메일
+            status:
+              type: string
+              description: 회원 상태 (ACTIVE | RESTRICTED)
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
     v1-members-me-web-push-subscriptions1250153706:
       required:
       - registration
@@ -4779,50 +4825,6 @@ components:
             totalCount:
               type: number
               description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
-    v1-regions1871099627:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - sidos
-          type: object
-          properties:
-            sidos:
-              type: array
-              description: 시도 목록
-              items:
-                required:
-                - name
-                - shortName
-                - sigungus
-                type: object
-                properties:
-                  sigungus:
-                    type: array
-                    description: 시군구 목록
-                    items:
-                      required:
-                      - name
-                      - sigunguId
-                      type: object
-                      properties:
-                        sigunguId:
-                          type: number
-                          description: 시군구 id (프로필 저장에 사용)
-                        name:
-                          type: string
-                          description: 시군구 명칭
-                  name:
-                    type: string
-                    description: 시도 정식명칭
-                  shortName:
-                    type: string
-                    description: "시도 축약명 (표시용, 예: 서울)"
     v1-terms1673199050:
       required:
       - result
@@ -4991,78 +4993,6 @@ components:
                       displayName:
                         type: string
                         description: 상위 직군 표시명
-    v1-members-me-321992391:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - email
-          - memberId
-          - nickname
-          - profile
-          - status
-          type: object
-          properties:
-            profile:
-              required:
-              - bio
-              - interestCompanies
-              - interestJobRoleIds
-              - meetingPreference
-              - memberId
-              type: object
-              properties:
-                sigunguId:
-                  type: number
-                  description: 관심 지역 시군구 id (미선택이면 null)
-                  nullable: true
-                meetingPreference:
-                  type: string
-                  description: 만남 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)
-                interestCompanies:
-                  type: array
-                  description: 관심 회사 목록 (미지정이면 빈 배열)
-                  items:
-                    required:
-                    - companyId
-                    - name
-                    type: object
-                    properties:
-                      companyId:
-                        type: number
-                        description: 회사 id
-                      name:
-                        type: string
-                        description: 회사명
-                bio:
-                  type: string
-                  description: 한 줄 소개 (미지정이면 빈 문자열)
-                interestJobRoleIds:
-                  type: array
-                  description: 관심 직무 id 목록 (미지정이면 빈 배열)
-                  items:
-                    type: number
-                memberId:
-                  type: string
-                  description: 회원 식별자 (UUID)
-              description: 프로필 (프로필 수정 응답의 data 와 동일 모양)
-            nickname:
-              type: string
-              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
-            email:
-              type: string
-              description: 대표 이메일
-            status:
-              type: string
-              description: 회원 상태 (ACTIVE | RESTRICTED)
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
     v1-members-me-nickname910352763:
       required:
       - result
@@ -5207,6 +5137,25 @@ components:
             maxCount:
               type: number
               description: 최대 보관 가능 개수 (10)
+    v1-members-me-profile608809462:
+      type: object
+      properties:
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-members-me-resumes-resumeId1837465274:
       required:
       - result
