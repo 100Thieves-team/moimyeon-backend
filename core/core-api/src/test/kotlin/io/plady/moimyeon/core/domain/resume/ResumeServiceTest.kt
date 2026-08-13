@@ -55,23 +55,6 @@ class ResumeServiceTest {
     }
 
     @Test
-    fun `회원의 이력서 목록을 조회한다`() {
-        val memberId = UUID.randomUUID()
-        val resumes = listOf(mockk<Resume>())
-        every { resumeManager.failExpiredSummaries(memberId, now) } returns 0
-        every { resumeFinder.getAll(memberId) } returns resumes
-
-        val result = resumeService.getAll(memberId)
-
-        assertThat(result).isSameAs(resumes)
-        verifyOrder {
-            resumeManager.failExpiredSummaries(memberId, now)
-            resumeFinder.getAll(memberId)
-        }
-        verify(exactly = 0) { summaryGenerator.generate(any()) }
-    }
-
-    @Test
     fun `이력서를 기본으로 지정한다`() {
         val memberId = UUID.randomUUID()
         val resumeId = UUID.randomUUID()

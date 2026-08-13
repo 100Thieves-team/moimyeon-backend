@@ -26,11 +26,6 @@ class ResumeService(
         return resumeFinder.get(memberId, resumeId)
     }
 
-    fun getAll(memberId: UUID): List<Resume> {
-        resumeManager.failExpiredSummaries(memberId, now())
-        return resumeFinder.getAll(memberId)
-    }
-
     fun getStored(memberId: UUID): List<StoredResume> {
         resumeManager.failExpiredSummaries(memberId, now())
         return storedResumeReader.getAll(memberId)
