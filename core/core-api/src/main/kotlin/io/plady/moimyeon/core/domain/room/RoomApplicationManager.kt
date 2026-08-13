@@ -90,12 +90,13 @@ class RoomApplicationManager(
     }
 
     // 반려. 정원·참여자에 영향이 없어 룸 잠금은 필요 없다. 방장 권한과 대기 상태만 확인한다.
+    // 사유는 코드의 name 으로 저장한다 — 컬럼에 코드 도입 전 자유 텍스트가 남아 있어 엔티티는 String 이다(MOI-451 D2-4).
     @Transactional
-    fun reject(roomId: UUID, applicationId: Long, hostMemberId: UUID, reason: String?): ApplicationDecision {
+    fun reject(roomId: UUID, applicationId: Long, hostMemberId: UUID, reason: RejectReason?): ApplicationDecision {
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
         val application = loadPendingApplication(roomId, applicationId)
 
-        application.reject(hostMemberId, reason, LocalDateTime.now(clock))
+        application.reject(hostMemberId, reason?.name, LocalDateTime.now(clock))
 
         val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
         return ApplicationDecision(
