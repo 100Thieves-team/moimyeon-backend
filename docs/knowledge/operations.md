@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-14: dev API가 운영 프론트 오리진과 apex 쿠키 도메인을 그대로 사용해 preview 프론트
+  도입 시 운영·개발 세션이 충돌할 수 있었다. 재발 방지: dev OAuth·CORS·쿠키 범위를
+  `dev.moimyeon.plady.io`로 묶고, S3 CORS와 알림 클릭 URL도 같은 프론트로 Terraform 검증한다.
 - 2026-08-12: core-api 새 리비전이 `PROVISIONING`에 머물러 배포 작업이 제한 시간을 넘겼다.
   원인: API, Worker, Redis가 `t3.small` 3대를 사용한 상태에서 API 롤링 교체용 네 번째 인스턴스가
   필요했지만 ASG `max_size`가 3이었다. 재발 방지: dev ASG 최대 크기를 4로 두고 정적 검사로
