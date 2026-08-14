@@ -233,18 +233,32 @@ class RoomApplicationManagerIT(
         seedHost()
         val applicationId = seedPendingApplication()
 
-        val decision = roomApplicationManager.reject(roomId, applicationId, hostId, "이번 방향과 맞지 않아요.")
+        val decision = roomApplicationManager.reject(roomId, applicationId, hostId, RejectReason.ROLE_MISMATCH)
 
         assertThat(decision.status).isEqualTo(RoomApplicationStatus.REJECTED)
         assertThat(decision.currentParticipants).isEqualTo(1) // 방장만
         val application = roomApplicationRepository.findById(applicationId).orElseThrow()
         assertThat(application.status).isEqualTo(RoomApplicationStatus.REJECTED)
-        assertThat(application.rejectReason).isEqualTo("이번 방향과 맞지 않아요.")
+        // 라벨이 아니라 코드 name 이 그대로 저장값이다(reject_reason VARCHAR(50)).
+        assertThat(application.rejectReason).isEqualTo("ROLE_MISMATCH")
         assertThat(application.pendingMemberId).isNull()
         // 참여자는 방장 1명 그대로
         assertThat(
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED),
         ).isEqualTo(1)
+    }
+
+    @Test
+    fun `사유 없이 반려하면 사유가 저장되지 않는다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.reject(roomId, applicationId, hostId, null)
+
+        val application = roomApplicationRepository.findById(applicationId).orElseThrow()
+        assertThat(application.status).isEqualTo(RoomApplicationStatus.REJECTED)
+        assertThat(application.rejectReason).isNull()
     }
 
     private fun seedRoom(maxCapacity: Int) {
