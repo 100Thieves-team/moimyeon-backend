@@ -119,8 +119,9 @@ class RoomCreateIdempotencyIT(
         assertThat(roomRepository.findByIdInAndDeletedAtIsNull(createdRoomIds)).hasSize(2)
     }
 
-    // 중복 확인이 3개 게이트보다 뒤면 더블클릭한 방장이 자기 룸 대신 E1427 을 받는다.
+    // 중복 확인이 한도 게이트들보다 뒤면 더블클릭한 방장이 자기 룸 대신 거부를 받는다.
     // 아래 둘은 짝이다 — 하나만 두면 게이트를 통째로 지워도 초록이 된다.
+    // 거부 코드가 E1425 인 것은 슬롯 게이트가 활성 3개(E1427)보다 앞이어서다(MOI-446, RoomManager 주석).
     @Test
     fun `활성 룸이 3개인 방장이 기존 룸과 같은 요청을 보내면 그 룸을 돌려준다`() {
         val first = createRoom()
@@ -133,14 +134,14 @@ class RoomCreateIdempotencyIT(
     }
 
     @Test
-    fun `활성 룸이 3개인 방장이 새 룸을 만들려 하면 E1427 로 거부한다`() {
+    fun `활성 룸이 3개인 방장이 새 룸을 만들려 하면 E1425 로 거부한다`() {
         createRoom()
         createRoom(startAt = FIXED_NOW.plusDays(8))
         createRoom(startAt = FIXED_NOW.plusDays(9))
 
         assertThatThrownBy { createRoom(startAt = FIXED_NOW.plusDays(10)) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.ACTIVE_ROOM_LIMIT_EXCEEDED)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED)
             }
     }
 

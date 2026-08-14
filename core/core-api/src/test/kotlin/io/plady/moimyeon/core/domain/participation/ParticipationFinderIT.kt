@@ -79,6 +79,16 @@ class ParticipationFinderIT(
         assertThat(participationFinder.countOccupiedSlots(memberId)).isEqualTo(1)
     }
 
+    // 조회 API(MOI-447)가 내리는 조립값. 계산 규칙은 ParticipationSlotsTest 가 본다 —
+    // 여기는 게이트와 같은 카운트 위에서 조립되는지만 본다.
+    @Test
+    fun `참여 슬롯 현황은 점유·한도·남은 수를 함께 준다`() {
+        repeat(2) { join(persistRoom(RoomStatus.RECRUITING)) }
+
+        assertThat(participationFinder.getSlots(memberId))
+            .isEqualTo(ParticipationSlots(occupied = 2, limit = 3, remaining = 1))
+    }
+
     @Test
     fun `참여 중인 룸이 둘이면 슬롯이 남고 셋이면 남지 않는다`() {
         repeat(2) { join(persistRoom(RoomStatus.RECRUITING)) }
