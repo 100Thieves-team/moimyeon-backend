@@ -13,6 +13,9 @@ class RoomParticipantService(
 ) {
     fun getParticipatingRoomIds(memberId: UUID): List<UUID> = participationFinder.getParticipatingRoomIds(memberId)
 
+    // 참여 슬롯 여유분(MOI-447). 신청·수락·생성 게이트와 같은 판정(ParticipationSlot)을 조회로 노출한다.
+    fun getParticipationSlots(memberId: UUID): ParticipationSlots = participationFinder.getSlots(memberId)
+
     // 참여자 명부(「룸 참여」 §4.5). AI 이력서 요약과 제출 이력서 참조가 실리므로
     // 방장·참여자만 통과시킨다 - 신청자와 제3자는 §6 상 볼 수 없다.
     fun getParticipants(viewerMemberId: UUID, roomId: UUID): List<RoomParticipant> {

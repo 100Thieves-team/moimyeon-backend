@@ -11,5 +11,5 @@ class RoomApplicationService(
     fun accept(hostMemberId: UUID, roomId: UUID, applicationId: Long): ApplicationDecision = roomApplicationManager.accept(roomId, applicationId, hostMemberId)
 
     // 참가 신청 반려(§4.4). 사유는 선택이며 정원·참여자에는 영향이 없다.
-    fun reject(hostMemberId: UUID, roomId: UUID, applicationId: Long, reason: String?): ApplicationDecision = roomApplicationManager.reject(roomId, applicationId, hostMemberId, reason)
+    fun reject(hostMemberId: UUID, roomId: UUID, applicationId: Long, reason: RejectReason?): ApplicationDecision = roomApplicationManager.reject(roomId, applicationId, hostMemberId, reason)
 }

@@ -1,8 +1,10 @@
 package io.plady.moimyeon.storage.db.core
 
 import io.plady.moimyeon.core.enums.AttendanceStatus
+import jakarta.persistence.LockModeType
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.util.UUID
@@ -11,6 +13,9 @@ interface AttendanceRepository : JpaRepository<AttendanceEntity, Long> {
     fun findByRoomIdInAndDeletedAtIsNull(roomIds: Collection<UUID>): List<AttendanceEntity>
 
     fun findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId: UUID, memberId: UUID): AttendanceEntity?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findForUpdateByRoomIdAndMemberIdAndDeletedAtIsNull(roomId: UUID, memberId: UUID): AttendanceEntity?
 
     fun findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId: UUID): List<AttendanceEntity>
 

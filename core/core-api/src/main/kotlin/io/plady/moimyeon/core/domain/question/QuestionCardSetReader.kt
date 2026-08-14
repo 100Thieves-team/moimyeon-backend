@@ -40,6 +40,13 @@ class QuestionCardSetReader(
         return toCardSet(targetMemberId, questions)
     }
 
+    @Transactional(readOnly = true)
+    fun countPreparers(roomId: UUID, targetMemberId: UUID): Int {
+        return questionRepository
+            .countDistinctAuthorsByRoomIdAndTargetMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
+            .toInt()
+    }
+
     private fun toCardSet(targetMemberId: UUID, questions: List<QuestionEntity>): QuestionCardSet {
         val followUpsByParentId = questions
             .filter { it.parentQuestionId != null }

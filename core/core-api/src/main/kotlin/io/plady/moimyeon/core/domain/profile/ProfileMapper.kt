@@ -11,8 +11,6 @@ object ProfileMapper {
     ): MemberProfile = MemberProfile(
         memberId = entity.memberId,
         bio = entity.bio,
-        meetingPreference = entity.meetingPreference,
-        sigunguId = entity.sigunguId,
         interestJobRoleIds = interestJobRoleIds,
         interestCompanyIds = interestCompanyIds,
     )
@@ -21,7 +19,5 @@ object ProfileMapper {
         id = UUID.randomUUID(),
         memberId = memberId,
         bio = content.bio,
-        meetingPreference = content.meetingPreference,
-        sigunguId = content.sigunguId,
     )
 }

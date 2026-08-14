@@ -95,6 +95,7 @@
 DROP TABLE IF EXISTS chat_message;
 DROP TABLE IF EXISTS outbox;
 DROP TABLE IF EXISTS chat_room;
+DROP TABLE IF EXISTS review_skip;
 DROP TABLE IF EXISTS review_tag;
 DROP TABLE IF EXISTS review;
 DROP TABLE IF EXISTS attendance;
@@ -354,14 +355,12 @@ CREATE INDEX ix_web_push_subscription_member_id ON web_push_subscription (member
 -- 직무 단일 참조(job_role_id) 컬럼은 두지 않는다 — 관심 직무는 다건이라
 --   member_profile_interest_job_role 로 뺐다.
 CREATE TABLE member_profile (
-    id                 BINARY(16)   NOT NULL,
-    member_id          BINARY(16)   NOT NULL,
-    bio                VARCHAR(500) NOT NULL DEFAULT '',
-    meeting_preference VARCHAR(20)  NOT NULL DEFAULT 'UNSPECIFIED',
-    sigungu_id         BIGINT       NULL,
-    created_at         DATETIME(6)  NOT NULL,
-    updated_at         DATETIME(6)  NOT NULL,
-    deleted_at         DATETIME(6)  NULL,
+    id         BINARY(16)   NOT NULL,
+    member_id  BINARY(16)   NOT NULL,
+    bio        VARCHAR(500) NOT NULL DEFAULT '',
+    created_at DATETIME(6)  NOT NULL,
+    updated_at DATETIME(6)  NOT NULL,
+    deleted_at DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_profile_member UNIQUE (member_id)
 );
@@ -669,22 +668,26 @@ CREATE TABLE round_assignment (
 CREATE INDEX ix_round_assignment_member_id ON round_assignment (member_id);
 
 -- 구두 피드백 단계의 산출물. 면접관·관찰자의 최종 피드백과 면접자의 자가 피드백을 유형으로 구분한다.
--- 대상 면접자를 따로 갖지 않는다 — 라운드가 면접자를 가지므로 파생된다.
--- 베이스 상속: 작성자별 1건이라 수정은 UPDATE 이고, 삭제는 소프트로 남긴다.
+-- 현재 진행 라운드는 별도 엔티티가 아니라 (룸, 면접자)로 식별하므로 피드백도 같은 키를 직접 가진다.
+-- 베이스 상속: 작성자별 1건이다. 최종 피드백은 최초 등록만 허용하고 중복 등록을 거부한다.
+--   자가 피드백은 같은 행의 본문을 수정할 수 있다. 삭제는 소프트로 남긴다.
+-- disclosed_at 은 면접자가 최종 피드백 카드 하나를 열람 확인한 최초 시각이다. 재확인은 멱등이다.
+--   룸 종료는 질문 메모 공개 조건일 뿐 이 가림막을 해제하지 않는다.
 --   피드백은 신고 대상이 되는 텍스트라 운영이 내렸다가 되돌리는 경로가 필요하다.
---   라운드가 지워질 때 여기도 같은 시각으로 함께 소프트 삭제한다 — 무엇이 있었는지가 분쟁의 핵심이다.
 CREATE TABLE round_feedback (
-    id                 BIGINT      NOT NULL AUTO_INCREMENT,
-    interview_round_id BIGINT      NOT NULL,
-    author_member_id   BINARY(16)  NOT NULL,
-    feedback_type      VARCHAR(20) NOT NULL,
-    content            TEXT        NOT NULL,
-    created_at         DATETIME(6) NOT NULL,
-    updated_at         DATETIME(6) NOT NULL,
-    deleted_at         DATETIME(6) NULL,
+    id                    BIGINT      NOT NULL AUTO_INCREMENT,
+    room_id               BINARY(16)  NOT NULL,
+    interviewee_member_id BINARY(16)  NOT NULL,
+    author_member_id      BINARY(16)  NOT NULL,
+    feedback_type         VARCHAR(20) NOT NULL,
+    content               TEXT        NOT NULL,
+    disclosed_at          DATETIME(6) NULL,
+    created_at            DATETIME(6) NOT NULL,
+    updated_at            DATETIME(6) NOT NULL,
+    deleted_at            DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_round_feedback_round_author_active UNIQUE (interview_round_id, author_member_id, _active_check)
+    CONSTRAINT uk_round_feedback_round_author_active UNIQUE (room_id, interviewee_member_id, author_member_id, _active_check)
 );
 
 -- 질문은 라운드가 아니라 (룸, 대상 면접자)에 매단다.
@@ -744,36 +747,29 @@ CREATE TABLE question_comment (
 );
 CREATE INDEX ix_question_comment_question_id ON question_comment (question_id);
 
--- 클로징의 질문 평가(기억에 남아요 / 아쉬워요).
--- 베이스 상속: 유니크가 (질문, 투표자)라 취소 후 재투표 때 지워진 행이 자리를 막는데,
---   _active_check 가 그 충돌을 없앤다. 취소된 표가 남아 있어야 어뷰징 조사에 답할 수 있다.
-CREATE TABLE question_vote (
-    id              BIGINT      NOT NULL AUTO_INCREMENT,
-    question_id     BIGINT      NOT NULL,
-    voter_member_id BINARY(16)  NOT NULL,
-    vote            VARCHAR(20) NOT NULL,
-    created_at      DATETIME(6) NOT NULL,
-    updated_at      DATETIME(6) NOT NULL,
-    deleted_at      DATETIME(6) NULL,
-    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
-    PRIMARY KEY (id),
-    CONSTRAINT uk_question_vote_question_voter_active UNIQUE (question_id, voter_member_id, _active_check)
-);
-
--- 클로징의 시간 배분 체감(짧았어요 / 적당했어요 / 길었어요). 집계로만 품질 루프에 쓴다.
--- 베이스 상속: 제출하면 끝이지만, 집계에서 빼야 할 응답이 나오면(중복 계정·테스트 데이터)
---   지운 뒤에도 무엇을 뺐는지 남아야 지표를 다시 설명할 수 있다.
+-- 참여자별 클로징 제출. created_at 을 제출 시각으로 사용한다.
 CREATE TABLE closing_response (
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     room_id    BINARY(16)  NOT NULL,
     member_id  BINARY(16)  NOT NULL,
-    pacing     VARCHAR(20) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
     deleted_at DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
     CONSTRAINT uk_closing_response_room_member_active UNIQUE (room_id, member_id, _active_check)
+);
+
+-- 클로징 제출에 종속된 원 질문 평가. 참여자와 유효 여부는 부모 closing_response 가 소유한다.
+CREATE TABLE question_vote (
+    id                  BIGINT      NOT NULL AUTO_INCREMENT,
+    closing_response_id BIGINT      NOT NULL,
+    question_id         BIGINT      NOT NULL,
+    vote                VARCHAR(20) NOT NULL,
+    created_at          DATETIME(6) NOT NULL,
+    updated_at          DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_question_vote_closing_response_question UNIQUE (closing_response_id, question_id)
 );
 
 -- 출석 기록. 진행 시작 시 확정 참여자별 출석·불참 선택을 한 번 저장하며 일반 사용자는 수정하지 않는다.
@@ -802,10 +798,11 @@ CREATE INDEX ix_attendance_member_id ON attendance (member_id);
 
 -- 참여자 상호 평가. 신뢰 정보(완료 횟수·출석률·평균 별점 등)는 별도 테이블 없이
 -- attendance 와 review 의 집계로 만든다 — 원천이 작아 조회 시점 집계로 충분하다.
--- visible_at = 제출 + 3시간. 그 전까지 수정·삭제 가능하고 그 후 통계에 반영된다.
+-- visible_at = 제출 + 3시간. 그 전까지 수정·삭제 가능하고 그 뒤 대상자 노출 기준이 된다.
+-- 실제 노출은 처리 주기에 따라 몇 분 늦을 수 있다.
 -- 작성자 ≠ 대상자는 애플리케이션이 검증한다.
 -- hidden_at: 신고 처리로 운영이 가린 시각(reported_at 과 짝). 작성자에게는 계속 보인다.
--- 베이스 상속: 「유저 후기」 4.6 의 "3시간 직전까지 수정·삭제 허용" 을 소프트 삭제로 구현한다.
+-- 베이스 상속: 「유저 후기」 4.3 의 "제출 후 3시간 동안 수정·삭제 허용" 을 소프트 삭제로 구현한다.
 --   숨김과 삭제는 행위자도 효과도 다르므로 두 컬럼이 공존한다 —
 --   hidden_at 은 운영이 남에게만 가리는 것이고, deleted_at 은 작성자가 통째로 거두는 것이다.
 --   유니크에 _active_check 가 붙어 있어 삭제 후 재작성은 새 행으로 들어간다.
@@ -814,7 +811,8 @@ CREATE TABLE review (
     room_id          BINARY(16) NOT NULL,
     author_member_id BINARY(16) NOT NULL,
     target_member_id BINARY(16) NOT NULL,
-    rating           SMALLINT   NOT NULL,
+    -- rolling deployment 호환용 레거시 컬럼. 구 core-api 태스크 종료 후 별도 contract migration으로 제거한다.
+    rating           SMALLINT   NOT NULL DEFAULT 0,
     content          TEXT       NULL,
     meet_again       BOOLEAN    NULL,
     visible_at       DATETIME(6) NOT NULL,
@@ -839,6 +837,19 @@ CREATE TABLE review_tag (
     review_id BIGINT      NOT NULL,
     tag       VARCHAR(40) NOT NULL,
     CONSTRAINT uk_review_tag UNIQUE (review_id, tag)
+);
+
+-- 대상별 건너뛰기 퍼널 기록. 건너뛰기는 후기 작성 자격을 소모하는 상태가 아니므로
+-- review 와 연결하거나 삭제하지 않는다. 같은 대상의 반복 동작은 첫 기록 하나로 멱등 처리한다.
+-- 사용자 수정·삭제 대상이 아닌 append-only 사실이라 표준 소프트 삭제 베이스를 쓰지 않는다.
+CREATE TABLE review_skip (
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    room_id          BINARY(16)  NOT NULL,
+    author_member_id BINARY(16)  NOT NULL,
+    target_member_id BINARY(16)  NOT NULL,
+    created_at       DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_review_skip_room_author_target UNIQUE (room_id, author_member_id, target_member_id)
 );
 
 -- ── 채팅 ────────────────────────────────────────────────────────────────

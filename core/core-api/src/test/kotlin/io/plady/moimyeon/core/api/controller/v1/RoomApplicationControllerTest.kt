@@ -69,7 +69,8 @@ class RoomApplicationControllerTest : RestDocsTest() {
             "SLOT_EXCEEDED 로 정리한다. 방장의 요청은 실패하지 않으므로 200 이며, 결과는 status 로 구분한다."
     private val rejectSummary = "참가 신청 반려"
     private val rejectDescription =
-        "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택(최대 50자)이며, 반려는 정원·참여자 목록에 영향이 없다. " +
+        "방장이 대기 중인 신청을 반려한다(§4.4). 사유는 선택이며 GET /v1/rooms/reject-reasons 가 내려주는 코드 중 하나다. " +
+            "null 또는 본문 생략은 사유 없음이고, 목록에 없는 코드는 E400 이다. 반려는 정원·참여자 목록에 영향이 없다. " +
             "반려된 사용자는 같은 룸에 재신청할 수 없다. 방장만 처리할 수 있다(E1406)."
     private val submitSummary = "참가 신청 제출"
     private val submitDescription =
@@ -83,6 +84,10 @@ class RoomApplicationControllerTest : RestDocsTest() {
     private val withdrawSummary = "참가 신청 철회"
     private val withdrawDescription =
         "로그인 회원이 방장 처리 전 PENDING 신청을 철회한다. 신청이 없으면 E1408, 이미 처리됐으면 E1409를 반환한다."
+    private val rejectReasonsSummary = "반려 사유 선택지 목록"
+    private val rejectReasonsDescription =
+        "반려 모달(D·03)의 사유 선택지를 코드와 라벨로 내려준다. 라벨은 서버 소유이며 순서가 곧 화면 순서다. " +
+            "사유 없이 반려하는 선택지는 목록에 없다. 반려 요청에 null 을 보내는 것이 그 표현이다."
 
     @BeforeEach
     fun setUp() {
@@ -436,7 +441,7 @@ class RoomApplicationControllerTest : RestDocsTest() {
             currentParticipants = 1,
             maxCapacity = 6,
         )
-        val request = RejectApplicationRequest(reason = "이번 일정과 준비 방향이 맞지 않아요.")
+        val request = RejectApplicationRequest(reason = "ROLE_MISMATCH")
 
         mockMvc.perform(
             post("/v1/rooms/{roomId}/applications/{applicationId}/reject", roomId, 3001L)
@@ -455,7 +460,8 @@ class RoomApplicationControllerTest : RestDocsTest() {
                         parameterWithName("applicationId").description("반려할 신청 id"),
                     ),
                     requestFields(
-                        fieldWithPath("reason").type(JsonFieldType.STRING).optional().description("반려 사유 (선택, 최대 50자)"),
+                        fieldWithPath("reason").type(JsonFieldType.STRING).optional()
+                            .description("반려 사유 코드 (선택: ROLE_MISMATCH | CAPACITY_FILLED | DIRECTION_MISMATCH, null 은 사유 없음)"),
                     ),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
@@ -470,6 +476,47 @@ class RoomApplicationControllerTest : RestDocsTest() {
                     ),
                 ),
             )
+    }
+
+    @Test
+    fun `반려 사유 선택지 목록을 코드와 라벨로 내려준다`() {
+        val response = mockMvc.perform(get("/v1/rooms/reject-reasons"))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "rejectReasons",
+                    rejectReasonsSummary,
+                    rejectReasonsDescription,
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.reasons[].code").type(JsonFieldType.STRING)
+                            .description("반려 사유 코드 (ROLE_MISMATCH | CAPACITY_FILLED | DIRECTION_MISMATCH)"),
+                        fieldWithPath("data.reasons[].label").type(JsonFieldType.STRING).description("화면 표시 문구"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+            .andReturn().response.contentAsString
+
+        // 코드·라벨·순서까지 D·03 모달과 1:1 이다.
+        assertThat(response).contains(
+            "{\"code\":\"ROLE_MISMATCH\",\"label\":\"직무·면접 단계가 맞지 않아요\"}," +
+                "{\"code\":\"CAPACITY_FILLED\",\"label\":\"정원을 다른 분들로 채웠어요\"}," +
+                "{\"code\":\"DIRECTION_MISMATCH\",\"label\":\"설명한 준비 방향과 맞지 않아요\"}",
+        )
+    }
+
+    // #8·#9 대표 — 자유 텍스트 시절의 문장도 이제 미지의 코드다(계약 전환의 핵심 단절).
+    @Test
+    fun `미지의 반려 사유 코드로 반려하면 E400 을 반환한다`() {
+        mockMvc.perform(
+            post("/v1/rooms/{roomId}/applications/{applicationId}/reject", roomId, 3001L)
+                .principal(principal)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper().writeValueAsString(mapOf("reason" to "이번 일정과 준비 방향이 맞지 않아요."))),
+        )
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("rejectApplication-e400-unknown-reason", rejectSummary, rejectDescription, errorResponseFields()))
     }
 
     private fun myApplication(): RoomApplication {

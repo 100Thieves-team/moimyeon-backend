@@ -109,7 +109,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     PARTICIPATION_SLOT_EXCEEDED(
         HttpStatus.CONFLICT,
         ErrorCode.E1425,
-        "참여 중인 룸이 3개라 더 신청할 수 없습니다.",
+        "참여 중인 룸이 3개라 새 룸에 참여할 수 없습니다.",
         LogLevel.WARN,
     ),
 
@@ -178,6 +178,30 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
+    QUESTION_COMMENT_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1509,
+        "질문 댓글에 접근할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_EDITABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1510,
+        "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1511,
+        "질문 댓글을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    QUESTION_COMMENT_NOT_VIEWABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1512,
+        "질문 댓글을 조회할 수 없는 룸 상태입니다.",
+        LogLevel.WARN,
+    ),
 
     INVALID_WEB_PUSH_REGISTRATION(
         HttpStatus.BAD_REQUEST,
@@ -220,6 +244,105 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         HttpStatus.BAD_REQUEST,
         ErrorCode.E1706,
         "출석 대상이 확정 참여자와 일치하지 않습니다.",
+        LogLevel.WARN,
+    ),
+
+    CLOSING_SUBMISSION_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1801,
+        "출석한 참여자만 클로징을 제출할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    CLOSING_NOT_AVAILABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1802,
+        "진행 중인 룸에서만 클로징을 제출할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    CLOSING_QUESTION_MISMATCH(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E1803,
+        "평가 대상 질문이 오늘 사용한 질문과 일치하지 않습니다.",
+        LogLevel.WARN,
+    ),
+
+    ROUND_FEEDBACK_ALREADY_EXISTS(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1901,
+        "이미 최종 피드백을 등록했습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E1902,
+        "라운드 피드백에 접근할 권한이 없습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_EDITABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1903,
+        "진행 중인 룸에서만 라운드 피드백을 작성하거나 수정할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_VIEWABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1904,
+        "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
+        LogLevel.WARN,
+    ),
+    ROUND_FEEDBACK_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E1905,
+        "최종 피드백 카드를 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
+    REVIEW_NOT_AVAILABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2001,
+        "완료된 룸에서만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_AUTHOR_NOT_ATTENDED(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E2002,
+        "출석한 참여자만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_TARGET_NOT_ATTENDED(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E2003,
+        "출석한 참여자에게만 후기를 작성할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_SELF_NOT_ALLOWED(
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.E2004,
+        "자기 자신에게 후기를 작성할 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_DUPLICATED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2005,
+        "이미 후기를 작성한 참여자입니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E2006,
+        "수정하거나 삭제할 후기를 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_FORBIDDEN(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E2007,
+        "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    REVIEW_EDIT_WINDOW_CLOSED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2008,
+        "공개 기준 시각이 지난 후기는 수정하거나 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
 }

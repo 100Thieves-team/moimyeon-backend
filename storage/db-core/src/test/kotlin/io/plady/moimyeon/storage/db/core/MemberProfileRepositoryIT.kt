@@ -1,6 +1,5 @@
 package io.plady.moimyeon.storage.db.core
 
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.storage.db.CoreDbContextTest
@@ -65,8 +64,6 @@ class MemberProfileRepositoryIT(
                 id = UUID.randomUUID(),
                 memberId = memberId,
                 bio = "자기소개",
-                meetingPreference = MeetingPreference.BOTH,
-                sigunguId = null,
             ),
         )
 
@@ -76,7 +73,6 @@ class MemberProfileRepositoryIT(
         // then
         assertThat(found).isNotNull
         assertThat(found!!.bio).isEqualTo("자기소개")
-        assertThat(found.meetingPreference).isEqualTo(MeetingPreference.BOTH)
     }
 
     @Test

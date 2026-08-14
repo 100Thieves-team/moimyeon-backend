@@ -9,6 +9,8 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomParticipantResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomParticipantsResponse
 import io.plady.moimyeon.core.api.facade.RoomParticipantFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
+import io.plady.moimyeon.core.domain.participation.ParticipationSlots
+import io.plady.moimyeon.core.domain.participation.RoomParticipantService
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -27,6 +29,7 @@ import java.util.UUID
 
 class RoomParticipantControllerTest : RestDocsTest() {
     private lateinit var roomParticipantFacade: RoomParticipantFacade
+    private lateinit var roomParticipantService: RoomParticipantService
     private val roomId = "01920000-0000-7000-8000-000000000001"
     private val viewerMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { viewerMemberId.toString() }
@@ -46,14 +49,47 @@ class RoomParticipantControllerTest : RestDocsTest() {
             "실명·연락처·전달 사항은 어떤 경우에도 내려가지 않는다(§6). " +
             "방장과 참여자만 조회할 수 있고 신청자·제3자는 거부된다(E1419). 취소·종료된 룸에서도 이미 속한 사람은 계속 조회할 수 있다."
 
+    private val participationSlotsSummary = "참여 슬롯 여유분 조회"
+    private val participationSlotsDescription =
+        "내가 참여 중인 룸이 몇 개고 몇 개 더 참여할 수 있는지 돌려준다(「룸 참여」 §4.1, 방장 포함). " +
+            "활성 룸(모집 중 · 진행 확정 · 진행 중)의 참여만 세고 취소 · 완료된 룸과 처리 대기 중인 신청은 세지 않는다. " +
+            "remaining 이 0 이면 신규 신청 · 수락 · 룸 생성이 모두 409(E1425)로 거부된다. " +
+            "일정을 여러 개 골라 룸을 일괄 생성할 때의 최대 선택 수는 화면이 min(중복 생성 제한 remaining, 이 remaining) 으로 계산한다(「룸 생성」 §4.4). " +
+            "서버가 min 을 합쳐 주지 않는다: 어느 한도에 걸렸는지에 따라 안내 문구가 갈린다."
+
     @BeforeEach
     fun setUp() {
         roomParticipantFacade = mockk()
+        roomParticipantService = mockk()
         mockMvc = mockController(
-            RoomParticipantController(roomParticipantFacade),
+            RoomParticipantController(roomParticipantFacade, roomParticipantService),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
+    }
+
+    @Test
+    fun participationSlots() {
+        every { roomParticipantService.getParticipationSlots(viewerMemberId) } returns ParticipationSlots.of(2)
+
+        mockMvc.perform(get("/v1/members/me/participation-slots").principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "participationSlots",
+                    participationSlotsSummary,
+                    participationSlotsDescription,
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.occupied").type(JsonFieldType.NUMBER)
+                            .description("활성 룸에서 참여 중(JOINED)인 룸 수. 방장으로 만든 룸도 센다"),
+                        fieldWithPath("data.limit").type(JsonFieldType.NUMBER).description("허용 개수 (3)"),
+                        fieldWithPath("data.remaining").type(JsonFieldType.NUMBER)
+                            .description("더 참여할 수 있는 개수. 0 이면 신청 · 수락 · 생성이 E1425 로 거부된다. 음수가 되지 않는다"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
     }
 
     @Test

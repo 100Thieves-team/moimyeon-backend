@@ -8,9 +8,12 @@ class QuestionCardSetService(
     private val accessValidator: QuestionCardSetAccessValidator,
     private val cardSetReader: QuestionCardSetReader,
 ) {
-    fun getCardSets(requesterMemberId: UUID, roomId: UUID): List<QuestionCardSet> {
+    fun getCardSetOverview(requesterMemberId: UUID, roomId: UUID): QuestionCardSetOverview {
         accessValidator.validateViewer(roomId, requesterMemberId)
-        return cardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
+        return QuestionCardSetOverview(
+            cardSets = cardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId),
+            myCardSetPreparerCount = cardSetReader.countPreparers(roomId, requesterMemberId),
+        )
     }
 
     fun getCardSet(requesterMemberId: UUID, roomId: UUID, targetMemberId: UUID): QuestionCardSet {

@@ -22,4 +22,7 @@ object ParticipationSlot {
     )
 
     fun isAvailable(occupiedCount: Long): Boolean = occupiedCount < MAX
+
+    // 화면의 min 계산에 쓰이므로 점유가 한도를 넘어도 음수가 되지 않는다(ActiveRoomLimit.remaining 과 동형).
+    fun remaining(occupiedCount: Long): Int = (MAX - occupiedCount).coerceAtLeast(0).toInt()
 }

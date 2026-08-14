@@ -79,7 +79,7 @@ class RoomControllerTest : RestDocsTest() {
     private val formOptionsSummary = "룸 생성 폼 선택지 조회"
     private val formOptionsDescription =
         "기본 정보·진행 방식(§4.1·§4.2) 폼의 회차·유형·진행 방식·예상 시간·인원 제약 선택지를 한 번에 내려준다. " +
-            "라벨을 서버가 소유하도록 목으로 제공한다."
+            "선택지와 라벨은 서버 enum·상수에서 파생되므로 생성 요청이 받는 값과 항상 일치한다."
     private val creationLimitSummary = "중복 생성 제한 조회"
     private val creationLimitDescription =
         "같은 회사·공고·직무로 내가 이미 만든 활성 룸이 몇 개인지 돌려준다(「룸 생성」 §4.7). 생성 화면이 경고를 띄울지 판단하는 데 쓴다. " +
@@ -418,6 +418,8 @@ class RoomControllerTest : RestDocsTest() {
     fun formOptions() {
         mockMvc.perform(get("/v1/rooms/form-options"))
             .andExpect(status().isOk)
+            // 회차는 enum 파생이다. 목 시절의 FINAL 이 다시 나가면 생성 요청에서 400 이 난다(MOI-452).
+            .andExpect { assertThat(it.response.contentAsString).contains("\"ETC\"").doesNotContain("\"FINAL\"") }
             .andDo(
                 documentApi(
                     "roomFormOptions",

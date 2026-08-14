@@ -27,6 +27,33 @@ class QuestionRecorder(
         if (parentQuestionId != null) {
             validateParent(roomId, targetMemberId, parentQuestionId)
         }
+        return save(roomId, targetMemberId, authorMemberId, parentQuestionId, content, source)
+    }
+
+    @Transactional
+    fun recordFollowUp(
+        roomId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long,
+        content: String,
+        source: QuestionSource,
+    ): Long {
+        val parent = getOriginalQuestionForUpdate(roomId, parentQuestionId)
+        requireBusiness(
+            parent.targetMemberId != authorMemberId,
+            CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,
+        )
+        return save(roomId, parent.targetMemberId, authorMemberId, parentQuestionId, content, source)
+    }
+
+    private fun save(
+        roomId: UUID,
+        targetMemberId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long?,
+        content: String,
+        source: QuestionSource,
+    ): Long {
         return questionRepository.save(
             QuestionEntity(
                 roomId = roomId,
@@ -71,15 +98,22 @@ class QuestionRecorder(
     }
 
     private fun validateParent(roomId: UUID, targetMemberId: UUID, parentQuestionId: Long) {
-        val parent = requireFound(
-            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, parentQuestionId),
+        val parent = getOriginalQuestionForUpdate(roomId, parentQuestionId)
+        requireBusiness(
+            parent.targetMemberId == targetMemberId,
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+    }
+
+    private fun getOriginalQuestionForUpdate(roomId: UUID, questionId: Long): QuestionEntity {
+        val question = requireFound(
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, questionId),
             CoreErrorType.QUESTION_NOT_FOUND,
         )
         requireBusiness(
-            parent.roomId == roomId &&
-                parent.targetMemberId == targetMemberId &&
-                parent.parentQuestionId == null,
+            question.parentQuestionId == null,
             CoreErrorType.QUESTION_NOT_FOUND,
         )
+        return question
     }
 }

@@ -64,11 +64,10 @@ class QuestionPreparationServiceTest {
     @Test
     fun `준비 단계에서 원 질문에 꼬리질문을 남기면 준비 출처로 저장한다`() {
         val parentQuestionId = 1L
-        givenQuestionCanBePrepared()
+        justRun { accessValidator.validateAuthor(roomId, authorMemberId) }
         every {
-            questionRecorder.record(
+            questionRecorder.recordFollowUp(
                 roomId,
-                targetMemberId,
                 authorMemberId,
                 parentQuestionId,
                 followUpContent,
@@ -79,7 +78,6 @@ class QuestionPreparationServiceTest {
         val followUpQuestionId = service.leaveFollowUp(
             authorMemberId,
             roomId,
-            targetMemberId,
             parentQuestionId,
             followUpContent,
         )
@@ -87,10 +85,8 @@ class QuestionPreparationServiceTest {
         assertThat(followUpQuestionId).isEqualTo(2L)
         verifyOrder {
             accessValidator.validateAuthor(roomId, authorMemberId)
-            accessValidator.validateTarget(roomId, authorMemberId, targetMemberId)
-            questionRecorder.record(
+            questionRecorder.recordFollowUp(
                 roomId,
-                targetMemberId,
                 authorMemberId,
                 parentQuestionId,
                 followUpContent,
@@ -142,13 +138,12 @@ class QuestionPreparationServiceTest {
     }
 
     @Test
-    fun `다른 룸이나 다른 대상의 원 질문에는 꼬리질문을 저장하지 않고 E1507 을 던진다`() {
+    fun `다른 룸의 원 질문에는 꼬리질문을 저장하지 않고 E1507 을 던진다`() {
         val parentQuestionId = 1L
-        givenQuestionCanBePrepared()
+        justRun { accessValidator.validateAuthor(roomId, authorMemberId) }
         every {
-            questionRecorder.record(
+            questionRecorder.recordFollowUp(
                 roomId,
-                targetMemberId,
                 authorMemberId,
                 parentQuestionId,
                 followUpContent,
@@ -160,7 +155,6 @@ class QuestionPreparationServiceTest {
             service.leaveFollowUp(
                 authorMemberId,
                 roomId,
-                targetMemberId,
                 parentQuestionId,
                 followUpContent,
             )

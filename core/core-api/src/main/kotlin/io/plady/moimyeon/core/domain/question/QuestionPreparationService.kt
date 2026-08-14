@@ -34,15 +34,12 @@ class QuestionPreparationService(
     fun leaveFollowUp(
         authorMemberId: UUID,
         roomId: UUID,
-        targetMemberId: UUID,
         parentQuestionId: Long,
         content: String,
     ): Long {
         accessValidator.validateAuthor(roomId, authorMemberId)
-        accessValidator.validateTarget(roomId, authorMemberId, targetMemberId)
-        return questionRecorder.record(
+        return questionRecorder.recordFollowUp(
             roomId,
-            targetMemberId,
             authorMemberId,
             parentQuestionId,
             content,

@@ -9,7 +9,6 @@ import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTagRespons
 import io.plady.moimyeon.core.api.controller.v1.response.PublicProfileTrustResponse
 import io.plady.moimyeon.core.api.facade.PublicProfileFacade
 import io.plady.moimyeon.core.enums.AttendanceStatus
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -34,8 +33,8 @@ class PublicProfileControllerTest : RestDocsTest() {
     private val publicProfileSummary = "공개 프로필 조회"
     private val publicProfileDescription =
         "인증 없이 다른 사용자의 공개 프로필과 신뢰 지표를 조회한다. " +
-            "닉네임·관심 직무·자기소개·진행 방식 선호만 프로필 정보로 노출하며, " +
-            "관심 회사·지역·이메일·OAuth 식별자·약관 동의 이력은 담지 않는다. " +
+            "닉네임·관심 직무·자기소개만 프로필 정보로 노출하며, " +
+            "관심 회사·이메일·OAuth 식별자·약관 동의 이력은 담지 않는다. " +
             "존재하지 않거나 탈퇴한 회원, 필수 프로필이 없는 회원은 404(E1006), " +
             "잘못된 UUID는 400(E400)으로 응답한다."
 
@@ -64,7 +63,6 @@ class PublicProfileControllerTest : RestDocsTest() {
                             "{\"jobRoleId\":2,\"code\":\"FRONTEND_DEVELOPER\",\"displayName\":\"프론트엔드 개발자\"}]",
                     )
                     .contains("\"bio\":\"자기소개\"")
-                    .contains("\"meetingPreference\":\"BOTH\"")
                     .contains("\"activityTopPercent\":12")
                     .contains("\"recentAttendances\":[\"ATTENDED\",\"ABSENT\",\"ATTENDED\"]")
                     .contains("\"noShowCount\":2")
@@ -76,6 +74,7 @@ class PublicProfileControllerTest : RestDocsTest() {
                     .doesNotContain("\"attendanceRate\"")
                     .doesNotContain("\"averageRating\"")
                     .doesNotContain("\"interestCompanies\"")
+                    .doesNotContain("\"meetingPreference\"")
                     .doesNotContain("\"sigunguId\"")
                     .doesNotContain("\"email\"")
                     .doesNotContain("\"socialAccounts\"")
@@ -182,7 +181,6 @@ class PublicProfileControllerTest : RestDocsTest() {
                 JobRoleResponse(2L, "FRONTEND_DEVELOPER", "프론트엔드 개발자"),
             ),
             bio = "자기소개",
-            meetingPreference = MeetingPreference.BOTH,
             trust = trust,
         )
     }
@@ -200,8 +198,6 @@ class PublicProfileControllerTest : RestDocsTest() {
         fieldWithPath("data.interestJobRoles[].code").type(JsonFieldType.STRING).description("관심 직무 코드"),
         fieldWithPath("data.interestJobRoles[].displayName").type(JsonFieldType.STRING).description("관심 직무 표시명"),
         fieldWithPath("data.bio").type(JsonFieldType.STRING).description("자기소개 (미지정이면 빈 문자열)"),
-        fieldWithPath("data.meetingPreference").type(JsonFieldType.STRING)
-            .description("진행 방식 선호 (UNSPECIFIED | ONLINE | OFFLINE | BOTH)"),
         fieldWithPath("data.trust").type(JsonFieldType.OBJECT).description("신뢰 지표 (활동 이력이 없어도 항상 반환)"),
         fieldWithPath("data.trust.activityTopPercent").type(JsonFieldType.NUMBER).optional()
             .description("활동률 상위 퍼센트 (출석한 완료 룸이 없으면 null)"),

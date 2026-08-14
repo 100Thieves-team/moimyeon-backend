@@ -129,6 +129,20 @@ class QuestionCardSetReaderTest {
         assertThat(result.questions).isEmpty()
     }
 
+    @Test
+    fun `본인 카드셋은 내용을 열지 않고 질문을 준비한 작성자 수만 조회한다`() {
+        every {
+            questionRepository.countDistinctAuthorsByRoomIdAndTargetMemberIdAndDeletedAtIsNull(
+                roomId,
+                requesterMemberId,
+            )
+        } returns 2L
+
+        val result = reader.countPreparers(roomId, requesterMemberId)
+
+        assertThat(result).isEqualTo(2)
+    }
+
     private fun question(
         id: Long,
         targetMemberId: UUID,

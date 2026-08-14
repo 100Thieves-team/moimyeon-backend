@@ -36,7 +36,7 @@ class CatalogRefValidatorTest {
     }
 
     @Test
-    fun `유효한 시군구를 선호 지역으로 선택할 수 있다`() {
+    fun `유효한 시군구 참조를 검증할 수 있다`() {
         every { sigunguRepository.existsByIdAndDeletedAtIsNull(1L) } returns true
 
         validator.validateSigungu(1L)

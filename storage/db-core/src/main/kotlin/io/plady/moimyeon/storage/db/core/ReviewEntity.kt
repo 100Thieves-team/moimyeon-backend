@@ -29,18 +29,25 @@ class ReviewEntity(
     val authorMemberId: UUID,
     @JdbcTypeCode(SqlTypes.BINARY)
     val targetMemberId: UUID,
-    val rating: Short,
-    val content: String? = null,
-    val meetAgain: Boolean? = null,
+    content: String? = null,
     val visibleAt: LocalDateTime,
     val hiddenAt: LocalDateTime? = null,
     val reportedAt: LocalDateTime? = null,
     tags: Collection<String> = emptyList(),
 ) : BaseEntity() {
+    final var content: String? = content
+        private set
+
     @ElementCollection
     @CollectionTable(name = "review_tag", joinColumns = [JoinColumn(name = "review_id")])
     @Column(name = "tag")
     private val tags: MutableSet<String> = tags.toMutableSet()
 
     fun tags(): Set<String> = tags.toSet()
+
+    fun update(tags: Collection<String>, content: String?) {
+        this.tags.clear()
+        this.tags.addAll(tags)
+        this.content = content
+    }
 }

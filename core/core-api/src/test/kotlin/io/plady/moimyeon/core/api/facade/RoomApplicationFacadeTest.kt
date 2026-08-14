@@ -14,7 +14,6 @@ import io.plady.moimyeon.core.domain.roomapplication.ApplicationApplicant
 import io.plady.moimyeon.core.domain.roomapplication.ApplicationResumeSummary
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationDetails
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionService
-import io.plady.moimyeon.core.enums.MeetingPreference
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -100,8 +99,6 @@ class RoomApplicationFacadeTest {
         return MemberProfile(
             memberId = applicantMemberId,
             bio = "",
-            meetingPreference = MeetingPreference.UNSPECIFIED,
-            sigunguId = null,
             interestJobRoleIds = jobRoleIds,
             interestCompanyIds = emptyList(),
         )
