@@ -37,6 +37,7 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = setOf("시간을 잘 지켜요"),
             content = "시간 약속을 잘 지켜주셨어요.",
+            anonymous = false,
         )
         val command = ReviewSubmissionCommand(
             roomId = roomId,
@@ -44,6 +45,7 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = content.tags,
             content = content.content,
+            anonymous = content.anonymous,
         )
         every { submissionManager.submit(command) } returns 1L
 
@@ -62,6 +64,7 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = tags.toSet(),
             content = "꼬리질문이 날카로워서 실전처럼 연습할 수 있었어요.",
+            anonymous = true,
         )
         every { submissionManager.submit(command) } returns 1L
 
@@ -170,7 +173,7 @@ class ReviewServiceTest {
     }
 
     @Test
-    fun `받은 후기에서는 작성자와 룸 이름 및 일자를 알 수 없다`() {
+    fun `받은 후기는 작성자 표시 조립에 필요한 작성자와 익명 여부를 유지한다`() {
         val review = receivedReview()
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
@@ -179,6 +182,8 @@ class ReviewServiceTest {
         assertThat(result).isEqualTo(
             ReceivedReview(
                 id = 1L,
+                authorMemberId = authorMemberId,
+                anonymous = true,
                 tags = setOf("피드백이 구체적이에요"),
                 content = "안정적으로 진행해주셨어요.",
             ),
@@ -377,6 +382,7 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = emptySet(),
             content = null,
+            anonymous = true,
         )
     }
 
@@ -400,6 +406,8 @@ class ReviewServiceTest {
     private fun receivedReview(): ReceivedReview {
         return ReceivedReview(
             id = 1L,
+            authorMemberId = authorMemberId,
+            anonymous = true,
             tags = setOf("피드백이 구체적이에요"),
             content = "안정적으로 진행해주셨어요.",
         )

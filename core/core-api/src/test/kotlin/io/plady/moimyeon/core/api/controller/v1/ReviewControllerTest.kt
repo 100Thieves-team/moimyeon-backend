@@ -6,12 +6,12 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
 import io.plady.moimyeon.core.api.facade.ReviewFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
-import io.plady.moimyeon.core.domain.trust.ReceivedReview
-import io.plady.moimyeon.core.domain.trust.ReceivedReviewPage
 import io.plady.moimyeon.core.domain.trust.ReviewService
 import io.plady.moimyeon.core.domain.trust.ReviewSkipContent
 import io.plady.moimyeon.core.domain.trust.ReviewSubmissionContent
@@ -54,7 +54,7 @@ class ReviewControllerTest : RestDocsTest() {
             "미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002로 응답한다."
     private val submitSummary = "후기 제출"
     private val submitDescription =
-        "완료 룸의 출석자가 다른 출석자에게 선택 태그와 선택 텍스트 후기를 제출한다. " +
+        "완료 룸의 출석자가 다른 출석자에게 익명 여부, 선택 태그와 선택 텍스트 후기를 제출한다. " +
             "잘못된 태그 E400, 미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002, 대상 결석 E2003, " +
             "본인 대상 E2004, 중복 제출 E2005로 응답한다."
     private val updateSummary = "후기 수정"
@@ -71,7 +71,8 @@ class ReviewControllerTest : RestDocsTest() {
             "미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002, 대상 결석 E2003, 본인 대상 E2004로 응답한다."
     private val receivedSummary = "내가 받은 후기 조회"
     private val receivedDescription =
-        "공개 기준 시각이 지난 받은 후기만 마지막 후기 id 기반으로 조회한다. 작성자와 룸 이름 및 일자는 응답하지 않는다. " +
+        "공개 기준 시각이 지난 받은 후기만 마지막 후기 id 기반으로 조회한다. " +
+            "익명 후기는 익명의 참여자, 공개 후기는 작성자 닉네임을 표시하며 룸 이름과 일자는 응답하지 않는다. " +
             "양수가 아닌 마지막 후기 id E400, 미인증 E1102로 응답한다."
 
     @BeforeEach
@@ -124,7 +125,7 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `선택한 참여자에게 태그와 한 줄 후기를 제출한다`() {
+    fun `닉네임 공개 여부를 선택해 참여자에게 태그와 한 줄 후기를 제출한다`() {
         val content = ReviewSubmissionContent(
             targetMemberId = writableTargetId,
             tags = setOf(
@@ -135,6 +136,7 @@ class ReviewControllerTest : RestDocsTest() {
                 "소통이 원활해요",
             ),
             content = "꼬리질문이 날카로워서 실전 같았어요.",
+            anonymous = false,
         )
         every { reviewService.submit(memberId, roomId, content) } returns 31L
 
@@ -154,6 +156,7 @@ class ReviewControllerTest : RestDocsTest() {
                                 "소통이 원활해요",
                             ),
                             "content" to "꼬리질문이 날카로워서 실전 같았어요.",
+                            "anonymous" to false,
                         ),
                     ),
                 ),
@@ -173,6 +176,9 @@ class ReviewControllerTest : RestDocsTest() {
                                     "피드백이 구체적이에요 | 소통이 원활해요, 선택, 빈 배열 허용)",
                             ),
                         fieldWithPath("content").type(JsonFieldType.STRING).optional().description("한 줄 후기 (선택)"),
+                        fieldWithPath("anonymous").type(JsonFieldType.BOOLEAN)
+                            .optional()
+                            .description("익명 작성 여부. true이면 익명의 참여자로 표시하며, 생략하면 true"),
                     ),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
@@ -186,11 +192,12 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `평가 태그와 텍스트 없이도 후기를 제출한다`() {
+    fun `익명 여부를 생략하면 기존처럼 익명으로 후기를 제출한다`() {
         val content = ReviewSubmissionContent(
             targetMemberId = writableTargetId,
             tags = emptySet(),
             content = null,
+            anonymous = true,
         )
         every { reviewService.submit(memberId, roomId, content) } returns 32L
 
@@ -287,12 +294,13 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `받은 후기는 작성자와 룸을 식별할 필드 없이 조회한다`() {
-        every { reviewService.getReceivedReviewPage(memberId, null, 20) } returns ReceivedReviewPage(
+    fun `받은 후기는 익명 여부에 따른 작성자 표시명과 함께 조회한다`() {
+        every { reviewFacade.getReceivedReviews(memberId, null, 20) } returns ReceivedReviewsResponse(
             reviews = listOf(
-                ReceivedReview(
-                    id = 31L,
-                    tags = setOf("피드백이 구체적이에요", "시간을 잘 지켜요"),
+                ReceivedReviewResponse(
+                    reviewId = 31L,
+                    authorNickname = "익명의 참여자",
+                    tags = listOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
                     content = "덕분에 약점을 정확히 알았어요.",
                 ),
             ),
@@ -321,16 +329,17 @@ class ReviewControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 1) { reviewService.getReceivedReviewPage(memberId, null, 20) }
+        verify(exactly = 1) { reviewFacade.getReceivedReviews(memberId, null, 20) }
     }
 
     @Test
     fun `범위 밖의 받은 후기 페이지 크기는 기본값으로 조회한다`() {
-        every { reviewService.getReceivedReviewPage(memberId, 31L, 20) } returns ReceivedReviewPage(
+        every { reviewFacade.getReceivedReviews(memberId, 31L, 20) } returns ReceivedReviewsResponse(
             reviews = listOf(
-                ReceivedReview(
-                    id = 31L,
-                    tags = setOf("시간을 잘 지켜요"),
+                ReceivedReviewResponse(
+                    reviewId = 31L,
+                    authorNickname = "꼼꼼한 여우 12",
+                    tags = listOf("시간을 잘 지켜요"),
                     content = null,
                 ),
             ),
@@ -360,7 +369,7 @@ class ReviewControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 1) { reviewService.getReceivedReviewPage(memberId, 31L, 20) }
+        verify(exactly = 1) { reviewFacade.getReceivedReviews(memberId, 31L, 20) }
     }
 
     @Test
@@ -383,7 +392,7 @@ class ReviewControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 0) { reviewService.getReceivedReviewPage(any(), any(), any()) }
+        verify(exactly = 0) { reviewFacade.getReceivedReviews(any(), any(), any()) }
     }
 
     @Test
@@ -532,7 +541,7 @@ class ReviewControllerTest : RestDocsTest() {
             CoreErrorType.REVIEW_SELF_NOT_ALLOWED,
             CoreErrorType.REVIEW_DUPLICATED,
         ).forEach { errorType ->
-            val content = ReviewSubmissionContent(writableTargetId, emptySet(), null)
+            val content = ReviewSubmissionContent(writableTargetId, emptySet(), null, anonymous = true)
             every { reviewService.submit(memberId, roomId, content) } throws CoreException(errorType)
 
             mockMvc.perform(
@@ -680,8 +689,10 @@ class ReviewControllerTest : RestDocsTest() {
     private fun receivedReviewResponseFields() = responseFields(
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
         fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("공개 가능한 받은 후기 전체 수"),
-        fieldWithPath("data.reviews").type(JsonFieldType.ARRAY).description("현재 페이지의 익명 받은 후기"),
+        fieldWithPath("data.reviews").type(JsonFieldType.ARRAY).description("현재 페이지의 받은 후기"),
         fieldWithPath("data.reviews[].reviewId").type(JsonFieldType.NUMBER).description("후기 id"),
+        fieldWithPath("data.reviews[].authorNickname").type(JsonFieldType.STRING)
+            .description("작성자 표시명. 익명이면 익명의 참여자, 공개이면 현재 닉네임"),
         fieldWithPath("data.reviews[].tags").type(JsonFieldType.ARRAY).description("평가 태그"),
         fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING).optional().description("한 줄 후기"),
         fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부"),

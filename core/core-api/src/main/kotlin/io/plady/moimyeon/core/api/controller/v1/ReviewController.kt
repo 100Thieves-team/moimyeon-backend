@@ -82,12 +82,10 @@ class ReviewController(
         request: ReceivedReviewsRequest,
     ): ApiResponse<ReceivedReviewsResponse> {
         return ApiResponse.success(
-            ReceivedReviewsResponse.from(
-                reviewService.getReceivedReviewPage(
-                    currentMember.id,
-                    request.toLastReviewId(),
-                    request.toSize(),
-                ),
+            reviewFacade.getReceivedReviews(
+                currentMember.id,
+                request.toLastReviewId(),
+                request.toSize(),
             ),
         )
     }

@@ -6,4 +6,5 @@ data class ReviewSubmissionContent(
     val targetMemberId: UUID,
     val tags: Set<String>,
     val content: String?,
+    val anonymous: Boolean,
 )

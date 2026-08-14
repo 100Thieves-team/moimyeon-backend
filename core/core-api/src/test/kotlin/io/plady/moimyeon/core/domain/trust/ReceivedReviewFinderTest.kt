@@ -19,6 +19,7 @@ class ReceivedReviewFinderTest {
     private val clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneOffset.UTC)
     private val finder = ReceivedReviewFinder(reviewRepository, clock)
     private val memberId = UUID.randomUUID()
+    private val authorMemberId = UUID.randomUUID()
 
     @Test
     fun `페이지 크기보다 한 건 더 읽어 다음 받은 후기 존재 여부를 판단한다`() {
@@ -41,6 +42,10 @@ class ReceivedReviewFinderTest {
         val page = finder.getPage(memberId, lastReviewId = null, size = 2)
 
         assertThat(page.reviews.map(ReceivedReview::id)).containsExactly(3L, 2L)
+        assertThat(page.reviews).allSatisfy {
+            assertThat(it.authorMemberId).isEqualTo(authorMemberId)
+            assertThat(it.anonymous).isTrue()
+        }
         assertThat(page.totalCount).isEqualTo(3L)
         assertThat(page.hasNext).isTrue()
     }
@@ -71,6 +76,8 @@ class ReceivedReviewFinderTest {
         return mockk<ReviewEntity>().also { review ->
             every { review.id } returns id
             every { review.visibleAt } returns visibleAt
+            every { review.authorMemberId } returns authorMemberId
+            every { review.anonymous } returns true
             every { review.tags() } returns setOf("피드백이 구체적이에요")
             every { review.content } returns content
         }

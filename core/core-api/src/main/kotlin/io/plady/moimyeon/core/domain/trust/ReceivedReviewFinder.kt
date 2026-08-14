@@ -37,6 +37,8 @@ class ReceivedReviewFinder(
             val review = reviewsById.getValue(reviewId)
             ReceivedReview(
                 id = review.id,
+                authorMemberId = review.authorMemberId,
+                anonymous = review.anonymous,
                 tags = review.tags(),
                 content = review.content,
             )

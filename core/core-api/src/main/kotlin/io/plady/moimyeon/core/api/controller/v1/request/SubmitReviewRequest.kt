@@ -9,12 +9,14 @@ data class SubmitReviewRequest(
     val targetMemberId: UUID,
     val tags: Set<String> = emptySet(),
     val content: String? = null,
+    val anonymous: Boolean = true,
 ) {
     fun toContent(): ReviewSubmissionContent {
         return ReviewSubmissionContent(
             targetMemberId = targetMemberId,
             tags = normalizeReviewTags(tags),
             content = normalizeReviewContent(content),
+            anonymous = anonymous,
         )
     }
 }

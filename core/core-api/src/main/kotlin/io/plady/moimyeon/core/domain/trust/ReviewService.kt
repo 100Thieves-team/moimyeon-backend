@@ -24,6 +24,7 @@ class ReviewService(
                 targetMemberId = content.targetMemberId,
                 tags = content.tags,
                 content = content.content,
+                anonymous = content.anonymous,
             ),
         )
     }

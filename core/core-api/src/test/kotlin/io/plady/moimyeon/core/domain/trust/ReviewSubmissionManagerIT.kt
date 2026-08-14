@@ -72,6 +72,7 @@ class ReviewSubmissionManagerIT(
             targetMemberId = targetMemberId,
             tags = setOf("시간 약속을 잘 지켜요", "좋은 질문을 해요"),
             content = "꼬리질문 덕분에 실전처럼 연습했어요.",
+            anonymous = true,
         )
 
         val reviewId = reviewService.submit(command)
@@ -82,6 +83,7 @@ class ReviewSubmissionManagerIT(
         assertThat(review.targetMemberId).isEqualTo(targetMemberId)
         assertThat(review.tags()).containsExactlyInAnyOrderElementsOf(command.tags)
         assertThat(review.content).isEqualTo(command.content)
+        assertThat(review.anonymous).isTrue()
         assertThat(review.visibleAt).isEqualTo(TRUST_NOW.plusHours(3))
 
         assertThatThrownBy { reviewService.submit(command) }
@@ -108,6 +110,7 @@ class ReviewSubmissionManagerIT(
                 targetMemberId = targetMemberId,
                 tags = emptySet(),
                 content = null,
+                anonymous = true,
             ),
         )
 
@@ -126,6 +129,7 @@ class ReviewSubmissionManagerIT(
                     targetMemberId = targetMemberId,
                     tags = emptySet(),
                     content = null,
+                    anonymous = true,
                 ),
             )
         }.isInstanceOfSatisfying(CoreException::class.java) {
@@ -148,6 +152,7 @@ class ReviewSubmissionManagerIT(
                 targetMemberId = targetMemberId,
                 tags = setOf("시간을 잘 지켜요"),
                 content = "수정 전 후기",
+                anonymous = true,
             ),
         )
 
@@ -176,6 +181,7 @@ class ReviewSubmissionManagerIT(
             targetMemberId = targetMemberId,
             tags = setOf("시간을 잘 지켜요"),
             content = "첫 번째 후기",
+            anonymous = true,
         )
         val deletedReviewId = reviewService.submit(command)
 
@@ -234,6 +240,7 @@ class ReviewSubmissionManagerIT(
                 targetMemberId = remainingTargetMemberId,
                 tags = emptySet(),
                 content = null,
+                anonymous = true,
             ),
         )
         val skippedTargetReviewId = reviewService.submit(
@@ -243,6 +250,7 @@ class ReviewSubmissionManagerIT(
                 targetMemberId = targetMemberId,
                 tags = emptySet(),
                 content = null,
+                anonymous = true,
             ),
         )
 
@@ -293,8 +301,20 @@ class ReviewSubmissionManagerIT(
         val result = reviewService.getReceivedReviewPage(targetMemberId, lastReviewId = null, size = 20)
 
         assertThat(result.reviews).containsExactly(
-            ReceivedReview(newest.id, setOf("피드백이 구체적이에요"), "가장 최근 공개 후기"),
-            ReceivedReview(older.id, setOf("시간을 잘 지켜요"), "이전에 공개된 후기"),
+            ReceivedReview(
+                newest.id,
+                newest.authorMemberId,
+                newest.anonymous,
+                setOf("피드백이 구체적이에요"),
+                "가장 최근 공개 후기",
+            ),
+            ReceivedReview(
+                older.id,
+                older.authorMemberId,
+                older.anonymous,
+                setOf("시간을 잘 지켜요"),
+                "이전에 공개된 후기",
+            ),
         )
         assertThat(result.totalCount).isEqualTo(2L)
         assertThat(result.hasNext).isFalse()
@@ -339,7 +359,13 @@ class ReviewSubmissionManagerIT(
         )
 
         assertThat(reviewService.getReceivedReviewPage(targetMemberId, lastReviewId = null, size = 20).reviews).containsExactly(
-            ReceivedReview(review.id, setOf("좋은 질문을 해요"), "탈퇴 이후에도 남는 후기"),
+            ReceivedReview(
+                review.id,
+                review.authorMemberId,
+                review.anonymous,
+                setOf("좋은 질문을 해요"),
+                "탈퇴 이후에도 남는 후기",
+            ),
         )
     }
 
@@ -395,6 +421,7 @@ class ReviewSubmissionManagerIT(
         tags: Set<String> = emptySet(),
         content: String? = null,
         hiddenAt: LocalDateTime? = null,
+        anonymous: Boolean = true,
     ): ReviewEntity {
         val review = reviewRepository.saveAndFlush(
             ReviewEntity(
@@ -404,6 +431,7 @@ class ReviewSubmissionManagerIT(
                 content = content,
                 visibleAt = visibleAt,
                 hiddenAt = hiddenAt,
+                anonymous = anonymous,
                 tags = tags,
             ),
         )
