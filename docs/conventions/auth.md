@@ -22,6 +22,9 @@ state 검증 오류가 백엔드 `/login?error`에 남는다.
 
 - OAuth 성공 리다이렉트는 `security.auth.oauth2.success-redirect-uri`, 실패 리다이렉트는
   `security.auth.oauth2.failure-redirect-uri` 설정을 사용한다. 둘 다 절대 HTTP(S) URI여야 한다.
+- 환경별 웹 세션 범위는 프론트와 API가 공유하는 최소 도메인으로 제한한다. `live`는
+  `moimyeon.plady.io`, `dev`는 `dev.moimyeon.plady.io`를 사용해 운영·개발 쿠키가 서로 덮어쓰지
+  않게 한다. dev CORS와 OAuth 완료 리다이렉트도 `https://dev.moimyeon.plady.io`만 가리킨다.
 - 회원 확정·JWT·세션·쿠키 생성이 전부 성공한 뒤 ACCESS_TOKEN·REFRESH_TOKEN을 응답에 함께 기록한다.
   중간 실패에는 일부 쿠키를 발급하지 않는다.
 - Google 오류와 로그인 내부 처리 오류는 모두 고정된 프론트 실패 URI로 보낸다. 공급자 오류 설명과 내부

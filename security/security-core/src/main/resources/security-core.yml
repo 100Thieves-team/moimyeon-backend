@@ -32,17 +32,20 @@ security:
         - https://moimyeon.plady.io
 
 ---
-# dev: 로컬 프론트(localhost:3000) 개발이 dev API 를 직접 호출할 수 있도록 오리진을 추가한다.
-# 자격증명(쿠키) 허용은 CorsConfig 에서 전 환경 공통. cross-site(localhost -> api.dev)에서도
-# 쿠키가 실리도록 SameSite 만 None 으로 완화한다(Secure=true 는 기본값 유지).
+# dev: preview 프론트와 dev API 가 세션을 공유하되 운영 세션과는 쿠키 도메인을 격리한다.
+# localhost -> api.dev cross-site 호출에서도 쿠키가 실리도록 SameSite=None 을 유지한다.
 spring.config.activate.on-profile: dev
 security:
   auth:
+    oauth2:
+      success-redirect-uri: ${OAUTH_FRONTEND_SUCCESS_REDIRECT_URI:https://dev.moimyeon.plady.io/auth/callback}
+      failure-redirect-uri: ${OAUTH_FRONTEND_FAILURE_REDIRECT_URI:https://dev.moimyeon.plady.io/?authError=login_failed}
     cookie:
+      domain: dev.moimyeon.plady.io
       same-site: None
     cors:
       allowed-origins:
-        - https://moimyeon.plady.io
+        - https://dev.moimyeon.plady.io
         - http://localhost:3000
 
 ---
