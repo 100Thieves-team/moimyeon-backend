@@ -23,22 +23,24 @@ class ReviewTargetFinder(
         eligibilityValidator.validateAuthorAttendance(
             attendances.firstOrNull { it.memberId == authorMemberId }?.status,
         )
-        val submittedTargetIds = reviewRepository
+        val submittedReviewsByTargetId = reviewRepository
             .findByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
-            .mapTo(mutableSetOf()) { it.targetMemberId }
+            .associateBy { it.targetMemberId }
 
         return attendances
             .filter {
                 it.memberId != authorMemberId && eligibilityValidator.isEligibleAttendance(it.status)
             }
             .map { attendance ->
+                val submittedReview = submittedReviewsByTargetId[attendance.memberId]
                 ReviewTarget(
                     memberId = attendance.memberId,
-                    status = if (attendance.memberId in submittedTargetIds) {
+                    status = if (submittedReview != null) {
                         ReviewTargetStatus.SUBMITTED
                     } else {
                         ReviewTargetStatus.WRITABLE
                     },
+                    reviewId = submittedReview?.id,
                 )
             }
     }

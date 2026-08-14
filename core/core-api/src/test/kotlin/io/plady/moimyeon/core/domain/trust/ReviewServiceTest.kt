@@ -32,6 +32,28 @@ class ReviewServiceTest {
     private val targetMemberId = UUID.randomUUID()
 
     @Test
+    fun `인증 회원과 후기 입력을 제출 명령으로 결합한다`() {
+        val content = ReviewSubmissionContent(
+            targetMemberId = targetMemberId,
+            tags = setOf("시간을 잘 지켜요"),
+            content = "시간 약속을 잘 지켜주셨어요.",
+        )
+        val command = ReviewSubmissionCommand(
+            roomId = roomId,
+            authorMemberId = authorMemberId,
+            targetMemberId = targetMemberId,
+            tags = content.tags,
+            content = content.content,
+        )
+        every { submissionManager.submit(command) } returns 1L
+
+        val reviewId = service.submit(authorMemberId, roomId, content)
+
+        assertThat(reviewId).isEqualTo(1L)
+        verify(exactly = 1) { submissionManager.submit(command) }
+    }
+
+    @Test
     fun `완료 룸의 출석자가 다른 출석자에게 선택 태그와 텍스트 후기를 제출한다`() {
         val tags = mutableSetOf("시간 약속을 잘 지켜요", "좋은 질문을 해요")
         val command = ReviewSubmissionCommand(
@@ -130,29 +152,29 @@ class ReviewServiceTest {
 
     @Test
     fun `제출 후 3시간 전에는 대상자의 받은 후기에 보이지 않는다`() {
-        every { receivedReviewFinder.getAll(targetMemberId) } returns emptyList()
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        val result = service.getReceivedReviews(targetMemberId)
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
 
-        assertThat(result).isEmpty()
+        assertThat(result.reviews).isEmpty()
     }
 
     @Test
     fun `제출 후 3시간이 지나면 대상자의 받은 후기에 노출할 수 있다`() {
         val reviews = listOf(receivedReview())
-        every { receivedReviewFinder.getAll(targetMemberId) } returns reviews
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(reviews)
 
-        val result = service.getReceivedReviews(targetMemberId)
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
 
-        assertThat(result).containsExactlyElementsOf(reviews)
+        assertThat(result.reviews).containsExactlyElementsOf(reviews)
     }
 
     @Test
     fun `받은 후기에서는 작성자와 룸 이름 및 일자를 알 수 없다`() {
         val review = receivedReview()
-        every { receivedReviewFinder.getAll(targetMemberId) } returns listOf(review)
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        val result = service.getReceivedReviews(targetMemberId).single()
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20).reviews.single()
 
         assertThat(result).isEqualTo(
             ReceivedReview(
@@ -165,17 +187,17 @@ class ReviewServiceTest {
 
     @Test
     fun `숨김되거나 삭제된 후기는 받은 후기 조회에서 제외한다`() {
-        every { receivedReviewFinder.getAll(targetMemberId) } returns emptyList()
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        assertThat(service.getReceivedReviews(targetMemberId)).isEmpty()
+        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).isEmpty()
     }
 
     @Test
     fun `탈퇴한 작성자의 후기도 대상자의 받은 후기에서 유지한다`() {
         val review = receivedReview()
-        every { receivedReviewFinder.getAll(targetMemberId) } returns listOf(review)
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        assertThat(service.getReceivedReviews(targetMemberId)).containsExactly(review)
+        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).containsExactly(review)
     }
 
     @Test
@@ -184,6 +206,25 @@ class ReviewServiceTest {
         every { reviewEditor.update(command) } just Runs
 
         service.update(command)
+
+        verify(exactly = 1) { reviewEditor.update(command) }
+    }
+
+    @Test
+    fun `인증 회원과 후기 입력을 수정 명령으로 결합한다`() {
+        val content = ReviewUpdateContent(
+            tags = setOf("피드백이 구체적이에요"),
+            content = "개선할 부분을 명확히 알려주셨어요.",
+        )
+        val command = ReviewUpdateCommand(
+            reviewId = 1L,
+            authorMemberId = authorMemberId,
+            tags = content.tags,
+            content = content.content,
+        )
+        every { reviewEditor.update(command) } just Runs
+
+        service.update(authorMemberId, 1L, content)
 
         verify(exactly = 1) { reviewEditor.update(command) }
     }
@@ -238,6 +279,18 @@ class ReviewServiceTest {
         every { skipRecorder.record(command) } just Runs
 
         service.skip(command)
+
+        verify(exactly = 1) { skipRecorder.record(command) }
+    }
+
+    @Test
+    fun `인증 회원과 대상 입력을 건너뛰기 명령으로 결합한다`() {
+        val content = ReviewSkipContent(targetMemberId)
+        val command = ReviewSkipCommand(roomId, authorMemberId, targetMemberId)
+        givenEligible(command)
+        every { skipRecorder.record(command) } just Runs
+
+        service.skip(authorMemberId, roomId, content)
 
         verify(exactly = 1) { skipRecorder.record(command) }
     }
@@ -349,6 +402,14 @@ class ReviewServiceTest {
             id = 1L,
             tags = setOf("피드백이 구체적이에요"),
             content = "안정적으로 진행해주셨어요.",
+        )
+    }
+
+    private fun receivedReviewPage(reviews: List<ReceivedReview> = emptyList()): ReceivedReviewPage {
+        return ReceivedReviewPage(
+            reviews = reviews,
+            totalCount = reviews.size.toLong(),
+            hasNext = false,
         )
     }
 

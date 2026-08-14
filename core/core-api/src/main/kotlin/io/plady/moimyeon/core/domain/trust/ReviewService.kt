@@ -12,8 +12,39 @@ class ReviewService(
     private val targetFinder: ReviewTargetFinder,
     private val receivedReviewFinder: ReceivedReviewFinder,
 ) {
+    fun submit(
+        authorMemberId: UUID,
+        roomId: UUID,
+        content: ReviewSubmissionContent,
+    ): Long {
+        return submit(
+            ReviewSubmissionCommand(
+                roomId = roomId,
+                authorMemberId = authorMemberId,
+                targetMemberId = content.targetMemberId,
+                tags = content.tags,
+                content = content.content,
+            ),
+        )
+    }
+
     fun submit(command: ReviewSubmissionCommand): Long {
         return submissionManager.submit(command)
+    }
+
+    fun update(
+        authorMemberId: UUID,
+        reviewId: Long,
+        content: ReviewUpdateContent,
+    ) {
+        update(
+            ReviewUpdateCommand(
+                reviewId = reviewId,
+                authorMemberId = authorMemberId,
+                tags = content.tags,
+                content = content.content,
+            ),
+        )
     }
 
     fun update(command: ReviewUpdateCommand) {
@@ -22,6 +53,20 @@ class ReviewService(
 
     fun delete(authorMemberId: UUID, reviewId: Long) {
         reviewEditor.delete(authorMemberId, reviewId)
+    }
+
+    fun skip(
+        authorMemberId: UUID,
+        roomId: UUID,
+        content: ReviewSkipContent,
+    ) {
+        skip(
+            ReviewSkipCommand(
+                roomId = roomId,
+                authorMemberId = authorMemberId,
+                targetMemberId = content.targetMemberId,
+            ),
+        )
     }
 
     fun skip(command: ReviewSkipCommand) {
@@ -33,7 +78,11 @@ class ReviewService(
         return targetFinder.getTargets(authorMemberId, roomId)
     }
 
-    fun getReceivedReviews(memberId: UUID): List<ReceivedReview> {
-        return receivedReviewFinder.getAll(memberId)
+    fun getReceivedReviewPage(
+        memberId: UUID,
+        lastReviewId: Long?,
+        size: Int,
+    ): ReceivedReviewPage {
+        return receivedReviewFinder.getPage(memberId, lastReviewId, size)
     }
 }
