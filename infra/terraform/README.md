@@ -108,7 +108,7 @@ remain in SSM.
 The dev backend is paired only with `https://dev.moimyeon.plady.io`:
 
 - Core API `dev` profile: OAuth completion redirects, credentialed CORS, and the
-  `dev.moimyeon.plady.io` cookie domain.
+  `dev.moimyeon.plady.io` cookie domain with dev-only cookie names.
 - Upload bucket: browser CORS for the preview origin and local frontend development.
 - Notification Worker: FCM click actions use the preview origin.
 
@@ -117,15 +117,14 @@ production frontend, which may still call the dev API, loses login access:
 
 ```bash
 dig +short dev.moimyeon.plady.io
-curl -sS -o /dev/null -D - https://dev.moimyeon.plady.io/auth/google/start \
-  | grep -iE '^(HTTP/|location:)'
-curl -sS -o /dev/null -D - https://moimyeon.plady.io/auth/google/start \
+curl -sS -o /dev/null -D - https://api.dev.moimyeon.plady.io/oauth2/authorization/google \
   | grep -iE '^(HTTP/|location:)'
 ```
 
-The first command must resolve to Vercel, the preview login must target
-`https://api.dev.moimyeon.plady.io`, and the production login must no longer
-target that dev API unless a temporary production outage was explicitly chosen.
+The first command must resolve to Vercel. The OAuth response must redirect to
+Google with `https://api.dev.moimyeon.plady.io/login/oauth2/code/google` as its
+encoded callback. In the browser network panel, verify that preview login starts
+at this dev API and that production login does not target the dev API.
 In Vercel, assign the custom domain to a long-lived preview branch; assigning it
 only to one deployment will not advance it on later Git pushes.
 

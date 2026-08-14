@@ -57,8 +57,14 @@ variable "upload_cors_allowed_origins" {
   default     = ["https://dev.moimyeon.plady.io", "http://localhost:3000", "http://localhost:5173"]
 
   validation {
-    condition     = contains(var.upload_cors_allowed_origins, "https://dev.moimyeon.plady.io")
-    error_message = "Dev upload CORS must allow https://dev.moimyeon.plady.io."
+    condition = contains(var.upload_cors_allowed_origins, "https://dev.moimyeon.plady.io") && alltrue([
+      for origin in var.upload_cors_allowed_origins : contains([
+        "https://dev.moimyeon.plady.io",
+        "http://localhost:3000",
+        "http://localhost:5173",
+      ], origin)
+    ])
+    error_message = "Dev upload CORS must include the preview origin and only use approved preview or localhost origins."
   }
 }
 
