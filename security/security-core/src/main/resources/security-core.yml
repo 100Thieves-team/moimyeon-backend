@@ -22,6 +22,8 @@ security:
       success-redirect-uri: ${OAUTH_FRONTEND_SUCCESS_REDIRECT_URI:https://moimyeon.plady.io/auth/callback}
       failure-redirect-uri: ${OAUTH_FRONTEND_FAILURE_REDIRECT_URI:https://moimyeon.plady.io/?authError=login_failed}
     cookie:
+      access-token-name: ACCESS_TOKEN
+      refresh-token-name: REFRESH_TOKEN
       domain: moimyeon.plady.io # api. 와 apex 가 공유
       secure: true
       same-site: Lax
@@ -41,6 +43,8 @@ security:
       success-redirect-uri: ${OAUTH_FRONTEND_SUCCESS_REDIRECT_URI:https://dev.moimyeon.plady.io/auth/callback}
       failure-redirect-uri: ${OAUTH_FRONTEND_FAILURE_REDIRECT_URI:https://dev.moimyeon.plady.io/?authError=login_failed}
     cookie:
+      access-token-name: DEV_ACCESS_TOKEN
+      refresh-token-name: DEV_REFRESH_TOKEN
       domain: dev.moimyeon.plady.io
       same-site: None
     cors:

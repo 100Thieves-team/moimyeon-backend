@@ -1,6 +1,7 @@
 package io.plady.moimyeon.security.auth
 
 import io.plady.moimyeon.security.config.AuthProperties
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
 import java.time.Duration
@@ -10,13 +11,18 @@ import java.time.Duration
 class AuthCookieFactory(
     private val authProperties: AuthProperties,
 ) {
-    fun createAccess(token: String): ResponseCookie = base(ACCESS_TOKEN, token, authProperties.cookie.accessMaxAgeSeconds).path("/").build()
+    val accessTokenName: String = authProperties.cookie.accessTokenName
+    val refreshTokenName: String = authProperties.cookie.refreshTokenName
 
-    fun createRefresh(session: IssuedSession): ResponseCookie = base(REFRESH_TOKEN, session.credential, authProperties.cookie.refreshMaxAgeSeconds).path(REFRESH_PATH).build()
+    fun createAccess(token: String): ResponseCookie = base(accessTokenName, token, authProperties.cookie.accessMaxAgeSeconds).path("/").build()
 
-    fun expireAccess(): ResponseCookie = base(ACCESS_TOKEN, "", 0).path("/").build()
+    fun createRefresh(session: IssuedSession): ResponseCookie = base(refreshTokenName, session.credential, authProperties.cookie.refreshMaxAgeSeconds).path(REFRESH_PATH).build()
 
-    fun expireRefresh(): ResponseCookie = base(REFRESH_TOKEN, "", 0).path(REFRESH_PATH).build()
+    fun expireAccess(): ResponseCookie = base(accessTokenName, "", 0).path("/").build()
+
+    fun expireRefresh(): ResponseCookie = base(refreshTokenName, "", 0).path(REFRESH_PATH).build()
+
+    fun resolveRefresh(request: HttpServletRequest): String? = request.cookies?.firstOrNull { it.name == refreshTokenName }?.value
 
     // 삭제 쿠키는 생성 때와 name+Path(+Domain)가 같아야 브라우저가 지움.
     private fun base(name: String, value: String, maxAgeSeconds: Long): ResponseCookie.ResponseCookieBuilder {

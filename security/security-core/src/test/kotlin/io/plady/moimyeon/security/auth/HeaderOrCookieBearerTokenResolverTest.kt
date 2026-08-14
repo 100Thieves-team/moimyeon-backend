@@ -31,4 +31,17 @@ class HeaderOrCookieBearerTokenResolverTest {
         // when & then
         assertThat(resolver.resolve(request)).isEqualTo("valid-access-token")
     }
+
+    @Test
+    fun `dev 전용 쿠키 이름을 사용하면 기존 apex 쿠키를 해석하지 않는다`() {
+        val devResolver = HeaderOrCookieBearerTokenResolver(cookieName = "DEV_ACCESS_TOKEN")
+        val request = MockHttpServletRequest("GET", "/v1/members/me").apply {
+            setCookies(
+                Cookie(AuthCookieFactory.ACCESS_TOKEN, "legacy-apex-token"),
+                Cookie("DEV_ACCESS_TOKEN", "dev-token"),
+            )
+        }
+
+        assertThat(devResolver.resolve(request)).isEqualTo("dev-token")
+    }
 }

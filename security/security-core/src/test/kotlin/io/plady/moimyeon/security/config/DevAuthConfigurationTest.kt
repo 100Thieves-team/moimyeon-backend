@@ -1,15 +1,21 @@
 package io.plady.moimyeon.security.config
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.StandardEnvironment
 
+@Tag("context")
 class DevAuthConfigurationTest {
     private val contextRunner = ApplicationContextRunner()
         .withInitializer(ConfigDataApplicationContextInitializer())
+        .withInitializer { context ->
+            context.environment.propertySources.remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)
+        }
         .withPropertyValues(
             "spring.config.name=security-core",
             "spring.profiles.active=dev",
@@ -25,7 +31,10 @@ class DevAuthConfigurationTest {
                 .isEqualTo("https://dev.moimyeon.plady.io/auth/callback")
             assertThat(properties.oauth2.failureRedirectUri.toString())
                 .isEqualTo("https://dev.moimyeon.plady.io/?authError=login_failed")
+            assertThat(properties.cookie.accessTokenName).isEqualTo("DEV_ACCESS_TOKEN")
+            assertThat(properties.cookie.refreshTokenName).isEqualTo("DEV_REFRESH_TOKEN")
             assertThat(properties.cookie.domain).isEqualTo("dev.moimyeon.plady.io")
+            assertThat(properties.cookie.secure).isTrue()
             assertThat(properties.cookie.sameSite).isEqualTo("None")
             assertThat(properties.cors.allowedOrigins).containsExactly(
                 "https://dev.moimyeon.plady.io",
