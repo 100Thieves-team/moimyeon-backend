@@ -54,7 +54,12 @@ variable "enable_https" {
 variable "upload_cors_allowed_origins" {
   description = "Frontend origins allowed to use S3 presigned upload/download URLs (dev)."
   type        = list(string)
-  default     = ["http://localhost:5173"]
+  default     = ["https://dev.moimyeon.plady.io", "http://localhost:3000", "http://localhost:5173"]
+
+  validation {
+    condition     = contains(var.upload_cors_allowed_origins, "https://dev.moimyeon.plady.io")
+    error_message = "Dev upload CORS must allow https://dev.moimyeon.plady.io."
+  }
 }
 
 variable "vpc_cidr" {
@@ -101,7 +106,12 @@ variable "firebase_project_id" {
 variable "notification_web_push_action_base_url" {
   description = "Frontend base URL opened by web push notifications."
   type        = string
-  default     = null
+  default     = "https://dev.moimyeon.plady.io"
+
+  validation {
+    condition     = trimsuffix(var.notification_web_push_action_base_url, "/") == "https://dev.moimyeon.plady.io"
+    error_message = "Dev web push notifications must open https://dev.moimyeon.plady.io."
+  }
 }
 
 variable "notification_email_ses_from_address" {

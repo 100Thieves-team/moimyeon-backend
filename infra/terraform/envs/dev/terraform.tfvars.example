@@ -10,8 +10,8 @@ github_oidc_provider_arn = "arn:aws:iam::781897847312:oidc-provider/token.action
 # 3. Set enable_https = true and apply again.
 app_domain_name             = "api.dev.moimyeon.plady.io"
 dns_management              = "external"
-enable_https                = false
-upload_cors_allowed_origins = ["http://localhost:5173"]
+enable_https                = true
+upload_cors_allowed_origins = ["https://dev.moimyeon.plady.io", "http://localhost:3000", "http://localhost:5173"]
 
 vpc_cidr    = "10.20.0.0/16"
 db_name     = "moimyeondev"
@@ -21,10 +21,9 @@ db_username = "moimyeon_admin"
 oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
 oauth_google_client_secret = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
 
-# Keep zero until both SSM SecureStrings below exist and the non-secret vendor
-# values have been filled in. Then raise to 1.
-notification_worker_desired_count     = 0
-firebase_project_id                   = null
+# The dev SSM SecureStrings and non-secret vendor values are provisioned.
+notification_worker_desired_count     = 1
+firebase_project_id                   = "moimyeon-development"
 notification_web_push_action_base_url = "https://dev.moimyeon.plady.io"
-notification_email_ses_from_address   = null
-notification_email_gmail_address      = null
+notification_email_ses_from_address   = "no-reply@moimyeon.plady.io"
+notification_email_gmail_address      = "100dodukteam@gmail.com"
