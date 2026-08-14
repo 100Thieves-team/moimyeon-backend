@@ -183,6 +183,8 @@ class RoundFeedbackControllerTest : RestDocsTest() {
                     GET_DESCRIPTION,
                     feedbackQueryParameters(),
                     successResponseFields(
+                        fieldWithPath("data.selfFeedback").optional()
+                            .description("자가 피드백, 작성하지 않았으면 null"),
                         fieldWithPath("data.selfFeedback.feedbackId").description("자가 피드백 id"),
                         fieldWithPath("data.selfFeedback.content").description("자가 피드백 본문"),
                         fieldWithPath("data.finalFeedbacks").description("최종 피드백 카드 목록"),

@@ -87,7 +87,8 @@ class RoundControllerTest : RestDocsTest() {
                         fieldWithPath("data.role").description("INTERVIEWEE | PARTICIPANT"),
                         fieldWithPath("data.interviewee.memberId").description("현재 라운드 면접자 회원 id"),
                         fieldWithPath("data.interviewee.nickname").description("현재 라운드 면접자 표시 이름"),
-                        fieldWithPath("data.questions").description("참여자용 질문 카드, 면접자는 null"),
+                        fieldWithPath("data.questions").optional()
+                            .description("참여자용 질문 카드, 면접자는 null"),
                         fieldWithPath("data.questions[].questionId").description("원 질문 id"),
                         fieldWithPath("data.questions[].author.memberId").description("원 질문 작성자 회원 id"),
                         fieldWithPath("data.questions[].author.nickname").description("원 질문 작성자 표시 이름"),

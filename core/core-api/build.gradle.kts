@@ -134,6 +134,7 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
 //   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
 // - 제한 문자열 스칼라 배열도 같은 제약이 있어 아이템 타입과 enum 값을 보강한다.
+// - 객체·배열 nullable 응답 필드: optional descriptor 를 생성기가 nullable 로 변환하지 않아 보강한다.
 // - nullable 로 문서화한 필드는 생성기가 required 에서 빼므로, 항상 키를 반환하는 필드는 다시 넣는다.
 // - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
 // - OAuth 로그인: Spring Security 필터 엔드포인트라 REST Docs 리소스가 없어 경로와 리다이렉트 계약을 보강한다.
@@ -141,6 +142,10 @@ val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
 // 프로젝트 클래스는 Gradle 스크립트 컴파일 클래스패스에 없으므로 문서 생성 시 컴파일 산출물에서 enum 값을 읽는다.
 val stringEnumArrayTypes = mapOf(
     "recentAttendances" to "io.plady.moimyeon.core.enums.AttendanceStatus",
+)
+val nullableResponsePropertyDescriptions = mapOf(
+    "questions" to "참여자용 질문 카드, 면접자는 null",
+    "selfFeedback" to "자가 피드백, 작성하지 않았으면 null",
 )
 
 fun resolveStringEnumArrayProperties(classpath: Set<File>): Map<String, List<String>> {
@@ -161,6 +166,7 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
     var errorDataPatched = 0
     val numberArraysPatched = mutableSetOf<String>()
     val stringEnumArraysPatched = mutableSetOf<String>()
+    val nullableResponsePropertiesPatched = mutableSetOf<String>()
     var nullableRequiredPatched = 0
     root.path("components").path("schemas").forEach { schema ->
         val errorData = schema.path("properties").path("error").path("properties").path("data")
@@ -173,6 +179,11 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
         }
         patchNumberIdArrays(schema, mapper, numberArraysPatched)
         patchStringEnumArrays(schema, mapper, stringEnumArrayProperties, stringEnumArraysPatched)
+        patchNullableResponseProperties(
+            schema,
+            nullableResponsePropertyDescriptions,
+            nullableResponsePropertiesPatched,
+        )
         nullableRequiredPatched += requireNullableProperty(schema, mapper, "activityTopPercent")
     }
     // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
@@ -182,6 +193,10 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
     check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
     val missingStringEnums = stringEnumArrayProperties.keys - stringEnumArraysPatched
     check(missingStringEnums.isEmpty()) { "문자열 enum 배열 보정 대상을 스펙에서 찾지 못했다: $missingStringEnums" }
+    val missingNullableProperties = nullableResponsePropertyDescriptions.keys - nullableResponsePropertiesPatched
+    check(missingNullableProperties.isEmpty()) {
+        "nullable 응답 필드 보정 대상을 스펙에서 찾지 못했다: $missingNullableProperties"
+    }
     check(nullableRequiredPatched == 1) { "nullable 필수 필드 보정 대상이 하나가 아니다: $nullableRequiredPatched" }
     check(patchResumeMultipartRequest(root, mapper)) { "이력서 multipart 요청 보정 대상을 스펙에서 찾지 못했다" }
     check(patchOAuthLoginContract(root, mapper)) { "OAuth 로그인 OpenAPI 계약을 보정하지 못했다" }
@@ -364,6 +379,32 @@ fun patchStringEnumArrays(
         }
     } else if (node.isArray) {
         node.forEach { patchStringEnumArrays(it, mapper, stringEnumArrayProperties, patched) }
+    }
+}
+
+fun patchNullableResponseProperties(
+    node: JsonNode,
+    propertyDescriptions: Map<String, String>,
+    patched: MutableSet<String>,
+) {
+    if (node is ObjectNode) {
+        val properties = node.path("properties")
+        if (properties is ObjectNode) {
+            properties.fields().forEach { (name, property) ->
+                val expectedDescription = propertyDescriptions[name]
+                if (
+                    expectedDescription != null &&
+                    property is ObjectNode &&
+                    property.path("description").asText() == expectedDescription
+                ) {
+                    check(patched.add(name)) { "nullable 응답 필드 보정 대상이 중복이다: $name" }
+                    property.put("nullable", true)
+                }
+            }
+        }
+        node.forEach { patchNullableResponseProperties(it, propertyDescriptions, patched) }
+    } else if (node.isArray) {
+        node.forEach { patchNullableResponseProperties(it, propertyDescriptions, patched) }
     }
 }
 
