@@ -780,6 +780,177 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
+<li><a href="#_interview_progress_모의_면접_진행_api">Interview Progress (모의 면접 진행) API</a>
+<ul class="sectlevel2">
+<li><a href="#_면접_진행_시작">면접 진행 시작</a>
+<ul class="sectlevel3">
+<li><a href="#_request_fields_11">Request Fields</a></li>
+<li><a href="#_http_response_37">Http Response</a></li>
+<li><a href="#_response_fields_36">Response Fields</a></li>
+<li><a href="#_error_responses_23">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_면접_진행_레일_조회">면접 진행 레일 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_5">Query Parameters</a></li>
+<li><a href="#_http_response_38">Http Response</a></li>
+<li><a href="#_response_fields_37">Response Fields</a></li>
+<li><a href="#_error_responses_24">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_내_출석_결과_조회">내 출석 결과 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_6">Query Parameters</a></li>
+<li><a href="#_http_response_39">Http Response</a></li>
+<li><a href="#_response_fields_38">Response Fields</a></li>
+<li><a href="#_error_responses_25">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_라운드_화면_조회">라운드 화면 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_7">Query Parameters</a></li>
+<li><a href="#_http_response_40">Http Response</a></li>
+<li><a href="#_response_fields_39">Response Fields</a></li>
+<li><a href="#_error_responses_26">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_진행_중_즉석_질문_추가">진행 중 즉석 질문 추가</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_17">Curl Request</a></li>
+<li><a href="#_request_fields_12">Request Fields</a></li>
+<li><a href="#_http_response_41">Http Response</a></li>
+<li><a href="#_response_fields_40">Response Fields</a></li>
+<li><a href="#_error_responses_27">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_진행_중_꼬리질문_추가">진행 중 꼬리질문 추가</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_18">Curl Request</a></li>
+<li><a href="#_request_fields_13">Request Fields</a></li>
+<li><a href="#_http_response_42">Http Response</a></li>
+<li><a href="#_response_fields_41">Response Fields</a></li>
+<li><a href="#_error_responses_28">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_사용_여부_변경">질문 사용 여부 변경</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_18">Path Parameters</a></li>
+<li><a href="#_request_fields_14">Request Fields</a></li>
+<li><a href="#_http_response_43">Http Response</a></li>
+<li><a href="#_response_fields_42">Response Fields</a></li>
+<li><a href="#_error_responses_29">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_메모_조회">질문 메모 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_19">Curl Request</a></li>
+<li><a href="#_query_parameters_8">Query Parameters</a></li>
+<li><a href="#_http_response_44">Http Response</a></li>
+<li><a href="#_response_fields_43">Response Fields</a></li>
+<li><a href="#_error_responses_30">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_메모_작성">질문 메모 작성</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_20">Curl Request</a></li>
+<li><a href="#_request_fields_15">Request Fields</a></li>
+<li><a href="#_http_response_45">Http Response</a></li>
+<li><a href="#_response_fields_44">Response Fields</a></li>
+<li><a href="#_error_responses_31">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_메모_평가_상태_토글">질문 메모 평가 상태 토글</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_21">Curl Request</a></li>
+<li><a href="#_path_parameters_19">Path Parameters</a></li>
+<li><a href="#_request_fields_16">Request Fields</a></li>
+<li><a href="#_http_response_46">Http Response</a></li>
+<li><a href="#_response_fields_45">Response Fields</a></li>
+<li><a href="#_error_responses_32">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_메모_수정">질문 메모 수정</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_22">Curl Request</a></li>
+<li><a href="#_path_parameters_20">Path Parameters</a></li>
+<li><a href="#_request_fields_17">Request Fields</a></li>
+<li><a href="#_http_response_47">Http Response</a></li>
+<li><a href="#_response_fields_46">Response Fields</a></li>
+<li><a href="#_error_responses_33">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_질문_메모_삭제">질문 메모 삭제</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_23">Curl Request</a></li>
+<li><a href="#_path_parameters_21">Path Parameters</a></li>
+<li><a href="#_query_parameters_9">Query Parameters</a></li>
+<li><a href="#_http_response_48">Http Response</a></li>
+<li><a href="#_response_fields_47">Response Fields</a></li>
+<li><a href="#_error_responses_34">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_내_라운드_질문_기록_조회">내 라운드 질문 기록 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_10">Query Parameters</a></li>
+<li><a href="#_http_response_49">Http Response</a></li>
+<li><a href="#_response_fields_48">Response Fields</a></li>
+<li><a href="#_error_responses_35">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_라운드_최종_피드백_작성">라운드 최종 피드백 작성</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_24">Curl Request</a></li>
+<li><a href="#_request_fields_18">Request Fields</a></li>
+<li><a href="#_http_response_50">Http Response</a></li>
+<li><a href="#_response_fields_49">Response Fields</a></li>
+<li><a href="#_error_responses_36">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_면접자_자가_피드백_저장">면접자 자가 피드백 저장</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_25">Curl Request</a></li>
+<li><a href="#_request_fields_19">Request Fields</a></li>
+<li><a href="#_http_response_51">Http Response</a></li>
+<li><a href="#_response_fields_50">Response Fields</a></li>
+<li><a href="#_error_responses_37">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_면접자_라운드_피드백_조회">면접자 라운드 피드백 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_11">Query Parameters</a></li>
+<li><a href="#_http_response_52">Http Response</a></li>
+<li><a href="#_response_fields_51">Response Fields</a></li>
+<li><a href="#_error_responses_38">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_최종_피드백_카드_열람_확인">최종 피드백 카드 열람 확인</a>
+<ul class="sectlevel3">
+<li><a href="#_curl_request_26">Curl Request</a></li>
+<li><a href="#_path_parameters_22">Path Parameters</a></li>
+<li><a href="#_request_fields_20">Request Fields</a></li>
+<li><a href="#_http_response_53">Http Response</a></li>
+<li><a href="#_response_fields_52">Response Fields</a></li>
+<li><a href="#_error_responses_39">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_내_클로징_평가_질문_조회">내 클로징 평가 질문 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_12">Query Parameters</a></li>
+<li><a href="#_http_response_54">Http Response</a></li>
+<li><a href="#_response_fields_53">Response Fields</a></li>
+<li><a href="#_error_responses_40">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_클로징_제출">클로징 제출</a>
+<ul class="sectlevel3">
+<li><a href="#_request_fields_21">Request Fields</a></li>
+<li><a href="#_http_response_55">Http Response</a></li>
+<li><a href="#_response_fields_54">Response Fields</a></li>
+<li><a href="#_error_responses_41">Error Responses</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -972,7 +1143,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-14",
-    "datetime" : "2026-08-14T00:53:37.297341221",
+    "datetime" : "2026-08-14T04:24:14.899252547",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1079,14 +1250,14 @@ Content-Length: 236
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 237
+Content-Length: 236
 
 {
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-14",
-    "datetime" : "2026-08-14T00:53:37.477619342",
+    "datetime" : "2026-08-14T04:24:14.95441952",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1274,7 +1445,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 14 Aug 2026 01:23:36 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 14 Aug 2026 04:54:13 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1480,7 +1651,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "39fdfd30-62ba-463f-a00e-cb7f43251525",
+      "termsId" : "e3693f7c-b17e-4a69-b712-738a9117db3c",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1488,7 +1659,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "cc6dd804-3c97-4c71-a13e-259ef3b59ce0",
+      "termsId" : "49e32856-6a89-4109-a422-bbaa7d22ddec",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1593,12 +1764,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "1bb87694-b1e9-47be-be53-642609dfdfd9",
+    "memberId" : "d20a9427-2caa-4cfe-bf55-f3d2e946a4dc",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "1bb87694-b1e9-47be-be53-642609dfdfd9",
+      "memberId" : "d20a9427-2caa-4cfe-bf55-f3d2e946a4dc",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2376,7 +2547,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "29462cfb-a549-4f82-ab1f-be60a9ed1e50",
+    "memberId" : "dbb8aa69-349a-4dba-9892-2b8ccbbbd86e",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -4291,7 +4462,7 @@ Content-Length: 1179
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-15T00:53:41.467668226",
+      "startAt" : "2026-08-15T04:24:21.094547746",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4302,7 +4473,7 @@ Content-Length: 1179
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "ac52fd4d-679d-4183-a475-a5e8a52c7644",
+    "hostMemberId" : "1cb168d7-5aed-4a4e-909b-ffe299f0ed56",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
@@ -4861,7 +5032,7 @@ Content-Length: 1375
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "d75fa7fc-936d-40ef-8a61-eba3f386fc85",
+  "resumeId" : "3bb4a8a0-24c6-4af5-82d3-cd4a379fec3f",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5095,7 +5266,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "e4267e08-ae18-4796-a35e-17ecb460bfad",
+      "resumeId" : "ea9b4fda-0981-4f1c-997e-daba1fc7581d",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -6613,11 +6784,3069 @@ Content-Length: 61
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_interview_progress_모의_면접_진행_api"><a class="link" href="#_interview_progress_모의_면접_진행_api">Interview Progress (모의 면접 진행) API</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_면접_진행_시작"><a class="link" href="#_면접_진행_시작">면접 진행 시작</a></h3>
+<div class="paragraph">
+<p>확정 참여자 전원의 출석·불참을 한 번에 기록하고 룸을 진행 중으로 전환한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/room-progresses' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "attendances" : [ {
+    "memberId" : "00000000-0000-0000-0000-000000000001",
+    "status" : "ATTENDED"
+  }, {
+    "memberId" : "00000000-0000-0000-0000-000000000002",
+    "status" : "ABSENT"
+  } ]
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_11"><a class="link" href="#_request_fields_11">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>attendances</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자 전원의 출석 선택</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>attendances[].memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>attendances[].status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ATTENDED | ABSENT</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_37"><a class="link" href="#_http_response_37">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 366
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "status" : "IN_PROGRESS",
+    "hostMemberId" : "00000000-0000-0000-0000-000000000001",
+    "attendances" : [ {
+      "memberId" : "00000000-0000-0000-0000-000000000001",
+      "status" : "ATTENDED"
+    }, {
+      "memberId" : "00000000-0000-0000-0000-000000000002",
+      "status" : "ABSENT"
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_36"><a class="link" href="#_response_fields_36">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">시작 후 룸 상태 (IN_PROGRESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.hostMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행을 시작한 방장 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.attendances</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정된 출석 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.attendances[].memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.attendances[].status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ATTENDED | ABSENT</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_23"><a class="link" href="#_error_responses_23">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석 상태 등 요청 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1706</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석 명단 누락·중복·명단 밖 회원</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1702</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 시작 권한 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1701</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">시작 가능 시각·룸 상태가 아님 또는 중복 시작</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_면접_진행_레일_조회"><a class="link" href="#_면접_진행_레일_조회">면접 진행 레일 조회</a></h3>
+<div class="paragraph">
+<p>오프닝, 확정 참여자 순 라운드, 클로징 블록을 반환한다. 현재 블록은 클라이언트 로컬 상태다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/progress-rails?roomId=01920000-0000-7000-8000-000000000440' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_5"><a class="link" href="#_query_parameters_5">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_38"><a class="link" href="#_http_response_38">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 358
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "blocks" : [ {
+      "type" : "OPENING",
+      "target" : null
+    }, {
+      "type" : "ROUND",
+      "target" : {
+        "memberId" : "00000000-0000-0000-0000-000000000002",
+        "nickname" : "성실한 사슴 03"
+      }
+    }, {
+      "type" : "CLOSING",
+      "target" : null
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_37"><a class="link" href="#_response_fields_37">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.blocks</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오프닝, 라운드, 클로징 순 진행 블록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.blocks[].type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">OPENING | ROUND | CLOSING</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.blocks[].target</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ROUND 블록의 면접 대상, 그 외 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.blocks[].target.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.blocks[].target.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상 표시 이름</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_24"><a class="link" href="#_error_responses_24">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 정보를 조회할 수 없는 룸 상태</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_내_출석_결과_조회"><a class="link" href="#_내_출석_결과_조회">내 출석 결과 조회</a></h3>
+<div class="paragraph">
+<p>진행 시작 시 기록된 로그인 참여자 자신의 출석 결과만 반환한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/attendances/me?roomId=01920000-0000-7000-8000-000000000440' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_6"><a class="link" href="#_query_parameters_6">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_39"><a class="link" href="#_http_response_39">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 145
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "memberId" : "00000000-0000-0000-0000-000000000001",
+    "status" : "ATTENDED"
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_38"><a class="link" href="#_response_fields_38">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">로그인 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ATTENDED | ABSENT</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_25"><a class="link" href="#_error_responses_25">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석을 조회할 수 없는 룸 상태</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1705</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석 기록을 찾을 수 없음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_라운드_화면_조회"><a class="link" href="#_라운드_화면_조회">라운드 화면 조회</a></h3>
+<div class="paragraph">
+<p>면접자는 질문을 받지 않고, 면접자 외 참여자는 질문 카드셋을 받는다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rounds?roomId=01920000-0000-7000-8000-000000000440&amp;intervieweeMemberId=00000000-0000-0000-0000-000000000002' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_7"><a class="link" href="#_query_parameters_7">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_40"><a class="link" href="#_http_response_40">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 844
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "role" : "PARTICIPANT",
+    "interviewee" : {
+      "memberId" : "00000000-0000-0000-0000-000000000002",
+      "nickname" : "성실한 사슴 03"
+    },
+    "questions" : [ {
+      "questionId" : 11,
+      "author" : {
+        "memberId" : "00000000-0000-0000-0000-000000000001",
+        "nickname" : "꼼꼼한 여우 12"
+      },
+      "content" : "정합성을 어떻게 복구했나요?",
+      "source" : "PREPARATION",
+      "asked" : true,
+      "followUps" : [ {
+        "questionId" : 12,
+        "author" : {
+          "memberId" : "00000000-0000-0000-0000-000000000001",
+          "nickname" : "꼼꼼한 여우 12"
+        },
+        "content" : "복구 순서는 어떻게 정했나요?",
+        "source" : "IN_PROGRESS",
+        "asked" : false
+      } ]
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_39"><a class="link" href="#_response_fields_39">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.role</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">INTERVIEWEE | PARTICIPANT</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.interviewee.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 라운드 면접자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.interviewee.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">현재 라운드 면접자 표시 이름</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자용 질문 카드, 면접자는 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].author.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 작성자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].author.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 작성자 표시 이름</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].source</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PREPARATION | IN_PROGRESS</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].asked</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 사용 여부</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].author.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 작성자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].author.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 작성자 표시 이름</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].source</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PREPARATION | IN_PROGRESS</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].followUps[].asked</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 사용 여부</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_26"><a class="link" href="#_error_responses_26">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1502</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인 카드셋을 요청함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1503</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상 카드셋을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_진행_중_즉석_질문_추가"><a class="link" href="#_진행_중_즉석_질문_추가">진행 중 즉석 질문 추가</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_17"><a class="link" href="#_curl_request_17">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/questions' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "content" : "즉석 질문"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_12"><a class="link" href="#_request_fields_12">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 본문 (1~500자)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_41"><a class="link" href="#_http_response_41">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 201 Created
+Content-Type: application/json
+Content-Length: 84
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "questionId" : 11
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_40"><a class="link" href="#_response_fields_40">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 원 질문 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_27"><a class="link" href="#_error_responses_27">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1502</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인 라운드에 질문을 추가함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1503</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_진행_중_꼬리질문_추가"><a class="link" href="#_진행_중_꼬리질문_추가">진행 중 꼬리질문 추가</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_18"><a class="link" href="#_curl_request_18">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/follow-up-questions' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "questionId" : 11,
+  "content" : "꼬리질문"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_13"><a class="link" href="#_request_fields_13">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">부모 원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 본문 (1~500자)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_42"><a class="link" href="#_http_response_42">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 201 Created
+Content-Type: application/json
+Content-Length: 84
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "questionId" : 12
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_41"><a class="link" href="#_response_fields_41">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 꼬리질문 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_28"><a class="link" href="#_error_responses_28">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">꼬리질문 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1502</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인 라운드에 질문을 추가함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1503</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">부모 원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_사용_여부_변경"><a class="link" href="#_질문_사용_여부_변경">질문 사용 여부 변경</a></h3>
+<div class="paragraph">
+<p>원 질문과 꼬리질문의 질문했어요 표시를 진행 중에 체크하거나 해제한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/questions/11' -i -X PATCH \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "asked" : false
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_18"><a class="link" href="#_path_parameters_18">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 18. /v1/questions/{questionId}</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 또는 꼬리질문 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_14"><a class="link" href="#_request_fields_14">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>asked</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문했으면 true, 되돌리면 false</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_43"><a class="link" href="#_http_response_43">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_42"><a class="link" href="#_response_fields_42">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_29"><a class="link" href="#_error_responses_29">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 사용 여부 요청 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1502</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인 라운드의 질문을 변경함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1503</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접 대상을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1703</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">확정 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1704</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_메모_조회"><a class="link" href="#_질문_메모_조회">질문 메모 조회</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_19"><a class="link" href="#_curl_request_19">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-comments?roomId=01920000-0000-7000-8000-000000000440&amp;intervieweeMemberId=00000000-0000-0000-0000-000000000002&amp;questionId=11&amp;cursorCreatedAt=2026-08-14T09:59:00&amp;cursorId=20' -i -X GET</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_8"><a class="link" href="#_query_parameters_8">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cursorCreatedAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이전 페이지 마지막 생성 시각</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cursorId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이전 페이지 마지막 질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_44"><a class="link" href="#_http_response_44">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 502
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "comments" : [ {
+      "commentId" : 21,
+      "author" : {
+        "memberId" : "00000000-0000-0000-0000-000000000001",
+        "nickname" : "꼼꼼한 여우 12",
+        "mine" : true
+      },
+      "type" : "GOOD_POINT",
+      "content" : "장애 시나리오부터 짚은 점이 좋았어요",
+      "createdAt" : "2026-08-14T10:00:00"
+    } ],
+    "nextCursor" : {
+      "createdAt" : "2026-08-14T10:00:00",
+      "id" : 21
+    }
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_43"><a class="link" href="#_response_fields_43">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">오래된 순 질문 메모 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].author.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].author.nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 표시 이름</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].author.mine</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">로그인 회원이 작성했는지 여부</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MEMO | GOOD_POINT | IMPROVEMENT_POINT</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.comments[].createdAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 작성 시각</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.nextCursor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">다음 페이지 커서, 없으면 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.nextCursor.createdAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">다음 커서 생성 시각</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.nextCursor.id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">다음 커서 질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_30"><a class="link" href="#_error_responses_30">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">커서 두 값 중 하나가 누락됨</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1509</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 조회할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1512</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 조회할 수 없는 룸 상태</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_메모_작성"><a class="link" href="#_질문_메모_작성">질문 메모 작성</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_20"><a class="link" href="#_curl_request_20">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-comments' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "questionId" : 11,
+  "type" : "MEMO",
+  "content" : "기록"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_15"><a class="link" href="#_request_fields_15">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최초 유형 MEMO</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공백이 아닌 메모 본문</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_45"><a class="link" href="#_http_response_45">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 201 Created
+Content-Type: application/json
+Content-Length: 83
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "commentId" : 21
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_44"><a class="link" href="#_response_fields_44">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_31"><a class="link" href="#_error_responses_31">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최초 유형 또는 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1509</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 작성할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1510</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_메모_평가_상태_토글"><a class="link" href="#_질문_메모_평가_상태_토글">질문 메모 평가 상태 토글</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_21"><a class="link" href="#_curl_request_21">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-comment-types/21' -i -X PATCH \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "questionId" : 11,
+  "type" : "GOOD_POINT"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_19"><a class="link" href="#_path_parameters_19">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 19. /v1/question-comment-types/{commentId}</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_16"><a class="link" href="#_request_fields_16">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GOOD_POINT | IMPROVEMENT_POINT</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_46"><a class="link" href="#_http_response_46">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_45"><a class="link" href="#_response_fields_45">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_32"><a class="link" href="#_error_responses_32">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">허용되지 않은 평가 유형</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1509</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 변경할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1510</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1511</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인이 작성한 질문 메모를 찾을 수 없음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_메모_수정"><a class="link" href="#_질문_메모_수정">질문 메모 수정</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_22"><a class="link" href="#_curl_request_22">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-comments/21' -i -X PATCH \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "questionId" : 11,
+  "content" : "수정한 기록"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_20"><a class="link" href="#_path_parameters_20">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 20. /v1/question-comments/{commentId}</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_17"><a class="link" href="#_request_fields_17">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공백이 아닌 수정 본문</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_47"><a class="link" href="#_http_response_47">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_46"><a class="link" href="#_response_fields_46">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_33"><a class="link" href="#_error_responses_33">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">수정 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1509</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 변경할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1510</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1511</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인이 작성한 질문 메모를 찾을 수 없음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_질문_메모_삭제"><a class="link" href="#_질문_메모_삭제">질문 메모 삭제</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_23"><a class="link" href="#_curl_request_23">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-comments/21?roomId=01920000-0000-7000-8000-000000000440&amp;intervieweeMemberId=00000000-0000-0000-0000-000000000002&amp;questionId=11' -i -X DELETE \
+    -H 'Content-Type: application/x-www-form-urlencoded'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_21"><a class="link" href="#_path_parameters_21">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 21. /v1/question-comments/{commentId}</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_9"><a class="link" href="#_query_parameters_9">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_48"><a class="link" href="#_http_response_48">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_47"><a class="link" href="#_response_fields_47">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_34"><a class="link" href="#_error_responses_34">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1507</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1509</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모를 삭제할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1510</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1511</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">본인이 작성한 질문 메모를 찾을 수 없음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_내_라운드_질문_기록_조회"><a class="link" href="#_내_라운드_질문_기록_조회">내 라운드 질문 기록 조회</a></h3>
+<div class="paragraph">
+<p>질문한 원 질문 중 로그인 참여자가 남긴 질문 메모만 질문별로 정리한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/question-records/me?roomId=01920000-0000-7000-8000-000000000440&amp;intervieweeMemberId=00000000-0000-0000-0000-000000000002' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_10"><a class="link" href="#_query_parameters_10">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_49"><a class="link" href="#_http_response_49">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 342
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "records" : [ {
+      "questionId" : 11,
+      "questionContent" : "정합성을 어떻게 복구했나요?",
+      "comments" : [ {
+        "commentId" : 21,
+        "type" : "MEMO",
+        "content" : "기록",
+        "createdAt" : "2026-08-14T10:00:00"
+      } ]
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_48"><a class="link" href="#_response_fields_48">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문별 내 기록 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제로 질문한 원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].questionContent</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">원 질문 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].comments</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">해당 질문에 작성한 내 메모</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].comments[].commentId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].comments[].type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MEMO | GOOD_POINT | IMPROVEMENT_POINT</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].comments[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.records[].comments[].createdAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 메모 작성 시각</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_35"><a class="link" href="#_error_responses_35">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1902</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 피드백에 접근할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1903</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_라운드_최종_피드백_작성"><a class="link" href="#_라운드_최종_피드백_작성">라운드 최종 피드백 작성</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_24"><a class="link" href="#_curl_request_24">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/final-feedbacks' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "content" : "최종 피드백"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_18"><a class="link" href="#_request_fields_18">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공백이 아닌 최종 피드백 본문</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_50"><a class="link" href="#_http_response_50">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 201 Created
+Content-Type: application/json
+Content-Length: 84
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "feedbackId" : 31
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_49"><a class="link" href="#_response_fields_49">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.feedbackId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">생성된 최종 피드백 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_36"><a class="link" href="#_error_responses_36">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1901</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이미 최종 피드백을 작성함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1902</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백을 작성할 권한이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1903</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_면접자_자가_피드백_저장"><a class="link" href="#_면접자_자가_피드백_저장">면접자 자가 피드백 저장</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_25"><a class="link" href="#_curl_request_25">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/self-feedbacks' -i -X PUT \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+  "content" : "자가 피드백"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_19"><a class="link" href="#_request_fields_19">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공백이 아닌 자가 피드백 본문</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_51"><a class="link" href="#_http_response_51">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 84
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "feedbackId" : 32
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_50"><a class="link" href="#_response_fields_50">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.feedbackId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">저장된 자가 피드백 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_37"><a class="link" href="#_error_responses_37">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자가 피드백 본문 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1902</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접자 본인이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1903</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_면접자_라운드_피드백_조회"><a class="link" href="#_면접자_라운드_피드백_조회">면접자 라운드 피드백 조회</a></h3>
+<div class="paragraph">
+<p>확인 전 최종 피드백 본문은 가리고 카드별 열람 상태만 반환한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/round-feedbacks?roomId=01920000-0000-7000-8000-000000000440&amp;intervieweeMemberId=00000000-0000-0000-0000-000000000002' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_11"><a class="link" href="#_query_parameters_11">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_52"><a class="link" href="#_http_response_52">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 703
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "selfFeedback" : {
+      "feedbackId" : 32,
+      "content" : "자가 피드백"
+    },
+    "finalFeedbacks" : [ {
+      "feedbackId" : 31,
+      "author" : {
+        "memberId" : "00000000-0000-0000-0000-000000000001",
+        "displayName" : "꼼꼼한 여우 12",
+        "role" : "PARTICIPANT"
+      },
+      "content" : null,
+      "revealed" : false
+    }, {
+      "feedbackId" : 33,
+      "author" : {
+        "memberId" : "00000000-0000-0000-0000-000000000001",
+        "displayName" : "꼼꼼한 여우 12",
+        "role" : "PARTICIPANT"
+      },
+      "content" : "열람한 최종 피드백",
+      "revealed" : true
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_51"><a class="link" href="#_response_fields_51">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.selfFeedback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자가 피드백, 작성하지 않았으면 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.selfFeedback.feedbackId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자가 피드백 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.selfFeedback.content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자가 피드백 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백 카드 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].feedbackId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].author.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].author.displayName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 표시 이름</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].author.role</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 역할 (PARTICIPANT)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">열람 확인 후 피드백 본문, 확인 전 null</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.finalFeedbacks[].revealed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">카드 열람 확인 여부</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_38"><a class="link" href="#_error_responses_38">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1902</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접자 본인이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1904</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">피드백을 조회할 수 없는 룸 상태</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_최종_피드백_카드_열람_확인"><a class="link" href="#_최종_피드백_카드_열람_확인">최종 피드백 카드 열람 확인</a></h3>
+<div class="sect3">
+<h4 id="_curl_request_26"><a class="link" href="#_curl_request_26">Curl Request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/feedback-disclosures/31' -i -X PUT \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
+}'</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_22"><a class="link" href="#_path_parameters_22">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 22. /v1/feedback-disclosures/{feedbackId}</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>feedbackId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_20"><a class="link" href="#_request_fields_20">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervieweeMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">라운드 면접자 회원 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_53"><a class="link" href="#_http_response_53">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_52"><a class="link" href="#_response_fields_52">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_39"><a class="link" href="#_error_responses_39">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1902</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">면접자 본인이 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1904</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">피드백을 조회할 수 없는 룸 상태</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1905</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최종 피드백 카드를 찾을 수 없음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_내_클로징_평가_질문_조회"><a class="link" href="#_내_클로징_평가_질문_조회">내 클로징 평가 질문 조회</a></h3>
+<div class="paragraph">
+<p>출석 참여자가 자기 라운드에서 실제 사용된 원 질문만 평가 대상으로 조회한다. 꼬리질문은 포함하지 않는다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/closing-questions/me?roomId=01920000-0000-7000-8000-000000000440' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_parameters_12"><a class="link" href="#_query_parameters_12">Query Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_54"><a class="link" href="#_http_response_54">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 274
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "questions" : [ {
+      "questionId" : 11,
+      "authorMemberId" : "00000000-0000-0000-0000-000000000001",
+      "content" : "정합성을 어떻게 복구했나요?",
+      "source" : "PREPARATION"
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_53"><a class="link" href="#_response_fields_53">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제로 사용된 원 질문 목록</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">평가 대상 원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].authorMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 작성자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 본문</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.questions[].source</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PREPARATION | IN_PROGRESS</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_40"><a class="link" href="#_error_responses_40">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1801</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1802</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_클로징_제출"><a class="link" href="#_클로징_제출">클로징 제출</a></h3>
+<div class="paragraph">
+<p>출석 참여자가 실제로 받은 모든 원 질문을 평가하고 클로징을 멱등하게 제출한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/closing-responses' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "roomId" : "01920000-0000-7000-8000-000000000440",
+  "evaluations" : [ {
+    "questionId" : 11,
+    "vote" : "MEMORABLE"
+  }, {
+    "questionId" : 12,
+    "vote" : "DISAPPOINTING"
+  } ]
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_21"><a class="link" href="#_request_fields_21">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evaluations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">받은 원 질문 전체의 평가</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evaluations[].questionId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제로 받은 원 질문 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evaluations[].vote</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MEMORABLE | DISAPPOINTING</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_55"><a class="link" href="#_http_response_55">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 216
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "roomId" : "01920000-0000-7000-8000-000000000440",
+    "memberId" : "00000000-0000-0000-0000-000000000001",
+    "submittedAt" : "2026-08-14T12:00:00"
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_54"><a class="link" href="#_response_fields_54">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">제출자 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.submittedAt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">최초 클로징 제출 시각</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_41"><a class="link" href="#_error_responses_41">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">error.code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">케이스</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">질문 평가 요청 형식 오류</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1803</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">평가 질문이 실제 사용한 모든 원 질문과 일치하지 않음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1801</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">출석 참여자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1802</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 중인 룸이 아님</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-14 00:52:12 UTC
+Last updated 2026-08-14 04:22:47 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
