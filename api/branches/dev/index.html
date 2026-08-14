@@ -972,7 +972,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-14",
-    "datetime" : "2026-08-14T00:51:14.569942054",
+    "datetime" : "2026-08-14T00:53:37.297341221",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1086,7 +1086,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-14",
-    "datetime" : "2026-08-14T00:51:14.785756045",
+    "datetime" : "2026-08-14T00:53:37.477619342",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1274,7 +1274,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 14 Aug 2026 01:21:13 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Fri, 14 Aug 2026 01:23:36 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1480,7 +1480,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "ad52f624-67ec-45d4-8264-7ac17bf83239",
+      "termsId" : "39fdfd30-62ba-463f-a00e-cb7f43251525",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1488,7 +1488,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "a8d30992-99a0-4088-8f60-da6eee8950a9",
+      "termsId" : "cc6dd804-3c97-4c71-a13e-259ef3b59ce0",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1593,12 +1593,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "01287c5d-dcf0-4eb0-8e41-a28c6a15fec5",
+    "memberId" : "1bb87694-b1e9-47be-be53-642609dfdfd9",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "01287c5d-dcf0-4eb0-8e41-a28c6a15fec5",
+      "memberId" : "1bb87694-b1e9-47be-be53-642609dfdfd9",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2376,7 +2376,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "400b34f7-6043-4e58-829a-54fa22ab7537",
+    "memberId" : "29462cfb-a549-4f82-ab1f-be60a9ed1e50",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -3433,7 +3433,7 @@ Content-Length: 61
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1185
+Content-Length: 1190
 
 {
   "result" : "SUCCESS",
@@ -3448,15 +3448,15 @@ Content-Length: 1185
       "code" : "THIRD",
       "label" : "3차"
     }, {
-      "code" : "FINAL",
-      "label" : "최종"
+      "code" : "ETC",
+      "label" : "기타"
     } ],
     "types" : [ {
       "code" : "JOB",
       "label" : "직무 면접"
     }, {
       "code" : "CULTURE_FIT",
-      "label" : "컬처핏"
+      "label" : "컬쳐핏 면접"
     }, {
       "code" : "EXECUTIVE",
       "label" : "임원 면접"
@@ -4273,7 +4273,7 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1178
+Content-Length: 1179
 
 {
   "result" : "SUCCESS",
@@ -4291,7 +4291,7 @@ Content-Length: 1178
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-15T00:51:19.61649613",
+      "startAt" : "2026-08-15T00:53:41.467668226",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4302,7 +4302,7 @@ Content-Length: 1178
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "2570f592-51a3-4a86-a427-07747bdae8b5",
+    "hostMemberId" : "ac52fd4d-679d-4183-a475-a5e8a52c7644",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
@@ -4861,7 +4861,7 @@ Content-Length: 1375
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "e1010436-2f7b-4ed4-a804-377d8c8a4262",
+  "resumeId" : "d75fa7fc-936d-40ef-8a61-eba3f386fc85",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5095,7 +5095,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "0e2839d4-6f01-4abc-b65a-2f2f2ec82f43",
+      "resumeId" : "e4267e08-ae18-4796-a35e-17ecb460bfad",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -5640,7 +5640,7 @@ Content-Length: 289
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications/3001/reject' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "reason" : "이번 일정과 준비 방향이 맞지 않아요."
+  "reason" : "ROLE_MISMATCH"
 }'</code></pre>
 </div>
 </div>
@@ -5689,7 +5689,7 @@ Content-Length: 289
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>reason</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">반려 사유 (선택, 최대 50자)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">반려 사유 코드 (선택: ROLE_MISMATCH | CAPACITY_FILLED | DIRECTION_MISMATCH, null 은 사유 없음)</p></td>
 </tr>
 </tbody>
 </table>
@@ -6617,7 +6617,7 @@ Content-Length: 61
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-14 00:49:35 UTC
+Last updated 2026-08-14 00:52:12 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
