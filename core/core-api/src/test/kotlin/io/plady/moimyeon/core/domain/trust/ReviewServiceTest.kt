@@ -68,7 +68,7 @@ class ReviewServiceTest {
         )
         every { submissionManager.submit(command) } returns 1L
 
-        val reviewId = service.submit(command)
+        val reviewId = submit(command)
         tags.clear()
 
         assertThat(reviewId).isEqualTo(1L)
@@ -80,7 +80,7 @@ class ReviewServiceTest {
         val command = command()
         every { submissionManager.submit(command) } returns 1L
 
-        val reviewId = service.submit(command)
+        val reviewId = submit(command)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(command) }
@@ -107,7 +107,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(selfCommand) } throws CoreException(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
 
         assertThatThrownBy {
-            service.submit(selfCommand)
+            submit(selfCommand)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
         }
@@ -210,7 +210,7 @@ class ReviewServiceTest {
         val command = updateCommand()
         every { reviewEditor.update(command) } just Runs
 
-        service.update(command)
+        update(command)
 
         verify(exactly = 1) { reviewEditor.update(command) }
     }
@@ -270,7 +270,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(submission) } returns 2L
 
         service.delete(authorMemberId, 1L)
-        val resubmittedReviewId = service.submit(submission)
+        val resubmittedReviewId = submit(submission)
 
         assertThat(resubmittedReviewId).isEqualTo(2L)
         verify(exactly = 1) { reviewEditor.delete(authorMemberId, 1L) }
@@ -283,7 +283,7 @@ class ReviewServiceTest {
         givenEligible(command)
         every { skipRecorder.record(command) } just Runs
 
-        service.skip(command)
+        skip(command)
 
         verify(exactly = 1) { skipRecorder.record(command) }
     }
@@ -308,8 +308,8 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(submission) } returns 1L
 
-        service.skip(skip)
-        val reviewId = service.submit(submission)
+        skip(skip)
+        val reviewId = submit(submission)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { skipRecorder.record(skip) }
@@ -325,8 +325,8 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(remainingSubmission) } returns 1L
 
-        service.skip(skip)
-        val reviewId = service.submit(remainingSubmission)
+        skip(skip)
+        val reviewId = submit(remainingSubmission)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(remainingSubmission) }
@@ -367,7 +367,7 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
 
-        service.skip(skip)
+        skip(skip)
         val result = service.getTargets(authorMemberId, roomId)
 
         assertThat(result).containsExactlyElementsOf(targets)
@@ -424,7 +424,7 @@ class ReviewServiceTest {
     private fun assertSubmissionSucceeds() {
         every { submissionManager.submit(command()) } returns 1L
 
-        val reviewId = service.submit(command())
+        val reviewId = submit(command())
 
         assertThat(reviewId).isEqualTo(1L)
     }
@@ -433,7 +433,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(command()) } throws CoreException(errorType)
 
         assertThatThrownBy {
-            service.submit(command())
+            submit(command())
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(errorType)
         }
@@ -443,7 +443,7 @@ class ReviewServiceTest {
         val command = command()
         every { submissionManager.submit(command) } throws CoreException(errorType)
 
-        assertThatThrownBy { service.submit(command) }
+        assertThatThrownBy { submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -459,7 +459,7 @@ class ReviewServiceTest {
         val command = updateCommand()
         every { reviewEditor.update(command) } throws CoreException(errorType)
 
-        assertThatThrownBy { service.update(command) }
+        assertThatThrownBy { update(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -472,5 +472,34 @@ class ReviewServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
+    }
+
+    private fun submit(command: ReviewSubmissionCommand): Long {
+        return service.submit(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSubmissionContent(
+                targetMemberId = command.targetMemberId,
+                tags = command.tags,
+                content = command.content,
+                anonymous = command.anonymous,
+            ),
+        )
+    }
+
+    private fun update(command: ReviewUpdateCommand) {
+        service.update(
+            command.authorMemberId,
+            command.reviewId,
+            ReviewUpdateContent(command.tags, command.content),
+        )
+    }
+
+    private fun skip(command: ReviewSkipCommand) {
+        service.skip(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSkipContent(command.targetMemberId),
+        )
     }
 }

@@ -17,7 +17,7 @@ class ReviewService(
         roomId: UUID,
         content: ReviewSubmissionContent,
     ): Long {
-        return submit(
+        return submissionManager.submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
                 authorMemberId = authorMemberId,
@@ -29,16 +29,12 @@ class ReviewService(
         )
     }
 
-    fun submit(command: ReviewSubmissionCommand): Long {
-        return submissionManager.submit(command)
-    }
-
     fun update(
         authorMemberId: UUID,
         reviewId: Long,
         content: ReviewUpdateContent,
     ) {
-        update(
+        reviewEditor.update(
             ReviewUpdateCommand(
                 reviewId = reviewId,
                 authorMemberId = authorMemberId,
@@ -46,10 +42,6 @@ class ReviewService(
                 content = content.content,
             ),
         )
-    }
-
-    fun update(command: ReviewUpdateCommand) {
-        reviewEditor.update(command)
     }
 
     fun delete(authorMemberId: UUID, reviewId: Long) {
@@ -61,16 +53,11 @@ class ReviewService(
         roomId: UUID,
         content: ReviewSkipContent,
     ) {
-        skip(
-            ReviewSkipCommand(
-                roomId = roomId,
-                authorMemberId = authorMemberId,
-                targetMemberId = content.targetMemberId,
-            ),
+        val command = ReviewSkipCommand(
+            roomId = roomId,
+            authorMemberId = authorMemberId,
+            targetMemberId = content.targetMemberId,
         )
-    }
-
-    fun skip(command: ReviewSkipCommand) {
         eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
         skipRecorder.record(command)
     }

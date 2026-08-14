@@ -75,7 +75,7 @@ class ReviewSubmissionManagerIT(
             anonymous = true,
         )
 
-        val reviewId = reviewService.submit(command)
+        val reviewId = submit(command)
 
         val review = reviewRepository.findAllWithTagsByIdIn(listOf(reviewId)).single()
         assertThat(review.roomId).isEqualTo(roomId)
@@ -86,7 +86,7 @@ class ReviewSubmissionManagerIT(
         assertThat(review.anonymous).isTrue()
         assertThat(review.visibleAt).isEqualTo(TRUST_NOW.plusHours(3))
 
-        assertThatThrownBy { reviewService.submit(command) }
+        assertThatThrownBy { submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_DUPLICATED)
             }
@@ -103,7 +103,7 @@ class ReviewSubmissionManagerIT(
         persistAttendance(roomId, authorMemberId, AttendanceStatus.ATTENDED)
         persistAttendance(roomId, targetMemberId, AttendanceStatus.ATTENDED)
 
-        val reviewId = reviewService.submit(
+        val reviewId = submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
                 authorMemberId = authorMemberId,
@@ -122,7 +122,7 @@ class ReviewSubmissionManagerIT(
         val roomId = persistRoom(RoomStatus.CANCELED)
 
         assertThatThrownBy {
-            reviewService.submit(
+            submit(
                 ReviewSubmissionCommand(
                     roomId = roomId,
                     authorMemberId = authorMemberId,
@@ -145,7 +145,7 @@ class ReviewSubmissionManagerIT(
         val roomId = persistRoom(RoomStatus.COMPLETED)
         persistAttendance(roomId, authorMemberId, AttendanceStatus.ATTENDED)
         persistAttendance(roomId, targetMemberId, AttendanceStatus.ATTENDED)
-        val reviewId = reviewService.submit(
+        val reviewId = submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
                 authorMemberId = authorMemberId,
@@ -183,10 +183,10 @@ class ReviewSubmissionManagerIT(
             content = "첫 번째 후기",
             anonymous = true,
         )
-        val deletedReviewId = reviewService.submit(command)
+        val deletedReviewId = submit(command)
 
         reviewEditor.delete(authorMemberId, deletedReviewId)
-        val resubmittedReviewId = reviewService.submit(command.copy(content = "다시 제출한 후기"))
+        val resubmittedReviewId = submit(command.copy(content = "다시 제출한 후기"))
 
         assertThat(resubmittedReviewId).isNotEqualTo(deletedReviewId)
         assertThat(reviewRepository.findById(deletedReviewId).orElseThrow().isDeleted()).isTrue()
@@ -211,8 +211,8 @@ class ReviewSubmissionManagerIT(
         persistAttendance(roomId, targetMemberId, AttendanceStatus.ATTENDED)
         val command = ReviewSkipCommand(roomId, authorMemberId, targetMemberId)
 
-        reviewService.skip(command)
-        reviewService.skip(command)
+        skip(command)
+        skip(command)
 
         assertThat(
             reviewSkipRepository.findAll().filter {
@@ -231,9 +231,9 @@ class ReviewSubmissionManagerIT(
         persistAttendance(roomId, authorMemberId, AttendanceStatus.ATTENDED)
         persistAttendance(roomId, targetMemberId, AttendanceStatus.ATTENDED)
         persistAttendance(roomId, remainingTargetMemberId, AttendanceStatus.ATTENDED)
-        reviewService.skip(ReviewSkipCommand(roomId, authorMemberId, targetMemberId))
+        skip(ReviewSkipCommand(roomId, authorMemberId, targetMemberId))
 
-        val remainingReviewId = reviewService.submit(
+        val remainingReviewId = submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
                 authorMemberId = authorMemberId,
@@ -243,7 +243,7 @@ class ReviewSubmissionManagerIT(
                 anonymous = true,
             ),
         )
-        val skippedTargetReviewId = reviewService.submit(
+        val skippedTargetReviewId = submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
                 authorMemberId = authorMemberId,
@@ -449,5 +449,26 @@ class ReviewSubmissionManagerIT(
         transactionTemplate.executeWithoutResult {
             reviewRepository.findById(reviewId).orElseThrow().delete(deletedAt)
         }
+    }
+
+    private fun submit(command: ReviewSubmissionCommand): Long {
+        return reviewService.submit(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSubmissionContent(
+                targetMemberId = command.targetMemberId,
+                tags = command.tags,
+                content = command.content,
+                anonymous = command.anonymous,
+            ),
+        )
+    }
+
+    private fun skip(command: ReviewSkipCommand) {
+        reviewService.skip(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSkipContent(command.targetMemberId),
+        )
     }
 }

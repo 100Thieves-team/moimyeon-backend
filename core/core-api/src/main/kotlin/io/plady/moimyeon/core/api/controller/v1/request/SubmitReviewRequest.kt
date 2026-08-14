@@ -12,20 +12,15 @@ data class SubmitReviewRequest(
     val anonymous: Boolean = true,
 ) {
     fun toContent(): ReviewSubmissionContent {
+        if (tags.any { it !in ReviewTagOption.labels }) {
+            throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+        }
+
         return ReviewSubmissionContent(
             targetMemberId = targetMemberId,
-            tags = normalizeReviewTags(tags),
-            content = normalizeReviewContent(content),
+            tags = tags.toCollection(linkedSetOf()),
+            content = content?.trim()?.takeIf(String::isNotEmpty),
             anonymous = anonymous,
         )
     }
 }
-
-internal fun normalizeReviewTags(tags: Set<String>): Set<String> {
-    if (tags.any { it !in ReviewTagOption.labels }) {
-        throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
-    }
-    return tags.toCollection(linkedSetOf())
-}
-
-internal fun normalizeReviewContent(content: String?): String? = content?.trim()?.takeIf(String::isNotEmpty)

@@ -15,6 +15,7 @@ import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -79,7 +80,7 @@ class ReviewController(
     @GetMapping("/v1/members/me/received-reviews")
     fun receivedReviews(
         @LoginMember currentMember: CurrentMember,
-        request: ReceivedReviewsRequest,
+        @ModelAttribute request: ReceivedReviewsRequest,
     ): ApiResponse<ReceivedReviewsResponse> {
         return ApiResponse.success(
             reviewFacade.getReceivedReviews(

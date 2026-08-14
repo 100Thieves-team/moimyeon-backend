@@ -694,7 +694,8 @@ class ReviewControllerTest : RestDocsTest() {
         fieldWithPath("data.reviews[].authorNickname").type(JsonFieldType.STRING)
             .description("작성자 표시명. 익명이면 익명의 참여자, 공개이면 현재 닉네임"),
         fieldWithPath("data.reviews[].tags").type(JsonFieldType.ARRAY).description("평가 태그"),
-        fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING).optional().description("한 줄 후기"),
+        fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING).optional()
+            .description("한 줄 후기 (null 가능)"),
         fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부"),
         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
     )
