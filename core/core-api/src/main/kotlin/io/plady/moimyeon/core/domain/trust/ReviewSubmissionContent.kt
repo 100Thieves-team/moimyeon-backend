@@ -2,10 +2,9 @@ package io.plady.moimyeon.core.domain.trust
 
 import java.util.UUID
 
-data class ReceivedReview(
-    val id: Long,
-    val authorMemberId: UUID,
-    val anonymous: Boolean,
+data class ReviewSubmissionContent(
+    val targetMemberId: UUID,
     val tags: Set<String>,
     val content: String?,
+    val anonymous: Boolean,
 )

@@ -73,6 +73,13 @@ class MySqlSchemaValidationIT(
     }
 
     @Test
+    fun `기존 후기는 익명으로 보존하고 새 후기의 익명 여부를 저장한다`() {
+        assertThat(columnNamesOf("review")).contains("anonymous")
+        assertThat(columnOf("review", "anonymous", "IS_NULLABLE")).isEqualTo("NO")
+        assertThat(columnOf("review", "anonymous", "COLUMN_DEFAULT")).isEqualTo("1")
+    }
+
+    @Test
     fun `후기 건너뛰기는 수정되지 않는 대상별 기록으로 저장한다`() {
         assertThat(columnNamesOf("review_skip")).containsExactly(
             "id",

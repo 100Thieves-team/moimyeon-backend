@@ -30,6 +30,7 @@ class ReviewEditorTest {
         targetMemberId = UUID.randomUUID(),
         content = "수정 전 후기",
         visibleAt = now.plusMinutes(5),
+        anonymous = true,
         tags = setOf("시간을 잘 지켜요"),
     )
 
@@ -101,6 +102,7 @@ class ReviewEditorTest {
             targetMemberId = UUID.randomUUID(),
             content = "공개된 후기",
             visibleAt = now.minusMinutes(1),
+            anonymous = true,
             tags = setOf("시간을 잘 지켜요"),
         )
         every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns expiredReview
@@ -125,6 +127,7 @@ class ReviewEditorTest {
             authorMemberId = authorMemberId,
             targetMemberId = UUID.randomUUID(),
             visibleAt = now.minusMinutes(1),
+            anonymous = true,
         )
         every { reviewRepository.findForUpdateByIdAndDeletedAtIsNull(1L) } returns expiredReview
 
