@@ -4,13 +4,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import io.plady.moimyeon.core.enums.AttendanceStatus
+import io.plady.moimyeon.core.domain.progress.RoomProgressReader
 import io.plady.moimyeon.core.enums.QuestionVote
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.storage.db.core.AttendanceEntity
-import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ClosingQuestionRepository
 import io.plady.moimyeon.storage.db.core.ClosingResponseEntity
 import io.plady.moimyeon.storage.db.core.ClosingResponseRepository
@@ -25,12 +23,12 @@ import java.util.UUID
 
 class ClosingSubmissionManagerTest {
     private val roomRepository = mockk<RoomRepository>()
-    private val attendanceRepository = mockk<AttendanceRepository>()
+    private val roomProgressReader = mockk<RoomProgressReader>()
     private val closingQuestionRepository = mockk<ClosingQuestionRepository>()
     private val closingResponseRepository = mockk<ClosingResponseRepository>()
     private val manager = ClosingSubmissionManager(
         roomRepository,
-        attendanceRepository,
+        roomProgressReader,
         closingQuestionRepository,
         closingResponseRepository,
     )
@@ -94,7 +92,7 @@ class ClosingSubmissionManagerTest {
 
         assertThat(result).isEqualTo(ClosingSubmission(roomId, memberId, firstSubmittedAt))
         verify(exactly = 0) {
-            attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(any(), any())
+            roomProgressReader.isAttended(any(), any())
             closingQuestionRepository.findAllAskedTopLevelByRoomIdAndTargetMemberId(any(), any())
             closingResponseRepository.saveAndFlush(any())
         }
@@ -106,9 +104,7 @@ class ClosingSubmissionManagerTest {
         every {
             closingResponseRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
         } returns null
-        every {
-            attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
-        } returns attendance(AttendanceStatus.ABSENT)
+        every { roomProgressReader.isAttended(roomId, memberId) } returns false
 
         assertClosingFails(CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN)
 
@@ -128,7 +124,7 @@ class ClosingSubmissionManagerTest {
         assertClosingFails(CoreErrorType.CLOSING_NOT_AVAILABLE)
 
         verify(exactly = 0) {
-            attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(any(), any())
+            roomProgressReader.isAttended(any(), any())
             closingQuestionRepository.findAllAskedTopLevelByRoomIdAndTargetMemberId(any(), any())
         }
     }
@@ -164,9 +160,7 @@ class ClosingSubmissionManagerTest {
         every {
             closingResponseRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
         } returns null
-        every {
-            attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
-        } returns attendance(AttendanceStatus.ATTENDED)
+        every { roomProgressReader.isAttended(roomId, memberId) } returns true
         every {
             closingQuestionRepository.findAllAskedTopLevelByRoomIdAndTargetMemberId(roomId, memberId)
         } returns listOf(
@@ -180,10 +174,6 @@ class ClosingSubmissionManagerTest {
             every { isActive() } returns true
             every { this@mockk.status } returns status
         }
-    }
-
-    private fun attendance(status: AttendanceStatus): AttendanceEntity = mockk {
-        every { this@mockk.status } returns status
     }
 
     private fun question(id: Long): QuestionEntity = mockk {

@@ -1,11 +1,10 @@
 package io.plady.moimyeon.core.domain.closing
 
-import io.plady.moimyeon.core.enums.AttendanceStatus
+import io.plady.moimyeon.core.domain.progress.RoomProgressReader
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
-import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ClosingQuestionRepository
 import io.plady.moimyeon.storage.db.core.ClosingResponseEntity
 import io.plady.moimyeon.storage.db.core.ClosingResponseRepository
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class ClosingSubmissionManager(
     private val roomRepository: RoomRepository,
-    private val attendanceRepository: AttendanceRepository,
+    private val roomProgressReader: RoomProgressReader,
     private val closingQuestionRepository: ClosingQuestionRepository,
     private val closingResponseRepository: ClosingResponseRepository,
 ) {
@@ -33,12 +32,8 @@ class ClosingSubmissionManager(
         )?.let { return it.toSubmission() }
 
         requireBusiness(room.status == RoomStatus.IN_PROGRESS, CoreErrorType.CLOSING_NOT_AVAILABLE)
-        val attendance = attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(
-            command.roomId,
-            command.memberId,
-        )
         requireBusiness(
-            attendance?.status == AttendanceStatus.ATTENDED,
+            roomProgressReader.isAttended(command.roomId, command.memberId),
             CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN,
         )
 
