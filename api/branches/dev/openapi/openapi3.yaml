@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-14",
-                        "datetime" : "2026-08-14T06:16:08.735374403",
+                        "datetime" : "2026-08-14T07:09:00.786555316",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-14",
-                        "datetime" : "2026-08-14T06:16:08.809239589",
+                        "datetime" : "2026-08-14T07:09:00.845351114",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -111,15 +111,6 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-closing-responses2021047633"
             examples:
-              submitClosingResponse-e1405:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "evaluations" : [ {
-                      "questionId" : 11,
-                      "vote" : "MEMORABLE"
-                    } ]
-                  }
               submitClosingResponse-e1803:
                 value: |-
                   {
@@ -129,7 +120,7 @@ paths:
                       "vote" : "MEMORABLE"
                     } ]
                   }
-              submitClosingResponse-e1801:
+              submitClosingResponse-e1802:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -147,7 +138,7 @@ paths:
                       "vote" : "NEUTRAL"
                     } ]
                   }
-              submitClosingResponse-e1802:
+              submitClosingResponse-e1405:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -168,25 +159,16 @@ paths:
                       "vote" : "DISAPPOINTING"
                     } ]
                   }
+              submitClosingResponse-e1801:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "evaluations" : [ {
+                      "questionId" : 11,
+                      "vote" : "MEMORABLE"
+                    } ]
+                  }
       responses:
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                submitClosingResponse-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "400":
           description: "400"
           content:
@@ -216,24 +198,6 @@ paths:
                         "data" : null
                       }
                     }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                submitClosingResponse-e1801:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1801",
-                        "message" : "출석한 참여자만 클로징을 제출할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
         "409":
           description: "409"
           content:
@@ -249,6 +213,24 @@ paths:
                       "error" : {
                         "code" : "E1802",
                         "message" : "진행 중인 룸에서만 클로징을 제출할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                submitClosingResponse-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -269,6 +251,24 @@ paths:
                         "submittedAt" : "2026-08-14T12:00:00"
                       },
                       "error" : null
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                submitClosingResponse-e1801:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1801",
+                        "message" : "출석한 참여자만 클로징을 제출할 수 있습니다.",
+                        "data" : null
+                      }
                     }
   /v1/companies:
     get:
@@ -345,13 +345,6 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "최종 피드백"
                   }
-              leaveFinalRoundFeedback-e1901:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : "최종 피드백"
-                  }
               leaveFinalRoundFeedback-e1902:
                 value: |-
                   {
@@ -366,7 +359,7 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "\n\t"
                   }
-              leaveFinalRoundFeedback-e1405:
+              leaveFinalRoundFeedback-e1901:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -374,6 +367,13 @@ paths:
                     "content" : "최종 피드백"
                   }
               leaveFinalRoundFeedback:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "최종 피드백"
+                  }
+              leaveFinalRoundFeedback-e1405:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -446,6 +446,22 @@ paths:
                         "data" : null
                       }
                     }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-final-feedbacks-317638049"
+              examples:
+                leaveFinalRoundFeedback:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "feedbackId" : 31
+                      },
+                      "error" : null
+                    }
         "404":
           description: "404"
           content:
@@ -464,22 +480,6 @@ paths:
                         "data" : null
                       }
                     }
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-final-feedbacks-317638049"
-              examples:
-                leaveFinalRoundFeedback:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "feedbackId" : 31
-                      },
-                      "error" : null
-                    }
   /v1/follow-up-questions:
     post:
       tags:
@@ -494,13 +494,13 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-follow-up-questions1363007138"
             examples:
-              leaveProgressFollowUpQuestion-e1502:
+              leaveProgressFollowUpQuestion-e400:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "questionId" : 11,
-                    "content" : "꼬리질문"
+                    "content" : "  "
                   }
               leaveProgressFollowUpQuestion-e1507:
                 value: |-
@@ -510,15 +510,15 @@ paths:
                     "questionId" : 11,
                     "content" : "꼬리질문"
                   }
-              leaveProgressFollowUpQuestion-e400:
+              leaveProgressFollowUpQuestion-e1502:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "questionId" : 11,
-                    "content" : "  "
+                    "content" : "꼬리질문"
                   }
-              leaveProgressFollowUpQuestion:
+              leaveProgressFollowUpQuestion-e1405:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -542,14 +542,6 @@ paths:
                     "questionId" : 11,
                     "content" : "꼬리질문"
                   }
-              leaveProgressFollowUpQuestion-e1405:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "content" : "꼬리질문"
-                  }
               leaveProgressFollowUpQuestion-e1703:
                 value: |-
                   {
@@ -558,7 +550,73 @@ paths:
                     "questionId" : 11,
                     "content" : "꼬리질문"
                   }
+              leaveProgressFollowUpQuestion:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "content" : "꼬리질문"
+                  }
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leaveProgressFollowUpQuestion-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leaveProgressFollowUpQuestion-e1507:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1507",
+                        "message" : "질문을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                leaveProgressFollowUpQuestion-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                leaveProgressFollowUpQuestion-e1503:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1503",
+                        "message" : "질문 카드셋을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "403":
           description: "403"
           content:
@@ -588,61 +646,21 @@ paths:
                         "data" : null
                       }
                     }
-        "404":
-          description: "404"
+        "409":
+          description: "409"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                leaveProgressFollowUpQuestion-e1507:
+                leaveProgressFollowUpQuestion-e1704:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1507",
-                        "message" : "질문을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                leaveProgressFollowUpQuestion-e1503:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1503",
-                        "message" : "질문 카드셋을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                leaveProgressFollowUpQuestion-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                leaveProgressFollowUpQuestion-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "code" : "E1704",
+                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
                         "data" : null
                       }
                     }
@@ -661,24 +679,6 @@ paths:
                         "questionId" : 12
                       },
                       "error" : null
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                leaveProgressFollowUpQuestion-e1704:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
-                        "data" : null
-                      }
                     }
   /v1/job-postings:
     post:
@@ -703,14 +703,14 @@ paths:
                     "url" : "https://company.example.com/careers/12345",
                     "postingName" : "   "
                   }
-              createJobPosting-e1102:
+              createJobPosting:
                 value: |-
                   {
                     "companyId" : 43429,
                     "url" : "https://company.example.com/careers/12345",
                     "postingName" : "프론트엔드 개발자 (결제플랫폼)"
                   }
-              createJobPosting:
+              createJobPosting-e1102:
                 value: |-
                   {
                     "companyId" : 43429,
@@ -736,24 +736,6 @@ paths:
                         "data" : null
                       }
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                createJobPosting-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -773,6 +755,24 @@ paths:
                         "verified" : false
                       },
                       "error" : null
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createJobPosting-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
                     }
   /v1/job-roles:
     get:
@@ -826,24 +826,6 @@ paths:
         schema:
           type: string
       responses:
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getProgressRail-e1703:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1703",
-                        "message" : "룸 진행에 접근할 권한이 없습니다.",
-                        "data" : null
-                      }
-                    }
         "404":
           description: "404"
           content:
@@ -859,24 +841,6 @@ paths:
                       "error" : {
                         "code" : "E1405",
                         "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getProgressRail-e1704:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
                         "data" : null
                       }
                     }
@@ -907,6 +871,42 @@ paths:
                         } ]
                       },
                       "error" : null
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getProgressRail-e1704:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1704",
+                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
+                        "data" : null
+                      }
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getProgressRail-e1703:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1703",
+                        "message" : "룸 진행에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
                     }
   /v1/question-comments:
     get:
@@ -948,6 +948,53 @@ paths:
         schema:
           type: string
       responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getQuestionComments-e1507:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1507",
+                        "message" : "질문을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                getQuestionComments-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getQuestionComments-e1512:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1512",
+                        "message" : "질문 댓글을 조회할 수 없는 룸 상태입니다.",
+                        "data" : null
+                      }
+                    }
         "400":
           description: "400"
           content:
@@ -996,35 +1043,6 @@ paths:
                       },
                       "error" : null
                     }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getQuestionComments-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                getQuestionComments-e1507:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1507",
-                        "message" : "질문을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "403":
           description: "403"
           content:
@@ -1043,24 +1061,6 @@ paths:
                         "data" : null
                       }
                     }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getQuestionComments-e1512:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1512",
-                        "message" : "질문 댓글을 조회할 수 없는 룸 상태입니다.",
-                        "data" : null
-                      }
-                    }
     post:
       tags:
       - v1
@@ -1074,7 +1074,16 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-question-comments1807061222"
             examples:
-              leaveQuestionComment-e1405:
+              leaveQuestionComment-e400:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "type" : "GOOD_POINT",
+                    "content" : "기록"
+                  }
+              leaveQuestionComment:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -1083,7 +1092,7 @@ paths:
                     "type" : "MEMO",
                     "content" : "기록"
                   }
-              leaveQuestionComment-e1507:
+              leaveQuestionComment-e1405:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -1101,13 +1110,13 @@ paths:
                     "type" : "MEMO",
                     "content" : "기록"
                   }
-              leaveQuestionComment-e400:
+              leaveQuestionComment-e1507:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "questionId" : 11,
-                    "type" : "GOOD_POINT",
+                    "type" : "MEMO",
                     "content" : "기록"
                   }
               leaveQuestionComment-e1509:
@@ -1119,16 +1128,41 @@ paths:
                     "type" : "MEMO",
                     "content" : "기록"
                   }
-              leaveQuestionComment:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "type" : "MEMO",
-                    "content" : "기록"
-                  }
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                leaveQuestionComment-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-question-comments32871189"
+              examples:
+                leaveQuestionComment:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "commentId" : 21
+                      },
+                      "error" : null
+                    }
         "404":
           description: "404"
           content:
@@ -1176,24 +1210,6 @@ paths:
                         "data" : null
                       }
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                leaveQuestionComment-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "403":
           description: "403"
           content:
@@ -1211,22 +1227,6 @@ paths:
                         "message" : "질문 댓글에 접근할 권한이 없습니다.",
                         "data" : null
                       }
-                    }
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-question-comments32871189"
-              examples:
-                leaveQuestionComment:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "commentId" : 21
-                      },
-                      "error" : null
                     }
   /v1/questions:
     post:
@@ -1249,20 +1249,6 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "즉석 질문"
                   }
-              leaveProgressQuestion-e1704:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : "즉석 질문"
-                  }
-              leaveProgressQuestion-e1405:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : "즉석 질문"
-                  }
               leaveProgressQuestion:
                 value: |-
                   {
@@ -1270,7 +1256,7 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "즉석 질문"
                   }
-              leaveProgressQuestion-e1502:
+              leaveProgressQuestion-e1704:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -1283,6 +1269,20 @@ paths:
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "  "
+                  }
+              leaveProgressQuestion-e1502:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "즉석 질문"
+                  }
+              leaveProgressQuestion-e1405:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "즉석 질문"
                   }
               leaveProgressQuestion-e1703:
                 value: |-
@@ -1321,6 +1321,22 @@ paths:
                         "data" : null
                       }
                     }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-questions-1610867609"
+              examples:
+                leaveProgressQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "questionId" : 11
+                      },
+                      "error" : null
+                    }
         "409":
           description: "409"
           content:
@@ -1339,21 +1355,23 @@ paths:
                         "data" : null
                       }
                     }
-        "201":
-          description: "201"
+        "400":
+          description: "400"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-questions-1610867609"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                leaveProgressQuestion:
+                leaveProgressQuestion-e400:
                   value: |-
                     {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "questionId" : 11
-                      },
-                      "error" : null
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
                     }
         "403":
           description: "403"
@@ -1381,24 +1399,6 @@ paths:
                       "error" : {
                         "code" : "E1703",
                         "message" : "룸 진행에 접근할 권한이 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                leaveProgressQuestion-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
                         "data" : null
                       }
                     }
@@ -1451,31 +1451,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-room-progresses1093163669"
             examples:
-              startRoomProgress-e1701:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
               startRoomProgress-e1706:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              startRoomProgress:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -1520,25 +1496,31 @@ paths:
                       "status" : "ABSENT"
                     } ]
                   }
+              startRoomProgress-e1701:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              startRoomProgress:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
       responses:
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                startRoomProgress-e1701:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1701",
-                        "message" : "진행을 시작할 수 없는 룸입니다.",
-                        "data" : null
-                      }
-                    }
         "400":
           description: "400"
           content:
@@ -1567,30 +1549,6 @@ paths:
                         "message" : "요청 형식이 올바르지 않습니다.",
                         "data" : null
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-room-progresses-1064909895"
-              examples:
-                startRoomProgress:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "status" : "IN_PROGRESS",
-                        "hostMemberId" : "00000000-0000-0000-0000-000000000001",
-                        "attendances" : [ {
-                          "memberId" : "00000000-0000-0000-0000-000000000001",
-                          "status" : "ATTENDED"
-                        }, {
-                          "memberId" : "00000000-0000-0000-0000-000000000002",
-                          "status" : "ABSENT"
-                        } ]
-                      },
-                      "error" : null
                     }
         "403":
           description: "403"
@@ -1627,6 +1585,48 @@ paths:
                         "message" : "방을 찾을 수 없습니다.",
                         "data" : null
                       }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                startRoomProgress-e1701:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1701",
+                        "message" : "진행을 시작할 수 없는 룸입니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-room-progresses-1064909895"
+              examples:
+                startRoomProgress:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "status" : "IN_PROGRESS",
+                        "hostMemberId" : "00000000-0000-0000-0000-000000000001",
+                        "attendances" : [ {
+                          "memberId" : "00000000-0000-0000-0000-000000000001",
+                          "status" : "ATTENDED"
+                        }, {
+                          "memberId" : "00000000-0000-0000-0000-000000000002",
+                          "status" : "ABSENT"
+                        } ]
+                      },
+                      "error" : null
                     }
   /v1/rooms:
     get:
@@ -1715,6 +1715,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                rooms-e400-cursor:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -1776,24 +1794,6 @@ paths:
                         "nextCursor" : "djE6U0NIRURVTEU6MjAyNi0wOS0wNVQxNDowMDowMTIzNA"
                       },
                       "error" : null
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                rooms-e400-cursor:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
                     }
     post:
       tags:
@@ -1983,6 +1983,42 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getIntervieweeRoundFeedback-e1904:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1904",
+                        "message" : "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getIntervieweeRoundFeedback-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -2020,42 +2056,6 @@ paths:
                         } ]
                       },
                       "error" : null
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getIntervieweeRoundFeedback-e1904:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1904",
-                        "message" : "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
-                        "data" : null
-                      }
-                    }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getIntervieweeRoundFeedback-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
                     }
         "403":
           description: "403"
@@ -2097,6 +2097,24 @@ paths:
         schema:
           type: string
       responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getRoundScreen-e1704:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1704",
+                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -2144,17 +2162,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                getRoundScreen-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
                 getRoundScreen-e1503:
                   value: |-
                     {
@@ -2166,6 +2173,17 @@ paths:
                         "data" : null
                       }
                     }
+                getRoundScreen-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "403":
           description: "403"
           content:
@@ -2173,17 +2191,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                getRoundScreen-e1502:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1502",
-                        "message" : "질문 카드셋에 접근할 권한이 없습니다.",
-                        "data" : null
-                      }
-                    }
                 getRoundScreen-e1703:
                   value: |-
                     {
@@ -2195,21 +2202,14 @@ paths:
                         "data" : null
                       }
                     }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getRoundScreen-e1704:
+                getRoundScreen-e1502:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
+                        "code" : "E1502",
+                        "message" : "질문 카드셋에 접근할 권한이 없습니다.",
                         "data" : null
                       }
                     }
@@ -2226,7 +2226,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-self-feedbacks784214113"
             examples:
-              saveSelfRoundFeedback:
+              saveSelfRoundFeedback-e1902:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -2240,14 +2240,7 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "  "
                   }
-              saveSelfRoundFeedback-e1405:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : "자가 피드백"
-                  }
-              saveSelfRoundFeedback-e1902:
+              saveSelfRoundFeedback:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -2261,22 +2254,31 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "자가 피드백"
                   }
+              saveSelfRoundFeedback-e1405:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "content" : "자가 피드백"
+                  }
       responses:
-        "200":
-          description: "200"
+        "403":
+          description: "403"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-self-feedbacks342673527"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                saveSelfRoundFeedback:
+                saveSelfRoundFeedback-e1902:
                   value: |-
                     {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "feedbackId" : 32
-                      },
-                      "error" : null
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1902",
+                        "message" : "라운드 피드백에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
                     }
         "400":
           description: "400"
@@ -2296,41 +2298,21 @@ paths:
                         "data" : null
                       }
                     }
-        "404":
-          description: "404"
+        "200":
+          description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-self-feedbacks342673527"
               examples:
-                saveSelfRoundFeedback-e1405:
+                saveSelfRoundFeedback:
                   value: |-
                     {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                saveSelfRoundFeedback-e1902:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1902",
-                        "message" : "라운드 피드백에 접근할 권한이 없습니다.",
-                        "data" : null
-                      }
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "feedbackId" : 32
+                      },
+                      "error" : null
                     }
         "409":
           description: "409"
@@ -2347,6 +2329,24 @@ paths:
                       "error" : {
                         "code" : "E1903",
                         "message" : "진행 중인 룸에서만 라운드 피드백을 작성하거나 수정할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                saveSelfRoundFeedback-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -2372,7 +2372,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "e7187007-fbe9-4b1d-b037-c6f65d56da33",
+                          "termsId" : "deb7d576-3af3-4705-8dd4-bc13d6e5a7c2",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2380,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "9b607b8d-11f5-4c02-8ab3-882c7d1044b5",
+                          "termsId" : "8bda1047-fb89-4b82-9b3e-070eebae9bee",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -2407,6 +2407,24 @@ paths:
         schema:
           type: string
       responses:
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getMyAttendance-e1703:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1703",
+                        "message" : "룸 진행에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
+                    }
         "404":
           description: "404"
           content:
@@ -2414,17 +2432,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                getMyAttendance-e1705:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1705",
-                        "message" : "출석 기록을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
                 getMyAttendance-e1405:
                   value: |-
                     {
@@ -2436,21 +2443,14 @@ paths:
                         "data" : null
                       }
                     }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getMyAttendance-e1704:
+                getMyAttendance-e1705:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
+                        "code" : "E1705",
+                        "message" : "출석 기록을 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -2471,21 +2471,21 @@ paths:
                       },
                       "error" : null
                     }
-        "403":
-          description: "403"
+        "409":
+          description: "409"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                getMyAttendance-e1703:
+                getMyAttendance-e1704:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1703",
-                        "message" : "룸 진행에 접근할 권한이 없습니다.",
+                        "code" : "E1704",
+                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
                         "data" : null
                       }
                     }
@@ -2526,6 +2526,24 @@ paths:
         \ 재발급한다. 쿠키가 없거나 세션이 만료·폐기됐으면 401(E1104)로 응답하며, FE 는 재로그인으로 보낸다."
       operationId: authRefresh
       responses:
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                authRefresh-e1104:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1104",
+                        "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           headers:
@@ -2545,24 +2563,6 @@ paths:
                       "data" : null,
                       "error" : null
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                authRefresh-e1104:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1104",
-                        "message" : "세션이 유효하지 않습니다. 다시 로그인해주세요.",
-                        "data" : null
-                      }
-                    }
   /v1/closing-questions/me:
     get:
       tags:
@@ -2578,6 +2578,24 @@ paths:
         schema:
           type: string
       responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getMyClosingQuestions-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "409":
           description: "409"
           content:
@@ -2596,21 +2614,21 @@ paths:
                         "data" : null
                       }
                     }
-        "404":
-          description: "404"
+        "403":
+          description: "403"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                getMyClosingQuestions-e1405:
+                getMyClosingQuestions-e1801:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
+                        "code" : "E1801",
+                        "message" : "출석한 참여자만 클로징을 제출할 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -2635,24 +2653,6 @@ paths:
                       },
                       "error" : null
                     }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getMyClosingQuestions-e1801:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1801",
-                        "message" : "출석한 참여자만 클로징을 제출할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
   /v1/feedback-disclosures/{feedbackId}:
     put:
       tags:
@@ -2673,7 +2673,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-feedback-disclosures-feedbackId-256087070"
             examples:
-              confirmRoundFeedbackDisclosure-e1904:
+              confirmRoundFeedbackDisclosure:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -2691,36 +2691,32 @@ paths:
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
                   }
+              confirmRoundFeedbackDisclosure-e1904:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
+                  }
               confirmRoundFeedbackDisclosure-e1905:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
                   }
-              confirmRoundFeedbackDisclosure:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
-                  }
       responses:
-        "409":
-          description: "409"
+        "200":
+          description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
               examples:
-                confirmRoundFeedbackDisclosure-e1904:
+                confirmRoundFeedbackDisclosure:
                   value: |-
                     {
-                      "result" : "ERROR",
+                      "result" : "SUCCESS",
                       "data" : null,
-                      "error" : {
-                        "code" : "E1904",
-                        "message" : "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
-                        "data" : null
-                      }
+                      "error" : null
                     }
         "403":
           description: "403"
@@ -2769,19 +2765,23 @@ paths:
                         "data" : null
                       }
                     }
-        "200":
-          description: "200"
+        "409":
+          description: "409"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                confirmRoundFeedbackDisclosure:
+                confirmRoundFeedbackDisclosure-e1904:
                   value: |-
                     {
-                      "result" : "SUCCESS",
+                      "result" : "ERROR",
                       "data" : null,
-                      "error" : null
+                      "error" : {
+                        "code" : "E1904",
+                        "message" : "라운드 피드백을 조회할 수 없는 룸 상태입니다.",
+                        "data" : null
+                      }
                     }
   /v1/job-postings/link-metadata:
     post:
@@ -2800,19 +2800,37 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-job-postings-link-metadata34312967"
             examples:
-              jobPostingLinkMetadata:
-                value: |-
-                  {
-                    "companyId" : 43429,
-                    "url" : "https://company.example.com/careers/12345"
-                  }
               jobPostingLinkMetadata-e400:
                 value: |-
                   {
                     "companyId" : 43429,
                     "url" : "ftp://company.example.com/careers"
                   }
+              jobPostingLinkMetadata:
+                value: |-
+                  {
+                    "companyId" : 43429,
+                    "url" : "https://company.example.com/careers/12345"
+                  }
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                jobPostingLinkMetadata-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -2832,24 +2850,6 @@ paths:
                         "sourceUrl" : "https://company.example.com/careers/12345"
                       },
                       "error" : null
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                jobPostingLinkMetadata-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
                     }
   /v1/job-postings/search:
     get:
@@ -2878,24 +2878,6 @@ paths:
         schema:
           type: string
       responses:
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                searchJobPostings-e400-length:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           headers:
@@ -2908,17 +2890,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-job-postings-search1628359421"
               examples:
-                searchJobPostings-empty:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "query" : "",
-                        "companies" : [ ],
-                        "jobPostings" : [ ]
-                      },
-                      "error" : null
-                    }
                 searchJobPostings:
                   value: |-
                     {
@@ -2955,14 +2926,41 @@ paths:
                       },
                       "error" : null
                     }
+                searchJobPostings-empty:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "query" : "",
+                        "companies" : [ ],
+                        "jobPostings" : [ ]
+                      },
+                      "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                searchJobPostings-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
   /v1/job-roles/search:
     get:
       tags:
       - v1
       summary: 직무 검색
-      description: 룸 생성 직무 셀렉트의 검색 소스. 직무명 부분 일치로 유효(미폐기) 직무를 상위 직군과 함께 최대 20건 반환한다.
-        직무는 공고와 독립한 평면 카탈로그이므로 공고 선택과 무관하게 고른다. 검색어가 없거나 공백이거나 1~50자를 벗어나면 400(E400)으로
-        응답한다.
+      description: 직무명 부분 일치 검색
       operationId: searchJobRoles
       parameters:
       - name: query
@@ -2972,6 +2970,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                searchJobRoles-e400-blank:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -2996,24 +3012,6 @@ paths:
                       },
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                searchJobRoles-e400-blank:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
   /v1/members/me:
     get:
       tags:
@@ -3025,37 +3023,6 @@ paths:
         회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
       operationId: memberMe
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me1349704155"
-              examples:
-                memberMe:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "memberId" : "5931e4d7-6c74-4696-a380-70f89400e728",
-                        "email" : "user@example.com",
-                        "nickname" : "차분한 펭귄 12",
-                        "status" : "ACTIVE",
-                        "profile" : {
-                          "memberId" : "5931e4d7-6c74-4696-a380-70f89400e728",
-                          "interestJobRoleIds" : [ 1, 2 ],
-                          "bio" : "",
-                          "interestCompanies" : [ {
-                            "companyId" : 1,
-                            "name" : "달빛페이"
-                          }, {
-                            "companyId" : 2,
-                            "name" : "한빛커머스"
-                          } ]
-                        }
-                      },
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -3092,6 +3059,37 @@ paths:
                       },
                       "result" : "ERROR"
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me1349704155"
+              examples:
+                memberMe:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "76bc6c6d-9325-410f-9819-29490291f8d8",
+                        "email" : "user@example.com",
+                        "nickname" : "차분한 펭귄 12",
+                        "status" : "ACTIVE",
+                        "profile" : {
+                          "memberId" : "76bc6c6d-9325-410f-9819-29490291f8d8",
+                          "interestJobRoleIds" : [ 1, 2 ],
+                          "bio" : "",
+                          "interestCompanies" : [ {
+                            "companyId" : 1,
+                            "name" : "달빛페이"
+                          }, {
+                            "companyId" : 2,
+                            "name" : "한빛커머스"
+                          } ]
+                        }
+                      },
+                      "error" : null
+                    }
   /v1/nicknames/availability:
     get:
       tags:
@@ -3108,6 +3106,22 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-nicknames-availability-1805856748"
+              examples:
+                nicknameAvailability:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "available" : true
+                      },
+                      "error" : null
+                    }
         "400":
           description: "400"
           content:
@@ -3138,22 +3152,6 @@ paths:
                         "message" : "닉네임 형식이 올바르지 않습니다.",
                         "data" : null
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-nicknames-availability-1805856748"
-              examples:
-                nicknameAvailability:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "available" : true
-                      },
-                      "error" : null
                     }
   /v1/nicknames/suggestion:
     get:
@@ -3200,23 +3198,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-question-comment-types-commentId-844872488"
             examples:
-              toggleQuestionCommentType-e1511:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "type" : "GOOD_POINT"
-                  }
-              toggleQuestionCommentType-e1405:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "type" : "GOOD_POINT"
-                  }
-              toggleQuestionCommentType-e1507:
+              toggleQuestionCommentType-e1510:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3232,7 +3214,7 @@ paths:
                     "questionId" : 11,
                     "type" : "MEMO"
                   }
-              toggleQuestionCommentType-e1510:
+              toggleQuestionCommentType-e1511:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3240,7 +3222,7 @@ paths:
                     "questionId" : 11,
                     "type" : "GOOD_POINT"
                   }
-              toggleQuestionCommentType-e1509:
+              toggleQuestionCommentType-e1507:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3256,44 +3238,38 @@ paths:
                     "questionId" : 11,
                     "type" : "GOOD_POINT"
                   }
+              toggleQuestionCommentType-e1405:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "type" : "GOOD_POINT"
+                  }
+              toggleQuestionCommentType-e1509:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "type" : "GOOD_POINT"
+                  }
       responses:
-        "404":
-          description: "404"
+        "409":
+          description: "409"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                toggleQuestionCommentType-e1511:
+                toggleQuestionCommentType-e1510:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1511",
-                        "message" : "질문 댓글을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                toggleQuestionCommentType-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                toggleQuestionCommentType-e1507:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1507",
-                        "message" : "질문을 찾을 수 없습니다.",
+                        "code" : "E1510",
+                        "message" : "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -3315,23 +3291,59 @@ paths:
                         "data" : null
                       }
                     }
-        "409":
-          description: "409"
+        "404":
+          description: "404"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                toggleQuestionCommentType-e1510:
+                toggleQuestionCommentType-e1511:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1510",
-                        "message" : "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
+                        "code" : "E1511",
+                        "message" : "질문 댓글을 찾을 수 없습니다.",
                         "data" : null
                       }
+                    }
+                toggleQuestionCommentType-e1507:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1507",
+                        "message" : "질문을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                toggleQuestionCommentType-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                toggleQuestionCommentType:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
                     }
         "403":
           description: "403"
@@ -3350,20 +3362,6 @@ paths:
                         "message" : "질문 댓글에 접근할 권한이 없습니다.",
                         "data" : null
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                toggleQuestionCommentType:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
                     }
   /v1/question-comments/{commentId}:
     delete:
@@ -3457,6 +3455,20 @@ paths:
                         "data" : null
                       }
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deleteQuestionComment:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
         "409":
           description: "409"
           content:
@@ -3474,20 +3486,6 @@ paths:
                         "message" : "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
                         "data" : null
                       }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                deleteQuestionComment:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
                     }
     patch:
       tags:
@@ -3509,23 +3507,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-question-comments-commentId83412404"
             examples:
-              editQuestionComment-e1509:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "content" : "수정한 기록"
-                  }
-              editQuestionComment-e400:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "questionId" : 11,
-                    "content" : "  "
-                  }
-              editQuestionComment-e1507:
+              editQuestionComment-e1510:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3541,6 +3523,14 @@ paths:
                     "questionId" : 11,
                     "content" : "수정한 기록"
                   }
+              editQuestionComment-e1509:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "content" : "수정한 기록"
+                  }
               editQuestionComment:
                 value: |-
                   {
@@ -3549,13 +3539,21 @@ paths:
                     "questionId" : 11,
                     "content" : "수정한 기록"
                   }
-              editQuestionComment-e1510:
+              editQuestionComment-e1507:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "questionId" : 11,
                     "content" : "수정한 기록"
+                  }
+              editQuestionComment-e400:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "questionId" : 11,
+                    "content" : "  "
                   }
               editQuestionComment-e1511:
                 value: |-
@@ -3566,6 +3564,64 @@ paths:
                     "content" : "수정한 기록"
                   }
       responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                editQuestionComment-e1510:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1510",
+                        "message" : "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                editQuestionComment-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                editQuestionComment-e1507:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1507",
+                        "message" : "질문을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                editQuestionComment-e1511:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1511",
+                        "message" : "질문 댓글을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "403":
           description: "403"
           content:
@@ -3584,6 +3640,20 @@ paths:
                         "data" : null
                       }
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                editQuestionComment:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
         "400":
           description: "400"
           content:
@@ -3599,78 +3669,6 @@ paths:
                       "error" : {
                         "code" : "E400",
                         "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                editQuestionComment-e1507:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1507",
-                        "message" : "질문을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                editQuestionComment-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-                editQuestionComment-e1511:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1511",
-                        "message" : "질문 댓글을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                editQuestionComment:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                editQuestionComment-e1510:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1510",
-                        "message" : "진행 중인 룸에서만 질문 댓글을 작성하거나 변경할 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -3695,42 +3693,6 @@ paths:
         schema:
           type: string
       responses:
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getMyRoundQuestionRecords-e1903:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1903",
-                        "message" : "진행 중인 룸에서만 라운드 피드백을 작성하거나 수정할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getMyRoundQuestionRecords-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -3774,6 +3736,42 @@ paths:
                         "data" : null
                       }
                     }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getMyRoundQuestionRecords-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getMyRoundQuestionRecords-e1903:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1903",
+                        "message" : "진행 중인 룸에서만 라운드 피드백을 작성하거나 수정할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
   /v1/questions/{questionId}:
     patch:
       tags:
@@ -3795,26 +3793,6 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-questions-questionId496267733"
             examples:
-              changeQuestionAsked-e1502:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "asked" : false
-                  }
-              changeQuestionAsked-e1507:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "asked" : false
-                  }
-              changeQuestionAsked-e400:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
-                  }
               changeQuestionAsked-e1703:
                 value: |-
                   {
@@ -3822,14 +3800,7 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "asked" : false
                   }
-              changeQuestionAsked-e1503:
-                value: |-
-                  {
-                    "roomId" : "01920000-0000-7000-8000-000000000440",
-                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "asked" : false
-                  }
-              changeQuestionAsked:
+              changeQuestionAsked-e1502:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3843,7 +3814,34 @@ paths:
                     "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
                     "asked" : false
                   }
+              changeQuestionAsked-e400:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002"
+                  }
               changeQuestionAsked-e1405:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "asked" : false
+                  }
+              changeQuestionAsked:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "asked" : false
+                  }
+              changeQuestionAsked-e1507:
+                value: |-
+                  {
+                    "roomId" : "01920000-0000-7000-8000-000000000440",
+                    "intervieweeMemberId" : "00000000-0000-0000-0000-000000000002",
+                    "asked" : false
+                  }
+              changeQuestionAsked-e1503:
                 value: |-
                   {
                     "roomId" : "01920000-0000-7000-8000-000000000440",
@@ -3858,17 +3856,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                changeQuestionAsked-e1502:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1502",
-                        "message" : "질문 카드셋에 접근할 권한이 없습니다.",
-                        "data" : null
-                      }
-                    }
                 changeQuestionAsked-e1703:
                   value: |-
                     {
@@ -3880,6 +3867,53 @@ paths:
                         "data" : null
                       }
                     }
+                changeQuestionAsked-e1502:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1502",
+                        "message" : "질문 카드셋에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                changeQuestionAsked-e1704:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1704",
+                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
+                        "data" : null
+                      }
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                changeQuestionAsked-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "404":
           description: "404"
           content:
@@ -3887,6 +3921,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
+                changeQuestionAsked-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
                 changeQuestionAsked-e1507:
                   value: |-
                     {
@@ -3909,35 +3954,6 @@ paths:
                         "data" : null
                       }
                     }
-                changeQuestionAsked-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                changeQuestionAsked-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -3951,24 +3967,6 @@ paths:
                       "result" : "SUCCESS",
                       "data" : null,
                       "error" : null
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                changeQuestionAsked-e1704:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
-                        "data" : null
-                      }
                     }
   /v1/reviews/{reviewId}:
     put:
@@ -3991,15 +3989,11 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-reviews-reviewId-292942325"
             examples:
-              updateReview-e2006:
+              updateReview:
                 value: |-
                   {
-                    "tags" : [ ]
-                  }
-              updateReview-e2007:
-                value: |-
-                  {
-                    "tags" : [ ]
+                    "tags" : [ "소통이 원활해요" ],
+                    "content" : "긴장을 풀어주는 진행이 좋았어요."
                   }
               updateReview-e400:
                 value: |-
@@ -4011,53 +4005,35 @@ paths:
                   {
                     "tags" : [ ]
                   }
+              updateReview-e2007:
+                value: |-
+                  {
+                    "tags" : [ ]
+                  }
               updateReview-e2008:
                 value: |-
                   {
                     "tags" : [ ]
                   }
-              updateReview:
+              updateReview-e2006:
                 value: |-
                   {
-                    "tags" : [ "소통이 원활해요" ],
-                    "content" : "긴장을 풀어주는 진행이 좋았어요."
+                    "tags" : [ ]
                   }
       responses:
-        "404":
-          description: "404"
+        "200":
+          description: "200"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
               examples:
-                updateReview-e2006:
+                updateReview:
                   value: |-
                     {
-                      "result" : "ERROR",
+                      "result" : "SUCCESS",
                       "data" : null,
-                      "error" : {
-                        "code" : "E2006",
-                        "message" : "수정하거나 삭제할 후기를 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                updateReview-e2007:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E2007",
-                        "message" : "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
-                        "data" : null
-                      }
+                      "error" : null
                     }
         "400":
           description: "400"
@@ -4095,6 +4071,24 @@ paths:
                         "data" : null
                       }
                     }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                updateReview-e2007:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2007",
+                        "message" : "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
         "409":
           description: "409"
           content:
@@ -4113,19 +4107,23 @@ paths:
                         "data" : null
                       }
                     }
-        "200":
-          description: "200"
+        "404":
+          description: "404"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                updateReview:
+                updateReview-e2006:
                   value: |-
                     {
-                      "result" : "SUCCESS",
+                      "result" : "ERROR",
                       "data" : null,
-                      "error" : null
+                      "error" : {
+                        "code" : "E2006",
+                        "message" : "수정하거나 삭제할 후기를 찾을 수 없습니다.",
+                        "data" : null
+                      }
                     }
     delete:
       tags:
@@ -4174,21 +4172,21 @@ paths:
                         "data" : null
                       }
                     }
-        "404":
-          description: "404"
+        "403":
+          description: "403"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                deleteReview-e2006:
+                deleteReview-e2007:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E2006",
-                        "message" : "수정하거나 삭제할 후기를 찾을 수 없습니다.",
+                        "code" : "E2007",
+                        "message" : "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -4210,21 +4208,21 @@ paths:
                         "data" : null
                       }
                     }
-        "403":
-          description: "403"
+        "404":
+          description: "404"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                deleteReview-e2007:
+                deleteReview-e2006:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E2007",
-                        "message" : "후기를 작성한 회원만 수정하거나 삭제할 수 있습니다.",
+                        "code" : "E2006",
+                        "message" : "수정하거나 삭제할 후기를 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -4442,7 +4440,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-15T06:16:15.792339233",
+                          "startAt" : "2026-08-15T07:09:07.764459662",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4453,7 +4451,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "9d90aeb7-ee1a-4807-9b53-323328b2e27e",
+                        "hostMemberId" : "4ced276b-d2ee-4dd8-aa95-ae1b24fb2d36",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4482,7 +4480,7 @@ paths:
       parameters:
       - name: companyId
         in: path
-        description: 공고를 조회할 회사 id (/v1/companies 검색 결과)
+        description: ""
         required: true
         schema:
           type: string
@@ -4493,6 +4491,24 @@ paths:
         schema:
           type: string
       responses:
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                jobPostings-e400-length:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
         "200":
           description: "200"
           content:
@@ -4525,24 +4541,6 @@ paths:
                       },
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                jobPostings-e400-length:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
   /v1/members/me/nickname:
     put:
       tags:
@@ -4562,15 +4560,15 @@ paths:
                   {
                     "nickname" : "명랑한 해달 33"
                   }
-              updateNickname-e1005:
-                value: |-
-                  {
-                    "nickname" : "금지문자!@#"
-                  }
               updateNickname-e1102:
                 value: |-
                   {
                     "nickname" : "명랑한 해달 33"
+                  }
+              updateNickname-e1005:
+                value: |-
+                  {
+                    "nickname" : "금지문자!@#"
                   }
               updateNickname-e1007:
                 value: |-
@@ -4592,24 +4590,6 @@ paths:
                       "data" : null,
                       "error" : null
                     }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                updateNickname-e1005:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1005",
-                        "message" : "닉네임 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
         "401":
           description: "401"
           content:
@@ -4625,6 +4605,24 @@ paths:
                       "error" : {
                         "code" : "E1102",
                         "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                updateNickname-e1005:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1005",
+                        "message" : "닉네임 형식이 올바르지 않습니다.",
                         "data" : null
                       }
                     }
@@ -4692,21 +4690,14 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-members-me-profile608809462"
             examples:
-              updateProfile-e1301:
-                value: |-
-                  {
-                    "interestJobRoleIds" : [ 1, 2 ],
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ]
-                  }
-              updateProfile:
-                value: |-
-                  {
-                    "interestJobRoleIds" : [ 1, 2 ],
-                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                    "interestCompanyIds" : [ 1, 2 ]
-                  }
               updateProfile-e1102:
+                value: |-
+                  {
+                    "interestJobRoleIds" : [ 1, 2 ],
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ]
+                  }
+              updateProfile-e1009:
                 value: |-
                   {
                     "interestJobRoleIds" : [ 1, 2 ],
@@ -4720,7 +4711,14 @@ paths:
                     "bio" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가",
                     "interestCompanyIds" : [ 1, 2 ]
                   }
-              updateProfile-e1009:
+              updateProfile:
+                value: |-
+                  {
+                    "interestJobRoleIds" : [ 1, 2 ],
+                    "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                    "interestCompanyIds" : [ 1, 2 ]
+                  }
+              updateProfile-e1301:
                 value: |-
                   {
                     "interestJobRoleIds" : [ 1, 2 ],
@@ -4735,71 +4733,6 @@ paths:
                     "interestCompanyIds" : [ 1, 2 ]
                   }
       responses:
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                updateProfile-e1301:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1301",
-                        "message" : "존재하지 않는 직무입니다.",
-                        "data" : null
-                      }
-                    }
-                updateProfile-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
-                updateProfile-e1303:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1303",
-                        "message" : "존재하지 않는 회사입니다.",
-                        "data" : null
-                      }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-profile934225230"
-              examples:
-                updateProfile:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "memberId" : "17485f50-4b4d-4d94-95b1-ea3f5ea707f4",
-                        "interestJobRoleIds" : [ 1, 2 ],
-                        "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
-                        "interestCompanies" : [ {
-                          "companyId" : 1,
-                          "name" : "달빛페이"
-                        }, {
-                          "companyId" : 2,
-                          "name" : "한빛커머스"
-                        } ]
-                      },
-                      "error" : null
-                    }
         "401":
           description: "401"
           content:
@@ -4836,6 +4769,71 @@ paths:
                         "data" : null
                       }
                     }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                updateProfile-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                updateProfile-e1301:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1301",
+                        "message" : "존재하지 않는 직무입니다.",
+                        "data" : null
+                      }
+                    }
+                updateProfile-e1303:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1303",
+                        "message" : "존재하지 않는 회사입니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-profile934225230"
+              examples:
+                updateProfile:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "memberId" : "9b55f26a-0c1c-4270-ab3f-5937caa3b5af",
+                        "interestJobRoleIds" : [ 1, 2 ],
+                        "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
+                        "interestCompanies" : [ {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        }, {
+                          "companyId" : 2,
+                          "name" : "한빛커머스"
+                        } ]
+                      },
+                      "error" : null
+                    }
   /v1/members/me/received-reviews:
     get:
       tags:
@@ -4848,14 +4846,14 @@ paths:
       parameters:
       - name: lastReviewId
         in: query
-        description: 직전 페이지 마지막 후기 id (선택). 첫 페이지는 생략한다
-        required: false
+        description: 직전 페이지 마지막 후기 id
+        required: true
         schema:
           type: string
       - name: size
         in: query
-        description: "페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다"
-        required: false
+        description: 페이지 크기. 허용 범위 1~50 밖이면 기본값 20을 사용한다
+        required: true
         schema:
           type: string
       responses:
@@ -4866,22 +4864,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-received-reviews785981355"
               examples:
-                getReceivedReviews:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "totalCount" : 11,
-                        "reviews" : [ {
-                          "reviewId" : 31,
-                          "authorNickname" : "익명의 참여자",
-                          "tags" : [ "시간을 잘 지켜요", "피드백이 구체적이에요" ],
-                          "content" : "덕분에 약점을 정확히 알았어요."
-                        } ],
-                        "hasNext" : true
-                      },
-                      "error" : null
-                    }
                 getReceivedReviews-default-size:
                   value: |-
                     {
@@ -4898,23 +4880,21 @@ paths:
                       },
                       "error" : null
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getReceivedReviews-e1102:
+                getReceivedReviews:
                   value: |-
                     {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "totalCount" : 11,
+                        "reviews" : [ {
+                          "reviewId" : 31,
+                          "authorNickname" : "익명의 참여자",
+                          "tags" : [ "시간을 잘 지켜요", "피드백이 구체적이에요" ],
+                          "content" : "덕분에 약점을 정확히 알았어요."
+                        } ],
+                        "hasNext" : true
+                      },
+                      "error" : null
                     }
         "400":
           description: "400"
@@ -4934,6 +4914,24 @@ paths:
                         "data" : null
                       }
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getReceivedReviews-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
   /v1/members/me/resumes:
     get:
       tags:
@@ -4947,24 +4945,6 @@ paths:
         \ 응답한다. 목 API는 고정 이력서 4건(DONE 2건, PROCESSING 1건, FAILED 1건)을 반환한다."
       operationId: resumes
       responses:
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                resumes-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -5046,6 +5026,24 @@ paths:
                       },
                       "error" : null
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resumes-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
     post:
       tags:
       - v1
@@ -5075,17 +5073,6 @@ paths:
                         "data" : null
                       }
                     }
-                createResume-e400-file-type:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
                 createResume-e400-missing-file:
                   value: |-
                     {
@@ -5099,21 +5086,14 @@ paths:
                         }
                       }
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                createResume-e1102:
+                createResume-e400-file-type:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
                         "data" : null
                       }
                     }
@@ -5144,6 +5124,24 @@ paths:
                         "registeredAt" : "2026-08-01T15:30:00"
                       },
                       "error" : null
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createResume-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
                     }
       requestBody:
         required: true
@@ -5343,26 +5341,6 @@ paths:
         schema:
           type: string
       responses:
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                publicProfile-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : {
-                          "memberId" : "type mismatch"
-                        }
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -5398,6 +5376,26 @@ paths:
                         }
                       },
                       "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                publicProfile-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : {
+                          "memberId" : "type mismatch"
+                        }
+                      }
                     }
         "404":
           description: "404"
@@ -5495,42 +5493,24 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-rooms-roomId-applications240308819"
             examples:
-              submitRoomApplication:
-                value: |-
-                  {
-                    "resumeId" : "50c9a3a4-4ec7-4079-9542-c917198eaafd",
-                    "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
-                  }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "67c02004-04c5-48f5-a8d8-4d3d90c89f00"
+                    "resumeId" : "f2910efa-0aee-415d-a0e1-aa8207325955"
+                  }
+              submitRoomApplication:
+                value: |-
+                  {
+                    "resumeId" : "7aa2fd74-df0a-4c46-bec4-cb8da3141b61",
+                    "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "12f381c1-22ea-46ef-97b0-5f01dc922b82",
+                    "resumeId" : "97e8b70a-e373-40d7-b4c7-6166d5e06655",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-applications1651584797"
-              examples:
-                submitRoomApplication:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "applicationId" : 3003,
-                        "status" : "PENDING",
-                        "statusLabel" : "대기 중"
-                      },
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -5548,6 +5528,24 @@ paths:
                         "message" : "이력서를 찾을 수 없습니다.",
                         "data" : null
                       }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-applications1651584797"
+              examples:
+                submitRoomApplication:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "applicationId" : 3003,
+                        "status" : "PENDING",
+                        "statusLabel" : "대기 중"
+                      },
+                      "error" : null
                     }
         "400":
           description: "400"
@@ -5579,11 +5577,25 @@ paths:
       parameters:
       - name: roomId
         in: path
-        description: ""
+        description: 취소할 룸 식별자
         required: true
         schema:
           type: string
       responses:
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                cancelRoom:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
         "409":
           description: "409"
           content:
@@ -5613,20 +5625,6 @@ paths:
                         "data" : null
                       }
                     }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                cancelRoom:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
   /v1/rooms/{roomId}/confirmation:
     post:
       tags:
@@ -5640,40 +5638,11 @@ paths:
       parameters:
       - name: roomId
         in: path
-        description: ""
+        description: 확정할 룸 식별자
         required: true
         schema:
           type: string
       responses:
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                confirmRoom-e1410:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1410",
-                        "message" : "모집 중인 방이 아닙니다.",
-                        "data" : null
-                      }
-                    }
-                confirmRoom-e1421:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1421",
-                        "message" : "최소 진행 인원을 채워야 확정할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
         "200":
           description: "200"
           content:
@@ -5687,6 +5656,35 @@ paths:
                       "result" : "SUCCESS",
                       "data" : null,
                       "error" : null
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                confirmRoom-e1421:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1421",
+                        "message" : "최소 진행 인원을 채워야 확정할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+                confirmRoom-e1410:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1410",
+                        "message" : "모집 중인 방이 아닙니다.",
+                        "data" : null
+                      }
                     }
   /v1/rooms/{roomId}/participants:
     get:
@@ -5787,24 +5785,6 @@ paths:
         schema:
           type: string
       responses:
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getQuestionCardSets-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "403":
           description: "403"
           content:
@@ -5820,6 +5800,24 @@ paths:
                       "error" : {
                         "code" : "E1502",
                         "message" : "질문 카드셋에 접근할 권한이 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getQuestionCardSets-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
                         "data" : null
                       }
                     }
@@ -5874,11 +5872,11 @@ paths:
                     "targetMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
-              leavePreparationQuestion-e1504:
+              leavePreparationQuestion-e400-blank:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : "질문"
+                    "content" : " \t\n"
                   }
               leavePreparationQuestion:
                 value: |-
@@ -5886,11 +5884,11 @@ paths:
                     "targetMemberId" : "00000000-0000-0000-0000-000000000002",
                     "content" : "결제 연동에서 이중 결제를 어떻게 막았나요?"
                   }
-              leavePreparationQuestion-e400-blank:
+              leavePreparationQuestion-e1504:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000002",
-                    "content" : " \t\n"
+                    "content" : "질문"
                   }
       responses:
         "400":
@@ -5922,6 +5920,22 @@ paths:
                         "data" : null
                       }
                     }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
+              examples:
+                leavePreparationQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "questionId" : 11
+                      },
+                      "error" : null
+                    }
         "409":
           description: "409"
           content:
@@ -5939,22 +5953,6 @@ paths:
                         "message" : "진행이 확정된 방에서만 질문을 준비할 수 있습니다.",
                         "data" : null
                       }
-                    }
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
-              examples:
-                leavePreparationQuestion:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "questionId" : 11
-                      },
-                      "error" : null
                     }
   /v1/rooms/{roomId}/review-skips:
     post:
@@ -5977,7 +5975,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-rooms-roomId-review-skips2104006349"
             examples:
-              skipReview-e2003:
+              skipReview-e1405:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003"
@@ -5992,17 +5990,7 @@ paths:
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003"
                   }
-              skipReview-e1102:
-                value: |-
-                  {
-                    "targetMemberId" : "00000000-0000-0000-0000-000000000003"
-                  }
               skipReview-e2001:
-                value: |-
-                  {
-                    "targetMemberId" : "00000000-0000-0000-0000-000000000003"
-                  }
-              skipReview-e1405:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003"
@@ -6012,7 +6000,35 @@ paths:
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003"
                   }
+              skipReview-e2003:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000003"
+                  }
+              skipReview-e1102:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000003"
+                  }
       responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                skipReview-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "400":
           description: "400"
           content:
@@ -6020,17 +6036,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                skipReview-e2003:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E2003",
-                        "message" : "출석한 참여자에게만 후기를 작성할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
                 skipReview-e2004:
                   value: |-
                     {
@@ -6039,6 +6044,17 @@ paths:
                       "error" : {
                         "code" : "E2004",
                         "message" : "자기 자신에게 후기를 작성할 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+                skipReview-e2003:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2003",
+                        "message" : "출석한 참여자에게만 후기를 작성할 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -6056,24 +6072,6 @@ paths:
                       "data" : null,
                       "error" : null
                     }
-        "401":
-          description: "401"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                skipReview-e1102:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1102",
-                        "message" : "인증이 필요합니다.",
-                        "data" : null
-                      }
-                    }
         "409":
           description: "409"
           content:
@@ -6089,24 +6087,6 @@ paths:
                       "error" : {
                         "code" : "E2001",
                         "message" : "완료된 룸에서만 후기를 작성할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                skipReview-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -6128,6 +6108,24 @@ paths:
                         "data" : null
                       }
                     }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                skipReview-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
   /v1/rooms/{roomId}/review-targets:
     get:
       tags:
@@ -6144,24 +6142,6 @@ paths:
         schema:
           type: string
       responses:
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                getReviewTargets-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "409":
           description: "409"
           content:
@@ -6195,6 +6175,24 @@ paths:
                       "error" : {
                         "code" : "E2002",
                         "message" : "출석한 참여자만 후기를 작성할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getReviewTargets-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
                         "data" : null
                       }
                     }
@@ -6266,19 +6264,7 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-rooms-roomId-reviews1356104346"
             examples:
-              submitReview-e2003:
-                value: |-
-                  {
-                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
-                    "tags" : [ ]
-                  }
-              submitReview-e1405:
-                value: |-
-                  {
-                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
-                    "tags" : [ ]
-                  }
-              submitReview-e2005:
+              submitReview-e2004:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003",
@@ -6292,7 +6278,13 @@ paths:
                     "content" : "꼬리질문이 날카로워서 실전 같았어요.",
                     "anonymous" : false
                   }
-              submitReview-e2002:
+              submitReview-e1405:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
+                    "tags" : [ ]
+                  }
+              submitReview-e2001:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003",
@@ -6303,19 +6295,25 @@ paths:
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003"
                   }
-              submitReview-e2004:
-                value: |-
-                  {
-                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
-                    "tags" : [ ]
-                  }
               submitReview-e400:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003",
                     "tags" : [ "설명이 명확해요" ]
                   }
-              submitReview-e2001:
+              submitReview-e2002:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
+                    "tags" : [ ]
+                  }
+              submitReview-e2003:
+                value: |-
+                  {
+                    "targetMemberId" : "00000000-0000-0000-0000-000000000003",
+                    "tags" : [ ]
+                  }
+              submitReview-e2005:
                 value: |-
                   {
                     "targetMemberId" : "00000000-0000-0000-0000-000000000003",
@@ -6329,17 +6327,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                submitReview-e2003:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E2003",
-                        "message" : "출석한 참여자에게만 후기를 작성할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
                 submitReview-e2004:
                   value: |-
                     {
@@ -6361,6 +6348,33 @@ paths:
                         "message" : "요청 형식이 올바르지 않습니다.",
                         "data" : null
                       }
+                    }
+                submitReview-e2003:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2003",
+                        "message" : "출석한 참여자에게만 후기를 작성할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-reviews-1785905513"
+              examples:
+                submitReview:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "reviewId" : 31
+                      },
+                      "error" : null
                     }
         "404":
           description: "404"
@@ -6387,17 +6401,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/v1-members-me-nickname910352763"
               examples:
-                submitReview-e2005:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E2005",
-                        "message" : "이미 후기를 작성한 참여자입니다.",
-                        "data" : null
-                      }
-                    }
                 submitReview-e2001:
                   value: |-
                     {
@@ -6409,37 +6412,14 @@ paths:
                         "data" : null
                       }
                     }
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-reviews-1785905513"
-              examples:
-                submitReview:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "reviewId" : 31
-                      },
-                      "error" : null
-                    }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                submitReview-e2002:
+                submitReview-e2005:
                   value: |-
                     {
                       "result" : "ERROR",
                       "data" : null,
                       "error" : {
-                        "code" : "E2002",
-                        "message" : "출석한 참여자만 후기를 작성할 수 있습니다.",
+                        "code" : "E2005",
+                        "message" : "이미 후기를 작성한 참여자입니다.",
                         "data" : null
                       }
                     }
@@ -6461,6 +6441,24 @@ paths:
                         "data" : null
                       }
                     }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                submitReview-e2002:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2002",
+                        "message" : "출석한 참여자만 후기를 작성할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
   /v1/members/me/resumes/{resumeId}:
     get:
       tags:
@@ -6479,6 +6477,24 @@ paths:
         schema:
           type: string
       responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                resume-e1010:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1010",
+                        "message" : "이력서를 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
         "400":
           description: "400"
           content:
@@ -6527,24 +6543,6 @@ paths:
                       },
                       "error" : null
                     }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname910352763"
-              examples:
-                resume-e1010:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1010",
-                        "message" : "이력서를 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
         "401":
           description: "401"
           content:
@@ -6579,20 +6577,6 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                deleteResume:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
         "404":
           description: "404"
           content:
@@ -6649,6 +6633,20 @@ paths:
                         "data" : null
                       }
                     }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deleteResume:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
   /v1/rooms/{roomId}/applications/me:
     get:
       tags:
@@ -6681,7 +6679,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "44206f57-85c5-4752-82c2-e0e3c6dd7e86",
+                          "resumeId" : "74ed80cd-1b2d-48d7-bcdd-144eee6d3dc1",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -6732,10 +6730,7 @@ paths:
       tags:
       - v1
       summary: 룸 나가기
-      description: "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에는 자유롭게 나갈 수 있고, 진행이 확정된 뒤에\
-        도 현재 인원이 최소 진행 인원보다 많으면 나갈 수 있다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, 모집 중이면 같은\
-        \ 룸에 다시 신청할 수 있다. 방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도 없으면\
-        \ 룸이 취소된다."
+      description: 참여 중이 아니면 나갈 수 없다(E1419). 신청만 넣은 사용자와 이미 나간 사람이 모두 여기에 해당한다.
       operationId: roomLeave
       parameters:
       - name: roomId
@@ -6745,20 +6740,6 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-members-me-nickname198252895"
-              examples:
-                roomLeave:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : null,
-                      "error" : null
-                    }
         "403":
           description: "403"
           content:
@@ -6776,6 +6757,20 @@ paths:
                         "message" : "룸에 참여한 사람만 볼 수 있습니다.",
                         "data" : null
                       }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                roomLeave:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
                     }
         "409":
           description: "409"
@@ -7120,13 +7115,13 @@ paths:
       parameters:
       - name: roomId
         in: path
-        description: 룸 id (UUID)
+        description: ""
         required: true
         schema:
           type: string
       - name: questionId
         in: path
-        description: 원 질문 id
+        description: ""
         required: true
         schema:
           type: string
@@ -7136,33 +7131,17 @@ paths:
             schema:
               $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-1317980453"
             examples:
-              leavePreparationFollowUpQuestion:
-                value: |-
-                  {
-                    "content" : "멱등 키는 어디에 저장했나요?"
-                  }
               leavePreparationFollowUpQuestion-e1505:
                 value: |-
                   {
                     "content" : "꼬리질문"
                   }
+              leavePreparationFollowUpQuestion:
+                value: |-
+                  {
+                    "content" : "멱등 키는 어디에 저장했나요?"
+                  }
       responses:
-        "201":
-          description: "201"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
-              examples:
-                leavePreparationFollowUpQuestion:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "questionId" : 12
-                      },
-                      "error" : null
-                    }
         "403":
           description: "403"
           content:
@@ -7180,6 +7159,22 @@ paths:
                         "message" : "질문을 작성하거나 삭제할 권한이 없습니다.",
                         "data" : null
                       }
+                    }
+        "201":
+          description: "201"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-questions-questionId-follow-ups-36237129"
+              examples:
+                leavePreparationFollowUpQuestion:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "questionId" : 12
+                      },
+                      "error" : null
                     }
   /oauth2/authorization/google:
     get:
@@ -7433,7 +7428,7 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -8719,25 +8714,6 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
-    v1-members-me-profile608809462:
-      type: object
-      properties:
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-members-me-resumes-resumeId1837465274:
       required:
       - result
@@ -8831,6 +8807,25 @@ components:
             status:
               type: string
               description: 시작 후 룸 상태 (IN_PROGRESS)
+    v1-members-me-profile608809462:
+      type: object
+      properties:
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-companies1839974379:
       required:
       - result
@@ -9686,6 +9681,30 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -9772,30 +9791,6 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
     v1-rooms1476531183:
       required:
       - result
