@@ -11,6 +11,8 @@ data class AuthProperties(
     val oauth2: OAuth2,
 ) {
     data class Cookie(
+        val accessTokenName: String,
+        val refreshTokenName: String,
         val domain: String?, // 비어있으면 Domain 미지정 (localhost 개발용)
         val secure: Boolean,
         val sameSite: String,

@@ -2,6 +2,7 @@ package io.plady.moimyeon.security.config
 
 import io.plady.moimyeon.security.auth.ApiResponseAccessDeniedHandler
 import io.plady.moimyeon.security.auth.ApiResponseAuthenticationEntryPoint
+import io.plady.moimyeon.security.auth.AuthCookieFactory
 import io.plady.moimyeon.security.auth.HeaderOrCookieBearerTokenResolver
 import io.plady.moimyeon.security.auth.MemberRoleJwtGrantedAuthoritiesConverter
 import io.plady.moimyeon.security.auth.OAuth2LoginFailureHandler
@@ -25,6 +26,7 @@ class SecurityConfig(
     private val oauth2LoginFailureHandler: OAuth2LoginFailureHandler,
     private val apiAuthenticationEntryPoint: ApiResponseAuthenticationEntryPoint,
     private val apiAccessDeniedHandler: ApiResponseAccessDeniedHandler,
+    private val authCookieFactory: AuthCookieFactory,
     // 부하테스트 우회 필터만 환경에 따라 없을 수 있다. 공통 인증 컴포넌트는 항상 필수로 조립한다.
     private val perfAuthenticationFilterProvider: ObjectProvider<PerfAuthenticationFilter>,
 ) {
@@ -67,6 +69,7 @@ class SecurityConfig(
                 // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용.
                 // refresh/logout 은 만료 AT 로 401 되면 안 되므로 이 경로에선 AT 를 해석하지 않는다.
                 bearerTokenResolver = HeaderOrCookieBearerTokenResolver(
+                    cookieName = authCookieFactory.accessTokenName,
                     bearerFreePaths = setOf("/v1/auth/refresh", "/v1/auth/logout"),
                 )
                 authenticationEntryPoint = apiAuthenticationEntryPoint
