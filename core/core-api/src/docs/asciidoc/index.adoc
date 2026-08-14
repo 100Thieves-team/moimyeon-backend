@@ -783,3 +783,417 @@ include::{snippets}/deletePreparationQuestion/response-fields.adoc[]
 | 404 | E1507 | 질문을 찾을 수 없음
 | 409 | E1508 | 원 질문에 다른 작성자의 활성 꼬리질문이 있음
 |===
+
+== Interview Progress (모의 면접 진행) API
+
+=== 면접 진행 시작
+확정 참여자 전원의 출석·불참을 한 번에 기록하고 룸을 진행 중으로 전환한다.
+==== Curl Request
+include::{snippets}/startRoomProgress/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/startRoomProgress/request-fields.adoc[]
+==== Http Response
+include::{snippets}/startRoomProgress/http-response.adoc[]
+==== Response Fields
+include::{snippets}/startRoomProgress/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 출석 상태 등 요청 형식 오류
+| 400 | E1706 | 출석 명단 누락·중복·명단 밖 회원
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1702 | 진행 시작 권한 없음
+| 409 | E1701 | 시작 가능 시각·룸 상태가 아님 또는 중복 시작
+|===
+
+'''
+
+=== 면접 진행 레일 조회
+오프닝, 확정 참여자 순 라운드, 클로징 블록을 반환한다. 현재 블록은 클라이언트 로컬 상태다.
+==== Curl Request
+include::{snippets}/getProgressRail/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getProgressRail/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getProgressRail/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getProgressRail/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 진행 정보를 조회할 수 없는 룸 상태
+|===
+
+'''
+
+=== 내 출석 결과 조회
+진행 시작 시 기록된 로그인 참여자 자신의 출석 결과만 반환한다.
+==== Curl Request
+include::{snippets}/getMyAttendance/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getMyAttendance/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getMyAttendance/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getMyAttendance/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 출석을 조회할 수 없는 룸 상태
+| 404 | E1705 | 출석 기록을 찾을 수 없음
+|===
+
+'''
+
+=== 라운드 화면 조회
+면접자는 질문을 받지 않고, 면접자 외 참여자는 질문 카드셋을 받는다.
+==== Curl Request
+include::{snippets}/getRoundScreen/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getRoundScreen/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getRoundScreen/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getRoundScreen/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1502 | 본인 카드셋을 요청함
+| 404 | E1503 | 면접 대상 카드셋을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 진행 중 즉석 질문 추가
+==== Curl Request
+include::{snippets}/leaveProgressQuestion/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/leaveProgressQuestion/request-fields.adoc[]
+==== Http Response
+include::{snippets}/leaveProgressQuestion/http-response.adoc[]
+==== Response Fields
+include::{snippets}/leaveProgressQuestion/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 질문 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1502 | 본인 라운드에 질문을 추가함
+| 404 | E1503 | 면접 대상을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 진행 중 꼬리질문 추가
+==== Curl Request
+include::{snippets}/leaveProgressFollowUpQuestion/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/leaveProgressFollowUpQuestion/request-fields.adoc[]
+==== Http Response
+include::{snippets}/leaveProgressFollowUpQuestion/http-response.adoc[]
+==== Response Fields
+include::{snippets}/leaveProgressFollowUpQuestion/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 꼬리질문 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1502 | 본인 라운드에 질문을 추가함
+| 404 | E1503 | 면접 대상을 찾을 수 없음
+| 404 | E1507 | 부모 원 질문을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 질문 사용 여부 변경
+원 질문과 꼬리질문의 질문했어요 표시를 진행 중에 체크하거나 해제한다.
+==== Curl Request
+include::{snippets}/changeQuestionAsked/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/changeQuestionAsked/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/changeQuestionAsked/request-fields.adoc[]
+==== Http Response
+include::{snippets}/changeQuestionAsked/http-response.adoc[]
+==== Response Fields
+include::{snippets}/changeQuestionAsked/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 질문 사용 여부 요청 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1502 | 본인 라운드의 질문을 변경함
+| 404 | E1503 | 면접 대상을 찾을 수 없음
+| 404 | E1507 | 질문을 찾을 수 없음
+| 403 | E1703 | 확정 참여자가 아님
+| 409 | E1704 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 질문 메모 조회
+==== Curl Request
+include::{snippets}/getQuestionComments/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getQuestionComments/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getQuestionComments/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getQuestionComments/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 커서 두 값 중 하나가 누락됨
+| 404 | E1405 | 룸을 찾을 수 없음
+| 404 | E1507 | 원 질문을 찾을 수 없음
+| 403 | E1509 | 질문 메모를 조회할 권한이 없음
+| 409 | E1512 | 질문 메모를 조회할 수 없는 룸 상태
+|===
+
+'''
+
+=== 질문 메모 작성
+==== Curl Request
+include::{snippets}/leaveQuestionComment/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/leaveQuestionComment/request-fields.adoc[]
+==== Http Response
+include::{snippets}/leaveQuestionComment/http-response.adoc[]
+==== Response Fields
+include::{snippets}/leaveQuestionComment/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 최초 유형 또는 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 404 | E1507 | 원 질문을 찾을 수 없음
+| 403 | E1509 | 질문 메모를 작성할 권한이 없음
+| 409 | E1510 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 질문 메모 평가 상태 토글
+==== Curl Request
+include::{snippets}/toggleQuestionCommentType/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/toggleQuestionCommentType/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/toggleQuestionCommentType/request-fields.adoc[]
+==== Http Response
+include::{snippets}/toggleQuestionCommentType/http-response.adoc[]
+==== Response Fields
+include::{snippets}/toggleQuestionCommentType/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 허용되지 않은 평가 유형
+| 404 | E1405 | 룸을 찾을 수 없음
+| 404 | E1507 | 원 질문을 찾을 수 없음
+| 403 | E1509 | 질문 메모를 변경할 권한이 없음
+| 409 | E1510 | 진행 중인 룸이 아님
+| 404 | E1511 | 본인이 작성한 질문 메모를 찾을 수 없음
+|===
+
+'''
+
+=== 질문 메모 수정
+==== Curl Request
+include::{snippets}/editQuestionComment/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/editQuestionComment/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/editQuestionComment/request-fields.adoc[]
+==== Http Response
+include::{snippets}/editQuestionComment/http-response.adoc[]
+==== Response Fields
+include::{snippets}/editQuestionComment/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 수정 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 404 | E1507 | 원 질문을 찾을 수 없음
+| 403 | E1509 | 질문 메모를 변경할 권한이 없음
+| 409 | E1510 | 진행 중인 룸이 아님
+| 404 | E1511 | 본인이 작성한 질문 메모를 찾을 수 없음
+|===
+
+'''
+
+=== 질문 메모 삭제
+==== Curl Request
+include::{snippets}/deleteQuestionComment/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/deleteQuestionComment/path-parameters.adoc[]
+==== Query Parameters
+include::{snippets}/deleteQuestionComment/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/deleteQuestionComment/http-response.adoc[]
+==== Response Fields
+include::{snippets}/deleteQuestionComment/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 404 | E1507 | 원 질문을 찾을 수 없음
+| 403 | E1509 | 질문 메모를 삭제할 권한이 없음
+| 409 | E1510 | 진행 중인 룸이 아님
+| 404 | E1511 | 본인이 작성한 질문 메모를 찾을 수 없음
+|===
+
+'''
+
+=== 내 라운드 질문 기록 조회
+질문한 원 질문 중 로그인 참여자가 남긴 질문 메모만 질문별로 정리한다.
+==== Curl Request
+include::{snippets}/getMyRoundQuestionRecords/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getMyRoundQuestionRecords/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getMyRoundQuestionRecords/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getMyRoundQuestionRecords/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1902 | 라운드 피드백에 접근할 권한이 없음
+| 409 | E1903 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 라운드 최종 피드백 작성
+==== Curl Request
+include::{snippets}/leaveFinalRoundFeedback/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/leaveFinalRoundFeedback/request-fields.adoc[]
+==== Http Response
+include::{snippets}/leaveFinalRoundFeedback/http-response.adoc[]
+==== Response Fields
+include::{snippets}/leaveFinalRoundFeedback/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 최종 피드백 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 409 | E1901 | 이미 최종 피드백을 작성함
+| 403 | E1902 | 최종 피드백을 작성할 권한이 없음
+| 409 | E1903 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 면접자 자가 피드백 저장
+==== Curl Request
+include::{snippets}/saveSelfRoundFeedback/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/saveSelfRoundFeedback/request-fields.adoc[]
+==== Http Response
+include::{snippets}/saveSelfRoundFeedback/http-response.adoc[]
+==== Response Fields
+include::{snippets}/saveSelfRoundFeedback/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 자가 피드백 본문 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1902 | 면접자 본인이 아님
+| 409 | E1903 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 면접자 라운드 피드백 조회
+확인 전 최종 피드백 본문은 가리고 카드별 열람 상태만 반환한다.
+==== Curl Request
+include::{snippets}/getIntervieweeRoundFeedback/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getIntervieweeRoundFeedback/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getIntervieweeRoundFeedback/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getIntervieweeRoundFeedback/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1902 | 면접자 본인이 아님
+| 409 | E1904 | 피드백을 조회할 수 없는 룸 상태
+|===
+
+'''
+
+=== 최종 피드백 카드 열람 확인
+==== Curl Request
+include::{snippets}/confirmRoundFeedbackDisclosure/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/confirmRoundFeedbackDisclosure/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/confirmRoundFeedbackDisclosure/request-fields.adoc[]
+==== Http Response
+include::{snippets}/confirmRoundFeedbackDisclosure/http-response.adoc[]
+==== Response Fields
+include::{snippets}/confirmRoundFeedbackDisclosure/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1902 | 면접자 본인이 아님
+| 409 | E1904 | 피드백을 조회할 수 없는 룸 상태
+| 404 | E1905 | 최종 피드백 카드를 찾을 수 없음
+|===
+
+'''
+
+=== 내 클로징 평가 질문 조회
+출석 참여자가 자기 라운드에서 실제 사용된 원 질문만 평가 대상으로 조회한다. 꼬리질문은 포함하지 않는다.
+==== Curl Request
+include::{snippets}/getMyClosingQuestions/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getMyClosingQuestions/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getMyClosingQuestions/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getMyClosingQuestions/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 404 | E1405 | 룸을 찾을 수 없음
+| 403 | E1801 | 출석 참여자가 아님
+| 409 | E1802 | 진행 중인 룸이 아님
+|===
+
+'''
+
+=== 클로징 제출
+출석 참여자가 실제로 받은 모든 원 질문을 평가하고 클로징을 멱등하게 제출한다.
+==== Curl Request
+include::{snippets}/submitClosingResponse/curl-request.adoc[]
+==== Request Fields
+include::{snippets}/submitClosingResponse/request-fields.adoc[]
+==== Http Response
+include::{snippets}/submitClosingResponse/http-response.adoc[]
+==== Response Fields
+include::{snippets}/submitClosingResponse/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+| 400 | E400 | 질문 평가 요청 형식 오류
+| 404 | E1405 | 룸을 찾을 수 없음
+| 400 | E1803 | 평가 질문이 실제 사용한 모든 원 질문과 일치하지 않음
+| 403 | E1801 | 출석 참여자가 아님
+| 409 | E1802 | 진행 중인 룸이 아님
+|===

@@ -14,7 +14,9 @@ import java.util.UUID
 
 class ClosingServiceTest {
     private val submissionManager = mockk<ClosingSubmissionManager>()
-    private val service = ClosingService(submissionManager)
+    private val accessValidator = mockk<ClosingAccessValidator>()
+    private val questionReader = mockk<ClosingQuestionReader>()
+    private val service = ClosingService(submissionManager, accessValidator, questionReader)
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
@@ -52,5 +54,19 @@ class ClosingServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN)
             }
+    }
+
+    @Test
+    fun `출석 참여자는 클로징에서 평가할 실제 사용 원 질문을 조회한다`() {
+        val questions = listOf(
+            ClosingQuestion(1L, UUID.randomUUID(), "장애 원인을 어떻게 좁혔나요?", io.plady.moimyeon.core.enums.QuestionSource.PREPARATION),
+            ClosingQuestion(2L, UUID.randomUUID(), "복구 순서는 어떻게 정했나요?", io.plady.moimyeon.core.enums.QuestionSource.IN_PROGRESS),
+        )
+        every { accessValidator.validateParticipant(roomId, memberId) } returns Unit
+        every { questionReader.getQuestions(roomId, memberId) } returns questions
+
+        assertThat(service.getQuestions(memberId, roomId)).containsExactlyElementsOf(questions)
+        verify(exactly = 1) { accessValidator.validateParticipant(roomId, memberId) }
+        verify(exactly = 1) { questionReader.getQuestions(roomId, memberId) }
     }
 }

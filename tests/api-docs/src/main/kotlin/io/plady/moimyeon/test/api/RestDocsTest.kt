@@ -9,6 +9,7 @@ import org.springframework.restdocs.RestDocumentationContextProvider
 import org.springframework.restdocs.RestDocumentationExtension
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation
 import org.springframework.restdocs.operation.preprocess.Preprocessors
+import org.springframework.restdocs.payload.FieldDescriptor
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
@@ -71,5 +72,19 @@ abstract class RestDocsTest {
         // oneOf: [null, object] 스키마가 생성된다. OBJECT 로 고정한다(nullable 은 optional 에서 나온다).
         subsectionWithPath("error.data").type(JsonFieldType.OBJECT).optional()
             .description("추가 정보 (검증 오류의 필드별 사유 등, 없으면 null)"),
+    )
+
+    protected fun successResponseFields(vararg dataFields: FieldDescriptor): ResponseFieldsSnippet {
+        return responseFields(
+            fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+            *dataFields,
+            fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+        )
+    }
+
+    protected fun emptySuccessResponseFields(): ResponseFieldsSnippet = responseFields(
+        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
     )
 }
