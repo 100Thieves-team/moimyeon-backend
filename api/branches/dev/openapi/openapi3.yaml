@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-14",
-                        "datetime" : "2026-08-14T07:09:00.786555316",
+                        "date" : "2026-08-15",
+                        "datetime" : "2026-08-15T14:03:28.331132301",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-14",
-                        "datetime" : "2026-08-14T07:09:00.845351114",
+                        "date" : "2026-08-15",
+                        "datetime" : "2026-08-15T14:03:28.376478448",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2372,7 +2372,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "deb7d576-3af3-4705-8dd4-bc13d6e5a7c2",
+                          "termsId" : "64eea28e-31ca-47b0-9af9-2a4e5ab977b7",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2380,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "8bda1047-fb89-4b82-9b3e-070eebae9bee",
+                          "termsId" : "384701a4-ecbc-4a1f-9f7b-eded4ea6f220",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3071,12 +3071,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "76bc6c6d-9325-410f-9819-29490291f8d8",
+                        "memberId" : "d0d4d4a8-36de-414b-be49-4571381301f9",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "76bc6c6d-9325-410f-9819-29490291f8d8",
+                          "memberId" : "d0d4d4a8-36de-414b-be49-4571381301f9",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4440,7 +4440,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-15T07:09:07.764459662",
+                          "startAt" : "2026-08-16T14:03:33.972609223",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4451,7 +4451,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "4ced276b-d2ee-4dd8-aa95-ae1b24fb2d36",
+                        "hostMemberId" : "66b98a56-752f-4768-b2a2-91f47e57e6e5",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4821,7 +4821,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "9b55f26a-0c1c-4270-ab3f-5937caa3b5af",
+                        "memberId" : "10505cf7-79ed-48dc-9615-ef6145c708ea",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5496,18 +5496,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "f2910efa-0aee-415d-a0e1-aa8207325955"
+                    "resumeId" : "3b365635-a4f9-429f-bf08-1204f4be6364"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "7aa2fd74-df0a-4c46-bec4-cb8da3141b61",
+                    "resumeId" : "d5f4246a-8628-4698-932a-41b04925fe99",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "97e8b70a-e373-40d7-b4c7-6166d5e06655",
+                    "resumeId" : "768705ee-987e-4626-bd4c-04b370cbee89",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -6679,7 +6679,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "74ed80cd-1b2d-48d7-bcdd-144eee6d3dc1",
+                          "resumeId" : "81a6c455-66c0-438d-ac5b-cc4975046219",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
