@@ -95,7 +95,7 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
 
     @Query(
         value = """
-            select case when count(*) > 0 then true else false end
+            select count(*)
             from participation p
             join room_status_log rsl on rsl.room_id = p.room_id
             where p.room_id = :roomId
@@ -108,10 +108,10 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         """,
         nativeQuery = true,
     )
-    fun existsAtRoomConfirmation(
+    fun countAtRoomConfirmation(
         @Param("roomId") roomId: UUID,
         @Param("memberId") memberId: UUID,
-    ): Boolean
+    ): Long
 
     @Query(
         value = """

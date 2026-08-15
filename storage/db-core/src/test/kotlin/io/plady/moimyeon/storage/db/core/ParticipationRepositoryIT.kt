@@ -84,7 +84,7 @@ class ParticipationRepositoryIT(
             leftAt = now.plusHours(1),
         )
 
-        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isTrue()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, memberId)).isPositive()
     }
 
     @Test
@@ -100,7 +100,7 @@ class ParticipationRepositoryIT(
             leftAt = now.minusHours(1),
         )
 
-        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isFalse()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, memberId)).isZero()
     }
 
     @Test
@@ -116,7 +116,7 @@ class ParticipationRepositoryIT(
         ).also { it.delete(now.plusHours(1)) }
         entityManager.flush()
 
-        assertThat(participationRepository.existsAtRoomConfirmation(roomId, memberId)).isFalse()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, memberId)).isZero()
     }
 
     @Test

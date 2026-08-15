@@ -64,7 +64,7 @@ class ParticipationFinder(
     }
 
     fun wasConfirmedParticipant(roomId: UUID, memberId: UUID): Boolean {
-        return participationRepository.existsAtRoomConfirmation(roomId, memberId)
+        return participationRepository.countAtRoomConfirmation(roomId, memberId) > 0
     }
 
     fun getConfirmedParticipantIds(roomId: UUID): List<UUID> {
