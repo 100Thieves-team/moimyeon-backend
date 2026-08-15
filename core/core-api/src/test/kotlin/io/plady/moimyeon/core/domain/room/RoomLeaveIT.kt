@@ -182,7 +182,7 @@ class RoomLeaveIT(
 
         roomLeaveManager.leave(roomId, participant)
 
-        assertThat(participationRepository.existsAtRoomConfirmation(roomId, participant)).isTrue()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, participant)).isPositive()
     }
 
     @Test
@@ -194,7 +194,7 @@ class RoomLeaveIT(
         roomLeaveManager.leave(roomId, leaver)
         roomManager.confirm(roomId, hostMemberId)
 
-        assertThat(participationRepository.existsAtRoomConfirmation(roomId, leaver)).isFalse()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, leaver)).isZero()
     }
 
     private fun rows() = participationRepository.findAll().filter { it.roomId == roomId }
