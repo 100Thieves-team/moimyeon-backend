@@ -23,6 +23,10 @@ class RoomParticipantService(
         return roomParticipantReader.getAllByRoom(roomId, viewerMemberId)
     }
 
+    // 방명록 글의 방장·(퇴장) 뱃지 판정용(MOI-461). 참여자 게이트는 방명록 Service 가 이미
+    // 통과한 뒤의 응답 조립에서만 쓴다 - 명부(getParticipants)와 달리 이력서가 실리지 않는다.
+    fun getJoinedParticipants(roomId: UUID): List<JoinedParticipant> = participationFinder.getJoinedParticipants(roomId)
+
     // 나가기(「룸 참여」 §4.6). 참여 여부 판정이 나가기 규칙과 한 잠금 안에 있어야 해서
     // 여기서 validateParticipant 를 먼저 부르지 않는다 — Manager 가 룸을 잠근 뒤 함께 본다.
     fun leave(memberId: UUID, roomId: UUID) {

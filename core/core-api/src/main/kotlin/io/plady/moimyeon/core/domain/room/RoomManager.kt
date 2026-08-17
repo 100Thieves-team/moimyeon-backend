@@ -108,7 +108,7 @@ class RoomManager(
                 submittedAt = now,
             ),
         )
-        // TODO(BE-05 잔여): chat_room — 엔티티 생성 필요.
+        // 방명록(room_guestbook)은 여기서 만들지 않는다 — 첫 글 작성 때 lazy 생성한다(MOI-461 D8).
         // room_status_log 의 생성 전이는 만들지 않는다(MOI-397). 최초 방장은 participation.role=HOST 가
         // 보존하고, 멱등용으로 되살려도 room_id 를 매번 새로 뽑는 이상 중복 생성을 막지 못한다(MOI-331).
         return RoomCreationResult(room.id, room.status)
