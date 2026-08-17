@@ -46,6 +46,9 @@
   사람용 테스트 데이터가 테스트에 실리면 count 단언이 깨지므로 `test` 프로파일에서는 로드하지 않는다.
 - `test` 프로파일은 `spring.profiles.group` 으로 **local 을 상속**하되 데이터 로드를 `seed.sql`만으로
   오버라이드한다. local 앱은 `seed.sql`과 `data-local.sql`을 함께 로드한다.
+- Docker initdb 스크립트는 `core-db` 컨테이너의 데이터 디렉터리가 처음 만들어질 때만 실행된다.
+  기존 컨테이너에 새 local 데이터를 반영하려면 `docker compose rm -sf core-db` 후
+  `docker compose up -d core-db`로 다시 만든다. 이 작업은 기존 로컬 MySQL 데이터를 삭제한다.
 - 참조 데이터를 추가하는 PR 은 `seed.sql` 과 마이그레이션에 같은 INSERT 를 함께 넣는다.
   수동 반영에 기대면 환경마다 어긋난다 — dev 의 약관이 오래 비어 있었던 것이 그 사례다.
   단, `seed.sql` 의 카탈로그 최소 시드(sido·sigungu·job_group·job_role·company)는 마이그레이션에

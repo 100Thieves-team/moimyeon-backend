@@ -63,7 +63,10 @@ class DevAuthControllerTest : RestDocsTest() {
                     ),
                     responseHeaders(
                         headerWithName(HttpHeaders.SET_COOKIE)
-                            .description("DEV_ACCESS_TOKEN·DEV_REFRESH_TOKEN 쿠키"),
+                            .description(
+                                "환경별 액세스·리프레시 쿠키. local·local-dev: ACCESS_TOKEN·REFRESH_TOKEN, " +
+                                    "dev: DEV_ACCESS_TOKEN·DEV_REFRESH_TOKEN",
+                            ),
                     ),
                     emptySuccessResponseFields(),
                 ),
