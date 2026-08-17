@@ -4,6 +4,7 @@ import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.security.auth.JwtTokenProvider
 import jakarta.servlet.Filter
+import jakarta.servlet.http.Cookie
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.bind.annotation.GetMapping
@@ -91,6 +93,17 @@ class AdminAuthorizationContextTest(
         val response = mockMvc.perform(get("/health")).andReturn().response
 
         assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `dev 세션 발급 경로는 만료된 액세스 쿠키가 있어도 인증 필터를 통과한다`() {
+        val response = mockMvc.perform(
+            post("/v1/auth/dev-sessions")
+                .cookie(Cookie("ACCESS_TOKEN", "expired-access-token")),
+        ).andReturn().response
+
+        // test는 local을 포함하므로 컨트롤러까지 도달한 뒤 빈 요청 본문이 E400으로 닫혀야 한다.
+        assertThat(response.status).isEqualTo(400)
     }
 
     @Test
