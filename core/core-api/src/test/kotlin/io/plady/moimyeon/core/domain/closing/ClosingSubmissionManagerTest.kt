@@ -1,10 +1,14 @@
 package io.plady.moimyeon.core.domain.closing
 
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
+import io.plady.moimyeon.core.domain.progress.Attendance
 import io.plady.moimyeon.core.domain.progress.RoomProgressReader
+import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.QuestionVote
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -15,6 +19,8 @@ import io.plady.moimyeon.storage.db.core.ClosingResponseRepository
 import io.plady.moimyeon.storage.db.core.QuestionEntity
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -26,15 +32,19 @@ class ClosingSubmissionManagerTest {
     private val roomProgressReader = mockk<RoomProgressReader>()
     private val closingQuestionRepository = mockk<ClosingQuestionRepository>()
     private val closingResponseRepository = mockk<ClosingResponseRepository>()
+    private val roomStatusLogRepository = mockk<RoomStatusLogRepository>()
     private val manager = ClosingSubmissionManager(
         roomRepository,
         roomProgressReader,
         closingQuestionRepository,
         closingResponseRepository,
+        roomStatusLogRepository,
     )
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
+    private val otherMemberId = UUID.randomUUID()
+    private lateinit var lockedRoom: RoomEntity
     private val submittedAt = LocalDateTime.of(2026, 8, 13, 3, 0)
     private val command = ClosingSubmissionCommand(
         roomId = roomId,
@@ -155,6 +165,50 @@ class ClosingSubmissionManagerTest {
         }
     }
 
+    @Test
+    fun `마지막 출석자가 제출하면 룸을 COMPLETED 로 전이하고 전이 로그를 남긴다`() {
+        givenNewSubmission()
+        givenAttendances(attended(memberId), attended(otherMemberId))
+        givenSubmitters(otherMemberId, memberId)
+        givenSavedResponse()
+        val statusLog = slot<RoomStatusLogEntity>()
+        every { roomStatusLogRepository.save(capture(statusLog)) } returnsArgument 0
+
+        manager.submit(command)
+
+        verify(exactly = 1) { lockedRoom.complete() }
+        assertThat(statusLog.captured.roomId).isEqualTo(roomId)
+        assertThat(statusLog.captured.transitionType).isEqualTo(RoomStatus.COMPLETED)
+        assertThat(statusLog.captured.handlerMemberId).isEqualTo(memberId)
+        assertThat(statusLog.captured.occurredAt).isEqualTo(submittedAt)
+    }
+
+    @Test
+    fun `아직 제출하지 않은 출석자가 있으면 전이하지 않는다`() {
+        givenNewSubmission()
+        givenSavedResponse()
+
+        manager.submit(command)
+
+        verify(exactly = 0) {
+            lockedRoom.complete()
+            roomStatusLogRepository.save(any())
+        }
+    }
+
+    @Test
+    fun `불참자의 미제출은 전이를 막지 않는다`() {
+        givenNewSubmission()
+        givenAttendances(attended(memberId), absent(otherMemberId))
+        givenSubmitters(memberId)
+        givenSavedResponse()
+        every { roomStatusLogRepository.save(any()) } returnsArgument 0
+
+        manager.submit(command)
+
+        verify(exactly = 1) { lockedRoom.complete() }
+    }
+
     private fun givenNewSubmission() {
         givenLockedRoom(RoomStatus.IN_PROGRESS)
         every {
@@ -167,14 +221,44 @@ class ClosingSubmissionManagerTest {
             question(1L),
             question(2L),
         )
+        // 판정은 새 저장 뒤마다 실행된다 — 기본값은 "아직 전원이 아님"으로 두고 전이 테스트가 덮어쓴다.
+        givenAttendances(attended(memberId), attended(otherMemberId))
+        givenSubmitters(memberId)
     }
 
     private fun givenLockedRoom(status: RoomStatus) {
-        every { roomRepository.findByIdForUpdate(roomId) } returns mockk<RoomEntity> {
+        lockedRoom = mockk<RoomEntity> {
             every { isActive() } returns true
             every { this@mockk.status } returns status
+            every { complete() } just runs
+        }
+        every { roomRepository.findByIdForUpdate(roomId) } returns lockedRoom
+    }
+
+    private fun givenAttendances(vararg attendances: Attendance) {
+        every { roomProgressReader.getAttendances(roomId) } returns attendances.toList()
+    }
+
+    private fun givenSubmitters(vararg memberIds: UUID) {
+        every { closingResponseRepository.findAllByRoomIdAndDeletedAtIsNull(roomId) } returns
+            memberIds.map { submitterId ->
+                mockk<ClosingResponseEntity> {
+                    every { this@mockk.memberId } returns submitterId
+                }
+            }
+    }
+
+    private fun givenSavedResponse() {
+        every { closingResponseRepository.saveAndFlush(any()) } returns mockk<ClosingResponseEntity> {
+            every { roomId } returns this@ClosingSubmissionManagerTest.roomId
+            every { memberId } returns this@ClosingSubmissionManagerTest.memberId
+            every { createdAt } returns submittedAt
         }
     }
+
+    private fun attended(memberId: UUID): Attendance = Attendance(memberId, AttendanceStatus.ATTENDED)
+
+    private fun absent(memberId: UUID): Attendance = Attendance(memberId, AttendanceStatus.ABSENT)
 
     private fun question(id: Long): QuestionEntity = mockk {
         every { this@mockk.id } returns id
