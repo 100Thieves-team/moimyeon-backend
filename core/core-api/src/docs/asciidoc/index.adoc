@@ -130,6 +130,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 Google OAuth를 거치지 않고 기존 회원 UUID의 현재 권한으로 개발 환경 세션을 발급한다.
 성공 시 local·local-dev는 `ACCESS_TOKEN`·`REFRESH_TOKEN`, dev는 도메인이 격리된
 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN` 쿠키를 함께 내려준다.
+기본 local(H2)에는 `019daf00-0000-7000-8000-000000000101` 테스트 회원이 준비되어 있다.
 
 ==== Curl Request
 include::{snippets}/issueDevSession/curl-request.adoc[]

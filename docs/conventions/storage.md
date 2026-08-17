@@ -40,11 +40,12 @@
 | --- | --- | --- |
 | `schema.sql` | DDL | local·test 는 `sql.init`, 로컬 MySQL 은 docker initdb |
 | `seed.sql` | **참조 데이터**(약관, 카탈로그). 스키마의 일부로 취급 | local·test 항상 로드. dev/live 는 마이그레이션(V5) |
-| `data-local.sql` | 사람용 로컬 테스트 데이터(테스트 회원 등) | **docker initdb 전용** (앱 설정에 없음) |
+| `data-local.sql` | 사람용 로컬 테스트 데이터(테스트 회원 등) | local `sql.init` + 로컬 MySQL docker initdb |
 
 - 테스트는 "스키마 + 참조 데이터"만 전제한다. 그 외 데이터는 각 테스트가 스스로 만든다.
-  사람용 테스트 데이터가 테스트에 실리면 count 단언이 깨지므로 `data-local.sql` 은 앱 설정에 싣지 않는다.
-- `test` 프로파일은 `spring.profiles.group` 으로 **local 을 상속**하고 데이터 로드만 오버라이드한다.
+  사람용 테스트 데이터가 테스트에 실리면 count 단언이 깨지므로 `test` 프로파일에서는 로드하지 않는다.
+- `test` 프로파일은 `spring.profiles.group` 으로 **local 을 상속**하되 데이터 로드를 `seed.sql`만으로
+  오버라이드한다. local 앱은 `seed.sql`과 `data-local.sql`을 함께 로드한다.
 - 참조 데이터를 추가하는 PR 은 `seed.sql` 과 마이그레이션에 같은 INSERT 를 함께 넣는다.
   수동 반영에 기대면 환경마다 어긋난다 — dev 의 약관이 오래 비어 있었던 것이 그 사례다.
   단, `seed.sql` 의 카탈로그 최소 시드(sido·sigungu·job_group·job_role·company)는 마이그레이션에
