@@ -33,6 +33,7 @@ class ReviewTargetFinderTest {
         val writableTargetId = UUID.randomUUID()
         val absentTargetId = UUID.randomUUID()
         val submittedReview = mockk<ReviewEntity> {
+            every { id } returns 31L
             every { targetMemberId } returns submittedTargetId
         }
         every { roomFinder.getRoom(roomId) } returns room
@@ -50,7 +51,7 @@ class ReviewTargetFinderTest {
         val targets = finder.getTargets(authorMemberId, roomId)
 
         assertThat(targets).containsExactly(
-            ReviewTarget(submittedTargetId, ReviewTargetStatus.SUBMITTED),
+            ReviewTarget(submittedTargetId, ReviewTargetStatus.SUBMITTED, reviewId = 31L),
             ReviewTarget(writableTargetId, ReviewTargetStatus.WRITABLE),
         )
     }

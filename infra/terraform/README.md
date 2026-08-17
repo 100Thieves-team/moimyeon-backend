@@ -39,17 +39,13 @@ Each app environment creates:
   ECS instance role, and a GitHub Actions deploy role restricted to the env branch.
 - Optional SSM DB-access bastion (developer RDS port-forward).
 
-## How this maps to the current (hand-built) dev infra
+## Current dev infra
 
-The live dev resources today were created outside Terraform and run the app as a
-manual `docker run` on a single EC2 (see `docs/moimyeon-backend/infra/`). This
-Terraform expresses the **Pattern A target** (ECS), not a 1:1 import of that
-box. Reused shapes: VPC/subnet CIDRs (`10.20.0.0/16`, same offsets), ALB, RDS
-MySQL, ECR, ACM, bastion. Replaced: the manual EC2 `docker run` → ECS service.
-
-**It is authored but not yet applied.** Cutover options:
-1. Fresh apply into a new VPC, then move the ALB DNS/records over (blue/green), or
-2. `terraform import` the existing VPC/ALB/RDS/etc. before apply to adopt them.
+As of 2026-08-14, dev Core API, Notification Worker, and notification Redis run
+on the Terraform-managed ECS stack. The configuration still contains explicit
+blue/green compatibility settings for resources retained from the former
+hand-built environment; follow the comments in `envs/dev/main.tf` when removing
+those transitional dependencies.
 
 ## Bootstrap Order
 
@@ -102,6 +98,65 @@ Before the four Worker variables are synced, the workflow keeps deploying only
 Core API. Once they are all present, it also builds and registers the Worker
 image. A Worker service with desired count `0` receives the new task definition
 without starting a task, so vendor credentials can be prepared before activation.
+
+No GitHub Actions secret is added for a frontend domain change. Deployment uses
+the existing `MOIMYEON_*_DEV` repository variables, while application secrets
+remain in SSM.
+
+## Dev preview frontend
+
+The dev backend is paired only with `https://dev.moimyeon.plady.io`:
+
+- Core API `dev` profile: OAuth completion redirects, credentialed CORS, and the
+  `dev.moimyeon.plady.io` cookie domain with dev-only cookie names.
+- Upload bucket: browser CORS for the preview origin and local frontend development.
+- Notification Worker: FCM click actions use the preview origin.
+
+Do not deploy this pairing until all three checks pass. Otherwise the current
+production frontend, which may still call the dev API, loses login access:
+
+```bash
+dig +short dev.moimyeon.plady.io
+curl -sS -o /dev/null -D - https://api.dev.moimyeon.plady.io/oauth2/authorization/google \
+  | grep -iE '^(HTTP/|location:)'
+```
+
+The first command must resolve to Vercel. The OAuth response must redirect to
+Google with `https://api.dev.moimyeon.plady.io/login/oauth2/code/google` as its
+encoded callback. In the browser network panel, verify that preview login starts
+at this dev API and that production login does not target the dev API.
+In Vercel, assign the custom domain to a long-lived preview branch; assigning it
+only to one deployment will not advance it on later Git pushes.
+
+Set the non-secret Terraform values before applying:
+
+```hcl
+upload_cors_allowed_origins             = ["https://dev.moimyeon.plady.io", "http://localhost:3000", "http://localhost:5173"]
+notification_web_push_action_base_url   = "https://dev.moimyeon.plady.io"
+```
+
+Then review and apply only after the frontend DNS is ready:
+
+```bash
+export AWS_PROFILE=plady
+terraform -chdir=infra/terraform/envs/dev init
+terraform -chdir=infra/terraform/envs/dev fmt -check
+terraform -chdir=infra/terraform/envs/dev validate
+terraform -chdir=infra/terraform/envs/dev plan -out=preview-domain.tfplan
+terraform -chdir=infra/terraform/envs/dev apply preview-domain.tfplan
+./infra/terraform/scripts/sync-github-variables.sh --env dev
+```
+
+Changing the frontend hostname does not rotate Firebase or Gmail credentials.
+Keep the dev-only Firebase project/service account and Gmail app password in the
+existing SSM paths, and verify their metadata without decrypting them:
+
+```bash
+aws ssm describe-parameters --profile plady --region ap-northeast-2 \
+  --parameter-filters 'Key=Name,Option=BeginsWith,Values=/moimyeon/dev/core-worker/' \
+  --query 'sort_by(Parameters,&Name)[].{Name:Name,Type:Type,Version:Version}' \
+  --output table
+```
 
 ## App config contract (injected into the ECS task)
 

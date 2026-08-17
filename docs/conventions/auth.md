@@ -9,7 +9,8 @@
 
 - 로그인 시작·콜백(`/oauth2/authorization/google`, `/login/oauth2/code/google`)은 컨트롤러가 아니라
   Spring Security 필터 체인이 처리한다.
-- 성공 시 `ACCESS_TOKEN`(JWT)·`REFRESH_TOKEN` 쿠키 발급. API 인증은 쿠키(웹) 또는
+- 성공 시 환경별 액세스·리프레시 쿠키를 발급한다. 기본·live는 `ACCESS_TOKEN`·`REFRESH_TOKEN`,
+  dev는 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN`을 사용한다. API 인증은 쿠키(웹) 또는
   `Authorization: Bearer`(앱) 둘 다 허용 (`HeaderOrCookieBearerTokenResolver`).
 - Access Token은 회원 UUID를 subject로, `USER` 또는 `ADMIN`을 `roles` claim으로 담는다.
   Resource Server는 이를 `ROLE_USER`, `ROLE_ADMIN` Spring Security 권한으로 변환한다.
@@ -22,7 +23,11 @@ state 검증 오류가 백엔드 `/login?error`에 남는다.
 
 - OAuth 성공 리다이렉트는 `security.auth.oauth2.success-redirect-uri`, 실패 리다이렉트는
   `security.auth.oauth2.failure-redirect-uri` 설정을 사용한다. 둘 다 절대 HTTP(S) URI여야 한다.
-- 회원 확정·JWT·세션·쿠키 생성이 전부 성공한 뒤 ACCESS_TOKEN·REFRESH_TOKEN을 응답에 함께 기록한다.
+- 환경별 웹 세션 범위는 프론트와 API가 공유하는 최소 도메인으로 제한한다. `live`는
+  `moimyeon.plady.io`, `dev`는 `dev.moimyeon.plady.io`를 사용해 운영·개발 쿠키가 서로 덮어쓰지
+  않게 한다. dev OAuth 완료 리다이렉트는 `https://dev.moimyeon.plady.io`를 가리키고, CORS는 이
+  preview 오리진과 로컬 개발 예외 `http://localhost:3000`만 허용한다.
+- 회원 확정·JWT·세션·쿠키 생성이 전부 성공한 뒤 환경별 액세스·리프레시 쿠키를 응답에 함께 기록한다.
   중간 실패에는 일부 쿠키를 발급하지 않는다.
 - Google 오류와 로그인 내부 처리 오류는 모두 고정된 프론트 실패 URI로 보낸다. 공급자 오류 설명과 내부
   예외 메시지는 리다이렉트 URL이나 응답에 싣지 않는다.

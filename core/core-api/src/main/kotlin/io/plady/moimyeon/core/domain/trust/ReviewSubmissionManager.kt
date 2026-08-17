@@ -69,6 +69,7 @@ class ReviewSubmissionManager(
                     authorMemberId = command.authorMemberId,
                     targetMemberId = command.targetMemberId,
                     content = command.content,
+                    anonymous = command.anonymous,
                     visibleAt = submittedAt.plusHours(REVIEW_VISIBILITY_DELAY_HOURS),
                     tags = command.tags,
                 ),

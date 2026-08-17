@@ -224,7 +224,7 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 | `SPRING_PROFILES_ACTIVE` | core-api, core-batch | 기본값 `local` (H2 부팅, 외부 의존 없음) |
 | `storage.database.core-db.url` / `.username` / `.password` | storage/db-core | dev 이상 MySQL 접속 정보 (외부 설정 주입) |
 | `security.perf-auth.enabled` | security/security-core | `dev,perf` 전용 환경에서 회원 UUID 기반 `X-Test-User-Id` 인증 활성화 (이중 게이트, live 차단) |
-| `OAUTH_FRONTEND_SUCCESS_REDIRECT_URI` | security/security-core | OAuth 성공 후 프론트 콜백 절대 URI (기본 `https://moimyeon.plady.io/auth/callback`) |
-| `OAUTH_FRONTEND_FAILURE_REDIRECT_URI` | security/security-core | OAuth 실패 후 프론트 화면 절대 URI (기본 `https://moimyeon.plady.io/?authError=login_failed`) |
+| `OAUTH_FRONTEND_SUCCESS_REDIRECT_URI` | security/security-core | OAuth 성공 후 프론트 콜백 절대 URI (`live`: `https://moimyeon.plady.io/auth/callback`, `dev`: `https://dev.moimyeon.plady.io/auth/callback`) |
+| `OAUTH_FRONTEND_FAILURE_REDIRECT_URI` | security/security-core | OAuth 실패 후 프론트 화면 절대 URI (`live`: `https://moimyeon.plady.io/?authError=login_failed`, `dev`: `https://dev.moimyeon.plady.io/?authError=login_failed`) |
 
 > Google OAuth client-id/secret과 JWT secret은 실행 환경에서 주입한다.

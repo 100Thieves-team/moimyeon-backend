@@ -49,6 +49,7 @@ class ReviewSubmissionManagerTest {
         targetMemberId = targetMemberId,
         tags = setOf("시간 약속을 잘 지켜요", "좋은 질문을 해요"),
         content = "실전 같은 질문과 피드백이 좋았어요.",
+        anonymous = true,
     )
 
     @BeforeEach
@@ -99,6 +100,7 @@ class ReviewSubmissionManagerTest {
         assertThat(reviewSlot.captured.targetMemberId).isEqualTo(targetMemberId)
         assertThat(reviewSlot.captured.tags()).containsExactlyInAnyOrderElementsOf(command.tags)
         assertThat(reviewSlot.captured.content).isEqualTo(command.content)
+        assertThat(reviewSlot.captured.anonymous).isTrue()
         assertThat(reviewSlot.captured.visibleAt).isEqualTo(LocalDateTime.of(2026, 8, 14, 6, 0))
         verifyOrder {
             roomRepository.findByIdForUpdate(roomId)

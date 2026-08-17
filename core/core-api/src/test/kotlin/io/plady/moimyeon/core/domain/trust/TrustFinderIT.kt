@@ -292,6 +292,7 @@ class TrustFinderIT(
                 targetMemberId = targetMemberId,
                 visibleAt = visibleAt,
                 hiddenAt = hiddenAt,
+                anonymous = true,
                 tags = tags,
             ),
         )

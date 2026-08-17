@@ -32,6 +32,30 @@ class ReviewServiceTest {
     private val targetMemberId = UUID.randomUUID()
 
     @Test
+    fun `인증 회원과 후기 입력을 제출 명령으로 결합한다`() {
+        val content = ReviewSubmissionContent(
+            targetMemberId = targetMemberId,
+            tags = setOf("시간을 잘 지켜요"),
+            content = "시간 약속을 잘 지켜주셨어요.",
+            anonymous = false,
+        )
+        val command = ReviewSubmissionCommand(
+            roomId = roomId,
+            authorMemberId = authorMemberId,
+            targetMemberId = targetMemberId,
+            tags = content.tags,
+            content = content.content,
+            anonymous = content.anonymous,
+        )
+        every { submissionManager.submit(command) } returns 1L
+
+        val reviewId = service.submit(authorMemberId, roomId, content)
+
+        assertThat(reviewId).isEqualTo(1L)
+        verify(exactly = 1) { submissionManager.submit(command) }
+    }
+
+    @Test
     fun `완료 룸의 출석자가 다른 출석자에게 선택 태그와 텍스트 후기를 제출한다`() {
         val tags = mutableSetOf("시간 약속을 잘 지켜요", "좋은 질문을 해요")
         val command = ReviewSubmissionCommand(
@@ -40,10 +64,11 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = tags.toSet(),
             content = "꼬리질문이 날카로워서 실전처럼 연습할 수 있었어요.",
+            anonymous = true,
         )
         every { submissionManager.submit(command) } returns 1L
 
-        val reviewId = service.submit(command)
+        val reviewId = submit(command)
         tags.clear()
 
         assertThat(reviewId).isEqualTo(1L)
@@ -55,7 +80,7 @@ class ReviewServiceTest {
         val command = command()
         every { submissionManager.submit(command) } returns 1L
 
-        val reviewId = service.submit(command)
+        val reviewId = submit(command)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(command) }
@@ -82,7 +107,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(selfCommand) } throws CoreException(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
 
         assertThatThrownBy {
-            service.submit(selfCommand)
+            submit(selfCommand)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
         }
@@ -130,33 +155,35 @@ class ReviewServiceTest {
 
     @Test
     fun `제출 후 3시간 전에는 대상자의 받은 후기에 보이지 않는다`() {
-        every { receivedReviewFinder.getAll(targetMemberId) } returns emptyList()
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        val result = service.getReceivedReviews(targetMemberId)
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
 
-        assertThat(result).isEmpty()
+        assertThat(result.reviews).isEmpty()
     }
 
     @Test
     fun `제출 후 3시간이 지나면 대상자의 받은 후기에 노출할 수 있다`() {
         val reviews = listOf(receivedReview())
-        every { receivedReviewFinder.getAll(targetMemberId) } returns reviews
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(reviews)
 
-        val result = service.getReceivedReviews(targetMemberId)
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
 
-        assertThat(result).containsExactlyElementsOf(reviews)
+        assertThat(result.reviews).containsExactlyElementsOf(reviews)
     }
 
     @Test
-    fun `받은 후기에서는 작성자와 룸 이름 및 일자를 알 수 없다`() {
+    fun `받은 후기는 작성자 표시 조립에 필요한 작성자와 익명 여부를 유지한다`() {
         val review = receivedReview()
-        every { receivedReviewFinder.getAll(targetMemberId) } returns listOf(review)
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        val result = service.getReceivedReviews(targetMemberId).single()
+        val result = service.getReceivedReviewPage(targetMemberId, null, 20).reviews.single()
 
         assertThat(result).isEqualTo(
             ReceivedReview(
                 id = 1L,
+                authorMemberId = authorMemberId,
+                anonymous = true,
                 tags = setOf("피드백이 구체적이에요"),
                 content = "안정적으로 진행해주셨어요.",
             ),
@@ -165,17 +192,17 @@ class ReviewServiceTest {
 
     @Test
     fun `숨김되거나 삭제된 후기는 받은 후기 조회에서 제외한다`() {
-        every { receivedReviewFinder.getAll(targetMemberId) } returns emptyList()
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        assertThat(service.getReceivedReviews(targetMemberId)).isEmpty()
+        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).isEmpty()
     }
 
     @Test
     fun `탈퇴한 작성자의 후기도 대상자의 받은 후기에서 유지한다`() {
         val review = receivedReview()
-        every { receivedReviewFinder.getAll(targetMemberId) } returns listOf(review)
+        every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        assertThat(service.getReceivedReviews(targetMemberId)).containsExactly(review)
+        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).containsExactly(review)
     }
 
     @Test
@@ -183,7 +210,26 @@ class ReviewServiceTest {
         val command = updateCommand()
         every { reviewEditor.update(command) } just Runs
 
-        service.update(command)
+        update(command)
+
+        verify(exactly = 1) { reviewEditor.update(command) }
+    }
+
+    @Test
+    fun `인증 회원과 후기 입력을 수정 명령으로 결합한다`() {
+        val content = ReviewUpdateContent(
+            tags = setOf("피드백이 구체적이에요"),
+            content = "개선할 부분을 명확히 알려주셨어요.",
+        )
+        val command = ReviewUpdateCommand(
+            reviewId = 1L,
+            authorMemberId = authorMemberId,
+            tags = content.tags,
+            content = content.content,
+        )
+        every { reviewEditor.update(command) } just Runs
+
+        service.update(authorMemberId, 1L, content)
 
         verify(exactly = 1) { reviewEditor.update(command) }
     }
@@ -224,7 +270,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(submission) } returns 2L
 
         service.delete(authorMemberId, 1L)
-        val resubmittedReviewId = service.submit(submission)
+        val resubmittedReviewId = submit(submission)
 
         assertThat(resubmittedReviewId).isEqualTo(2L)
         verify(exactly = 1) { reviewEditor.delete(authorMemberId, 1L) }
@@ -237,7 +283,19 @@ class ReviewServiceTest {
         givenEligible(command)
         every { skipRecorder.record(command) } just Runs
 
-        service.skip(command)
+        skip(command)
+
+        verify(exactly = 1) { skipRecorder.record(command) }
+    }
+
+    @Test
+    fun `인증 회원과 대상 입력을 건너뛰기 명령으로 결합한다`() {
+        val content = ReviewSkipContent(targetMemberId)
+        val command = ReviewSkipCommand(roomId, authorMemberId, targetMemberId)
+        givenEligible(command)
+        every { skipRecorder.record(command) } just Runs
+
+        service.skip(authorMemberId, roomId, content)
 
         verify(exactly = 1) { skipRecorder.record(command) }
     }
@@ -250,8 +308,8 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(submission) } returns 1L
 
-        service.skip(skip)
-        val reviewId = service.submit(submission)
+        skip(skip)
+        val reviewId = submit(submission)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { skipRecorder.record(skip) }
@@ -267,8 +325,8 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { submissionManager.submit(remainingSubmission) } returns 1L
 
-        service.skip(skip)
-        val reviewId = service.submit(remainingSubmission)
+        skip(skip)
+        val reviewId = submit(remainingSubmission)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(remainingSubmission) }
@@ -309,7 +367,7 @@ class ReviewServiceTest {
         every { skipRecorder.record(skip) } just Runs
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
 
-        service.skip(skip)
+        skip(skip)
         val result = service.getTargets(authorMemberId, roomId)
 
         assertThat(result).containsExactlyElementsOf(targets)
@@ -324,6 +382,7 @@ class ReviewServiceTest {
             targetMemberId = targetMemberId,
             tags = emptySet(),
             content = null,
+            anonymous = true,
         )
     }
 
@@ -347,15 +406,25 @@ class ReviewServiceTest {
     private fun receivedReview(): ReceivedReview {
         return ReceivedReview(
             id = 1L,
+            authorMemberId = authorMemberId,
+            anonymous = true,
             tags = setOf("피드백이 구체적이에요"),
             content = "안정적으로 진행해주셨어요.",
+        )
+    }
+
+    private fun receivedReviewPage(reviews: List<ReceivedReview> = emptyList()): ReceivedReviewPage {
+        return ReceivedReviewPage(
+            reviews = reviews,
+            totalCount = reviews.size.toLong(),
+            hasNext = false,
         )
     }
 
     private fun assertSubmissionSucceeds() {
         every { submissionManager.submit(command()) } returns 1L
 
-        val reviewId = service.submit(command())
+        val reviewId = submit(command())
 
         assertThat(reviewId).isEqualTo(1L)
     }
@@ -364,7 +433,7 @@ class ReviewServiceTest {
         every { submissionManager.submit(command()) } throws CoreException(errorType)
 
         assertThatThrownBy {
-            service.submit(command())
+            submit(command())
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(errorType)
         }
@@ -374,7 +443,7 @@ class ReviewServiceTest {
         val command = command()
         every { submissionManager.submit(command) } throws CoreException(errorType)
 
-        assertThatThrownBy { service.submit(command) }
+        assertThatThrownBy { submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -390,7 +459,7 @@ class ReviewServiceTest {
         val command = updateCommand()
         every { reviewEditor.update(command) } throws CoreException(errorType)
 
-        assertThatThrownBy { service.update(command) }
+        assertThatThrownBy { update(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -403,5 +472,34 @@ class ReviewServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
+    }
+
+    private fun submit(command: ReviewSubmissionCommand): Long {
+        return service.submit(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSubmissionContent(
+                targetMemberId = command.targetMemberId,
+                tags = command.tags,
+                content = command.content,
+                anonymous = command.anonymous,
+            ),
+        )
+    }
+
+    private fun update(command: ReviewUpdateCommand) {
+        service.update(
+            command.authorMemberId,
+            command.reviewId,
+            ReviewUpdateContent(command.tags, command.content),
+        )
+    }
+
+    private fun skip(command: ReviewSkipCommand) {
+        service.skip(
+            command.authorMemberId,
+            command.roomId,
+            ReviewSkipContent(command.targetMemberId),
+        )
     }
 }

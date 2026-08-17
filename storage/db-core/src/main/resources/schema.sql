@@ -814,6 +814,8 @@ CREATE TABLE review (
     -- rolling deployment 호환용 레거시 컬럼. 구 core-api 태스크 종료 후 별도 contract migration으로 제거한다.
     rating           SMALLINT   NOT NULL DEFAULT 0,
     content          TEXT       NULL,
+    -- 기능 추가 전 후기는 모두 익명으로 노출됐으므로, 필드가 없는 구 클라이언트와 기존 행도 익명으로 보존한다.
+    anonymous        BOOLEAN    NOT NULL DEFAULT TRUE,
     meet_again       BOOLEAN    NULL,
     visible_at       DATETIME(6) NOT NULL,
     hidden_at        DATETIME(6) NULL,

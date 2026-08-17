@@ -46,6 +46,7 @@ class AuthControllerTest : RestDocsTest() {
         jwtTokenProvider = mockk()
         authCookieFactory = mockk()
         memberFinder = mockk()
+        every { authCookieFactory.resolveRefresh(any()) } returns null
         mockMvc = mockController(
             AuthController(sessionService, jwtTokenProvider, authCookieFactory, memberFinder),
             controllerAdvice = ApiControllerAdvice(),
@@ -61,6 +62,7 @@ class AuthControllerTest : RestDocsTest() {
         every { member.id } returns memberId
         every { member.role } returns MemberRole.USER
         every { jwtTokenProvider.issue(memberId, MemberRole.USER) } returns "issued-access-token"
+        every { authCookieFactory.resolveRefresh(any()) } returns "refresh-credential"
         every { authCookieFactory.createAccess("issued-access-token") } returns
             ResponseCookie.from(AuthCookieFactory.ACCESS_TOKEN, "issued-access-token")
                 .httpOnly(true)
@@ -102,6 +104,7 @@ class AuthControllerTest : RestDocsTest() {
 
     @Test
     fun authLogout() {
+        every { authCookieFactory.resolveRefresh(any()) } returns "refresh-credential"
         every { sessionService.logout("refresh-credential") } just Runs
         every { authCookieFactory.expireAccess() } returns
             ResponseCookie.from(AuthCookieFactory.ACCESS_TOKEN, "").path("/").maxAge(0).build()

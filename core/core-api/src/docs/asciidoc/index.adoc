@@ -1198,6 +1198,151 @@ include::{snippets}/submitClosingResponse/response-fields.adoc[]
 | 409 | E1802 | 진행 중인 룸이 아님
 |===
 
+== Review (유저 후기) API
+
+=== 후기 작성 대상 조회
+완료 룸의 출석자 중 본인을 제외한 후기 대상과 제출 진행 상태를 조회한다. 건너뛴 대상은 다시 작성할 수 있도록 `WRITABLE`로 제공한다. `SUBMITTED` 대상은 수정·삭제에 사용할 후기 id를 함께 제공한다.
+==== Curl Request
+include::{snippets}/getReviewTargets/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/getReviewTargets/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/getReviewTargets/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getReviewTargets/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E1405 | 룸을 찾을 수 없음
+| 409 | E2001 | 룸이 완료 상태가 아님
+| 403 | E2002 | 작성자가 출석하지 않음
+|===
+
+'''
+
+=== 후기 제출
+완료 룸의 출석자가 다른 출석자에게 익명 여부, 평가 태그와 텍스트 후기를 선택 입력해 제출한다.
+익명 여부를 생략한 구 요청은 기존 개인정보 보호 동작을 유지해 익명으로 저장한다.
+평가 태그는 `시간을 잘 지켜요`, `준비가 성실해요`, `질문이 날카로워요`, `피드백이 구체적이에요`, `소통이 원활해요` 중에서 선택하며 최소 선택 개수는 없다.
+==== Curl Request
+include::{snippets}/submitReview/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/submitReview/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/submitReview/request-fields.adoc[]
+==== Http Response
+include::{snippets}/submitReview/http-response.adoc[]
+==== Response Fields
+include::{snippets}/submitReview/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | 와이어프레임에 없는 평가 태그를 요청함
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E1405 | 룸을 찾을 수 없음
+| 409 | E2001 | 룸이 완료 상태가 아님
+| 403 | E2002 | 작성자가 출석하지 않음
+| 400 | E2003 | 대상자가 출석하지 않음
+| 400 | E2004 | 자기 자신을 대상으로 지정함
+| 409 | E2005 | 같은 룸의 같은 대상자에게 이미 제출함
+|===
+
+'''
+
+=== 후기 수정
+작성자가 공개 기준 시각 전까지 평가 태그와 텍스트 후기를 교체한다. 빈 태그 배열과 null 텍스트로 모든 입력을 지울 수 있다.
+==== Curl Request
+include::{snippets}/updateReview/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/updateReview/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/updateReview/request-fields.adoc[]
+==== Http Response
+include::{snippets}/updateReview/http-response.adoc[]
+==== Response Fields
+include::{snippets}/updateReview/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | 와이어프레임에 없는 평가 태그를 요청함
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E2006 | 후기를 찾을 수 없음
+| 403 | E2007 | 작성자가 아님
+| 409 | E2008 | 공개 기준 시각이 지나 수정 창이 닫힘
+|===
+
+'''
+
+=== 후기 삭제
+작성자가 공개 기준 시각 전까지 후기를 삭제한다. 삭제 후 같은 룸의 같은 대상자에게 다시 제출할 수 있다.
+==== Curl Request
+include::{snippets}/deleteReview/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/deleteReview/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/deleteReview/http-response.adoc[]
+==== Response Fields
+include::{snippets}/deleteReview/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E2006 | 후기를 찾을 수 없음
+| 403 | E2007 | 작성자가 아님
+| 409 | E2008 | 공개 기준 시각이 지나 수정 창이 닫힘
+|===
+
+'''
+
+=== 후기 건너뛰기
+후기 대상을 개별로 건너뛴다. 건너뛴 뒤에도 다시 진입해 후기를 제출할 수 있다.
+==== Curl Request
+include::{snippets}/skipReview/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/skipReview/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/skipReview/request-fields.adoc[]
+==== Http Response
+include::{snippets}/skipReview/http-response.adoc[]
+==== Response Fields
+include::{snippets}/skipReview/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E1405 | 룸을 찾을 수 없음
+| 409 | E2001 | 룸이 완료 상태가 아님
+| 403 | E2002 | 작성자가 출석하지 않음
+| 400 | E2003 | 대상자가 출석하지 않음
+| 400 | E2004 | 자기 자신을 대상으로 지정함
+|===
+
+'''
+
+=== 내가 받은 후기 조회
+공개 기준 시각이 지난 받은 후기를 후기 id 내림차순의 무한스크롤 페이지로 조회한다. 다음 요청은 직전 페이지 마지막 후기 id를 전달한다. 익명 후기는 `익명의 참여자`, 공개 후기는 현재 작성자 닉네임으로 표시하며 룸 이름과 일자는 응답 스키마에 포함하지 않는다.
+==== Curl Request
+include::{snippets}/getReceivedReviews/curl-request.adoc[]
+==== Query Parameters
+include::{snippets}/getReceivedReviews/query-parameters.adoc[]
+==== Http Response
+include::{snippets}/getReceivedReviews/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getReceivedReviews/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | 마지막 후기 id가 양수가 아님
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+|===
+
 == Room Guestbook (룸 방명록) API
 
 룸의 1-depth 게시판(「룸 방명록」, 2026-08-04 실시간 채팅 대개편). 세 API 모두 룸 참여자(방장 포함)만

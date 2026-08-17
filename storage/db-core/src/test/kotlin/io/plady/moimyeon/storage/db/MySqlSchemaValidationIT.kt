@@ -1,5 +1,10 @@
 package io.plady.moimyeon.storage.db
 
+import io.plady.moimyeon.core.enums.ParticipationRole
+import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.storage.db.core.ParticipationEntity
+import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -8,10 +13,13 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.TestConstructor
+import org.springframework.transaction.annotation.Transactional
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 @ActiveProfiles("test")
@@ -28,7 +36,43 @@ import javax.sql.DataSource
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MySqlSchemaValidationIT(
     private val dataSource: DataSource,
+    private val participationRepository: ParticipationRepository,
+    private val entityManager: EntityManager,
 ) {
+    @Test
+    @Transactional
+    fun `확정 시점 참여 여부를 MySQL에서 조회한다`() {
+        val roomId = UUID.randomUUID()
+        val memberId = UUID.randomUUID()
+        val confirmedAt = LocalDateTime.of(2026, 8, 15, 12, 0)
+        participationRepository.saveAndFlush(
+            ParticipationEntity(
+                roomId = roomId,
+                memberId = memberId,
+                participationRole = ParticipationRole.PARTICIPANT,
+                status = ParticipationStatus.JOINED,
+                joinedAt = confirmedAt.minusDays(1),
+            ),
+        )
+        entityManager.createNativeQuery(
+            """
+            insert into room_status_log (
+                room_id, transition_type, handler_member_id, occurred_at,
+                created_at, updated_at, deleted_at
+            ) values (
+                :roomId, 'CONFIRMED', :handlerMemberId, :confirmedAt,
+                :confirmedAt, :confirmedAt, null
+            )
+            """.trimIndent(),
+        )
+            .setParameter("roomId", roomId)
+            .setParameter("handlerMemberId", UUID.randomUUID())
+            .setParameter("confirmedAt", confirmedAt)
+            .executeUpdate()
+
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, memberId)).isEqualTo(1)
+    }
+
     @Test
     fun `Flyway로 만든 MySQL TEXT 스키마와 JPA 매핑이 일치한다`() {
         assertThat(dataTypeOf("outbox", "payload")).isEqualTo("text")
@@ -70,6 +114,13 @@ class MySqlSchemaValidationIT(
         assertThat(columnNamesOf("review"))
             .contains("rating", "meet_again")
         assertThat(columnOf("review", "rating", "COLUMN_DEFAULT")).isEqualTo("0")
+    }
+
+    @Test
+    fun `기존 후기는 익명으로 보존하고 새 후기의 익명 여부를 저장한다`() {
+        assertThat(columnNamesOf("review")).contains("anonymous")
+        assertThat(columnOf("review", "anonymous", "IS_NULLABLE")).isEqualTo("NO")
+        assertThat(columnOf("review", "anonymous", "COLUMN_DEFAULT")).isEqualTo("1")
     }
 
     @Test
