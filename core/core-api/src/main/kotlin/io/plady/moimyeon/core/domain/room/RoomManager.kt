@@ -164,7 +164,7 @@ class RoomManager(
     fun cancelWithoutGuard(room: RoomEntity, handlerMemberId: UUID, now: LocalDateTime) {
         room.cancel()
         roomStatusLogRepository.save(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = room.id,
                 transitionType = RoomStatus.CANCELED,
                 handlerMemberId = handlerMemberId,
@@ -197,7 +197,7 @@ class RoomManager(
 
         entity.confirm()
         roomStatusLogRepository.save(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = roomId,
                 transitionType = RoomStatus.CONFIRMED,
                 handlerMemberId = hostMemberId,
