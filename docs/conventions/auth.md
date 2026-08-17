@@ -9,6 +9,8 @@
 
 - 로그인 시작·콜백(`/oauth2/authorization/google`, `/login/oauth2/code/google`)은 컨트롤러가 아니라
   Spring Security 필터 체인이 처리한다.
+- local·local-dev·dev 환경은 `POST /v1/auth/dev-sessions`에서 기존 회원 UUID를 받아 Google OAuth 없이
+  같은 세션 발급 흐름을 제공한다. 이 컨트롤러와 발급 컴포넌트는 개발용 프로파일에서만 등록한다.
 - 성공 시 환경별 액세스·리프레시 쿠키를 발급한다. 기본·live는 `ACCESS_TOKEN`·`REFRESH_TOKEN`,
   dev는 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN`을 사용한다. API 인증은 쿠키(웹) 또는
   `Authorization: Bearer`(앱) 둘 다 허용 (`HeaderOrCookieBearerTokenResolver`).
@@ -31,6 +33,17 @@ state 검증 오류가 백엔드 `/login?error`에 남는다.
   중간 실패에는 일부 쿠키를 발급하지 않는다.
 - Google 오류와 로그인 내부 처리 오류는 모두 고정된 프론트 실패 URI로 보낸다. 공급자 오류 설명과 내부
   예외 메시지는 리다이렉트 URL이나 응답에 싣지 않는다.
+
+## 개발 환경 전용 인증
+
+- `POST /v1/auth/dev-sessions`는 요청한 탈퇴하지 않은 회원을 조회한 뒤 현재 `MemberRole`로 액세스 토큰을 만들고
+  리프레시 세션을 저장한다. 성공 응답에는 local·local-dev의 `ACCESS_TOKEN`·`REFRESH_TOKEN`, dev의
+  `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN` 쿠키를 함께 기록한다.
+- 회원이 없거나 탈퇴했으면 기존 `MEMBER_NOT_FOUND`(404 E1006)를 사용하며 세션과 쿠키를 발급하지 않는다.
+- 기존 액세스 쿠키가 만료됐더라도 개발 로그인을 다시 할 수 있도록 refresh/logout과 같이 Bearer Token
+  해석 대상에서 제외한다.
+- staging·live에는 빈을 등록하지 않으며, 개발용 프로파일과 `live`가 함께 활성화되어도 등록하지 않는다.
+  운영 환경에는 같은 경로의 핸들러가 존재하지 않는다.
 
 ## 부하테스트 인증
 
@@ -98,7 +111,7 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
   이미 발급된 JWT는 만료 전까지 역할이 남으므로 권한 변경은 최대 Access Token TTL(30분) 뒤에
   완전히 반영된다. 즉시 회수가 필요해지면 세션 폐기·토큰 차단 정책을 별도로 추가한다.
 - 관리자 승격·해제 API와 권한 감사 기록은 아직 제품 요구사항이 없어 범위에서 제외했다.
-- 필터 체인은 OAuth·refresh/logout·health와 제품상 공개된 조회 API만 `permitAll`로 열고,
+- 필터 체인은 OAuth·refresh/logout·dev 세션 발급·health와 제품상 공개된 조회 API만 `permitAll`로 열고,
   `/admin/**`는 `ROLE_ADMIN`, 그 외 요청은 `authenticated()`를 요구한다. 관리 엔드포인트는
   health만 공개하며 `/actuator/**`는 명시적으로 거부한다. 새 공개 API는 HTTP 메서드와 경로를
   `SecurityConfig`에 함께 추가하고, 그 외 API는 기본 인증 정책을 그대로 따른다.
