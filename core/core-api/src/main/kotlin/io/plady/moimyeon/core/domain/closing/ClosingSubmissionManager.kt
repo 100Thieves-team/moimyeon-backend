@@ -87,7 +87,7 @@ class ClosingSubmissionManager(
 
         room.complete()
         roomStatusLogRepository.save(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = command.roomId,
                 transitionType = RoomStatus.COMPLETED,
                 handlerMemberId = command.memberId,

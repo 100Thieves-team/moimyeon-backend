@@ -511,11 +511,14 @@ CREATE INDEX ix_room_status_created_at_id ON room (status, created_at, id);
 -- append-only 로 다루되 베이스는 상속한다 — 쌓인 전이 기록은 고치지 않고,
 --   deleted_at 만 예외로 운영이 잘못 찍힌 전이를 걷어낼 때 쓴다. 룸이 소프트 삭제돼도 로그는 남는다.
 --   유니크가 멱등성을 보장하므로 걷어낸 뒤 다시 전이할 수 있도록 _active_check 를 붙였다.
+-- handler_type: 전이 주체. MEMBER 면 handler_member_id NOT NULL, SYSTEM(배치)이면 NULL —
+--   이 불변식은 애플리케이션(엔티티 팩토리 byMember/bySystem)이 지킨다(MOI-471).
 CREATE TABLE room_status_log (
     id                BIGINT      NOT NULL AUTO_INCREMENT,
     room_id           BINARY(16)  NOT NULL,
     transition_type   VARCHAR(20) NOT NULL,
-    handler_member_id BINARY(16)  NOT NULL,
+    handler_type      VARCHAR(20) NOT NULL,
+    handler_member_id BINARY(16)  NULL,
     occurred_at       DATETIME(6) NOT NULL,
     created_at        DATETIME(6) NOT NULL,
     updated_at        DATETIME(6) NOT NULL,

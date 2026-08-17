@@ -57,10 +57,10 @@ class MySqlSchemaValidationIT(
         entityManager.createNativeQuery(
             """
             insert into room_status_log (
-                room_id, transition_type, handler_member_id, occurred_at,
+                room_id, transition_type, handler_type, handler_member_id, occurred_at,
                 created_at, updated_at, deleted_at
             ) values (
-                :roomId, 'CONFIRMED', :handlerMemberId, :confirmedAt,
+                :roomId, 'CONFIRMED', 'MEMBER', :handlerMemberId, :confirmedAt,
                 :confirmedAt, :confirmedAt, null
             )
             """.trimIndent(),
