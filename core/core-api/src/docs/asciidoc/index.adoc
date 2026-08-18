@@ -213,24 +213,6 @@ include::{snippets}/memberMe/response-fields.adoc[]
 
 '''
 
-=== 닉네임 변경
-==== Curl Request
-include::{snippets}/updateNickname/curl-request.adoc[]
-==== Request Fields
-include::{snippets}/updateNickname/request-fields.adoc[]
-==== Http Response
-include::{snippets}/updateNickname/http-response.adoc[]
-==== Error Responses
-|===
-| HTTP | error.code | 케이스
-
-| 400 | E1005 | 닉네임 형식 위반 (길이 2~20, 한글·영문·숫자·공백만, 금칙어)
-| 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
-| 409 | E1007 | 이미 사용 중인 닉네임 (자신이 쓰던 값은 허용)
-|===
-
-'''
-
 === 닉네임 자동 추천
 ==== Curl Request
 include::{snippets}/nicknameSuggestion/curl-request.adoc[]

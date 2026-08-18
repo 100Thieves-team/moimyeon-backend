@@ -19,6 +19,6 @@ class ProfileController(
         @LoginMember currentMember: CurrentMember,
         @RequestBody request: UpdateProfileRequest,
     ): ApiResponse<ProfileResponse> {
-        return ApiResponse.success(profileFacade.update(currentMember.id, request.toContent()))
+        return ApiResponse.success(profileFacade.update(currentMember.id, request.toNickname(), request.toContent()))
     }
 }
