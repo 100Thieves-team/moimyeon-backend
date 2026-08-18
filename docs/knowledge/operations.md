@@ -4,6 +4,10 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-18: `ParticipationSlotCreationIT`가 고정 테스트 시각이 실제 시각을 지난 뒤 CI에서 실패했다.
+  원인: 테스트 데이터만 `FIXED_NOW`를 사용하고 `RoomManager`의 `Clock`을 고정하는
+  `FixedClockTestConfiguration` import를 빠뜨렸다. 재발 방지: 룸 시각 기반 ContextTest는 같은 설정을
+  import해 도메인 입력과 커밋 경계가 동일한 Clock을 보게 한다.
 - 2026-08-14: dev API가 운영 프론트 오리진과 apex 쿠키 도메인을 그대로 사용해 preview 프론트
   도입 시 운영·개발 세션이 충돌할 수 있었다. 재발 방지: dev OAuth·CORS·쿠키 범위를
   `dev.moimyeon.plady.io`로 묶고 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN` 이름으로 기존 apex 쿠키를
