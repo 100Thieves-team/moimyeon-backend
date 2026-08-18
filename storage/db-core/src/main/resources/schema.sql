@@ -92,9 +92,9 @@
 -- 설계 근거는 docs/design/erd/ 참고 (개념 Step 1~8 + 논리모델링.md).
 -- 코딩 규약은 docs/conventions/storage.md 참고.
 
-DROP TABLE IF EXISTS chat_message;
+DROP TABLE IF EXISTS guestbook_post;
 DROP TABLE IF EXISTS outbox;
-DROP TABLE IF EXISTS chat_room;
+DROP TABLE IF EXISTS room_guestbook;
 DROP TABLE IF EXISTS review_skip;
 DROP TABLE IF EXISTS review_tag;
 DROP TABLE IF EXISTS review;
@@ -854,41 +854,41 @@ CREATE TABLE review_skip (
     CONSTRAINT uk_review_skip_room_author_target UNIQUE (room_id, author_member_id, target_member_id)
 );
 
--- ── 채팅 ────────────────────────────────────────────────────────────────
+-- ── 방명록 ──────────────────────────────────────────────────────────────
+-- 2026-08-04 PRD 대개편으로 실시간 채팅이 삭제되고 방명록(1-depth 게시판)이 됐다(「룸 방명록」).
 
--- 룸당 1개. 룸 생성 시 자동으로 만들어지고 룸의 참여자 구성을 그대로 따른다.
--- 룸과 완전한 1:1이지만 읽기 전용 전환·퇴장 처리 등 생명주기 규칙이 달라 테이블을 분리했다.
--- 베이스 상속: 「룸 채팅」 4.2 가 사용자의 개별 생성·삭제를 막고, 읽기 전용 전환은 read_only_at 이 갖는다.
---   deleted_at 은 룸이 내려갈 때 대화방도 함께 닫되 내용은 보존하기 위한 것이다.
-CREATE TABLE chat_room (
-    id           BIGINT     NOT NULL AUTO_INCREMENT,
-    room_id      BINARY(16) NOT NULL,
-    read_only_at DATETIME(6) NULL,
-    created_at   DATETIME(6) NOT NULL,
-    updated_at   DATETIME(6) NOT NULL,
-    deleted_at   DATETIME(6) NULL,
+-- 룸당 1개(유니크). 룸 생성이 아니라 첫 글 작성 때 lazy 생성된다 — 방명록 행이 없어도
+-- 목록 조회는 빈 목록으로 동작하므로 기존 룸도 소급 조치 없이 화면이 돈다.
+-- 읽기 전용 전환 시각은 저장하지 않는다: room_status_log 의 종료·취소 전이 시각 + 24시간
+-- 파생으로 조회·작성 시점에 판정한다(배치·레이스 없음).
+--   deleted_at 은 룸이 운영에 의해 내려갈 때 방명록도 함께 닫되 내용은 보존하기 위한 것이다.
+CREATE TABLE room_guestbook (
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    room_id    BINARY(16)  NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    deleted_at DATETIME(6) NULL,
     _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
     PRIMARY KEY (id),
-    CONSTRAINT uk_chat_room_room_active UNIQUE (room_id, _active_check)
+    CONSTRAINT uk_room_guestbook_room_active UNIQUE (room_id, _active_check)
 );
 
--- 텍스트 메시지만 지원한다. 사용자에게 수정·삭제를 제공하지 않는다(「룸 채팅」 5. Out of Scope).
--- 베이스 상속: 사용자가 못 지운다는 것과 운영이 못 지운다는 것은 다르다. 신고된 메시지를 가리는
---   경로가 없으면 대응할 방법이 DB 직접 삭제밖에 없는데, 그러면 대화 맥락이 통째로 사라진다.
--- 퇴장한 사용자의 메시지는 대화 맥락 유지를 위해 남기고 닉네임 옆에 (퇴장)을 표시한다.
--- author_member_id 가 NULL 이면 시스템 메시지(입장·퇴장 알림)다.
-CREATE TABLE chat_message (
-    id               BIGINT      NOT NULL AUTO_INCREMENT,
-    chat_room_id     BIGINT      NOT NULL,
-    author_member_id BINARY(16)  NULL,
-    message_type     VARCHAR(20) NOT NULL,
-    content          TEXT        NOT NULL,
-    created_at       DATETIME(6) NOT NULL,
-    updated_at       DATETIME(6) NOT NULL,
-    deleted_at       DATETIME(6) NULL,
+-- 텍스트 글만, 답글·스레드·시스템 메시지 없음. 작성 시각 시간순으로만 흐른다.
+-- deleted_at 은 작성자 본인 삭제(「룸 방명록」 §4.3, 2026-08-14 개정)와 운영 가림이 함께 쓴다.
+--   삭제된 글은 목록에서 빠지지 않고 tombstone 으로 남는다 — 대화 맥락 유지.
+--   내용·작성자는 응답에서 가리고 "삭제된 댓글입니다" 문구는 FE 가 그린다.
+-- 퇴장한 사용자의 글도 남기고 닉네임 옆에 (퇴장)을 표시한다.
+CREATE TABLE guestbook_post (
+    id                BIGINT      NOT NULL AUTO_INCREMENT,
+    room_guestbook_id BIGINT      NOT NULL,
+    author_member_id  BINARY(16)  NOT NULL,
+    content           TEXT        NOT NULL,
+    created_at        DATETIME(6) NOT NULL,
+    updated_at        DATETIME(6) NOT NULL,
+    deleted_at        DATETIME(6) NULL,
     PRIMARY KEY (id)
 );
-CREATE INDEX ix_chat_message_chat_room_id ON chat_message (chat_room_id);
+CREATE INDEX ix_guestbook_post_room_guestbook_id ON guestbook_post (room_guestbook_id);
 
 -- ── 스캐폴딩 ────────────────────────────────────────────────────────────
 

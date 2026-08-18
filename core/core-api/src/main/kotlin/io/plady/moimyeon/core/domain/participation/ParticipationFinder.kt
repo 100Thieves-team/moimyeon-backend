@@ -55,6 +55,15 @@ class ParticipationFinder(
             }
     }
 
+    // 방명록 작성자 뱃지 판정용(MOI-461). 작성자가 명단에 없으면 (퇴장), 방장 행이면 방장 뱃지다.
+    // 술어는 validateParticipant 와 같은 JOINED 기준이어야 한다 - 갈리면 게이트는 통과한 사람이
+    // 자기 글에서 (퇴장)으로 보이는 상태가 된다.
+    fun getJoinedParticipants(roomId: UUID): List<JoinedParticipant> {
+        return participationRepository
+            .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
+            .map { JoinedParticipant(memberId = it.memberId, isHost = it.participationRole == ParticipationRole.HOST) }
+    }
+
     fun isParticipating(roomId: UUID, memberId: UUID): Boolean {
         return participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
             roomId,

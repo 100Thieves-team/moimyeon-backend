@@ -336,4 +336,23 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "공개 기준 시각이 지난 후기는 수정하거나 삭제할 수 없습니다.",
         LogLevel.WARN,
     ),
+
+    ROOM_COMMENT_READ_ONLY(
+        HttpStatus.CONFLICT,
+        ErrorCode.E2101,
+        "읽기 전용으로 전환된 방명록입니다. 지난 댓글은 볼 수 있지만 새로 남길 수는 없어요.",
+        LogLevel.WARN,
+    ),
+    ROOM_COMMENT_NOT_MINE(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.E2102,
+        "내가 작성한 댓글만 삭제할 수 있습니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_COMMENT_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        ErrorCode.E2103,
+        "댓글을 찾을 수 없습니다.",
+        LogLevel.WARN,
+    ),
 }
