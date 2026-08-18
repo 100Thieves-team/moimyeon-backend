@@ -85,6 +85,29 @@ class ProfileServiceIT(
     }
 
     @Test
+    fun `다른 회원의 닉네임으로 프로필을 수정하면 E1007 을 던지고 프로필을 변경하지 않는다`() {
+        val first = signUp("google-sub-p7")
+        val second = signUp("google-sub-p8")
+        val firstNickname = memberService.getMember(first).nickname
+
+        assertThatThrownBy {
+            profileService.update(
+                second,
+                firstNickname,
+                ProfileContent(
+                    bio = "저장되지 않을 소개",
+                    interestJobRoleIds = emptyList(),
+                    interestCompanyIds = emptyList(),
+                ),
+            )
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(CoreErrorType.NICKNAME_DUPLICATED)
+        }
+
+        assertThat(profileService.getProfile(second).bio).isEmpty()
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     fun `프로필 저장이 실패하면 앞서 변경한 닉네임도 롤백한다`() {

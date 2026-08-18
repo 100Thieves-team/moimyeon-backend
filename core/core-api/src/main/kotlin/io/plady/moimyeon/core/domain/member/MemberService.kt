@@ -6,7 +6,6 @@ import java.util.UUID
 @Service
 class MemberService(
     private val memberFinder: MemberFinder,
-    private val memberManager: MemberManager,
     private val nicknameGenerator: NicknameGenerator,
 ) {
     fun getMember(memberId: UUID): Member = memberFinder.getById(memberId)
@@ -17,9 +16,5 @@ class MemberService(
 
     fun isNicknameAvailable(rawNickname: String): Boolean {
         return memberFinder.isNicknameAvailable(Nickname(rawNickname))
-    }
-
-    fun changeNickname(memberId: UUID, nickname: Nickname) {
-        memberManager.changeNickname(memberId, nickname)
     }
 }
