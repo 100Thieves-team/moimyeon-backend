@@ -9,6 +9,7 @@ import io.plady.moimyeon.core.api.facade.ProfileFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.company.CompanyService
+import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.domain.profile.MemberProfile
 import io.plady.moimyeon.core.domain.profile.ProfileContent
 import io.plady.moimyeon.core.domain.profile.ProfileService
@@ -36,13 +37,15 @@ class ProfileControllerTest : RestDocsTest() {
 
     private val updateProfileSummary = "프로필 수정"
     private val updateProfileDescription =
-        "프로필 전체 교체 저장. 프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재하므로 별도 생성 API 는 없다. " +
+        "닉네임과 프로필을 한 번에 전체 교체 저장한다. 프로필은 가입 시 빈 상태로 함께 만들어져 회원당 항상 하나 존재하므로 별도 생성 API 는 없다. " +
             "아직 작성하지 않은 소개는 빈 문자열로 오간다. " +
             "관심 직무·관심 회사는 선택 가능한 참조 id 를 받는다. 관심 회사는 검증 완료된 회사만 선택할 수 있다. " +
-            "요청 형태 오류 400(E400), 존재하지 않는 직무 또는 선택할 수 없는 회사 400(E1301/E1303), " +
+            "요청 형태 또는 닉네임 형식 오류 400(E400/E1005), 닉네임 중복 409(E1007), " +
+            "존재하지 않는 직무 또는 선택할 수 없는 회사 400(E1301/E1303), " +
             "인증 정보 없음·무효 401(E1102), 프로필을 찾을 수 없음 404(E1009)로 응답한다."
 
     private val validUpdateRequest = UpdateProfileRequest(
+        nickname = "명랑한 해달 33",
         interestJobRoleIds = listOf(1L, 2L),
         bio = "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
         interestCompanyIds = listOf(1L, 2L),
@@ -69,7 +72,7 @@ class ProfileControllerTest : RestDocsTest() {
     @Test
     fun updateProfile() {
         val request = validUpdateRequest
-        every { profileService.update(memberId, request.toContent()) } returns memberId
+        every { profileService.update(memberId, request.toNickname(), request.toContent()) } returns memberId
         every { profileService.getProfile(memberId) } returns request.toContent().toProfileFixture(memberId)
         every { companyService.getCompanies(listOf(1L, 2L)) } returns listOf(Company(1L, "달빛페이"), Company(2L, "한빛커머스"))
 
@@ -89,6 +92,7 @@ class ProfileControllerTest : RestDocsTest() {
                     updateProfileSummary,
                     updateProfileDescription,
                     requestFields(
+                        fieldWithPath("nickname").type(JsonFieldType.STRING).description("변경할 닉네임 (전체 중복 불가, 자신 제외)"),
                         fieldWithPath("interestJobRoleIds").type(JsonFieldType.ARRAY).optional()
                             .description("관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"),
                         fieldWithPath("bio").type(JsonFieldType.STRING).optional().description("자기소개 (미지정이면 빈 문자열, 최대 500자)"),
@@ -130,8 +134,25 @@ class ProfileControllerTest : RestDocsTest() {
     }
 
     @Test
+    fun `updateProfile 닉네임 형식 위반 E1005`() {
+        performUpdate(validUpdateRequest.copy(nickname = "금지문자!@#"))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("updateProfile-e1005", updateProfileSummary, updateProfileDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `updateProfile 닉네임 중복 E1007`() {
+        every { profileService.update(memberId, Nickname("명랑한 해달 33"), any()) } throws
+            CoreException(CoreErrorType.NICKNAME_DUPLICATED)
+
+        performUpdate(validUpdateRequest)
+            .andExpect(status().isConflict)
+            .andDo(documentApi("updateProfile-e1007", updateProfileSummary, updateProfileDescription, errorResponseFields()))
+    }
+
+    @Test
     fun `updateProfile 존재하지 않는 직무 E1301`() {
-        every { profileService.update(memberId, any()) } throws CoreException(CoreErrorType.JOB_ROLE_NOT_FOUND)
+        every { profileService.update(memberId, validUpdateRequest.toNickname(), any()) } throws CoreException(CoreErrorType.JOB_ROLE_NOT_FOUND)
 
         performUpdate(validUpdateRequest)
             .andExpect(status().isBadRequest)
@@ -140,7 +161,7 @@ class ProfileControllerTest : RestDocsTest() {
 
     @Test
     fun `updateProfile 선택할 수 없는 회사 E1303`() {
-        every { profileService.update(memberId, any()) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
+        every { profileService.update(memberId, validUpdateRequest.toNickname(), any()) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
 
         performUpdate(validUpdateRequest)
             .andExpect(status().isBadRequest)
@@ -149,7 +170,7 @@ class ProfileControllerTest : RestDocsTest() {
 
     @Test
     fun `updateProfile 프로필을 찾을 수 없음 E1009`() {
-        every { profileService.update(memberId, any()) } throws CoreException(CoreErrorType.PROFILE_NOT_FOUND)
+        every { profileService.update(memberId, validUpdateRequest.toNickname(), any()) } throws CoreException(CoreErrorType.PROFILE_NOT_FOUND)
 
         performUpdate(validUpdateRequest)
             .andExpect(status().isNotFound)

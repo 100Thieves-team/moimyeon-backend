@@ -1,6 +1,5 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import io.plady.moimyeon.core.api.controller.v1.request.UpdateNicknameRequest
 import io.plady.moimyeon.core.api.controller.v1.response.MemberMeResponse
 import io.plady.moimyeon.core.api.controller.v1.response.NicknameAvailabilityResponse
 import io.plady.moimyeon.core.api.controller.v1.response.NicknameSuggestionResponse
@@ -10,8 +9,6 @@ import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
@@ -25,15 +22,6 @@ class MemberController(
         @LoginMember currentMember: CurrentMember,
     ): ApiResponse<MemberMeResponse> {
         return ApiResponse.success(memberFacade.me(currentMember.id))
-    }
-
-    @PutMapping("/v1/members/me/nickname")
-    fun updateNickname(
-        @LoginMember currentMember: CurrentMember,
-        @RequestBody request: UpdateNicknameRequest,
-    ): ApiResponse<Any> {
-        memberService.changeNickname(currentMember.id, request.toNickname())
-        return ApiResponse.success()
     }
 
     @GetMapping("/v1/nicknames/suggestion")
