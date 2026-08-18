@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-17",
-                        "datetime" : "2026-08-17T06:40:31.097861131",
+                        "date" : "2026-08-18",
+                        "datetime" : "2026-08-18T03:46:07.398951579",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-17",
-                        "datetime" : "2026-08-17T06:40:31.140792784",
+                        "date" : "2026-08-18",
+                        "datetime" : "2026-08-18T03:46:07.445366148",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2372,7 +2372,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "0b805654-8999-4139-9919-a6f9db315367",
+                          "termsId" : "d38b2475-2d3f-4432-9b6f-5c218a9c89ba",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2380,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "ebdac4e2-d163-4783-a69a-278fe56d3014",
+                          "termsId" : "24d91f9b-77b6-454f-8256-73b8cf5a9b10",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3158,12 +3158,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "93def898-866c-413d-8c4b-e8328a0add5c",
+                        "memberId" : "20f029c0-c9a2-474f-8b20-b116162dc382",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "93def898-866c-413d-8c4b-e8328a0add5c",
+                          "memberId" : "20f029c0-c9a2-474f-8b20-b116162dc382",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4527,7 +4527,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-18T06:40:37.735540676",
+                          "startAt" : "2026-08-19T03:46:15.196829056",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4538,7 +4538,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "49242cd6-e340-4e29-b754-91197db49163",
+                        "hostMemberId" : "9c267ca8-3094-4195-9e0a-6f88f24b47f9",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4908,7 +4908,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "3e7fef14-776f-4135-b560-bb57120a9be9",
+                        "memberId" : "904c892b-b7a2-40c5-bbf5-c41fc5d21e32",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5583,18 +5583,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "18c40a46-a3aa-4878-b6c2-69413286c640"
+                    "resumeId" : "ff1fd2b4-7738-4529-b6ef-635816fd2c58"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "32753800-43bd-48c0-844e-b93d9115f01a",
+                    "resumeId" : "583d6bd3-a07e-460e-ae18-41e73e29078f",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "3b6799fc-4821-4a23-95b0-7585518afbcd",
+                    "resumeId" : "08fe0c8a-5a69-43b0-a574-bf58d36a1e47",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -5709,6 +5709,248 @@ paths:
                       "error" : {
                         "code" : "E1420",
                         "message" : "참여자가 있는 룸은 취소할 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+  /v1/rooms/{roomId}/comments:
+    get:
+      tags:
+      - v1
+      summary: 룸 방명록 글 목록 조회
+      description: "룸 참여자(방장 포함)가 방명록 글을 최신순으로 조회한다. 커서는 불투명 토큰으로, 이전 응답의 nextCursor\
+        \ 를 그대로 되돌려준다. writable=false 면 읽기 전용이고, writable=true 인데 readOnlyAt 이 있으면\
+        \ 곧 읽기 전용으로 바뀐다는 예고다. 삭제된 글은 isDeleted=true tombstone 으로 남고 작성자·내용이 가려진다.\
+        \ 비참여자·신청자·퇴장자·존재하지 않는 룸은 403 E1419 로 끊는다(존재 비공개). 깨진 커서 토큰·size 범위(1~50)\
+        \ 위반은 400 E400."
+      operationId: getRoomComments
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      - name: cursor
+        in: query
+        description: 이전 응답의 nextCursor 를 그대로 되돌려주는 불투명 토큰. 첫 페이지는 생략
+        required: false
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: "페이지 크기 (기본 20, 최대 50)"
+        required: false
+        schema:
+          type: string
+      responses:
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getRoomComments-e1419:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1419",
+                        "message" : "룸에 참여한 사람만 볼 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                getRoomComments-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-comments1495367468"
+              examples:
+                getRoomComments:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "comments" : [ {
+                          "commentId" : 44,
+                          "isDeleted" : false,
+                          "author" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000002",
+                            "nickname" : "꼼꼼한 여우 12",
+                            "isHost" : true,
+                            "hasLeft" : false
+                          },
+                          "content" : "그럼 각자 이력서 기준으로 예상 질문 3개씩 준비해와요.",
+                          "createdAt" : "2026-07-21T14:31:00",
+                          "isMine" : false
+                        }, {
+                          "commentId" : 43,
+                          "isDeleted" : true,
+                          "author" : null,
+                          "content" : null,
+                          "createdAt" : "2026-07-21T14:22:00",
+                          "isMine" : false
+                        }, {
+                          "commentId" : 42,
+                          "isDeleted" : false,
+                          "author" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000003",
+                            "nickname" : "성실한 사슴 03",
+                            "isHost" : false,
+                            "hasLeft" : true
+                          },
+                          "content" : "좋아요. 자기소개는 각자 3분 정도 준비하면 될까요?",
+                          "createdAt" : "2026-07-21T14:20:00",
+                          "isMine" : false
+                        }, {
+                          "commentId" : 41,
+                          "isDeleted" : false,
+                          "author" : {
+                            "memberId" : "00000000-0000-0000-0000-000000000001",
+                            "nickname" : "든든한 곰 21",
+                            "isHost" : false,
+                            "hasLeft" : false
+                          },
+                          "content" : "네 좋습니다. 이력서 기준 예상 질문도 각자 정리해오면 좋을 것 같아요.",
+                          "createdAt" : "2026-07-21T14:15:00",
+                          "isMine" : true
+                        } ],
+                        "writable" : true,
+                        "readOnlyAt" : "2026-07-22T18:40:00",
+                        "nextCursor" : "djF8MjAyNi0wNy0yMVQxNDoxNHw0MA"
+                      },
+                      "error" : null
+                    }
+    post:
+      tags:
+      - v1
+      summary: 룸 방명록 글 작성
+      description: "룸 참여자가 텍스트 글을 남긴다(trim 후 1~1000자). 직전 글과 같은 내용을 10초 안에 다시 보내면\
+        \ 새로 만들지 않고 기존 글을 돌려준다(멱등 - 에러가 아니라 200). 400 E400 내용 규칙 위반, 403 E1419 비참여\
+        자, 409 E2101 읽기 전용 전환 후 작성."
+      operationId: createRoomComment
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-roomId-comments-1160873406"
+            examples:
+              createRoomComment-e2101:
+                value: |-
+                  {
+                    "content" : "늦은 글"
+                  }
+              createRoomComment:
+                value: |-
+                  {
+                    "content" : "좋아요. 자기소개는 각자 3분 정도 준비하면 될까요?"
+                  }
+              createRoomComment-e400:
+                value: |-
+                  {
+                    "content" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
+                  }
+              createRoomComment-e1419:
+                value: |-
+                  {
+                    "content" : "몰래 등록"
+                  }
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createRoomComment-e2101:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2101",
+                        "message" : "읽기 전용으로 전환된 방명록입니다. 지난 댓글은 볼 수 있지만 새로 남길 수는 없어요.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-comments876888201"
+              examples:
+                createRoomComment:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "commentId" : 42,
+                        "createdAt" : "2026-07-21T14:31:02"
+                      },
+                      "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createRoomComment-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                createRoomComment-e1419:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1419",
+                        "message" : "룸에 참여한 사람만 볼 수 있습니다.",
                         "data" : null
                       }
                     }
@@ -6766,7 +7008,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "91d239cb-1383-4fb6-a416-f5ea88ef6eb6",
+                          "resumeId" : "cd3499eb-f22a-4b3a-883b-82f142eb1b6e",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -6811,6 +7053,108 @@ paths:
                       "result" : "SUCCESS",
                       "data" : null,
                       "error" : null
+                    }
+  /v1/rooms/{roomId}/comments/{commentId}:
+    delete:
+      tags:
+      - v1
+      summary: 룸 방명록 글 삭제
+      description: "내가 쓴 글을 소프트 삭제한다. 목록에서 빠지지 않고 tombstone 으로 남는다. 이미 삭제된 글의 재삭제는\
+        \ 200(멱등). 403 E1419 비참여자, 403 E2102 내 글 아님, 404 E2103 글 없음, 409 E2101 읽기\
+        \ 전용 전환 후에는 삭제도 불가."
+      operationId: deleteRoomComment
+      parameters:
+      - name: roomId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      - name: commentId
+        in: path
+        description: ""
+        required: true
+        schema:
+          type: string
+      responses:
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                deleteRoomComment-e2101:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2101",
+                        "message" : "읽기 전용으로 전환된 방명록입니다. 지난 댓글은 볼 수 있지만 새로 남길 수는 없어요.",
+                        "data" : null
+                      }
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                deleteRoomComment-e2102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2102",
+                        "message" : "내가 작성한 댓글만 삭제할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+                deleteRoomComment-e1419:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1419",
+                        "message" : "룸에 참여한 사람만 볼 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname198252895"
+              examples:
+                deleteRoomComment:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : null,
+                      "error" : null
+                    }
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-members-me-nickname910352763"
+              examples:
+                deleteRoomComment-e2103:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2103",
+                        "message" : "댓글을 찾을 수 없습니다.",
+                        "data" : null
+                      }
                     }
   /v1/rooms/{roomId}/participants/me:
     delete:
@@ -7515,7 +7859,15 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    get-exampleValue191457252:
+    v1-rooms-roomId-comments-1160873406:
+      required:
+      - content
+      type: object
+      properties:
+        content:
+          type: string
+          description: "글 내용 (trim 후 1~1000자, 텍스트만)"
+    post191457252:
       required:
       - result
       type: object
@@ -7551,6 +7903,79 @@ components:
                   key:
                     type: string
                     description: Result Item
+    v1-rooms-roomId-comments1495367468:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - comments
+          - writable
+          type: object
+          properties:
+            nextCursor:
+              type: string
+              description: 다음 페이지 커서 토큰. 마지막 페이지면 null
+              nullable: true
+            readOnlyAt:
+              type: string
+              description: "읽기 전용 전환(예정) 시각. writable=true 와 함께 오면 전환 예고 배너 조합, 활성\
+                \ 룸은 null"
+              nullable: true
+            comments:
+              type: array
+              description: 최신순 글 목록
+              items:
+                required:
+                - commentId
+                - createdAt
+                - isDeleted
+                - isMine
+                type: object
+                properties:
+                  createdAt:
+                    type: string
+                    description: 작성 시각
+                  isDeleted:
+                    type: boolean
+                    description: 삭제된 글 여부. true 면 tombstone - 작성자·내용이 가려진다
+                  author:
+                    type: object
+                    properties:
+                      isHost:
+                        type: boolean
+                        description: 현재 방장 여부 (위임되면 새 방장 글만 true)
+                        nullable: true
+                      hasLeft:
+                        type: boolean
+                        description: 퇴장 여부 - (퇴장) 표시
+                        nullable: true
+                      nickname:
+                        type: string
+                        description: 작성자 닉네임. 탈퇴 회원은 "탈퇴한 회원"
+                        nullable: true
+                      memberId:
+                        type: string
+                        description: 작성자 회원 id
+                        nullable: true
+                    description: 작성자. 삭제된 글은 null
+                  commentId:
+                    type: number
+                    description: 글 id
+                  isMine:
+                    type: boolean
+                    description: 내가 쓴 글 여부 - '나' 뱃지·삭제 버튼 판정
+                  content:
+                    type: string
+                    description: 글 내용. 삭제된 글은 null
+                    nullable: true
+            writable:
+              type: boolean
+              description: 작성 가능 여부. false 면 읽기 전용
     v1-members-me-nickname198252895:
       required:
       - result
@@ -7938,6 +8363,14 @@ components:
             questionId:
               type: number
               description: 생성된 꼬리질문 id
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -7950,14 +8383,6 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-rooms-roomId-1165715694:
       required:
       - result
@@ -8858,25 +9283,6 @@ components:
             name:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
-    v1-members-me-profile608809462:
-      type: object
-      properties:
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-room-progresses-1064909895:
       required:
       - result
@@ -8913,6 +9319,25 @@ components:
             status:
               type: string
               description: 시작 후 룸 상태 (IN_PROGRESS)
+    v1-members-me-profile608809462:
+      type: object
+      properties:
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-companies1839974379:
       required:
       - result
@@ -9347,6 +9772,26 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
+    v1-rooms-roomId-comments876888201:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - commentId
+          - createdAt
+          type: object
+          properties:
+            createdAt:
+              type: string
+              description: 작성 시각
+            commentId:
+              type: number
+              description: 생성된(또는 멱등 반환된 기존) 글 id
     v1-rooms-roomId-reviews1356104346:
       required:
       - tags
