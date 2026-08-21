@@ -33,7 +33,8 @@
 **비재현 관찰 (참고용 — 재검증 불가):**
 
 - 멘토링 녹취(2026-08-19): plan-first 워크플로우, 게이트 훅, 지식 승격 체계
-  등. 녹취 원본은 로컬 `_workspace/`에만 있다.
+  등. 녹취 원본과 주제별 재구성 노트(harness_mentoring_note.md)는 로컬
+  `_workspace/`에만 있다.
 - 3주 세션 분석(상위 세션 42개, update_plan 358회 등): 개인 로컬
   `~/.codex` trace 집계. 집계 스크립트는 `_workspace/harness-reference/
   workflow_analysis/`에 있으나 원 데이터가 개인 로컬이라 팀 재현은 불가.
@@ -41,5 +42,8 @@
   기반 참고치.
 - 대상 워크플로우 4종: 요구사항 구현(service TDD) / API 스펙 정의(+모킹) /
   API 연결 / 엔티티·테이블 설계.
+- 제품 방향(2026-08-21): 피봇 후 현 제품에 Bedrock 기반 이력서 요약이 있고,
+  이력서 기반 모의 면접 질문 생성 등 AI 기능이 계속 추가될 예정 —
+  LLM 관련 하네스 결정(DR-014)의 배경.
 - 제약: session team 프리미티브 미사용, 개인 스킬(drawio 등) 팀 하네스 포함 금지,
   docs/conventions 내용 유실·변경 금지.

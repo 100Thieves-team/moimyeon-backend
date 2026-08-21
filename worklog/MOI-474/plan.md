@@ -8,9 +8,15 @@
 - [ ] Step 2 — `requirement-implementation` + `issue-context` 스킬,
       `.agents/execution-policy.md`(공유 실행 정책), `code-reviewer` 에이전트,
       eval 러너 + requirement-implementation eval 세트 (DR-012 스킬의 TDD)
-- [ ] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬
-- [ ] Step 4 — `ship-pr` 스킬 및 공통부 정리
+- [ ] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬,
+      `db-reviewer` 에이전트 (DR-014)
+- [ ] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
+      `docs/knowledge/release-checklist.md` 시드 (DR-014)
+- [ ] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`
+      에이전트, `prompt-change` · `infra-change` · `incident-response`
+      워크플로우, `docs/knowledge/llm.md` · `data.md` 시드. 각 스킬 eval 동반
 - [ ] Step 5 — 결정론 게이트: 변경 파일 대응 테스트·ktlint 훅
-- [ ] Step 6 — 진화 루프(랩업→레슨→승격), AGENTS.md 라우팅·포인터 등록,
+- [ ] Step 6 — 진화 루프(랩업→레슨→승격), AGENTS.md 라우팅·포인터 등록(6행),
       트리거 양성/음성 검증 + With/Without 1회, 완공 정리(도면 Step 라벨 제거,
       유효 결정의 knowledge 승격)
+- [ ] (예약) SLO·에러버짓 검토 — 런칭·실트래픽 발생 시점에 도입 (DR-014)
