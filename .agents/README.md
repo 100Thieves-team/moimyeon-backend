@@ -6,9 +6,11 @@
 
 | 위치 | 책임 |
 | --- | --- |
-| `skills/backend-orchestrator/` | 언제·누구와: 작업 판별, 순서, 체크포인트, 실패 정책 |
-| `skills/` (워커) | 어떻게: 워크플로우별 절차 |
-| `agents/` | 누가: 역할 계약 |
+| `skills/` | 어떻게: 워크플로우별 절차. 각 본문의 체크리스트가 그 워크플로우의 오케스트레이터다 (Step 2~ 예정) |
+| `execution-policy.md` | 공유 실행 정책: 체크포인트, 재시도 상한·에스컬레이트, 재실행 분기 (Step 2 예정) |
+| `agents/` | 누가: 역할 계약 (Step 2~ 예정) |
+
+라우팅은 `AGENTS.md`의 작업 유형 → 스킬 표가 담당한다. 별도 오케스트레이터 스킬은 없다.
 
 작업 산출물 계약은 [worklog/README.md](../worklog/README.md),
 구축 의사결정은 [worklog/MOI-474/decisions.md](../worklog/MOI-474/decisions.md) 참조.

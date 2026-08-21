@@ -5,8 +5,8 @@
 
 - [x] Step 1 — 골격: `.agents/` 단일 소스 + symlink 3개, worklog 파일 계약,
       의사결정 기록, 아키텍처 도면. 양 런타임 스킬 발견 검증 (2026-08-19 승인·커밋)
-- [ ] Step 2 — `backend-orchestrator` + `requirement-implementation` +
-      `issue-context` 스킬, `code-reviewer` 에이전트
+- [ ] Step 2 — `requirement-implementation` + `issue-context` 스킬,
+      `.agents/execution-policy.md`(공유 실행 정책), `code-reviewer` 에이전트
 - [ ] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬
 - [ ] Step 4 — `ship-pr` 스킬 및 공통부 정리
 - [ ] Step 5 — 결정론 게이트: 변경 파일 대응 테스트·ktlint 훅
