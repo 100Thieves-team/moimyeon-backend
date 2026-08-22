@@ -16,8 +16,11 @@
     루프(진화 루프와 접합)
   - 보관: Redis dataset 분류 스키마(cache/lock·rebuildable·fail-open/closed)
     — Redis 실사용 시점에
-  - security-policy.md 신설 여부: 외부 작성 콘텐츠(이슈·PR 코멘트)의 명령
-    승격 금지 등 — Step 3 범위 포함 여부 결정 대기
+  - ~~security-policy.md 신설~~ → DR-016으로 해소 (Step 3에서 신설)
+- 실행형 EXPLAIN 검토: db-reviewer는 현재 "전/후 EXPLAIN 첨부 요구"까지만
+  (비실행). Step 5에서 SELECT-only 검증 스크립트 + read-only DB 계정 +
+  tools allowlist 3층으로 도입 검토 — EXPLAIN ANALYZE는 쿼리를 실제
+  실행하므로(DML 부작용) 구조적 차단이 전제 (2026-08-22 결정).
 
 - `entity-design`을 독립 스킬로 유지할지: 절차가 짧아 스킬 가치가 불확실.
   Step 3에서 작성 후 With/Without 비교로 결정한다.
