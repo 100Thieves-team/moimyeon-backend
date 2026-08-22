@@ -1,5 +1,24 @@
 # MOI-474 — 미결정 사항
 
+- 전문 에이전트 블루프린트 소재 매핑 (로컬
+  `_workspace/harness-reference/specialist-agents-blueprint.md`, 원전 링크
+  29개 포함 — DR-015 소싱 소스. 해당 스텝 작성 시 벤더링):
+  - Step 3 `db-reviewer`: SQL 리뷰 10단계 절차 + 검사항목, DDL 분석 출력
+    스키마(INSTANT/INPLACE/COPY·lock·rollback — "ALTER니까 online 추정 금지",
+    MySQL 원전), expand-contract 8단계 상세
+  - Step 4 `qa-reviewer`: 변경 영향 분류, 위험 신호 목록, 특수 검증
+    8문항(retry 중복·타인 ID 접근(BOLA/BFLA, OWASP 원전)·nullable 양버전
+    호환·pagination 안정성·timeout×retry 곱)
+  - Step 4b `incident-response`: MySQL 장애 진단 순서 + 완화 사다리(낮은
+    위험부터), SRE 완화 사다리(flag off→…→직접 변조 최후)
+  - Step 4b `prompt-change`·eval 확장: eval dataset 10분류(adversarial·
+    historical-incidents·prompt-injection 등), historical-incidents 재투입
+    루프(진화 루프와 접합)
+  - 보관: Redis dataset 분류 스키마(cache/lock·rebuildable·fail-open/closed)
+    — Redis 실사용 시점에
+  - security-policy.md 신설 여부: 외부 작성 콘텐츠(이슈·PR 코멘트)의 명령
+    승격 금지 등 — Step 3 범위 포함 여부 결정 대기
+
 - `entity-design`을 독립 스킬로 유지할지: 절차가 짧아 스킬 가치가 불확실.
   Step 3에서 작성 후 With/Without 비교로 결정한다.
   - 사람이 step1에서 단 의견: 필요하다면 ERD 설계 도메인 지식 문서를 줄 수 있어. 필요하다면 말해.
