@@ -16,7 +16,7 @@
     루프(진화 루프와 접합)
   - 보관: Redis dataset 분류 스키마(cache/lock·rebuildable·fail-open/closed)
     — Redis 실사용 시점에
-  - ~~security-policy.md 신설~~ → DR-016으로 해소 (Step 3에서 신설)
+  - ~~공유 안전 정책 신설~~ → DR-016으로 해소 (Step 3에서 safety-policy.md 신설)
 - 실행형 EXPLAIN 검토: db-reviewer는 현재 "전/후 EXPLAIN 첨부 요구"까지만
   (비실행). Step 5에서 SELECT-only 검증 스크립트 + read-only DB 계정 +
   tools allowlist 3층으로 도입 검토 — EXPLAIN ANALYZE는 쿼리를 실제

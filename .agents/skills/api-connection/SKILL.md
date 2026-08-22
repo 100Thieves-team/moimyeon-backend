@@ -5,7 +5,7 @@ description: 정의된 API 스펙(Controller·모킹)과 구현된 Service를 �
 
 # api-connection — 스펙과 Service 배선
 
-[execution-policy.md](../../execution-policy.md)·[security-policy.md](../../security-policy.md)를
+[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를
 따른다. `worklog/{이슈키}/`가 있으면 재실행 분기부터.
 
 ## 단계

@@ -5,7 +5,7 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 
 # entity-design — 엔티티·테이블 설계
 
-[execution-policy.md](../../execution-policy.md)·[security-policy.md](../../security-policy.md)를
+[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를
 따른다. `worklog/{이슈키}/`가 있으면 재실행 분기부터 — 1단 합의가 끝난
 상태면 2단부터 시작한다.
 

@@ -5,7 +5,7 @@ description: 와이어프레임·PRD를 바탕으로 API 계약(Controller·Requ
 
 # api-spec-definition — API 계약 정의
 
-[execution-policy.md](../../execution-policy.md)·[security-policy.md](../../security-policy.md)를
+[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를
 따른다. `worklog/{이슈키}/`가 있으면 재실행 분기부터.
 
 전제: Linear 이슈 키 + 화면·요구사항 근거(와이어프레임, PRD, 또는 사용자

@@ -5,7 +5,7 @@ description: Linear 이슈 키(MOI-xxx)를 받아 이슈·PRD·팀 위키·관�
 
 # issue-context — 이슈 컨텍스트 수집
 
-[execution-policy.md](../../execution-policy.md)·[security-policy.md](../../security-policy.md)를 따른다.
+[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를 따른다.
 `worklog/{이슈키}/context.md`가 이미 있으면 처음부터 다시 만들지 말고
 빠진 부분만 보강한다.
 

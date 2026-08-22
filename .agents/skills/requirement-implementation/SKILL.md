@@ -5,7 +5,7 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
 
 # requirement-implementation — 요구사항 구현 (service TDD)
 
-[execution-policy.md](../../execution-policy.md)·[security-policy.md](../../security-policy.md)를 따른다.
+[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를 따른다.
 `worklog/{이슈키}/`가 이미 있으면 재실행 분기부터 시작한다.
 
 전제: Linear 이슈 키가 주어진다. API 스펙이나 엔티티 변경이 선행돼야 하는
