@@ -22,17 +22,17 @@
   tools allowlist 3층으로 도입 검토 — EXPLAIN ANALYZE는 쿼리를 실제
   실행하므로(DML 부작용) 구조적 차단이 전제 (2026-08-22 결정).
 
-- `entity-design`을 독립 스킬로 유지할지: 절차가 짧아 스킬 가치가 불확실.
-  Step 3에서 작성 후 With/Without 비교로 결정한다.
-  - 베이스라인 실측(2026-08-23, 정정 포함): 최초 집계의 p4·p5 미호출은
-    세션 한도 오염이었고(교훈 8), 한도 해제 후 재측정에서 양성 7/7 호출·
-    n3 정상 미호출. 트리거는 문제 없음 — 남는 쟁점은 산출물 재정의와
-    With/Without 가치 판정뿐.
-  - 사람이 step1에서 단 의견: 필요하다면 ERD 설계 도메인 지식 문서를 줄 수 있어. 필요하다면 말해.
-  - Codex 검토(2026-08-21) 추가 쟁점: 산출물이 "schema.sql 초안"이면
-    DR-011 ①(독립 머지 가능) 테스트를 통과하지 못하고 Flyway-only 규칙과도
-    충돌한다. Step 3에서 산출물을 "엔티티+마이그레이션+schema.sql 갱신 PR"로
-    재정의할지, 회의용 초안 단계로 재분류할지 결정.
+- ~~`entity-design`을 독립 스킬로 유지할지~~ → DR-018로 해소 (유지 확정,
+  1단/2단 산출물 구조 확정, With/Without 생략 — 트리거 실측은
+  baseline-summary, Codex의 DR-011 ① 쟁점은 1단/2단 분리로 해소).
+- (예약) entity-design 워크플로우 확장 후보 — erd-design 레퍼런스의 미도입
+  절차 (DR-018 등재, 도입 시 각각 결정 필요):
+  - 논리적 ERD를 DBML로 표기하고 렌더링해 회의 인풋으로 사용
+    (IntelliJ/VSCode 플러그인 실재 — 도구·DBML 파일 위치 결정 필요)
+  - 논리 모델링 → 물리 모델링 단계 분리, 스키마 문서로 관리 →
+    JPA 엔티티 → Flyway 반영의 전체 파이프라인화
+  - docs/conventions에 용어 사전(도메인 용어 SSOT) 신설 — conventions
+    추가라 사람 승인 필요
 - `ship-pr`을 스킬로 둘지 공유 reference 문서로 둘지: 단독 호출 가치
   기준으로 Step 4에서 확정 (DR-008).
   (`issue-context`는 "MOI-xxx 분석해줘"로 단독 호출됨 → 스킬로 확정, Step 2)
