@@ -66,7 +66,8 @@ while IFS=$'\t' read -r id type expected prompt; do
           --sandbox read-only "$prompt" < /dev/null > "$raw" 2>&1 ) || true
     fi
     dur=$(( $(date +%s) - start ))
-    if grep -qE "$PATTERN" "$raw"; then detected=yes; else detected=no; fi
+    if grep -q "hit your session limit" "$raw"; then detected=LIMIT
+    elif grep -qE "$PATTERN" "$raw"; then detected=yes; else detected=no; fi
     echo "$STAMP,$RUNTIME,$(version),$id,$expected,$i,$detected,$dur,$raw" >> "$CSV"
     echo "[$id iter$i] expected=$expected detected=$detected (${dur}s)"
   done

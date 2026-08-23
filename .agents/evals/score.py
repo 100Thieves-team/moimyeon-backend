@@ -28,6 +28,10 @@ claude_pat = re.compile(r'"skill": ?"%s"|Launching skill: %s' % (re.escape(skill
 
 def score_claude(path: Path) -> str:
     text = path.read_text(encoding="utf-8", errors="replace")
+    # 사용량 한도 응답은 실행 자체가 안 된 것 — 미호출로 세면 안 된다
+    # (2026-08-23 entity-design claude 19/24건이 이걸로 무효)
+    if "hit your session limit" in text:
+        return "LIMIT"
     return "INVOKED" if claude_pat.search(text) else "no"
 
 
