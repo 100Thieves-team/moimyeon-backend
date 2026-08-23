@@ -26,11 +26,8 @@
   1단/2단 산출물 구조 확정, With/Without 생략 — 트리거 실측은
   baseline-summary, Codex의 DR-011 ① 쟁점은 1단/2단 분리로 해소).
 - (예약) entity-design 워크플로우 확장 후보 — erd-design 레퍼런스의 미도입
-  절차 (DR-018 등재, 도입 시 각각 결정 필요):
-  - 논리적 ERD를 DBML로 표기하고 렌더링해 회의 인풋으로 사용
-    (IntelliJ/VSCode 플러그인 실재 — 도구·DBML 파일 위치 결정 필요)
-  - 논리 모델링 → 물리 모델링 단계 분리, 스키마 문서로 관리 →
-    JPA 엔티티 → Flyway 반영의 전체 파이프라인화
+  절차 (DR-018 등재). ~~DBML 논리 모델링·물리 모델링 단계~~ → DR-019로
+  스킬에 반영. 남은 것:
   - docs/conventions에 용어 사전(도메인 용어 SSOT) 신설 — conventions
     추가라 사람 승인 필요
 - `ship-pr`을 스킬로 둘지 공유 reference 문서로 둘지: 단독 호출 가치
