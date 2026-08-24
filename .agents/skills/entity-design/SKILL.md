@@ -43,7 +43,8 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 8. **검증** — `./gradlew test ktlintCheck` 통과 (Flyway 버전 중복은 CI가
    차단). 실패 수정 상한 3회 — 소진 시 기록 후 턴 종료.
    **[체크포인트 B: 구현 승인]**
-9. **커밋·PR** — 합의에서 달라진 점이 있으면 decisions.md에 기록.
+9. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다. 합의에서
+   달라진 점이 있으면 decisions.md에 기록.
 
 ## 하지 않는 것
 

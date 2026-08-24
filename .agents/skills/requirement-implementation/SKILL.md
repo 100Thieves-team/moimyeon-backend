@@ -44,9 +44,8 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
    사유를 기록하고 턴을 끝낸다. 조용히 계속하거나 조용히 포기하지 않는다.
 7. **검증** — `./gradlew test ktlintCheck` 통과 확인.
    **[체크포인트 C: 구현 승인]**
-8. **커밋·PR** — `docs/conventions/git.md` 준수. `tbd.md`의 PRD 반영 대상
-   항목은 PR 본문에 명시해 사람이 PRD를 갱신할 수 있게 한다.
-   (ship-pr 스킬 도입 전까지 이 단계는 직접 수행)
+8. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다 (검증·QA
+   게이트·커밋 분할·PR·리뷰봇 대응).
 
 ## 산출물
 

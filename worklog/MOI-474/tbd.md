@@ -6,9 +6,8 @@
   - Step 3 `db-reviewer`: SQL 리뷰 10단계 절차 + 검사항목, DDL 분석 출력
     스키마(INSTANT/INPLACE/COPY·lock·rollback — "ALTER니까 online 추정 금지",
     MySQL 원전), expand-contract 8단계 상세
-  - Step 4 `qa-reviewer`: 변경 영향 분류, 위험 신호 목록, 특수 검증
-    8문항(retry 중복·타인 ID 접근(BOLA/BFLA, OWASP 원전)·nullable 양버전
-    호환·pagination 안정성·timeout×retry 곱)
+  - ~~Step 4 `qa-reviewer`~~ → DR-022로 벤더링 완료
+    (docs/knowledge/qa-review.md + release-checklist.md 시드)
   - Step 4b `incident-response`: MySQL 장애 진단 순서 + 완화 사다리(낮은
     위험부터), SRE 완화 사다리(flag off→…→직접 변조 최후)
   - Step 4b `prompt-change`·eval 확장: eval dataset 10분류(adversarial·
@@ -30,9 +29,10 @@
   스킬에 반영. 남은 것:
   - docs/conventions에 용어 사전(도메인 용어 SSOT) 신설 — conventions
     추가라 사람 승인 필요
-- `ship-pr`을 스킬로 둘지 공유 reference 문서로 둘지: 단독 호출 가치
-  기준으로 Step 4에서 확정 (DR-008).
-  (`issue-context`는 "MOI-xxx 분석해줘"로 단독 호출됨 → 스킬로 확정, Step 2)
+- ~~`ship-pr`을 스킬로 둘지 공유 reference 문서로 둘지~~ → DR-021로 해소
+  (스킬 확정 — DR-011 3중 테스트 통과, 워크플로우 4종 공통부 수렴).
+- (예약) 팀 개발 플랫폼에 qa-engineer가 실제 배치되면 레포 qa-reviewer와의
+  중복을 재평가한다 (DR-022 경계: 레포=머지 전 정적, 플랫폼=배포 후 런타임).
 - ~~Codex용 커스텀 에이전트 정의(toml) 필요성~~ → DR-013으로 해소
   (프롬프트 주입 방식, 어댑터 미도입. 마찰 실측 시 재검토).
 - DR-004·008은 승인(잠정): Step 6에서 트리거 양성/음성/경계 프롬프트로

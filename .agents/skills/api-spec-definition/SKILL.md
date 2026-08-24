@@ -34,7 +34,8 @@ description: 와이어프레임·PRD를 바탕으로 API 계약(Controller·Requ
 7. **검증** — `./gradlew test ktlintCheck` 통과. 실패 수정 상한 3회 —
    소진 시 리뷰와 동일하게 기록 후 턴 종료.
    **[체크포인트 B: 구현 승인]**
-8. **커밋·PR** — git.md 준수. 스펙 결정·미결정은 decisions.md·tbd.md에.
+8. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다. 스펙
+   결정·미결정은 decisions.md·tbd.md에.
 
 ## 하지 않는 것
 

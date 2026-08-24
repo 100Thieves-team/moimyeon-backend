@@ -32,7 +32,7 @@ description: 정의된 API 스펙(Controller·모킹)과 구현된 Service를 �
    (도구는 curl — 에이전트가 설치·GUI 의존 없이 실행·기록·판정할 수 있다.
    사람 탐색용은 Swagger UI가 이미 있다.)
    **[체크포인트 B: 구현 승인]**
-7. **커밋·PR** — git.md 준수.
+7. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다.
 
 ## 하지 않는 것
 
