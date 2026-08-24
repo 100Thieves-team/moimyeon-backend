@@ -5,11 +5,12 @@
 
 - [x] Step 1 — 골격: `.agents/` 단일 소스 + symlink 3개, worklog 파일 계약,
       의사결정 기록, 아키텍처 도면. 양 런타임 스킬 발견 검증 (2026-08-19 승인·커밋)
-- [ ] Step 2 — `requirement-implementation` + `issue-context` 스킬,
+- [x] Step 2 — `requirement-implementation` + `issue-context` 스킬,
       `.agents/execution-policy.md`(공유 실행 정책), `code-reviewer` 에이전트,
       eval 러너 + requirement-implementation eval 세트 (DR-012 스킬의 TDD)
-- [ ] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬,
-      `db-reviewer` 에이전트 (DR-014)
+      (2026-08-24 승인·메타 리뷰 통과)
+- [x] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬,
+      `db-reviewer` 에이전트 (DR-014) (2026-08-24 승인·메타 리뷰 통과)
 - [ ] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
       `docs/knowledge/release-checklist.md` 시드 (DR-014)
 - [ ] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`

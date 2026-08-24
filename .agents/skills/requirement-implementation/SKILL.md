@@ -32,7 +32,8 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
 5. **TDD 구현**
    - 시작 전 `docs/conventions/layers.md`, `testing.md`, `errors.md`를
      정독한다. 엔티티·스키마를 건드리게 되면 `storage.md`도.
-   - 테스트를 하나씩 통과시키며 진행한다. 스타일은 `kotlin-style.md`.
+   - 테스트를 하나씩 통과시키며 진행한다. 스타일은
+     `docs/conventions/kotlin-style.md`.
      테스트 실패 수정은 3회 상한 — 소진하면 plan.md에
      `실패(재시도 3회 소진): 사유`를 기록하고 턴을 끝낸다.
    - 구현 중 내린 결정은 `decisions.md`에, 요구사항 모호점은 `tbd.md`에

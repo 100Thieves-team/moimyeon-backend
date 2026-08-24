@@ -8,7 +8,7 @@ With/Without으로 검증하기 위한 자산이다. 결과는 `worklog/{이슈�
 
 ```
 trigger/   # 라우팅·트리거 검증: 양성/음성/경계 프롬프트 (md=설명, tsv=러너 입력)
-ab/        # With/Without 태스크: task.md(과제) + assertions.md(판정 기준)
+ab/        # With/Without 태스크: task.md(과제), assertions.md(판정 기준)는 정량 판정이 가능한 태스크에만
 run.sh     # 헤드리스 러너 (claude -p / codex exec)
 ```
 
