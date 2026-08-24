@@ -238,3 +238,62 @@ With/Without AB(req-impl-01)를 실행했으나, **실행 도중 모델 사용�
      오분류했다 — 한도 신호로 쓸 수 없다.
 10. 헤드리스 `claude -p`는 세션 모델 설정과 무관하게 CLI 기본 모델을 쓴다.
     긴 배치 전에 한도 여유를 확인하거나 `--model`을 명시할 것.
+
+---
+
+# 라우팅 등재 후 재측정 + With/Without — sonnet 재실행 (2026-08-25, 유효)
+
+한도로 무효가 된 직전 라운드를 `--model claude-sonnet-5` 명시로 재실행했다.
+27건 전부 완주, LIMIT 0건. 원본: `trigger-routing-sonnet-20260825-0348.csv`,
+raw `routing-sonnet-*/`, `ab-sonnet-*/`.
+
+## 트리거 — 스킬 9종 경쟁 + 라우팅 표 등재 상태
+
+| | 결과 |
+| --- | --- |
+| 양성 | **17/18** (94%) |
+| 음성 — 대상 스킬 오호출 | **0/9** |
+| 음성 중 정답 스킬로 교차 라우팅 | 6/9 |
+
+- 교차 라우팅 정확: "API 스펙만 먼저 정의해줘"×2 → api-spec-definition,
+  "구현해줘"×4 → requirement-implementation. near-miss 음성 설계 의도대로 작동.
+- 유일한 미호출은 ship-pr p2("이 변경분 커밋 나눠서 PR 만들어줘"). 워크트리가
+  clean이라 "커밋할 변경분 없음"을 판단하고 사람에게 확인 요청 — ship-pr
+  1단계의 의도와 같은 행동이나 스킬을 거치지 않았다. 직전 라운드(다른 모델)
+  에서는 같은 프롬프트가 호출됐다.
+- **집계 주의**: 음성은 "그 스킬을 부르면 안 됨"이지 "아무 스킬도 부르면 안 됨"이
+  아니다. 초기 스크립트가 후자로 판정해 정상 교차 라우팅 6건을 불일치로
+  오분류했다 — tsv 원문 대조로 정정.
+
+## With/Without (req-impl-01)
+
+| | With | Without |
+| --- | --- | --- |
+| 소요 | 316s | 436s |
+| 산출물 | `.worklog/MOI-EVAL-01/`(context.md·plan.md), **코드 0** | 코드 5파일(main 3·test 2) |
+| 멈춘 지점 | **체크포인트 A에서 정지** | 완주 |
+| A1~A3 | 미도달 | **통과** (`:core:core-api:test ktlintCheck` exit 0) |
+| A4 | **충족** | 해당 없음 |
+| H2 Clock 주입 | 계획에 명시 | **통과** |
+| H1 판정 위치 | `RoomEntity.canLeaveBeforeDeadline()` (기존 canLeave·canStartProgress와 대칭) | `RoomLeaveManager` private 메서드, 엔티티 미변경 |
+
+**A1~A3은 Without도 통과했다** — assertions.md가 예상한 대로이고, 코드베이스
+자체가 좋으면(Clock 패턴·에러 코드 체계가 이미 존재) 하네스 없이도 되는
+항목이 있다는 증거다. 이 사실을 기록에 남긴다.
+
+**핵심 발견 — 요구사항 모호성의 처리가 갈렸다.** "24시간 전까지"의 경계에서
+With 계획은 마감 시각 **포함 허용**(`!at.isAfter(startAt.minusHours(24))`,
+근거: canStartProgress 대칭), Without 구현은 **거부**
+(`startAt.minusHours(24).isAfter(now)`, 근거: RoomConfirmation 관례)로 결론이
+정반대다. 둘 다 코드베이스 관례를 댔지만, With는 이 판단을 **사람 승인 전
+계획서에 올렸고** Without은 구현 후 주석에만 남겼다. 스킬의 가치는 산출물
+품질(A1~A3)이 아니라 **모호점을 승인 전에 표면화하는 것**에서 관측됐다.
+
+비용도 같이 기록한다: With는 한 번의 헤드리스 실행으로 완결되지 않는다.
+자동화 파이프라인에 넣으려면 체크포인트 통과 설계가 별도로 필요하다.
+
+## 추가 교훈
+
+11. 파이프라인의 exit code는 마지막 명령의 것이다 — `./gradlew … | tail`의
+    `$?`는 tail의 코드라 빌드 실패를 통과로 오판한다. 검증은 리다이렉트 후
+    exit code를 직접 받는다.
