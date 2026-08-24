@@ -1338,3 +1338,56 @@ force push: 보호 브랜치(main·dev)로의 non-fast-forward push를 pre-push�
 - 기록된 잔여 한계(MINOR): deny 접두사 매칭은 `cd … && terraform apply`
   미포착(L2·안전층이 커버), config 프로파일 기본 탐색은 2단계 모듈 경로
   가정, push 이벤트 시크릿 스캔은 직전 커밋 범위.
+
+## DR-026: Step 6 — 라우팅 등록, 문서 경계, 스킬 작성 규약
+
+- 날짜: 2026-08-24
+- 상태: 승인
+
+### 결정
+
+1. **AGENTS.md 라우팅 표 9행 등록** (DR-004 실행): 작업 유형 → 스킬 +
+   판별 기준 열. 리뷰어 5종 단독 위임 안내 1줄. 행동 원칙 4줄은 미포함 —
+   일반 지침의 효과가 실험상 미미하고(arXiv "Evaluating AGENTS.md") 이미
+   압축 정책 4줄이 있어 중복이다.
+2. **conventions ↔ knowledge 경계를 "구속력"으로 정의**: 컨벤션은 위반 시
+   리뷰·게이트가 막는 규칙, 지식은 판단을 돕는 것. 레슨을 주제 파일에 함께
+   두는 현행을 유지하고 승격 경로(레슨 → 지식 → 컨벤션)를 명문화. 위치
+   판단이 어려우면 아무 데나 남기는 fallback 규칙 추가.
+3. **`.agents/skill-authoring.md` 신설**: 스킬 신설·수정 시 공식 문서
+   기준(description 1,536자·본문 간결·새 세션 측정)과 우리 프로토콜
+   (트리거 측정 → 실패분만 보강 → 재측정)을 규약화. 출력 품질 비교는
+   `skillOverrides: off`로 without 실행을 만든다.
+4. **worktree 절차를 git.md에 추가** (conventions 추가 — 사용자 승인):
+   기준 브랜치 최신화 → worktree 생성 → 리베이스 → 머지 후 정리.
+5. **PRD→이슈는 이 레포의 작업이 아니다** — 스킬·예약 모두 제외 (사용자
+   결정, tbd 항목 삭제).
+6. **라우팅 등록 후 재측정·With/Without은 토큰 여유 시로 이연** — DR-004·008은
+   잠정 상태를 유지한다.
+
+### 근거
+
+- 레슨의 중앙 lessons.md 패턴 대신 주제 파일 분산을 택한 이유: 스킬이 작업
+  전에 해당 주제 파일을 읽도록 이미 배선돼 있어(entity-design→erd-design.md,
+  infra-change→infra.md) 레슨이 필요한 순간에 지시 없이 읽힌다. 중앙 파일은
+  상시 로드(컨텍스트 비용, DR-020에서 기각) 또는 자발적 읽기 기대(회수율
+  낮음) 중 하나를 요구하고, 시간순 잡탕이 되어 주제 맥락과 끊긴다.
+- 공식 문서에서 채택한 것: 평가의 2분법(호출 여부/출력 품질), 새 세션
+  측정의 필요("작성 세션의 잔여 컨텍스트가 지침의 간극을 가린다"),
+  `skillOverrides`로 without 실행 구성. 우리 DR-012·017과 충돌 없이 보강된다.
+- 라우팅 표의 판별 기준 열: 실측에서 test_authoring이 단독 작업 공동 1위였고
+  (workflow_analysis) DR-011은 이를 독립 스킬로 만들지 않기로 했다 — 목적지가
+  requirement-implementation임을 표에 명시해야 라우팅이 닫힌다.
+
+### 대안
+
+- 중앙 `lessons.md` 신설(일반 패턴): 위 근거로 기각. AGENTS.md의 "새로 알게
+  된 것" 절이 이미 같은 역할의 진입점이다.
+- 진화 루프 전용 스킬: incident-response 사후 기록·prompt-change 재투입·
+  knowledge 승격 경로로 이미 배선됨. 신설은 사용 관찰 후 재평가(tbd).
+
+### 영향
+
+- AGENTS.md·`.agents/README.md`·knowledge/conventions README·git.md 개정,
+  `.agents/skill-authoring.md` 신설.
+- 남은 완공 작업: 아키텍처 도면 갱신, 라우팅 후 재측정(이연).

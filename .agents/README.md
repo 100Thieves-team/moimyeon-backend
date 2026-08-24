@@ -11,9 +11,11 @@
 | `safety-policy.md` | 안전 정책(행동 경계) **원본** — 런타임은 AGENTS.md 압축 + 해당 스킬 인라인 (DR-016·020) |
 | `agents/` | 누가: 역할 계약 (위임 프롬프트에 주입될 것을 전제로 자기완결적으로 작성) |
 | `evals/` | 측정 자산: 트리거 세트, With/Without 태스크, 러너 (DR-012) |
+| `gates/` | 결정론 게이트: 시크릿·스킬 lint·정합성 검사. L1 훅·L2 git hook·L3 CI가 공유 (DR-025) |
+| `skill-authoring.md` | 스킬 작성·평가 규약: description·본문 기준, 트리거/품질 2단 측정 (DR-026) |
 
-라우팅은 스킬 description 기반 직접 라우팅이다 (AGENTS.md 라우팅 표는 Step 6
-등재 예정). 별도 오케스트레이터 스킬은 없다.
+라우팅은 `AGENTS.md`의 작업 유형 → 스킬 표와 각 스킬 description이 담당한다.
+별도 오케스트레이터 스킬은 없다 (DR-008).
 
 작업 산출물 계약은 [worklog/README.md](../worklog/README.md),
 구축 의사결정은 [worklog/MOI-474/decisions.md](../worklog/MOI-474/decisions.md) 참조.
