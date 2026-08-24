@@ -1,6 +1,6 @@
 ---
 name: prompt-change
-description: LLM 기능의 프롬프트·모델·파라미터·출력 스키마 변경을 eval 비교와 함께 수행한다. "프롬프트 개선해줘", "요약/질문 생성 품질 올려줘", "모델 바꿔보자" 요청 시 사용한다. 핵심 규칙 — eval 비교 없는 프롬프트 변경 금지. LLM과 무관한 기능 구현은 requirement-implementation, LLM 기능의 런타임 장애는 incident-response.
+description: LLM 기능의 프롬프트·모델·파라미터·출력 스키마 변경을 eval 비교와 함께 수행한다. "프롬프트 개선해줘", "요약/질문 생성 품질 올려줘", "모델 바꿔보자" 요청 시 사용하고, 프롬프트 파일의 오타·문구 수정처럼 사소해 보이는 변경도 출력에 영향을 주므로 이 스킬로 처리한다. 핵심 규칙 — eval 비교 없는 프롬프트 변경 금지. LLM과 무관한 기능 구현은 requirement-implementation, LLM 기능의 런타임 장애는 incident-response.
 ---
 
 # prompt-change — 프롬프트·모델 변경 (eval 비교 필수)
