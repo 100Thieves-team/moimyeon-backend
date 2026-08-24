@@ -1,0 +1,2 @@
+# 의도적으로 특정 배포 프로파일에만 두는 설정 키 (한 줄에 dotted key 하나)
+# 예: management.server.port

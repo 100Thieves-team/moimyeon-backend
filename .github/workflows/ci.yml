@@ -10,6 +10,31 @@ permissions:
   contents: read
 
 jobs:
+  # 하네스 게이트 — 로컬 pre-commit(.agents/gates/)과 같은 스크립트를 호출한다.
+  # 로컬 훅 미설치·우회를 잡는 백스톱 (DR-025).
+  harness-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Skill lint
+        run: python3 .agents/gates/lint_skills.py
+
+      - name: Secret scan
+        run: |
+          base="${{ github.base_ref }}"
+          if [ -n "${base}" ]; then
+            git fetch -q origin "${base}"
+            python3 .agents/gates/scan_secrets.py --range "origin/${base}...HEAD"
+          else
+            python3 .agents/gates/scan_secrets.py --range "HEAD~1...HEAD"
+          fi
+
+      - name: Config profile sync
+        run: python3 .agents/gates/check_config_profiles.py
+
   build:
     runs-on: ubuntu-latest
 

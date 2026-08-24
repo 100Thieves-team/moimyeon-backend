@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# 보호 브랜치(main/dev)로의 non-fast-forward push 차단 (DR-025).
+# force 플래그가 아니라 "원격이 로컬의 조상인가"로 판정하므로 우회 불가.
+# 그 외 브랜치는 --force-with-lease 자유 (DR-024).
+zero="0000000000000000000000000000000000000000"
+while read -r _local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/dev)
+      if [ "$remote_sha" != "$zero" ] && [ "$local_sha" != "$zero" ]; then
+        if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+          echo "push 차단: ${remote_ref#refs/heads/} 는 보호 브랜치다 — non-fast-forward push 금지"
+          exit 1
+        fi
+      fi
+      ;;
+  esac
+done
+exit 0

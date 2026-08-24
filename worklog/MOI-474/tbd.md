@@ -13,10 +13,9 @@
   - 보관: Redis dataset 분류 스키마(cache/lock·rebuildable·fail-open/closed)
     — Redis 실사용 시점에
   - ~~공유 안전 정책 신설~~ → DR-016으로 해소 (Step 3에서 safety-policy.md 신설)
-- 실행형 EXPLAIN 검토: db-reviewer는 현재 "전/후 EXPLAIN 첨부 요구"까지만
-  (비실행). Step 5에서 SELECT-only 검증 스크립트 + read-only DB 계정 +
-  tools allowlist 3층으로 도입 검토 — EXPLAIN ANALYZE는 쿼리를 실제
-  실행하므로(DML 부작용) 구조적 차단이 전제 (2026-08-22 결정).
+- ~~실행형 EXPLAIN 검토~~ → DR-025에서 운영 개시 후로 이연 확정
+  (read-only DB 계정 인프라 전제. 원 결정: SELECT-only 스크립트 +
+  read-only 계정 + tools allowlist 3층, 2026-08-22).
 
 - ~~`entity-design`을 독립 스킬로 유지할지~~ → DR-018로 해소 (유지 확정,
   1단/2단 산출물 구조 확정, With/Without 생략 — 트리거 실측은
@@ -83,3 +82,9 @@
   3종 이전 기준 — 현재 워크플로우 7종+ship-pr), requirement-implementation
   행에 "서비스 테스트만 작성" 요청도 이 워크플로우 소관임을 판별 기준으로
   명시(실측 test_authoring 공동 1위).
+
+- (예약) Codex 프로젝트 훅 로드 방식 스모크: Codex 0.149에 훅 이벤트
+  모델(hooks.json·trust 해시)은 실재 — 레포 단위로 gate_hook.py를 싣는
+  방법 확인되면 L1을 Codex에도 배선 (DR-025, 현재는 L2/L3 커버).
+- (제안) GitHub branch protection(dev·main): 로컬 pre-push는 우회
+  가능하므로 서버측 최종 방어 — gh api로 설정 가능, 사람 승인 대기.

@@ -1253,3 +1253,73 @@ Step 5 진입 전 `_workspace/harness-reference/` 전체(블루프린트 §4·12
 - 스킬 9종 중 8종·리뷰어 5종·AGENTS.md·safety-policy 원본·qa-review.md
   개정. Step 5 게이트 범위 2건 추가. DR-014의 "라우팅 6행"은 Step 6
   재산정으로 대체 예정.
+
+## DR-025: 결정론 게이트 — 검사기 6종 × 3층 배선
+
+- 날짜: 2026-08-24
+- 상태: 승인
+
+### 결정
+
+검사 로직은 `.agents/gates/`의 스크립트 한 벌(순수 로컬 파이썬, LLM 호출
+없음)이고, 세 시점이 같은 스크립트를 호출한다:
+
+- **L1 편집 직후** — Claude 훅(`.claude/settings.json` PostToolUse
+  Edit|Write → `gate_hook.py`). 비용 계약: 경로 필터 선행, 무위반 시
+  무출력(토큰 0), 위반 시에만 stderr 1줄이 모델에 피드백, 같은
+  (파일, 규칙) 경고는 세션당 1회(dedup 마커).
+- **L2 커밋·푸시** — `.githooks/pre-commit`(→ gates/pre-commit.sh)·
+  `pre-push`. 사람·양 런타임 공통. 설치는 `git config core.hooksPath
+  .githooks` 1회 (AGENTS.md 안내).
+- **L3 CI** — ci.yml `harness-gates` 잡 (로컬 우회 백스톱).
+
+검사기와 수위:
+
+| 검사기 | 수위 | 내용 |
+| --- | --- | --- |
+| scan_secrets | BLOCK | diff 추가 줄·파일 전문의 시크릿 패턴. `gate:allow-secret` 예외 주석 |
+| lint_skills | BLOCKER 차단/MAJOR 경고 | frontmatter·name 일치·description + 정책 인라인(상한·초기 실행·재실행·데이터 규칙) 존재 |
+| check_config_profiles | BLOCK | application.yml 배포 프로파일(dev/live) 키 집합 싱크, allowlist |
+| check_pairings: entity-schema | WARN | @Entity/@Column 변경인데 마이그레이션·schema.sql 무변경 |
+| check_pairings: api-docs | WARN | Controller·DTO 변경인데 테스트 무변경 |
+| check_pairings: deps-regression | WARN | 의존성 파일 변경인데 테스트 무변경 |
+
+force push: 보호 브랜치(main·dev)로의 non-fast-forward push를 pre-push가
+차단 — force 플래그가 아니라 조상 관계로 판정해 우회 불가. 그 외 브랜치는
+`--force-with-lease` 허용 (DR-024 문구에 브랜치 한정 추가).
+권한 deny(`.claude/settings.json`): `terraform apply`·`rm -rf` 고신뢰
+패턴만.
+
+### 근거
+
+- 확률/결정론 분리(DR-012·020): 시크릿·프로파일 누락·frontmatter 파손은
+  기계 판정이 가능한 결함 — 지침(확률)이 아니라 게이트(결정론)가 맞다.
+- 페어링 3종을 WARN으로 둔 이유: 트리거 파일 변경이 항상 짝을 요구하지는
+  않아(스키마 무관 엔티티 수정, 패치 범프) BLOCK이면 오탐 마찰·의례적
+  테스트가 생긴다. 정밀 판정은 리뷰어(확률 층), 게이트는 "잊었을 가능성"
+  통지까지. L1이 편집 즉시 피드백하므로 WARN이어도 에이전트는 흐름 안에서
+  자가 수정한다.
+- 프로파일 싱크만 페어링 중 유일한 BLOCK: 오탐이 구조적으로 없고(키 부재는
+  사실) 놓치면 배포 사고 직결.
+- dbml은 싱크 대상에서 제외: DR-019가 erd.dbml을 "이슈 단위 설계 기록,
+  갱신 의무 없음"으로 확정 — 강제하면 이중 SSOT 부활.
+- ktlint·테스트는 로컬 훅에서 돌리지 않는다: gradle 기동 비용으로 커밋
+  마찰이 크고 CI가 이미 강제한다.
+- 검증: 게이트 자체 테스트(tests/run.sh) 7케이스 — 양성(가짜 시크릿·규칙
+  위반 스킬·프로파일 누락 픽스처는 실행 시점 생성, 커밋 안 함) + 실레포
+  음성 전부 통과. L1 훅 스모크: 무경고 침묵/경고 1회/dedup 확인.
+
+### 대안
+
+- 매 편집 LLM 판정 훅: 토큰 소모·비결정성 — 기각 (사용자 제약).
+- 서버측 branch protection만으로 force 통제: GitHub 설정 변경이라 별도
+  승인 사안으로 분리 제안 — 로컬 pre-push가 1차, 서버측은 후속.
+
+### 영향
+
+- Codex L1: Codex 0.149에 동일 이벤트 모델 훅이 실재함을 확인(hooks.json·
+  trust 해시)했으나 프로젝트 단위 로드 방식 미확정 — Codex는 당분간
+  L2/L3 커버, 로드 방식 확인 스모크를 tbd에 예약.
+- 실행형 EXPLAIN(3층 가드레일)은 read-only DB 계정 인프라가 전제라 운영
+  개시 후로 이연 확정.
+- GitHub branch protection(dev·main) 설정은 사람 승인 후 별도 실행.
