@@ -36,3 +36,4 @@ CLAUDE.local.md
 
 # eval raw 트랜스크립트는 로컬 보존 (요약·CSV만 커밋)
 worklog/**/evals/raw/
+__pycache__/
