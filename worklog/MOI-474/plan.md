@@ -11,8 +11,9 @@
       (2026-08-24 승인·메타 리뷰 통과)
 - [x] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬,
       `db-reviewer` 에이전트 (DR-014) (2026-08-24 승인·메타 리뷰 통과)
-- [ ] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
+- [x] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
       `docs/knowledge/release-checklist.md` 시드 (DR-014)
+      (2026-08-24 승인 — 트리거 5/5·오호출 0, DR-021·022)
 - [ ] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`
       에이전트, `prompt-change` · `infra-change` · `incident-response`
       워크플로우, `docs/knowledge/llm.md` · `data.md` 시드. 각 스킬 eval 동반
