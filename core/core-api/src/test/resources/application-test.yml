@@ -5,8 +5,8 @@ spring:
         registration:
           google:
             client-id: test-google-client
-            client-secret: test-google-secret
+            client-secret: test-google-secret # gate:allow-secret
 
 security:
   jwt:
-    secret: test-jwt-secret-key-with-at-least-32-bytes
+    secret: test-jwt-secret-key-with-at-least-32-bytes # gate:allow-secret

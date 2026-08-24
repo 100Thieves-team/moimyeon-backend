@@ -25,7 +25,7 @@ def dedup_dir(root):
     return d
 
 
-def already_warned(dd, key):
+def already_warned(dd, key):  # key에 session_id 포함 — 세션당 1회 계약
     marker = dd / hashlib.sha1(key.encode()).hexdigest()
     if marker.exists():
         return True
@@ -55,6 +55,7 @@ def main():
     if not watched:
         return 0
 
+    session = str(event.get("session_id", "global"))
     dd = dedup_dir(root)
     messages = []
 
@@ -68,11 +69,11 @@ def main():
     changed = check_pairings.worktree_changed() | {rel}
     read = lambda p: Path(p).read_text(encoding="utf-8", errors="replace") if Path(p).is_file() else None
     for rid, path, msg in check_pairings.check([rel], changed, read):
-        if not already_warned(dd, f"{rid}:{path}"):
+        if not already_warned(dd, f"{session}:{rid}:{path}"):
             messages.append(f"[WARN:{rid}] {msg}")
 
     # application.yml이면 프로파일 싱크 (세션당 1회)
-    if rel.endswith("application.yml") and "/main/" in rel and not already_warned(dd, f"profiles:{rel}"):
+    if rel.endswith("application.yml") and "/main/" in rel and not already_warned(dd, f"{session}:profiles:{rel}"):
         import subprocess
         r = subprocess.run([sys.executable, str(Path(__file__).parent / "check_config_profiles.py"), rel],
                            capture_output=True, text=True)

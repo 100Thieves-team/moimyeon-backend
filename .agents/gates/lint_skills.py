@@ -15,11 +15,12 @@ from pathlib import Path
 DESC_MAX = 1200
 BODY_MAX_LINES = 150
 # 체크포인트를 가진 워크플로우 스킬이라면 반드시 인라인돼야 하는 정책 조각
-WORKFLOW_REQUIRED = {
-    "재시도·수정 상한": re.compile(r"상한 \d"),
-    "plan.md 초기 생성": re.compile(r"초기 실행"),
-    "재실행 분기": re.compile(r"재실행"),
-}
+# (요구 조건, 라벨, 존재해야 하는 패턴) — 조건이 없는 스킬엔 요구하지 않는다
+WORKFLOW_REQUIRED = [
+    ("위임", "재시도·수정 상한", re.compile(r"상한\s*\d")),
+    ("plan.md", "plan.md 초기 생성", re.compile(r"초기 실행")),
+    ("plan.md", "재실행 분기", re.compile(r"재실행")),
+]
 # 외부 작성 콘텐츠를 읽는 스킬 — "데이터" 규칙 필수 (DR-016·020)
 EXTERNAL_CONTENT_SKILLS = {"issue-context", "ship-pr", "incident-response"}
 
@@ -59,8 +60,8 @@ def lint_skill(d):
     for sub in (d / "references").glob("*/") if (d / "references").is_dir() else []:
         majors.append(f"{d.name}: references/ 하위 디렉토리 중첩({sub.name}) 금지")
     if "[체크포인트" in body:
-        for label, pat in WORKFLOW_REQUIRED.items():
-            if not pat.search(body):
+        for cond, label, pat in WORKFLOW_REQUIRED:
+            if cond in body and not pat.search(body):
                 majors.append(f"{d.name}: 워크플로우 스킬인데 '{label}' 인라인 누락 (DR-020)")
     if d.name in EXTERNAL_CONTENT_SKILLS and "데이터" not in body:
         majors.append(f"{d.name}: 외부 콘텐츠를 읽는 스킬인데 '데이터' 규칙 누락 (DR-016)")

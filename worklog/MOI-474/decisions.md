@@ -1323,3 +1323,18 @@ force push: 보호 브랜치(main·dev)로의 non-fast-forward push를 pre-push�
 - 실행형 EXPLAIN(3층 가드레일)은 read-only DB 계정 인프라가 전제라 운영
   개시 후로 이연 확정.
 - GitHub branch protection(dev·main) 설정은 사람 승인 후 별도 실행.
+
+### DR-025 정정 (2026-08-24, sonnet 메타 리뷰 반영)
+
+- 시크릿 스캐너 보강: unquoted YAML/properties 값·Stripe(sk_live)·Google
+  (AIza) 패턴 추가, Spring placeholder(`${…}`) 제외. 실레포 FP 스윕 후
+  테스트 더미 2줄에 allow 주석. (리뷰가 재현한 BLOCKER)
+- gate_hook dedup 키에 session_id 포함 — "세션당 1회" 계약 실구현.
+- PyYAML 부재 시 CI(GITHUB_ACTIONS)에서는 실패로 처리 + ci.yml에 설치
+  스텝 — 조용한 무력화 차단.
+- lint_skills 요구 조건화(위임→상한, plan.md→초기 실행·재실행) + 상한
+  regex 개행 허용 — 과다일반화로 상시 발생하던 미기록 MAJOR 7건 해소
+  (ship-pr에 plan.md 초기 생성 절 추가 포함). 재실행 결과 MAJOR 0.
+- 기록된 잔여 한계(MINOR): deny 접두사 매칭은 `cd … && terraform apply`
+  미포착(L2·안전층이 커버), config 프로파일 기본 탐색은 2단계 모듈 경로
+  가정, push 이벤트 시크릿 스캔은 직전 커밋 범위.

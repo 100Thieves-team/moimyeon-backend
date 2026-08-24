@@ -20,7 +20,9 @@ PATTERNS = [
     ("API 키 형태(sk-)", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
     ("JWT", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\b")),
     ("URL 내 자격증명", re.compile(r"\b[a-z][a-z0-9+.-]*://[^/\s:@]+:[^@\s]{4,}@")),
-    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"'][^\"'\s]{8,}[\"']")),
+    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"']?(?!\$\{)[^\"'\s$]{8,}[\"']?\s*$")),
+    ("Stripe류 키", re.compile(r"\bsk_(live|test)_[A-Za-z0-9]{10,}\b")),
+    ("Google API 키", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
 ]
 ALLOW_MARK = "gate:allow-secret"
 
@@ -31,6 +33,8 @@ def scan(lines):
         if ALLOW_MARK in line:
             continue
         for name, pat in PATTERNS:
+            if name == "평문 비밀값 대입" and "${" in line:
+                continue  # Spring placeholder 기본값은 시크릿이 아니다
             if pat.search(line):
                 hits.append((where, name))
     return hits

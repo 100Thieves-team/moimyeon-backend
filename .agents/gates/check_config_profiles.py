@@ -12,8 +12,9 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("PyYAML 없음 — 프로파일 검사 생략 (CI에서는 필수)", file=sys.stderr)
-    sys.exit(0)
+    import os
+    print("PyYAML 없음 — 프로파일 검사 불가", file=sys.stderr)
+    sys.exit(1 if os.environ.get("GITHUB_ACTIONS") else 0)
 
 DEPLOY_PROFILES = {"dev", "live"}
 PROFILE_KEY = "spring.config.activate.on-profile"

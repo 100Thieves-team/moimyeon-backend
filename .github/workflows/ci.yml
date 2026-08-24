@@ -19,6 +19,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install gate deps
+        run: pip install --quiet pyyaml
+
       - name: Skill lint
         run: python3 .agents/gates/lint_skills.py
 
