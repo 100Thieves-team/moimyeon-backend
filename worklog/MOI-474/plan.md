@@ -14,9 +14,11 @@
 - [x] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
       `docs/knowledge/release-checklist.md` 시드 (DR-014)
       (2026-08-24 승인 — 트리거 5/5·오호출 0, DR-021·022)
-- [ ] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`
+- [x] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`
       에이전트, `prompt-change` · `infra-change` · `incident-response`
       워크플로우, `docs/knowledge/llm.md` · `data.md` 시드. 각 스킬 eval 동반
+      (2026-08-24 승인 — 트리거 9/9·오호출 0, sonnet 메타 리뷰 + Claude·Codex
+      이중 평가 반영, DR-023·024)
 - [ ] Step 5 — 결정론 게이트: 변경 파일 대응 테스트·ktlint 훅, 스킬 구조·
       필수 정책 라인·plan.md 계약(생성/재개/실패 기록) lint, 시크릿 검출,
       의존성 변경 검증(멘토 §30), 권한 통제 이관(deny·훅·sandbox —
