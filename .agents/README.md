@@ -12,7 +12,8 @@
 | `agents/` | 누가: 역할 계약 (위임 프롬프트에 주입될 것을 전제로 자기완결적으로 작성) |
 | `evals/` | 측정 자산: 트리거 세트, With/Without 태스크, 러너 (DR-012) |
 
-라우팅은 `AGENTS.md`의 작업 유형 → 스킬 표가 담당한다. 별도 오케스트레이터 스킬은 없다.
+라우팅은 스킬 description 기반 직접 라우팅이다 (AGENTS.md 라우팅 표는 Step 6
+등재 예정). 별도 오케스트레이터 스킬은 없다.
 
 작업 산출물 계약은 [worklog/README.md](../worklog/README.md),
 구축 의사결정은 [worklog/MOI-474/decisions.md](../worklog/MOI-474/decisions.md) 참조.

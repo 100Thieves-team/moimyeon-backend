@@ -9,7 +9,7 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
 승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
 생략). `worklog/{이슈키}/`가 이미 있으면 재실행이다 — plan.md 체크박스
 (사람이 승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터
-재개하고, 기존 산출물은 차분만 수정한다.
+재개하고, 기존 산출물은 차분만 수정한다. 없으면 초기 실행이다 — worklog 디렉토리와 plan.md(단계 체크리스트)부터 만든다.
 
 전제: Linear 이슈 키가 주어진다. API 스펙이나 엔티티 변경이 선행돼야 하는
 이슈면 해당 산출물이 이미 있는지 확인하고, 없으면 진행하지 말고 사람에게
@@ -41,7 +41,8 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
      즉시 기록한다. 형식: [references/worklog-forms.md](references/worklog-forms.md).
 6. **리뷰** — `.agents/agents/code-reviewer.md`의 역할 계약을 읽혀
    서브에이전트에 위임한다. 입력으로 변경 파일 목록과 context.md 경로를
-   준다. 변경에 스키마·쿼리가 포함되면 `.agents/agents/db-reviewer.md`를,
+   준다. 위임 전 diff를 `worklog/{이슈키}/review-diff.patch`로 저장해 함께 준다.
+   변경에 스키마·쿼리가 포함되면 `.agents/agents/db-reviewer.md`를,
    배치·데이터 이동·백필이 포함되면 `.agents/agents/data-reviewer.md`를
    같은 입력으로 함께 위임한다. "필수" 지적은 반영한다 — 반영 루프 상한
    2회, 소진하면 plan.md에 사유를 기록하고 턴을 끝낸다. 조용히 계속하거나

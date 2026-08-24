@@ -20,10 +20,17 @@ description: 완성된 변경분을 검증하고 커밋을 나눠 PR을 만들�
    보고한다.
 2. **검증** — `./gradlew test ktlintCheck` 통과. 실패 수정 상한 3회 —
    소진하면 plan.md에 사유를 기록하고 턴을 끝낸다.
-3. **QA 게이트** — `.agents/agents/qa-reviewer.md` 위임 (변경 파일 목록 +
-   context.md 경로). `decision: BLOCK`이면 findings를 보고하고 정지한다 —
-   수정은 원 워크플로우의 몫이다. CONDITIONAL이면 조건을 PR 본문의
-   후속 작업에 명시한다.
+3. **리뷰 게이트** — 위임 전 `git diff`(기준: dev)를
+   `worklog/{이슈키}/review-diff.patch`로 저장한다. diff를 의미 기준으로
+   분류해 리뷰어를 고른다: 전 변경 공통 `.agents/agents/qa-reviewer.md`,
+   마이그레이션·엔티티·schema.sql 포함 시 `db-reviewer.md`,
+   core-batch·데이터 이동 포함 시 `data-reviewer.md`, 프롬프트·모델 설정
+   포함 시 `llm-reviewer.md`를 같은 입력(변경 파일 목록 +
+   review-diff.patch + context.md 경로)으로 함께 위임한다 — 원
+   워크플로우에서 이미 받은 리뷰는 반복하지 않는다. **판정 취합은 이
+   스킬이 소유한다**: BLOCK > 필수 > CONDITIONAL 순으로 정리해, BLOCK·
+   필수는 보고하고 정지한다(수정은 원 워크플로우 또는 사람의 몫),
+   CONDITIONAL 조건은 PR 본문의 후속 작업에 명시한다.
 4. **커밋 분할** — git.md의 커밋 단위 규칙: 관심사별 응집, 커밋별
    빌드·테스트 통과 보장. 메시지는 Angular 컨벤션, em-dash 금지,
    Co-Authored-By 트레일러 금지.

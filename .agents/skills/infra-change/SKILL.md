@@ -9,6 +9,7 @@ description: infra/terraform·Dockerfile·GitHub Actions 워크플로·docker-co
 승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
 생략). `worklog/{이슈키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
 승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터 재개한다.
+없으면 초기 실행이다 — worklog 디렉토리와 plan.md(단계 체크리스트)부터 만든다.
 
 기준 문서: `docs/knowledge/infra.md` (파이프라인·Terraform 불변식, Actions
 정책, plan 위험 요소). 시작 전 전체를 읽고, **불변식을 위반하는 변경을

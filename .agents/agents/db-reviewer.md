@@ -41,13 +41,16 @@ ddl_analysis:
 ```
 
 - 파괴적 변경(rename·drop·타입 변경·NOT NULL 추가)은 expand-contract
-  3단 분리를 요구한다 (erd-design.md).
+  3단 분리를 요구한다 (erd-design.md). 이때 contract(기존 컬럼 제거)
+  단계의 후속 이슈 생성을 지적에 포함한다 — PR 본문 후속 작업에 남긴다.
 - 대형 테이블 백필은 마이그레이션과 분리됐는지 확인한다.
 - schema.sql과 마이그레이션의 정합(단일 소스 규칙)을 확인한다.
 
 ## 입력 (위임 프롬프트로 받음)
 
 - 변경 파일 목록 (마이그레이션·엔티티·Repository·schema.sql)
+- 변경 diff patch 경로 (`worklog/{이슈키}/review-diff.patch` — 위임자가
+  `git diff`로 생성; 파일 스냅샷만으로는 변경 전후·삭제분을 볼 수 없다)
 - `worklog/{이슈키}/context.md` 경로 (있으면)
 
 ## 출력 (반환 텍스트)

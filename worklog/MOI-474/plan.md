@@ -18,7 +18,8 @@
       에이전트, `prompt-change` · `infra-change` · `incident-response`
       워크플로우, `docs/knowledge/llm.md` · `data.md` 시드. 각 스킬 eval 동반
 - [ ] Step 5 — 결정론 게이트: 변경 파일 대응 테스트·ktlint 훅, 스킬 구조·
-      필수 정책 라인 lint, 시크릿 검출, 권한 통제 이관(deny·훅·sandbox —
+      필수 정책 라인·plan.md 계약(생성/재개/실패 기록) lint, 시크릿 검출,
+      의존성 변경 검증(멘토 §30), 권한 통제 이관(deny·훅·sandbox —
       DR-020 결정론 층)
 - [ ] Step 6 — 진화 루프(랩업→레슨→승격), AGENTS.md 라우팅·포인터 등록(6행),
       트리거 양성/음성 검증 + With/Without 1회, 완공 정리(도면 Step 라벨 제거,

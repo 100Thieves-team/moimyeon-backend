@@ -9,6 +9,7 @@ description: LLM 기능의 프롬프트·모델·파라미터·출력 스키마 
 승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
 생략). `worklog/{이슈키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
 승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터 재개한다.
+없으면 초기 실행이다 — worklog 디렉토리와 plan.md(단계 체크리스트)부터 만든다.
 
 기준 문서: `docs/knowledge/llm.md`. 시작 전 전체를 읽는다.
 **eval 비교 없는 프롬프트 변경은 머지하지 않는다** — 변경 단위는
@@ -31,7 +32,7 @@ description: LLM 기능의 프롬프트·모델·파라미터·출력 스키마 
    악화된 분류가 있으면 숨기지 말고 명시한다.
    **[체크포인트 B: 비교 결과 승인]**
 7. **리뷰** — `.agents/agents/llm-reviewer.md` 위임 (변경 파일 + 비교
-   결과 위치 + context.md 경로). "필수" 반영 상한 2회 — 소진하면 plan.md에
+   결과 위치 + review-diff.patch + context.md 경로 — 위임 전 diff를 `worklog/{이슈키}/review-diff.patch`로 저장해 함께 준다.) "필수" 반영 상한 2회 — 소진하면 plan.md에
    사유를 기록하고 턴을 끝낸다.
 8. **검증** — `./gradlew test ktlintCheck` 통과 (실패 수정 상한 3회).
 9. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다. PR 본문에

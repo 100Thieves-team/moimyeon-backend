@@ -1193,3 +1193,63 @@ QA 게이트 단일 지점. 경계: **레포 qa-reviewer = 머지 전 정적 dif
 - prompt-change ↔ incident-response 접합: 사고 입력의
   historical-incidents 재투입 루프가 양쪽에 명시됨.
 - 플랫폼 예약(tbd): 장애 탐지·자동 완화, AWS 레벨 운영 액션.
+
+## DR-024: 사이클 적합성 이중 평가 반영 (Claude + Codex 교차)
+
+- 날짜: 2026-08-24
+- 상태: 승인
+
+### 결정
+
+Step 5 진입 전 `_workspace/harness-reference/` 전체(블루프린트 §4·12·14,
+멘토링 노트, 책 요약, workflow_analysis 실측, papers)를 기준으로 Claude
+서브에이전트와 Codex가 독립 평가를 수행했다. 두 평가의 합의·고유 발견을
+다음과 같이 반영한다:
+
+1. **ship-pr 리뷰 게이트 확장** (양측 합의, Codex [상]): diff를 의미
+   기준으로 분류해 db/data/llm-reviewer를 조건 위임하고, 판정 취합
+   (BLOCK > 필수 > CONDITIONAL)을 ship-pr이 소유한다 — 단독 진입 경로의
+   전문 리뷰 우회 해소 (§12 PR 이벤트 체인).
+2. **리뷰어 diff 인계 계약** (Codex [상]): 읽기 전용 tools로는 변경
+   전후·삭제분을 볼 수 없으므로, 위임자가
+   `worklog/{이슈키}/review-diff.patch`를 생성해 입력으로 준다 — 권한
+   추가 없이 최소 기능 회복. 리뷰어 5종 입력 절과 워크플로우 위임 지점
+   전부에 명시.
+3. **plan.md 초기 생성 절 인라인** (Codex [상]): DR-020 재배치에서 원본에만
+   남았던 "없으면 worklog·plan.md부터 만든다"를 워크플로우 6종 서두에
+   복원. Step 5 lint가 생성/재개/실패 기록 3요소를 검사한다.
+4. **api-connection 의미 인계** (Codex [상]): 상류 컨텍스트(context.md·
+   스펙/구현 worklog) 필수화, 연결 계획에서 요구사항 근거와 대조, 실호출
+   로컬 한정.
+5. **incident-response 완화 결과 수신 단계** (Codex [중]): 실행
+   항목·결과·복구 증거를 받은 뒤에만 사후 기록 — §12 장애 체인의 왕복
+   인계 복원.
+6. **force push 정책 정합화** (사용자 결정): 리뷰 반영 리라이트의
+   `--force-with-lease`는 허용 — AGENTS.md·safety-policy 원본을 ship-pr과
+   일치시킴 (git.md 기존 규칙과도 일치).
+7. **의존성 변경**: qa-review.md 위험 신호 등재 + Step 5 게이트 범위 추가
+   (멘토 §30 실장애 사례, Claude [중]).
+8. **expand-contract 후속 소유**: db-reviewer가 contract 단계 후속 이슈
+   생성을 지적에 포함 (Claude [하]).
+9. **tbd 예약 등재**: PRD→이슈 경로(실측 최다 작업 — Step 6 결정),
+   백업·복원 검증(시점 트리거), worktree 공통 절차, 라우팅 표 행 수
+   재산정·test_authoring 판별 기준.
+10. `.agents/README.md` 라우팅 서술을 현재 상태(직접 라우팅, 표는 Step 6
+    예정)로 정정.
+
+### 근거
+
+- 양 평가 공통 총평: 리뷰어 최소 권한·역할 경계·배치 기준·정책 3층은
+  기준 자료와 정합 — 구조 교체가 아니라 인계 계약 보수가 맞다 (Codex:
+  "에이전트 수를 늘리기보다 결정론적 경계면과 인계 계약을 먼저").
+- 실측 근거: workflow_analysis(요구사항 분석 1위·worktree 40.5%·
+  test_authoring 공동 1위)가 예약 항목의 우선순위를 정했다.
+- 기각: 다이어그램·발표 작업 지원(개인 스킬 소관, DR-011 ① 불통과 —
+  양측 합의로 제외 타당 확인), 리뷰어 Bash 권한 부여(patch 인계로 충분,
+  최소 권한 유지).
+
+### 영향
+
+- 스킬 9종 중 8종·리뷰어 5종·AGENTS.md·safety-policy 원본·qa-review.md
+  개정. Step 5 게이트 범위 2건 추가. DR-014의 "라우팅 6행"은 Step 6
+  재산정으로 대체 예정.
