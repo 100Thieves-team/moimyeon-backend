@@ -1,0 +1,10 @@
+run_id,runtime,version,prompt_id,expected,iter,detected,duration_s,raw_file
+# runtime=claude version=2.1.239 (Claude Code) N=1 date=20260824-1548 workdir=/private/tmp/claude-501/-Users-luna-Desktop-nonsync-teams-100-thieves-moimyeon-backend/27b45e1c-be58-4119-9903-c7a6e4defbc6/scratchpad/eval4-claude timeout=240s
+20260824-1548,claude,2.1.239 (Claude Code),p1,yes,1,yes,123,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/p1-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),p2,yes,1,yes,49,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/p2-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),p3,yes,1,yes,52,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/p3-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),n1,no,1,no,37,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/n1-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),n2,no,1,no,51,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/n2-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),n3,no,1,no,55,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/n3-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),b1,boundary,1,yes,53,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/b1-1.jsonl
+20260824-1548,claude,2.1.239 (Claude Code),b2,boundary,1,no,33,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/b2-1.jsonl

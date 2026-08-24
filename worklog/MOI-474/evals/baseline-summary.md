@@ -161,3 +161,34 @@ raw 트랜스크립트만 21MB. 이후 eval은 DR-017 경량 프로토콜을 따
   올려줘"): 워크트리를 검사해 "올릴 변경이 없다"며 정지·보고 — ship-pr
   1단계(변경분 검토)의 의도와 일치하는 판단. 미푸시 타 브랜치를 발견하고도
   임의 push하지 않음.
+
+---
+
+# 트리거 베이스라인 — Step 4b 3종 (스킬 9개 경쟁 상태, 축소 세트)
+
+- 날짜: 2026-08-24. 저빈도 워크플로우라 축소 세트(양성 3·음성 3·경계 2 =
+  8행, DR-023) × claude N=1 + codex 스모크 양성 각 1건. 격리 워크트리
+  (HEAD 2a0b02d0). 원본: `trigger-{스킬}-claude-20260824-*.csv`,
+  raw `*-codex-*-smoke/`.
+
+## 확정 결과 (score.py 9-스킬 교차 재집계)
+
+| 스킬 | claude 양성 | claude 음성 오호출 | codex 스모크 |
+| --- | --- | --- | --- |
+| prompt-change | 3/3 | 0/3 | 1/1 |
+| infra-change | 3/3 | 0/3 | 1/1 |
+| incident-response | 3/3 | 0/3 | 1/1 |
+
+- 9-스킬 경쟁에서 오선택 0. 교차 라우팅 정확: 각 세트의 "구현해줘"→
+  requirement-implementation(3/3), infra n3("서버 왜 죽었어")→
+  **incident-response** (신규 3자 경계 정확), incident n1(느린 쿼리)→
+  무호출(db-reviewer는 위임이라 정답).
+- 경계: incident b1(요약 빈 문자열)→incident-response — 설계한 정답
+  경로(진단 후 prompt-change 재투입). infra b1(배포 시간 줄여보자)→
+  issue-context — 다단계 요청의 일관 패턴. prompt-change b1(요약이 이상한
+  말)→prompt-change — incident와 양쪽 다 합리인 경계.
+- **차분 보강 1건**: prompt-change b2("오타 고쳐줘") 미호출 관찰 →
+  "사소한 수정도 출력에 영향" 절을 description에 추가 후 해당 1건만 N=1
+  재측정, INVOKED 확인 (DR-017 차분 재측정의 첫 적용, raw
+  `prompt-change-claude-*-delta/`). 핵심 규칙("오타 수정도 eval 비교")의
+  보호 지점이라 경계임에도 보강했다.
