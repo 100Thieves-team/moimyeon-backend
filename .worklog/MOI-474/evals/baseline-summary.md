@@ -193,3 +193,48 @@ raw 트랜스크립트만 21MB. 이후 eval은 DR-017 경량 프로토콜을 따
   재측정, INVOKED 확인 (DR-017 차분 재측정의 첫 적용, raw
   `prompt-change-claude-*-delta/`). 핵심 규칙("오타 수정도 eval 비교")의
   보호 지점이라 경계임에도 보강했다.
+
+---
+
+# 라우팅 등재 후 재측정 + With/Without — **모델 한도로 대부분 무효** (2026-08-25)
+
+DR-004·008 확정을 위해 라우팅 표 등재 후 재측정(9스킬 × p1·p2·n1 = 27세션)과
+With/Without AB(req-impl-01)를 실행했으나, **실행 도중 모델 사용량 한도**
+("You've reached your Fable 5 limit")에 걸려 대부분 무효가 됐다.
+
+## 유효분 (7건) — 라우팅 등재 후에도 트리거 유지
+
+| 스킬 | 양성 | 음성 오호출 |
+| --- | --- | --- |
+| issue-context | 2/2 | 0/1 |
+| requirement-implementation | 2/2 | 0/1 |
+| api-spec-definition | 1/1 (p1) | — |
+| infra-change | — | 0/1 |
+
+- 유효 양성 5/5 호출, 유효 음성 오호출 0/3. 등재 전 베이스라인과 동일한
+  경향이나 **표본이 작아 DR-004·008 확정 근거로는 불충분** — 잠정 유지.
+- 나머지 16건은 LIMIT(측정 불가). 원본:
+  `trigger-routing-claude-20260825-0336.csv`, raw `routing-claude-*/`.
+
+## With/Without AB — 무효
+
+- With: 스킬(`requirement-implementation`)을 정확히 호출하고 컨텍스트 수집·
+  코드 탐색까지 9턴 진행하다 한도로 중단. 산출물 없음.
+- Without: 0턴, 즉시 한도. 비교 불가.
+- Without 구성 방법은 검증됐다(재현 가능): `.agents/` 이름변경으로 심링크 3개
+  차단 + `.claude/settings.json` 제거 + AGENTS.md 라우팅 섹션만 삭제
+  (docs/는 양쪽 유지 — 하네스의 가치를 재는 것이지 문서의 가치가 아니다).
+
+## 추가 교훈
+
+9. **한도 문구를 하드코딩하면 침묵 실패한다.** 교훈 8에서 넣은 감지는
+   `"hit your session limit"` 한 문구뿐이었는데, 이번 한도는
+   `"reached your Fable 5 limit"`라 걸리지 않아 **16건이 미호출(no)로
+   오집계**됐다. 같은 실패의 재발이다. `LIMIT_TEXT` 정규식을 넓히고
+   (`reached your …limit`·`usage limit` 포함), 호출 후 한도는 INVOKED로,
+   호출 전 한도만 LIMIT으로 판정하게 정정했다.
+   - 시도했다가 되돌린 것: result 이벤트의 `is_error`를 구조적 신호로 쓰기.
+     **max-turns 소진에도 켜져서** 정상 음성(4턴 소진 후 미호출)을 ERROR로
+     오분류했다 — 한도 신호로 쓸 수 없다.
+10. 헤드리스 `claude -p`는 세션 모델 설정과 무관하게 CLI 기본 모델을 쓴다.
+    긴 배치 전에 한도 여유를 확인하거나 `--model`을 명시할 것.

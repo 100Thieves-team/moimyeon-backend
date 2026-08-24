@@ -26,13 +26,21 @@ runtime = "claude" if "claude" in raw_dir.name else "codex"
 claude_pat = re.compile(r'"skill": ?"%s"|Launching skill: %s' % (re.escape(skill), re.escape(skill)))
 
 
+# 실행 실패(사용량 한도 등)는 미호출과 구분해야 한다. 문구는 런타임 업데이트로
+# 바뀌므로("hit your session limit" → "reached your Fable 5 limit", 2026-08-25에
+# 16건 오집계) 문구가 아니라 result 이벤트의 is_error를 1차 신호로 쓴다.
+LIMIT_TEXT = re.compile(r"hit your session limit|reached your .{0,30}limit|usage limit")
+
+
 def score_claude(path: Path) -> str:
     text = path.read_text(encoding="utf-8", errors="replace")
-    # 사용량 한도 응답은 실행 자체가 안 된 것 — 미호출로 세면 안 된다
-    # (2026-08-23 entity-design claude 19/24건이 이걸로 무효)
-    if "hit your session limit" in text:
-        return "LIMIT"
-    return "INVOKED" if claude_pat.search(text) else "no"
+    invoked = bool(claude_pat.search(text))
+    # 호출 후 한도에 걸린 것은 트리거가 관측된 것이므로 INVOKED가 맞다.
+    # 호출 전에 한도로 죽었으면 미호출이 아니라 측정 불가(LIMIT)다.
+    # result의 is_error는 max-turns 소진으로도 켜지므로 한도 신호로 쓰지 않는다.
+    if invoked:
+        return "INVOKED"
+    return "LIMIT" if LIMIT_TEXT.search(text) else "no"
 
 
 def score_codex(path: Path) -> str:

@@ -66,7 +66,8 @@ while IFS=$'\t' read -r id type expected prompt; do
           --sandbox read-only "$prompt" < /dev/null > "$raw" 2>&1 ) || true
     fi
     dur=$(( $(date +%s) - start ))
-    if grep -q "hit your session limit" "$raw"; then detected=LIMIT
+    # 한도·에러 문구는 런타임 업데이트로 바뀐다 — 확정 집계는 score.py(is_error 기반)
+    if grep -qE "hit your session limit|reached your .{0,30}limit" "$raw"; then detected=LIMIT
     elif grep -qE "$PATTERN" "$raw"; then detected=yes; else detected=no; fi
     echo "$STAMP,$RUNTIME,$(version),$id,$expected,$i,$detected,$dur,$raw" >> "$CSV"
     echo "[$id iter$i] expected=$expected detected=$detected (${dur}s)"
