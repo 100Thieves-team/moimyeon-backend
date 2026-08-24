@@ -5,8 +5,11 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
 
 # requirement-implementation — 요구사항 구현 (service TDD)
 
-[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를 따른다.
-`worklog/{이슈키}/`가 이미 있으면 재실행 분기부터 시작한다.
+진행 규칙: `[체크포인트]`에서는 산출물을 제시하고 **턴을 끝낸다** — 사람
+승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
+생략). `worklog/{이슈키}/`가 이미 있으면 재실행이다 — plan.md 체크박스
+(사람이 승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터
+재개하고, 기존 산출물은 차분만 수정한다.
 
 전제: Linear 이슈 키가 주어진다. API 스펙이나 엔티티 변경이 선행돼야 하는
 이슈면 해당 산출물이 이미 있는지 확인하고, 없으면 진행하지 말고 사람에게
@@ -30,11 +33,14 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
    - 시작 전 `docs/conventions/layers.md`, `testing.md`, `errors.md`를
      정독한다. 엔티티·스키마를 건드리게 되면 `storage.md`도.
    - 테스트를 하나씩 통과시키며 진행한다. 스타일은 `kotlin-style.md`.
+     테스트 실패 수정은 3회 상한 — 소진하면 plan.md에
+     `실패(재시도 3회 소진): 사유`를 기록하고 턴을 끝낸다.
    - 구현 중 내린 결정은 `decisions.md`에, 요구사항 모호점은 `tbd.md`에
      즉시 기록한다. 형식: [references/worklog-forms.md](references/worklog-forms.md).
 6. **리뷰** — `.agents/agents/code-reviewer.md`의 역할 계약을 읽혀
    서브에이전트에 위임한다. 입력으로 변경 파일 목록과 context.md 경로를
-   준다. "필수" 지적은 반영한다 — 반영 루프 상한 2회.
+   준다. "필수" 지적은 반영한다 — 반영 루프 상한 2회, 소진하면 plan.md에
+   사유를 기록하고 턴을 끝낸다. 조용히 계속하거나 조용히 포기하지 않는다.
 7. **검증** — `./gradlew test ktlintCheck` 통과 확인.
    **[체크포인트 C: 구현 승인]**
 8. **커밋·PR** — `docs/conventions/git.md` 준수. `tbd.md`의 PRD 반영 대상

@@ -5,9 +5,11 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 
 # entity-design — 엔티티·테이블 설계
 
-[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를
-따른다. `worklog/{이슈키}/`가 있으면 재실행 분기부터 — 1단 합의가 끝난
-상태면 2단부터 시작한다.
+진행 규칙: `[체크포인트]`에서는 산출물을 제시하고 **턴을 끝낸다** — 사람
+승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
+생략). `worklog/{이슈키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
+승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터 재개하고,
+기존 산출물은 차분만 수정한다. 1단 합의가 끝난 상태면 2단부터 시작한다.
 
 ## 1단 — 논리 모델링 (팀 회의 인풋)
 
@@ -36,9 +38,10 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
    반영한다. 물리 스키마의 단일 소스는 schema.sql이다 — erd.dbml은 이슈
    단위 논리 설계 기록으로 남기고 이후 갱신 의무를 지지 않는다.
 7. **리뷰** — `.agents/agents/db-reviewer.md` 위임 (마이그레이션·엔티티 파일
-   + context.md 경로). ddl_analysis 판정 포함. 반영 상한 2회.
+   + context.md 경로). ddl_analysis 판정 포함. 반영 상한 2회 — 소진하면
+   plan.md에 사유를 기록하고 턴을 끝낸다.
 8. **검증** — `./gradlew test ktlintCheck` 통과 (Flyway 버전 중복은 CI가
-   차단).
+   차단). 실패 수정 상한 3회 — 소진 시 기록 후 턴 종료.
    **[체크포인트 B: 구현 승인]**
 9. **커밋·PR** — 합의에서 달라진 점이 있으면 decisions.md에 기록.
 

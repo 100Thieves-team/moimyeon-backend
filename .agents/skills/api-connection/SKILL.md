@@ -5,8 +5,11 @@ description: 정의된 API 스펙(Controller·모킹)과 구현된 Service를 �
 
 # api-connection — 스펙과 Service 배선
 
-[execution-policy.md](../../execution-policy.md)·[safety-policy.md](../../safety-policy.md)를
-따른다. `worklog/{이슈키}/`가 있으면 재실행 분기부터.
+진행 규칙: `[체크포인트]`에서는 산출물을 제시하고 **턴을 끝낸다** — 사람
+승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
+생략). `worklog/{이슈키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
+승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터 재개하고,
+기존 산출물은 차분만 수정한다.
 
 ## 단계
 
@@ -20,8 +23,10 @@ description: 정의된 API 스펙(Controller·모킹)과 구현된 Service를 �
    **[체크포인트 A: 계획 승인]**
 4. **배선** — 모킹 스텁 제거, `toXxx()`/`from()` 변환 연결(api-design.md
    변환 방향), RestDocs 테스트를 실구현 기준으로 교체(모킹→실구현 전환 규칙).
-5. **리뷰** — `.agents/agents/code-reviewer.md` 위임. 반영 상한 2회.
-6. **검증** — `./gradlew test ktlintCheck` 통과 + **도커로 기동해 curl로
+5. **리뷰** — `.agents/agents/code-reviewer.md` 위임. 반영 상한 2회 —
+   소진하면 plan.md에 사유를 기록하고 턴을 끝낸다.
+6. **검증** — `./gradlew test ktlintCheck` 통과(실패 수정 상한 3회, 소진 시
+   기록 후 턴 종료) + **도커로 기동해 curl로
    대표 시나리오(성공 1·에러 1 이상) 실호출**하고 요청·응답을
    `worklog/{이슈키}/`에 기록한다.
    (도구는 curl — 에이전트가 설치·GUI 의존 없이 실행·기록·판정할 수 있다.
