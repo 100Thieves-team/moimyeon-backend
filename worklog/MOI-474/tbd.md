@@ -8,11 +8,8 @@
     MySQL 원전), expand-contract 8단계 상세
   - ~~Step 4 `qa-reviewer`~~ → DR-022로 벤더링 완료
     (docs/knowledge/qa-review.md + release-checklist.md 시드)
-  - Step 4b `incident-response`: MySQL 장애 진단 순서 + 완화 사다리(낮은
-    위험부터), SRE 완화 사다리(flag off→…→직접 변조 최후)
-  - Step 4b `prompt-change`·eval 확장: eval dataset 10분류(adversarial·
-    historical-incidents·prompt-injection 등), historical-incidents 재투입
-    루프(진화 루프와 접합)
+  - ~~Step 4b `incident-response`·`prompt-change`~~ → DR-023으로 벤더링
+    완료 (llm.md·data.md·infra.md 시드, 완화 사다리·10분류·재투입 루프)
   - 보관: Redis dataset 분류 스키마(cache/lock·rebuildable·fail-open/closed)
     — Redis 실사용 시점에
   - ~~공유 안전 정책 신설~~ → DR-016으로 해소 (Step 3에서 safety-policy.md 신설)
@@ -33,6 +30,11 @@
   (스킬 확정 — DR-011 3중 테스트 통과, 워크플로우 4종 공통부 수렴).
 - (예약) 팀 개발 플랫폼에 qa-engineer가 실제 배치되면 레포 qa-reviewer와의
   중복을 재평가한다 (DR-022 경계: 레포=머지 전 정적, 플랫폼=배포 후 런타임).
+- (예약) 플랫폼 소관으로 이연한 것 (DR-023 배치 기준): 장애 탐지·자동
+  완화 실행, AWS 레벨 운영 액션. infra-reviewer는 미도입 — infra-change
+  사용 빈도 관찰 후 재평가.
+- (예약) `docs/knowledge/infra.md`는 배포 개편 하위 이슈들이 상세를
+  확정할 때마다 동기화한다 (Terraform CI 이전 완료 시 과도기 규칙 제거).
 - ~~Codex용 커스텀 에이전트 정의(toml) 필요성~~ → DR-013으로 해소
   (프롬프트 주입 방식, 어댑터 미도입. 마찰 실측 시 재검토).
 - DR-004·008은 승인(잠정): Step 6에서 트리거 양성/음성/경계 프롬프트로
