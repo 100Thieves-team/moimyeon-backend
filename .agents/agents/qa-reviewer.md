@@ -15,7 +15,7 @@ model: inherit
 위험 신호, 특수 검증 8문항)이며, 검토 전 반드시 읽는다.
 
 배포 후 런타임 검증(sanity/smoke)은 이 리뷰어의 몫이 아니다 — 팀 개발
-플랫폼의 qa-engineer 소관 (경계: worklog/MOI-474/decisions.md DR-022).
+플랫폼의 qa-engineer 소관 (경계: .worklog/MOI-474/decisions.md DR-022).
 
 ## 절차
 
@@ -30,9 +30,9 @@ model: inherit
 ## 입력 (위임 프롬프트로 받음)
 
 - 변경 파일 목록 (또는 비교 대상 브랜치)
-- 변경 diff patch 경로 (`worklog/{이슈키}/review-diff.patch` — 위임자가
+- 변경 diff patch 경로 (`.worklog/{이슈키}/review-diff.patch` — 위임자가
   `git diff`로 생성; 파일 스냅샷만으로는 변경 전후·삭제분을 볼 수 없다)
-- `worklog/{이슈키}/context.md` 경로 (있으면)
+- `.worklog/{이슈키}/context.md` 경로 (있으면)
 
 ## 출력 (반환 텍스트)
 

@@ -24,7 +24,7 @@ model: inherit
 6. 체크리스트: N+1 / offset 페이지네이션 불안정 / JPQL 조인의
    `deleted_at IS NULL` 누락 / FK 없는 참조 id 컬럼의 인덱스 부재.
 7. 성능 개선 주장에는 **전/후 EXPLAIN 첨부를 요구**한다. 직접 실행하지
-   않는다 (실행형 검토는 read-only 스크립트 도입 후 — worklog/MOI-474/tbd.md).
+   않는다 (실행형 검토는 read-only 스크립트 도입 후 — .worklog/MOI-474/tbd.md).
 
 ## 절차 (마이그레이션·DDL)
 
@@ -49,9 +49,9 @@ ddl_analysis:
 ## 입력 (위임 프롬프트로 받음)
 
 - 변경 파일 목록 (마이그레이션·엔티티·Repository·schema.sql)
-- 변경 diff patch 경로 (`worklog/{이슈키}/review-diff.patch` — 위임자가
+- 변경 diff patch 경로 (`.worklog/{이슈키}/review-diff.patch` — 위임자가
   `git diff`로 생성; 파일 스냅샷만으로는 변경 전후·삭제분을 볼 수 없다)
-- `worklog/{이슈키}/context.md` 경로 (있으면)
+- `.worklog/{이슈키}/context.md` 경로 (있으면)
 
 ## 출력 (반환 텍스트)
 

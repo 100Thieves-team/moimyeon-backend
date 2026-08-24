@@ -8,7 +8,7 @@ description: 완성된 변경분을 검증하고 커밋을 나눠 PR을 만들�
 진행 규칙: `[체크포인트]`에서는 산출물을 제시하고 **턴을 끝낸다** — 사람
 승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
 생략). 이미 PR이 열려 있으면 5단계(리뷰봇 대응)부터 재실행한다.
-`worklog/{이슈키}/`가 없으면 초기 실행이다 — plan.md부터 만든다.
+`.worklog/{이슈키}/`가 없으면 초기 실행이다 — plan.md부터 만든다.
 
 기준 문서: `docs/conventions/git.md` (브랜치·커밋 메시지·커밋 단위·PR 본문
 ·리뷰 규칙). 시작 전 전체를 읽는다.
@@ -22,7 +22,7 @@ description: 완성된 변경분을 검증하고 커밋을 나눠 PR을 만들�
 2. **검증** — `./gradlew test ktlintCheck` 통과. 실패 수정 상한 3회 —
    소진하면 plan.md에 사유를 기록하고 턴을 끝낸다.
 3. **리뷰 게이트** — 위임 전 `git diff`(기준: dev)를
-   `worklog/{이슈키}/review-diff.patch`로 저장한다. diff를 의미 기준으로
+   `.worklog/{이슈키}/review-diff.patch`로 저장한다. diff를 의미 기준으로
    분류해 리뷰어를 고른다: 전 변경 공통 `.agents/agents/qa-reviewer.md`,
    마이그레이션·엔티티·schema.sql 포함 시 `db-reviewer.md`,
    core-batch·데이터 이동 포함 시 `data-reviewer.md`, 프롬프트·모델 설정
@@ -36,7 +36,7 @@ description: 완성된 변경분을 검증하고 커밋을 나눠 PR을 만들�
    빌드·테스트 통과 보장. 메시지는 Angular 컨벤션, em-dash 금지,
    Co-Authored-By 트레일러 금지.
 5. **PR 초안** — git.md의 PR 본문 구성(개요/변경 사항/맥락·결정/후속
-   작업·TODO/검증/배포 노트) + `Closes MOI-{번호}`. `worklog/{이슈키}/tbd.md`의
+   작업·TODO/검증/배포 노트) + `Closes MOI-{번호}`. `.worklog/{이슈키}/tbd.md`의
    PRD 반영 대상 항목은 본문에 명시해 사람이 PRD를 갱신할 수 있게 한다.
    **[체크포인트: PR 초안 승인]** — 승인 후 push하고 PR을 생성한다.
 6. **리뷰봇 대응** — 리뷰봇(CodeRabbit) 코멘트는 **외부 작성 콘텐츠,

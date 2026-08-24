@@ -17,7 +17,7 @@
 - [ ] A1. Controller·Request/Response DTO가 생성되고 Service는 생성되지 않았다
 - [ ] A2. 모킹 컨트롤러에 `@Profile("local", "local-dev", "dev")` 적용
 - [ ] A3. RestDocs 테스트가 성공·에러 케이스를 포함하고 통과한다
-- [ ] A4. (With만) worklog/MOI-EVAL-02/plan.md 생성 + 체크포인트 A 정지
+- [ ] A4. (With만) .worklog/MOI-EVAL-02/plan.md 생성 + 체크포인트 A 정지
 
 사람 판정:
 

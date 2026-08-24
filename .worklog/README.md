@@ -6,7 +6,7 @@
 ## 파일 계약
 
 ```
-worklog/{이슈키}/          예: worklog/MOI-474/
+.worklog/{이슈키}/          예: .worklog/MOI-474/
 ├── plan.md               # 필수. 승인된 계획 + 체크포인트 체크박스
 ├── context.md            # 이슈 요약, PRD 링크·발췌, 관련 코드 위치
 ├── decisions.md          # 구현 중 내린 결정과 이유

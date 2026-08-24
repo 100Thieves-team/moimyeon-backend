@@ -17,8 +17,8 @@
 라우팅은 `AGENTS.md`의 작업 유형 → 스킬 표와 각 스킬 description이 담당한다.
 별도 오케스트레이터 스킬은 없다 (DR-008).
 
-작업 산출물 계약은 [worklog/README.md](../worklog/README.md),
-구축 의사결정은 [worklog/MOI-474/decisions.md](../worklog/MOI-474/decisions.md) 참조.
+작업 산출물 계약은 [.worklog/README.md](../.worklog/README.md),
+구축 의사결정은 [.worklog/MOI-474/decisions.md](../.worklog/MOI-474/decisions.md) 참조.
 
 ![하네스 아키텍처](harness-architecture.drawio.svg)
 

@@ -1,6 +1,6 @@
 # worklog 기록 양식
 
-파일 계약은 [worklog/README.md](../../../../worklog/README.md) 참조.
+파일 계약은 [.worklog/README.md](../../../../.worklog/README.md) 참조.
 
 ## decisions.md 항목
 

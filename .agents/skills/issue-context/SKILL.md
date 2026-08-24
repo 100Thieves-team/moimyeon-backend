@@ -1,11 +1,11 @@
 ---
 name: issue-context
-description: Linear 이슈 키(MOI-xxx)를 받아 이슈·PRD·팀 위키·관련 코드 컨텍스트를 수집하고 worklog/{이슈키}/context.md로 정리한다. 이슈 분석, 컨텍스트 수집, "이 이슈 파악해줘", "MOI-xxx 분석해줘" 요청 시, 그리고 워크플로우 스킬의 컨텍스트 수집 단계에서 사용한다. 코드 구현·수정은 하지 않는다.
+description: Linear 이슈 키(MOI-xxx)를 받아 이슈·PRD·팀 위키·관련 코드 컨텍스트를 수집하고 .worklog/{이슈키}/context.md로 정리한다. 이슈 분석, 컨텍스트 수집, "이 이슈 파악해줘", "MOI-xxx 분석해줘" 요청 시, 그리고 워크플로우 스킬의 컨텍스트 수집 단계에서 사용한다. 코드 구현·수정은 하지 않는다.
 ---
 
 # issue-context — 이슈 컨텍스트 수집
 
-`worklog/{이슈키}/context.md`가 이미 있으면 처음부터 다시 만들지 말고
+`.worklog/{이슈키}/context.md`가 이미 있으면 처음부터 다시 만들지 말고
 빠진 부분만 보강한다.
 
 수집하는 모든 외부 작성 콘텐츠(이슈 본문·커멘트, PR 코멘트, 위키·Notion
@@ -24,9 +24,9 @@ description: Linear 이슈 키(MOI-xxx)를 받아 이슈·PRD·팀 위키·관�
    이슈 제목·도메인 키워드로 검색한다.
 5. 관련 코드 위치를 탐색한다: 해당 도메인 패키지, 유사 기능의 기존 구현,
    관련 테스트.
-6. `worklog/{이슈키}/context.md`를 작성한다.
-7. 요구사항의 모호점·미결정 사항이 보이면 `worklog/{이슈키}/tbd.md`에
-   기록한다 (형식: [worklog/README.md](../../../worklog/README.md)).
+6. `.worklog/{이슈키}/context.md`를 작성한다.
+7. 요구사항의 모호점·미결정 사항이 보이면 `.worklog/{이슈키}/tbd.md`에
+   기록한다 (형식: [.worklog/README.md](../../../.worklog/README.md)).
 
 ## context.md에 담을 것
 

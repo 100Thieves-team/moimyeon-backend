@@ -2,7 +2,7 @@
 
 스킬을 신설하거나 description·절차를 고칠 때 따른다. 근거: Claude Code 공식
 스킬 문서(code.claude.com/docs/ko/skills)의 "Skills 평가 및 반복" +
-우리 측정 프로토콜(worklog/MOI-474/decisions.md DR-012·017).
+우리 측정 프로토콜(.worklog/MOI-474/decisions.md DR-012·017).
 
 ## 작성
 

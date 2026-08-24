@@ -6,7 +6,7 @@
       따른다 (docs/conventions/testing.md)
 - [ ] A2. 취소 불가 케이스가 에러 코드와 함께 테스트된다
 - [ ] A3. `./gradlew test ktlintCheck` 통과
-- [ ] A4. (With만) worklog/MOI-EVAL-01/에 plan.md가 생성되고 체크포인트에서
+- [ ] A4. (With만) .worklog/MOI-EVAL-01/에 plan.md가 생성되고 체크포인트에서
       정지했다
 
 사람 판정 (rubric):

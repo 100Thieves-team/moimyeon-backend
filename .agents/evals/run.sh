@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 하네스 트리거 eval 러너
 # 사용: .agents/evals/run.sh trigger <claude|codex> <반복수N> [워킹디렉토리] [스킬명]
-# 결과: worklog/MOI-474/evals/trigger-<runtime>-<날짜>.csv + raw/
+# 결과: .worklog/MOI-474/evals/trigger-<runtime>-<날짜>.csv + raw/
 #
 # 감지 규칙: 스킬 메타데이터(이름+description 상시 노출)와 실제 호출을
 # 구분하기 위해, 이름 단독이 아니라 "경로/파일 접근 또는 명시 호출" 패턴만
@@ -14,7 +14,7 @@ WORKDIR="${4:-$ROOT}"
 SKILL="${5:-requirement-implementation}"
 TSV="$ROOT/.agents/evals/trigger/$SKILL.tsv"
 STAMP="$(date +%Y%m%d-%H%M)"
-OUT_DIR="$ROOT/worklog/MOI-474/evals"
+OUT_DIR="$ROOT/.worklog/MOI-474/evals"
 RAW_DIR="$OUT_DIR/raw/$SKILL-$RUNTIME-$STAMP"
 CSV="$OUT_DIR/trigger-$SKILL-$RUNTIME-$STAMP.csv"
 mkdir -p "$RAW_DIR"

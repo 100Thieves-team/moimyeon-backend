@@ -279,19 +279,19 @@ worklog 파일 계약(DR-007)으로 주고받는" 모델로 한정한다.
 
 ---
 
-## DR-006: 작업 산출물은 worklog/에 커밋, _workspace/는 개인 스크래치
+## DR-006: 작업 산출물은 .worklog/에 커밋, _workspace/는 개인 스크래치
 
 - 날짜: 2026-08-19
 - 상태: 승인
 
 ### 결정
 
-- 작업 산출물(계획·결정·TBD 기록)은 `worklog/{이슈키}/`에 저장하고 커밋한다.
+- 작업 산출물(계획·결정·TBD 기록)은 `.worklog/{이슈키}/`에 저장하고 커밋한다.
 - `_workspace/`는 gitignore를 유지하고 개인 스크래치 전용으로 남긴다.
 - worklog는 어떤 항상-로드 경로(AGENTS.md 등)에도 연결하지 않는다.
   해당 이슈를 작업할 때만 온디맨드로 읽는다.
 - 정리 규칙: 이슈가 머지되고 일반화할 가치가 있는 내용은 `docs/knowledge/`로
-  승격한 뒤, 오래된 worklog 디렉토리는 삭제할 수 있다. 정교한 GC 정책은
+  승격한 뒤, 오래된 .worklog 디렉토리는 삭제할 수 있다. 정교한 GC 정책은
   운영 경험이 쌓인 뒤 정한다.
 
 ### 근거
@@ -314,7 +314,7 @@ worklog 파일 계약(DR-007)으로 주고받는" 모델로 한정한다.
 
 ### 영향
 
-- `.gitignore`의 `_workspace/`는 유지, `worklog/`는 커밋 대상.
+- `.gitignore`의 `_workspace/`는 유지, `.worklog/`는 커밋 대상.
 - worklog가 재실행 분기(이어하기)의 상태 저장소 역할을 겸한다(DR-007, DR-009).
 
 ---
@@ -326,7 +326,7 @@ worklog 파일 계약(DR-007)으로 주고받는" 모델로 한정한다.
 
 ### 결정
 
-`worklog/{이슈키}/`의 파일명과 역할을 고정한다.
+`.worklog/{이슈키}/`의 파일명과 역할을 고정한다.
 
 | 파일 | 역할 | 쓰는 시점 |
 | --- | --- | --- |
@@ -489,7 +489,7 @@ worklog 파일 계약(DR-007)으로 주고받는" 모델로 한정한다.
 - 워크플로우 실행(메인 세션)은 체크포인트에서 **턴을 끝내고** 산출물을 제시한
   뒤 승인을 기다린다. 승인 없이 다음 단계로 넘어가지 않는다.
 - 기본값은 체크포인트 ON. 사용자가 "끝까지 진행해" 등으로 명시하면 해제한다.
-- 진행 상태는 `worklog/{이슈키}/plan.md`의 체크박스로 기록한다.
+- 진행 상태는 `.worklog/{이슈키}/plan.md`의 체크박스로 기록한다.
   새 세션(다른 사람·다른 런타임 포함)은 plan.md를 읽고 마지막 승인 지점부터
   이어간다.
 
@@ -554,7 +554,7 @@ worklog 파일 계약(DR-007)으로 주고받는" 모델로 한정한다.
 
 - 완공(Step 6) 시 일반화 가치가 있는 결정은 docs/knowledge/로 승격한 뒤
   이 worklog는 GC 대상이 될 수 있다.
-- 로드맵·체크포인트는 worklog/MOI-474/plan.md가 담는다.
+- 로드맵·체크포인트는 .worklog/MOI-474/plan.md가 담는다.
 ## DR-011: 워크플로우의 추상화 수준 정의
 
 - 날짜: 2026-08-21
@@ -666,7 +666,7 @@ p^n 복리 하락·자기조건화(arXiv:2509.09677).
   - `trigger/` — 라우팅 검증용 양성/음성/경계 프롬프트 세트
   - `ab/` — With/Without 태스크 정의 + assertion
   - `README.md` — 실행 방법·재현 조건
-- 측정 결과는 `worklog/{이슈키}/evals/`에 커밋한다 — 근거가 레포에 남는다.
+- 측정 결과는 `.worklog/{이슈키}/evals/`에 커밋한다 — 근거가 레포에 남는다.
 - **스킬의 TDD**: 새 워커 스킬은 eval 세트(트리거 양성/음성 + With/Without
   태스크 1개 이상)를 스킬 본문보다 먼저 작성한다.
 - 러너는 헤드리스 실행(`claude -p`, `codex exec`)으로 트리거 여부·산출물
@@ -975,7 +975,7 @@ schema.sql 갱신 PR, 체크포인트 B) 구조로 확정한다. 예정했던 Wi
 ### 결정
 
 entity-design 1단은 개념 모델링과 논리 모델링을 한 번에 진행하고 산출물은
-논리 모델 — `worklog/{이슈키}/erd.dbml`(DBML)이다. 회의에서는 DBML
+논리 모델 — `.worklog/{이슈키}/erd.dbml`(DBML)이다. 회의에서는 DBML
 렌더링(IntelliJ·VSCode 플러그인)으로 본다. 2단은 물리 모델링(MySQL 컬럼
 타입·인덱스·제약 확정)을 명시 단계로 갖고, 그 결과를 JPA 엔티티 + Flyway +
 schema.sql로 반영한다.
@@ -1212,7 +1212,7 @@ Step 5 진입 전 `_workspace/harness-reference/` 전체(블루프린트 §4·12
    전문 리뷰 우회 해소 (§12 PR 이벤트 체인).
 2. **리뷰어 diff 인계 계약** (Codex [상]): 읽기 전용 tools로는 변경
    전후·삭제분을 볼 수 없으므로, 위임자가
-   `worklog/{이슈키}/review-diff.patch`를 생성해 입력으로 준다 — 권한
+   `.worklog/{이슈키}/review-diff.patch`를 생성해 입력으로 준다 — 권한
    추가 없이 최소 기능 회복. 리뷰어 5종 입력 절과 워크플로우 위임 지점
    전부에 명시.
 3. **plan.md 초기 생성 절 인라인** (Codex [상]): DR-020 재배치에서 원본에만
@@ -1391,3 +1391,45 @@ force push: 보호 브랜치(main·dev)로의 non-fast-forward push를 pre-push�
 - AGENTS.md·`.agents/README.md`·knowledge/conventions README·git.md 개정,
   `.agents/skill-authoring.md` 신설.
 - 남은 완공 작업: 아키텍처 도면 갱신, 라우팅 후 재측정(이연).
+
+## DR-027: worklog → .worklog 리네임 (IDE 정렬용)
+
+- 날짜: 2026-08-24
+- 상태: 승인
+
+### 결정
+
+`worklog/` 디렉토리를 `.worklog/`로 리네임한다. 참조하는 모든 커밋 대상
+파일(스킬 9종, 에이전트 5종, `.agents/README.md`·`execution-policy.md`·
+`skill-authoring.md`, `docs/knowledge/qa-review.md`, `.worklog/` 내부 문서,
+`.gitignore`)을 갱신했다. `docs/`는 이번에 건드리지 않는다 — 이유는 아래.
+
+### 근거
+
+- 사용자 요청(2026-08-24): IDE 파일 트리에서 정렬 순서를 위로 올리기 위해
+  `docs`·`worklog` 앞에 `.`을 붙이고 싶다.
+- `worklog/`는 외부 URL·CI·서드파티 도구에 문자열로 걸리는 곳이 없어
+  전면 치환이 안전했다 (검증: 리네임 후 게이트 셀프 테스트 7/7 통과,
+  스킬 lint 통과, 전체 레포에서 dot 없는 `worklog/` 잔존 0건 — raw/
+  이력 jsonl·CSV는 제외, 그 시점의 실제 경로를 기록한 감사 로그라 원문
+  유지가 맞다).
+- `docs/`는 리네임하지 않는다: `.review-swarm.yaml`(CodeRabbit 리뷰 자동화
+  설정)이 `docs/conventions/*`·`docs/knowledge/*`를 knowledgeFiles·
+  path-trigger(`docs/**`)로 15곳 이상 기능적으로 참조한다 — 여기서 실수하면
+  리뷰봇 컨텍스트 로딩이 조용히 깨진다. 또한 `docs/`는 GitHub Pages·
+  MkDocs·Docusaurus 등이 인식하는 관례 이름이라 표준 도구 호환을 잃고,
+  ripgrep·fd·VS Code Quick Open 등 다수 도구가 기본으로 dot 디렉토리를
+  검색에서 제외해 오히려 탐색성이 떨어진다. 정렬이라는 사소한 이득 대비
+  비용이 크다고 판단해 사용자에게 근거와 함께 보류를 제안했다.
+
+### 대안
+
+- `docs/`도 함께 리네임: 위 근거로 기각(사용자 확인 대기 — 원하면 별도
+  세션에서 `.review-swarm.yaml`까지 정확히 갱신하고 재실행).
+
+### 영향
+
+- `.worklog/**/evals/raw/`로 `.gitignore` 패턴 갱신.
+- `infra/`는 리네임 대상 논의에서 제외 — 실행 가능한 IaC이자 CI가 문자열로
+  참조하는 코드이지 메타 문서가 아니라, docs·worklog와 층이 다르다는
+  사용자 관찰이 맞다.
