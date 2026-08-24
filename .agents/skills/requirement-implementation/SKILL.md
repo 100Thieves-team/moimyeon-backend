@@ -14,6 +14,7 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
 전제: Linear 이슈 키가 주어진다. API 스펙이나 엔티티 변경이 선행돼야 하는
 이슈면 해당 산출물이 이미 있는지 확인하고, 없으면 진행하지 말고 사람에게
 알린다 (선행 워크플로우: api-spec-definition, entity-design).
+프롬프트·모델 설정만의 변경이면 이 워크플로우가 아니라 prompt-change다.
 
 ## 단계
 
@@ -40,8 +41,11 @@ description: Linear 이슈의 요구사항을 service 테스트로 스펙화하�
      즉시 기록한다. 형식: [references/worklog-forms.md](references/worklog-forms.md).
 6. **리뷰** — `.agents/agents/code-reviewer.md`의 역할 계약을 읽혀
    서브에이전트에 위임한다. 입력으로 변경 파일 목록과 context.md 경로를
-   준다. "필수" 지적은 반영한다 — 반영 루프 상한 2회, 소진하면 plan.md에
-   사유를 기록하고 턴을 끝낸다. 조용히 계속하거나 조용히 포기하지 않는다.
+   준다. 변경에 스키마·쿼리가 포함되면 `.agents/agents/db-reviewer.md`를,
+   배치·데이터 이동·백필이 포함되면 `.agents/agents/data-reviewer.md`를
+   같은 입력으로 함께 위임한다. "필수" 지적은 반영한다 — 반영 루프 상한
+   2회, 소진하면 plan.md에 사유를 기록하고 턴을 끝낸다. 조용히 계속하거나
+   조용히 포기하지 않는다.
 7. **검증** — `./gradlew test ktlintCheck` 통과 확인.
    **[체크포인트 C: 구현 승인]**
 8. **커밋·PR** — `.agents/skills/ship-pr/SKILL.md`를 수행한다 (검증·QA

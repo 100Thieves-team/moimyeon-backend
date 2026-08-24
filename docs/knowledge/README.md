@@ -13,6 +13,11 @@
 | [performance.md](performance.md) | 쿼리·인덱스·JPA 로딩. 우리 규모에서 무엇을 근거로 판단하는가 |
 | [operations.md](operations.md) | 배포·헬스 체크·외부 인프라 연결에서 실제로 겪은 장애 |
 | [erd-design.md](erd-design.md) | ERD·스키마 설계의 판단 기준과 함정. 참고서 증류(2026-08) — 엔티티 도출, 키·관계, 이력, soft delete, JSON |
+| [qa-review.md](qa-review.md) | 변경 위험 분석 — 영향 사슬, 위험 신호, 특수 검증 8문항(BOLA/BFLA 등) |
+| [release-checklist.md](release-checklist.md) | 머지·배포 전 체크리스트. 사고마다 자란다 |
+| [llm.md](llm.md) | LLM 기능 운영 — eval 비교 규칙, 데이터셋 분류, injection 대응, Bedrock 함정 |
+| [data.md](data.md) | 배치·데이터 이동 — 멱등성, backfill, 데이터 장애 대응, data contract |
+| [infra.md](infra.md) | 인프라·배포 파이프라인 불변식(2026-08 배포 개편 기준), Terraform plan 판독 |
 
 주제가 늘어나면 파일을 추가하고 이 표에 한 줄 넣는다. 도메인 지식(개념 간 관계, 업무 규칙의
 배경, 왜 이렇게 모델링했는지)도 여기 들어올 자리다.

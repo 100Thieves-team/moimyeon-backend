@@ -8,3 +8,4 @@ run_id,runtime,version,prompt_id,expected,iter,detected,duration_s,raw_file
 20260824-1548,claude,2.1.239 (Claude Code),n3,no,1,no,55,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/n3-1.jsonl
 20260824-1548,claude,2.1.239 (Claude Code),b1,boundary,1,yes,53,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/b1-1.jsonl
 20260824-1548,claude,2.1.239 (Claude Code),b2,boundary,1,no,33,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/prompt-change-claude-20260824-1548/b2-1.jsonl
+# 보강: b2는 description 보강 후 delta 재측정 INVOKED — raw/prompt-change-claude-20260824-1621-delta/ (baseline-summary 참조)

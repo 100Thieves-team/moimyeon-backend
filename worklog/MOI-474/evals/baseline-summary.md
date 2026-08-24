@@ -185,8 +185,9 @@ raw 트랜스크립트만 21MB. 이후 eval은 DR-017 경량 프로토콜을 따
   무호출(db-reviewer는 위임이라 정답).
 - 경계: incident b1(요약 빈 문자열)→incident-response — 설계한 정답
   경로(진단 후 prompt-change 재투입). infra b1(배포 시간 줄여보자)→
-  issue-context — 다단계 요청의 일관 패턴. prompt-change b1(요약이 이상한
-  말)→prompt-change — incident와 양쪽 다 합리인 경계.
+  issue-context — 다단계 요청의 일관 패턴. infra b2(plan 결과 봐줘)→
+  무호출(판독만 직접 수행 — 부분 작업이라 합리). prompt-change b1(요약이
+  이상한 말)→prompt-change — incident와 양쪽 다 합리인 경계.
 - **차분 보강 1건**: prompt-change b2("오타 고쳐줘") 미호출 관찰 →
   "사소한 수정도 출력에 영향" 절을 description에 추가 후 해당 1건만 N=1
   재측정, INVOKED 확인 (DR-017 차분 재측정의 첫 적용, raw
