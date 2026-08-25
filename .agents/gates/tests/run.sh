@@ -36,6 +36,15 @@ YML
 python3 "$G/check_config_profiles.py" "$T/app.yml" > /dev/null; check "profiles-양성" 1 $?
 python3 "$G/check_config_profiles.py" > /dev/null; check "profiles-실레포" 0 $?
 
+# 3a. 시크릿 우회 회귀: 형태 기반 예외로 실제 시크릿이 새면 안 된다
+#     (2026-08-25 Security Sentinel이 CONSTANT_CASE 예외의 우회를 잡아냈다)
+printf 'val secret = "QK7XTPLM4NDVRWS9"\n' > "$T/bypass.kt"  # gate:allow-secret (픽스처)
+python3 "$G/scan_secrets.py" --files "$T/bypass.kt" > /dev/null; check "secrets-우회차단" 1 $?
+printf 'const val ACCESS_TOKEN = "ACCESS_TOKEN"\n' > "$T/keyname.kt"
+python3 "$G/scan_secrets.py" --files "$T/keyname.kt" > /dev/null; check "secrets-키이름반복-제외" 0 $?
+printf 'password: SuperSecretPwd123 # 주석\n' > "$T/inline.yml"  # gate:allow-secret (픽스처)
+python3 "$G/scan_secrets.py" --files "$T/inline.yml" > /dev/null; check "secrets-인라인주석" 1 $?
+
 # 3b. 시크릿 음성 회귀: 실제 레포 소스 전체에 오탐이 없어야 한다
 #     (2026-08-25 qa-reviewer가 합성 픽스처만으로는 못 잡는 오탐 2건을 발견)
 git ls-files '*.kt' '*.yml' '*.yaml' '*.properties' '*.sql' | grep -v worktrees \
