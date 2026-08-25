@@ -20,29 +20,35 @@ PATTERNS = [
     ("API 키 형태(sk-)", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
     ("JWT", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\b")),
     ("URL 내 자격증명", re.compile(r"\b[a-z][a-z0-9+.-]*://[^/\s:@]+:[^@\s]{4,}@")),
-    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"']?(?!\$\{)[^\"'\s$]{8,}[\"']?\s*(?:[#;].*)?$")),
+    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"']?(?!\$\{)([^\"'\s$]{8,})[\"']?\s*(?:[#;].*)?$")),
     ("Stripe류 키", re.compile(r"\bsk_(live|test)_[A-Za-z0-9]{10,}\b")),
     ("Google API 키", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
 ]
 ALLOW_MARK = "gate:allow-secret"
 
 
-# 키 이름을 그대로 값으로 쓴 상수(`const val ACCESS_TOKEN = "ACCESS_TOKEN"`)만
-# 구조적으로 시크릿이 아니다 — 값과 키가 **실제로 같은지** 비교한다.
-# 형태(CONSTANT_CASE)만 보는 예외는 `secret = "QK7XTPLM4NDVRWS9"` 같은 실제
-# 대문자 시크릿을 통과시켰다 (2026-08-25 Security Sentinel이 잡아냈다).
-ASSIGN_VALUE = re.compile(r"[:=]\s*[\"']?([^\"'\s]+)[\"']?\s*(?:[#;].*)?$")
+# 예외는 **매치된 그 자리**를 근거로만 준다. 줄 어딘가에 무엇이 있는지로
+# 판정하면 그것을 덧붙이는 것만으로 우회된다 — 실제로 `${` 포함 여부를 줄
+# 전체에서 보다가 `password: RealSecret1234 # ... ${VAR}` 를 통과시켰다  gate:allow-secret
+# (2026-08-25 Security Sentinel). 예외는 둘뿐이다:
+#   1) 매치가 `${...}` **안쪽**일 때 — placeholder 안의 이름은 값이 아니라 참조다
+#      (`password: ${storage.database.core-db.password:moimyeon}`의 뒤쪽 password)
+#   2) 값이 키 이름 그 자체일 때 (`const val ACCESS_TOKEN = "ACCESS_TOKEN"`)
 
 
-def _is_false_positive(line: str) -> bool:
-    if "${" in line:  # Spring placeholder 기본값
+def _normalize(s: str) -> str:
+    return s.lower().replace("_", "").replace("-", "")
+
+
+def _inside_placeholder(line: str, pos: int) -> bool:
+    head = line[:pos]
+    return head.count("${") > head.count("}")
+
+
+def _is_false_positive(line: str, m: "re.Match") -> bool:
+    if _inside_placeholder(line, m.start()):
         return True
-    m = ASSIGN_VALUE.search(line)
-    if not m:
-        return False
-    value = m.group(1)
-    key = re.search(r"([A-Za-z_][A-Za-z0-9_-]*)\s*[:=]", line)
-    return bool(key and key.group(1).lower().replace("_", "") == value.lower().replace("_", ""))
+    return _normalize(m.group(1)) == _normalize(m.group(2))
 
 
 def scan(lines):
@@ -51,10 +57,12 @@ def scan(lines):
         if ALLOW_MARK in line:
             continue
         for name, pat in PATTERNS:
-            if name == "평문 비밀값 대입" and _is_false_positive(line):
+            m = pat.search(line)
+            if not m:
                 continue
-            if pat.search(line):
-                hits.append((where, name))
+            if name == "평문 비밀값 대입" and _is_false_positive(line, m):
+                continue
+            hits.append((where, name))
     return hits
 
 

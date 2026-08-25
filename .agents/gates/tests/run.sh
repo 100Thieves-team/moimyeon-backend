@@ -44,6 +44,12 @@ printf 'const val ACCESS_TOKEN = "ACCESS_TOKEN"\n' > "$T/keyname.kt"
 python3 "$G/scan_secrets.py" --files "$T/keyname.kt" > /dev/null; check "secrets-키이름반복-제외" 0 $?
 printf 'password: SuperSecretPwd123 # 주석\n' > "$T/inline.yml"  # gate:allow-secret (픽스처)
 python3 "$G/scan_secrets.py" --files "$T/inline.yml" > /dev/null; check "secrets-인라인주석" 1 $?
+# 줄 어딘가의 ${...} 를 덧붙여 예외를 얻는 우회 (2026-08-25 Security Sentinel)
+printf 'password: MyRealSecretPass1234 # default is ${SOME_VAR}\n' > "$T/ph.yml"  # gate:allow-secret (픽스처)
+python3 "$G/scan_secrets.py" --files "$T/ph.yml" > /dev/null; check "secrets-placeholder-우회차단" 1 $?
+# placeholder **안쪽** 키 이름은 값이 아니라 참조다 — 실레포 db-core.yml 형태
+printf 'password: ${storage.database.core-db.password:moimyeon}\n' > "$T/ph-ok.yml"
+python3 "$G/scan_secrets.py" --files "$T/ph-ok.yml" > /dev/null; check "secrets-placeholder-내부-제외" 0 $?
 
 # 3b. 시크릿 음성 회귀: 실제 레포 소스 전체에 오탐이 없어야 한다
 #     (2026-08-25 qa-reviewer가 합성 픽스처만으로는 못 잡는 오탐 2건을 발견)

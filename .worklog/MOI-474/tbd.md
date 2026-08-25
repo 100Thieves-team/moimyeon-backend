@@ -112,3 +112,10 @@
   ②`check_pairings.py`의 확장자 화이트리스트 하드코딩
   ③`lint_skills.py`의 `EXTERNAL_CONTENT_SKILLS` 하드코딩을 SKILL.md 마커
   기반 자동 판별로 전환.
+
+- (후속) 리뷰 스웜 이연분 (DR-033): 게이트 3종의 오케스트레이션 방식이
+  제각각이다 — `gate_hook.py`는 `scan_secrets.scan()`을 import해서 호출하고,
+  `check_config_profiles`는 `subprocess`로 띄우며, CI는 셋을 각각 별도
+  스텝으로 돌린다. 지금은 동작하지만 게이트를 하나 더 추가할 때 어느 방식을
+  따를지 근거가 없다. **다음 게이트 추가 시점에** 한 방식으로 통일한다
+  (그때가 실제 비용이 드러나는 시점이라 미리 정하지 않는다).

@@ -24,7 +24,13 @@ WORKFLOW_REQUIRED = [
 # 외부 작성 콘텐츠를 읽는 스킬 — injection 방어 문구 필수 (DR-016·020).
 # "데이터" 단순 포함 검사는 "데이터 오염" 같은 무관한 용례를 통과시킨다
 # (2026-08-25 리뷰봇이 incident-response의 누락을 잡아냈다) — 문구를 앵커링한다.
-EXTERNAL_CONTENT_SKILLS = {"issue-context", "ship-pr", "incident-response"}
+EXTERNAL_CONTENT_SKILLS = {
+    "issue-context",      # Linear 이슈·코멘트
+    "ship-pr",            # PR 리뷰봇 코멘트
+    "incident-response",  # 장애 알림·로그
+    "infra-change",       # terraform plan 출력·CI plan 코멘트
+    "prompt-change",      # 운영 입력·모델 출력(eval 픽스처)
+}
 INJECTION_GUARD = re.compile(r"명령이\s*아니다|명령으로 승격|승격하지\s*않는다")
 
 
