@@ -281,6 +281,7 @@ data "aws_iam_policy_document" "terraform_plan_refresh" {
       "acm:Describe*",
       "acm:List*",
       "application-autoscaling:Describe*",
+      "application-autoscaling:ListTagsForResource",
       "autoscaling:Describe*",
       "cloudwatch:Describe*",
       "cloudwatch:List*",

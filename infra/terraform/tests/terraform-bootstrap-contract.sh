@@ -63,6 +63,7 @@ assert_contains "${BOOTSTRAP_TF}" 'DenyApplicationSecureStringReads' "plan role�
 assert_contains "${BOOTSTRAP_TF}" 'DenyGeneralKMSDecryption' "plan role의 managed ReadOnly policy가 KMS decrypt를 열면 안 된다."
 assert_not_contains "${BOOTSTRAP_TF}" 'aws:policy/ReadOnlyAccess' "AWS managed ReadOnlyAccess가 새 data-plane read를 열면 안 된다."
 assert_contains "${BOOTSTRAP_TF}" 'RefreshTerraformResourceMetadata' "plan refresh는 저장소 소유 metadata allowlist를 사용해야 한다."
+assert_contains "${BOOTSTRAP_TF}" 'application-autoscaling:ListTagsForResource' "Application Auto Scaling target refresh에는 tag 조회 권한이 필요하다."
 assert_contains "${BOOTSTRAP_TF}" 'RefreshTerraformBucketMetadata' "plan role은 S3 object 대신 bucket metadata만 읽어야 한다."
 assert_contains "${BOOTSTRAP_TF}" 'ReadNonSecretTerraformParameters' "plan role은 public AMI와 image marker만 읽어야 한다."
 assert_contains "${BOOTSTRAP_TF}" 'DenyExactPlanArtifactMutation' "apply role은 approved plan을 바꿀 수 없어야 한다."
