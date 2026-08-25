@@ -36,8 +36,8 @@
   확정할 때마다 동기화한다 (Terraform CI 이전 완료 시 과도기 규칙 제거).
 - ~~Codex용 커스텀 에이전트 정의(toml) 필요성~~ → DR-013으로 해소
   (프롬프트 주입 방식, 어댑터 미도입. 마찰 실측 시 재검토).
-- DR-004·008은 승인(잠정): Step 6에서 트리거 양성/음성/경계 프롬프트로
-  레포 기준 측정 후 확정.
+- ~~DR-004·008 잠정~~ → DR-029로 확정 (2026-08-25 실측: 양성 실질 18/18,
+  오호출 0/9, sonnet·opus 집계 동일로 모델 교란 배제).
 - Step 5 게이트 범위 확장 (토스 스킬 품질 루브릭 참고,
   toss.tech/article/skill-quality-rubric, 2026-08-21 검토):
   - 스킬 구조 lint — frontmatter 파싱·name kebab/폴더 일치·description
@@ -74,8 +74,8 @@
 - ~~worktree 공통 절차화~~ → DR-026으로 해소 (git.md에 worktree 절 추가).
 - ~~라우팅 표 행 수·test_authoring 판별 기준~~ → DR-026으로 해소 (9행,
   판별 기준 열에 명시).
-- (이연) 라우팅 등록 후 트리거 재측정 + With/Without 1회: 토큰 여유 시 실행.
-  그때까지 DR-004·008은 잠정 유지 (측정 방법은 .agents/skill-authoring.md).
+- ~~라우팅 등록 후 재측정 + With/Without~~ → 2026-08-25 실행 완료
+  (DR-028·029, baseline-summary).
 
 - (예약) Codex 프로젝트 훅 로드 방식 스모크: Codex 0.149에 훅 이벤트
   모델(hooks.json·trust 해시)은 실재 — 레포 단위로 gate_hook.py를 싣는
