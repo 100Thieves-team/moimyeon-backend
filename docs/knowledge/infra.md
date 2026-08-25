@@ -2,9 +2,11 @@
 
 > 출처: 팀 배포 개편 결정(2026-08-24 승인 — 배포 시간 단축·CI 게이트·
 > build once promote 이슈. 상세 설계는 하위 이슈에서 확정되며 확정 시 이
-> 문서를 동기화한다) + 전문 에이전트 블루프린트 §7 DevOps·§8 Infra(로컬
-> `_workspace/harness-reference/specialist-agents-blueprint.md`, AWS 문서
-> 원전 인용 포함).
+> 문서를 동기화한다) + 전문 에이전트 블루프린트 §7 DevOps·§8 Infra
+> (AWS 문서 원전 인용 포함, 로컬 `_workspace/harness-reference/` 비커밋).
+>
+> **이 문서는 원본 없이 자립한다** — 판단 기준을 본문에 옮겨 담았다. 로컬
+> 경로는 작성 이력이지 참조 의무가 아니다.
 >
 > 에이전트 중립 문서다 — 현재 소비자는 infra-change·incident-response 스킬.
 > 코딩 에이전트가 워크플로·Terraform을 수정할 때 아래 불변식을 위반하는

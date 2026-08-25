@@ -1,9 +1,11 @@
 # 데이터 이동·배치 — 계약과 재처리
 
-> 출처: 전문 에이전트 블루프린트 §10 Data Engineer(로컬
-> `_workspace/harness-reference/specialist-agents-blueprint.md`)에서 현재
-> 스택(core-batch + MySQL, 분석 레이크 없음)에 맞는 부분만 벤더링.
+> 출처: 팀 내부 전문 에이전트 블루프린트 §10 Data Engineer에서 현재
+> 스택(core-batch + MySQL, 분석 레이크 없음)에 맞는 부분만 벤더링
+> (블루프린트는 로컬 `_workspace/harness-reference/`, 비커밋).
 > Glue·Athena·CDC 파이프라인은 분석 요구가 실재할 때 §10에서 다시 가져온다.
+> **이 문서는 원본 없이 자립한다** — 판단 기준을 본문에 옮겨 담았다. 로컬
+> 경로는 작성 이력이지 참조 의무가 아니다.
 >
 > 에이전트 중립 문서다 — 현재 소비자는 data-reviewer.
 

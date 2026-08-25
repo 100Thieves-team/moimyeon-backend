@@ -1,8 +1,11 @@
 # ERD·스키마 설계 지식
 
-> 출처: ERD 설계 참고서(ch2~21, 로컬 `_workspace/erd-design-reference/`)를
-> 2026-08-21에 증류. 교과서 일반론은 제외하고 판단 기준·함정·이 스택
-> (MySQL 8 / JPA / Flyway / schema.sql SSOT) 접점만 남겼다. [chN]은 원 챕터.
+> 출처: ERD 설계 참고서(ch2~21)를 2026-08-21에 증류. 교과서 일반론은
+> 제외하고 판단 기준·함정·이 스택(MySQL 8 / JPA / Flyway / schema.sql SSOT)
+> 접점만 남겼다. [chN]은 원 챕터 번호다.
+> **이 문서는 원본 없이 자립한다** — 판단 기준을 본문에 옮겨 담았다. 작성 시
+> 참조한 원본은 로컬 `_workspace/erd-design-reference/`(비커밋)에 있고,
+> 경로는 작성 이력이지 참조 의무가 아니다.
 > 기존 [storage.md](../conventions/storage.md)·[concepts.md](../conventions/concepts.md)와
 > 겹치는 내용은 뺐다 — 이 문서는 컨벤션의 보완이지 대체가 아니다.
 

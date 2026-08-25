@@ -1,10 +1,12 @@
 # LLM 기능 운영 — 프롬프트·모델·평가
 
-> 출처: 전문 에이전트 블루프린트 §11 LLMOps(로컬
-> `_workspace/harness-reference/specialist-agents-blueprint.md`, NIST AI RMF
-> GenAI Profile·OWASP GenAI LLM Top 10 2026·AWS Bedrock 문서 원전 인용 포함)
-> 에서 이 레포 규모에 맞는 부분을 벤더링. 제품 맥락: Bedrock 기반 이력서
+> 출처: **NIST AI RMF GenAI Profile · OWASP GenAI LLM Top 10 2026 · AWS
+> Bedrock 문서**(공개 원전) + 팀 내부 전문 에이전트 블루프린트 §11 LLMOps에서
+> 이 레포 규모에 맞는 부분을 벤더링 (블루프린트는 로컬
+> `_workspace/harness-reference/`, 비커밋). 제품 맥락: Bedrock 기반 이력서
 > 요약(실재), 모의 면접 질문 생성(예정).
+> **이 문서는 원본 없이 자립한다** — 판단 기준을 본문에 옮겨 담았다. 로컬
+> 경로는 작성 이력이지 참조 의무가 아니다.
 >
 > 에이전트 중립 문서다 — 현재 소비자는 llm-reviewer와 prompt-change 스킬.
 

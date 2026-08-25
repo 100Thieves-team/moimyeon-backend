@@ -1,9 +1,11 @@
 # QA 리뷰 — 변경 위험 분석
 
-> 출처: 전문 에이전트 블루프린트(팀 내부, `_workspace/harness-reference/specialist-agents-blueprint.md`
-> §5 QA Agent)에서 머지 전 정적 리뷰에 해당하는 부분을 벤더링. BOLA/BFLA는
-> OWASP API Security Top 10 원전. 성능 게이트(k6·SLO 연동)는 SLO 도입
-> 시점까지 보류(.worklog/MOI-474 plan의 SLO 예약 항목).
+> 출처: **OWASP API Security Top 10**(BOLA/BFLA 등 공개 원전) + 팀 내부
+> 전문 에이전트 블루프린트 §5 QA Agent에서 머지 전 정적 리뷰 부분을 벤더링
+> (블루프린트는 로컬 `_workspace/harness-reference/`, 비커밋). 성능 게이트
+> (k6·SLO 연동)는 SLO 도입 시점까지 보류(.worklog/MOI-474 plan의 SLO 예약).
+> **이 문서는 원본 없이 자립한다** — 판단 기준을 본문에 옮겨 담았다. 로컬
+> 경로는 작성 이력이지 참조 의무가 아니다.
 >
 > 이 문서는 특정 에이전트에 종속되지 않게 작성한다 — 현재 소비자는
 > `.agents/agents/qa-reviewer.md`(머지 전 diff 리뷰)이고, 팀 개발 플랫폼에
