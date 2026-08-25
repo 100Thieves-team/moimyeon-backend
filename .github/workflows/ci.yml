@@ -43,15 +43,24 @@ jobs:
       # 정합성 페어링(WARN) — hooksPath 미설정 기여자에게도 경고가 닿게 한다.
       # 차단하지 않고 로그로만 노출한다(로컬 pre-commit과 동일 수위).
       - name: Pairing check
+        shell: bash
         run: |
           base="${{ github.base_ref }}"
           if [ -n "${base}" ]; then
             git fetch -q origin "${base}"
-            files=$(git diff --name-only "origin/${base}...HEAD")
+            range="origin/${base}...HEAD"
           else
-            files=$(git diff --name-only HEAD~1...HEAD)
+            # push는 여러 커밋을 담을 수 있다 — 시크릿 스캔과 같은 범위를 쓴다.
+            before="${{ github.event.before }}"
+            case "$before" in ""|0000000*) before="HEAD~1" ;; esac
+            range="${before}...HEAD"
           fi
-          [ -z "$files" ] || python3 .agents/gates/check_pairings.py --worktree $files
+          # 공백·glob 문자가 든 경로가 깨지지 않게 NUL 구분으로 받아 배열로 넘긴다
+          # (mapfile은 bash 4+ 전용이라 로컬 검증이 안 된다 — read 루프로 간다).
+          files=()
+          while IFS= read -r -d '' f; do files+=("$f"); done \
+            < <(git diff --name-only -z "${range}")
+          [ ${#files[@]} -eq 0 ] || python3 .agents/gates/check_pairings.py --worktree "${files[@]}"
 
       # 게이트 스크립트 자체의 회귀를 잡는다 (양성·음성 픽스처 + 실레포 오탐 0)
       - name: Gate self-test

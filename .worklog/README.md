@@ -7,6 +7,8 @@
 
 디렉토리 이름은 **현재 브랜치명에서 `feat/`·`chore/` 같은 type을 제거**해
 만든다. 추측하지 않고 `git rev-parse --abbrev-ref HEAD`에서 도출한다.
+결과가 `HEAD`면(detached checkout) 작업키를 만들 수 없다 — `.worklog/HEAD/`에
+쓰지 말고 정지해 브랜치 체크아웃을 요청하거나 사람에게 작업키를 받는다.
 
 | 브랜치 | 작업키 |
 | --- | --- |
@@ -22,7 +24,7 @@ worklog가 같은 이름이라 서로 찾기 쉽다.
 
 ## 파일 계약
 
-```
+```text
 .worklog/{작업키}/          예: .worklog/MOI-410-closing-feedback/
 ├── plan.md               # 필수. 승인된 계획 + 체크포인트 체크박스
 ├── context.md            # 이슈 요약, PRD 링크·발췌, 관련 코드 위치
