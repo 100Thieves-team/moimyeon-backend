@@ -7,19 +7,21 @@ description: 와이어프레임·PRD를 바탕으로 API 계약(Controller·Requ
 
 진행 규칙: `[체크포인트]`에서는 산출물을 제시하고 **턴을 끝낸다** — 사람
 승인 없이 다음 단계로 가지 않는다(사용자가 "끝까지 진행해"라고 명시하면
-생략). `.worklog/{이슈키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
+생략). `.worklog/{작업키}/`가 있으면 재실행이다 — plan.md 체크박스(사람이
 승인한 단계에만 `[x]`)로 마지막 승인 지점을 찾아 그 다음부터 재개하고,
 기존 산출물은 차분만 수정한다. 없으면 초기 실행이다 — .worklog 디렉토리와 plan.md(단계 체크리스트)부터 만든다.
 
-전제: Linear 이슈 키 + 화면·요구사항 근거(와이어프레임, PRD, 또는 사용자
-제공 캡처). 근거가 없으면 스펙을 추측하지 말고 사람에게 요청한다.
+전제: 화면·요구사항 근거(와이어프레임, PRD, 또는 사용자 제공 캡처).
+근거가 없으면 스펙을 추측하지 말고 사람에게 요청한다. Linear 이슈는 있으면
+쓰고 없으면 사용자 설명이 근거다 — 작업키는 브랜치명에서 도출한다
+(.worklog/README.md).
 
 ## 단계
 
 1. **worktree 준비** — `docs/conventions/git.md`.
 2. **컨텍스트 수집** — `.agents/skills/issue-context/SKILL.md` 수행.
    와이어프레임·화면 정의를 반드시 확보한다.
-3. **스펙 초안** — `.worklog/{이슈키}/plan.md`에 작성:
+3. **스펙 초안** — `.worklog/{작업키}/plan.md`에 작성:
    - URI: `docs/conventions/api-design.md`의 URI 절 전체를 읽고 적용
      (포함 관계 vs 필터 판정, ID 1개 제한, 제공 정보 표현, 행위 동사 템플릿)
    - 엔드포인트별 요청/응답 필드와 타입, 에러 케이스와 에러 코드
@@ -30,7 +32,7 @@ description: 와이어프레임·PRD를 바탕으로 API 계약(Controller·Requ
 5. **RestDocs 테스트** — 성공 + 에러 케이스를 에러 코드와 함께 문서화
    (`docs/conventions/api-docs.md`). openapi3.yaml 생성을 확인한다.
 6. **리뷰** — `.agents/agents/code-reviewer.md` 위임 (변경 파일 +
-   review-diff.patch + context.md 경로 — 위임 전 diff를 `.worklog/{이슈키}/review-diff.patch`로 저장해 함께 준다.) "필수" 반영 상한 2회 — 소진하면 plan.md에 사유를 기록하고 턴을
+   review-diff.patch + context.md 경로 — 위임 전 diff를 `.worklog/{작업키}/review-diff.patch`로 저장해 함께 준다.) "필수" 반영 상한 2회 — 소진하면 plan.md에 사유를 기록하고 턴을
    끝낸다.
 7. **검증** — `./gradlew test ktlintCheck` 통과. 실패 수정 상한 3회 —
    소진 시 리뷰와 동일하게 기록 후 턴 종료.

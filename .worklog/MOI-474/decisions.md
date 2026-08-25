@@ -1702,3 +1702,39 @@ DR-015(출처 헤더 의무)의 취지도 약해진다. 대신:
 
 data.md·erd-design.md는 공개 원전이 없어 자립 선언이 유일한 해법이다 —
 두 문서 모두 판단 기준을 본문에 전부 옮겨 담았음을 확인했다.
+
+## DR-031: 작업키는 브랜치명에서 도출한다
+
+- 날짜: 2026-08-25
+- 상태: 승인
+
+### 결정
+
+worklog 디렉토리 이름(`{작업키}`)은 **현재 브랜치명에서 type 접두사를 제거**해
+만든다. `feat/MOI-410-closing-feedback` → `.worklog/MOI-410-closing-feedback/`,
+`chore/review-swarm-tuning` → `.worklog/review-swarm-tuning/`.
+파일명(plan/context/decisions/tbd)은 고정 유지. 신규 작업부터 적용하고
+기존 `MOI-474/`는 옮기지 않는다.
+
+### 근거
+
+- 사용자가 `MOI-410_CLOSING_FEEDBACK_DESIGN.md` 형태(주제가 파일명에)를
+  제안했다. 사람 가독성은 뛰어나지만 **주제를 매번 지어내야 해서 재실행 시
+  자기가 만든 파일을 못 찾는다** — 스킬 9종·리뷰어 5종이 `plan.md`·
+  `context.md`·`review-diff.patch`를 고정 이름으로 참조하고, 재실행 분기가
+  `plan.md` 체크박스 판정이라 이름이 흔들리면 계약이 깨진다.
+- 주제를 **디렉토리 이름**으로 올리면 둘 다 얻는다: 사람은 목록에서 주제를
+  보고, 에이전트는 고정 파일명을 쓴다.
+- 브랜치에서 도출하면 **추측이 사라진다**(`git rev-parse --abbrev-ref HEAD`).
+  `.worktrees/`가 이미 같은 패턴이라 새 규칙이 아니라 기존 관행의 확장이다.
+- **이슈 없는 작업이 자동 처리된다** — 이 레포에 이슈 키 없는 브랜치가 이미
+  8개 이상 실재한다(`chore/review-swarm-tuning`, `codex/*`). 이슈 기준
+  규칙이었다면 별도 분기가 필요했다.
+
+### 영향
+
+- `{이슈키}` → `{작업키}` 치환: 스킬 9종·리뷰어 5종·evals README·
+  execution-policy·worklog README (16파일 45곳).
+- 이슈 없는 작업 분기 명시: issue-context(Linear 조회 건너뛰고 사용자 설명을
+  context.md로), requirement-implementation·api-spec-definition 전제.
+- 도면의 `{이슈키}` 라벨 1곳은 다음 도면 갱신 때 반영.

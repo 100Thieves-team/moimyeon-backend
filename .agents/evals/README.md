@@ -1,7 +1,7 @@
 # evals — 하네스 측정 자산
 
 잠정 결정을 레포 기준 측정으로 확정하고(DR-012), 새 스킬의 효과를
-With/Without으로 검증하기 위한 자산이다. 결과는 `.worklog/{이슈키}/evals/`에
+With/Without으로 검증하기 위한 자산이다. 결과는 `.worklog/{작업키}/evals/`에
 커밋한다.
 
 ## 구성

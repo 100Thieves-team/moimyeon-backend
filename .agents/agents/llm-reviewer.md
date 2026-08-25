@@ -29,9 +29,9 @@ model: inherit
 ## 입력 (위임 프롬프트로 받음)
 
 - 변경 파일 목록, eval 비교 결과 위치
-- 변경 diff patch 경로 (`.worklog/{이슈키}/review-diff.patch` — 위임자가
+- 변경 diff patch 경로 (`.worklog/{작업키}/review-diff.patch` — 위임자가
   `git diff`로 생성; 파일 스냅샷만으로는 변경 전후·삭제분을 볼 수 없다)
-- `.worklog/{이슈키}/context.md` 경로 (있으면)
+- `.worklog/{작업키}/context.md` 경로 (있으면)
 
 ## 출력 (반환 텍스트)
 

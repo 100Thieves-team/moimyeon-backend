@@ -1,12 +1,29 @@
 # worklog — 커밋되는 작업 산출물
 
-이슈 단위 작업의 계획·결정·미결정 사항을 남기는 곳이다. 커밋 대상이다.
+작업 단위의 계획·결정·미결정 사항을 남기는 곳이다. 커밋 대상이다.
 계약의 근거는 [MOI-474 결정 기록](MOI-474/decisions.md)의 DR-006, DR-007에 있다.
+
+## 작업키 — 브랜치명에서 type 접두사를 뗀 것
+
+디렉토리 이름은 **현재 브랜치명에서 `feat/`·`chore/` 같은 type을 제거**해
+만든다. 추측하지 않고 `git rev-parse --abbrev-ref HEAD`에서 도출한다.
+
+| 브랜치 | 작업키 |
+| --- | --- |
+| `feat/MOI-410-closing-feedback` | `MOI-410-closing-feedback` |
+| `chore/review-swarm-tuning` | `review-swarm-tuning` |
+
+이슈가 있으면 키가 앞에 붙어 정렬이 맞고, **이슈 없는 작업도 같은 규칙으로
+처리된다**(이 레포에는 이슈 없는 브랜치가 이미 다수 있다). 브랜치·worktree·
+worklog가 같은 이름이라 서로 찾기 쉽다.
+
+**신규 작업부터 적용한다.** 이 규칙 이전에 만든 `MOI-474/`는 그대로 둔다 —
+진행 중인 작업의 경로를 바꾸면 참조가 깨지고 diff만 커진다.
 
 ## 파일 계약
 
 ```
-.worklog/{이슈키}/          예: .worklog/MOI-474/
+.worklog/{작업키}/          예: .worklog/MOI-410-closing-feedback/
 ├── plan.md               # 필수. 승인된 계획 + 체크포인트 체크박스
 ├── context.md            # 이슈 요약, PRD 링크·발췌, 관련 코드 위치
 ├── decisions.md          # 구현 중 내린 결정과 이유
