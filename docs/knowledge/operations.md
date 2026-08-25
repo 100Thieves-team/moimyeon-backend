@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-26: Terraform AWS provider가 Application Auto Scaling target을 refresh하며
+  `application-autoscaling:ListTagsForResource`를 별도로 호출해 plan이 실패했다. 재발 방지:
+  metadata-only plan role에 tag 조회 권한을 명시하고 bootstrap 계약 검사로 고정한다.
 - 2026-08-25: ignored `terraform.tfvars`를 환경 설정 원본으로 두자 개발자별 plan 입력과 CI 입력을
   재현할 수 없었다. 재발 방지: 비민감 환경값은 reviewed `{env}.tfvars`로 커밋하고 공식 command는
   explicit `-var-file`만 허용한다. 로컬 override와 자동 로드 tfvars는 승인 plan에서 거부한다.
