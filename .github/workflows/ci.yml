@@ -38,6 +38,19 @@ jobs:
       - name: Config profile sync
         run: python3 .agents/gates/check_config_profiles.py
 
+      # 정합성 페어링(WARN) — hooksPath 미설정 기여자에게도 경고가 닿게 한다.
+      # 차단하지 않고 로그로만 노출한다(로컬 pre-commit과 동일 수위).
+      - name: Pairing check
+        run: |
+          base="${{ github.base_ref }}"
+          if [ -n "${base}" ]; then
+            git fetch -q origin "${base}"
+            files=$(git diff --name-only "origin/${base}...HEAD")
+          else
+            files=$(git diff --name-only HEAD~1...HEAD)
+          fi
+          [ -z "$files" ] || python3 .agents/gates/check_pairings.py --worktree $files
+
       # 게이트 스크립트 자체의 회귀를 잡는다 (양성·음성 픽스처 + 실레포 오탐 0)
       - name: Gate self-test
         run: bash .agents/gates/tests/run.sh

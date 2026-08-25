@@ -1562,3 +1562,14 @@ qa-reviewer의 권고 중 다음은 팀 흐름을 막지 않아 이연한다: li
 SKILL.md 없는 디렉토리 처리, python3 부재 환경의 안내, pre-push의 remote
 객체 부재 시 메시지 개선, `.review-swarm.yaml` teamRuleFiles 문자 상한 확인,
 gate_hook·pre-push의 자체 테스트 부재.
+
+### DR-030 보강 (2026-08-25, 리뷰봇 지적 반영 1회차)
+
+review-swarm architect가 **문서 약속과 CI 실태의 불일치**를 지적했고 사실
+확인 후 반영했다: AGENTS.md와 `pre-commit.sh` 주석이 "정합성 검사가 커밋·CI
+에서 돈다"고 약속하는데 `harness-gates` 잡은 `check_pairings.py`를 호출하지
+않았다. hooksPath 미설정 기여자는 페어링 경고를 로컬에서도 CI에서도 받지
+못하는 상태였다 — 문서화한 백스톱이 그 규칙에 한해 비어 있었다.
+
+CI에 Pairing check 스텝을 추가했다(PR 범위 diff 기준, WARN이라 차단하지
+않고 로그로만 노출 — 로컬 pre-commit과 같은 수위).
