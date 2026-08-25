@@ -1,0 +1,8 @@
+p1	positive	yes	MOI-741 이력서 요약 프롬프트 품질 개선해줘
+p2	positive	yes	면접 질문 생성 프롬프트 바꿔보자 MOI-742
+p3	positive	yes	MOI-743 요약 모델을 Haiku로 바꾸는 거 검토하고 적용해줘
+n1	negative	no	MOI-744 구현해줘
+n2	negative	no	이 API 응답에 필드 하나 추가해줘
+n3	negative	no	Bedrock 요금 체계가 어떻게 되지?
+b1	boundary	boundary	이력서 요약이 가끔 이상한 말을 해. MOI-745
+b2	boundary	boundary	요약 프롬프트에 오타 있던데 고쳐줘

@@ -10,6 +10,73 @@ permissions:
   contents: read
 
 jobs:
+  # 하네스 게이트 — 로컬 pre-commit(.agents/gates/)과 같은 스크립트를 호출한다.
+  # 로컬 훅 미설치·우회를 잡는 백스톱 (DR-025).
+  harness-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install gate deps
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Skill lint
+        run: python3 .agents/gates/lint_skills.py
+
+      # 검사 범위를 한 번만 계산해 아래 게이트들이 공유한다 — 스텝마다
+      # 따로 계산하면 하나가 조용히 어긋난다(페어링이 마지막 커밋만 보던 결함).
+      # 새 ref(before가 전부 0)면 비교 대상이 없다 — HEAD~1 로 때우면 여러
+      # 커밋을 놓치고 root 커밋에선 아예 실패하므로, 그때는 전수 검사한다.
+      - name: Compute gate scope
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          zero="0000000000000000000000000000000000000000"
+          if [ -n "${BASE_REF}" ]; then
+            git fetch -q origin "${BASE_REF}"
+            echo "GATE_RANGE=origin/${BASE_REF}...HEAD" >> "$GITHUB_ENV"
+          elif [ -n "${BEFORE}" ] && [ "${BEFORE}" != "${zero}" ] \
+               && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "GATE_RANGE=${BEFORE}...HEAD" >> "$GITHUB_ENV"
+          else
+            echo "::notice::새 ref이거나 before 커밋이 없다 — 추적 파일 전수 검사로 간다"
+            echo "GATE_RANGE=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Secret scan
+        run: |
+          if [ -n "${GATE_RANGE}" ]; then
+            python3 .agents/gates/scan_secrets.py --range "${GATE_RANGE}"
+          else
+            git ls-files -z | xargs -0 python3 .agents/gates/scan_secrets.py --files
+          fi
+
+      - name: Config profile sync
+        run: python3 .agents/gates/check_config_profiles.py
+
+      # 정합성 페어링(WARN) — hooksPath 미설정 기여자에게도 경고가 닿게 한다.
+      # 차단하지 않고 로그로만 노출한다(로컬 pre-commit과 동일 수위).
+      - name: Pairing check
+        shell: bash
+        run: |
+          # 공백·glob 문자가 든 경로가 깨지지 않게 NUL 구분으로 받아 배열로 넘긴다
+          # (mapfile은 bash 4+ 전용이라 로컬 검증이 안 된다 — read 루프로 간다).
+          files=()
+          if [ -n "${GATE_RANGE}" ]; then
+            while IFS= read -r -d '' f; do files+=("$f"); done \
+              < <(git diff --name-only -z "${GATE_RANGE}")
+          else
+            while IFS= read -r -d '' f; do files+=("$f"); done < <(git ls-files -z)
+          fi
+          [ ${#files[@]} -eq 0 ] || python3 .agents/gates/check_pairings.py --worktree "${files[@]}"
+
+      # 게이트 스크립트 자체의 회귀를 잡는다 (양성·음성 픽스처 + 실레포 오탐 0)
+      - name: Gate self-test
+        run: bash .agents/gates/tests/run.sh
+
   build:
     runs-on: ubuntu-latest
 

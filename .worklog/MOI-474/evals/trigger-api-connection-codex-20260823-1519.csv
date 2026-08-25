@@ -1,0 +1,14 @@
+run_id,runtime,version,prompt_id,expected,iter,detected,duration_s,raw_file
+# runtime=codex version=codex-cli 0.149.0 N=1 date=20260823-1519 workdir=/private/tmp/claude-501/-Users-luna-Desktop-nonsync-teams-100-thieves-moimyeon-backend/2a6a6fb7-656c-4acb-b38a-4e6e13bebc18/scratchpad/eval3-codex timeout=240s
+20260823-1519,codex,codex-cli 0.149.0,p1,yes,1,yes,128,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/p1-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,p2,yes,1,yes,240,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/p2-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,p3,yes,1,yes,143,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/p3-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,p4,yes,1,yes,152,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/p4-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,p5,yes,1,yes,240,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/p5-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,n1,no,1,no,136,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/n1-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,n2,no,1,no,103,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/n2-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,n3,no,1,no,21,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/n3-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,n4,no,1,no,48,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/n4-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,n5,no,1,no,54,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/n5-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,b1,boundary,1,yes,114,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/b1-1.jsonl
+20260823-1519,codex,codex-cli 0.149.0,b2,boundary,1,yes,150,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/api-connection-codex-20260823-1519/b2-1.jsonl

@@ -1,0 +1,12 @@
+p1	positive	yes	MOI-601 분석해줘
+p2	positive	yes	이 이슈 파악 좀: MOI-602
+p3	positive	yes	MOI-603 관련 PRD랑 코드 컨텍스트 정리해줘
+p4	positive	yes	MOI-604 가 뭘 해야 하는 이슈인지 요약해줘
+p5	positive	yes	이슈 MOI-605 컨텍스트 수집해서 worklog에 남겨줘
+n1	negative	no	RoomService 변경분 코드 리뷰해줘
+n2	negative	no	participation 도메인 구조가 어떻게 돼있는지 설명해줘
+n3	negative	no	이 레포 테스트 태그 체계 알려줘
+n4	negative	no	git log에서 최근 room 도메인 커밋들 요약해줘
+n5	negative	no	worklog README에 있는 오타 고쳐줘
+b1	boundary	boundary	MOI-606 구현해줘
+b2	boundary	boundary	MOI-607 이슈 봐주고, 판단 어려운 건 나한테 물어봐

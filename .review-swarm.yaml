@@ -270,3 +270,7 @@ ignore:
   - '**/*.png'
   - '**/*.jpg'
   - '**/*.pdf'
+  - '.worklog/**'
+  - '**/*.tsv'
+  - '**/*.csv'
+  - '.agents/evals/**'

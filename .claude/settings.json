@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(terraform apply:*)",
+      "Bash(rm -rf:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR:-.}/.agents/gates/gate_hook.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
