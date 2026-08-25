@@ -1837,3 +1837,55 @@ CodeRabbit 인라인 지적 9건을 전부 반영했다. 유형별로:
   `.github/workflows/ci.yml`(범위 계산 단일화·전수 폴백).
 - 게이트 오케스트레이션 방식 불일치(F4)는 tbd로 이연 — 다음 게이트 추가
   시점에 통일한다.
+
+## DR-034: MOI-432 배포 확정 설계에 하네스 동기화
+
+- 날짜: 2026-08-26
+- 상태: 승인
+
+### 결정
+
+MOI-432(PR #104·#105 머지)가 초기 가정으로 적어둔 배포·Terraform 불변식을
+확정 설계로 바꿨다. origin/dev를 이 브랜치에 병합(충돌 0)하고 하네스 문서
+3곳을 동기화했다. MOI-432의 DR-012·DR-015가 "infra.md가 이 브랜치에
+합류하면 동기화한다"고 명시한 후속이기도 하다.
+
+**infra.md** — 초기 가정 대비 바뀐 것:
+
+| 항목 | 초기 가정 | 확정 (MOI-432) |
+| --- | --- | --- |
+| 롤백 단위 | `{env}-{sha12}` 태그 재등록 | SSM bundle ledger의 exact task definition 복원 + `deployed-*` marker 필수 |
+| 배포 컨트롤러 | CodeDeploy blue/green | **ECS native** BLUE_GREEN(API) / ROLLING(Worker) |
+| live 게이트 | Environment required reviewer | **reviewer 없음** — main 머지자 책임 + fail-closed 검증 (가정 반전) |
+| 스모크 | 엔드포인트 [TBD] | readiness + `/v1/terms`, blocking, 5s×3회/60s |
+| Terraform apply | 머지 + Environment 승인 | merged SHA exact-plan **무승인 자동 apply** |
+| plan 공유 | PR 코멘트 | sanitized 요약만 PR, raw는 KMS S3 private |
+| tfvars | 시크릿 CI 주입 | 비민감 값은 Git 커밋 `{env}.tfvars`, 시크릿은 사전 생성 SSM ARN 참조 |
+
+**incident-response** — 배포 이력 원본을 SSM bundle ledger로, 롤백 계획
+항목을 source SHA·scope 명시 + 플랫폼 UI/break-glass 실행으로 갱신.
+
+**infra-change** — 과도기(로컬 plan) 문구 제거. 핵심 반영: **머지 후
+apply가 무승인 자동이므로 plan 체크포인트가 사실상 마지막 사람 게이트다**
+— "머지 승인 = apply 승인"을 명시하고 승인받게 했다. 변경 작성 단계에
+tfvars 원본 규칙과 "Terraform이 SecureString을 생성하면 state에 값이
+남는다"를 인라인.
+
+### 근거
+
+- 사람 승인 게이트가 사라진 만큼 **머지 전 판독의 무게가 커졌다** — 스킬
+  체크포인트의 의미가 "참고 승인"에서 "배포 결정"으로 바뀌었으니 문구에
+  그 무게를 실어야 한다.
+- 레슨은 dev에서 이미 operations.md에 쌓였다(MOI-432 작업 관행). infra.md는
+  중복 대신 포인터를 두고 불변식만 소유한다 — 두 곳에 두면 갈라진다
+  (knowledge README의 승격 경로 원칙).
+- Linear 이슈 원문은 이 세션에서 MCP 미인증으로 직접 못 읽었다. dev에
+  커밋된 `.worklog/MOI-432/`(context·decisions·tbd)가 이슈·결정 전체를
+  담고 있어 그것을 원본으로 썼다.
+
+### 영향
+
+- origin/dev 병합: MOI-432 워크플로 8종·terraform tests·operations.md
+  레슨 6건이 이 브랜치에 합류.
+- `docs/knowledge/infra.md`, `.agents/skills/incident-response/SKILL.md`,
+  `.agents/skills/infra-change/SKILL.md`.

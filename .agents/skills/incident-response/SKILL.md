@@ -22,9 +22,10 @@ description: 장애·이상 동작의 원인을 코드베이스 관점에서 진
 
 1. **증상 확정** — 언제부터, 어떤 요청·기능이, 어떤 형태로(에러 코드·
    무응답·오출력) 실패하는지. 재현 가능하면 재현 조건.
-2. **최근 변화 대조** — 증상 시작 시점과 배포 이력(`{env}-{sha12}` 태그·
-   digest), Flyway 마이그레이션, 인프라 변경, 설정 변경을 대조한다.
-   "배포 직후 시작"이면 해당 diff가 1순위 용의자다.
+2. **최근 변화 대조** — 증상 시작 시점과 배포 이력, Flyway 마이그레이션,
+   인프라 변경, 설정 변경을 대조한다. 배포 이력의 원본은 SSM bundle
+   ledger(`/moimyeon/{env}/deployments/{sha12}` — source SHA·digest·task
+   definition·성공 시각)다. "배포 직후 시작"이면 해당 diff가 1순위 용의자다.
 3. **진단** — 로그·에러 코드에서 실패 지점을 좁힌다.
    - DB 의심이면 순서대로: top SQL → lock·long transaction →
      connection pool → CPU/I/O → 최근 마이그레이션 (블루프린트 §9 순서).
@@ -34,7 +35,10 @@ description: 장애·이상 동작의 원인을 코드베이스 관점에서 진
      1순위다.**
 4. **완화 계획 제안** — 위험이 낮은 순서로, 각 항목에 예상 효과와
    부작용을 붙인다:
-   ① 이전 태그로 롤백 (대상 태그·digest 명시 — 롤백 워크플로 dispatch)
+   ① 이전 deployment bundle로 롤백 — 대상 source SHA·scope(api/worker/
+      both)를 명시한다. 실행은 개발 플랫폼 UI 또는 break-glass dispatch로
+      사람이 한다. `deployed-{env}-{sha12}` marker가 없는 이미지는 롤백
+      대상이 아니다
    ② 문제 기능 제한·설정 변경 ③ batch 중지 ④ connection 제한·스케일
    ⑤ 데이터 직접 변조는 **최후이며 계획만** — 실행 여부·순서는 사람이
    결정하고 사람이 실행한다.
