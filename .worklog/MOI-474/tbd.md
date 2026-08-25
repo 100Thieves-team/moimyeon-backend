@@ -23,8 +23,8 @@
 - (예약) entity-design 워크플로우 확장 후보 — erd-design 레퍼런스의 미도입
   절차 (DR-018 등재). ~~DBML 논리 모델링·물리 모델링 단계~~ → DR-019로
   스킬에 반영. 남은 것:
-  - docs/conventions에 용어 사전(도메인 용어 SSOT) 신설 — conventions
-    추가라 사람 승인 필요
+  - ~~용어 사전(도메인 용어 SSOT)~~ → 2026-08-25 신설
+    (docs/conventions/glossary.md, entity-design 1단이 참조)
 - ~~`ship-pr`을 스킬로 둘지 공유 reference 문서로 둘지~~ → DR-021로 해소
   (스킬 확정 — DR-011 3중 테스트 통과, 워크플로우 4종 공통부 수렴).
 - (예약) 팀 개발 플랫폼에 qa-engineer가 실제 배치되면 레포 qa-reviewer와의
@@ -80,5 +80,11 @@
 - (예약) Codex 프로젝트 훅 로드 방식 스모크: Codex 0.149에 훅 이벤트
   모델(hooks.json·trust 해시)은 실재 — 레포 단위로 gate_hook.py를 싣는
   방법 확인되면 L1을 Codex에도 배선 (DR-025, 현재는 L2/L3 커버).
-- (제안) GitHub branch protection(dev·main): 로컬 pre-push는 우회
-  가능하므로 서버측 최종 방어 — gh api로 설정 가능, 사람 승인 대기.
+- (실행 대기) GitHub branch protection(main·dev): 사람 승인은 받았으나
+  에이전트 권한으로 레포 설정 변경이 차단됨 — 사람이 직접 실행한다.
+  명령은 _workspace/branch-protection.md.
+
+- (예약) 무인 자동화의 체크포인트 통과 설계: 스킬은 체크포인트에서 턴을
+  끝내므로(DR-009) 사람 없는 파이프라인에서는 완결되지 않는다. 실제로
+  하네스를 무인 자동화에 물릴 때 결정한다 — 저위험 작업만 무인 허용,
+  또는 결정을 전부 기록하는 조건부 통과 모드 (DR-028 비용 항목).
