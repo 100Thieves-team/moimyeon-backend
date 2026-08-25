@@ -9,9 +9,14 @@ crash.*.log
 # Generated per-account backend config (bucket name is account-specific).
 backend.tf
 
-# Local variable files (may contain secrets: OAuth, etc.). Only *.example is tracked.
+# Local variable files are ignored by default. Only the three reviewed,
+# non-sensitive environment sources below are tracked.
 *.tfvars
-!*.tfvars.example
+*.auto.tfvars
+terraform.tfvars
+!envs/dev/dev.tfvars
+!envs/live/live.tfvars
+!envs/shared/shared.tfvars
 
 # Plan outputs
 *.tfplan

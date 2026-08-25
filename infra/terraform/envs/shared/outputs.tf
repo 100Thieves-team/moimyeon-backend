@@ -1,5 +1,5 @@
 output "github_oidc_provider_arn" {
-  description = "GitHub Actions OIDC provider ARN. Copy into envs/dev and envs/live tfvars."
+  description = "GitHub Actions OIDC provider ARN. Environment roots resolve the same provider with an AWS data source."
   value       = module.foundation.github_oidc_provider_arn
 }
 

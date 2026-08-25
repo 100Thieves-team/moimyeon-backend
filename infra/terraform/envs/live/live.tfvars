@@ -1,9 +1,7 @@
 aws_region        = "ap-northeast-2"
 github_repository = "100Thieves-team/moimyeon-backend"
 
-github_oidc_provider_arn = "arn:aws:iam::781897847312:oidc-provider/token.actions.githubusercontent.com"
-
-# live is provisioned but scaled to zero (see main.tf). Bring it up intentionally.
+# The live stack remains scaled to zero until DNS, secrets, and capacity are ready.
 app_domain_name             = "api.moimyeon.plady.io"
 dns_management              = "external"
 enable_https                = false
@@ -12,9 +10,12 @@ upload_cors_allowed_origins = []
 vpc_cidr    = "10.30.0.0/16"
 db_name     = "moimyeon"
 db_username = "moimyeon"
+# RDS rotates this admin identity in Secrets Manager. ECS uses db_username and
+# the separately pre-created SSM DB_PASSWORD instead.
+db_master_username = "moimyeon_admin"
 
-oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
-oauth_google_client_secret = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+# Commit the production client ID in a reviewed PR before raising API capacity.
+oauth_google_client_id = null
 
 notification_worker_desired_count     = 0
 firebase_project_id                   = null

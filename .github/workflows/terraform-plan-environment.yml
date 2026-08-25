@@ -1,0 +1,161 @@
+name: Terraform Plan Environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Terraform root planned from a trusted merged branch SHA
+        required: true
+        type: string
+      source_sha:
+        description: Exact CI-successful merged branch SHA
+        required: true
+        type: string
+      source_branch:
+        description: Trusted merged branch containing source_sha
+        required: true
+        type: string
+    outputs:
+      current:
+        description: Whether the caller SHA remained the latest CI-successful branch revision
+        value: ${{ jobs.plan.outputs.current }}
+      apply_required:
+        description: Whether resource or output changes require exact-plan apply
+        value: ${{ jobs.plan.outputs.apply_required }}
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: terraform-apply-plan
+    concurrency:
+      group: terraform-plan-${{ inputs.environment }}
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    outputs:
+      current: ${{ steps.freshness.outputs.current }}
+      apply_required: ${{ steps.exact_plan.outputs.apply_required }}
+
+    steps:
+      - name: Check out merged Terraform source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+
+      - name: Reject stale CI-successful revision before planning
+        id: freshness
+        env:
+          BRANCH_NAME: ${{ inputs.source_branch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTED_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/${BRANCH_NAME}:refs/remotes/origin/${BRANCH_NAME}"
+          current_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            "refs/remotes/origin/${BRANCH_NAME}" "${BRANCH_NAME}" "${REQUESTED_SHA}")"
+          if [ "${REQUESTED_SHA}" != "${current_sha}" ]; then
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "Stale Terraform plan rejected: ${REQUESTED_SHA} is behind ${current_sha}." \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          else
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate trusted plan bootstrap variables
+        if: steps.freshness.outputs.current == 'true'
+        env:
+          PLAN_ROLE_ARN: ${{ vars.MOIMYEON_TERRAFORM_APPLY_PLAN_ROLE_TO_ASSUME }}
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
+        run: |
+          set -euo pipefail
+          for value in "${PLAN_ROLE_ARN}" "${PLAN_BUCKET}" "${PLAN_KMS_KEY_ARN}"; do
+            if [ -z "${value}" ]; then
+              echo "::error::Trusted Terraform plan bootstrap variables are incomplete."
+              exit 1
+            fi
+          done
+
+      - name: Configure trusted plan AWS credentials
+        if: steps.freshness.outputs.current == 'true'
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_TERRAFORM_APPLY_PLAN_ROLE_TO_ASSUME }}
+          aws-region: ap-northeast-2
+
+      - name: Set up Terraform
+        if: steps.freshness.outputs.current == 'true'
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+
+      - name: Create exact merged-SHA plan and sanitized summary
+        id: exact_plan
+        if: steps.freshness.outputs.current == 'true'
+        env:
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
+          PLAN_FILE: ${{ runner.temp }}/${{ inputs.environment }}.tfplan
+        run: |
+          set -euo pipefail
+          bash infra/terraform/scripts/terraform-command.sh plan \
+            "${{ inputs.environment }}" "${PLAN_FILE}"
+          plan_sha256="$(sha256sum "${PLAN_FILE}" | awk '{print $1}')"
+          printf '%s  tfplan\n' "${plan_sha256}" > "${PLAN_FILE}.sha256"
+
+          terraform \
+            -chdir="infra/terraform/envs/${{ inputs.environment }}" \
+            show -json "${PLAN_FILE}" > "${RUNNER_TEMP}/${{ inputs.environment }}-apply-plan.json"
+          jq '[
+            .resource_changes[]?
+            | select(.change.actions != ["no-op"])
+            | {address, actions: .change.actions}
+          ]' "${RUNNER_TEMP}/${{ inputs.environment }}-apply-plan.json" \
+            > "${RUNNER_TEMP}/${{ inputs.environment }}-apply-changes.json"
+          resource_change_count="$(jq 'length' "${RUNNER_TEMP}/${{ inputs.environment }}-apply-changes.json")"
+          output_change_count="$(jq '[
+            .output_changes[]?
+            | select(.actions != ["no-op"])
+          ] | length' "${RUNNER_TEMP}/${{ inputs.environment }}-apply-plan.json")"
+          change_count=$((resource_change_count + output_change_count))
+          if [ "${change_count}" -gt 0 ]; then
+            echo "apply_required=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apply_required=false" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Exact merged-SHA Terraform ${{ inputs.environment }} plan"
+            echo
+            echo "Resource changes: ${resource_change_count}"
+            echo "Output changes: ${output_change_count}"
+            echo
+            echo '```json'
+            jq -c '.[]' "${RUNNER_TEMP}/${{ inputs.environment }}-apply-changes.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          prefix="plans/apply/${{ inputs.source_sha }}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ inputs.environment }}"
+          aws s3api put-object \
+            --bucket "${PLAN_BUCKET}" \
+            --key "${prefix}.tfplan" \
+            --body "${PLAN_FILE}" \
+            --server-side-encryption aws:kms \
+            --ssekms-key-id "${PLAN_KMS_KEY_ARN}" \
+            --if-none-match '*'
+          aws s3api put-object \
+            --bucket "${PLAN_BUCKET}" \
+            --key "${prefix}.tfplan.sha256" \
+            --body "${PLAN_FILE}.sha256" \
+            --server-side-encryption aws:kms \
+            --ssekms-key-id "${PLAN_KMS_KEY_ARN}" \
+            --if-none-match '*'

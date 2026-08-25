@@ -7,16 +7,19 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name      = "${var.project}-${var.environment}"
-  profile   = var.environment == "live" ? "live" : "dev"
-  image_tag = coalesce(var.container_image_tag, var.environment)
-  image_uri = "${aws_ecr_repository.app.repository_url}:${local.image_tag}"
-  azs       = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, var.az_count)
+  name                               = "${var.project}-${var.environment}"
+  profile                            = var.environment == "live" ? "live" : "dev"
+  image_tag                          = coalesce(var.container_image_tag, var.environment)
+  image_uri                          = "${aws_ecr_repository.app.repository_url}:${local.image_tag}"
+  deployment_bundle_parameter_prefix = "/${var.project}/${var.environment}/deployments"
+  azs                                = length(var.availability_zones) > 0 ? var.availability_zones : slice(data.aws_availability_zones.available.names, 0, var.az_count)
 
   # moimyeon DB URL contract is host:port/db (see STORAGE_DATABASE_CORE_DB_URL).
   db_url = "${aws_db_instance.core.address}:${aws_db_instance.core.port}/${var.db_name}"
 
-  tg_name = coalesce(var.target_group_name, "${local.name}-tg-app")
+  tg_name                = coalesce(var.target_group_name, "${local.name}-tg-app")
+  ecs_blue_green_enabled = var.ecs_deployment_strategy == "BLUE_GREEN"
+  alternate_tg_name      = substr("${local.name}-tg-alt", 0, 32)
 
   app_domain_enabled       = var.app_domain_name != null && var.app_domain_name != ""
   route53_zone_lookup      = var.route53_zone_name != null && var.route53_zone_name != ""

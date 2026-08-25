@@ -1,0 +1,120 @@
+name: Terraform Apply Environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Terraform root and GitHub Environment prefix
+        required: true
+        type: string
+      source_sha:
+        description: Exact CI-successful merged branch SHA
+        required: true
+        type: string
+      source_branch:
+        description: Trusted merged branch containing source_sha
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-infra
+    concurrency:
+      group: ${{ inputs.environment == 'shared' && 'terraform-shared' || format('deploy-aws-{0}', inputs.environment) }}
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out exact merged Terraform source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+
+      - name: Reject stale CI-successful revision after mutation lock
+        id: freshness
+        env:
+          BRANCH_NAME: ${{ inputs.source_branch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTED_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/${BRANCH_NAME}:refs/remotes/origin/${BRANCH_NAME}"
+          current_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            "refs/remotes/origin/${BRANCH_NAME}" "${BRANCH_NAME}" "${REQUESTED_SHA}")"
+          if [ "${REQUESTED_SHA}" != "${current_sha}" ]; then
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "Stale Terraform apply rejected: ${REQUESTED_SHA} is behind ${current_sha}." \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          else
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate apply bootstrap variables
+        if: steps.freshness.outputs.current == 'true'
+        env:
+          APPLY_ROLE_ARN: ${{ vars.MOIMYEON_TERRAFORM_APPLY_ROLE_TO_ASSUME }}
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
+          VARIABLE_SYNC_TOKEN: ${{ secrets.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          for value in "${APPLY_ROLE_ARN}" "${PLAN_BUCKET}" "${PLAN_KMS_KEY_ARN}"; do
+            if [ -z "${value}" ]; then
+              echo "::error::Terraform apply bootstrap variables are incomplete."
+              exit 1
+            fi
+          done
+          if [ "${{ inputs.environment }}" != "shared" ] && [ -z "${VARIABLE_SYNC_TOKEN}" ]; then
+            echo "::error::Terraform variable sync credential is missing."
+            exit 1
+          fi
+
+      - name: Configure apply AWS credentials
+        if: steps.freshness.outputs.current == 'true'
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_TERRAFORM_APPLY_ROLE_TO_ASSUME }}
+          aws-region: ap-northeast-2
+
+      - name: Set up Terraform
+        if: steps.freshness.outputs.current == 'true'
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+
+      - name: Download and verify exact plan
+        if: steps.freshness.outputs.current == 'true'
+        env:
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+        run: |
+          set -euo pipefail
+          prefix="plans/apply/${{ inputs.source_sha }}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ inputs.environment }}"
+          aws s3 cp "s3://${PLAN_BUCKET}/${prefix}.tfplan" tfplan
+          aws s3 cp "s3://${PLAN_BUCKET}/${prefix}.tfplan.sha256" tfplan.sha256
+          sha256sum --check tfplan.sha256
+
+      - name: Initialize exact backend
+        if: steps.freshness.outputs.current == 'true'
+        run: bash infra/terraform/scripts/terraform-command.sh init "${{ inputs.environment }}"
+
+      - name: Apply approved exact plan
+        if: steps.freshness.outputs.current == 'true'
+        run: terraform -chdir="infra/terraform/envs/${{ inputs.environment }}" apply -input=false "${GITHUB_WORKSPACE}/tfplan"
+
+      - name: Sync deployment variables
+        if: steps.freshness.outputs.current == 'true' && inputs.environment != 'shared'
+        env:
+          GH_TOKEN: ${{ secrets.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN }}
+        run: bash infra/terraform/scripts/sync-github-variables.sh --env "${{ inputs.environment }}"

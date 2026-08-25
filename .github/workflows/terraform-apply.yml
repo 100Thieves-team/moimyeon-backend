@@ -1,0 +1,120 @@
+name: Terraform Apply
+run-name: Terraform Apply ${{ github.event.workflow_run.head_branch }}@${{ github.event.workflow_run.head_sha }}
+
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ dev, main ]
+
+permissions:
+  contents: read
+
+jobs:
+  select:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source_branch: ${{ github.event.workflow_run.head_branch }}
+      source_sha: ${{ github.event.workflow_run.head_sha }}
+
+    steps:
+      - name: Pin CI-successful trigger revision
+        env:
+          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          echo "Terraform boundary pinned to ${SOURCE_BRANCH}@${SOURCE_SHA}." \
+            >> "$GITHUB_STEP_SUMMARY"
+
+  plan-shared:
+    needs: select
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'dev' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-plan-environment.yml
+    with:
+      environment: shared
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  apply-shared:
+    needs: [ select, plan-shared ]
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.plan-shared.result == 'success' && needs.plan-shared.outputs.current == 'true' && needs.plan-shared.outputs.apply_required == 'true' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-apply-environment.yml
+    with:
+      environment: shared
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  plan-dev:
+    needs: [ select, plan-shared, apply-shared ]
+    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-shared.result == 'success' && needs.plan-shared.outputs.current == 'true' && (needs.plan-shared.outputs.apply_required == 'false' || needs.apply-shared.result == 'success') }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-plan-environment.yml
+    with:
+      environment: dev
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  apply-dev:
+    needs: [ select, plan-dev ]
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.plan-dev.result == 'success' && needs.plan-dev.outputs.current == 'true' && needs.plan-dev.outputs.apply_required == 'true' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-apply-environment.yml
+    with:
+      environment: dev
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  plan-live:
+    needs: select
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'main' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-plan-environment.yml
+    with:
+      environment: live
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  apply-live:
+    needs: [ select, plan-live ]
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && needs.plan-live.outputs.apply_required == 'true' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-apply-environment.yml
+    with:
+      environment: live
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  disabled:
+    needs: select
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED != 'true' && needs.select.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Report Terraform CI bootstrap gate
+        run: |
+          echo "::error::Terraform apply is disabled until the bootstrap preflight is complete. Application deployment remains frozen."
+          exit 1

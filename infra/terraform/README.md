@@ -9,7 +9,8 @@ deployment model. Structure mirrors `100Thieves-team/plady`'s `infra/terraform`.
   optional Route 53 zone/domain). Account **781897847312 already has an OIDC
   provider**, so `create_oidc_provider = false` by default — shared references it.
 - `envs/dev`: development environment for the `dev` branch.
-- `envs/live`: production environment for the `main` branch (provisioned scaled-to-zero).
+- `envs/live`: production configuration for the `main` branch. Remote state is
+  not created yet; the current plan is a full scaled-to-zero environment bootstrap.
 - `modules/shared-foundation`: reusable shared resources.
 - `modules/moimyeon-environment`: reusable environment stack.
 
@@ -32,9 +33,10 @@ Each app environment creates:
   `dns_management = "external"` (moimyeon DNS is in Cloudflare → external).
 - S3 private upload bucket for the MOI-361 presigned-URL flow.
 - Separate ECR repositories for core-api and core-worker Docker images.
-- SSM parameters for generated DB password / JWT secret / Google OAuth secret
-  and the last deployed image URI. Redis and vendor credentials are pre-created
-  SecureStrings so their values do not enter Terraform state.
+- SSM references for pre-created JWT, Google OAuth, Redis, and vendor
+  SecureStrings, plus last-deployed image metadata. New live RDS credentials are
+  generated and rotated by RDS in Secrets Manager; secret values do not enter
+  Terraform configuration or new state.
 - IAM: ECS task role (S3 uploads + ECS Exec), task execution role (SSM secrets),
   ECS instance role, and a GitHub Actions deploy role restricted to the env branch.
 - Optional SSM DB-access bastion (developer RDS port-forward).
@@ -59,16 +61,34 @@ aws sts get-caller-identity
 # 3) (Optional) shared — only needed for Route 53. OIDC already exists.
 cd infra/terraform/envs/shared && terraform init && terraform apply
 
-# 4) dev
-cd ../dev
-cp terraform.tfvars.example terraform.tfvars   # fill OAuth id/secret
-terraform init && terraform plan && terraform apply
-terraform output
+# 4) Validate the committed, non-secret environment sources.
+cd ../../..
+bash infra/terraform/tests/terraform-config-contract.sh
+bash infra/terraform/scripts/terraform-command.sh validate shared
+bash infra/terraform/scripts/terraform-command.sh validate dev
+bash infra/terraform/scripts/terraform-command.sh validate live
 ```
 
+The authoritative non-secret settings are committed as `shared.tfvars`,
+`dev.tfvars`, and `live.tfvars`. Official commands always pass the matching file
+with `-var-file`; `terraform.tfvars` and `*.auto.tfvars` are forbidden. A local
+`local.override.tfvars` may be passed only to an explicitly ad-hoc local command
+and is never accepted by CI plan or apply.
+
+Before an environment's first apply, create the following SSM SecureStrings
+through the approved operator process. Do not put their values in tfvars, shell
+history, plan, or GitHub workflow inputs. Terraform constructs the ARN without
+reading or owning the value.
+
+- `/moimyeon/{env}/core-api/JWT_SECRET`
+- `/moimyeon/{env}/core-api/GOOGLE_OAUTH_CLIENT_SECRET`
+- `/moimyeon/{env}/core-api/DB_PASSWORD` (least-privilege application DB user)
+- `/moimyeon/{env}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON`
+- `/moimyeon/{env}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD`
+
 On the very first apply, ECS cannot start a task until the first image is pushed
-to ECR. After the first `dev` push, the deploy workflow registers a task
-definition revision with the built image and updates the service.
+to ECR. After the first successful `dev` CI run, the deploy workflow registers a
+task definition revision with the built image and updates the service.
 
 ## GitHub Repository Variables
 
@@ -87,17 +107,79 @@ will consume (workflow itself is the next step — Pattern A CD):
 | `MOIMYEON_ECS_CLUSTER_{ENV}` | `ecs_cluster_name` |
 | `MOIMYEON_ECS_SERVICE_{ENV}` | `ecs_service_name` |
 | `MOIMYEON_ECS_CONTAINER_NAME_{ENV}` | `ecs_container_name` |
+| `MOIMYEON_ECS_TASK_DEFINITION_{ENV}` | `ecs_task_definition_arn` |
 | `MOIMYEON_IMAGE_URI_PARAMETER_{ENV}` | `image_uri_parameter_name` |
+| `MOIMYEON_APP_URL_{ENV}` | `app_url` |
+| `MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_{ENV}` | `deployment_bundle_parameter_prefix` |
 | `MOIMYEON_WORKER_ECR_REPOSITORY_URL_{ENV}` | `notification_worker_ecr_repository_url` |
 | `MOIMYEON_WORKER_ECS_SERVICE_{ENV}` | `notification_worker_ecs_service_name` |
 | `MOIMYEON_WORKER_ECS_CONTAINER_NAME_{ENV}` | `notification_worker_ecs_container_name` |
+| `MOIMYEON_WORKER_ECS_TASK_DEFINITION_{ENV}` | `notification_worker_task_definition_arn` |
 | `MOIMYEON_WORKER_IMAGE_URI_PARAMETER_{ENV}` | `notification_worker_image_uri_parameter_name` |
 
-Push behavior (once the workflow exists): `dev` push → dev, `main` push → live.
-Before the four Worker variables are synced, the workflow keeps deploying only
-Core API. Once they are all present, it also builds and registers the Worker
-image. A Worker service with desired count `0` receives the new task definition
-without starting a task, so vendor credentials can be prepared before activation.
+Push behavior (once the workflow exists): a successful CI run for `dev` deploys
+to dev. Documentation-only revisions do not enter the deployment queue. `main`
+does not deploy until `MOIMYEON_LIVE_DEPLOY_ENABLED=true`: the promotion workflow
+is fail-closed until native ECS blue/green and the promotion IAM role have been
+planned and applied by a person.
+
+Before the five Worker variables are synced, the workflow keeps deploying only
+Core API. Once they are all present, it builds the Worker image while the API
+stabilizes, then registers and deploys the Worker only after both sides succeed.
+A Worker service with desired count `0` receives the new task definition without
+starting a task, so vendor credentials can be prepared before activation.
+
+## Release promotion and rollback
+
+- `.github/workflows/promote-live.yml` wakes after a successful main CI run. It
+  accepts only a two-parent main merge and verifies that the dev parent passed CI.
+  It selects that revision's deployment bundle, or the latest first-parent bundle
+  with an identical runtime tree when only documentation changed, then copies API
+  and Worker manifests into live ECR without building them again.
+- `.github/workflows/rollback-aws.yml` is the execution boundary used by the team
+  development platform. The UI selects a prior deployment bundle and dispatches
+  the full source SHA, target environment, scope, and audit reason. The browser
+  never receives AWS credentials. The workflow resolves image digests and exact
+  historical task-definition ARNs from the immutable SSM deployment ledger.
+- Both workflows deploy immutable `repo@sha256:...` references. SSM `last deployed`
+  is updated only after ECS stability and, for Core API, blocking smoke tests.
+  Only then is `deployed-{env}-{sha12}` added and a single immutable SSM bundle
+  manifest binds source SHA, API/Worker digests, and exact task definitions.
+  Promotion and rollback require the ledger and marker to agree.
+- ECR lifecycle expires only untagged images after seven days. Tagged build
+  candidates and `deployed-{env}-{sha12}` markers are retained because ECR
+  lifecycle rules cannot exclude a deployed image that also has a candidate tag.
+  Deployment roles intentionally lack `ecr:BatchDeleteImage`, so they cannot
+  delete and recreate immutable deployment markers.
+- Live promotion also refuses to start until the API reports native ECS
+  `BLUE_GREEN` with its alternate target group/listener infrastructure, and every
+  configured live service has desired count above zero. Verify capacity before
+  enabling `MOIMYEON_LIVE_DEPLOY_ENABLED`.
+- `live-app` and `dev-app` GitHub Environments scope OIDC and variables but have no
+  required reviewers. The person who merges main owns the resulting app deployment.
+  Terraform apply remains a separate `live-infra` confirmation boundary.
+
+Fail-closed repository variables, created only after the IAM/Terraform slice is ready:
+
+| Variable | Purpose |
+| --- | --- |
+| `MOIMYEON_LIVE_DEPLOY_ENABLED` | Enables automatic main-to-live promotion only when exactly `true` |
+| `MOIMYEON_ROLLBACK_ENABLED` | Enables development-platform and break-glass rollback only when exactly `true` |
+| `MOIMYEON_DEPLOYMENT_LEDGER_ENABLED` | Enables immutable SSM bundle recording after IAM/prefix apply |
+| `MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE` | OIDC role that reads deployed dev images and writes/deploys live |
+| `MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_DEV` | OIDC rollback role for dev bundles |
+| `MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_LIVE` | OIDC rollback role for live bundles |
+| `MOIMYEON_DEVELOPMENT_PLATFORM_ACTOR` | Exact GitHub App/bot actor allowed to dispatch normal rollback |
+| `MOIMYEON_ROLLBACK_BREAK_GLASS_ACTORS` | Comma-separated human actors allowed for audited break-glass dispatch |
+
+GitHub secrets hold only the AWS-external Slack webhook URLs:
+
+- `SLACK_DEPLOY_WEBHOOK_URL_DEV`
+- `SLACK_DEPLOY_WEBHOOK_URL_LIVE`
+
+Missing Slack webhooks skip notification without changing deployment success. A
+configured webhook failure produces a workflow warning because the notification
+steps use `continue-on-error`.
 
 No GitHub Actions secret is added for a frontend domain change. Deployment uses
 the existing `MOIMYEON_*_DEV` repository variables, while application secrets
@@ -128,23 +210,21 @@ at this dev API and that production login does not target the dev API.
 In Vercel, assign the custom domain to a long-lived preview branch; assigning it
 only to one deployment will not advance it on later Git pushes.
 
-Set the non-secret Terraform values before applying:
+Change the reviewed non-secret values in `envs/dev/dev.tfvars` by PR:
 
 ```hcl
 upload_cors_allowed_origins             = ["https://dev.moimyeon.plady.io", "http://localhost:3000", "http://localhost:5173"]
 notification_web_push_action_base_url   = "https://dev.moimyeon.plady.io"
 ```
 
-Then review and apply only after the frontend DNS is ready:
+CI creates the plan from the committed file. After merge it recreates an exact
+merged-SHA plan, waits behind the `dev-infra` Environment, verifies the checksum,
+and applies that binary plan. Do not run a local apply:
 
 ```bash
-export AWS_PROFILE=plady
-terraform -chdir=infra/terraform/envs/dev init
-terraform -chdir=infra/terraform/envs/dev fmt -check
-terraform -chdir=infra/terraform/envs/dev validate
-terraform -chdir=infra/terraform/envs/dev plan -out=preview-domain.tfplan
-terraform -chdir=infra/terraform/envs/dev apply preview-domain.tfplan
-./infra/terraform/scripts/sync-github-variables.sh --env dev
+git add infra/terraform/envs/dev/dev.tfvars
+git commit
+# Open and merge a PR after Terraform Plan passes.
 ```
 
 Changing the frontend hostname does not rotate Firebase or Gmail credentials.
@@ -164,14 +244,14 @@ Non-secret env: `SPRING_PROFILES_ACTIVE`, `SERVER_PORT`,
 `STORAGE_DATABASE_CORE_DB_URL` (host:port/db), `STORAGE_DATABASE_CORE_DB_USERNAME`,
 `GOOGLE_OAUTH_CLIENT_ID`, `AWS_REGION`.
 
-Secrets via SSM SecureString `valueFrom` (hybrid model). The first three are
-always required. `STORAGE_REDIS_URL` is required when notification Redis is enabled:
+Secrets are injected with ECS `valueFrom`. `STORAGE_REDIS_URL` is required when
+notification Redis is enabled:
 
 | Secret | Source | Rotates on apply? |
 | --- | --- | --- |
-| `STORAGE_DATABASE_CORE_DB_PASSWORD` | **pre-existing SSM** (`generate_db_password = false`) — dev references it by ARN; the RDS master password is left untouched | No (preserved) |
-| `JWT_SECRET` | Terraform-generated `random_password` → SSM | Yes (dev only; invalidates sessions) |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | tfvars → SSM | n/a |
+| `STORAGE_DATABASE_CORE_DB_PASSWORD` | Pre-created SSM SecureString for the least-privilege application DB user | Manual, coordinated with DB user rotation |
+| `JWT_SECRET` | Pre-created SSM SecureString → `/moimyeon/{env}/core-api/JWT_SECRET` | Manual; rotation invalidates sessions |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Pre-created SSM SecureString → `/moimyeon/{env}/core-api/GOOGLE_OAUTH_CLIENT_SECRET` | Manual |
 | `STORAGE_REDIS_URL` | Pre-created private Redis URL → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Manual |
 
 Before enabling Redis, create its password and URL without passing either value
@@ -200,7 +280,10 @@ The worker additionally expects two pre-created SecureStrings. Terraform referen
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | `/moimyeon/{env}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON` |
 | `NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` | `/moimyeon/{env}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD` |
 
-Keep `notification_worker_desired_count = 0` until those parameters and the non-secret FCM/email values in `terraform.tfvars` are ready. The worker Task Role receives `ses:SendEmail` only when a sender address is configured, and the API Task Role does not receive that permission.
+Keep `notification_worker_desired_count = 0` until those parameters and the
+non-secret FCM/email values in the committed environment tfvars are ready. The
+worker Task Role receives `ses:SendEmail` only when a sender address is configured,
+and the API Task Role does not receive that permission.
 
 **Before applying dev**, seed the DB password parameter with the value currently
 in the box's `app.env` (this is the one manual secret step of the absorb):
@@ -211,8 +294,13 @@ aws ssm put-parameter --region ap-northeast-2 \
   --value "<current app.env STORAGE_DATABASE_CORE_DB_PASSWORD>"
 ```
 
-For a fresh env (e.g. live) set `generate_db_password = true` (default) and
-Terraform creates the parameter and the RDS master password itself.
+For live, `manage_db_master_password = true` lets RDS generate and rotate the
+master password in Secrets Manager. Terraform state contains the secret ARN, not
+the password value. ECS cannot read that admin secret. After the live RDS bootstrap,
+an operator uses the admin credential once to create the committed `db_username`
+with least-privilege grants and the password already stored in SSM `DB_PASSWORD`.
+Only then may API or Worker capacity be raised. RDS master rotation therefore
+does not invalidate long-running ECS task environment variables.
 
 ## Open items / assumptions to confirm
 
@@ -237,3 +325,85 @@ Terraform creates the parameter and the RDS master password itself.
 - S3 bucket `moimyeon-terraform-state-<account-id>-<region>` (versioned, AES256, BPA).
 - DynamoDB lock table `moimyeon-terraform-locks`.
 - `backend.tf` in each env (git-ignored; `backend.tf.example` is tracked).
+
+`backend.tf.example` is the committed, credentials-free backend source. The
+official command refuses a generated `backend.tf` that differs from it. AWS
+credentials are supplied only by the local bootstrap identity or GitHub OIDC.
+
+## Terraform CI bootstrap
+
+`.github/workflows/terraform-plan.yml` runs fork-safe fmt/validate, internal PR
+plans, and daily drift plans. After the merged revision passes `CI`,
+`.github/workflows/terraform-apply.yml` pins each run to its CI-successful trigger
+revision and creates a plan even when that commit is app-only. It
+applies only roots with resource or output changes. This avoids losing an older
+Terraform change when a newer app/docs CI finishes first.
+
+Configure these non-secret GitHub variables before enabling Terraform CI:
+
+- `MOIMYEON_TERRAFORM_CI_ENABLED=false` during bootstrap; set exactly `true` only after the following preflight
+- `MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME` in `terraform-review-plan`; it may
+  write only create-only `plans/pr/*` objects
+- `MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME` in `terraform-drift-plan`; it may
+  write only create-only `plans/drift/*` objects
+- `MOIMYEON_TERRAFORM_APPLY_PLAN_ROLE_TO_ASSUME` for trusted dev/main push
+  planning in `terraform-apply-plan`; it may write only create-only
+  `plans/apply/*` objects
+- `MOIMYEON_TERRAFORM_APPLY_ROLE_TO_ASSUME` separately in `shared-infra`,
+  `dev-infra`, and `live-infra`
+- `MOIMYEON_TERRAFORM_PLAN_BUCKET`
+- `MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN`
+- `MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN` secret separately in `dev-infra`
+  and `live-infra`; use a short-lived fine-grained token with repository
+  Variables write and Metadata read only (prefer a GitHub App installation token
+  when the team platform can mint one)
+
+While `MOIMYEON_TERRAFORM_CI_ENABLED` is not exactly `true`, the Terraform
+boundary deliberately fails and application deploy/promotion remains frozen.
+This prevents a commit containing infrastructure and application changes from
+running the application on old infrastructure during bootstrap.
+
+The two plan roles need read access for Terraform refresh plus write access only
+to their disjoint plan-artifact prefixes. Neither writer may delete or overwrite
+objects, and the bucket policy must deny cross-prefix writes. Apply roles need the matching state/backend and
+environment resource permissions. The artifact bucket must block public access,
+use the configured KMS key, enable versioning, and expire plan objects within 24
+hours. Raw plans and `terraform show -json` are never GitHub artifacts or PR text.
+
+`terraform-review-plan` requires a human reviewer with self-review prevention
+because an internal PR controls Terraform configuration and scripts. It must not
+read remote state or receive an OIDC token until the reviewer approves that exact
+diff. `terraform-drift-plan` accepts only the default branch schedule without a
+review pause. `terraform-apply-plan` accepts only trusted `dev`/`main` branches and uses a
+different OIDC subject and role. `shared-infra`, `dev-infra`, and `live-infra`
+require human apply review. This does not reintroduce reviewers for `dev-app` or
+`live-app`. Apply the one-time dev JWT/OAuth state-forget plan before turning
+`MOIMYEON_TERRAFORM_CI_ENABLED` on, so the plan role never starts with current
+state objects that still contain those secret values.
+
+On dev, shared is planned and applied first; only then is the dev plan created,
+so an exact dev plan cannot capture pre-shared state. Each apply job acquires the
+environment mutation lock and then resolves the latest CI-successful `dev` or
+`main` first-parent revision. A
+plan whose trigger is no longer the latest CI-successful revision fails before AWS apply
+credentials are configured,
+preventing out-of-order workflow completion from rolling infrastructure back to
+an older commit.
+
+Dev/live Terraform apply shares `deploy-aws-{env}` concurrency with application
+deploy, promotion, and rollback. Shared uses `terraform-shared`. Terraform and
+application workflows therefore cannot mutate the same ECS/ECR/IAM boundary at
+the same time.
+
+Application deploy and live promotion also wait for the `Terraform Apply
+{branch}@{CI SHA}` workflow run to succeed before entering their AWS mutation
+jobs. The shared lock prevents overlap; this explicit workflow dependency ensures
+Terraform completes first when one commit changes both infrastructure and app.
+If only documentation commits become CI-successful after a Terraform-ready app
+candidate, the mutation job permits that runtime-equivalent candidate; any newer
+runtime or infrastructure change requires its own successful Terraform boundary.
+
+Repository security must also enable GitHub secret scanning and push protection.
+CI runs the pinned Gitleaks image over full history; `.gitleaksignore` contains
+only exact historical test-fixture fingerprints, and `.gitleaks.toml` allows only
+deterministic test placeholders rather than whole files or directories.

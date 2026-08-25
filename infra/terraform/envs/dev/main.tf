@@ -1,3 +1,7 @@
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
 module "dev" {
   source = "../../modules/moimyeon-environment"
 
@@ -5,10 +9,11 @@ module "dev" {
   environment              = "dev"
   github_repository        = var.github_repository
   github_branch            = "dev"
-  github_oidc_provider_arn = var.github_oidc_provider_arn
+  github_oidc_provider_arn = data.aws_iam_openid_connect_provider.github.arn
   # GitHub immutable OIDC subject prefix (numeric org/repo IDs).
   # From: gh api /repos/100Thieves-team/moimyeon-backend/actions/oidc/customization/sub
   github_deploy_immutable_repo = "100Thieves-team@278404932/moimyeon-backend@1307286446"
+  github_deploy_environments   = ["dev-app"]
 
   route53_zone_id   = var.route53_zone_id
   route53_zone_name = var.route53_zone_name
@@ -50,9 +55,11 @@ module "dev" {
   ecr_repository_name  = "moimyeon/backend"
   db_name              = var.db_name
   db_username          = var.db_username
+  db_master_username   = var.db_master_username
   # Absorb the existing dev DB without rotating its master password. The current
   # app.env password must be put into SSM /moimyeon/dev/core-api/DB_PASSWORD first.
   generate_db_password        = false
+  manage_db_master_password   = false
   db_backup_retention_period  = 1
   db_deletion_protection      = false
   db_skip_final_snapshot      = true
@@ -89,8 +96,7 @@ module "dev" {
   alb_sg_description = "Allow public HTTP/HTTPS traffic to the Moimyeon development ALB"
   rds_sg_description = "Security group for moimyeon dev MySQL RDS"
 
-  oauth_google_client_id     = var.oauth_google_client_id
-  oauth_google_client_secret = var.oauth_google_client_secret
+  oauth_google_client_id = var.oauth_google_client_id
 
   tags = var.tags
 }

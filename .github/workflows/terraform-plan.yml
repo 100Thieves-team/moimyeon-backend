@@ -1,0 +1,181 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-plan.yml"
+      - ".github/workflows/terraform-apply.yml"
+      - ".github/workflows/terraform-plan-environment.yml"
+      - ".github/workflows/terraform-apply-environment.yml"
+  schedule:
+    - cron: "17 21 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [ shared, dev, live ]
+
+    steps:
+      - name: Check out Terraform source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+
+      - name: Check configuration authority
+        run: bash infra/terraform/tests/terraform-config-contract.sh
+
+      - name: Check formatting
+        run: bash infra/terraform/scripts/terraform-command.sh fmt
+
+      - name: Validate ${{ matrix.environment }}
+        run: bash infra/terraform/scripts/terraform-command.sh validate "${{ matrix.environment }}"
+
+  plan:
+    needs: static
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'pull_request' && 'terraform-review-plan' || 'terraform-drift-plan' }}
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [ shared, dev, live ]
+
+    steps:
+      - name: Check out Terraform source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate Terraform CI bootstrap variables
+        env:
+          PLAN_ROLE_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME }}
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
+        run: |
+          set -euo pipefail
+          for value in "${PLAN_ROLE_ARN}" "${PLAN_BUCKET}" "${PLAN_KMS_KEY_ARN}"; do
+            if [ -z "${value}" ]; then
+              echo "::error::Terraform plan bootstrap variables are incomplete."
+              exit 1
+            fi
+          done
+
+      - name: Configure Terraform plan AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME }}
+          aws-region: ap-northeast-2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+
+      - name: Create ${{ matrix.environment }} plan
+        id: plan
+        env:
+          PLAN_FILE: ${{ runner.temp }}/${{ matrix.environment }}.tfplan
+        run: |
+          set -euo pipefail
+          bash infra/terraform/scripts/terraform-command.sh plan \
+            "${{ matrix.environment }}" "${PLAN_FILE}"
+          plan_sha256="$(sha256sum "${PLAN_FILE}" | awk '{print $1}')"
+          printf '%s  tfplan\n' "${plan_sha256}" > "${PLAN_FILE}.sha256"
+
+          terraform \
+            -chdir="infra/terraform/envs/${{ matrix.environment }}" \
+            show -json "${PLAN_FILE}" > "${RUNNER_TEMP}/${{ matrix.environment }}-plan.json"
+          jq '[
+            .resource_changes[]?
+            | select(.change.actions != ["no-op"])
+            | {address, actions: .change.actions}
+          ]' "${RUNNER_TEMP}/${{ matrix.environment }}-plan.json" \
+            > "${RUNNER_TEMP}/${{ matrix.environment }}-changes.json"
+          change_count="$(jq 'length' "${RUNNER_TEMP}/${{ matrix.environment }}-changes.json")"
+          echo "change_count=${change_count}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "<!-- moimyeon-terraform-plan-${{ matrix.environment }} -->"
+            echo "### Terraform ${{ matrix.environment }} plan"
+            echo
+            echo "Resource changes: ${change_count}"
+            echo
+            echo '```json'
+            jq -c '.[]' "${RUNNER_TEMP}/${{ matrix.environment }}-changes.json"
+            echo '```'
+            echo
+            echo "Raw plan: private KMS-encrypted S3 object for run ${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}."
+          } > "${RUNNER_TEMP}/${{ matrix.environment }}-summary.md"
+          cat "${RUNNER_TEMP}/${{ matrix.environment }}-summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Store private plan artifact
+        env:
+          PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
+          PLAN_FILE: ${{ runner.temp }}/${{ matrix.environment }}.tfplan
+        run: |
+          set -euo pipefail
+          case "${GITHUB_EVENT_NAME}" in
+            pull_request) artifact_scope=pr ;;
+            schedule) artifact_scope=drift ;;
+            *) echo "::error::Unsupported Terraform plan event."; exit 1 ;;
+          esac
+          prefix="plans/${artifact_scope}/${GITHUB_SHA}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ matrix.environment }}"
+          aws s3api put-object \
+            --bucket "${PLAN_BUCKET}" \
+            --key "${prefix}.tfplan" \
+            --body "${PLAN_FILE}" \
+            --server-side-encryption aws:kms \
+            --ssekms-key-id "${PLAN_KMS_KEY_ARN}" \
+            --if-none-match '*'
+          aws s3api put-object \
+            --bucket "${PLAN_BUCKET}" \
+            --key "${prefix}.tfplan.sha256" \
+            --body "${PLAN_FILE}.sha256" \
+            --server-side-encryption aws:kms \
+            --ssekms-key-id "${PLAN_KMS_KEY_ARN}" \
+            --if-none-match '*'
+
+      - name: Comment sanitized PR plan
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUMMARY_FILE: ${{ runner.temp }}/${{ matrix.environment }}-summary.md
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file "${SUMMARY_FILE}"
+
+      - name: Fail scheduled drift detection on changes
+        if: github.event_name == 'schedule' && steps.plan.outputs.change_count != '0'
+        run: |
+          echo "::error::Terraform drift detected in ${{ matrix.environment }}."
+          exit 1
+
+  disabled:
+    needs: static
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Report Terraform CI bootstrap gate
+        run: |
+          echo "Terraform AWS plan is disabled until OIDC roles, private plan storage, KMS, and Environment boundaries are bootstrapped." \
+            >> "$GITHUB_STEP_SUMMARY"

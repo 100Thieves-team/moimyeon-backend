@@ -35,6 +35,24 @@ variable "github_deploy_immutable_repo" {
   default     = null
 }
 
+variable "github_deploy_environments" {
+  description = "GitHub Environment names additionally allowed to assume the deploy role."
+  type        = list(string)
+  default     = []
+}
+
+variable "github_deploy_additional_ecr_read_repository_arns" {
+  description = "Additional ECR repositories the deploy role may read for build-once promotion."
+  type        = list(string)
+  default     = []
+}
+
+variable "github_deploy_additional_ssm_read_parameter_arns" {
+  description = "Additional SSM parameters the deploy role may read for deployment bundle promotion."
+  type        = list(string)
+  default     = []
+}
+
 # ---------------------------------------------------------------------------
 # DNS / TLS
 # ---------------------------------------------------------------------------
@@ -280,6 +298,34 @@ variable "ecs_service_health_check_grace_period_seconds" {
   default     = 240
 }
 
+variable "ecs_deployment_strategy" {
+  description = "Core API ECS deployment strategy. Worker remains ROLLING."
+  type        = string
+  default     = "ROLLING"
+
+  validation {
+    condition     = contains(["ROLLING", "BLUE_GREEN"], var.ecs_deployment_strategy)
+    error_message = "ecs_deployment_strategy must be ROLLING or BLUE_GREEN."
+  }
+}
+
+variable "ecs_blue_green_bake_time_in_minutes" {
+  description = "Minutes to keep both Core API service revisions during ECS blue/green deployment."
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.ecs_blue_green_bake_time_in_minutes >= 0
+    error_message = "ecs_blue_green_bake_time_in_minutes must be non-negative."
+  }
+}
+
+variable "ecs_deployment_alarm_names" {
+  description = "CloudWatch alarms that trigger Core API ECS deployment rollback."
+  type        = list(string)
+  default     = []
+}
+
 variable "log_retention_days" {
   description = "CloudWatch Logs retention in days."
   type        = number
@@ -436,6 +482,18 @@ variable "generate_db_password" {
   default     = true
 }
 
+variable "db_master_username" {
+  description = "Optional RDS master username. Keep separate from db_username when the application uses a least-privilege SSM credential."
+  type        = string
+  default     = null
+}
+
+variable "manage_db_master_password" {
+  description = "Let RDS generate, store, and rotate the master password in AWS Secrets Manager. Use for new environments; mutually exclusive with generate_db_password."
+  type        = bool
+  default     = false
+}
+
 # ---------------------------------------------------------------------------
 # DB access bastion (developer SSM port-forward to private RDS)
 # ---------------------------------------------------------------------------
@@ -469,14 +527,9 @@ variable "jwt_issuer" {
 }
 
 variable "oauth_google_client_id" {
-  description = "Google OAuth client ID (required for the app to boot). Non-secret."
+  description = "Google OAuth client ID. Non-secret; may be null only while the API is scaled to zero."
   type        = string
-}
-
-variable "oauth_google_client_secret" {
-  description = "Google OAuth client secret (required for the app to boot). Stored in SSM SecureString."
-  type        = string
-  sensitive   = true
+  default     = null
 }
 
 # ---------------------------------------------------------------------------
