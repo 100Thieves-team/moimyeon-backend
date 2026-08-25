@@ -25,6 +25,7 @@ Kotlin 2.3 / JVM 25 · Spring Boot 4.1 · Gradle 9.5 멀티모듈 · JPA + Flywa
 | 인증·인가 | [`auth.md`](docs/conventions/auth.md) |
 | 테스트 | [`testing.md`](docs/conventions/testing.md) |
 | 커밋·PR | [`git.md`](docs/conventions/git.md) |
+| 도메인 용어 | [`glossary.md`](docs/conventions/glossary.md) |
 
 **경험** — [`docs/knowledge/`](docs/knowledge/README.md)는 규칙이 아니라 축적된 경험이다.
 이 스택의 함정, 우리가 실제로 물린 것, 판단 기준. 규칙 문서에는 안 나오지만

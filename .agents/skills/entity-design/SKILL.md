@@ -18,7 +18,9 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 
 1. **컨텍스트 수집** — `.agents/skills/issue-context/SKILL.md` 수행. PRD를
    정독한다.
-2. **엔티티 도출** — `docs/knowledge/erd-design.md`의 판정 질문을 명시
+2. **엔티티 도출** — 이름은 `docs/conventions/glossary.md`의 표준어를 쓴다
+   (없는 개념이면 사전에 먼저 한 줄 추가).
+   `docs/knowledge/erd-design.md`의 판정 질문을 명시
    적용한다: 명사의 엔티티 승격 예외, 동사→기록 판정, 기본/중심/행위 태깅,
    M:N의 숨은 속성 질문, 스냅샷 vs 파생 값 경계.
 3. **논리 모델 작성** — `.worklog/{이슈키}/erd.dbml`에 DBML로: 엔티티·관계,
