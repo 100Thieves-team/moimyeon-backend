@@ -81,6 +81,19 @@ jobs:
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
 
+  sync-dev-variables:
+    needs: [ select, plan-dev, apply-dev ]
+    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-dev.result == 'success' && needs.plan-dev.outputs.current == 'true' && (needs.plan-dev.outputs.apply_required == 'false' || needs.apply-dev.result == 'success') }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-sync-variables.yml
+    with:
+      environment: dev
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
   plan-live:
     needs: select
     if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'main' }}
@@ -102,6 +115,19 @@ jobs:
       contents: read
       id-token: write
     uses: ./.github/workflows/terraform-apply-environment.yml
+    with:
+      environment: live
+      source_sha: ${{ needs.select.outputs.source_sha }}
+      source_branch: ${{ needs.select.outputs.source_branch }}
+
+  sync-live-variables:
+    needs: [ select, plan-live, apply-live ]
+    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && (needs.plan-live.outputs.apply_required == 'false' || needs.apply-live.result == 'success') }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/terraform-sync-variables.yml
     with:
       environment: live
       source_sha: ${{ needs.select.outputs.source_sha }}

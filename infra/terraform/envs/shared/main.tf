@@ -4,6 +4,8 @@ module "foundation" {
   project                             = var.project
   github_repository                   = var.github_repository
   github_immutable_repository         = var.github_immutable_repository
+  github_repository_id                = var.github_repository_id
+  github_repository_owner_id          = var.github_repository_owner_id
   create_oidc_provider                = var.create_oidc_provider
   terraform_state_bucket_name         = var.terraform_state_bucket_name
   terraform_lock_table_name           = var.terraform_lock_table_name

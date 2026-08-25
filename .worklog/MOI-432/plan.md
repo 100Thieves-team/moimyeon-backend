@@ -168,14 +168,18 @@
 
 ### shared 실제 state plan
 
-- 최종 저장 plan: `/tmp/moi432-shared-bootstrap-v2.tfplan`.
+- 최종 저장 plan: `/tmp/moi432-shared-bootstrap-v4.tfplan`.
 - `28 add / 0 change / 0 destroy`.
 - 신규: rotating KMS key/alias, private plan S3 bucket과 BPA·versioning·KMS encryption·24시간 lifecycle·bucket policy,
   review/drift/apply-plan writer role 3개, shared/dev/live apply role 3개와 각 policy/managed-policy attachment.
 - 기존 GitHub OIDC provider와 Route53 리소스는 변경하지 않는다.
 - writer는 서로 다른 GitHub Environment subject와 S3 prefix를 사용한다. bucket policy가 KMS header,
   `s3:if-none-match` create-only Put, cross-prefix write·Delete를 fail-closed로 강제한다.
+- Terraform Environment는 reviewer·wait timer·branch policy 없는 변수 namespace다. privileged role은 immutable
+  repository/owner ID, `refs/heads/dev`, workflow 이름과 reusable `job_workflow_ref`를 추가 검증한다.
 - 이 plan은 순환 의존성을 끊기 위한 최초 1회 사람 apply 대상이다. 에이전트는 apply하지 않았다.
+- 적용 순서: current dev state의 JWT/OAuth/random forget plan을 사람이 먼저 apply한 뒤에만 shared bootstrap을 apply한다.
+  role ARN variable을 숨겨도 ARN 자체가 예측 가능하므로 shared-first 순서는 허용하지 않는다.
 
 ### 위험 판독
 
@@ -184,7 +188,7 @@
 - IAM 확대: dev/live deploy role에 환경 OIDC subject, bundle SSM read/write, live role의 dev ECR·ledger read를 추가한다.
 - shared IAM 신규: plan 역할은 저장소 소유 metadata-only managed policy와 exact state/image marker read만 받고
   application data-plane/secret/KMS decrypt를 거부한다. apply 역할은 PowerUserAccess에 cross-state/artifact/KMS 보호
-  Deny와 프로젝트 prefix IAM 관리만 추가한다. Environment 승인과 sanitized exact plan 판독이 사람 권한 경계다.
+  Deny와 프로젝트 prefix IAM 관리만 추가한다. protected branch·CI·exact plan·workflow/ref OIDC claim이 권한 경계다.
 - apply·GitHub enable flag 설정·시크릿 생성은 실행하지 않았다.
 
 ## 설정 권위·Terraform CI 검증 결과
@@ -198,8 +202,9 @@
 - fork-safe PR plan, daily drift, merged-SHA exact-plan apply workflow와 정적 계약 추가.
 - PR review-plan과 merged apply-plan을 서로 다른 GitHub Environment/OIDC role/S3 prefix로 분리하고 create-only upload 사용.
 - `shared-foundation`에 KMS·private S3 plan store·분리된 OIDC role을 코드화하고 실제 shared plan `28/0/0` 판독.
-- `sync-terraform-bootstrap.sh`로 6개 Terraform Environment, reviewer/branch policy, role/bucket/KMS Variables를
-  dry-run→명시적 `--apply` 순서로 reconcile. enable flag는 항상 false로 남기고 Variables-write secret은 수동 경계로 유지.
+- `sync-terraform-bootstrap.sh`로 보호 규칙 없는 6개 Terraform Environment namespace와 role/bucket/KMS Variables를
+  dry-run→명시적 `--apply` 순서로 reconcile. enable flag는 항상 false로 남기고 Variables-write token 값은
+  ref/workflow-bound apply role만 읽는 사전 생성 SSM SecureString에 둔다.
 - dev branch는 shared plan/apply가 성공한 뒤 dev plan을 새로 만들어 old shared state 캡처를 차단.
 - apply lock 뒤 branch tip freshness를 재검증하고 stale push는 AWS apply credential 전에 종료.
 - 모든 CI-success trigger를 run-name/source에 고정하고 no-op plan까지 수행해 Terraform 변경 뒤 app/docs commit의 역순 CI 완료에도 변경을 누락하지 않음.

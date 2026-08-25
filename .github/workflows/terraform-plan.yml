@@ -9,6 +9,7 @@ on:
       - ".github/workflows/terraform-apply.yml"
       - ".github/workflows/terraform-plan-environment.yml"
       - ".github/workflows/terraform-apply-environment.yml"
+      - ".github/workflows/terraform-sync-variables.yml"
   schedule:
     - cron: "17 21 * * *"
 

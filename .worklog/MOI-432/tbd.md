@@ -12,7 +12,7 @@
 | 4. 배포 알림 | A. Incoming Webhook | 확정 |
 | 5. 스모크 테스트 | B. readiness + public DB read | 확정 |
 | 6. 배포 컨트롤러 | C. ECS native blue/green | 확정: controller는 ECS 통일, Worker 전략은 rolling |
-| 7.1 Terraform CI | A. PR plan + 승인 apply | 확정 |
+| 7.1 Terraform CI | A. PR plan + merged exact-plan 무승인 자동 apply | 확정 |
 | 7.2 설정·시크릿 원본 | 비민감 tfvars는 Git, 앱 시크릿은 사전 생성 SSM, 신규 live RDS는 Secrets Manager | 확정 |
 
 공통 불변식:
@@ -202,30 +202,31 @@ strategy만 rolling으로 되돌릴 수 있지만 controller는 ECS로 유지한
 
 ### 7.1 plan/apply 운영 방식
 
-상태: **A로 확정**. PR plan + merged revision 재-plan + 승인된 apply를 사용한다.
+상태: **A의 무승인형으로 확정**. PR plan + merged revision 재-plan + CI 성공 뒤 자동 apply를 사용한다.
 
 | 방안 | 장점 | 단점 |
 | --- | --- | --- |
-| A. PR plan + merge 후 승인 apply | 리뷰 시 변경량·replacement·IAM 확대를 보고, 승인된 merged revision만 apply한다. OIDC 역할을 plan/apply로 분리할 수 있다. | workflow·role·artifact 경계가 늘고 plan과 apply 사이 drift/TOCTOU를 막아야 한다. |
+| A. PR plan + merge 후 CI 자동 apply | 리뷰 시 변경량·replacement·IAM 확대를 보고, CI를 통과한 merged revision만 apply한다. OIDC 역할을 plan/apply로 분리할 수 있다. | 별도 사람 pause가 없으므로 protected branch·workflow/ref claim과 exact-plan 정합성이 최종 경계다. |
 | B. 수동 dispatch plan/apply | 단순하고 초기 통제가 쉽다. | PR 리뷰에 plan 근거가 없고 실행 누락·로컬 작업 회귀 위험이 크다. 반복 운영이 사람 기억에 의존한다. |
 | C. HCP Terraform 같은 managed runner | state lock, 정책, run history, approval을 제품에 맡길 수 있다. | 비용·공급자 종속·학습 비용이 생기며 현재 규모에는 과할 수 있다. |
 
 ### 추천
 
-**A. GitHub Actions 기반 PR plan + merged revision 재-plan + Environment 승인 apply**를 사용한다.
+**A. GitHub Actions 기반 PR plan + merged revision 재-plan + 무승인 자동 apply**를 사용한다.
 
 - PR(`infra/terraform/**`): fmt/validate 후 환경별 plan. AWS 리소스 mutation 권한이 없는 plan OIDC role을 쓴다.
   state read와 lock에 필요한 최소 S3/DynamoDB 권한은 별도 허용한다.
 - fork PR: OIDC와 시크릿 없이 fmt/validate만 수행한다.
 - merge: merged SHA에서 plan을 다시 만들고, raw plan은 공개 저장소의 GitHub artifact에 올리지 않는다.
   전용 private S3 prefix에 SSE-KMS·24시간 이내 lifecycle로 저장하고 SHA-256을 함께 기록한다. apply job은
-  같은 key와 hash의 exact plan만 받아 Environment 승인 뒤 환경별 apply OIDC role로 실행한다.
+  같은 key와 hash의 exact plan만 받아 별도 사람 승인 없이 환경별 apply OIDC role로 실행한다.
 - PR 코멘트에는 raw `terraform show -json`을 붙이지 않고 add/change/destroy 수, replacement·IAM·public
   exposure 같은 위험 요약만 secret redaction 뒤 게시한다.
 - apply 뒤 `sync-github-variables.sh`를 실행하고 실패하면 apply 성공과 변수 동기화 실패를 구분해 알린다.
 - drift: live/shared는 매일, dev는 주 1회 `plan -detailed-exitcode`를 실행한다. 차이가 있을 때만 알리고
   자동 apply하지 않는다.
-- role trust는 branch가 아니라 GitHub Environment subject에 묶고, plan/apply role을 분리한다.
+- Environment는 보호 없는 variable namespace로만 쓴다. role trust는 Environment subject 외에 immutable repository ID,
+  workflow, default branch ref, reusable `job_workflow_ref`를 함께 검증하고 plan/apply role을 분리한다.
 
 GitHub OIDC는 장기 AWS access key 없이 단기 자격 증명을 사용하며, Environment를 쓰면 AWS trust의
 `sub`도 environment 이름과 맞춰야 한다.

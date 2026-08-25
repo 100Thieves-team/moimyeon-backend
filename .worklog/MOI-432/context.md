@@ -18,7 +18,7 @@ CI 게이트·build once promote·롤백·live 승인·알림·스모크 테스�
 - 문서만 바뀐 커밋은 배포하지 않는다.
 - live는 dev에서 검증된 이미지를 재빌드하지 않고 승격하며 승인 게이트를 거친다.
 - 배포 실패·롤백 알림과 배포 후 스모크 테스트가 존재해야 한다.
-- Terraform은 PR plan과 승인된 CI apply로 운영하고 시크릿 원본은 SSM SecureString으로 단일화한다.
+- Terraform은 PR plan과 CI 성공 뒤 exact-plan 자동 apply로 운영하고 시크릿 원본은 SSM SecureString으로 단일화한다.
 
 작업 세션의 `infra-change` 기준과 이슈에 승인된 파이프라인 원칙을 불변식으로 적용하며,
 현재 코드와 충돌할 때 이 작업에서 새로 만드는 경로는 반드시 이를 만족해야 한다.

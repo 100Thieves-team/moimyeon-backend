@@ -15,6 +15,16 @@ variable "github_immutable_repository" {
   default     = null
 }
 
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID used in OIDC trust conditions."
+  type        = string
+}
+
+variable "github_repository_owner_id" {
+  description = "Immutable numeric GitHub organization ID used in OIDC trust conditions."
+  type        = string
+}
+
 variable "terraform_state_bucket_name" {
   description = "Existing Terraform remote-state bucket. Null derives <project>-terraform-state-<account>-<region>."
   type        = string

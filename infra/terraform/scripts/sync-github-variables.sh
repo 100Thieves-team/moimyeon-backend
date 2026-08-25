@@ -68,12 +68,12 @@ if [[ "${DRY_RUN}" == "false" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TERRAFORM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+TERRAFORM_COMMAND="${SCRIPT_DIR}/terraform-command.sh"
 
 terraform_output() {
   local env_name="$1"
   local output_name="$2"
-  terraform -chdir="${TERRAFORM_DIR}/envs/${env_name}" output -raw "${output_name}"
+  bash "${TERRAFORM_COMMAND}" output-raw "${env_name}" "${output_name}"
 }
 
 set_variable() {

@@ -22,6 +22,18 @@ variable "github_immutable_repository" {
   default     = "100Thieves-team@278404932/moimyeon-backend@1307286446"
 }
 
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID."
+  type        = string
+  default     = "1307286446"
+}
+
+variable "github_repository_owner_id" {
+  description = "Immutable numeric GitHub organization ID."
+  type        = string
+  default     = "278404932"
+}
+
 variable "terraform_state_bucket_name" {
   description = "Existing Terraform remote-state bucket. Null derives the canonical account/region name."
   type        = string

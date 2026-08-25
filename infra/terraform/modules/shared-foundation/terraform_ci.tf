@@ -14,23 +14,44 @@ locals {
 
   terraform_plan_roles = {
     terraform-review-plan = {
-      name            = "${var.project}-terraform-review-plan"
-      artifact_prefix = "plans/pr"
+      name              = "${var.project}-terraform-review-plan"
+      artifact_prefix   = "plans/pr"
+      workflow          = "Terraform Plan"
+      ref               = null
+      job_workflow_refs = []
     }
     terraform-drift-plan = {
-      name            = "${var.project}-terraform-drift-plan"
-      artifact_prefix = "plans/drift"
+      name              = "${var.project}-terraform-drift-plan"
+      artifact_prefix   = "plans/drift"
+      workflow          = "Terraform Plan"
+      ref               = "refs/heads/dev"
+      job_workflow_refs = []
     }
     terraform-apply-plan = {
       name            = "${var.project}-terraform-apply-plan"
       artifact_prefix = "plans/apply"
+      workflow        = "Terraform Apply"
+      ref             = "refs/heads/dev"
+      job_workflow_refs = [
+        "${var.github_repository}/.github/workflows/terraform-plan-environment.yml@refs/heads/dev",
+      ]
     }
   }
 
   terraform_apply_environments = toset(["shared", "dev", "live"])
-  terraform_oidc_environments = setunion(
-    toset(keys(local.terraform_plan_roles)),
-    toset([for environment in local.terraform_apply_environments : "${environment}-infra"]),
+  terraform_oidc_trusts = merge(
+    local.terraform_plan_roles,
+    {
+      for environment in local.terraform_apply_environments :
+      "${environment}-infra" => {
+        workflow = "Terraform Apply"
+        ref      = "refs/heads/dev"
+        job_workflow_refs = [
+          "${var.github_repository}/.github/workflows/terraform-apply-environment.yml@refs/heads/dev",
+          "${var.github_repository}/.github/workflows/terraform-sync-variables.yml@refs/heads/dev",
+        ]
+      }
+    },
   )
   terraform_state_keys = {
     for environment in local.terraform_apply_environments :
@@ -38,11 +59,11 @@ locals {
   }
 }
 
-# Every writer/reader has a distinct GitHub Environment subject. A PR-authored
-# workflow cannot assume the merged-SHA writer or apply roles merely by knowing
-# their ARN.
+# Environments are unprotected variable namespaces, not an authorization gate.
+# Repository/ref/workflow claims prevent a PR from reusing a privileged
+# Environment subject, while job_workflow_ref pins reusable apply boundaries.
 data "aws_iam_policy_document" "terraform_github_assume_role" {
-  for_each = local.terraform_oidc_environments
+  for_each = local.terraform_oidc_trusts
 
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -67,6 +88,46 @@ data "aws_iam_policy_document" "terraform_github_assume_role" {
           "repo:${var.github_immutable_repository}:environment:${each.key}",
         ],
       )
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:repository_id"
+      values   = [var.github_repository_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:repository_owner_id"
+      values   = [var.github_repository_owner_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:workflow"
+      values   = [each.value.workflow]
+    }
+
+    dynamic "condition" {
+      for_each = each.value.ref == null ? [] : [each.value.ref]
+      iterator = ref_claim
+
+      content {
+        test     = "StringEquals"
+        variable = "token.actions.githubusercontent.com:ref"
+        values   = [ref_claim.value]
+      }
+    }
+
+    dynamic "condition" {
+      for_each = length(each.value.job_workflow_refs) == 0 ? [] : [each.value.job_workflow_refs]
+      iterator = workflow_claim
+
+      content {
+        test     = "StringEquals"
+        variable = "token.actions.githubusercontent.com:job_workflow_ref"
+        values   = workflow_claim.value
+      }
     }
   }
 }

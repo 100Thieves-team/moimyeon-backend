@@ -102,14 +102,14 @@
 - Worker 완료 조건: waiter 성공 뒤 요청 task definition이 PRIMARY인지 별도 검증한다.
 - 문서 후속: 하네스의 `docs/knowledge/infra.md`가 이 브랜치에 합류하면 CodeDeploy 전제를 native ECS 결정으로 동기화한다.
 
-## DR-013: Terraform은 PR plan과 승인된 exact-plan apply로 운영
+## DR-013: Terraform은 PR plan과 CI-gated exact-plan 자동 apply로 운영
 
-- 결정: PR에서 fmt·validate·환경별 plan을 실행하고, merged SHA에서 다시 만든 exact plan만 승인 뒤 apply한다.
+- 결정: PR에서 fmt·validate·환경별 plan을 실행하고, merged SHA에서 다시 만든 exact plan을 CI 성공 뒤 사람 승인 없이 apply한다.
 - 권한: resource mutation이 없는 plan OIDC role과 환경별 apply OIDC role을 분리한다. fork PR은 fmt·validate만 수행한다.
 - plan 전달: raw plan은 공개 GitHub artifact에 두지 않는다. private S3 prefix에 SSE-KMS·24시간 이내 lifecycle로
   저장하고 SHA-256이 같은 artifact만 apply한다. PR에는 redaction한 위험 요약만 게시한다.
 - 후속: apply 성공 뒤 GitHub variables를 동기화한다. live/shared는 매일, dev는 주 1회 drift plan을 실행하되 자동 apply하지 않는다.
-- 안전 규칙: 로컬·에이전트 apply는 계속 금지한다.
+- 안전 규칙: 최초 bootstrap 외 로컬·에이전트 apply는 계속 금지한다. 일반 apply 권한은 protected branch·CI·workflow/ref OIDC claim으로 통제한다.
 
 ## DR-014: 애플리케이션 시크릿은 사전 생성 SSM을 참조
 
@@ -217,15 +217,17 @@
 ## DR-025: Terraform CI는 sanitized summary와 private exact plan을 분리
 
 - PR: fork는 fmt·validate만 실행하고, 내부 PR은 OIDC plan role로 refresh한 뒤 resource address·action만 코멘트한다.
-- PR 권한: 내부 PR도 Terraform 코드·script를 제어하므로 `terraform-review-plan` Environment required reviewer와
-  self-review 방지를 지난 뒤에만 OIDC와 remote state read를 허용한다.
+- PR 권한: 내부 PR은 별도 사람 승인 없이 `terraform-review-plan` OIDC role로 refresh plan을 실행한다. fork는
+  OIDC와 remote state 없이 fmt/validate만 실행한다.
 - drift 권한: schedule은 default branch 전용 `terraform-drift-plan` Environment와 별도 role로 자동 실행해
   PR approval 대기와 분리한다.
 - artifact: raw binary plan과 checksum은 KMS-encrypted private S3 prefix에만 저장하고 GitHub artifact로 올리지 않는다.
 - artifact trust: review, drift, merged apply-plan writer role을 분리하고 각각 `plans/pr/*`, `plans/drift/*`,
   `plans/apply/*`에만 create-only PutObject를 허용한다. 각 GitHub Environment의 서로 다른 OIDC subject를
-  trust하며 role은 상대 prefix write·DeleteObject 권한이 없다.
-- apply: dev push는 shared/dev, main push는 live의 merged SHA plan을 새로 만든다. 환경별 `*-infra` 승인 뒤 checksum이 같은 binary plan만 apply한다.
+  trust하되 보호 없는 Environment만 신뢰하지 않고 immutable repository ID, workflow, ref, reusable workflow 경로를
+  함께 검증한다. role은 상대 prefix write·DeleteObject 권한이 없다.
+- apply: dev push는 shared/dev, main push는 live의 merged SHA plan을 새로 만든다. 별도 사람 승인 없이 checksum이
+  같은 binary plan만 자동 apply한다.
 - CI gate: apply workflow는 push에 독립 발화하지 않는다. 내부 dev/main push의 `CI` 성공 `workflow_run`마다
   run-name과 plan source를 그 trigger SHA에 고정하고 shared/dev 또는 live plan을 만든다.
 - 누락 방지: trigger commit의 first-parent Terraform diff만 보지 않는다. app/docs 후속 commit이 먼저 성공해도
@@ -247,9 +249,12 @@
   docs/Markdown뿐이면 runtime-equivalent candidate를 허용한다. runtime surface가 다르면 실패해 newer run이 처리한다.
 - drift: 매일 shared/dev/live plan을 실행하고 resource change가 있으면 workflow를 실패시킨다.
 - bootstrap: plan/apply role ARN, artifact bucket, KMS key ARN은 GitHub Environment/Repository variable로 사전 설정한다.
-- output sync: 기본 `GITHUB_TOKEN`에는 Variables write permission이 없으므로 `dev-infra`·`live-infra`의
-  `MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN`을 사용한다. 초기에는 최소 권한·짧은 만료 fine-grained token,
-  개발 플랫폼이 준비되면 GitHub App installation token으로 교체한다.
+- output sync: 기본 `GITHUB_TOKEN`에는 Variables write permission이 없고 보호 없는 Environment secret은 PR이 읽을
+  수 있으므로 token 값은 사전 생성 SSM SecureString `/moimyeon/shared/terraform/GITHUB_VARIABLE_SYNC_TOKEN`에 둔다.
+  GitHub에는 parameter name만 두고 ref/workflow-bound apply role을 assume한 뒤 값을 읽는다. 초기에는 최소 권한·짧은
+  만료 fine-grained token, 개발 플랫폼이 준비되면 GitHub App installation token으로 교체한다.
+- sync 복구: Variables sync는 apply job과 분리한다. `(plan no-op || apply success)`마다 current state에서 실행하므로
+  apply 성공·sync 실패 뒤 전체 rerun에서 새 plan이 no-op이어도 sync를 다시 시도한다. token decrypt preflight는 apply 전에 한다.
 - gate: `MOIMYEON_TERRAFORM_CI_ENABLED`가 정확히 `true`가 되기 전에는 AWS plan·apply job을 만들지 않고
   fork와 내부 PR 모두 fmt·validate·계약 검사만 수행한다. merged CI의 Terraform boundary는 실패로 끝내
   app deploy/promotion을 함께 freeze한다. 비활성 run을 app-ready success로 간주하지 않는다.
@@ -269,16 +274,18 @@
   다른 환경 state object 접근과 plan artifact mutation을 거부한다. dev/live는 bootstrap bucket/KMS 설정도 바꿀 수 없다.
   shared 역할만 이후 bootstrap 리소스 자체를 유지보수한다.
 - 수용한 권한 경계: 현재 apply role은 환경 Terraform 전체를 만들기 위해 `PowerUserAccess`와 project-prefix IAM 관리가
-  필요하고 permissions boundary는 아직 없다. 따라서 악성 approved workflow가 project role을 경유해 권한을 높일 수 있는
-  잔여 위험을 exact merged source·sanitized plan·`*-infra` 사람 승인으로 통제한다. 역할별 permissions boundary와
+  필요하고 permissions boundary는 아직 없다. 따라서 악성 merged workflow가 project role을 경유해 권한을 높일 수 있는
+  잔여 위험을 protected branch·CI·exact plan·workflow/ref OIDC claim으로 통제한다. 역할별 permissions boundary와
   `iam:PolicyARN` attachment allowlist는 bootstrap 안정화 뒤 hardening 후속 후보로 남긴다.
 - GitHub bootstrap: `sync-terraform-bootstrap.sh`는 기본 dry-run이다. `environments` phase를 최초 AWS apply 전에
-  실행해 OIDC subject의 reviewer/branch policy를 먼저 닫고, apply 뒤 `variables` phase에서 output을 동기화한다.
-  두 mutation phase의 결합을 거부한다. 항상 `MOIMYEON_TERRAFORM_CI_ENABLED=false`를 기록하고 Variables-write
-  secret은 취급하지 않는다.
-- 최초 경계: OIDC role과 plan store를 만들기 위한 첫 shared apply만 기존 사람 AWS identity가 수행한다. 에이전트와
+  실행해 reviewer·wait timer·branch policy가 없는 변수 namespace를 만들고, apply 뒤 `variables` phase에서 output을
+  동기화한다. 항상 `MOIMYEON_TERRAFORM_CI_ENABLED=false`를 기록하고 Variables-write secret 값은 취급하지 않는다.
+- 외부 반영: 2026-08-25에 Terraform Environment 6개를 실제 생성했고 모두 `protection_rules=[]`,
+  `deployment_branch_policy=null`임을 GitHub API로 재확인했다. role/bucket/KMS Variables는 shared apply 전이라 아직 설정하지 않았다.
+- 최초 경계: 예측 가능한 review role이 생기기 전에 기존 사람 AWS identity로 dev JWT/OAuth/random state-forget
+  plan을 먼저 apply한다. 그 다음 같은 사람이 OIDC role과 plan store를 만드는 첫 shared apply를 수행한다. 에이전트와
   PR은 실제 state plan 생성·판독까지만 하고 apply하지 않는다.
-- 실제 plan: `/tmp/moi432-shared-bootstrap-v2.tfplan`, `28 add / 0 change / 0 destroy`. 기존 OIDC provider·Route53 mutation은 없다.
+- 실제 plan: `/tmp/moi432-shared-bootstrap-v4.tfplan`, `28 add / 0 change / 0 destroy`. 기존 OIDC provider·Route53 mutation은 없다.
 
 ## 구현된 승격·롤백 흐름
 

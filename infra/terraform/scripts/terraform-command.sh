@@ -16,6 +16,7 @@ Usage:
   terraform-command.sh init <shared|dev|live>
   terraform-command.sh validate <shared|dev|live>
   terraform-command.sh plan <shared|dev|live> <plan-output-path>
+  terraform-command.sh state-list <shared|dev|live>
   terraform-command.sh output-raw <shared|dev|live> <output-name>
   terraform-command.sh output-json <shared|dev|live> <output-name>
 
@@ -116,6 +117,16 @@ case "${command_name}" in
       -no-color \
       -var-file="${environment}.tfvars" \
       -out="${plan_output}"
+    ;;
+  state-list)
+    [ "$#" -eq 2 ] || usage
+    "${TERRAFORM_BIN}" -chdir="${environment_dir}" init -input=false -no-color >/dev/null
+    "${TERRAFORM_BIN}" -chdir="${environment_dir}" workspace select default >/dev/null
+    [ "$("${TERRAFORM_BIN}" -chdir="${environment_dir}" workspace show)" = "default" ] || {
+      echo "Official Terraform commands require the default workspace." >&2
+      exit 1
+    }
+    exec "${TERRAFORM_BIN}" -chdir="${environment_dir}" state list
     ;;
   output-raw|output-json)
     [ "$#" -eq 3 ] || usage

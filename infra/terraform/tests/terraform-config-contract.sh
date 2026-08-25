@@ -75,6 +75,8 @@ assert_keys "${TERRAFORM_DIR}/envs/shared/shared.tfvars" \
   create_oidc_provider \
   github_immutable_repository \
   github_repository \
+  github_repository_id \
+  github_repository_owner_id \
   project \
   register_domain \
   route53_zone_name \
