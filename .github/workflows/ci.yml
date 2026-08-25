@@ -55,6 +55,9 @@ jobs:
       - name: Check Terraform CI contract
         run: bash infra/terraform/tests/terraform-ci-contract.sh
 
+      - name: Check Terraform bootstrap contract
+        run: bash infra/terraform/tests/terraform-bootstrap-contract.sh
+
       - name: Check Terraform apply boundary waiter
         run: bash infra/terraform/tests/wait-for-terraform-apply-test.sh
 

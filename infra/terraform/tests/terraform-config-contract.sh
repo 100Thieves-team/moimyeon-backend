@@ -73,10 +73,14 @@ assert_keys "${TERRAFORM_DIR}/envs/shared/shared.tfvars" \
   aws_region \
   create_hosted_zone \
   create_oidc_provider \
+  github_immutable_repository \
   github_repository \
   project \
   register_domain \
-  route53_zone_name
+  route53_zone_name \
+  terraform_lock_table_name \
+  terraform_plan_artifact_bucket_name \
+  terraform_state_bucket_name
 
 if grep -RInE \
   '^[[:space:]]*(.*(secret|password|token|private_key).*)[[:space:]]*=[[:space:]]*"' \

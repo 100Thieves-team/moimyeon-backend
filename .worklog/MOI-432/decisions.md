@@ -255,6 +255,31 @@
   app deploy/promotion을 함께 freeze한다. 비활성 run을 app-ready success로 간주하지 않는다.
 - 활성화 선행: dev JWT/OAuth state-forget bootstrap을 사람이 먼저 적용해 현재 state에서 secret-bearing object를 제거한다.
 
+## DR-026: Terraform CI bootstrap도 shared state에서 코드로 소유
+
+- 위치: 계정 공통 GitHub OIDC provider를 소유하는 `shared-foundation`이 plan storage와 CI role을 함께 관리한다.
+- artifact: 전용 KMS key(rotation, `prevent_destroy`)와 private S3 bucket(BPA, versioning, 24시간 lifecycle,
+  `prevent_destroy`)을 만든다. CI 주체의 DeleteObject를 명시적으로 거부하되 lifecycle expiration은 유지한다.
+- 불변성: workflow의 `--if-none-match '*'`뿐 아니라 bucket policy의 `s3:if-none-match` 조건으로 create-only Put을
+  강제한다. 같은 writer가 같은 key를 다시 써도 S3가 거부한다.
+- writer 격벽: `terraform-review-plan`, `terraform-drift-plan`, `terraform-apply-plan`은 서로 다른 GitHub
+  Environment OIDC subject를 trust하고 각각 `plans/pr`, `plans/drift`, `plans/apply` prefix만 쓴다. bucket policy도
+  다른 prefix write를 명시적으로 거부하고 writer는 artifact read/decrypt 권한을 받지 않는다.
+- apply 격벽: `shared-infra`, `dev-infra`, `live-infra` 역할은 approved `plans/apply` artifact를 read-only로 소비하며
+  다른 환경 state object 접근과 plan artifact mutation을 거부한다. dev/live는 bootstrap bucket/KMS 설정도 바꿀 수 없다.
+  shared 역할만 이후 bootstrap 리소스 자체를 유지보수한다.
+- 수용한 권한 경계: 현재 apply role은 환경 Terraform 전체를 만들기 위해 `PowerUserAccess`와 project-prefix IAM 관리가
+  필요하고 permissions boundary는 아직 없다. 따라서 악성 approved workflow가 project role을 경유해 권한을 높일 수 있는
+  잔여 위험을 exact merged source·sanitized plan·`*-infra` 사람 승인으로 통제한다. 역할별 permissions boundary와
+  `iam:PolicyARN` attachment allowlist는 bootstrap 안정화 뒤 hardening 후속 후보로 남긴다.
+- GitHub bootstrap: `sync-terraform-bootstrap.sh`는 기본 dry-run이다. `environments` phase를 최초 AWS apply 전에
+  실행해 OIDC subject의 reviewer/branch policy를 먼저 닫고, apply 뒤 `variables` phase에서 output을 동기화한다.
+  두 mutation phase의 결합을 거부한다. 항상 `MOIMYEON_TERRAFORM_CI_ENABLED=false`를 기록하고 Variables-write
+  secret은 취급하지 않는다.
+- 최초 경계: OIDC role과 plan store를 만들기 위한 첫 shared apply만 기존 사람 AWS identity가 수행한다. 에이전트와
+  PR은 실제 state plan 생성·판독까지만 하고 apply하지 않는다.
+- 실제 plan: `/tmp/moi432-shared-bootstrap-v2.tfplan`, `28 add / 0 change / 0 destroy`. 기존 OIDC provider·Route53 mutation은 없다.
+
 ## 구현된 승격·롤백 흐름
 
 ```mermaid
@@ -317,6 +342,7 @@ sequenceDiagram
 
 ## Terraform plan 판독
 
-- Terraform 파일 변경 없음
-- 자원 요약: `0 add / 0 change / 0 destroy`
-- dev/live 리소스 영향: apply 대상 없음
+- shared bootstrap: `28 add / 0 change / 0 destroy`
+- dev: `2 add / 4 change / 2 destroy`로 기존 판독과 동일하며 bootstrap 추가로 인한 변화 없음
+- live: `96 add / 0 change / 0 destroy`로 기존 전체 신규 bootstrap 판독과 동일
+- 실제 apply와 GitHub Environment/Variable mutation은 수행하지 않음

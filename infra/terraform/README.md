@@ -339,6 +339,18 @@ revision and creates a plan even when that commit is app-only. It
 applies only roots with resource or output changes. This avoids losing an older
 Terraform change when a newer app/docs CI finishes first.
 
+The `shared-foundation` module creates the bootstrap boundary itself:
+
+- rotating KMS key and private, versioned, Block-Public-Access S3 plan bucket
+- enforced KMS headers and `If-None-Match` create-only writes at the bucket policy
+- 24-hour current/noncurrent plan expiry and deletion denial for CI principals
+- separate `terraform-review-plan`, `terraform-drift-plan`, and
+  `terraform-apply-plan` OIDC roles/prefixes with a repository-owned
+  metadata-only refresh allowlist (no broad AWS `ReadOnlyAccess`)
+- separate `shared-infra`, `dev-infra`, and `live-infra` exact-plan apply roles
+
+The conditional-write policy follows the
+[AWS S3 enforced conditional writes contract](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes-enforce.html).
 Configure these non-secret GitHub variables before enabling Terraform CI:
 
 - `MOIMYEON_TERRAFORM_CI_ENABLED=false` during bootstrap; set exactly `true` only after the following preflight
@@ -363,9 +375,9 @@ boundary deliberately fails and application deploy/promotion remains frozen.
 This prevents a commit containing infrastructure and application changes from
 running the application on old infrastructure during bootstrap.
 
-The two plan roles need read access for Terraform refresh plus write access only
+The three plan roles need read access for Terraform refresh plus write access only
 to their disjoint plan-artifact prefixes. Neither writer may delete or overwrite
-objects, and the bucket policy must deny cross-prefix writes. Apply roles need the matching state/backend and
+objects, and the bucket policy denies non-conditional and cross-prefix writes. Apply roles need the matching state/backend and
 environment resource permissions. The artifact bucket must block public access,
 use the configured KMS key, enable versioning, and expire plan objects within 24
 hours. Raw plans and `terraform show -json` are never GitHub artifacts or PR text.
@@ -380,6 +392,69 @@ require human apply review. This does not reintroduce reviewers for `dev-app` or
 `live-app`. Apply the one-time dev JWT/OAuth state-forget plan before turning
 `MOIMYEON_TERRAFORM_CI_ENABLED` on, so the plan role never starts with current
 state objects that still contain those secret values.
+
+Plan roles may refresh resource and bucket metadata, read only the three exact
+backend state objects, and read the public ECS optimized AMI plus non-secret
+Core API/Worker `IMAGE_URI` parameters. They cannot read application S3 objects,
+SSM SecureString paths, Secrets Manager values, KMS plaintext, or their own raw
+plan artifact. This is a repository-owned policy so an AWS managed policy update
+cannot silently add a new data-plane read.
+
+Apply roles deliberately retain broad environment infrastructure permissions:
+`PowerUserAccess` plus project-prefixed IAM role management. The current trust
+boundary is the exact merged source, sanitized binary-plan summary, and human
+approval on each `*-infra` job. A malicious approved workflow could still use
+project roles to expand permissions because a permissions boundary is not yet
+enforced. Add an apply-role permissions boundary and `iam:PolicyARN` attachment
+allowlist as a hardening follow-up after the bootstrap path is proven.
+
+GitHub evaluates Environment deployment branches against the workflow execution
+ref. `workflow_run` and its reusable calls execute from the default branch
+(`dev`) even when the pinned source SHA belongs to `main`, so
+`terraform-apply-plan` and `live-infra` allow the `dev` execution ref. The
+workflow's source-branch/SHA verification remains the authority for main.
+
+### One-time bootstrap handoff
+
+The first apply is intentionally circular: Terraform CI needs the OIDC roles and
+plan store that Terraform creates. Close the GitHub Environment subjects first;
+this prevents an internal PR from receiving an unreviewed Environment OIDC token
+after the AWS roles appear:
+
+```bash
+infra/terraform/scripts/sync-terraform-bootstrap.sh \
+  --phase environments --reviewer GITHUB_LOGIN
+infra/terraform/scripts/sync-terraform-bootstrap.sh \
+  --phase environments --reviewer GITHUB_LOGIN --apply
+```
+
+Then generate and review the exact shared plan and use an existing human AWS
+identity for this single apply:
+
+```bash
+AWS_PROFILE=plady aws sts get-caller-identity --query Account --output text
+AWS_PROFILE=plady bash infra/terraform/scripts/terraform-command.sh plan \
+  shared /tmp/moimyeon-shared-bootstrap.tfplan
+AWS_PROFILE=plady terraform -chdir=infra/terraform/envs/shared apply \
+  /tmp/moimyeon-shared-bootstrap.tfplan
+```
+
+The identity check must print the reviewed account `781897847312`. Do not apply
+when the account differs.
+
+The repository agent must stop after plan; the apply command is an operator
+action. After apply, preview and reconcile non-secret Variables:
+
+```bash
+AWS_PROFILE=plady infra/terraform/scripts/sync-terraform-bootstrap.sh --phase variables
+AWS_PROFILE=plady infra/terraform/scripts/sync-terraform-bootstrap.sh --phase variables --apply
+```
+
+The script creates/reconciles the six Terraform Environments, branch policies,
+and role/bucket/KMS Variables while deliberately keeping
+`MOIMYEON_TERRAFORM_CI_ENABLED=false`. It never handles the Variables-write
+secret. Add `MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN` to `dev-infra` and
+`live-infra`, verify a review plan and drift plan, and only then enable the gate.
 
 On dev, shared is planned and applied first; only then is the dev plan created,
 so an exact dev plan cannot capture pre-shared state. Each apply job acquires the

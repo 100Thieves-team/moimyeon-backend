@@ -39,6 +39,7 @@ assert_contains "${COMMAND_SCRIPT}" '-var-file="\$\{environment\}\.tfvars"' "공
 assert_contains "${COMMAND_SCRIPT}" 'TF_VAR_\*\|TF_CLI_ARGS.*TF_WORKSPACE\|TF_DATA_DIR' "공식 plan은 변수·workspace·data-dir implicit override를 거부해야 한다."
 assert_contains "${COMMAND_SCRIPT}" 'workspace select default' "공식 init·plan은 default workspace로 고정해야 한다."
 assert_not_contains "${COMMAND_SCRIPT}" 'terraform[^[:space:]]*[[:space:]]+apply' "로컬 공식 command script에 apply를 노출하면 안 된다."
+assert_contains "${COMMAND_SCRIPT}" 'output-raw\|output-json' "bootstrap output도 공식 backend/workspace 경계로 읽어야 한다."
 
 assert_contains "${PLAN_WORKFLOW}" '^  pull_request:' "Terraform PR plan이 필요하다."
 assert_contains "${PLAN_WORKFLOW}" 'terraform-plan-environment\.yml' "reusable plan workflow 변경도 PR plan을 깨워야 한다."
