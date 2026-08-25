@@ -32,7 +32,9 @@ jobs:
             git fetch -q origin "${base}"
             python3 .agents/gates/scan_secrets.py --range "origin/${base}...HEAD"
           else
-            python3 .agents/gates/scan_secrets.py --range "HEAD~1...HEAD"
+            before="${{ github.event.before }}"
+            case "$before" in ""|0000000*) before="HEAD~1" ;; esac
+            python3 .agents/gates/scan_secrets.py --range "${before}...HEAD"
           fi
 
       - name: Config profile sync

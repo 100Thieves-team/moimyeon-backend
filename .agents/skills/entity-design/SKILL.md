@@ -40,8 +40,8 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 6. **구현** — JPA 엔티티 + Flyway 마이그레이션 + schema.sql 갱신으로
    반영한다. 물리 스키마의 단일 소스는 schema.sql이다 — erd.dbml은 이슈
    단위 논리 설계 기록으로 남기고 이후 갱신 의무를 지지 않는다.
-7. **리뷰** — `.agents/agents/db-reviewer.md` 위임 (마이그레이션·엔티티 파일
-   + review-diff.patch + context.md 경로 — 위임 전 diff를 `.worklog/{이슈키}/review-diff.patch`로 저장해 함께 준다.) ddl_analysis 판정 포함. 반영 상한 2회 — 소진하면
+7. **리뷰** — `.agents/agents/db-reviewer.md` 위임 (마이그레이션·엔티티·
+   schema.sql 등 변경된 스키마 산출물 전부 + review-diff.patch + context.md 경로 — 위임 전 diff를 `.worklog/{이슈키}/review-diff.patch`로 저장해 함께 준다.) ddl_analysis 판정 포함. 반영 상한 2회 — 소진하면
    plan.md에 사유를 기록하고 턴을 끝낸다.
 8. **검증** — `./gradlew test ktlintCheck` 통과 (Flyway 버전 중복은 CI가
    차단). 실패 수정 상한 3회 — 소진 시 기록 후 턴 종료.

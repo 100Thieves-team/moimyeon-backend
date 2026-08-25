@@ -6,7 +6,11 @@ zero="0000000000000000000000000000000000000000"
 while read -r _local_ref local_sha remote_ref remote_sha; do
   case "$remote_ref" in
     refs/heads/main|refs/heads/dev)
-      if [ "$remote_sha" != "$zero" ] && [ "$local_sha" != "$zero" ]; then
+      if [ "$local_sha" = "$zero" ]; then
+        echo "push 차단: ${remote_ref#refs/heads/} 는 보호 브랜치다 — 삭제 금지"
+        exit 1
+      fi
+      if [ "$remote_sha" != "$zero" ]; then
         if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
           echo "push 차단: ${remote_ref#refs/heads/} 는 보호 브랜치다 — non-fast-forward push 금지"
           exit 1

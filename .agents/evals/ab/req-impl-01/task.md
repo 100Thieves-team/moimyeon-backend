@@ -11,7 +11,11 @@
 > 그 이후의 취소 요청은 거부되고, 취소 불가 사유가 에러로 전달된다."
 
 - **With**: 하네스 있는 그대로 실행 (스킬·정책 로드 가능)
-- **Without**: `.claude/skills`·`.agents` 심링크를 임시 제거한 워크트리에서 실행
+- **Without**: 격리 워크트리에서 런타임 스킬 경로를 **전부** 차단한다 —
+  `.agents/`(단일 소스) 이름변경으로 `.claude/skills`·`.claude/agents`·
+  `.codex/skills` 심링크를 함께 끊고, `.claude/settings.json`과 AGENTS.md의
+  라우팅 섹션도 제거한다. `docs/`는 양쪽 유지 (하네스의 가치를 재는 것이지
+  문서의 가치가 아니다).
 
 ## 측정
 

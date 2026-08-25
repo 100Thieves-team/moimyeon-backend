@@ -1596,3 +1596,48 @@ review-swarm이 2건을 더 지적했고 사실 확인 후 반영했다.
 교훈: **게이트를 만들 때 "통과한다"가 아니라 "위반하면 잡히는가"를
 검증해야 한다.** 1번은 게이트가 통과 상태였지만 실제로는 규칙이 지켜지지
 않았다. 게이트 신설 시 위반 픽스처로 검출을 확인하는 절차를 기본으로 한다.
+
+### DR-030 보강 3 (2026-08-25, CodeRabbit 리뷰 반영 — 사람 지시로 상한 예외)
+
+ship-pr 대응 상한 2회는 소진했으나 사용자가 "타당하면 반영"을 지시해 진행했다.
+CodeRabbit이 Major 25건·Minor 7건을 냈고, 전건을 판정해 21건 반영·나머지는
+사유와 함께 스킵·이연했다.
+
+**게이트 실제 구멍 (실증 후 반영)**
+
+1. `scan_secrets` 인라인 주석 우회 — `password: xxx # 주석`이 통과했다
+   (재현 확인). 값 뒤 주석을 허용하도록 패턴과 오탐 판정을 함께 고쳤다.
+2. `pre-push`가 **보호 브랜치 삭제를 막지 않았다** — `git push origin :main`은
+   `local_sha=zero`라 조건을 통과했다(재현 확인). 삭제를 별도로 차단하고,
+   일반 브랜치 삭제는 여전히 허용됨을 확인했다.
+3. push 이벤트 시크릿 스캔이 `HEAD~1...HEAD`라 멀티커밋 push의 앞 커밋을
+   놓쳤다 — `github.event.before` 기준으로 교체.
+4. `run.sh` 출력 경로가 분 단위라 같은 분 재실행이 서로 덮어썼다(실제로
+   이번 세션에서 겪었다) — 초·PID를 붙였다. 런타임 실패(빈 출력)를
+   `ERROR`로 구분해 거짓 음성을 막았다.
+5. `score.py`가 본문 텍스트의 `Launching skill:`도 호출로 셌다 — Skill
+   도구 호출 이벤트 파싱을 1차 신호로 추가(기존 결과 재현 확인).
+
+**문서·계약 정정** — ship-pr 단계 번호(5→6), 표본 수 102→108,
+plan.md 셀프테스트 7/7→8/8, glossary의 `JobGroup`/`JobRole` 1:1 분리,
+release-checklist에 BFLA 추가, api-design 예시를 glossary 표준어(`leave`)로,
+evals/README를 워크트리 필수 인자 반영, 중복 헤딩·fence 언어.
+
+**계약 강화** — entity-design 리뷰 입력에 schema.sql 포함, api-spec-definition
+과 qa-reviewer에 인증 주체 규칙(토큰 직접 파싱 금지), infra-change의 plan
+출력을 데이터로 취급, AB 태스크의 Without 구성에 `.codex/skills` 포함·대상
+엔드포인트 사전 고정.
+
+**스킵 (사유)**
+
+- `.tsv`가 아니라 `.md`를 쓰라는 지적: **오탐**. `trigger/`에는 둘 다 있고
+  `.tsv`가 러너 입력, `.md`가 설명이다.
+- PyYAML 부재 시 로컬도 실패시키라는 지적: 로컬 훅이 파이썬 환경 때문에
+  커밋을 막으면 마찰이 크다. 로컬은 stderr 경고 + CI는 fail-closed라는
+  현 구조가 의도다.
+- 리뷰어에 AGENTS.md 선행 로드 명시: 서브에이전트는 CLAUDE.md(=AGENTS.md)를
+  자동 로드한다 — 중복 지시다.
+
+**이연 (후속)** — pre-commit의 staged YAML 검증(워크트리 대신 `git show :path`),
+리뷰어 5종 출력 계약 통일, infra.md 스모크 테스트 계약과 배포 워크플로 연결,
+리뷰어 입력의 시크릿 redaction 명문화.

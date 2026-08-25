@@ -25,7 +25,8 @@ description: 와이어프레임·PRD를 바탕으로 API 계약(Controller·Requ
    - 엔드포인트별 요청/응답 필드와 타입, 에러 케이스와 에러 코드
    **[체크포인트 A: 스펙 승인]**
 4. **구현** — Controller + Request/Response DTO (api-design.md의 DTO·검증
-   규칙). 모킹 컨트롤러는 api-design.md 모킹 패턴(`@Profile`, 정적 목업 값).
+   규칙). 인증 주체는 정해진 방식으로 받는다 — 컨트롤러에서 토큰을 직접
+   파싱하지 않는다 (`docs/conventions/auth.md`). 모킹 컨트롤러는 api-design.md 모킹 패턴(`@Profile`, 정적 목업 값).
 5. **RestDocs 테스트** — 성공 + 에러 케이스를 에러 코드와 함께 문서화
    (`docs/conventions/api-docs.md`). openapi3.yaml 생성을 확인한다.
 6. **리뷰** — `.agents/agents/code-reviewer.md` 위임 (변경 파일 +

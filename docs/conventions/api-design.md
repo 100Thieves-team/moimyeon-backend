@@ -19,7 +19,7 @@
 - **URI 는 호출 주체가 아니라 제공 정보를 표현한다.** `/summary`·`/detail` ○,
   `/by-admin`·`/for-user` ✗ — 권한이 늘어도 URI 가 재사용되어야 한다.
 - **CRUD 로 표현되지 않는 도메인 행위는 동사를 쓰되 `/리소스/{id}/행위` 템플릿을
-  지킨다** (`POST /v1/rooms/{roomId}/participations/cancel`). 삭제와 취소는 다른 행위다.
+  지킨다** (`POST /v1/rooms/{roomId}/participations/leave`). 삭제와 취소는 다른 행위다.
 
 ## DTO
 

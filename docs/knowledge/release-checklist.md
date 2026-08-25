@@ -8,6 +8,7 @@
 머지·배포 전 확인:
 
 - [ ] 타 사용자 ID로 조회·수정·삭제가 막혀 있는가 (BOLA — qa-review.md 3번)
+- [ ] 일반 사용자가 관리자 API를 호출할 수 없는가 (BFLA — qa-review.md 4번)
 - [ ] 재시도 시 데이터가 중복 생성되지 않는가 (qa-review.md 1·2번)
 - [ ] 컬럼 삭제·rename이 구버전 앱과 공존 가능한가 — expand-contract
       (erd-design.md, db-reviewer ddl_analysis)

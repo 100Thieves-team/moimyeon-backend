@@ -6,7 +6,7 @@ With/Without으로 검증하기 위한 자산이다. 결과는 `.worklog/{이슈
 
 ## 구성
 
-```
+```text
 trigger/   # 라우팅·트리거 검증: 양성/음성/경계 프롬프트 (md=설명, tsv=러너 입력)
 ab/        # With/Without 태스크: task.md(과제), assertions.md(판정 기준)는 정량 판정이 가능한 태스크에만
 run.sh     # 헤드리스 러너 (claude -p / codex exec)
@@ -25,10 +25,12 @@ run.sh     # 헤드리스 러너 (claude -p / codex exec)
 
 ## 실행
 
+격리 워크트리가 **필수 인자**다 (레포 루트 실행은 거부된다 — DR-030).
+
 ```bash
-.agents/evals/run.sh trigger claude 3   # 트리거 세트를 claude로 3회 반복
-.agents/evals/run.sh trigger codex 3
+git worktree add /tmp/eval-wt --detach HEAD
+.agents/evals/run.sh trigger claude 1 /tmp/eval-wt requirement-implementation
 ```
 
-러너는 초안이다 — 첫 실행에서 감지 휴리스틱(스킬 경로 언급 여부)을 실측으로
-보정한다.
+모델은 `--model`로 명시한다 — 헤드리스 CLI는 세션 모델 설정을 따르지 않는다
+(교훈 10). 확정 집계는 `score.py`로 한다.

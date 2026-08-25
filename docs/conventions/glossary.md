@@ -38,7 +38,8 @@
 | 이력서 | `Resume` | 참여자가 등록한 이력서. 면접 질문 생성의 입력 |
 | 회원 | `Member` | 서비스 사용자 계정 |
 | 프로필 | `MemberProfile` | 회원의 공개 정보·관심 직군·관심 기업 |
-| 직군 | `JobGroup` / `JobRole` | 직무 분류(대분류/세부 역할) |
+| 직군 | `JobGroup` | 직무 대분류 |
+| 직무 | `JobRole` | 직군 안의 세부 역할 |
 | 채용 공고 | `JobPosting` | 기업의 채용 공고 |
 | 기업 | `Company` | 채용 주체 |
 | 출석 | `Attendance` | 회차 참석 여부 기록 |

@@ -20,7 +20,7 @@ PATTERNS = [
     ("API 키 형태(sk-)", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
     ("JWT", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\b")),
     ("URL 내 자격증명", re.compile(r"\b[a-z][a-z0-9+.-]*://[^/\s:@]+:[^@\s]{4,}@")),
-    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"']?(?!\$\{)[^\"'\s$]{8,}[\"']?\s*$")),
+    ("평문 비밀값 대입", re.compile(r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token)\b\s*[:=]\s*[\"']?(?!\$\{)[^\"'\s$]{8,}[\"']?\s*(?:[#;].*)?$")),
     ("Stripe류 키", re.compile(r"\bsk_(live|test)_[A-Za-z0-9]{10,}\b")),
     ("Google API 키", re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b")),
 ]
@@ -30,7 +30,7 @@ ALLOW_MARK = "gate:allow-secret"
 # 키 이름을 그대로 값으로 쓴 상수(`const val ACCESS_TOKEN = "ACCESS_TOKEN"`)와
 # CONSTANT_CASE 식별자는 구조적으로 시크릿이 아니다 — 2026-08-25 qa-reviewer가
 # 실제 소스 2곳의 오탐을 잡아냈다.
-ASSIGN_VALUE = re.compile(r"[:=]\s*[\"']?([^\"'\s]+)[\"']?\s*$")
+ASSIGN_VALUE = re.compile(r"[:=]\s*[\"']?([^\"'\s]+)[\"']?\s*(?:[#;].*)?$")
 IDENTIFIER_VALUE = re.compile(r"\A[A-Z][A-Z0-9_]*\Z")
 
 

@@ -32,9 +32,28 @@ claude_pat = re.compile(r'"skill": ?"%s"|Launching skill: %s' % (re.escape(skill
 LIMIT_TEXT = re.compile(r"hit your session limit|reached your .{0,30}limit|usage limit")
 
 
+def _skill_tool_called(text: str, skill: str) -> bool:
+    """Skill 도구 호출 이벤트만 센다 — 본문 텍스트의 'Launching skill: X'는
+    도구 호출이 아니라서 세면 거짓 양성이 된다 (2026-08-25 리뷰 지적)."""
+    for line in text.splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            ev = json.loads(line)
+        except ValueError:
+            continue
+        if ev.get("type") != "assistant":
+            continue
+        for c in ev.get("message", {}).get("content", []):
+            if c.get("type") == "tool_use" and c.get("name") == "Skill":
+                if (c.get("input") or {}).get("skill") == skill:
+                    return True
+    return False
+
+
 def score_claude(path: Path) -> str:
     text = path.read_text(encoding="utf-8", errors="replace")
-    invoked = bool(claude_pat.search(text))
+    invoked = _skill_tool_called(text, skill) or bool(claude_pat.search(text))
     # 호출 후 한도에 걸린 것은 트리거가 관측된 것이므로 INVOKED가 맞다.
     # 호출 전에 한도로 죽었으면 미호출이 아니라 측정 불가(LIMIT)다.
     # result의 is_error는 max-turns 소진으로도 켜지므로 한도 신호로 쓰지 않는다.

@@ -21,7 +21,7 @@ if [ -z "$WORKDIR" ] || [ "$WORKDIR" = "$ROOT" ]; then
 fi
 SKILL="${5:-requirement-implementation}"
 TSV="$ROOT/.agents/evals/trigger/$SKILL.tsv"
-STAMP="$(date +%Y%m%d-%H%M)"
+STAMP="$(date +%Y%m%d-%H%M%S)-$$"   # 초·PID까지 — 같은 분 재실행이 서로 덮어쓰지 않게
 OUT_DIR="$ROOT/.worklog/MOI-474/evals"
 RAW_DIR="$OUT_DIR/raw/$SKILL-$RUNTIME-$STAMP"
 CSV="$OUT_DIR/trigger-$SKILL-$RUNTIME-$STAMP.csv"
@@ -74,8 +74,10 @@ while IFS=$'\t' read -r id type expected prompt; do
           --sandbox read-only "$prompt" < /dev/null > "$raw" 2>&1 ) || true
     fi
     dur=$(( $(date +%s) - start ))
-    # 한도·에러 문구는 런타임 업데이트로 바뀐다 — 확정 집계는 score.py(is_error 기반)
-    if grep -qE "hit your session limit|reached your .{0,30}limit" "$raw"; then detected=LIMIT
+    # 런타임 실패(미설치·타임아웃·크래시)를 미호출로 세면 거짓 음성이 된다
+    if [ ! -s "$raw" ]; then detected=ERROR
+    # 한도·에러 문구는 런타임 업데이트로 바뀐다 — 확정 집계는 score.py
+    elif grep -qE "hit your session limit|reached your .{0,30}limit" "$raw"; then detected=LIMIT
     elif grep -qE "$PATTERN" "$raw"; then detected=yes; else detected=no; fi
     echo "$STAMP,$RUNTIME,$(version),$id,$expected,$i,$detected,$dur,$raw" >> "$CSV"
     echo "[$id iter$i] expected=$expected detected=$detected (${dur}s)"
