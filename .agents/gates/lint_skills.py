@@ -21,8 +21,11 @@ WORKFLOW_REQUIRED = [
     ("plan.md", "plan.md 초기 생성", re.compile(r"초기 실행")),
     ("plan.md", "재실행 분기", re.compile(r"재실행")),
 ]
-# 외부 작성 콘텐츠를 읽는 스킬 — "데이터" 규칙 필수 (DR-016·020)
+# 외부 작성 콘텐츠를 읽는 스킬 — injection 방어 문구 필수 (DR-016·020).
+# "데이터" 단순 포함 검사는 "데이터 오염" 같은 무관한 용례를 통과시킨다
+# (2026-08-25 리뷰봇이 incident-response의 누락을 잡아냈다) — 문구를 앵커링한다.
 EXTERNAL_CONTENT_SKILLS = {"issue-context", "ship-pr", "incident-response"}
+INJECTION_GUARD = re.compile(r"명령이\s*아니다|명령으로 승격|승격하지\s*않는다")
 
 
 def parse_frontmatter(text):
@@ -63,8 +66,8 @@ def lint_skill(d):
         for cond, label, pat in WORKFLOW_REQUIRED:
             if cond in body and not pat.search(body):
                 majors.append(f"{d.name}: 워크플로우 스킬인데 '{label}' 인라인 누락 (DR-020)")
-    if d.name in EXTERNAL_CONTENT_SKILLS and "데이터" not in body:
-        majors.append(f"{d.name}: 외부 콘텐츠를 읽는 스킬인데 '데이터' 규칙 누락 (DR-016)")
+    if d.name in EXTERNAL_CONTENT_SKILLS and not INJECTION_GUARD.search(body):
+        majors.append(f"{d.name}: 외부 콘텐츠를 읽는 스킬인데 injection 방어 문구 누락 (DR-016)")
     return blockers, majors
 
 

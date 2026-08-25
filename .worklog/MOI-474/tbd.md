@@ -94,3 +94,9 @@
   pre-push의 remote 객체 부재 시 오도 메시지, .review-swarm.yaml
   teamRuleFiles 20000자 상한 확인, gate_hook·pre-push 자체 테스트 부재,
   .agents/agents/*.md frontmatter lint 부재.
+
+- (후속 이슈) 2-ID path 엔드포인트 정리: `rooms/{roomId}/comments/{commentId}`
+  (RoomCommentController), QuestionPreparationController·RoomApplicationController
+  등이 api-design.md의 "path ID 1개" 규칙 이전에 작성됐다. 문서에 예외를
+  명시해 뒀고(신규부터 적용), 실제 리팩토링은 별도 이슈 — 라우팅·API 계약·
+  클라이언트 영향이 걸려 스코프가 다르다 (2026-08-25 사용자 결정).
