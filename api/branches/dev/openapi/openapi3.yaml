@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-08-18",
-                        "datetime" : "2026-08-18T14:23:19.419609034",
+                        "date" : "2026-08-25",
+                        "datetime" : "2026-08-25T19:30:58.064240158",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-08-18",
-                        "datetime" : "2026-08-18T14:23:19.469781527",
+                        "date" : "2026-08-25",
+                        "datetime" : "2026-08-25T19:30:58.116148123",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2372,7 +2372,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "e997795b-2677-409d-8894-d5c4749e64bf",
+                          "termsId" : "5f0320af-ed9c-455e-980e-86a38fb6ce54",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2380,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "d7e082b2-17d0-48c4-b0ea-8026cc5ddddb",
+                          "termsId" : "db0283b5-0e43-4f08-a20d-32aeb7fa4f87",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3158,12 +3158,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b73cfb14-627c-455c-ab34-37250c028d6d",
+                        "memberId" : "64e46965-f591-410e-bff7-f3a35850e3bb",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "b73cfb14-627c-455c-ab34-37250c028d6d",
+                          "memberId" : "64e46965-f591-410e-bff7-f3a35850e3bb",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4527,7 +4527,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-08-19T14:23:26.187191115",
+                          "startAt" : "2026-08-26T19:31:05.811526444",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4538,7 +4538,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "a5fce80d-c425-4f94-ade9-bd59b6e83927",
+                        "hostMemberId" : "6bfb23ee-55a1-4f92-b25d-7c659771230b",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4839,7 +4839,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "47c1f89c-6db6-433f-ad4d-a44e5ce19245",
+                        "memberId" : "43ad3d1c-34fa-49f9-92fa-17a63d87a7f7",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5532,18 +5532,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "d99093df-dd87-43d4-a35c-7b0bedb83a1d"
+                    "resumeId" : "510bc256-ba55-47e0-83d2-1eef739371c2"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "f08aa118-5c99-4ef4-a50c-b40d943b9ad9",
+                    "resumeId" : "80ef9e8c-ae98-4a94-9958-794ebc13cbbb",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "c9e9e716-9941-490b-a684-afd8f9de700c",
+                    "resumeId" : "fc6f753d-54d6-46fa-a7dd-ef9c6c845a01",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -6957,7 +6957,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "8aae8d8c-b140-4721-8154-6c4eec756350",
+                          "resumeId" : "915cb426-0a51-4706-89fb-7f91e587283e",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7627,6 +7627,18 @@ paths:
                   type: string
 components:
   schemas:
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -7646,18 +7658,6 @@ components:
             - type: boolean
             - type: string
             - type: number
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-job-postings1538643122:
       required:
       - result
@@ -7816,7 +7816,7 @@ components:
         content:
           type: string
           description: "글 내용 (trim 후 1~1000자, 텍스트만)"
-    get-exampleValue191457252:
+    post191457252:
       required:
       - result
       type: object
@@ -9312,22 +9312,6 @@ components:
           nullable: true
           items:
             type: number
-    v1-questions-questionId496267733:
-      required:
-      - asked
-      - intervieweeMemberId
-      - roomId
-      type: object
-      properties:
-        intervieweeMemberId:
-          type: string
-          description: 라운드 면접자 회원 id (UUID)
-        asked:
-          type: boolean
-          description: "질문했으면 true, 되돌리면 false"
-        roomId:
-          type: string
-          description: 룸 id (UUID)
     v1-rooms-roomId-applications-me2061746466:
       required:
       - result
@@ -9401,6 +9385,22 @@ components:
               type: string
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
+    v1-questions-questionId496267733:
+      required:
+      - asked
+      - intervieweeMemberId
+      - roomId
+      type: object
+      properties:
+        intervieweeMemberId:
+          type: string
+          description: 라운드 면접자 회원 id (UUID)
+        asked:
+          type: boolean
+          description: "질문했으면 true, 되돌리면 false"
+        roomId:
+          type: string
+          description: 룸 id (UUID)
     v1-members-memberId-profile655149006:
       required:
       - result
@@ -10159,6 +10159,30 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -10245,30 +10269,6 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
     v1-rooms1476531183:
       required:
       - result
