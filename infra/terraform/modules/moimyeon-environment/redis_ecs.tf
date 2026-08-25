@@ -76,6 +76,9 @@ resource "aws_service_discovery_service" "notification_redis" {
     }
   }
 
+  # Provider 6 deprecates this AWS-fixed value, but removing it forces the
+  # existing Cloud Map service to be replaced. Keep it until a no-replacement
+  # provider migration path exists.
   health_check_custom_config {
     failure_threshold = 1
   }
@@ -207,7 +210,7 @@ resource "aws_ecs_task_definition" "notification_redis" {
         logDriver = "awslogs"
         options = {
           awslogs-group         = aws_cloudwatch_log_group.notification_redis[0].name
-          awslogs-region        = data.aws_region.current.name
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = "notification-redis"
         }
       }

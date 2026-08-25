@@ -13,8 +13,8 @@ locals {
       SPRING_PROFILES_ACTIVE            = local.profile
       STORAGE_DATABASE_CORE_DB_URL      = local.db_url
       STORAGE_DATABASE_CORE_DB_USERNAME = var.db_username
-      AWS_REGION                        = data.aws_region.current.name
-      AWS_DEFAULT_REGION                = data.aws_region.current.name
+      AWS_REGION                        = data.aws_region.current.region
+      AWS_DEFAULT_REGION                = data.aws_region.current.region
     },
     var.firebase_project_id == null ? {} : { FIREBASE_PROJECT_ID = var.firebase_project_id },
     var.notification_web_push_action_base_url == null ? {} : {
@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "notification_worker" {
         logDriver = "awslogs"
         options = {
           awslogs-group         = aws_cloudwatch_log_group.notification_worker.name
-          awslogs-region        = data.aws_region.current.name
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = var.notification_worker_container_name
         }
       }

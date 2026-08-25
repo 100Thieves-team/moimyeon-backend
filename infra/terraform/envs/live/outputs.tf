@@ -73,6 +73,11 @@ output "rds_endpoint" {
   value       = module.live.rds_endpoint
 }
 
+output "db_master_secret_arn" {
+  description = "RDS-managed Secrets Manager ARN containing the live master password."
+  value       = module.live.db_master_secret_arn
+}
+
 output "notification_redis_endpoint" {
   description = "Private DNS name of the notification Redis ECS service when enabled."
   value       = module.live.notification_redis_endpoint
@@ -88,6 +93,11 @@ output "notification_redis_password_parameter_name" {
   value       = module.live.notification_redis_password_parameter_name
 }
 
+output "jwt_secret_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the JWT signing secret."
+  value       = module.live.jwt_secret_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.live.upload_bucket_name
@@ -101,6 +111,11 @@ output "image_uri_parameter_name" {
 output "notification_worker_image_uri_parameter_name" {
   description = "SSM parameter updated with the deployed core-worker image URI."
   value       = module.live.notification_worker_image_uri_parameter_name
+}
+
+output "deployment_bundle_parameter_prefix" {
+  description = "SSM prefix containing immutable live deployment bundles."
+  value       = module.live.deployment_bundle_parameter_prefix
 }
 
 output "firebase_service_account_parameter_name" {

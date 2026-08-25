@@ -16,11 +16,6 @@ variable "github_repository" {
   default     = "100Thieves-team/moimyeon-backend"
 }
 
-variable "github_oidc_provider_arn" {
-  description = "Shared GitHub Actions OIDC provider ARN (from envs/shared output, or the existing account provider)."
-  type        = string
-}
-
 variable "route53_zone_id" {
   description = "Route 53 hosted zone ID. Leave null for external (Cloudflare) DNS."
   type        = string
@@ -86,15 +81,16 @@ variable "db_username" {
   default     = "moimyeon_admin"
 }
 
+variable "db_master_username" {
+  description = "Optional RDS master username when it differs from the application DB username."
+  type        = string
+  default     = null
+}
+
 variable "oauth_google_client_id" {
   description = "Google OAuth client ID (required to boot)."
   type        = string
-}
-
-variable "oauth_google_client_secret" {
-  description = "Google OAuth client secret (required to boot)."
-  type        = string
-  sensitive   = true
+  default     = null
 }
 
 variable "notification_worker_desired_count" {

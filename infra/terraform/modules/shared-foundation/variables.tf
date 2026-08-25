@@ -9,6 +9,40 @@ variable "github_repository" {
   type        = string
 }
 
+variable "github_immutable_repository" {
+  description = "GitHub immutable OIDC subject prefix in org@id/repo@id form. Null trusts only the legacy owner/repo subject."
+  type        = string
+  default     = null
+}
+
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID used in OIDC trust conditions."
+  type        = string
+}
+
+variable "github_repository_owner_id" {
+  description = "Immutable numeric GitHub organization ID used in OIDC trust conditions."
+  type        = string
+}
+
+variable "terraform_state_bucket_name" {
+  description = "Existing Terraform remote-state bucket. Null derives <project>-terraform-state-<account>-<region>."
+  type        = string
+  default     = null
+}
+
+variable "terraform_lock_table_name" {
+  description = "Existing DynamoDB table used by the Terraform S3 backend for state locking."
+  type        = string
+  default     = "moimyeon-terraform-locks"
+}
+
+variable "terraform_plan_artifact_bucket_name" {
+  description = "Private bucket for short-lived exact Terraform plans. Null derives <project>-terraform-plans-<account>-<region>."
+  type        = string
+  default     = null
+}
+
 variable "create_oidc_provider" {
   description = "Create the GitHub Actions OIDC provider. Set false when the account already has one (e.g. 781897847312 already does) and reference it instead."
   type        = bool

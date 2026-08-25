@@ -1,25 +1,28 @@
-resource "random_password" "jwt" {
-  length  = 64
-  special = false
+removed {
+  from = random_password.jwt
+
+  lifecycle {
+    destroy = false
+  }
 }
 
-resource "aws_ssm_parameter" "jwt_secret" {
-  name        = "/${var.project}/${var.environment}/core-api/JWT_SECRET"
-  description = "JWT signing secret for ${local.name} core-api"
-  type        = "SecureString"
-  value       = random_password.jwt.result
+removed {
+  from = aws_ssm_parameter.jwt_secret
 
-  tags = local.tags
+  lifecycle {
+    destroy = false
+  }
 }
 
-# moimyeon requires Google OAuth client secret to boot (security-core.yml, no default).
-resource "aws_ssm_parameter" "oauth_google_client_secret" {
-  name        = "/${var.project}/${var.environment}/core-api/GOOGLE_OAUTH_CLIENT_SECRET"
-  description = "Google OAuth client secret for ${local.name} core-api"
-  type        = "SecureString"
-  value       = var.oauth_google_client_secret
+# Preserve the existing parameter while removing its secret value from Terraform
+# state ownership. The value is created and rotated through a separate approved
+# SSM process; Terraform constructs only its ARN below.
+removed {
+  from = aws_ssm_parameter.oauth_google_client_secret
 
-  tags = local.tags
+  lifecycle {
+    destroy = false
+  }
 }
 
 # Last deployed image URI. The deploy workflow overwrites this (ssm put-parameter),
@@ -54,21 +57,25 @@ locals {
   # DB password ARN. generate mode: the TF-managed parameter. reference mode: a
   # constructed ARN pointing at the pre-created parameter, so the secret VALUE is
   # never read into Terraform state (unlike a data source, which would).
-  db_password_param_name = "/${var.project}/${var.environment}/core-api/DB_PASSWORD"
+  db_password_param_name                = "/${var.project}/${var.environment}/core-api/DB_PASSWORD"
+  jwt_secret_param_name                 = "/${var.project}/${var.environment}/core-api/JWT_SECRET"
+  oauth_google_client_secret_param_name = "/${var.project}/${var.environment}/core-api/GOOGLE_OAUTH_CLIENT_SECRET"
   db_password_ssm_arn = (
-    var.generate_db_password
+    var.generate_db_password && !var.manage_db_master_password
     ? aws_ssm_parameter.db_password[0].arn
-    : "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.db_password_param_name}"
+    : "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.db_password_param_name}"
   )
+  jwt_secret_ssm_arn                 = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.jwt_secret_param_name}"
+  oauth_google_client_secret_ssm_arn = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.oauth_google_client_secret_param_name}"
 
   firebase_service_account_param_name    = "/${var.project}/${var.environment}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON"
   gmail_app_password_param_name          = "/${var.project}/${var.environment}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD"
-  firebase_service_account_ssm_arn       = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.firebase_service_account_param_name}"
-  gmail_app_password_ssm_arn             = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.gmail_app_password_param_name}"
+  firebase_service_account_ssm_arn       = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.firebase_service_account_param_name}"
+  gmail_app_password_ssm_arn             = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.gmail_app_password_param_name}"
   notification_redis_password_param_name = "/${var.project}/${var.environment}/notification-redis/PASSWORD"
   notification_redis_url_param_name      = "/${var.project}/${var.environment}/shared/STORAGE_REDIS_URL"
-  notification_redis_password_ssm_arn    = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_password_param_name}"
-  notification_redis_url_ssm_arn         = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_url_param_name}"
+  notification_redis_password_ssm_arn    = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_password_param_name}"
+  notification_redis_url_ssm_arn         = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_url_param_name}"
 
   # Injected into the container as `secrets` (valueFrom SSM). The `name` is the
   # runtime env var the app reads; these match moimyeon's config contract.
@@ -80,11 +87,11 @@ locals {
       },
       {
         name      = "JWT_SECRET"
-        valueFrom = aws_ssm_parameter.jwt_secret.arn
+        valueFrom = local.jwt_secret_ssm_arn
       },
       {
         name      = "GOOGLE_OAUTH_CLIENT_SECRET"
-        valueFrom = aws_ssm_parameter.oauth_google_client_secret.arn
+        valueFrom = local.oauth_google_client_secret_ssm_arn
       },
     ],
     var.enable_notification_redis ? [
@@ -96,10 +103,10 @@ locals {
   )
 
   ssm_parameter_arns = concat(
+    [local.db_password_ssm_arn],
     [
-      local.db_password_ssm_arn,
-      aws_ssm_parameter.jwt_secret.arn,
-      aws_ssm_parameter.oauth_google_client_secret.arn,
+      local.jwt_secret_ssm_arn,
+      local.oauth_google_client_secret_ssm_arn,
     ],
     var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
   )
@@ -129,8 +136,8 @@ locals {
   )
 
   notification_worker_ssm_parameter_arns = concat(
+    [local.db_password_ssm_arn],
     [
-      local.db_password_ssm_arn,
       local.firebase_service_account_ssm_arn,
       local.gmail_app_password_ssm_arn,
     ],

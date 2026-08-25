@@ -68,12 +68,12 @@ if [[ "${DRY_RUN}" == "false" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TERRAFORM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+TERRAFORM_COMMAND="${SCRIPT_DIR}/terraform-command.sh"
 
 terraform_output() {
   local env_name="$1"
   local output_name="$2"
-  terraform -chdir="${TERRAFORM_DIR}/envs/${env_name}" output -raw "${output_name}"
+  bash "${TERRAFORM_COMMAND}" output-raw "${env_name}" "${output_name}"
 }
 
 set_variable() {
@@ -88,7 +88,11 @@ set_variable() {
   if [[ "${DRY_RUN}" == "true" ]]; then
     echo "DRY RUN ${name}=${value}"
   else
-    gh variable set "${name}" --body "${value}" --repo "${REPOSITORY}"
+    echo "Setting GitHub variable ${name}."
+    if ! gh variable set "${name}" --body "${value}" --repo "${REPOSITORY}"; then
+      echo "::error::Failed to set GitHub variable ${name}; rerun the resumable sync job." >&2
+      return 1
+    fi
   fi
 }
 
@@ -101,11 +105,17 @@ sync_environment() {
 
   set_variable "MOIMYEON_AWS_REGION_${suffix}" "$(terraform_output "${env_name}" "aws_region")"
   set_variable "MOIMYEON_AWS_ROLE_TO_ASSUME_${suffix}" "$(terraform_output "${env_name}" "github_deploy_role_arn")"
+  set_variable "MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_${suffix}" "$(terraform_output "${env_name}" "github_deploy_role_arn")"
+  if [[ "${env_name}" == "live" ]]; then
+    set_variable "MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE" "$(terraform_output "${env_name}" "github_deploy_role_arn")"
+  fi
   set_variable "MOIMYEON_ECR_REPOSITORY_URL_${suffix}" "$(terraform_output "${env_name}" "ecr_repository_url")"
   set_variable "MOIMYEON_ECS_CLUSTER_${suffix}" "$(terraform_output "${env_name}" "ecs_cluster_name")"
   set_variable "MOIMYEON_ECS_SERVICE_${suffix}" "$(terraform_output "${env_name}" "ecs_service_name")"
   set_variable "MOIMYEON_ECS_CONTAINER_NAME_${suffix}" "$(terraform_output "${env_name}" "ecs_container_name")"
   set_variable "MOIMYEON_IMAGE_URI_PARAMETER_${suffix}" "$(terraform_output "${env_name}" "image_uri_parameter_name")"
+  set_variable "MOIMYEON_APP_URL_${suffix}" "$(terraform_output "${env_name}" "app_url")"
+  set_variable "MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_${suffix}" "$(terraform_output "${env_name}" "deployment_bundle_parameter_prefix")"
   set_variable "MOIMYEON_WORKER_ECR_REPOSITORY_URL_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecr_repository_url")"
   set_variable "MOIMYEON_WORKER_ECS_SERVICE_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecs_service_name")"
   set_variable "MOIMYEON_WORKER_ECS_CONTAINER_NAME_${suffix}" "$(terraform_output "${env_name}" "notification_worker_ecs_container_name")"

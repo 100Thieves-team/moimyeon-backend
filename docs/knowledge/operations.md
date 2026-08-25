@@ -4,6 +4,22 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-25: ignored `terraform.tfvars`를 환경 설정 원본으로 두자 개발자별 plan 입력과 CI 입력을
+  재현할 수 없었다. 재발 방지: 비민감 환경값은 reviewed `{env}.tfvars`로 커밋하고 공식 command는
+  explicit `-var-file`만 허용한다. 로컬 override와 자동 로드 tfvars는 승인 plan에서 거부한다.
+- 2026-08-25: SSM SecureString을 Terraform이 생성하면 런타임 저장소가 SSM이어도 값은 state·plan에
+  남는다. 재발 방지: 앱 시크릿은 pre-created SSM ARN만 참조하고, 신규 RDS master password는
+  RDS-managed Secrets Manager를 사용하며 raw plan은 private KMS artifact로만 취급한다.
+- 2026-08-25: GitHub concurrency의 기본 single pending은 늦게 도착한 과거 run도 최신 pending run을
+  취소·대체한다. 재발 방지: 배포·Terraform mutation queue는 `queue: max`로 pending을 보존하고, 실제 실행
+  직전에 latest CI-successful revision freshness를 검사한다. actionlint 1.7.12가 새 queue schema를 아직
+  모르므로 `.github/actionlint.yaml`은 그 parser error 하나만 임시 ignore한다.
+- 2026-08-25: live Terraform을 기존 환경의 in-place 변경으로 가정했지만 remote state가 없었다.
+  초기 plan은 RDS·VPC·ALB를 포함한 전체 생성이다. 재발 방지: live 변경은 state 존재를 먼저
+  확인하고, state가 없으면 기능 diff가 아니라 신규 환경 bootstrap plan으로 분류한다.
+- 2026-08-25: API·Worker multi-target Dockerfile에서 Spring Boot layer 추출 뒤 runtime COPY가 실패했다.
+  원인: Spring Boot 4 tools 추출이 입력 jar 파일명을 application layer에도 유지했다. 재발 방지:
+  runtime이 `app.jar`를 기대하면 추출 전에 입력을 같은 이름으로 정규화한다.
 - 2026-08-18: `ParticipationSlotCreationIT`가 고정 테스트 시각이 실제 시각을 지난 뒤 CI에서 실패했다.
   원인: 테스트 데이터만 `FIXED_NOW`를 사용하고 `RoomManager`의 `Clock`을 고정하는
   `FixedClockTestConfiguration` import를 빠뜨렸다. 재발 방지: 룸 시각 기반 ContextTest는 같은 설정을

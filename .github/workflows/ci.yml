@@ -14,7 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan repository secrets
+        run: |
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}:/repo" \
+            zricethezav/gitleaks@sha256:ebfeb6fd4f2c37fa371d3731ebfa662fdf80f93cd37d3b4771bb82263edff8d0 \
+            detect --source=/repo --no-banner --redact
 
       # 같은 버전 번호를 가진 마이그레이션이 둘이면 Flyway 는 애플리케이션 부팅에서야 터진다.
       # 브랜치 두 개가 각자 같은 번호를 달고 나란히 머지되면 git 은 충돌 없이 통과시키므로
@@ -34,16 +43,34 @@ jobs:
       - name: Check ECS capacity ownership
         run: bash infra/terraform/tests/ecs-capacity-ownership.sh
 
+      - name: Check deployment workflow contract
+        run: bash infra/terraform/tests/deploy-workflow-contract.sh
+
+      - name: Check release workflow contract
+        run: bash infra/terraform/tests/release-workflow-contract.sh
+
+      - name: Check Terraform configuration authority
+        run: bash infra/terraform/tests/terraform-config-contract.sh
+
+      - name: Check Terraform CI contract
+        run: bash infra/terraform/tests/terraform-ci-contract.sh
+
+      - name: Check Terraform bootstrap contract
+        run: bash infra/terraform/tests/terraform-bootstrap-contract.sh
+
+      - name: Check Terraform apply boundary waiter
+        run: bash infra/terraform/tests/wait-for-terraform-apply-test.sh
+
       # gradle.properties 의 javaVersion(toolchain)=25 와 일치시킨다.
       # settings.gradle.kts 에 toolchain 리졸버(foojay)가 없으므로 러너에 JDK 25 를 직접 설치해야 한다.
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           java-version: "25"
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: Lint
         run: ./gradlew ktlintCheck

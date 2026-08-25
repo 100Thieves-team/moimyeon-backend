@@ -16,9 +16,16 @@ variable "github_repository" {
   default     = "100Thieves-team/moimyeon-backend"
 }
 
-variable "github_oidc_provider_arn" {
-  description = "Shared GitHub Actions OIDC provider ARN."
+variable "promotion_source_api_ecr_repository_name" {
+  description = "Dev Core API ECR repository read by the live promotion role."
   type        = string
+  default     = "moimyeon/backend"
+}
+
+variable "promotion_source_worker_ecr_repository_name" {
+  description = "Dev Worker ECR repository read by the live promotion role."
+  type        = string
+  default     = "moimyeon/worker"
 }
 
 variable "route53_zone_id" {
@@ -70,20 +77,21 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "MySQL master username."
+  description = "Least-privilege application MySQL username provisioned during bootstrap."
   type        = string
   default     = "moimyeon"
 }
 
-variable "oauth_google_client_id" {
-  description = "Google OAuth client ID (required to boot)."
+variable "db_master_username" {
+  description = "RDS admin username whose password is managed in Secrets Manager."
   type        = string
+  default     = "moimyeon_admin"
 }
 
-variable "oauth_google_client_secret" {
-  description = "Google OAuth client secret (required to boot)."
+variable "oauth_google_client_id" {
+  description = "Google OAuth client ID. May be null only while the API is scaled to zero."
   type        = string
-  sensitive   = true
+  default     = null
 }
 
 variable "notification_worker_desired_count" {

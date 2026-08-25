@@ -45,6 +45,34 @@ resource "aws_lb_target_group" "app" {
   })
 }
 
+resource "aws_lb_target_group" "app_alternate" {
+  count = local.ecs_blue_green_enabled ? 1 : 0
+
+  name        = local.alternate_tg_name
+  port        = var.container_port
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = aws_vpc.this.id
+
+  deregistration_delay = 30
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = var.health_check_path
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 3
+  }
+
+  tags = merge(local.tags, {
+    Name = local.alternate_tg_name
+  })
+}
+
 resource "aws_lb_listener" "http" {
   count = var.manage_alb_listeners ? 1 : 0
 
@@ -159,6 +187,51 @@ resource "aws_lb_listener" "ecs_provisional" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
+  }
+
+  tags = local.tags
+}
+
+resource "aws_lb_listener_rule" "app_deployment" {
+  count = local.ecs_blue_green_enabled ? 1 : 0
+
+  listener_arn = local.https_enabled ? aws_lb_listener.https[0].arn : (
+    var.manage_alb_listeners ? aws_lb_listener.http[0].arn : aws_lb_listener.ecs_provisional[0].arn
+  )
+  priority = 100
+
+  action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.app.arn
+        weight = 100
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.app_alternate[0].arn
+        weight = 0
+      }
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  lifecycle {
+    # ECS owns blue/green target-group weights after the initial rule is created.
+    ignore_changes = [action]
+
+    precondition {
+      condition = (
+        var.manage_alb_listeners || var.provisional_ecs_listener_port != null
+      )
+      error_message = "ECS blue/green requires a managed production listener or provisional listener."
+    }
   }
 
   tags = local.tags

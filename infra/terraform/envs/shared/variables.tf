@@ -16,6 +16,42 @@ variable "github_repository" {
   default     = "100Thieves-team/moimyeon-backend"
 }
 
+variable "github_immutable_repository" {
+  description = "GitHub immutable OIDC subject prefix in org@id/repo@id form."
+  type        = string
+  default     = "100Thieves-team@278404932/moimyeon-backend@1307286446"
+}
+
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID."
+  type        = string
+  default     = "1307286446"
+}
+
+variable "github_repository_owner_id" {
+  description = "Immutable numeric GitHub organization ID."
+  type        = string
+  default     = "278404932"
+}
+
+variable "terraform_state_bucket_name" {
+  description = "Existing Terraform remote-state bucket. Null derives the canonical account/region name."
+  type        = string
+  default     = null
+}
+
+variable "terraform_lock_table_name" {
+  description = "Existing DynamoDB state-lock table."
+  type        = string
+  default     = "moimyeon-terraform-locks"
+}
+
+variable "terraform_plan_artifact_bucket_name" {
+  description = "Private short-lived Terraform plan bucket. Null derives the canonical account/region name."
+  type        = string
+  default     = null
+}
+
 variable "create_oidc_provider" {
   description = "Create the GitHub Actions OIDC provider. Account 781897847312 already has one, so default false and reference it."
   type        = bool

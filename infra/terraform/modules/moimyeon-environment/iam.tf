@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "task_execution_ssm" {
     condition {
       test     = "StringEquals"
       variable = "kms:ViaService"
-      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+      values   = ["ssm.${data.aws_region.current.region}.amazonaws.com"]
     }
   }
 }
@@ -148,7 +148,7 @@ data "aws_iam_policy_document" "notification_worker_execution_ssm" {
     condition {
       test     = "StringEquals"
       variable = "kms:ViaService"
-      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+      values   = ["ssm.${data.aws_region.current.region}.amazonaws.com"]
     }
   }
 }
@@ -239,7 +239,7 @@ data "aws_iam_policy_document" "notification_redis_execution_ssm" {
     condition {
       test     = "StringEquals"
       variable = "kms:ViaService"
-      values   = ["ssm.${data.aws_region.current.name}.amazonaws.com"]
+      values   = ["ssm.${data.aws_region.current.region}.amazonaws.com"]
     }
   }
 }
@@ -279,6 +279,33 @@ resource "aws_iam_instance_profile" "ecs_instance" {
   tags = local.tags
 }
 
+data "aws_iam_policy_document" "ecs_load_balancer_infrastructure_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ecs_load_balancer_infrastructure" {
+  count = local.ecs_blue_green_enabled ? 1 : 0
+
+  name               = "${local.name}-ecs-load-balancer-infrastructure"
+  assume_role_policy = data.aws_iam_policy_document.ecs_load_balancer_infrastructure_assume_role.json
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_load_balancer_infrastructure" {
+  count = local.ecs_blue_green_enabled ? 1 : 0
+
+  role       = aws_iam_role.ecs_load_balancer_infrastructure[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonECSInfrastructureRolePolicyForLoadBalancers"
+}
+
 # ---------------------------------------------------------------------------
 # GitHub Actions deploy role (OIDC), restricted to this env's branch.
 # ---------------------------------------------------------------------------
@@ -291,6 +318,10 @@ locals {
   github_deploy_subs = concat(
     ["repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"],
     var.github_deploy_immutable_repo != null ? ["repo:${var.github_deploy_immutable_repo}:ref:refs/heads/${var.github_branch}"] : [],
+    [for environment in var.github_deploy_environments : "repo:${var.github_repository}:environment:${environment}"],
+    var.github_deploy_immutable_repo != null ? [
+      for environment in var.github_deploy_environments : "repo:${var.github_deploy_immutable_repo}:environment:${environment}"
+    ] : [],
   )
 }
 
@@ -314,7 +345,32 @@ data "aws_iam_policy_document" "github_deploy_assume_role" {
       variable = "${local.github_oidc_host}:sub"
       values   = local.github_deploy_subs
     }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:repository_id"
+      values   = [var.github_repository_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:repository_owner_id"
+      values   = [var.github_repository_owner_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:workflow"
+      values   = var.github_deploy_workflows
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:ref"
+      values   = var.github_deploy_execution_refs
+    }
   }
+
 }
 
 resource "aws_iam_role" "github_deploy" {
@@ -348,6 +404,30 @@ data "aws_iam_policy_document" "github_deploy" {
     ]
   }
 
+  dynamic "statement" {
+    for_each = length(var.github_deploy_additional_ecr_read_repository_arns) > 0 ? [1] : []
+
+    content {
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetDownloadUrlForLayer",
+      ]
+      resources = var.github_deploy_additional_ecr_read_repository_arns
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.github_deploy_additional_ssm_read_parameter_arns) > 0 ? [1] : []
+
+    content {
+      actions   = ["ssm:GetParameter"]
+      resources = var.github_deploy_additional_ssm_read_parameter_arns
+    }
+  }
+
   statement {
     actions = [
       "ecs:DescribeServices",
@@ -374,13 +454,26 @@ data "aws_iam_policy_document" "github_deploy" {
   }
 
   statement {
-    actions = ["iam:PassRole"]
-    resources = [
-      aws_iam_role.task.arn,
-      aws_iam_role.task_execution.arn,
-      aws_iam_role.notification_worker.arn,
-      aws_iam_role.notification_worker_execution.arn,
+    actions = [
+      "ssm:GetParameter",
+      "ssm:PutParameter",
     ]
+    resources = [
+      "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.deployment_bundle_parameter_prefix}/*",
+    ]
+  }
+
+  statement {
+    actions = ["iam:PassRole"]
+    resources = concat(
+      [
+        aws_iam_role.task.arn,
+        aws_iam_role.task_execution.arn,
+        aws_iam_role.notification_worker.arn,
+        aws_iam_role.notification_worker_execution.arn,
+      ],
+      aws_iam_role.ecs_load_balancer_infrastructure[*].arn,
+    )
   }
 }
 
