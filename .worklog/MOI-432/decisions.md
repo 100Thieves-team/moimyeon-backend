@@ -125,8 +125,9 @@
 - 결정: 일반 live 애플리케이션 배포에는 required PR approval과 GitHub Environment required reviewer를 두지 않는다.
 - 책임 경계: 필수 CI를 통과한 변경을 main에 머지하는 행위가 배포 결정이며, 머지한 사람이 배포·smoke·알림 결과를 확인한다.
 - 저장소 경계: PR은 변경 이력과 CI 연결을 위해 유지하고 main 직접 push는 허용하지 않는 방향으로 branch protection을 구성한다.
-- `live-app`: main branch·OIDC·환경 변수 범위를 제한하지만 reviewer pause는 두지 않는다.
-- 별도 고위험 경계: rollback은 개발 플랫폼 권한·확인 UI·감사 로그를 사용하고, Terraform apply는 `live-infra` 확인 경계를 유지한다.
+- `live-app`·`dev-app`: reviewer·branch policy 없는 변수 namespace로만 사용한다. Deploy role은 Environment subject 외에
+  immutable repository/owner ID, `refs/heads/dev`, 허용된 deploy/promote/rollback workflow 이름을 함께 검증한다.
+- 별도 고위험 경계: rollback은 개발 플랫폼 권한·확인 UI·감사 로그를 사용하고, Terraform apply는 CI/exact-plan/OIDC claim으로 자동 실행한다.
 - 보호 장치: build once promote, source digest fail-closed 검증, native ECS blue/green, blocking smoke, 자동 롤백, Slack 알림을 필수로 둔다.
 - 문서 후속: 하네스의 `docs/knowledge/infra.md`가 이 브랜치에 합류하면 required-reviewer 불변식을 이 결정으로 갱신한다.
 

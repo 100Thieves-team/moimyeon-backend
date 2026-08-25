@@ -131,6 +131,7 @@ put_ssm_with_retry() {
 
 restore_previous_state() {
   local restored_task_definition
+  local rollback_stable=true
   local rollback_args=(
     --cluster "${cluster}"
     --service "${service}"
@@ -141,13 +142,22 @@ restore_previous_state() {
     rollback_args+=(--health-check-grace-period-seconds "${health_grace_seconds}")
   fi
 
-  aws ecs update-service "${rollback_args[@]}" > "${work_dir}/rollback-update.json"
-  aws ecs wait services-stable --cluster "${cluster}" --services "${service}"
-  restored_task_definition="$(aws ecs describe-services \
+  if ! aws ecs update-service "${rollback_args[@]}" > "${work_dir}/rollback-update.json"; then
+    echo "Automatic rollback update-service failed for ${service}." >&2
+    return 1
+  fi
+  if ! aws ecs wait services-stable --cluster "${cluster}" --services "${service}"; then
+    echo "Automatic rollback waiter failed for ${service}; checking the PRIMARY revision." >&2
+    rollback_stable=false
+  fi
+  if ! restored_task_definition="$(aws ecs describe-services \
     --cluster "${cluster}" \
     --services "${service}" \
     --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition | [0]' \
-    --output text)"
+    --output text)"; then
+    echo "Automatic rollback describe-services failed for ${service}." >&2
+    return 1
+  fi
   if [ "${restored_task_definition}" != "${previous_task_definition}" ]; then
     echo "Automatic rollback failed: expected ${previous_task_definition}, got ${restored_task_definition}." >&2
     return 1
@@ -156,6 +166,11 @@ restore_previous_state() {
     echo "Previous ECS revision was restored, but SSM restoration failed." >&2
     return 1
   fi
+  if [ "${rollback_stable}" != "true" ]; then
+    echo "Previous ECS revision and SSM value were restored, but ECS stability was not confirmed." >&2
+    return 1
+  fi
+  return 0
 }
 
 task_definition_source="${template_task_definition:-${existing_task_definition}}"
@@ -223,7 +238,9 @@ fi
 aws ecs update-service "${update_args[@]}" > "${work_dir}/service-update.json"
 if ! aws ecs wait services-stable --cluster "${cluster}" --services "${service}"; then
   echo "ECS did not stabilize; restoring previous ECS and SSM state." >&2
-  restore_previous_state
+  if ! restore_previous_state; then
+    echo "Forward deployment failed and automatic compensation also failed." >&2
+  fi
   exit 1
 fi
 aws ecs describe-services \
@@ -243,22 +260,29 @@ if [ "${primary_task_definition}" != "${next_task_definition}" ] \
   || [ "${pending_count}" != "0" ]; then
   echo "ECS service stabilized on an unexpected revision or task count." >&2
   jq '.services[0].deployments' "${work_dir}/service.json" >&2
-  restore_previous_state
+  if ! restore_previous_state; then
+    echo "Revision verification failed and automatic compensation also failed." >&2
+  fi
   exit 1
 fi
 
 if [ -n "${smoke_base_url}" ] && [ "${desired_count}" != "0" ]; then
   if ! bash "${script_dir}/smoke-test.sh" "${smoke_base_url}"; then
     echo "Smoke failed; restoring previous task definition ${previous_task_definition}." >&2
-    restore_previous_state
-    echo "Previous task definition restored after smoke failure." >&2
+    if restore_previous_state; then
+      echo "Previous task definition restored after smoke failure." >&2
+    else
+      echo "Smoke failed and automatic compensation also failed." >&2
+    fi
     exit 1
   fi
 fi
 
 if ! put_ssm_with_retry "${image_uri}"; then
   echo "SSM commit failed; restoring previous ECS and SSM state." >&2
-  restore_previous_state
+  if ! restore_previous_state; then
+    echo "SSM commit failed and automatic compensation also failed." >&2
+  fi
   exit 1
 fi
 

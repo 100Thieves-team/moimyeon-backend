@@ -96,6 +96,7 @@ assert_contains "${ROLLBACK_WORKFLOW}" 'verify-release-source\.sh' "과거 CI �
 assert_contains "${ROLLBACK_WORKFLOW}" 'MOIMYEON_DEVELOPMENT_PLATFORM_ACTOR' "개발 플랫폼 또는 명시된 break-glass actor만 rollback할 수 있다."
 assert_contains "${ROLLBACK_WORKFLOW}" '^  authorize:' "rollback actor·입력 검증은 mutation job 밖에서 끝나야 한다."
 assert_contains "${ROLLBACK_WORKFLOW}" 'github\.ref == '\''refs/heads/dev'\''' "rollback은 default dev ref의 검증된 workflow만 실행해야 한다."
+assert_contains "${ROLLBACK_WORKFLOW}" 'Rollback must be dispatched from the dev branch' "잘못된 rollback ref는 조용히 skip하지 말고 fail-fast해야 한다."
 assert_contains "${ROLLBACK_WORKFLOW}" 'needs:[[:space:]]*authorize' "승인된 요청만 rollback mutation job에 들어가야 한다."
 assert_contains "${ROLLBACK_WORKFLOW}" 'ref:.*needs\.authorize\.outputs\.tooling_sha' "OIDC rollback job은 authorize가 고정한 tooling SHA를 실행해야 한다."
 assert_contains "${ROLLBACK_WORKFLOW}" 'existing-task-definition' "rollback은 과거 task definition 전체를 복원해야 한다."
@@ -118,6 +119,9 @@ if [ "${smoke_line}" -ge "${ssm_line}" ]; then
 fi
 assert_contains "${DEPLOY_SCRIPT}" 'aws ecs wait services-stable' "ECS 안정화를 기다린 뒤 commit해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'SSM commit failed; restoring previous ECS and SSM state' "SSM 실패도 이전 ECS 상태로 보상해야 한다."
+assert_contains "${DEPLOY_SCRIPT}" 'Automatic rollback update-service failed' "rollback update 실패를 명시적으로 진단해야 한다."
+assert_contains "${DEPLOY_SCRIPT}" 'Automatic rollback waiter failed' "rollback waiter 실패 뒤 PRIMARY/SSM 검증을 계속해야 한다."
+assert_contains "${DEPLOY_SCRIPT}" 'automatic compensation also failed' "순방향 실패와 보상 실패를 구분해 보고해야 한다."
 
 assert_contains "${DEPLOY_SCRIPT}" '@sha256:\[0-9a-f\]\{64\}' "ECS에는 immutable digest만 적용해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'Smoke failed; restoring previous task definition' "smoke 실패는 이전 ECS revision을 실제 복원해야 한다."
@@ -133,5 +137,9 @@ assert_contains "${ECR_MODULE}" 'image_tag_mutability[[:space:]]*=[[:space:]]*"I
 assert_contains "${ECR_MODULE}" 'tagStatus[[:space:]]*=[[:space:]]*"untagged"' "ECR lifecycle은 untagged image만 자동 만료해야 한다."
 assert_not_contains "${ECR_MODULE}" 'tagStatus[[:space:]]*=[[:space:]]*"tagged"' "tagged candidate와 deployed marker를 같은 lifecycle로 만료하면 안 된다."
 assert_not_contains "${IAM_MODULE}" 'ecr:BatchDeleteImage' "deployment role이 immutable marker를 삭제·재생성할 권한을 가지면 안 된다."
+assert_contains "${IAM_MODULE}" 'repository_id' "보호 없는 app Environment OIDC는 immutable repository ID를 함께 검증해야 한다."
+assert_contains "${IAM_MODULE}" 'repository_owner_id' "app deploy role은 GitHub organization ID를 검증해야 한다."
+assert_contains "${IAM_MODULE}" 'github_deploy_workflows' "app deploy role은 허용 workflow 이름으로 제한해야 한다."
+assert_contains "${IAM_MODULE}" 'github_deploy_execution_refs' "app deploy role은 default branch 실행 ref로 제한해야 한다."
 
 echo "릴리스 워크플로 계약을 만족한다."

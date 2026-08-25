@@ -41,6 +41,26 @@ variable "github_deploy_environments" {
   default     = []
 }
 
+variable "github_repository_id" {
+  description = "Immutable numeric GitHub repository ID required by the deploy role trust."
+  type        = string
+}
+
+variable "github_repository_owner_id" {
+  description = "Immutable numeric GitHub organization ID required by the deploy role trust."
+  type        = string
+}
+
+variable "github_deploy_workflows" {
+  description = "GitHub workflow names allowed to assume the deploy role."
+  type        = list(string)
+}
+
+variable "github_deploy_execution_refs" {
+  description = "Git refs from which allowed deploy workflows execute."
+  type        = list(string)
+}
+
 variable "github_deploy_additional_ecr_read_repository_arns" {
   description = "Additional ECR repositories the deploy role may read for build-once promotion."
   type        = list(string)

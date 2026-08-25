@@ -345,6 +345,30 @@ data "aws_iam_policy_document" "github_deploy_assume_role" {
       variable = "${local.github_oidc_host}:sub"
       values   = local.github_deploy_subs
     }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:repository_id"
+      values   = [var.github_repository_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:repository_owner_id"
+      values   = [var.github_repository_owner_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:workflow"
+      values   = var.github_deploy_workflows
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.github_oidc_host}:ref"
+      values   = var.github_deploy_execution_refs
+    }
   }
 
 }

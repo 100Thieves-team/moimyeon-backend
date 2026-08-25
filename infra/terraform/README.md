@@ -140,7 +140,8 @@ starting a task, so vendor credentials can be prepared before activation.
   development platform. The UI selects a prior deployment bundle and dispatches
   the full source SHA, target environment, scope, and audit reason. The browser
   never receives AWS credentials. The workflow resolves image digests and exact
-  historical task-definition ARNs from the immutable SSM deployment ledger.
+  historical task-definition ARNs from the immutable SSM deployment ledger. It
+  must be dispatched from the `dev` branch ref; every other ref fails immediately.
 - Both workflows deploy immutable `repo@sha256:...` references. SSM `last deployed`
   is updated only after ECS stability and, for Core API, blocking smoke tests.
   Only then is `deployed-{env}-{sha12}` added and a single immutable SSM bundle
@@ -157,7 +158,9 @@ starting a task, so vendor credentials can be prepared before activation.
   enabling `MOIMYEON_LIVE_DEPLOY_ENABLED`.
 - `live-app` and `dev-app` GitHub Environments scope OIDC and variables but have no
   required reviewers. The person who merges main owns the resulting app deployment.
-  Terraform apply remains a separate `live-infra` confirmation boundary.
+  Deploy roles additionally require immutable repository IDs, the `dev` execution
+  ref, and the expected deploy/promote/rollback workflow name. Terraform apply is
+  also CI-gated and runs without a separate confirmation pause.
 
 Fail-closed repository variables, created only after the IAM/Terraform slice is ready:
 
@@ -431,7 +434,7 @@ parameters:
 ```bash
 AWS_PROFILE=plady aws sts get-caller-identity --query Account --output text
 AWS_PROFILE=plady terraform -chdir=infra/terraform/envs/dev apply \
-  /tmp/moi432-dev-config-v4.tfplan
+  /tmp/moi432-dev-config-v5.tfplan
 ```
 
 The identity check must print the reviewed account `781897847312`. Do not apply

@@ -222,7 +222,8 @@ strategy만 rolling으로 되돌릴 수 있지만 controller는 ECS로 유지한
   같은 key와 hash의 exact plan만 받아 별도 사람 승인 없이 환경별 apply OIDC role로 실행한다.
 - PR 코멘트에는 raw `terraform show -json`을 붙이지 않고 add/change/destroy 수, replacement·IAM·public
   exposure 같은 위험 요약만 secret redaction 뒤 게시한다.
-- apply 뒤 `sync-github-variables.sh`를 실행하고 실패하면 apply 성공과 변수 동기화 실패를 구분해 알린다.
+- `(plan no-op || apply 성공)` 뒤 별도 resumable job에서 `sync-github-variables.sh`를 실행한다. sync 실패는 apply
+  실패와 구분하고, 전체 rerun의 새 plan이 no-op이어도 current state에서 sync를 다시 시도한다.
 - drift: live/shared는 매일, dev는 주 1회 `plan -detailed-exitcode`를 실행한다. 차이가 있을 때만 알리고
   자동 apply하지 않는다.
 - Environment는 보호 없는 variable namespace로만 쓴다. role trust는 Environment subject 외에 immutable repository ID,

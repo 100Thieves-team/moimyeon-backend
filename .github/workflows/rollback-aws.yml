@@ -28,7 +28,6 @@ permissions:
 
 jobs:
   authorize:
-    if: ${{ github.ref == 'refs/heads/dev' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -45,6 +44,15 @@ jobs:
       tooling_sha: ${{ steps.tooling.outputs.sha }}
 
     steps:
+      - name: Reject non-dev dispatch ref
+        env:
+          WORKFLOW_REF: ${{ github.ref }}
+        run: |
+          if [ "${WORKFLOW_REF}" != "refs/heads/dev" ]; then
+            echo "::error::Rollback must be dispatched from the dev branch."
+            exit 1
+          fi
+
       - name: Check out trusted dev tooling
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

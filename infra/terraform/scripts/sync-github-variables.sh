@@ -88,7 +88,11 @@ set_variable() {
   if [[ "${DRY_RUN}" == "true" ]]; then
     echo "DRY RUN ${name}=${value}"
   else
-    gh variable set "${name}" --body "${value}" --repo "${REPOSITORY}"
+    echo "Setting GitHub variable ${name}."
+    if ! gh variable set "${name}" --body "${value}" --repo "${REPOSITORY}"; then
+      echo "::error::Failed to set GitHub variable ${name}; rerun the resumable sync job." >&2
+      return 1
+    fi
   fi
 }
 

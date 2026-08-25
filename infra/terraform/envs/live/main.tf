@@ -18,6 +18,10 @@ module "live" {
   # From: gh api /repos/100Thieves-team/moimyeon-backend/actions/oidc/customization/sub
   github_deploy_immutable_repo = "100Thieves-team@278404932/moimyeon-backend@1307286446"
   github_deploy_environments   = ["live-app"]
+  github_repository_id         = "1307286446"
+  github_repository_owner_id   = "278404932"
+  github_deploy_workflows      = ["Promote Live", "Rollback AWS"]
+  github_deploy_execution_refs = ["refs/heads/dev"]
   github_deploy_additional_ecr_read_repository_arns = [
     "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${var.promotion_source_api_ecr_repository_name}",
     "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${var.promotion_source_worker_ecr_repository_name}",

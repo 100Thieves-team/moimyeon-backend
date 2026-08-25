@@ -136,8 +136,8 @@ jobs:
         run: |
           set -euo pipefail
           case "${GITHUB_EVENT_NAME}" in
-            pull_request) artifact_scope=pr ;;
-            schedule) artifact_scope=drift ;;
+            pull_request) artifact_scope="pr" ;;
+            schedule) artifact_scope="drift" ;;
             *) echo "::error::Unsupported Terraform plan event."; exit 1 ;;
           esac
           prefix="plans/${artifact_scope}/${GITHUB_SHA}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ matrix.environment }}"

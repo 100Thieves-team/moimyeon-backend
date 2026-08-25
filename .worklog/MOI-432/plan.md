@@ -138,7 +138,7 @@
 
 ### dev 실제 state plan
 
-- 최종 저장 plan: `/tmp/moi432-dev-config-v4.tfplan`.
+- 최종 저장 plan: `/tmp/moi432-dev-config-v5.tfplan`.
 - 요약: `2 add / 4 change / 2 destroy`로 표시된다.
 - replacement 2건은 `aws_ecr_lifecycle_policy.app`, `notification_worker`의 **정책 객체 교체**다.
   ECR repository와 image를 삭제하는 replacement가 아니다.
@@ -153,7 +153,7 @@
 
 ### live plan
 
-- 최종 저장 plan: `/tmp/moi432-live-config-v4.tfplan`.
+- 최종 저장 plan: `/tmp/moi432-live-config-v5.tfplan`.
 - 원격 state가 존재하지 않아 실제 plan은 **전체 신규 bootstrap**이다.
 - committed `live.tfvars` 기준: `96 add / 0 change / 0 destroy`.
 - native blue/green 핵심 생성: alternate target group, production listener rule, ECS load-balancer infrastructure role,
