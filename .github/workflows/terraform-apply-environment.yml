@@ -15,6 +15,10 @@ on:
         description: Trusted merged branch containing source_sha
         required: true
         type: string
+      plan_prefix:
+        description: Immutable S3 prefix output by the successful exact-plan job
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -114,11 +118,17 @@ jobs:
         if: steps.freshness.outputs.current == 'true'
         env:
           PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
+          PLAN_PREFIX: ${{ inputs.plan_prefix }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TERRAFORM_ENVIRONMENT: ${{ inputs.environment }}
         run: |
           set -euo pipefail
-          prefix="plans/apply/${{ inputs.source_sha }}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ inputs.environment }}"
-          aws s3 cp "s3://${PLAN_BUCKET}/${prefix}.tfplan" tfplan
-          aws s3 cp "s3://${PLAN_BUCKET}/${prefix}.tfplan.sha256" tfplan.sha256
+          case "${PLAN_PREFIX}" in
+            "plans/apply/${SOURCE_SHA}/"*"/${TERRAFORM_ENVIRONMENT}") ;;
+            *) echo "::error::Unexpected Terraform plan prefix ${PLAN_PREFIX}."; exit 1 ;;
+          esac
+          aws s3 cp "s3://${PLAN_BUCKET}/${PLAN_PREFIX}.tfplan" tfplan
+          aws s3 cp "s3://${PLAN_BUCKET}/${PLAN_PREFIX}.tfplan.sha256" tfplan.sha256
           sha256sum --check tfplan.sha256
 
       - name: Initialize exact backend

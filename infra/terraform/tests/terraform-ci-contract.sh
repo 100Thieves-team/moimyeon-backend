@@ -96,9 +96,12 @@ assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'resolve-deploy-candidate\.sh' "trust
 assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'Stale Terraform plan rejected' "stale Terraform boundary가 success로 보이면 app deploy가 먼저 시작할 수 있다."
 assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'queue:[[:space:]]*max' "latest plan pending run을 늦은 과거 run이 교체하면 안 된다."
 assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'inputs\.source_sha' "reusable plan은 caller의 CI-successful SHA를 사용해야 한다."
+assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'plan_prefix' "exact plan job은 실제 저장한 immutable S3 prefix를 output해야 한다."
 
 assert_contains "${ENV_APPLY_WORKFLOW}" 'environment:[[:space:]]*\$\{\{ inputs\.environment \}\}-infra' "환경별 apply role variable namespace가 필요하다."
 assert_contains "${ENV_APPLY_WORKFLOW}" 'sha256sum --check' "apply 전 exact plan checksum을 확인해야 한다."
+assert_contains "${ENV_APPLY_WORKFLOW}" 'inputs\.plan_prefix' "apply retry는 성공한 plan job이 쓴 exact S3 prefix를 받아야 한다."
+assert_not_contains "${ENV_APPLY_WORKFLOW}" 'prefix="plans/apply/.*GITHUB_RUN_ATTEMPT' "apply가 retry attempt로 plan prefix를 재계산하면 안 된다."
 assert_contains "${ENV_APPLY_WORKFLOW}" 'terraform .*apply[[:space:]]+-input=false.*tfplan' "CI가 생성한 exact binary plan만 apply해야 한다."
 assert_contains "${ENV_APPLY_WORKFLOW}" 'deploy-aws-\{0\}' "dev/live Terraform은 app deploy·rollback과 같은 mutation lock을 사용해야 한다."
 assert_contains "${ENV_APPLY_WORKFLOW}" 'terraform-shared' "shared Terraform은 별도 account-level mutation lock을 사용해야 한다."

@@ -22,6 +22,9 @@ on:
       apply_required:
         description: Whether resource or output changes require exact-plan apply
         value: ${{ jobs.plan.outputs.apply_required }}
+      plan_prefix:
+        description: Immutable S3 prefix written by the exact plan job
+        value: ${{ jobs.plan.outputs.plan_prefix }}
 
 permissions:
   contents: read
@@ -41,6 +44,7 @@ jobs:
     outputs:
       current: ${{ steps.freshness.outputs.current }}
       apply_required: ${{ steps.exact_plan.outputs.apply_required }}
+      plan_prefix: ${{ steps.exact_plan.outputs.plan_prefix }}
 
     steps:
       - name: Check out merged Terraform source
@@ -145,6 +149,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           prefix="plans/apply/${{ inputs.source_sha }}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/${{ inputs.environment }}"
+          echo "plan_prefix=${prefix}" >> "$GITHUB_OUTPUT"
           aws s3api put-object \
             --bucket "${PLAN_BUCKET}" \
             --key "${prefix}.tfplan" \

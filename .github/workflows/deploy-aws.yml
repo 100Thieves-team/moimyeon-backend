@@ -537,6 +537,7 @@ jobs:
             fi
 
             if [ "${requested_rollout_state}" = "FAILED" ]; then
+              abort_worker_build
               echo "::error::ECS deployment failed before the service became stable."
               jq '.services[0].events[0:10]' service.json
               exit 1
@@ -545,12 +546,14 @@ jobs:
             if [ "${requested_deployment_seen}" = "true" ] \
               && [ "${requested_rollout_state}" = "MISSING" ] \
               && [ "${primary_task_definition}" != "${task_definition}" ]; then
+              abort_worker_build
               echo "::error::ECS rolled back from ${task_definition} to ${primary_task_definition}."
               jq '.services[0].events[0:10]' service.json
               exit 1
             fi
 
             if [ "${SECONDS}" -ge "${deadline}" ]; then
+              abort_worker_build
               echo "::error::Timed out waiting for ECS service ${service} to stabilize."
               jq '.services[0].deployments' service.json
               jq '.services[0].events[0:10]' service.json

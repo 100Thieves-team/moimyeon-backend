@@ -54,6 +54,7 @@ jobs:
       environment: shared
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
+      plan_prefix: ${{ needs.plan-shared.outputs.plan_prefix }}
 
   plan-dev:
     needs: [ select, plan-shared, apply-shared ]
@@ -80,6 +81,7 @@ jobs:
       environment: dev
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
+      plan_prefix: ${{ needs.plan-dev.outputs.plan_prefix }}
 
   sync-dev-variables:
     needs: [ select, plan-dev, apply-dev ]
@@ -119,6 +121,7 @@ jobs:
       environment: live
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
+      plan_prefix: ${{ needs.plan-live.outputs.plan_prefix }}
 
   sync-live-variables:
     needs: [ select, plan-live, apply-live ]

@@ -226,6 +226,8 @@
   `plans/apply/*`에만 create-only PutObject를 허용한다. 각 GitHub Environment의 서로 다른 OIDC subject를
   trust하되 보호 없는 Environment만 신뢰하지 않고 immutable repository ID, workflow, ref, reusable workflow 경로를
   함께 검증한다. role은 상대 prefix write·DeleteObject 권한이 없다.
+- artifact retry: plan job이 실제로 쓴 S3 prefix를 job output으로 전달하고 apply는 이를 검증해 그대로 사용한다.
+  apply-only retry의 `GITHUB_RUN_ATTEMPT`로 prefix를 다시 계산해 존재하지 않는 plan을 찾는 동작은 금지한다.
 - apply: dev push는 shared/dev, main push는 live의 merged SHA plan을 새로 만든다. 별도 사람 승인 없이 checksum이
   같은 binary plan만 자동 apply한다.
 - CI gate: apply workflow는 push에 독립 발화하지 않는다. 내부 dev/main push의 `CI` 성공 `workflow_run`마다

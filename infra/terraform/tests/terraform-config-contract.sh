@@ -16,7 +16,9 @@ expected_tfvars="$(printf '%s\n' \
   infra/terraform/envs/shared/shared.tfvars)"
 tracked_tfvars="$({
   git -C "${ROOT_DIR}" ls-files 'infra/terraform/**/*.tfvars'
+  git -C "${ROOT_DIR}" ls-files 'infra/terraform/**/*.tfvars.json'
   git -C "${ROOT_DIR}" ls-files --others --exclude-standard 'infra/terraform/**/*.tfvars'
+  git -C "${ROOT_DIR}" ls-files --others --exclude-standard 'infra/terraform/**/*.tfvars.json'
 } | sort -u)"
 if [ "${tracked_tfvars}" != "${expected_tfvars}" ]; then
   echo "Expected tracked tfvars:" >&2

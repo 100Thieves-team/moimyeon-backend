@@ -12,6 +12,7 @@ backend.tf
 # Local variable files are ignored by default. Only the three reviewed,
 # non-sensitive environment sources below are tracked.
 *.tfvars
+*.tfvars.json
 *.auto.tfvars
 terraform.tfvars
 !envs/dev/dev.tfvars
