@@ -96,6 +96,12 @@ assert_contains "${SYNC_SCRIPT}" 'configure_environment dev-infra' "dev apply ro
 assert_contains "${SYNC_SCRIPT}" 'configure_environment live-infra' "live apply role variable namespace가 필요하다."
 assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_CI_ENABLED false' "bootstrap 스크립트는 CI를 비활성 상태로 남겨야 한다."
 assert_not_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_CI_ENABLED true' "preflight 전에 Terraform CI를 켜면 안 된다."
+assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_LIVE_CI_ENABLED false' "bootstrap은 live Terraform apply를 별도 false로 고정해야 한다."
+assert_not_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_LIVE_CI_ENABLED true' "bootstrap이 live Terraform을 활성화하면 안 된다."
+assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_LIVE_DEPLOY_ENABLED false' "bootstrap은 live application promotion도 false로 고정해야 한다."
+assert_not_contains "${SYNC_SCRIPT}" 'MOIMYEON_LIVE_DEPLOY_ENABLED true' "bootstrap이 live application promotion을 활성화하면 안 된다."
+assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_LIVE_ROLLBACK_ENABLED false' "bootstrap은 live rollback mutation도 false로 고정해야 한다."
+assert_not_contains "${SYNC_SCRIPT}" 'MOIMYEON_LIVE_ROLLBACK_ENABLED true' "bootstrap이 live rollback을 활성화하면 안 된다."
 assert_not_contains "${SYNC_SCRIPT}" 'gh secret set.*MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN' "Variables-write credential 값은 자동화가 취급하면 안 된다."
 assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER' "GitHub에는 Variables-write credential의 SSM 이름만 동기화해야 한다."
 

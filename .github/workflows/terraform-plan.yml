@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [ shared, dev, live ]
+        environment: ${{ fromJSON(vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED == 'true' && '["shared","dev","live"]' || '["shared","dev"]') }}
 
     steps:
       - name: Check out Terraform source

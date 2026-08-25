@@ -71,6 +71,7 @@ jobs:
           PLAN_BUCKET: ${{ vars.MOIMYEON_TERRAFORM_PLAN_BUCKET }}
           PLAN_KMS_KEY_ARN: ${{ vars.MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN }}
           VARIABLE_SYNC_TOKEN_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER }}
+          LIVE_CI_ENABLED: ${{ vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED }}
         run: |
           set -euo pipefail
           for value in "${APPLY_ROLE_ARN}" "${PLAN_BUCKET}" "${PLAN_KMS_KEY_ARN}"; do
@@ -81,6 +82,10 @@ jobs:
           done
           if [ "${{ inputs.environment }}" != "shared" ] && [ -z "${VARIABLE_SYNC_TOKEN_PARAMETER}" ]; then
             echo "::error::Terraform variable sync credential parameter is missing."
+            exit 1
+          fi
+          if [ "${{ inputs.environment }}" = "live" ] && [ "${LIVE_CI_ENABLED}" != "true" ]; then
+            echo "::error::Live Terraform apply is disabled before AWS credential use."
             exit 1
           fi
 

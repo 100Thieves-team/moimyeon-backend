@@ -98,7 +98,7 @@ jobs:
 
   plan-live:
     needs: select
-    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'main' }}
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'main' }}
     permissions:
       actions: read
       contents: read
@@ -111,7 +111,7 @@ jobs:
 
   apply-live:
     needs: [ select, plan-live ]
-    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && needs.plan-live.outputs.apply_required == 'true' }}
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED == 'true' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && needs.plan-live.outputs.apply_required == 'true' }}
     permissions:
       actions: read
       contents: read
@@ -125,7 +125,7 @@ jobs:
 
   sync-live-variables:
     needs: [ select, plan-live, apply-live ]
-    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && (needs.plan-live.outputs.apply_required == 'false' || needs.apply-live.result == 'success') }}
+    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-live.result == 'success' && needs.plan-live.outputs.current == 'true' && (needs.plan-live.outputs.apply_required == 'false' || needs.apply-live.result == 'success') }}
     permissions:
       actions: read
       contents: read
@@ -135,6 +135,18 @@ jobs:
       environment: live
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
+
+  live-disabled:
+    needs: select
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED != 'true' && needs.select.outputs.source_branch == 'main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Freeze live Terraform and promotion boundary
+        run: |
+          echo "::error::Live Terraform apply is disabled. Keep MOIMYEON_TERRAFORM_LIVE_CI_ENABLED=false until live infrastructure is explicitly authorized."
+          exit 1
 
   disabled:
     needs: select

@@ -168,6 +168,7 @@ Fail-closed repository variables, created only after the IAM/Terraform slice is 
 | --- | --- |
 | `MOIMYEON_LIVE_DEPLOY_ENABLED` | Enables automatic main-to-live promotion only when exactly `true` |
 | `MOIMYEON_ROLLBACK_ENABLED` | Enables development-platform and break-glass rollback only when exactly `true` |
+| `MOIMYEON_LIVE_ROLLBACK_ENABLED` | Enables rollback mutations against live only when exactly `true`; keep false now |
 | `MOIMYEON_DEPLOYMENT_LEDGER_ENABLED` | Enables immutable SSM bundle recording after IAM/prefix apply |
 | `MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE` | OIDC role that reads deployed dev images and writes/deploys live |
 | `MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_DEV` | OIDC rollback role for dev bundles |
@@ -357,6 +358,7 @@ The conditional-write policy follows the
 Configure these non-secret GitHub variables before enabling Terraform CI:
 
 - `MOIMYEON_TERRAFORM_CI_ENABLED=false` during bootstrap; set exactly `true` only after the following preflight
+- `MOIMYEON_TERRAFORM_LIVE_CI_ENABLED=false` until the live `96 add` plan is explicitly authorized; dev automation does not require this flag
 - `MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME` in `terraform-review-plan`; it may
   write only create-only `plans/pr/*` objects
 - `MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME` in `terraform-drift-plan`; it may
@@ -377,6 +379,12 @@ While `MOIMYEON_TERRAFORM_CI_ENABLED` is not exactly `true`, the Terraform
 boundary deliberately fails and application deploy/promotion remains frozen.
 This prevents a commit containing infrastructure and application changes from
 running the application on old infrastructure during bootstrap.
+
+After bootstrap, `MOIMYEON_TERRAFORM_CI_ENABLED=true` enables shared/dev
+automatic apply. Main remains fail-closed while
+`MOIMYEON_TERRAFORM_LIVE_CI_ENABLED` is not exactly `true`: no live plan/apply
+or variable sync job is created, and the main Terraform boundary fails so live
+promotion cannot continue. Keep the live flag false for the current rollout.
 
 The three plan roles need read access for Terraform refresh plus write access only
 to their disjoint plan-artifact prefixes. Neither writer may delete or overwrite
@@ -473,12 +481,16 @@ environment mutation lock.
 
 The script creates/reconciles six unprotected Terraform Environment namespaces
 and role/bucket/KMS/SSM-name Variables while deliberately keeping
-`MOIMYEON_TERRAFORM_CI_ENABLED=false`. It never handles the Variables-write
+both Terraform CI flags false. It never handles the Variables-write
 secret value. Pre-create
 `/moimyeon/shared/terraform/GITHUB_VARIABLE_SYNC_TOKEN` as SecureString, verify
 a review plan and drift plan, and only then enable the gate. The apply role reads
 that value only after its ref/workflow-bound OIDC assumption; an unprotected PR
 Environment receives only the parameter name.
+
+The same bootstrap sync also writes `MOIMYEON_LIVE_DEPLOY_ENABLED=false` and
+`MOIMYEON_LIVE_ROLLBACK_ENABLED=false`, so Terraform apply, promotion, and
+rollback mutation against live all remain disabled during shared/dev bootstrap.
 
 On dev, shared is planned and applied first; only then is the dev plan created,
 so an exact dev plan cannot capture pre-shared state. Each apply job acquires the

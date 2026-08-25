@@ -218,6 +218,9 @@ if [[ "${PHASE}" == "variables" || "${PHASE}" == "all" ]]; then
   set_repository_variable MOIMYEON_TERRAFORM_PLAN_KMS_KEY_ARN "${PLAN_KMS_KEY_ARN}"
   set_repository_variable MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER "/moimyeon/shared/terraform/GITHUB_VARIABLE_SYNC_TOKEN"
   set_repository_variable MOIMYEON_TERRAFORM_CI_ENABLED false
+  set_repository_variable MOIMYEON_TERRAFORM_LIVE_CI_ENABLED false
+  set_repository_variable MOIMYEON_LIVE_DEPLOY_ENABLED false
+  set_repository_variable MOIMYEON_LIVE_ROLLBACK_ENABLED false
 
   set_environment_variable terraform-review-plan MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME "${REVIEW_PLAN_ROLE_ARN}"
   set_environment_variable terraform-drift-plan MOIMYEON_TERRAFORM_PLAN_ROLE_TO_ASSUME "${DRIFT_PLAN_ROLE_ARN}"

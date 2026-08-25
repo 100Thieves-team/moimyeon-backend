@@ -40,6 +40,7 @@ jobs:
       PLATFORM_ACTOR: ${{ vars.MOIMYEON_DEVELOPMENT_PLATFORM_ACTOR }}
       BREAK_GLASS_ACTORS: ${{ vars.MOIMYEON_ROLLBACK_BREAK_GLASS_ACTORS }}
       ROLLBACK_ENABLED: ${{ vars.MOIMYEON_ROLLBACK_ENABLED }}
+      LIVE_ROLLBACK_ENABLED: ${{ vars.MOIMYEON_LIVE_ROLLBACK_ENABLED }}
     outputs:
       tooling_sha: ${{ steps.tooling.outputs.sha }}
 
@@ -73,6 +74,10 @@ jobs:
             exit 1
           fi
           case "${ROLLBACK_ENV}" in dev|live) ;; *) exit 1 ;; esac
+          if [ "${ROLLBACK_ENV}" = "live" ] && [ "${LIVE_ROLLBACK_ENABLED}" != "true" ]; then
+            echo "::error::Live rollback is disabled."
+            exit 1
+          fi
           case "${ROLLBACK_SCOPE}" in both|api|worker) ;; *) exit 1 ;; esac
           if [[ ! "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::Rollback source must be a full lowercase SHA."
@@ -130,6 +135,16 @@ jobs:
       worker_result: ${{ steps.rollback_worker.outcome }}
 
     steps:
+      - name: Recheck live rollback freeze
+        env:
+          LIVE_ROLLBACK_ENABLED: ${{ vars.MOIMYEON_LIVE_ROLLBACK_ENABLED }}
+        run: |
+          if [ "${ROLLBACK_ENV}" = "live" ] \
+            && [ "${LIVE_ROLLBACK_ENABLED}" != "true" ]; then
+            echo "::error::Live rollback is disabled before AWS credential use."
+            exit 1
+          fi
+
       - name: Check out release tooling and dev history
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

@@ -209,6 +209,7 @@
 - apply lock 뒤 branch tip freshness를 재검증하고 stale push는 AWS apply credential 전에 종료.
 - 모든 CI-success trigger를 run-name/source에 고정하고 no-op plan까지 수행해 Terraform 변경 뒤 app/docs commit의 역순 CI 완료에도 변경을 누락하지 않음.
 - dev deploy/live promotion이 같은 CI SHA의 Terraform Apply run 성공을 기다려 infra+app commit의 실행 순서를 명시.
+- `MOIMYEON_TERRAFORM_LIVE_CI_ENABLED=false`를 별도 고정해 shared/dev 자동 apply 활성화와 live `96 add` apply를 분리.
 - plan·deploy·promotion·rollback·Terraform apply concurrency를 `queue: max`로 바꿔 late old run의 latest pending 교체를 차단.
 - candidate 이후 docs-only successor는 runtime-equivalent로 허용하고 runtime change만 newer Terraform boundary로 넘김.
 - dev/live/shared provider 6.61 isolated validate 통과.

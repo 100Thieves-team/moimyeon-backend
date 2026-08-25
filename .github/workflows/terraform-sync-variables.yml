@@ -64,10 +64,15 @@ jobs:
         env:
           APPLY_ROLE_ARN: ${{ vars.MOIMYEON_TERRAFORM_APPLY_ROLE_TO_ASSUME }}
           VARIABLE_SYNC_TOKEN_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER }}
+          LIVE_CI_ENABLED: ${{ vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED }}
         run: |
           set -euo pipefail
           if [ -z "${APPLY_ROLE_ARN}" ] || [ -z "${VARIABLE_SYNC_TOKEN_PARAMETER}" ]; then
             echo "::error::Terraform variable sync bootstrap is incomplete."
+            exit 1
+          fi
+          if [ "${{ inputs.environment }}" = "live" ] && [ "${LIVE_CI_ENABLED}" != "true" ]; then
+            echo "::error::Live Terraform variable sync is disabled before AWS credential use."
             exit 1
           fi
 

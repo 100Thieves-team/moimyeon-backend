@@ -139,6 +139,17 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - name: Recheck live mutation freeze
+        env:
+          LIVE_DEPLOY_ENABLED: ${{ vars.MOIMYEON_LIVE_DEPLOY_ENABLED }}
+          LIVE_TERRAFORM_ENABLED: ${{ vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED }}
+        run: |
+          if [ "${LIVE_DEPLOY_ENABLED}" != "true" ] \
+            || [ "${LIVE_TERRAFORM_ENABLED}" != "true" ]; then
+            echo "::error::Live promotion is disabled before AWS credential use."
+            exit 1
+          fi
+
       - name: Check out release tooling
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

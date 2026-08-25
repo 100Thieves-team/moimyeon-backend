@@ -261,6 +261,10 @@
 - gate: `MOIMYEON_TERRAFORM_CI_ENABLED`가 정확히 `true`가 되기 전에는 AWS plan·apply job을 만들지 않고
   fork와 내부 PR 모두 fmt·validate·계약 검사만 수행한다. merged CI의 Terraform boundary는 실패로 끝내
   app deploy/promotion을 함께 freeze한다. 비활성 run을 app-ready success로 간주하지 않는다.
+- live gate: shared/dev 자동 apply를 켜도 `MOIMYEON_TERRAFORM_LIVE_CI_ENABLED=false`이면 main의 live
+  privileged plan/apply/sync를 만들지 않고 Terraform boundary를 명시적으로 실패시킨다. promote job도 AWS credential 전
+  Terraform/application flag를 재검증한다. `MOIMYEON_LIVE_DEPLOY_ENABLED=false`, `MOIMYEON_LIVE_ROLLBACK_ENABLED=false`를
+  함께 고정해 현재 live `96 add`, promotion, rollback mutation을 모두 금지한다.
 - 활성화 선행: dev JWT/OAuth state-forget bootstrap을 사람이 먼저 적용해 현재 state에서 secret-bearing object를 제거한다.
 
 ## DR-026: Terraform CI bootstrap도 shared state에서 코드로 소유
@@ -282,7 +286,7 @@
   `iam:PolicyARN` attachment allowlist는 bootstrap 안정화 뒤 hardening 후속 후보로 남긴다.
 - GitHub bootstrap: `sync-terraform-bootstrap.sh`는 기본 dry-run이다. `environments` phase를 최초 AWS apply 전에
   실행해 reviewer·wait timer·branch policy가 없는 변수 namespace를 만들고, apply 뒤 `variables` phase에서 output을
-  동기화한다. 항상 `MOIMYEON_TERRAFORM_CI_ENABLED=false`를 기록하고 Variables-write secret 값은 취급하지 않는다.
+  동기화한다. 항상 두 Terraform CI flag를 false로 기록하고 Variables-write secret 값은 취급하지 않는다.
 - 외부 반영: 2026-08-25에 Terraform Environment 6개를 실제 생성했고 모두 `protection_rules=[]`,
   `deployment_branch_policy=null`임을 GitHub API로 재확인했다. role/bucket/KMS Variables는 shared apply 전이라 아직 설정하지 않았다.
 - 최초 경계: 예측 가능한 review role이 생기기 전에 기존 사람 AWS identity로 dev JWT/OAuth/random state-forget
