@@ -1,12 +1,6 @@
 aws_region        = "ap-northeast-2"
 github_repository = "100Thieves-team/moimyeon-backend"
 
-# Existing GitHub OIDC provider in account 781897847312 (shared output, or reuse).
-github_oidc_provider_arn = "arn:aws:iam::781897847312:oidc-provider/token.actions.githubusercontent.com"
-
-# Current dev already completed the external DNS/ACM bootstrap, so HTTPS is enabled below.
-# For a new environment, start with false, create `external_dns_records` in Cloudflare,
-# then switch to true and apply again.
 app_domain_name             = "api.dev.moimyeon.plady.io"
 dns_management              = "external"
 enable_https                = true
@@ -15,12 +9,12 @@ upload_cors_allowed_origins = ["https://dev.moimyeon.plady.io", "http://localhos
 vpc_cidr    = "10.20.0.0/16"
 db_name     = "moimyeondev"
 db_username = "moimyeon_admin"
+# Existing dev uses the same externally managed DB identity for app and admin.
+db_master_username = null
 
-# Required for the app to boot (security-core.yml has no defaults).
-oauth_google_client_id     = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
-oauth_google_client_secret = "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+# Public OAuth identifier. The corresponding client secret exists only in SSM.
+oauth_google_client_id = "662774804169-9r00i1iuh80lmctu72144qbl1kqqqk0c.apps.googleusercontent.com"
 
-# The dev SSM SecureStrings and non-secret vendor values are provisioned.
 notification_worker_desired_count     = 1
 firebase_project_id                   = "moimyeon-development"
 notification_web_push_action_base_url = "https://dev.moimyeon.plady.io"

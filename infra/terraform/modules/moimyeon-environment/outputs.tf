@@ -5,7 +5,7 @@ output "environment" {
 
 output "aws_region" {
   description = "AWS region for this environment."
-  value       = data.aws_region.current.name
+  value       = data.aws_region.current.region
 }
 
 output "ecr_repository_url" {
@@ -80,6 +80,11 @@ output "rds_endpoint" {
   value       = aws_db_instance.core.address
 }
 
+output "db_master_secret_arn" {
+  description = "RDS-managed Secrets Manager ARN for the master password, when enabled."
+  value       = var.manage_db_master_password ? aws_db_instance.core.master_user_secret[0].secret_arn : null
+}
+
 output "notification_redis_endpoint" {
   description = "Private Cloud Map DNS name of the notification Redis ECS service, if enabled."
   value       = var.enable_notification_redis ? local.notification_redis_host : null
@@ -105,6 +110,11 @@ output "ssm_parameter_prefix" {
   value       = "/${var.project}/${var.environment}/core-api"
 }
 
+output "jwt_secret_parameter_name" {
+  description = "Pre-created SSM SecureString expected to contain the JWT signing secret."
+  value       = local.jwt_secret_param_name
+}
+
 output "image_uri_parameter_name" {
   description = "SSM parameter the deploy workflow updates with the last deployed image URI."
   value       = aws_ssm_parameter.image_uri.name
@@ -113,6 +123,11 @@ output "image_uri_parameter_name" {
 output "notification_worker_image_uri_parameter_name" {
   description = "SSM parameter updated with the last deployed core-worker image URI."
   value       = aws_ssm_parameter.notification_worker_image_uri.name
+}
+
+output "deployment_bundle_parameter_prefix" {
+  description = "SSM prefix containing immutable successful deployment bundle manifests."
+  value       = local.deployment_bundle_parameter_prefix
 }
 
 output "firebase_service_account_parameter_name" {

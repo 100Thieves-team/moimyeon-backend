@@ -1,34 +1,152 @@
 name: Deploy AWS
 
-# Pattern A (ECS on EC2) continuous deploy. Push to dev/main builds the Core API
-# and, once its Terraform outputs are synced, the Notification Worker image.
+# Pattern A (ECS on EC2) continuous deploy. A successful dev CI run builds the
+# Core API and overlaps Notification Worker image assembly with API stabilization.
 # Each image gets its own ECR repository and ECS task-definition revision.
 #
-# Env is chosen by branch: dev -> dev environment, main -> live environment.
-# Each environment assumes its own OIDC deploy role whose trust policy is pinned
-# to the matching branch (infra/terraform/modules/moimyeon-environment/iam.tf).
-# Repo variables come from `scripts/sync-github-variables.sh`.
+# Live is intentionally absent until the build-once promotion workflow and its
+# approval gate are implemented. Repository variables come from
+# `infra/terraform/scripts/sync-github-variables.sh`.
 
 on:
-  push:
-    branches:
-      - dev
-      - main
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ dev ]
 
 permissions:
   contents: read
-  id-token: write
-
-concurrency:
-  group: deploy-aws-${{ github.ref_name }}
-  cancel-in-progress: false
 
 jobs:
-  deploy:
+  changes:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      deploy_required: ${{ steps.changes.outputs.deploy_required }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out CI-verified revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - name: Detect deployable changes
+        id: changes
+        shell: bash
+        env:
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          base_sha="$(git rev-parse "${DEPLOY_SHA}^" 2>/dev/null || true)"
+          if [ -z "${base_sha}" ]; then
+            echo "deploy_required=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          deploy_required=false
+          while IFS= read -r changed_file; do
+            case "${changed_file}" in
+              docs/*|*.md|*.mdx)
+                ;;
+              *)
+                deploy_required=true
+                break
+                ;;
+            esac
+          done < <(git diff --name-only --no-renames "${base_sha}" "${DEPLOY_SHA}")
+
+          echo "deploy_required=${deploy_required}" >> "$GITHUB_OUTPUT"
+          if [ "${deploy_required}" = "false" ]; then
+            echo "Only documentation changed; skipping AWS deployment."
+          fi
+
+  candidate:
+    needs: changes
+    if: ${{ needs.changes.outputs.deploy_required == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+
+    steps:
+      - name: Check out CI-verified revision and history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Resolve Terraform-ready dev candidate
+        id: source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/dev:refs/remotes/origin/dev"
+          resolved_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            refs/remotes/origin/dev dev "${{ github.event.workflow_run.head_sha }}")"
+          bash infra/terraform/scripts/wait-for-terraform-apply.sh \
+            dev "${resolved_sha}"
+          echo "sha=${resolved_sha}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: candidate
+    if: ${{ needs.candidate.result == 'success' }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-aws-dev
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      DEPLOY_SHA: ${{ needs.candidate.outputs.sha }}
+
+    steps:
+      - name: Check out CI-verified revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+          fetch-depth: 0
+
+      - name: Verify Terraform-ready dev candidate freshness
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/dev:refs/remotes/origin/dev"
+          resolved_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            refs/remotes/origin/dev dev "${DEPLOY_SHA}")"
+          if [ "${resolved_sha}" != "${DEPLOY_SHA}" ]; then
+            if ! git merge-base --is-ancestor "${DEPLOY_SHA}" "${resolved_sha}"; then
+              echo "::error::Resolved dev revision is not a descendant of the Terraform-ready candidate."
+              exit 1
+            fi
+            while IFS= read -r changed_file; do
+              case "${changed_file}" in
+                docs/*|*.md|*.mdx)
+                  ;;
+                *)
+                  echo "::error::A newer runtime-changing dev revision requires its own Terraform boundary: ${changed_file}."
+                  exit 1
+                  ;;
+              esac
+            done < <(git diff --name-only --no-renames "${DEPLOY_SHA}" "${resolved_sha}")
+            echo "Allowing Terraform-ready candidate across documentation-only successors."
+          fi
+          echo "Deploying Terraform-ready dev revision ${DEPLOY_SHA}."
 
       - name: Select environment
         id: env
@@ -36,7 +154,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          case "${GITHUB_REF_NAME}" in
+          case "${DEPLOY_BRANCH}" in
             dev)
               echo "name=dev" >> "$GITHUB_OUTPUT"
               echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_DEV }}" >> "$GITHUB_OUTPUT"
@@ -47,6 +165,8 @@ jobs:
               echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
               echo "ecs_task_definition=${{ vars.MOIMYEON_ECS_TASK_DEFINITION_DEV }}" >> "$GITHUB_OUTPUT"
               echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "app_url=${{ vars.MOIMYEON_APP_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "bundle_parameter_prefix=${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}" >> "$GITHUB_OUTPUT"
               echo "worker_ecr_repository_url=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
               echo "worker_ecs_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
               echo "worker_ecs_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
@@ -54,25 +174,8 @@ jobs:
               echo "worker_image_uri_parameter=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
               echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
               ;;
-            main)
-              echo "name=live" >> "$GITHUB_OUTPUT"
-              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecr_repository_url=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_cluster=${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_task_definition=${{ vars.MOIMYEON_ECS_TASK_DEFINITION_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecr_repository_url=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_task_definition=${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "worker_image_uri_parameter=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
-              ;;
             *)
-              echo "::error::Unsupported branch ${GITHUB_REF_NAME}"
+              echo "::error::Unsupported branch ${DEPLOY_BRANCH}"
               exit 1
               ;;
           esac
@@ -80,6 +183,8 @@ jobs:
       - name: Validate deployment variables
         id: deployment_config
         shell: bash
+        env:
+          DEPLOYMENT_LEDGER_ENABLED: ${{ vars.MOIMYEON_DEPLOYMENT_LEDGER_ENABLED }}
         run: |
           set -euo pipefail
           required=(
@@ -91,6 +196,7 @@ jobs:
             "${{ steps.env.outputs.ecs_container }}"
             "${{ steps.env.outputs.ecs_task_definition }}"
             "${{ steps.env.outputs.image_uri_parameter }}"
+            "${{ steps.env.outputs.app_url }}"
             "${{ steps.env.outputs.ecs_health_check_grace_seconds }}"
           )
           for value in "${required[@]}"; do
@@ -104,6 +210,16 @@ jobs:
           if [[ ! "${{ steps.env.outputs.ecs_health_check_grace_seconds }}" =~ ^[0-9]+$ ]]; then
             echo "::error::ecs_health_check_grace_seconds must be a positive integer."
             exit 1
+          fi
+
+          if [ "${DEPLOYMENT_LEDGER_ENABLED}" = "true" ]; then
+            if [ -z "${{ steps.env.outputs.bundle_parameter_prefix }}" ]; then
+              echo "::error::Deployment ledger is enabled but its SSM prefix is missing."
+              exit 1
+            fi
+            echo "ledger_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ledger_enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
           worker_values=(
@@ -132,13 +248,13 @@ jobs:
           fi
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
         with:
           role-to-assume: ${{ steps.env.outputs.role_arn }}
           aws-region: ${{ steps.env.outputs.aws_region }}
 
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
       - name: Resolve image tags
         id: image
@@ -148,16 +264,11 @@ jobs:
 
           repo="${{ steps.env.outputs.ecr_repository_url }}"
           env_tag="${{ steps.env.outputs.name }}"
-          sha_tag="${env_tag}-${GITHUB_SHA::12}"
+          sha_tag="${env_tag}-${DEPLOY_SHA::12}"
           image_uri="${repo}:${sha_tag}"
 
           echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
-          {
-            echo "tags<<EOF"
-            echo "${image_uri}"
-            echo "${repo}:${env_tag}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Notification Worker image tags
         if: steps.deployment_config.outputs.worker_enabled == 'true'
@@ -168,35 +279,38 @@ jobs:
 
           repo="${{ steps.env.outputs.worker_ecr_repository_url }}"
           env_tag="${{ steps.env.outputs.name }}"
-          sha_tag="${env_tag}-${GITHUB_SHA::12}"
+          sha_tag="${env_tag}-${DEPLOY_SHA::12}"
           image_uri="${repo}:${sha_tag}"
 
           echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
           echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Check for existing Core API image
+        id: api_image_cache
+        shell: bash
+        run: |
+          if docker buildx imagetools inspect "${{ steps.image.outputs.image_uri }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Reusing existing immutable Core API image."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        if: steps.api_image_cache.outputs.exists != 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: Dockerfile
+          target: core-api
           platforms: linux/amd64
           push: true
           tags: ${{ steps.image.outputs.tags }}
-          cache-from: type=gha,scope=core-api
-          cache-to: type=gha,mode=max,scope=core-api
-
-      - name: Store deployed image URI in SSM
-        shell: bash
-        run: |
-          set -euo pipefail
-          aws ssm put-parameter \
-            --name "${{ steps.env.outputs.image_uri_parameter }}" \
-            --type String \
-            --value "${{ steps.image.outputs.image_uri }}" \
-            --overwrite
+          cache-from: type=gha,scope=deployment-images
+          cache-to: type=gha,mode=max,scope=deployment-images
 
       - name: Register task definition revision
         id: task_def
@@ -212,6 +326,14 @@ jobs:
             --task-definition "${template_task_def_arn}" \
             --query taskDefinition \
             > task-definition.json
+
+          if ! jq -e \
+            --arg container "${container}" \
+            '.containerDefinitions | any(.name == $container)' \
+            task-definition.json >/dev/null; then
+            echo "::error::Container ${container} is absent from Core API task definition."
+            exit 1
+          fi
 
           # Swap only the container image; keep every other field (env, secrets,
           # roles, log config) that Terraform put in the definition. Drop the
@@ -241,8 +363,15 @@ jobs:
           echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy ECS service
+        id: api_deploy
         timeout-minutes: 30
         shell: bash
+        env:
+          API_IMAGE_URI: ${{ steps.image.outputs.image_uri }}
+          API_IMAGE_URI_PARAMETER: ${{ steps.env.outputs.image_uri_parameter }}
+          APP_URL: ${{ steps.env.outputs.app_url }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_IMAGE_TAG: ${{ steps.worker_image.outputs.tags }}
         run: |
           set -euo pipefail
 
@@ -251,6 +380,97 @@ jobs:
           task_definition="${{ steps.task_def.outputs.arn }}"
           grace_seconds="${{ steps.env.outputs.ecs_health_check_grace_seconds }}"
           deployment_config='{"minimumHealthyPercent":50,"maximumPercent":200,"deploymentCircuitBreaker":{"enable":true,"rollback":true}}'
+          worker_build_pid=""
+          worker_build_status="not-requested"
+
+          finish_worker_build() {
+            if [ -z "${worker_build_pid}" ]; then
+              echo "worker_build_succeeded=${worker_build_status}" >> "$GITHUB_OUTPUT"
+              return
+            fi
+
+            if wait "${worker_build_pid}"; then
+              echo "worker_build_succeeded=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "worker_build_succeeded=false" >> "$GITHUB_OUTPUT"
+            fi
+            worker_build_pid=""
+          }
+
+          trap finish_worker_build EXIT
+
+          aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            > service-before.json
+          previous_task_definition="$(jq -r \
+            '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition' \
+            service-before.json)"
+          if [ -z "${previous_task_definition}" ] || [ "${previous_task_definition}" = "null" ]; then
+            echo "::error::Core API service has no PRIMARY task definition."
+            exit 1
+          fi
+          aws ecs describe-task-definition \
+            --task-definition "${previous_task_definition}" \
+            --query taskDefinition \
+            > previous-task-definition.json
+          previous_image_uri="$(jq -r \
+            --arg container "${{ steps.env.outputs.ecs_container }}" \
+            '.containerDefinitions[] | select(.name == $container) | .image' \
+            previous-task-definition.json)"
+
+          abort_worker_build() {
+            if [ -n "${worker_build_pid}" ]; then
+              kill "${worker_build_pid}" 2>/dev/null || true
+              wait "${worker_build_pid}" 2>/dev/null || true
+              echo "worker_build_succeeded=false" >> "$GITHUB_OUTPUT"
+              worker_build_pid=""
+            fi
+            trap - EXIT
+          }
+
+          restore_previous_api() {
+            local restored_task_definition
+            aws ecs update-service \
+              --cluster "${cluster}" \
+              --service "${service}" \
+              --task-definition "${previous_task_definition}" \
+              --health-check-grace-period-seconds "${grace_seconds}" \
+              --deployment-configuration "${deployment_config}" \
+              --force-new-deployment \
+              > service-rollback.json
+            aws ecs wait services-stable \
+              --cluster "${cluster}" \
+              --services "${service}"
+            restored_task_definition="$(aws ecs describe-services \
+              --cluster "${cluster}" \
+              --services "${service}" \
+              --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition | [0]' \
+              --output text)"
+            if [ "${restored_task_definition}" != "${previous_task_definition}" ]; then
+              echo "::error::API rollback failed: expected ${previous_task_definition}, got ${restored_task_definition}."
+              return 1
+            fi
+            local ssm_restored=false
+            local attempt
+            for attempt in 1 2 3; do
+              if aws ssm put-parameter \
+                --name "${API_IMAGE_URI_PARAMETER}" \
+                --type String \
+                --value "${previous_image_uri}" \
+                --overwrite; then
+                ssm_restored=true
+                break
+              fi
+              if [ "${attempt}" -lt 3 ]; then
+                sleep $((attempt * 2))
+              fi
+            done
+            if [ "${ssm_restored}" != "true" ]; then
+              echo "::error::API revision restored but SSM restoration failed."
+              return 1
+            fi
+          }
 
           aws ecs update-service \
             --cluster "${cluster}" \
@@ -260,6 +480,24 @@ jobs:
             --deployment-configuration "${deployment_config}" \
             --force-new-deployment \
             > service-update.json
+
+          # The shared Docker builder already produced both bootJars for the API
+          # target. Assemble and push the Worker target while ECS stabilizes the
+          # API. Worker rollout still waits for both operations to succeed.
+          if [ "${WORKER_ENABLED}" = "true" ]; then
+            if docker buildx imagetools inspect "${WORKER_IMAGE_TAG}" >/dev/null 2>&1; then
+              echo "Reusing existing immutable Worker image."
+              worker_build_status="true"
+            else
+              timeout --signal=TERM 900 docker buildx build --target core-worker \
+                --platform linux/amd64 \
+                --file Dockerfile \
+                --tag "${WORKER_IMAGE_TAG}" \
+                --push \
+                . &
+              worker_build_pid=$!
+            fi
+          fi
 
           deadline=$((SECONDS + 1500))
           requested_deployment_seen="$(jq -r \
@@ -299,6 +537,7 @@ jobs:
             fi
 
             if [ "${requested_rollout_state}" = "FAILED" ]; then
+              abort_worker_build
               echo "::error::ECS deployment failed before the service became stable."
               jq '.services[0].events[0:10]' service.json
               exit 1
@@ -307,12 +546,14 @@ jobs:
             if [ "${requested_deployment_seen}" = "true" ] \
               && [ "${requested_rollout_state}" = "MISSING" ] \
               && [ "${primary_task_definition}" != "${task_definition}" ]; then
+              abort_worker_build
               echo "::error::ECS rolled back from ${task_definition} to ${primary_task_definition}."
               jq '.services[0].events[0:10]' service.json
               exit 1
             fi
 
             if [ "${SECONDS}" -ge "${deadline}" ]; then
+              abort_worker_build
               echo "::error::Timed out waiting for ECS service ${service} to stabilize."
               jq '.services[0].deployments' service.json
               jq '.services[0].events[0:10]' service.json
@@ -322,33 +563,54 @@ jobs:
             sleep 15
           done
 
-      # Keep the Worker chain after Core API is stable. A Worker build or rollout
-      # failure must not prevent an otherwise valid API revision from deploying.
-      - name: Build and push Notification Worker image
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          platforms: linux/amd64
-          push: true
-          tags: ${{ steps.worker_image.outputs.tags }}
-          build-args: |
-            GRADLE_BOOT_JAR_TASK=:core:core-worker:bootJar
-            BOOT_JAR_DIRECTORY=core/core-worker
-          cache-from: type=gha,scope=core-worker
-          cache-to: type=gha,mode=max,scope=core-worker
+          if ! bash infra/terraform/scripts/smoke-test.sh "${APP_URL}"; then
+            abort_worker_build
+            echo "::error::Smoke failed; restoring ${previous_task_definition}."
+            restore_previous_api
+            exit 1
+          fi
 
-      - name: Store Notification Worker image URI in SSM
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+          # Commit the API deployment boundary before waiting on the independent
+          # Worker build result. A Worker timeout cannot hide a stable API image.
+          ssm_committed=false
+          for attempt in 1 2 3; do
+            if aws ssm put-parameter \
+              --name "${API_IMAGE_URI_PARAMETER}" \
+              --type String \
+              --value "${API_IMAGE_URI}" \
+              --overwrite; then
+              ssm_committed=true
+              break
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 2))
+            fi
+          done
+          if [ "${ssm_committed}" != "true" ]; then
+            abort_worker_build
+            echo "::error::API SSM commit failed; restoring ${previous_task_definition}."
+            restore_previous_api
+            exit 1
+          fi
+
+          finish_worker_build
+          trap - EXIT
+
+      - name: Mark Core API deployment bundle
+        id: api_bundle
         shell: bash
         run: |
-          set -euo pipefail
-          aws ssm put-parameter \
-            --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
-            --type String \
-            --value "${{ steps.worker_image.outputs.image_uri }}" \
-            --overwrite
+          deployed_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${{ steps.image.outputs.image_uri }}" \
+            "${{ steps.env.outputs.ecr_repository_url }}:deployed-dev-${DEPLOY_SHA::12}")"
+          echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
+
+      - name: Fail when Notification Worker image build failed
+        if: steps.deployment_config.outputs.worker_enabled == 'true' && steps.api_deploy.outputs.worker_build_succeeded != 'true'
+        shell: bash
+        run: |
+          echo "::error::Core API is stable, but the Notification Worker image build failed. Worker deployment was not started."
+          exit 1
 
       - name: Register Notification Worker task definition revision
         if: steps.deployment_config.outputs.worker_enabled == 'true'
@@ -399,6 +661,7 @@ jobs:
           echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy Notification Worker ECS service
+        id: worker_deploy
         if: steps.deployment_config.outputs.worker_enabled == 'true'
         timeout-minutes: 30
         shell: bash
@@ -409,6 +672,28 @@ jobs:
           service="${{ steps.env.outputs.worker_ecs_service }}"
           task_definition="${{ steps.worker_task_def.outputs.arn }}"
           deployment_config='{"minimumHealthyPercent":0,"maximumPercent":200,"deploymentCircuitBreaker":{"enable":true,"rollback":true}}'
+
+          aws ecs describe-services \
+            --cluster "${cluster}" \
+            --services "${service}" \
+            > worker-service-before.json
+          previous_task_definition="$(jq -r \
+            '.services[0].deployments[] | select(.status == "PRIMARY") | .taskDefinition' \
+            worker-service-before.json)"
+          if [ -z "${previous_task_definition}" ] || [ "${previous_task_definition}" = "null" ]; then
+            echo "::error::Worker service has no PRIMARY task definition."
+            exit 1
+          fi
+          aws ecs describe-task-definition \
+            --task-definition "${previous_task_definition}" \
+            --query taskDefinition \
+            > worker-previous-task-definition.json
+          previous_image_uri="$(jq -r \
+            --arg container "${{ steps.env.outputs.worker_ecs_container }}" \
+            '.containerDefinitions[] | select(.name == $container) | .image' \
+            worker-previous-task-definition.json)"
+          echo "previous_task_definition_arn=${previous_task_definition}" >> "$GITHUB_OUTPUT"
+          echo "previous_image_uri=${previous_image_uri}" >> "$GITHUB_OUTPUT"
 
           aws ecs update-service \
             --cluster "${cluster}" \
@@ -483,6 +768,88 @@ jobs:
 
             sleep 15
           done
+
+      - name: Store Notification Worker image URI in SSM
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssm_committed=false
+          for attempt in 1 2 3; do
+            if aws ssm put-parameter \
+              --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
+              --type String \
+              --value "${{ steps.worker_image.outputs.image_uri }}" \
+              --overwrite; then
+              ssm_committed=true
+              break
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 2))
+            fi
+          done
+          if [ "${ssm_committed}" != "true" ]; then
+            echo "::error::Worker SSM commit failed; restoring previous task definition."
+            aws ecs update-service \
+              --cluster "${{ steps.env.outputs.ecs_cluster }}" \
+              --service "${{ steps.env.outputs.worker_ecs_service }}" \
+              --task-definition "${{ steps.worker_deploy.outputs.previous_task_definition_arn }}" \
+              --force-new-deployment \
+              > worker-service-rollback.json
+            aws ecs wait services-stable \
+              --cluster "${{ steps.env.outputs.ecs_cluster }}" \
+              --services "${{ steps.env.outputs.worker_ecs_service }}"
+            restored_task_definition="$(aws ecs describe-services \
+              --cluster "${{ steps.env.outputs.ecs_cluster }}" \
+              --services "${{ steps.env.outputs.worker_ecs_service }}" \
+              --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition | [0]' \
+              --output text)"
+            if [ "${restored_task_definition}" != "${{ steps.worker_deploy.outputs.previous_task_definition_arn }}" ]; then
+              echo "::error::Worker rollback failed after SSM commit failure."
+              exit 1
+            fi
+            ssm_restored=false
+            for attempt in 1 2 3; do
+              if aws ssm put-parameter \
+                --name "${{ steps.env.outputs.worker_image_uri_parameter }}" \
+                --type String \
+                --value "${{ steps.worker_deploy.outputs.previous_image_uri }}" \
+                --overwrite; then
+                ssm_restored=true
+                break
+              fi
+              if [ "${attempt}" -lt 3 ]; then
+                sleep $((attempt * 2))
+              fi
+            done
+            if [ "${ssm_restored}" != "true" ]; then
+              echo "::error::Worker revision restored but SSM restoration failed."
+            fi
+            exit 1
+          fi
+
+      - name: Mark Notification Worker deployment bundle
+        id: worker_bundle
+        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          deployed_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${{ steps.worker_image.outputs.image_uri }}" \
+            "${{ steps.env.outputs.worker_ecr_repository_url }}:deployed-dev-${DEPLOY_SHA::12}")"
+          echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
+
+      - name: Record immutable dev deployment bundle
+        if: steps.deployment_config.outputs.ledger_enabled == 'true'
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/record-deployment-bundle.sh \
+            "${{ steps.env.outputs.bundle_parameter_prefix }}" \
+            dev \
+            "${DEPLOY_SHA}" \
+            "${{ steps.api_bundle.outputs.image_uri }}" \
+            "${{ steps.task_def.outputs.arn }}" \
+            "${{ steps.worker_bundle.outputs.image_uri }}" \
+            "${{ steps.worker_task_def.outputs.arn }}"
 
       - name: Print ECS diagnostics
         if: failure()
@@ -568,3 +935,19 @@ jobs:
               --query 'tasks[].{taskArn:taskArn,taskDefinitionArn:taskDefinitionArn,lastStatus:lastStatus,stoppedReason:stoppedReason,stoppedAt:stoppedAt,containers:containers[].{name:name,exitCode:exitCode,reason:reason,lastStatus:lastStatus,healthStatus:healthStatus}}' \
               --output json
           fi
+
+      - name: Notify Slack
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_DEV }}
+          DEPLOY_ENVIRONMENT: dev
+          DEPLOY_KIND: deployment
+          DEPLOY_OUTCOME: ${{ job.status }}
+          DEPLOY_SHA: ${{ env.DEPLOY_SHA }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          API_RESULT: ${{ steps.api_deploy.outcome }}
+          WORKER_RESULT: ${{ steps.worker_deploy.outcome }}
+        run: bash infra/terraform/scripts/notify-deployment.sh

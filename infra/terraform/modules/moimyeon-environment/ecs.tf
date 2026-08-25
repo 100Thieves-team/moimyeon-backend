@@ -29,11 +29,11 @@ locals {
       SERVER_PORT                       = tostring(var.container_port)
       STORAGE_DATABASE_CORE_DB_URL      = local.db_url
       STORAGE_DATABASE_CORE_DB_USERNAME = var.db_username
-      GOOGLE_OAUTH_CLIENT_ID            = var.oauth_google_client_id
-      AWS_REGION                        = data.aws_region.current.name
-      AWS_DEFAULT_REGION                = data.aws_region.current.name
+      AWS_REGION                        = data.aws_region.current.region
+      AWS_DEFAULT_REGION                = data.aws_region.current.region
       STORAGE_OBJECTSTORAGE_S3_BUCKET   = aws_s3_bucket.uploads.bucket
     },
+    var.oauth_google_client_id == null ? {} : { GOOGLE_OAUTH_CLIENT_ID = var.oauth_google_client_id },
     var.jwt_issuer == null ? {} : { JWT_ISSUER = var.jwt_issuer },
     var.additional_environment,
   )
@@ -81,13 +81,22 @@ locals {
         logDriver = "awslogs"
         options = {
           awslogs-group         = aws_cloudwatch_log_group.app.name
-          awslogs-region        = data.aws_region.current.name
+          awslogs-region        = data.aws_region.current.region
           awslogs-stream-prefix = var.container_name
         }
       }
     },
     local.container_health_check,
   )
+}
+
+check "oauth_google_client_id_before_activation" {
+  assert {
+    condition = var.ecs_service_desired_count == 0 || (
+      var.oauth_google_client_id != null && trimspace(var.oauth_google_client_id) != ""
+    )
+    error_message = "oauth_google_client_id must be committed before Core API desired count is raised above zero."
+  }
 }
 
 resource "aws_ecs_task_definition" "app" {
@@ -237,7 +246,7 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.ecs_service_desired_count
 
-  deployment_minimum_healthy_percent = 50
+  deployment_minimum_healthy_percent = local.ecs_blue_green_enabled ? 100 : 50
   deployment_maximum_percent         = 200
   enable_execute_command             = var.enable_ecs_exec
   health_check_grace_period_seconds  = var.ecs_service_health_check_grace_period_seconds
@@ -246,6 +255,28 @@ resource "aws_ecs_service" "app" {
     enable   = true
     rollback = true
   }
+
+  deployment_controller {
+    type = "ECS"
+  }
+
+  deployment_configuration {
+    strategy             = var.ecs_deployment_strategy
+    bake_time_in_minutes = local.ecs_blue_green_enabled ? tostring(var.ecs_blue_green_bake_time_in_minutes) : null
+  }
+
+  dynamic "alarms" {
+    for_each = length(var.ecs_deployment_alarm_names) > 0 ? [1] : []
+
+    content {
+      alarm_names = var.ecs_deployment_alarm_names
+      enable      = true
+      rollback    = true
+    }
+  }
+
+  sigint_rollback       = local.ecs_blue_green_enabled
+  wait_for_steady_state = local.ecs_blue_green_enabled
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.this.name
@@ -268,6 +299,16 @@ resource "aws_ecs_service" "app" {
     target_group_arn = aws_lb_target_group.app.arn
     container_name   = var.container_name
     container_port   = var.container_port
+
+    dynamic "advanced_configuration" {
+      for_each = local.ecs_blue_green_enabled ? [1] : []
+
+      content {
+        alternate_target_group_arn = aws_lb_target_group.app_alternate[0].arn
+        production_listener_rule   = aws_lb_listener_rule.app_deployment[0].arn
+        role_arn                   = aws_iam_role.ecs_load_balancer_infrastructure[0].arn
+      }
+    }
   }
 
   # ECS requires the TG to be attached to a listener before the service is
@@ -278,6 +319,8 @@ resource "aws_ecs_service" "app" {
     aws_lb_listener.http,
     aws_lb_listener.https,
     aws_lb_listener.ecs_provisional,
+    aws_lb_listener_rule.app_deployment,
+    aws_iam_role_policy_attachment.ecs_load_balancer_infrastructure,
   ]
 
   # Runtime deploy (GitHub Actions) and app-autoscaling own these; Terraform

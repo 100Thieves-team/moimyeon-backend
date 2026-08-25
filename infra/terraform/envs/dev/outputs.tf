@@ -88,6 +88,11 @@ output "notification_redis_password_parameter_name" {
   value       = module.dev.notification_redis_password_parameter_name
 }
 
+output "jwt_secret_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the JWT signing secret."
+  value       = module.dev.jwt_secret_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.dev.upload_bucket_name
@@ -101,6 +106,11 @@ output "image_uri_parameter_name" {
 output "notification_worker_image_uri_parameter_name" {
   description = "SSM parameter updated with the deployed core-worker image URI."
   value       = module.dev.notification_worker_image_uri_parameter_name
+}
+
+output "deployment_bundle_parameter_prefix" {
+  description = "SSM prefix containing immutable dev deployment bundles."
+  value       = module.dev.deployment_bundle_parameter_prefix
 }
 
 output "firebase_service_account_parameter_name" {
