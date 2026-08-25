@@ -106,3 +106,10 @@
   출력 계약 통일(ship-pr 취합이 형식 제각각을 파싱), infra.md 스모크
   테스트 계약을 배포 워크플로에 연결(app_url 동기화 선행), 리뷰어 입력의
   시크릿 redaction 명문화.
+
+- (후속) Multi-Agent Review 이연분 (DR-030 보강 5): ①knowledge 문서의
+  출처가 `_workspace/`(비커밋)뿐이라 팀원이 원본 확인 불가 — 공개 원전
+  링크 병기 또는 요약 인용으로 자립시킬지 결정 (DR-006과 충돌하지 않는
+  선에서) ②`check_pairings.py`의 확장자 화이트리스트 하드코딩
+  ③`lint_skills.py`의 `EXTERNAL_CONTENT_SKILLS` 하드코딩을 SKILL.md 마커
+  기반 자동 판별로 전환.

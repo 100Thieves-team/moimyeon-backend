@@ -64,3 +64,8 @@ normal / boundary / adversarial / historical-incidents / prompt-injection
 eval 셋과 결과 저장 구조를 특정 공급자 API에 종속시키지 않는다
 (OpenAI Evals 플랫폼이 2026-11 종료되는 사례). 파일 기반 manifest +
 자체 러너면 공급자를 바꿔도 기준이 유지된다.
+
+## 우리가 겪은 것
+
+아직 없다. 사고·리뷰에서 배운 것이 생기면 날짜와 함께 한 줄 추가한다
+(형식: README의 "어떻게 늘리는가").
