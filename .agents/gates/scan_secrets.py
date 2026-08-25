@@ -27,14 +27,34 @@ PATTERNS = [
 ALLOW_MARK = "gate:allow-secret"
 
 
+# 키 이름을 그대로 값으로 쓴 상수(`const val ACCESS_TOKEN = "ACCESS_TOKEN"`)와
+# CONSTANT_CASE 식별자는 구조적으로 시크릿이 아니다 — 2026-08-25 qa-reviewer가
+# 실제 소스 2곳의 오탐을 잡아냈다.
+ASSIGN_VALUE = re.compile(r"[:=]\s*[\"']?([^\"'\s]+)[\"']?\s*$")
+IDENTIFIER_VALUE = re.compile(r"\A[A-Z][A-Z0-9_]*\Z")
+
+
+def _is_false_positive(line: str) -> bool:
+    if "${" in line:  # Spring placeholder 기본값
+        return True
+    m = ASSIGN_VALUE.search(line)
+    if not m:
+        return False
+    value = m.group(1)
+    if IDENTIFIER_VALUE.match(value):
+        return True  # 값이 대문자 상수명 — 키 이름의 반복이지 비밀값이 아니다
+    key = re.search(r"([A-Za-z_][A-Za-z0-9_-]*)\s*[:=]", line)
+    return bool(key and key.group(1).lower().replace("_", "") == value.lower().replace("_", ""))
+
+
 def scan(lines):
     hits = []
     for where, line in lines:
         if ALLOW_MARK in line:
             continue
         for name, pat in PATTERNS:
-            if name == "평문 비밀값 대입" and "${" in line:
-                continue  # Spring placeholder 기본값은 시크릿이 아니다
+            if name == "평문 비밀값 대입" and _is_false_positive(line):
+                continue
             if pat.search(line):
                 hits.append((where, name))
     return hits

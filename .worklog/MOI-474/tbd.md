@@ -88,3 +88,9 @@
   끝내므로(DR-009) 사람 없는 파이프라인에서는 완결되지 않는다. 실제로
   하네스를 무인 자동화에 물릴 때 결정한다 — 저위험 작업만 무인 허용,
   또는 결정을 전부 기록하는 조건부 통과 모드 (DR-028 비용 항목).
+
+- (후속) qa-reviewer 권고 미반영분 (DR-030): lint_skills가 SKILL.md 없는
+  디렉토리를 BLOCKER로 처리하는 문제, python3 부재 환경의 pre-commit 안내,
+  pre-push의 remote 객체 부재 시 오도 메시지, .review-swarm.yaml
+  teamRuleFiles 20000자 상한 확인, gate_hook·pre-push 자체 테스트 부재,
+  .agents/agents/*.md frontmatter lint 부재.

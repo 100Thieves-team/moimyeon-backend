@@ -59,11 +59,13 @@ def main():
     dd = dedup_dir(root)
     messages = []
 
-    # 시크릿: 편집된 파일 전문 (BLOCK급이므로 dedup 없이 항상)
+    # 시크릿: 편집된 파일 전문. 훅은 diff를 볼 수 없어 기존 줄까지 걸리므로
+    # 세션당 1회만 알린다 — 확정 차단은 diff 기반인 pre-commit·CI가 한다.
     if Path(rel).is_file():
         lines = [(rel, line) for line in open(rel, encoding="utf-8", errors="replace")]
         for where, name in scan_secrets.scan(lines):
-            messages.append(f"[BLOCK] 시크릿 의심: {name} — {where}. 커밋 전에 제거하라.")
+            if not already_warned(dd, f"{session}:secret:{name}:{where}"):
+                messages.append(f"[BLOCK] 시크릿 의심: {name} — {where}. 커밋 전에 제거하라.")
 
     # 정합성 페어링: WARN, 세션당 1회
     changed = check_pairings.worktree_changed() | {rel}

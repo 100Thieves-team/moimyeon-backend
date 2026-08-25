@@ -10,7 +10,15 @@ set -euo pipefail
 
 MODE="${1:?trigger}" ; RUNTIME="${2:?claude|codex}" ; N="${3:-1}"
 ROOT="$(git rev-parse --show-toplevel)"
-WORKDIR="${4:-$ROOT}"
+# 트리거 프롬프트는 "구현해줘" 류 실행 요청이고 claude 경로는 권한을 우회한다.
+# 레포 루트에서 돌면 측정 1회가 워킹트리를 오염시킨다 — 격리 워크트리를 강제한다.
+WORKDIR="${4:-}"
+if [ -z "$WORKDIR" ] || [ "$WORKDIR" = "$ROOT" ]; then
+  echo "격리 워크트리를 지정하라 (레포 루트 실행 금지):" >&2
+  echo "  git worktree add /tmp/eval-wt --detach HEAD" >&2
+  echo "  $0 $MODE $RUNTIME $N /tmp/eval-wt <스킬명>" >&2
+  exit 2
+fi
 SKILL="${5:-requirement-implementation}"
 TSV="$ROOT/.agents/evals/trigger/$SKILL.tsv"
 STAMP="$(date +%Y%m%d-%H%M)"

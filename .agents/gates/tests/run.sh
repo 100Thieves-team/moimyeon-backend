@@ -36,6 +36,12 @@ YML
 python3 "$G/check_config_profiles.py" "$T/app.yml" > /dev/null; check "profiles-양성" 1 $?
 python3 "$G/check_config_profiles.py" > /dev/null; check "profiles-실레포" 0 $?
 
+# 3b. 시크릿 음성 회귀: 실제 레포 소스 전체에 오탐이 없어야 한다
+#     (2026-08-25 qa-reviewer가 합성 픽스처만으로는 못 잡는 오탐 2건을 발견)
+git ls-files '*.kt' '*.yml' '*.yaml' '*.properties' '*.sql' | grep -v worktrees \
+  | xargs python3 "$G/scan_secrets.py" --files > /dev/null 2>&1
+check "secrets-실레포-오탐없음" 0 $?
+
 # 4. 페어링: 훅 모드 스모크 (경고는 exit 0)
 python3 "$G/check_pairings.py" --staged > /dev/null; check "pairings-smoke" 0 $?
 
