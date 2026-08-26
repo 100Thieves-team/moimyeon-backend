@@ -10,10 +10,11 @@
 - 로그인 시작·콜백(`/oauth2/authorization/google`, `/login/oauth2/code/google`)은 컨트롤러가 아니라
   Spring Security 필터 체인이 처리한다.
 - local·local-dev·dev 환경은 `POST /v1/auth/dev-sessions`에서 기존 회원 UUID를 받아 Google OAuth 없이
-  같은 세션 발급 흐름을 제공한다. 이 컨트롤러와 발급 컴포넌트는 개발용 프로파일에서만 등록한다.
-- 성공 시 환경별 액세스·리프레시 쿠키를 발급한다. 기본·live는 `ACCESS_TOKEN`·`REFRESH_TOKEN`,
-  dev는 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN`을 사용한다. API 인증은 쿠키(웹) 또는
-  `Authorization: Bearer`(앱) 둘 다 허용 (`HeaderOrCookieBearerTokenResolver`).
+  만료 없는 액세스 토큰을 응답한다. 이 컨트롤러와 발급 컴포넌트는 개발용 프로파일에서만 등록한다.
+- Google OAuth 성공 시 환경별 액세스·리프레시 쿠키를 발급한다. 기본·live는
+  `ACCESS_TOKEN`·`REFRESH_TOKEN`, dev는 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN`을 사용한다.
+  API 인증은 쿠키(웹) 또는 `Authorization: Bearer`(앱) 둘 다 허용
+  (`HeaderOrCookieBearerTokenResolver`).
 - Access Token은 회원 UUID를 subject로, `USER` 또는 `ADMIN`을 `roles` claim으로 담는다.
   Resource Server는 이를 `ROLE_USER`, `ROLE_ADMIN` Spring Security 권한으로 변환한다.
 - refresh/logout 경로에서는 액세스 토큰을 해석하지 않는다(만료 토큰이 실려도 401 로 막지 않기 위해).
@@ -36,10 +37,10 @@ state 검증 오류가 백엔드 `/login?error`에 남는다.
 
 ## 개발 환경 전용 인증
 
-- `POST /v1/auth/dev-sessions`는 요청한 탈퇴하지 않은 회원을 조회한 뒤 현재 `MemberRole`로 액세스 토큰을 만들고
-  리프레시 세션을 저장한다. 성공 응답에는 local·local-dev의 `ACCESS_TOKEN`·`REFRESH_TOKEN`, dev의
-  `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN` 쿠키를 함께 기록한다.
-- 회원이 없거나 탈퇴했으면 기존 `MEMBER_NOT_FOUND`(404 E1006)를 사용하며 세션과 쿠키를 발급하지 않는다.
+- `POST /v1/auth/dev-sessions`는 요청한 탈퇴하지 않은 회원을 조회한 뒤 현재 `MemberRole`로 `exp` claim이
+  없는 액세스 토큰을 만든다. 성공 응답의 `data.accessToken`으로 반환하며 리프레시 세션을 저장하거나
+  쿠키를 발급하지 않는다.
+- 회원이 없거나 탈퇴했으면 기존 `MEMBER_NOT_FOUND`(404 E1006)를 사용하며 액세스 토큰을 발급하지 않는다.
 - 기존 액세스 쿠키가 만료됐더라도 개발 로그인을 다시 할 수 있도록 refresh/logout과 같이 Bearer Token
   해석 대상에서 제외한다.
 - staging·live에는 빈을 등록하지 않으며, 개발용 프로파일과 `live`가 함께 활성화되어도 등록하지 않는다.

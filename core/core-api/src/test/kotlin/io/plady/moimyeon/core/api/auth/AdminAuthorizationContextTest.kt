@@ -89,6 +89,18 @@ class AdminAuthorizationContextTest(
     }
 
     @Test
+    fun `만료 없는 개발 액세스 토큰은 Bearer 인증에 사용할 수 있다`() {
+        val accessToken = jwtTokenProvider.issueWithoutExpiration(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
     fun `상태 확인 경로는 인증 없이 접근할 수 있다`() {
         val response = mockMvc.perform(get("/health")).andReturn().response
 
