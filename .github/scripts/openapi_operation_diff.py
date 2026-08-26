@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""OpenAPI operation의 계약 변화만 비교하고 문서 표현 변화는 제외한다.
+
+OpenAPI object의 `example` 같은 키워드와, 같은 문자열을 실제 필드명으로 쓰는
+named map을 role로 구분해 오탐과 미탐을 함께 막는다.
+"""
+
 import argparse
 import json
 import sys
@@ -13,6 +19,8 @@ import yaml
 HTTP_METHODS = frozenset({"get", "put", "post", "delete", "options", "head", "patch", "trace"})
 CHANGE_ORDER = {"REMOVED": 0, "ADDED": 1, "CHANGED": 2}
 NON_CONTRACT_KEYS = frozenset({"description", "example", "examples", "summary"})
+# 아래 필드의 dict key는 OpenAPI 키워드가 아니라 사용자가 정한 이름이다.
+# 따라서 이름이 NON_CONTRACT_KEYS와 같아도 계약 데이터로 보존한다.
 NAMED_MAP_FIELDS = frozenset(
     {
         "$defs",
@@ -82,6 +90,8 @@ def resolve_local_ref(spec: dict[str, Any], ref: str) -> Any:
 
 
 def child_role(parent_role: str, key: str, value: Any) -> str:
+    # named map의 자식 값부터는 다시 Schema/Response 같은 OpenAPI object다.
+    # 이 경계가 없으면 `properties.content.example`에서 content를 키워드로 오인한다.
     if parent_role == ROLE_NAMED_MAP:
         return ROLE_OBJECT
     if parent_role == ROLE_CALLBACK_MAP:
