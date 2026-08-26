@@ -10,7 +10,8 @@
 ```text
 RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
   ├─▶ build/generated-snippets/{identifier}/*.adoc ─▶ src/docs/asciidoc/index.adoc ─▶ index.html
-  └─▶ restdocs-api-spec 리소스 ─▶ :core:core-api:openapi3 ─▶ build/api-spec/openapi3.yaml (Swagger UI, dev 자동 배포)
+  └─▶ restdocs-api-spec 리소스 ─▶ :core:core-api:openapi3 ─▶ build/api-spec/openapi3.yaml
+        └─▶ 직전 gh-pages 스펙과 operation 비교 ─▶ Slack 변경 알림 + Swagger UI 자동 배포
 ```
 
 - 같은 경로·메서드의 `document()` 호출은 **하나의 OpenAPI 연산으로 병합**된다. 상태 코드별 응답,
@@ -19,6 +20,19 @@ RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
   핸들러 단위 테스트와 필터 체인 컨텍스트 테스트로 동작을 고정하고, index.adoc 수기 섹션과
   OpenAPI 생성 후 보정 경로(`/oauth2/authorization/google`, `/login/oauth2/code/google`)로 문서화한다.
   OpenAPI에는 웹 쿠키(`AccessTokenCookie`)와 앱 Bearer(`BearerAuth`) securityScheme도 함께 선언한다.
+
+## API 스펙 변경 알림
+
+- dev/main에서 API Docs Pages 워크플로가 새 스펙을 만들고, 같은 브랜치의 직전 gh-pages 스펙과 비교한다.
+- HTTP method·path 추가/삭제와 operation 본문 변경을 알린다. operation이 로컬 `$ref`로 참조하는
+  request·response·parameter·schema 변경도 해당 API의 변경으로 판정한다.
+- 실행마다 달라질 수 있는 `example`·`examples`와 문서 표현인 `summary`·`description`은
+  계약 변경 판정에서 제외한다.
+- 비교 기준선이 아직 없으면 최초 스펙을 게시하되 전체 API를 신규 변경으로 알리지 않는다.
+- 변경 목록은 repository secret `SLACK_API_SPEC_WEBHOOK_URL`의 Incoming Webhook으로 보낸다.
+  시크릿 값과 채널 설정은 저장소 밖에서 관리한다.
+- Slack 변경 알림은 dev에서만 보낸다. main은 API 문서를 게시하되 같은 계약을 다시 알리지 않는다.
+- Slack 전송 실패는 API 문서 게시를 막지 않고 Actions 경고로 남긴다.
 
 ## 문서화 테스트 작성법
 

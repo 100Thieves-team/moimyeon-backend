@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-27: OpenAPI 전체 operation 비교가 실행 시각 example을 계약 변경으로 오탐했고, 생성기가 읽는
+  `core-enum`은 workflow path filter에서 빠져 실제 enum 변경을 놓쳤다. 재발 방지: 동적 예시는 계약 fingerprint에서
+  제외하고 문서 workflow trigger를 OpenAPI 생성 태스크의 전이 입력과 정적 계약으로 맞춘다.
 - 2026-08-26: Terraform AWS provider가 Application Auto Scaling target을 refresh하며
   `application-autoscaling:ListTagsForResource`를 별도로 호출해 plan이 실패했다. 재발 방지:
   metadata-only plan role에 tag 조회 권한을 명시하고 bootstrap 계약 검사로 고정한다.
