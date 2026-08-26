@@ -3,7 +3,7 @@
 - 브랜치: `feat/MOI-487-dev-auth-token`
 - 워크트리: `.worktrees/moi-487-dev-auth-token`
 - 기준: `origin/dev` (`a92b4ff8`)
-- 검증한 커밋: 없음
+- 검증한 커밋: `599d2996e8f49a10caac10913914c6b420455d6f`
 
 ## 체크포인트
 
@@ -15,7 +15,7 @@
   - 코드 리뷰 통과 (2026-08-27): 필수 1건인 `dev,staging` 혼합 프로파일 노출을 수정하고 재리뷰 통과
   - 전체 게이트 통과 (2026-08-27): `./gradlew test ktlintCheck :core:core-api:openapi3`
   - OpenAPI 확인 (2026-08-27): 200 응답에 `data.accessToken` 포함, `Set-Cookie` 응답 헤더 없음
-- [ ] 커밋·PR 완료
+- [x] 커밋·PR 완료 (2026-08-27, PR #106)
 
 ## 요구사항 흐름
 
