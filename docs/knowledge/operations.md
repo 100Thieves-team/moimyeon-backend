@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-27: Slack 테스트의 `API_SPEC_SHA`에 40자리 hex 리터럴을 넣자 Gitleaks가 generic API key로
+  판정해 CI가 애플리케이션 테스트 전에 실패했다. 재발 방지: credential처럼 보이는 변수의 fixture는 긴
+  토큰 리터럴을 커밋하지 않고 짧은 비민감 조각으로 조립하며 push 전에 PR 커밋 범위의 Gitleaks를 실행한다.
 - 2026-08-27: OpenAPI 전체 operation 비교가 실행 시각 example을 계약 변경으로 오탐했고, 생성기가 읽는
   `core-enum`은 workflow path filter에서 빠져 실제 enum 변경을 놓쳤다. 재발 방지: 동적 예시는 계약 fingerprint에서
   제외하고 문서 workflow trigger를 OpenAPI 생성 태스크의 전이 입력과 정적 계약으로 맞춘다.
