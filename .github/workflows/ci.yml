@@ -54,6 +54,29 @@ jobs:
             git ls-files -z | xargs -0 python3 .agents/gates/scan_secrets.py --files
           fi
 
+      - name: Gitleaks
+        shell: bash
+        run: |
+          image="zricethezav/gitleaks@sha256:ebfeb6fd4f2c37fa371d3731ebfa662fdf80f93cd37d3b4771bb82263edff8d0"
+          common=(
+            --config=/repo/.gitleaks.toml
+            --gitleaks-ignore-path=/repo/.gitleaksignore
+            --no-banner
+            --redact
+            --verbose
+          )
+          if [ -n "${GATE_RANGE}" ]; then
+            docker run --rm \
+              --volume "${GITHUB_WORKSPACE}:/repo" \
+              "${image}" \
+              detect --source=/repo --log-opts="${GATE_RANGE}" "${common[@]}"
+          else
+            docker run --rm \
+              --volume "${GITHUB_WORKSPACE}:/repo" \
+              "${image}" \
+              detect --source=/repo --log-opts=HEAD "${common[@]}"
+          fi
+
       - name: Config profile sync
         run: python3 .agents/gates/check_config_profiles.py
 
@@ -90,13 +113,6 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-
-      - name: Scan repository secrets
-        run: |
-          docker run --rm \
-            --volume "${GITHUB_WORKSPACE}:/repo" \
-            zricethezav/gitleaks@sha256:ebfeb6fd4f2c37fa371d3731ebfa662fdf80f93cd37d3b4771bb82263edff8d0 \
-            detect --source=/repo --no-banner --redact
 
       # 같은 버전 번호를 가진 마이그레이션이 둘이면 Flyway 는 애플리케이션 부팅에서야 터진다.
       # 브랜치 두 개가 각자 같은 번호를 달고 나란히 머지되면 git 은 충돌 없이 통과시키므로
