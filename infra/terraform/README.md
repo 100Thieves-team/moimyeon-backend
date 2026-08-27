@@ -515,6 +515,8 @@ candidate, the mutation job permits that runtime-equivalent candidate; any newer
 runtime or infrastructure change requires its own successful Terraform boundary.
 
 Repository security must also enable GitHub secret scanning and push protection.
-CI runs the pinned Gitleaks image over full history; `.gitleaksignore` contains
-only exact historical test-fixture fingerprints, and `.gitleaks.toml` allows only
-deterministic test placeholders rather than whole files or directories.
+CI runs the pinned Gitleaks image over the shared PR·push change range, or over
+history reachable from `HEAD` when no comparison commit exists. The command uses
+explicit config and ignore paths; `.gitleaksignore` contains only exact historical
+test-fixture fingerprints, and `.gitleaks.toml` allows only deterministic test
+placeholders rather than whole files or directories.

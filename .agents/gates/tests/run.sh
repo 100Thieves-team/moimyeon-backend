@@ -60,4 +60,17 @@ check "secrets-실레포-오탐없음" 0 $?
 # 4. 페어링: 훅 모드 스모크 (경고는 exit 0)
 python3 "$G/check_pairings.py" --staged > /dev/null; check "pairings-smoke" 0 $?
 
+# 5. Gitleaks CI 계약: 변경 범위를 공유하고, 새 ref는 HEAD 이력을 전수 검사한다
+ci=".github/workflows/ci.yml"
+checkout_pin='uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262'
+checkout_pin_count="$(grep -Fc -- "$checkout_pin" "$ci")"
+grep -Fq -- 'name: Gitleaks' "$ci"; check "gitleaks-step" 0 $?
+grep -Fq -- '--config=/repo/.gitleaks.toml' "$ci"; check "gitleaks-config-path" 0 $?
+grep -Fq -- '--gitleaks-ignore-path=/repo/.gitleaksignore' "$ci"; check "gitleaks-ignore-path" 0 $?
+grep -Fq -- 'detect --source=/repo --log-opts="${GATE_RANGE}"' "$ci"; check "gitleaks-range" 0 $?
+grep -Fq -- 'detect --source=/repo --log-opts=HEAD' "$ci"; check "gitleaks-new-ref-head" 0 $?
+[ "$checkout_pin_count" -eq 2 ]; check "gitleaks-checkout-pin" 0 $?
+grep -Fq -- 'uses: actions/checkout@v4' "$ci"; check "gitleaks-no-mutable-checkout" 1 $?
+grep -Fq -- 'name: Scan repository secrets' "$ci"; check "gitleaks-no-old-step" 1 $?
+
 exit $fail

@@ -73,6 +73,8 @@
 - workflow `permissions`는 최소로: 기본 `contents: read` +
   `id-token: write`(OIDC), job별 필요 권한만 추가.
 - 외부 Action은 full SHA pin. fork PR에는 secrets·write token 차단.
+- 시크릿 스캐너는 PR·push의 공통 변경 범위를 사용하고, 비교 범위가 없는 새 ref는
+  HEAD에 도달 가능한 Git 이력을 검사한다. config·ignore 경로는 명시한다.
 - 같은 환경 동시 배포를 막는 concurrency group.
 - 로그에 secret·OIDC token을 출력하지 않고, Docker build secret을
   `ARG`나 레이어에 남기지 않는다.
