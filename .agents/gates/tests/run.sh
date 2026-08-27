@@ -64,18 +64,13 @@ python3 "$G/check_pairings.py" --staged > /dev/null; check "pairings-smoke" 0 $?
 ci=".github/workflows/ci.yml"
 checkout_pin='uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262'
 checkout_pin_count="$(grep -Fc -- "$checkout_pin" "$ci")"
-if grep -Fq -- 'name: Gitleaks' "$ci" \
-   && grep -Fq -- '--config=/repo/.gitleaks.toml' "$ci" \
-   && grep -Fq -- '--gitleaks-ignore-path=/repo/.gitleaksignore' "$ci" \
-   && grep -Fq -- 'detect --source=/repo --log-opts="${GATE_RANGE}"' "$ci" \
-   && grep -Fq -- 'detect --source=/repo --log-opts=HEAD' "$ci" \
-   && [ "$checkout_pin_count" -eq 2 ] \
-   && ! grep -Fq -- 'uses: actions/checkout@v4' "$ci" \
-   && ! grep -Fq -- 'name: Scan repository secrets' "$ci"; then
-  gitleaks_contract=0
-else
-  gitleaks_contract=1
-fi
-check "gitleaks-ci-범위계약" 0 "$gitleaks_contract"
+grep -Fq -- 'name: Gitleaks' "$ci"; check "gitleaks-step" 0 $?
+grep -Fq -- '--config=/repo/.gitleaks.toml' "$ci"; check "gitleaks-config-path" 0 $?
+grep -Fq -- '--gitleaks-ignore-path=/repo/.gitleaksignore' "$ci"; check "gitleaks-ignore-path" 0 $?
+grep -Fq -- 'detect --source=/repo --log-opts="${GATE_RANGE}"' "$ci"; check "gitleaks-range" 0 $?
+grep -Fq -- 'detect --source=/repo --log-opts=HEAD' "$ci"; check "gitleaks-new-ref-head" 0 $?
+[ "$checkout_pin_count" -eq 2 ]; check "gitleaks-checkout-pin" 0 $?
+grep -Fq -- 'uses: actions/checkout@v4' "$ci"; check "gitleaks-no-mutable-checkout" 1 $?
+grep -Fq -- 'name: Scan repository secrets' "$ci"; check "gitleaks-no-old-step" 1 $?
 
 exit $fail

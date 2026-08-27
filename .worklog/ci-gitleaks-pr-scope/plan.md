@@ -26,7 +26,7 @@
 ## 검증 결과
 
 - YAML parse·shell syntax·diff whitespace: 통과
-- 하네스 gate self-test 14개: 통과
+- 하네스 gate self-test 21개: 통과
 - Gitleaks 변경 범위 검사: 누출 0건
 - Gitleaks 새 ref HEAD-history 검사: 누출 0건
 - 합성 토큰 양성 검사: finding 발생 확인
