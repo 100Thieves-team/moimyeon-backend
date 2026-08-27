@@ -6,8 +6,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+internal const val DEV_AUTH_PROFILE_EXPRESSION = "(local | local-dev | dev) & !staging & !live"
+
 @Component
-@Profile("(local | local-dev | dev) & !staging & !live")
+@Profile(DEV_AUTH_PROFILE_EXPRESSION)
 class DevAccessTokenIssuer(
     private val memberFinder: MemberFinder,
     private val jwtTokenProvider: JwtTokenProvider,

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.plady.moimyeon.core.api.auth.DEV_AUTH_PROFILE_EXPRESSION
 import io.plady.moimyeon.core.api.auth.DevAccessTokenIssuer
 import io.plady.moimyeon.core.api.controller.v1.request.IssueDevSessionRequest
 import io.plady.moimyeon.core.api.controller.v1.response.DevAccessTokenResponse
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@Profile("(local | local-dev | dev) & !staging & !live")
+@Profile(DEV_AUTH_PROFILE_EXPRESSION)
 class DevAuthController(
     private val devAccessTokenIssuer: DevAccessTokenIssuer,
 ) {
