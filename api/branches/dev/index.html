@@ -478,12 +478,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_auth_api">Auth API</a>
 <ul class="sectlevel2">
 <li><a href="#_google_oauth2_로그인_수기_문서">Google OAuth2 로그인 (수기 문서)</a></li>
-<li><a href="#_개발_환경_세션_발급">개발 환경 세션 발급</a>
+<li><a href="#_개발_환경_액세스_토큰_발급">개발 환경 액세스 토큰 발급</a>
 <ul class="sectlevel3">
 <li><a href="#_curl_request_3">Curl Request</a></li>
 <li><a href="#_request_fields_2">Request Fields</a></li>
 <li><a href="#_http_response_3">Http Response</a></li>
-<li><a href="#_response_headers">Response Headers</a></li>
 <li><a href="#_response_fields_3">Response Fields</a></li>
 <li><a href="#_error_responses">Error Responses</a></li>
 </ul>
@@ -493,7 +492,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_curl_request_4">Curl Request</a></li>
 <li><a href="#_request_cookies">Request Cookies</a></li>
 <li><a href="#_http_response_4">Http Response</a></li>
-<li><a href="#_response_headers_2">Response Headers</a></li>
+<li><a href="#_response_headers">Response Headers</a></li>
 <li><a href="#_response_fields_4">Response Fields</a></li>
 <li><a href="#_error_responses_2">Error Responses</a></li>
 </ul>
@@ -503,7 +502,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_curl_request_5">Curl Request</a></li>
 <li><a href="#_request_cookies_2">Request Cookies</a></li>
 <li><a href="#_http_response_5">Http Response</a></li>
-<li><a href="#_response_headers_3">Response Headers</a></li>
+<li><a href="#_response_headers_2">Response Headers</a></li>
 <li><a href="#_response_fields_5">Response Fields</a></li>
 </ul>
 </li>
@@ -1230,7 +1229,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-27",
-    "datetime" : "2026-08-27T06:18:44.717882446",
+    "datetime" : "2026-08-27T09:12:14.131409372",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1344,7 +1343,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-27",
-    "datetime" : "2026-08-27T06:18:44.759808829",
+    "datetime" : "2026-08-27T09:12:14.172104101",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1496,7 +1495,7 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_개발_환경_세션_발급"><a class="link" href="#_개발_환경_세션_발급">개발 환경 세션 발급</a></h3>
+<h3 id="_개발_환경_액세스_토큰_발급"><a class="link" href="#_개발_환경_액세스_토큰_발급">개발 환경 액세스 토큰 발급</a></h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -1512,9 +1511,9 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 </table>
 </div>
 <div class="paragraph">
-<p>Google OAuth를 거치지 않고 기존 회원 UUID의 현재 권한으로 개발 환경 세션을 발급한다.
-성공 시 local·local-dev는 <code>ACCESS_TOKEN</code>·<code>REFRESH_TOKEN</code>, dev는 도메인이 격리된
-<code>DEV_ACCESS_TOKEN</code>·<code>DEV_REFRESH_TOKEN</code> 쿠키를 함께 내려준다.
+<p>Google OAuth를 거치지 않고 기존 회원 UUID의 현재 권한으로 만료 없는 액세스 토큰을 발급한다.
+성공 응답의 <code>data.accessToken`을 `Authorization: Bearer</code> 헤더에 사용한다. 리프레시 세션이나
+쿠키는 발급하지 않는다.
 기본 local(H2)에는 <code>019daf00-0000-7000-8000-000000000101</code> 테스트 회원이 준비되어 있다.</p>
 </div>
 <div class="sect3">
@@ -1558,39 +1557,18 @@ REST Docs 스니펫이 아닌 수기로 문서화한다. 동작은 성공·실�
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: DEV_ACCESS_TOKEN=access-token
-Set-Cookie: DEV_REFRESH_TOKEN=refresh-credential
 Content-Type: application/json
-Content-Length: 61
+Content-Length: 97
 
 {
   "result" : "SUCCESS",
-  "data" : null,
+  "data" : {
+    "accessToken" : "access-token"
+  },
   "error" : null
 }</code></pre>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_response_headers"><a class="link" href="#_response_headers">Response Headers</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Name</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Set-Cookie</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">환경별 액세스·리프레시 쿠키. local·local-dev: ACCESS_TOKEN·REFRESH_TOKEN, dev: DEV_ACCESS_TOKEN·DEV_REFRESH_TOKEN</p></td>
-</tr>
-</tbody>
-</table>
 </div>
 <div class="sect3">
 <h4 id="_response_fields_3"><a class="link" href="#_response_fields_3">Response Fields</a></h4>
@@ -1612,6 +1590,11 @@ Content-Length: 61
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.accessToken</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">만료 시각이 없는 개발용 액세스 토큰</p></td>
 </tr>
 </tbody>
 </table>
@@ -1679,7 +1662,7 @@ Content-Length: 61
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 27 Aug 2026 06:48:42 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 27 Aug 2026 09:42:12 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1692,7 +1675,7 @@ Content-Length: 61
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_headers_2"><a class="link" href="#_response_headers_2">Response Headers</a></h4>
+<h4 id="_response_headers"><a class="link" href="#_response_headers">Response Headers</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 50%;">
@@ -1813,7 +1796,7 @@ Content-Length: 61
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_headers_3"><a class="link" href="#_response_headers_3">Response Headers</a></h4>
+<h4 id="_response_headers_2"><a class="link" href="#_response_headers_2">Response Headers</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 50%;">
@@ -1885,7 +1868,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "40b8ce62-336b-4218-b6d8-1412c039fe5f",
+      "termsId" : "a27d0bf2-7ab5-4bb1-b4e5-34c593eb93a9",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1893,7 +1876,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "5cea4f6a-b8bd-478a-b809-2ba574f10e2a",
+      "termsId" : "913d0a7a-fc4f-42c3-8042-df1a21bb86b6",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1998,12 +1981,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "514a9a57-d55f-4e6c-bec5-3027d03fa12e",
+    "memberId" : "9eb01575-fa98-46ca-8aa5-617ece670da8",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "514a9a57-d55f-4e6c-bec5-3027d03fa12e",
+      "memberId" : "9eb01575-fa98-46ca-8aa5-617ece670da8",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2697,7 +2680,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "133d68d8-cb6a-4390-8029-777af666adc5",
+    "memberId" : "238694cc-c575-45b1-84b1-3589fab2c44c",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -4612,7 +4595,7 @@ Content-Length: 1179
     "method" : "OFFLINE",
     "sigunguId" : 1,
     "schedule" : {
-      "startAt" : "2026-08-28T06:18:51.562880668",
+      "startAt" : "2026-08-28T09:12:20.545611426",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4623,7 +4606,7 @@ Content-Length: 1179
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "79d122a5-f1ef-4003-af20-703e3c9e141e",
+    "hostMemberId" : "7675eb53-9219-4a22-a80c-fa5dc7f726ef",
     "confirmation" : {
       "ready" : false,
       "blockReason" : {
@@ -5182,7 +5165,7 @@ Content-Length: 1375
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "687f565e-2767-4c98-999c-73ef2c7b2bc7",
+  "resumeId" : "891ac7b4-0ac7-4842-aa05-cd8ed567e706",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5416,7 +5399,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "5f48ecd3-d8ef-48e7-8609-f4bf9f0a02a2",
+      "resumeId" : "8f5becef-f63b-4717-808e-53aabff90d6e",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -11450,7 +11433,7 @@ Content-Length: 61
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-27 06:17:15 UTC
+Last updated 2026-08-27 09:10:59 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
