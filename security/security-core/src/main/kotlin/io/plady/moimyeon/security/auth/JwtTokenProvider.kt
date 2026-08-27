@@ -17,12 +17,37 @@ class JwtTokenProvider(
 ) {
     fun issue(memberId: UUID, role: MemberRole): String {
         val now = Instant.now()
-        val claims = JwtClaimsSet.builder()
+        return encode(
+            memberId = memberId,
+            role = role,
+            issuedAt = now,
+            expiresAt = now.plus(TOKEN_TTL_MINUTES, ChronoUnit.MINUTES),
+        )
+    }
+
+    fun issueWithoutExpiration(memberId: UUID, role: MemberRole): String {
+        return encode(
+            memberId = memberId,
+            role = role,
+            issuedAt = Instant.now(),
+            expiresAt = null,
+        )
+    }
+
+    private fun encode(
+        memberId: UUID,
+        role: MemberRole,
+        issuedAt: Instant,
+        expiresAt: Instant?,
+    ): String {
+        val claimsBuilder = JwtClaimsSet.builder()
             .subject(memberId.toString())
-            .issuedAt(now)
-            .expiresAt(now.plus(TOKEN_TTL_MINUTES, ChronoUnit.MINUTES))
+            .issuedAt(issuedAt)
             .claim(ROLES_CLAIM, listOf(role.name))
-            .build()
+        if (expiresAt != null) {
+            claimsBuilder.expiresAt(expiresAt)
+        }
+        val claims = claimsBuilder.build()
         return jwtEncoder
             .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
             .tokenValue

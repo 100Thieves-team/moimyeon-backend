@@ -4,32 +4,31 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.plady.moimyeon.core.api.auth.DevSessionCookieIssuer
+import io.plady.moimyeon.core.api.auth.DevAccessTokenIssuer
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.request.IssueDevSessionRequest
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseCookie
-import org.springframework.restdocs.headers.HeaderDocumentation.headerWithName
-import org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
 class DevAuthControllerTest : RestDocsTest() {
-    private val issuer = mockk<DevSessionCookieIssuer>()
+    private val issuer = mockk<DevAccessTokenIssuer>()
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
-    private val summary = "개발 환경 세션 발급"
+    private val summary = "개발 환경 액세스 토큰 발급"
     private val description =
-        "local·local-dev·dev 프로파일에서 기존 회원 UUID로 Google OAuth를 거치지 않고 환경별 액세스·리프레시 쿠키를 발급한다. " +
+        "local·local-dev·dev 프로파일에서 기존 회원 UUID로 Google OAuth를 거치지 않고 만료 없는 액세스 토큰을 응답한다. " +
             "회원이 없거나 탈퇴했으면 404(E1006), 요청 본문 형식이 잘못됐으면 400(E400)으로 응답한다."
 
     @BeforeEach
@@ -41,10 +40,8 @@ class DevAuthControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `dev 회원 세션을 쿠키로 발급한다`() {
-        val accessCookie = ResponseCookie.from("DEV_ACCESS_TOKEN", "access-token").build()
-        val refreshCookie = ResponseCookie.from("DEV_REFRESH_TOKEN", "refresh-credential").build()
-        every { issuer.issue(memberId) } returns listOf(accessCookie, refreshCookie)
+    fun `dev 회원의 만료 없는 액세스 토큰을 응답하고 쿠키는 발급하지 않는다`() {
+        every { issuer.issue(memberId) } returns "access-token"
 
         mockMvc.perform(
             post(PATH)
@@ -52,6 +49,8 @@ class DevAuthControllerTest : RestDocsTest() {
                 .content(jsonMapper().writeValueAsString(IssueDevSessionRequest(memberId))),
         )
             .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"accessToken\":\"access-token\"") }
+            .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
             .andDo(
                 documentApi(
                     "issueDevSession",
@@ -61,14 +60,10 @@ class DevAuthControllerTest : RestDocsTest() {
                         fieldWithPath("memberId").type(JsonFieldType.STRING)
                             .description("개발 환경에서 로그인할 기존 회원 UUID"),
                     ),
-                    responseHeaders(
-                        headerWithName(HttpHeaders.SET_COOKIE)
-                            .description(
-                                "환경별 액세스·리프레시 쿠키. local·local-dev: ACCESS_TOKEN·REFRESH_TOKEN, " +
-                                    "dev: DEV_ACCESS_TOKEN·DEV_REFRESH_TOKEN",
-                            ),
+                    successResponseFields(
+                        fieldWithPath("data.accessToken").type(JsonFieldType.STRING)
+                            .description("만료 시각이 없는 개발용 액세스 토큰"),
                     ),
-                    emptySuccessResponseFields(),
                 ),
             )
 
