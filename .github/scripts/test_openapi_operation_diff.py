@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from openapi_operation_diff import diff_operations
+from openapi_operation_diff import OpenApiDiffError, diff_operations
 
 
 def base_spec() -> dict:
@@ -97,6 +97,191 @@ class OpenApiOperationDiffTest(unittest.TestCase):
             "type": "string",
             "format": "email",
         }
+
+        changes = diff_operations(before, after)
+
+        self.assertEqual(
+            [("CHANGED", "GET", "/v1/members/{memberId}")],
+            [(change.kind, change.method, change.path) for change in changes],
+        )
+
+    def test_local_component_rename_with_same_schema_is_ignored(self) -> None:
+        before = base_spec()
+        after = copy.deepcopy(before)
+        schemas = after["components"]["schemas"]
+        schemas["RenamedMemberResponse"] = schemas.pop("MemberResponse")
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/RenamedMemberResponse"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_pure_local_ref_alias_with_same_schema_is_ignored(self) -> None:
+        before = base_spec()
+        after = copy.deepcopy(before)
+        after["components"]["schemas"]["MemberResponseAlias"] = {
+            "$ref": "#/components/schemas/MemberResponse"
+        }
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/MemberResponseAlias"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_local_ref_alias_contract_sibling_is_reported(self) -> None:
+        before = base_spec()
+        after = copy.deepcopy(before)
+        after["components"]["schemas"]["MemberResponseAlias"] = {
+            "$ref": "#/components/schemas/MemberResponse",
+            "nullable": True,
+        }
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/MemberResponseAlias"
+
+        changes = diff_operations(before, after)
+
+        self.assertEqual(
+            [("CHANGED", "GET", "/v1/members/{memberId}")],
+            [(change.kind, change.method, change.path) for change in changes],
+        )
+
+    def test_local_ref_alias_description_only_sibling_is_ignored(self) -> None:
+        before = base_spec()
+        after = copy.deepcopy(before)
+        after["components"]["schemas"]["MemberResponseAlias"] = {
+            "$ref": "#/components/schemas/MemberResponse",
+            "description": "문서 표현만 추가",
+        }
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/MemberResponseAlias"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_local_ref_alias_rename_with_contract_sibling_is_ignored(self) -> None:
+        before = base_spec()
+        before["components"]["schemas"]["AliasBefore"] = {
+            "$ref": "#/components/schemas/MemberResponse",
+            "nullable": True,
+        }
+        before["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/AliasBefore"
+        after = copy.deepcopy(before)
+        alias = after["components"]["schemas"].pop("AliasBefore")
+        after["components"]["schemas"]["AliasAfter"] = alias
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/AliasAfter"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_external_ref_change_is_reported(self) -> None:
+        before = base_spec()
+        schema = before["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
+        schema["$ref"] = "https://contracts.example.com/member-v1.yaml"
+        after = copy.deepcopy(before)
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "https://contracts.example.com/member-v2.yaml"
+
+        changes = diff_operations(before, after)
+
+        self.assertEqual(
+            [("CHANGED", "GET", "/v1/members/{memberId}")],
+            [(change.kind, change.method, change.path) for change in changes],
+        )
+
+    def test_recursive_component_rename_with_same_schema_is_ignored(self) -> None:
+        before = base_spec()
+        member_schema = before["components"]["schemas"]["MemberResponse"]
+        member_schema["properties"]["manager"] = {
+            "$ref": "#/components/schemas/MemberResponse"
+        }
+        after = copy.deepcopy(before)
+        schemas = after["components"]["schemas"]
+        renamed_schema = schemas.pop("MemberResponse")
+        schemas["RenamedMemberResponse"] = renamed_schema
+        renamed_schema["properties"]["manager"][
+            "$ref"
+        ] = "#/components/schemas/RenamedMemberResponse"
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/RenamedMemberResponse"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_recursive_local_ref_alias_with_same_schema_is_ignored(self) -> None:
+        before = base_spec()
+        member_schema = before["components"]["schemas"]["MemberResponse"]
+        member_schema["properties"]["manager"] = {
+            "$ref": "#/components/schemas/MemberResponse"
+        }
+        after = copy.deepcopy(before)
+        after["components"]["schemas"]["MemberResponseAlias"] = {
+            "$ref": "#/components/schemas/MemberResponse"
+        }
+        after["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/MemberResponseAlias"
+
+        self.assertEqual([], diff_operations(before, after))
+
+    def test_pure_local_ref_alias_cycle_fails_comparison(self) -> None:
+        spec = base_spec()
+        schemas = spec["components"]["schemas"]
+        schemas["AliasA"] = {"$ref": "#/components/schemas/AliasB"}
+        schemas["AliasB"] = {"$ref": "#/components/schemas/AliasA"}
+        spec["paths"]["/v1/members/{memberId}"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] = "#/components/schemas/AliasA"
+
+        with self.assertRaisesRegex(OpenApiDiffError, "순환하는 local \\$ref alias"):
+            diff_operations(spec, copy.deepcopy(spec))
+
+    def test_recursive_reference_target_change_is_reported(self) -> None:
+        before = base_spec()
+        member_schema = before["components"]["schemas"]["MemberResponse"]
+        member_schema["properties"]["manager"] = {
+            "$ref": "#/components/schemas/MemberResponse"
+        }
+        after = copy.deepcopy(before)
+        schemas = after["components"]["schemas"]
+        manager_schema = copy.deepcopy(schemas["MemberResponse"])
+        manager_schema["properties"]["manager"][
+            "$ref"
+        ] = "#/components/schemas/ManagerResponse"
+        schemas["ManagerResponse"] = manager_schema
+        schemas["MemberResponse"]["properties"]["manager"][
+            "$ref"
+        ] = "#/components/schemas/ManagerResponse"
+
+        changes = diff_operations(before, after)
+
+        self.assertEqual(
+            [("CHANGED", "GET", "/v1/members/{memberId}")],
+            [(change.kind, change.method, change.path) for change in changes],
+        )
+
+    def test_recursive_back_edge_target_change_is_reported(self) -> None:
+        before = base_spec()
+        schemas = before["components"]["schemas"]
+        schemas["MemberResponse"]["properties"]["manager"] = {
+            "$ref": "#/components/schemas/ManagerResponse"
+        }
+        schemas["ManagerResponse"] = {
+            "type": "object",
+            "properties": {
+                "manager": {"$ref": "#/components/schemas/MemberResponse"}
+            },
+        }
+        after = copy.deepcopy(before)
+        after["components"]["schemas"]["ManagerResponse"]["properties"]["manager"][
+            "$ref"
+        ] = "#/components/schemas/ManagerResponse"
 
         changes = diff_operations(before, after)
 
