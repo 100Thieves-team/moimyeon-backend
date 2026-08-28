@@ -89,6 +89,35 @@ def resolve_local_ref(spec: dict[str, Any], ref: str) -> Any:
     return current
 
 
+def resolve_local_ref_target(spec: dict[str, Any], ref: str) -> tuple[str, Any]:
+    """이름 외 계약이 없는 local ref alias chain을 실제 target까지 접는다."""
+    current_ref = ref
+    visited: set[str] = set()
+    while True:
+        if current_ref in visited:
+            raise OpenApiDiffError(f"순환하는 local $ref alias: {current_ref}")
+        visited.add(current_ref)
+
+        resolved = resolve_local_ref(spec, current_ref)
+        if not isinstance(resolved, dict):
+            return current_ref, resolved
+
+        nested_ref = resolved.get("$ref")
+        contract_siblings = {
+            key
+            for key in resolved
+            if key != "$ref" and key not in NON_CONTRACT_KEYS
+        }
+        if (
+            isinstance(nested_ref, str)
+            and nested_ref.startswith("#/")
+            and not contract_siblings
+        ):
+            current_ref = nested_ref
+            continue
+        return current_ref, resolved
+
+
 def child_role(parent_role: str, key: str, value: Any) -> str:
     # named map의 자식 값부터는 다시 Schema/Response 같은 OpenAPI object다.
     # 이 경계가 없으면 `properties.content.example`에서 content를 키워드로 오인한다.
@@ -131,13 +160,14 @@ def expand_refs(
         for key, value in node.items()
         if key != "$ref" and (role != ROLE_OBJECT or key not in NON_CONTRACT_KEYS)
     }
-    if ref in ref_stack:
-        return {"$ref": ref, "$cycle": True, **siblings}
+    canonical_ref, resolved = resolve_local_ref_target(spec, ref)
+    if canonical_ref in ref_stack:
+        # 생성기가 붙인 component 이름은 계약이 아니다. 재귀 구조만 보존하도록
+        # 현재 ref가 확장 stack의 어느 조상을 가리키는지 이름 독립적으로 기록한다.
+        return {"$cycleDepth": ref_stack.index(canonical_ref), **siblings}
 
-    resolved = resolve_local_ref(spec, ref)
     return {
-        "$ref": ref,
-        "$resolved": expand_refs(resolved, spec, (*ref_stack, ref)),
+        "$resolved": expand_refs(resolved, spec, (*ref_stack, canonical_ref)),
         **siblings,
     }
 

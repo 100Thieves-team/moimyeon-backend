@@ -28,6 +28,8 @@ RestDocs 테스트 (@Tag("restdocs"), documentApi(...))
   request·response·parameter·schema 변경도 해당 API의 변경으로 판정한다.
 - 실행마다 달라질 수 있는 `example`·`examples`와 문서 표현인 `summary`·`description`은
   계약 변경 판정에서 제외한다.
+- 로컬 component의 `$ref` 이름은 생성 순서에 따라 바뀔 수 있으므로 계약으로 보지 않고,
+  참조를 확장한 실제 내용과 재귀 연결 구조를 비교한다.
 - 비교 기준선이 아직 없으면 최초 스펙을 게시하되 전체 API를 신규 변경으로 알리지 않는다.
 - 변경 목록은 repository secret `SLACK_API_SPEC_WEBHOOK_URL`의 Incoming Webhook으로 보낸다.
   시크릿 값과 채널 설정은 저장소 밖에서 관리한다.

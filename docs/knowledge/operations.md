@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-08-27: REST Docs가 동일 스키마에 붙인 component 이름을 재생성하면서 실제 1개 API 변경이
+  64개 변경으로 Slack에 오탐됐다. 원인: 비교기가 local `$ref`를 확장한 내용과 원래 이름을 함께
+  fingerprint에 넣었다. 재발 방지: local ref 이름은 버리고 확장 내용과 이름 독립적인 cycle 위치만 비교한다.
 - 2026-08-27: Slack 테스트의 `API_SPEC_SHA`에 40자리 hex 리터럴을 넣자 Gitleaks가 generic API key로
   판정해 CI가 애플리케이션 테스트 전에 실패했다. 재발 방지: credential처럼 보이는 변수의 fixture는 긴
   토큰 리터럴을 커밋하지 않고 짧은 비민감 조각으로 조립하며 push 전에 PR 커밋 범위의 Gitleaks를 실행한다.
