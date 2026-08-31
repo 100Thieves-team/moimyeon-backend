@@ -5,7 +5,6 @@ import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
-import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomCard
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
 import java.util.UUID
@@ -99,10 +98,7 @@ data class RoomRecruitSummaryResponse(
             max = card.room.capacity.max,
             pending = card.pendingApplications,
             recruitStatus = card.recruitStatus.name,
-            recruitStatusLabel = when (card.recruitStatus) {
-                RecruitStatus.RECRUITING -> "모집 중"
-                RecruitStatus.CLOSED -> "모집 마감"
-            },
+            recruitStatusLabel = card.recruitStatus.label,
         )
     }
 }
