@@ -725,7 +725,7 @@ class RoomControllerTest : RestDocsTest() {
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
-                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)"),
                         fieldWithPath("data.jobPostingId").type(JsonFieldType.NUMBER).description("채용 공고 id (회사는 공고에서 파생)"),
                         fieldWithPath("data.jobRoleId").type(JsonFieldType.NUMBER).description("직무 id"),
                         fieldWithPath("data.company").type(JsonFieldType.OBJECT).optional().description("회사 (공고에서 파생. 회사를 알 수 없으면 null)"),

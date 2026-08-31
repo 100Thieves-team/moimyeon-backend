@@ -5,11 +5,11 @@ import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
-import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomConfirmation
 import io.plady.moimyeon.core.domain.room.RoomConfirmationBlockReason
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import java.time.LocalDateTime
 import java.util.UUID
@@ -58,12 +58,10 @@ data class RoomReadResponse(
             viewer: RoomViewer,
         ): RoomReadResponse {
             val room = detail.room
-            val (method, methodLabel, sigunguId) = when (val place = room.meetingPlace) {
-                MeetingPlace.Online -> Triple("ONLINE", "온라인", null)
-                is MeetingPlace.Offline -> Triple("OFFLINE", "오프라인", place.sigunguId)
+            val (meetingType, sigunguId) = when (val place = room.meetingPlace) {
+                MeetingPlace.Online -> MeetingType.ONLINE to null
+                is MeetingPlace.Offline -> MeetingType.OFFLINE to place.sigunguId
             }
-            // 모집중/마감은 저장값이 아니라 정원 충족 여부로 계산한다(핵심 결정).
-            val recruitStatus = RecruitStatus.of(detail.currentParticipants, room.capacity)
             return RoomReadResponse(
                 roomId = room.id,
                 status = room.status.name,
@@ -78,8 +76,8 @@ data class RoomReadResponse(
                 roundLabel = room.interviewStage.label,
                 type = room.interviewType?.name,
                 typeLabel = room.interviewType?.label,
-                method = method,
-                methodLabel = methodLabel,
+                method = meetingType.name,
+                methodLabel = meetingType.label,
                 sigunguId = sigunguId,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
                 schedule = RoomReadScheduleResponse(
@@ -90,8 +88,8 @@ data class RoomReadResponse(
                     current = detail.currentParticipants,
                     min = room.capacity.min,
                     max = room.capacity.max,
-                    recruitStatus = recruitStatus.name,
-                    recruitStatusLabel = recruitStatus.label,
+                    recruitStatus = detail.recruitStatus.name,
+                    recruitStatusLabel = detail.recruitStatus.label,
                     pendingApplicationCount = detail.pendingApplicationCount,
                 ),
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
