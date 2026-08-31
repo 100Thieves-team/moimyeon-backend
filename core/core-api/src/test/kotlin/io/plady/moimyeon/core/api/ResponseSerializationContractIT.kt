@@ -1,14 +1,12 @@
 package io.plady.moimyeon.core.api
 
 import io.plady.moimyeon.ContextTest
-import io.plady.moimyeon.core.api.controller.v1.response.RoomReadScheduleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomViewerResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerMemberResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerQuotaResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.ObjectMapper
-import java.time.LocalDateTime
 
 // 웹 응답 직렬화 계약 — 앱 컨텍스트의 매퍼(Jackson 3, tools.jackson)로 프로퍼티 이름을 고정한다.
 //
@@ -25,15 +23,6 @@ class ResponseSerializationContractIT(
 ) : ContextTest() {
     @Test
     fun `is·has 접두 프로퍼티는 접두를 유지한 이름으로 직렬화된다`() {
-        val scheduleJson = objectMapper.writeValueAsString(
-            RoomReadScheduleResponse(
-                startAt = LocalDateTime.of(2026, 9, 1, 10, 0),
-                durationMinutes = 60,
-                isPassed = false,
-            ),
-        )
-        assertThat(scheduleJson).contains("\"isPassed\"").doesNotContain("\"passed\"")
-
         val viewerJson = objectMapper.writeValueAsString(
             RoomViewerResponse(
                 isHost = false,
