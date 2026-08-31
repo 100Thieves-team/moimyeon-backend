@@ -177,8 +177,8 @@ class RoomManager(
     // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
     // 수정·신청·수락 게이트가 발효한다.
     //
-    // 조건 판정은 RoomConfirmation 이 소유한다 — 룸 상세 조회(F1 버튼)와 같은 함수를 타야
-    // 화면 상태와 서버 결과가 어긋나지 않는다. 그래서 여기서 status 를 다시 비교하지 않는다.
+    // 조건 판정은 RoomConfirmation 이 소유한다. 화면은 사실(status·recruit·schedule.isPassed)로
+    // 스스로 판정하고(MOI-500), 여기의 실행 검증이 최종 강제다. 그래서 여기서 status 를 다시 비교하지 않는다.
     // 락은 취소와 같은 이유로 잡는다(취소·수락·신청 제출이 모두 같은 룸 행을 잠근다).
     @Transactional
     fun confirm(roomId: UUID, hostMemberId: UUID) {

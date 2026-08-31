@@ -51,7 +51,6 @@ data class RoomReadResponse(
             jobRole: JobRole?,
             region: RegionLabel?,
             viewer: ViewerFacts?,
-            now: LocalDateTime,
         ): RoomReadResponse {
             val room = detail.room
             val meetingType = when (room.meetingPlace) {
@@ -76,8 +75,6 @@ data class RoomReadResponse(
                 schedule = RoomReadScheduleResponse(
                     startAt = room.schedule.startAt,
                     durationMinutes = room.schedule.durationMinutes,
-                    // 시작 시각과 같아지는 순간부터 지난 것으로 본다 — 신청·확정 검증과 같은 술어다.
-                    isPassed = !room.schedule.startAt.isAfter(now),
                 ),
                 recruit = RoomReadRecruitResponse(
                     current = detail.currentParticipants,
@@ -98,8 +95,6 @@ data class RoomReadResponse(
 data class RoomReadScheduleResponse(
     val startAt: LocalDateTime,
     val durationMinutes: Int,
-    // 서버 시각 기준 일정 경과(MOI-500). 화면이 시계로 재계산하면 신청·확정 API 와 어긋난다.
-    val isPassed: Boolean,
 )
 
 data class RoomReadRecruitResponse(

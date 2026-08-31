@@ -11,8 +11,6 @@ import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomUpdateCommand
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import org.springframework.stereotype.Component
-import java.time.Clock
-import java.time.LocalDateTime
 import java.util.UUID
 
 @Component
@@ -22,7 +20,6 @@ class RoomFacade(
     private val jobPostingService: JobPostingService,
     private val companyService: CompanyService,
     private val catalogService: CatalogService,
-    private val clock: Clock,
 ) {
     fun create(hostMemberId: UUID, command: RoomCreationCommand): RoomCreatedResponse {
         val result = roomService.createRoom(hostMemberId, command)
@@ -57,7 +54,6 @@ class RoomFacade(
             region = (detail.room.meetingPlace as? MeetingPlace.Offline)
                 ?.let { catalogService.getRegionLabels(setOf(it.sigunguId)).firstOrNull() },
             viewer = roomViewerService.getViewer(viewerMemberId, roomId),
-            now = LocalDateTime.now(clock),
         )
     }
 }

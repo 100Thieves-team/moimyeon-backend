@@ -66,9 +66,7 @@ import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.security.Principal
-import java.time.Clock
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class RoomControllerTest : RestDocsTest() {
@@ -154,12 +152,6 @@ class RoomControllerTest : RestDocsTest() {
             "일괄 종료된다. 반려가 아니므로 신청자는 재신청 차단에 걸리지 않는다. " +
             "방장 외 참여자가 남아 있으면 취소할 수 없다(E1420) — 그때는 나가기로 방장을 넘겨야 한다."
 
-    // 확정 조건은 일정과 현재 시각을 비교하므로 문서 예시가 흔들리지 않게 시각을 고정한다.
-    private val fixedClock: Clock = Clock.fixed(
-        LocalDateTime.of(2026, 8, 1, 12, 0).toInstant(ZoneOffset.UTC),
-        ZoneOffset.UTC,
-    )
-
     @BeforeEach
     fun setUp() {
         roomService = mockk()
@@ -179,7 +171,7 @@ class RoomControllerTest : RestDocsTest() {
         every { catalogService.getRegionLabels(any()) } returns listOf(RegionLabel(sigunguId = 1L, label = "서울 강남구"))
         mockMvc = mockController(
             RoomController(
-                RoomFacade(roomService, roomViewerService, jobPostingService, companyService, catalogService, fixedClock),
+                RoomFacade(roomService, roomViewerService, jobPostingService, companyService, catalogService),
                 roomSearchFacade,
                 roomService,
             ),
@@ -198,8 +190,8 @@ class RoomControllerTest : RestDocsTest() {
             "SLOT_EXCEEDED | ACCEPTED). 신청 이력이 없으면 null. " +
             "강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저 봐야 한다"
 
-    private fun sampleRoomDetail(startAt: LocalDateTime = LocalDateTime.now().plusDays(1)): RoomDetail = RoomDetail(
-        room = sampleRoom(startAt),
+    private fun sampleRoomDetail(): RoomDetail = RoomDetail(
+        room = sampleRoom(),
         hostMemberId = hostMemberId,
         currentParticipants = 1,
         pendingApplicationCount = 5,
@@ -259,7 +251,7 @@ class RoomControllerTest : RestDocsTest() {
                 method = "OFFLINE",
                 methodLabel = "오프라인",
                 region = RoomRegionResponse(sigunguId = 1L, label = "서울 강남구"),
-                schedule = RoomScheduleResponse.from(RoomSchedule(LocalDateTime.of(2026, 9, 5, 14, 0), 90), isPassed = false),
+                schedule = RoomScheduleResponse.from(RoomSchedule(LocalDateTime.of(2026, 9, 5, 14, 0), 90)),
                 recruit = RoomRecruitSummaryResponse(
                     current = 3,
                     max = 8,
@@ -288,7 +280,7 @@ class RoomControllerTest : RestDocsTest() {
     private fun emptyRoomsResponse(): RoomsResponse = RoomsResponse(rooms = emptyList(), sort = RoomSortOrder.SCHEDULE.name, totalCount = 0, nextCursor = null)
 
     // 생성 응답은 도메인 Room(id·status)만 쓰므로, 서비스는 목으로 두고 고정 Room 을 돌려준다.
-    private fun sampleRoom(startAt: LocalDateTime = LocalDateTime.now().plusDays(1)): Room = Room.create(
+    private fun sampleRoom(): Room = Room.create(
         id = createdRoomId,
         jobPostingId = 1L,
         jobRoleId = 1L,
@@ -298,9 +290,9 @@ class RoomControllerTest : RestDocsTest() {
         interviewType = InterviewType.JOB,
         meetingPlace = MeetingPlace.Offline(sigunguId = 1L),
         capacity = RoomCapacity(min = 3, max = 6),
-        schedule = RoomSchedule(startAt = startAt, durationMinutes = 90),
+        schedule = RoomSchedule(startAt = LocalDateTime.now().plusDays(1), durationMinutes = 90),
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
-        now = startAt.minusDays(2), // 생성 검증(미래 일정)을 통과시키되, fixedClock 기준으론 과거일 수 있게
+        now = LocalDateTime.now(),
 
     )
 
@@ -622,8 +614,6 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.rooms[].schedule.date").type(JsonFieldType.STRING).description("진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다"),
                         fieldWithPath("data.rooms[].schedule.startTime").type(JsonFieldType.STRING).description("시작 시각 (HH:mm)"),
                         fieldWithPath("data.rooms[].schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
-                        fieldWithPath("data.rooms[].schedule.isPassed").type(JsonFieldType.BOOLEAN)
-                            .description("진행 일정 경과 여부 (서버 시각 기준). 클라이언트 시계로 재계산하지 않는다 — 신청 API 와 어긋난다"),
                         fieldWithPath("data.rooms[].recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)"),
                         fieldWithPath("data.rooms[].recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
                         fieldWithPath("data.rooms[].recruit.pending").type(JsonFieldType.NUMBER).description("대기 중인 참가 신청 수"),
@@ -744,17 +734,6 @@ class RoomControllerTest : RestDocsTest() {
         assertThat(viewerMemberId.captured).isNull()
     }
 
-    // 일정 경과는 서버 시각(fixedClock) 기준으로 계산된다 — 신청·확정 검증과 같은 술어다.
-    @Test
-    fun `일정이 지난 룸은 상세에서 경과로 표시된다`() {
-        every { roomService.getRoom(any()) } returns
-            sampleRoomDetail(startAt = LocalDateTime.of(2026, 8, 1, 11, 0)) // fixedClock(12:00) 직전
-
-        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
-            .andExpect(status().isOk)
-            .andExpect { assertThat(it.response.contentAsString).contains("\"isPassed\":true") }
-    }
-
     @Test
     fun roomDetail() {
         every { roomService.getRoom(any()) } returns sampleRoomDetail()
@@ -796,8 +775,6 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.region.label").type(JsonFieldType.STRING).optional().description("지역 표시명"),
                         fieldWithPath("data.schedule.startAt").type(JsonFieldType.STRING).description("진행 시작 일시 (ISO-8601)"),
                         fieldWithPath("data.schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
-                        fieldWithPath("data.schedule.isPassed").type(JsonFieldType.BOOLEAN)
-                            .description("진행 일정 경과 여부 (서버 시각 기준). 신청·확정 검증과 같은 술어라 클라이언트 시계로 재계산하지 않는다"),
                         fieldWithPath("data.recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (활성 참여 수, 방장 포함)"),
                         fieldWithPath("data.recruit.min").type(JsonFieldType.NUMBER).description("최소 인원"),
                         fieldWithPath("data.recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
