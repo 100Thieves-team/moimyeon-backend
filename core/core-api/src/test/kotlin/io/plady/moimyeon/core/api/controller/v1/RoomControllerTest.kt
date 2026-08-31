@@ -12,6 +12,8 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomRegionResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomScheduleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomViewerResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ViewerMemberResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ViewerQuotaResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
@@ -36,10 +38,12 @@ import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
 import io.plady.moimyeon.core.domain.room.RoomTitle
-import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.domain.participation.ParticipationSlots
+import io.plady.moimyeon.core.domain.roomapplication.PendingApplicationQuota
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
-import io.plady.moimyeon.core.domain.roomviewer.ViewerAction
-import io.plady.moimyeon.core.domain.roomviewer.ViewerRelation
+import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
+import io.plady.moimyeon.core.domain.roomviewer.ViewerMemberFacts
+import io.plady.moimyeon.core.domain.roomviewer.ViewerRoomFacts
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
@@ -106,11 +110,11 @@ class RoomControllerTest : RestDocsTest() {
             "회사·공고·직무·지역 표시명은 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 룸 자체는 목록에 남는다."
     private val detailSummary = "룸 단건 조회"
     private val detailDescription =
-        "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다(§6 공개 데이터). 현재 인원 = 활성 참여 수, " +
-            "모집 상태는 정원 충족 여부로 계산한다. " +
-            "회사·공고·직무·지역 표시명은 목록과 같은 규칙으로 내려간다 — 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) " +
-            "null 로 내려가고 raw id(jobPostingId·jobRoleId·sigunguId)는 그대로 남는다. " +
-            "방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하지 않는 룸은 404(E1405)."
+        "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명 + 조회자 본인의 사실(viewer)을 반환한다(§6 공개 데이터). " +
+            "현재 인원 = 활성 참여 수, 모집 상태는 정원 충족 여부로 계산한다. " +
+            "회사·공고·직무·지역 표시명은 목록과 같은 규칙이다 — 참조가 끊어지면(회사 미매칭 공고, 폐기된 직무 등) 해당 객체만 null 로 내려간다. " +
+            "판정 결과(가능한 행동·확정 준비 여부)는 내리지 않는다 — 버튼 판정은 화면이 하고, 강제는 신청·확정 API 가 한다. " +
+            "존재하지 않는 룸은 404(E1405)."
 
     // 위저드가 모아 보내는 생성 페이로드. 형식 검증만 걸려 있어 유효한 값이면 그대로 통과한다.
     private val createRequestJson =
@@ -141,7 +145,7 @@ class RoomControllerTest : RestDocsTest() {
         "방장이 진행을 확정한다(「진행 확정」 §4.2). 룸 상태가 CONFIRMED 가 되고 참여자·인원이 고정되며, " +
             "남아 있던 대기 신청은 같은 트랜잭션에서 일괄 종료된다(반려가 아니므로 재신청 차단에 걸리지 않는다). " +
             "확정 이후에는 룸 정보 수정·신규 신청·수락이 모두 막힌다(§4.3). " +
-            "조건은 룸 상세의 confirmation 블록과 같은 판정을 쓴다 — 인원 미달은 E1421, 일정 경과는 E1422, " +
+            "확정 조건은 서버가 실행 시점에 룸 행을 잠근 뒤 검증한다 — 인원 미달은 E1421, 일정 경과는 E1422, " +
             "이미 확정·취소·완료·진행 중인 룸은 E1410 이다. 같은 요청을 두 번 보내도 한 번만 처리된다."
 
     private val cancelSummary = "룸 취소"
@@ -164,7 +168,7 @@ class RoomControllerTest : RestDocsTest() {
         jobPostingService = mockk()
         companyService = mockk()
         catalogService = mockk()
-        every { roomViewerService.getViewer(any(), any(), any()) } returns anonymousViewer()
+        every { roomViewerService.getViewer(any(), any()) } returns null
         // 상세 표시명 조립(MOI-496)이 읽는 참조들. sampleRoom() 의 공고 1·직무 1·시군구 1 과 짝이 맞아야
         // 문서 예시가 목록(sampleRoomsResponse)과 같은 회사·직무·지역으로 나온다.
         every { jobPostingService.getRefs(any()) } returns
@@ -185,32 +189,59 @@ class RoomControllerTest : RestDocsTest() {
         )
     }
 
-    // 목록 응답은 Facade 가 조립을 끝내고 오므로, 컨트롤러 문서화는 그 결과를 고정값으로 둔다.
-    private val viewerRelationDescription =
-        "조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | " +
-            "APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | " +
-            "PARTICIPANT 참여 중 | HOST 방장). 배지(`참여 중`·`내가 만든 룸`)를 이 값으로 그린다"
-    private val viewerActionsDescription =
-        "취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 " +
-            "(LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | " +
-            "VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다"
-    private val viewerBlockReasonDescription =
-        "할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | " +
-            "APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | " +
-            "APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. " +
-            "정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다"
+    // viewer 는 판정 없이 "조회자 본인"의 사실만 싣는다(MOI-500). 버튼·배지 판정 규칙은 프론트 상태 카탈로그가 갖는다.
+    private val viewerDescription =
+        "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, " +
+            "신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415 | E1416 | E1425)이 전담한다"
+    private val viewerLatestApplicationDescription =
+        "이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED | ROOM_CANCELED | ROOM_CONFIRMED | " +
+            "SLOT_EXCEEDED | ACCEPTED). 신청 이력이 없으면 null. " +
+            "강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저 봐야 한다"
 
-    private fun sampleRoomDetail(): RoomDetail = RoomDetail(
-        room = sampleRoom(),
+    private fun sampleRoomDetail(startAt: LocalDateTime = LocalDateTime.now().plusDays(1)): RoomDetail = RoomDetail(
+        room = sampleRoom(startAt),
         hostMemberId = hostMemberId,
         currentParticipants = 1,
         pendingApplicationCount = 5,
     )
 
-    private fun anonymousViewer(): RoomViewer = RoomViewer(
-        relation = ViewerRelation.ANONYMOUS,
-        actions = listOf(ViewerAction.LOGIN_REQUIRED),
-        blockReason = null,
+    // 문서 예시용 로그인 뷰어. 비로그인은 사실이 없으므로 픽스처가 아니라 null 이다.
+    private fun sampleViewerFacts(): ViewerFacts = ViewerFacts(
+        room = ViewerRoomFacts(host = false, participating = false, removed = false, latestApplication = null),
+        member = ViewerMemberFacts(
+            active = true,
+            participationSlots = ParticipationSlots.of(occupied = 1),
+            pendingApplicationQuota = PendingApplicationQuota(occupied = 0, limit = 3),
+        ),
+    )
+
+    // 목록·상세가 같은 viewer 객체를 실으므로 문서도 한 벌로 쓴다. 비로그인 응답에서는 전부 없어 optional 이다.
+    private fun viewerFields(prefix: String) = arrayOf(
+        fieldWithPath(prefix).type(JsonFieldType.OBJECT).optional().description(viewerDescription),
+        fieldWithPath("$prefix.isHost").type(JsonFieldType.BOOLEAN).optional()
+            .description("내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용"),
+        fieldWithPath("$prefix.isParticipating").type(JsonFieldType.BOOLEAN).optional()
+            .description("내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다"),
+        fieldWithPath("$prefix.hasRemovalHistory").type(JsonFieldType.BOOLEAN).optional()
+            .description("이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다"),
+        fieldWithPath("$prefix.latestApplicationStatus").type(JsonFieldType.STRING).optional()
+            .description(viewerLatestApplicationDescription),
+        fieldWithPath("$prefix.member").type(JsonFieldType.OBJECT).optional()
+            .description("룸과 무관한 회원 축 사실"),
+        fieldWithPath("$prefix.member.isActive").type(JsonFieldType.BOOLEAN).optional()
+            .description("이용 제한(제재) 중이면 false"),
+        fieldWithPath("$prefix.member.participationSlots").type(JsonFieldType.OBJECT).optional()
+            .description("참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)"),
+        fieldWithPath("$prefix.member.participationSlots.occupied").type(JsonFieldType.NUMBER).optional()
+            .description("참여 중인 룸 수 (방장 포함)"),
+        fieldWithPath("$prefix.member.participationSlots.limit").type(JsonFieldType.NUMBER).optional()
+            .description("참여 슬롯 한도"),
+        fieldWithPath("$prefix.member.pendingApplicationQuota").type(JsonFieldType.OBJECT).optional()
+            .description("대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)"),
+        fieldWithPath("$prefix.member.pendingApplicationQuota.occupied").type(JsonFieldType.NUMBER).optional()
+            .description("처리 대기 중인 내 신청 수"),
+        fieldWithPath("$prefix.member.pendingApplicationQuota.limit").type(JsonFieldType.NUMBER).optional()
+            .description("대기 신청 한도"),
     )
 
     private fun sampleRoomsResponse(): RoomsResponse = RoomsResponse(
@@ -228,7 +259,7 @@ class RoomControllerTest : RestDocsTest() {
                 method = "OFFLINE",
                 methodLabel = "오프라인",
                 region = RoomRegionResponse(sigunguId = 1L, label = "서울 강남구"),
-                schedule = RoomScheduleResponse.from(RoomSchedule(LocalDateTime.of(2026, 9, 5, 14, 0), 90)),
+                schedule = RoomScheduleResponse.from(RoomSchedule(LocalDateTime.of(2026, 9, 5, 14, 0), 90), isPassed = false),
                 recruit = RoomRecruitSummaryResponse(
                     current = 3,
                     max = 8,
@@ -237,9 +268,15 @@ class RoomControllerTest : RestDocsTest() {
                     recruitStatusLabel = "모집 중",
                 ),
                 viewer = RoomViewerResponse(
-                    relation = ViewerRelation.NONE.name,
-                    actions = listOf(ViewerAction.APPLY.name),
-                    blockReason = null,
+                    isHost = false,
+                    isParticipating = false,
+                    hasRemovalHistory = false,
+                    latestApplicationStatus = null,
+                    member = ViewerMemberResponse(
+                        isActive = true,
+                        participationSlots = ViewerQuotaResponse(occupied = 1, limit = 3),
+                        pendingApplicationQuota = ViewerQuotaResponse(occupied = 0, limit = 3),
+                    ),
                 ),
             ),
         ),
@@ -251,7 +288,7 @@ class RoomControllerTest : RestDocsTest() {
     private fun emptyRoomsResponse(): RoomsResponse = RoomsResponse(rooms = emptyList(), sort = RoomSortOrder.SCHEDULE.name, totalCount = 0, nextCursor = null)
 
     // 생성 응답은 도메인 Room(id·status)만 쓰므로, 서비스는 목으로 두고 고정 Room 을 돌려준다.
-    private fun sampleRoom(): Room = Room.create(
+    private fun sampleRoom(startAt: LocalDateTime = LocalDateTime.now().plusDays(1)): Room = Room.create(
         id = createdRoomId,
         jobPostingId = 1L,
         jobRoleId = 1L,
@@ -261,9 +298,10 @@ class RoomControllerTest : RestDocsTest() {
         interviewType = InterviewType.JOB,
         meetingPlace = MeetingPlace.Offline(sigunguId = 1L),
         capacity = RoomCapacity(min = 3, max = 6),
-        schedule = RoomSchedule(startAt = LocalDateTime.now().plusDays(1), durationMinutes = 90),
+        schedule = RoomSchedule(startAt = startAt, durationMinutes = 90),
         resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
-        now = LocalDateTime.now(),
+        now = startAt.minusDays(2), // 생성 검증(미래 일정)을 통과시키되, fixedClock 기준으론 과거일 수 있게
+
     )
 
     // 인원 규칙은 값 객체 RoomCapacity 가 검증한다 → 형식 오류(E400)가 아니라 도메인 코드 E1402(INVALID_ROOM_CAPACITY).
@@ -584,19 +622,14 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.rooms[].schedule.date").type(JsonFieldType.STRING).description("진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다"),
                         fieldWithPath("data.rooms[].schedule.startTime").type(JsonFieldType.STRING).description("시작 시각 (HH:mm)"),
                         fieldWithPath("data.rooms[].schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
+                        fieldWithPath("data.rooms[].schedule.isPassed").type(JsonFieldType.BOOLEAN)
+                            .description("진행 일정 경과 여부 (서버 시각 기준). 클라이언트 시계로 재계산하지 않는다 — 신청 API 와 어긋난다"),
                         fieldWithPath("data.rooms[].recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)"),
                         fieldWithPath("data.rooms[].recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
                         fieldWithPath("data.rooms[].recruit.pending").type(JsonFieldType.NUMBER).description("대기 중인 참가 신청 수"),
                         fieldWithPath("data.rooms[].recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
                         fieldWithPath("data.rooms[].recruit.recruitStatusLabel").type(JsonFieldType.STRING).description("모집 상태 표시명"),
-                        fieldWithPath("data.rooms[].viewer").type(JsonFieldType.OBJECT)
-                            .description("조회자와 이 룸의 관계·행동. 상세와 같은 객체라 렌더러를 하나만 만들면 된다"),
-                        fieldWithPath("data.rooms[].viewer.relation").type(JsonFieldType.STRING)
-                            .description(viewerRelationDescription),
-                        fieldWithPath("data.rooms[].viewer.actions").type(JsonFieldType.ARRAY)
-                            .description(viewerActionsDescription),
-                        fieldWithPath("data.rooms[].viewer.blockReason").type(JsonFieldType.STRING).optional()
-                            .description(viewerBlockReasonDescription),
+                        *viewerFields("data.rooms[].viewer"),
                         fieldWithPath("data.sort").type(JsonFieldType.STRING).description("실제로 적용된 정렬"),
                         fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("조건에 맞는 전체 룸 수 (페이지 크기와 무관)"),
                         fieldWithPath("data.nextCursor").type(JsonFieldType.STRING).optional().description("다음 페이지 커서. 마지막 페이지면 null"),
@@ -701,18 +734,32 @@ class RoomControllerTest : RestDocsTest() {
         every { roomService.getRoom(any()) } returns sampleRoomDetail()
         val viewerMemberId = slot<UUID?>()
         every {
-            roomViewerService.getViewer(captureNullable(viewerMemberId), any(), any())
-        } returns anonymousViewer()
+            roomViewerService.getViewer(captureNullable(viewerMemberId), any())
+        } returns null
 
-        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString())).andExpect(status().isOk)
+        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"viewer\":null") }
 
         assertThat(viewerMemberId.captured).isNull()
+    }
+
+    // 일정 경과는 서버 시각(fixedClock) 기준으로 계산된다 — 신청·확정 검증과 같은 술어다.
+    @Test
+    fun `일정이 지난 룸은 상세에서 경과로 표시된다`() {
+        every { roomService.getRoom(any()) } returns
+            sampleRoomDetail(startAt = LocalDateTime.of(2026, 8, 1, 11, 0)) // fixedClock(12:00) 직전
+
+        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"isPassed\":true") }
     }
 
     @Test
     fun roomDetail() {
         every { roomService.getRoom(any()) } returns sampleRoomDetail()
-        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
+        every { roomViewerService.getViewer(any(), any()) } returns sampleViewerFacts() // 문서 예시는 로그인 뷰어
+        mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()).principal(principal))
             .andExpect(status().isOk)
             .andDo(
                 documentApi(
@@ -726,8 +773,6 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
                         fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)"),
-                        fieldWithPath("data.jobPostingId").type(JsonFieldType.NUMBER).description("채용 공고 id (회사는 공고에서 파생)"),
-                        fieldWithPath("data.jobRoleId").type(JsonFieldType.NUMBER).description("직무 id"),
                         fieldWithPath("data.company").type(JsonFieldType.OBJECT).optional().description("회사 (공고에서 파생. 회사를 알 수 없으면 null)"),
                         fieldWithPath("data.company.companyId").type(JsonFieldType.NUMBER).optional().description("회사 id"),
                         fieldWithPath("data.company.name").type(JsonFieldType.STRING).optional().description("회사명"),
@@ -746,12 +791,13 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.typeLabel").type(JsonFieldType.STRING).optional().description("면접 유형 표시명 (선택)"),
                         fieldWithPath("data.method").type(JsonFieldType.STRING).description("진행 방식 (ONLINE | OFFLINE)"),
                         fieldWithPath("data.methodLabel").type(JsonFieldType.STRING).description("진행 방식 표시명"),
-                        fieldWithPath("data.sigunguId").type(JsonFieldType.NUMBER).optional().description("오프라인 지역 시군구 id (온라인이면 null)"),
                         fieldWithPath("data.region").type(JsonFieldType.OBJECT).optional().description("오프라인 지역 (온라인이거나 폐기된 지역이면 null)"),
                         fieldWithPath("data.region.sigunguId").type(JsonFieldType.NUMBER).optional().description("지역 시군구 id"),
                         fieldWithPath("data.region.label").type(JsonFieldType.STRING).optional().description("지역 표시명"),
                         fieldWithPath("data.schedule.startAt").type(JsonFieldType.STRING).description("진행 시작 일시 (ISO-8601)"),
                         fieldWithPath("data.schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
+                        fieldWithPath("data.schedule.isPassed").type(JsonFieldType.BOOLEAN)
+                            .description("진행 일정 경과 여부 (서버 시각 기준). 신청·확정 검증과 같은 술어라 클라이언트 시계로 재계산하지 않는다"),
                         fieldWithPath("data.recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (활성 참여 수, 방장 포함)"),
                         fieldWithPath("data.recruit.min").type(JsonFieldType.NUMBER).description("최소 인원"),
                         fieldWithPath("data.recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
@@ -759,26 +805,9 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.recruit.recruitStatusLabel").type(JsonFieldType.STRING).description("모집 상태 표시명 (모집 중 | 모집 마감)"),
                         fieldWithPath("data.recruit.pendingApplicationCount").type(JsonFieldType.NUMBER)
                             .description("대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다"),
-                        fieldWithPath("data.confirmation").type(JsonFieldType.OBJECT)
-                            .description("진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다"),
-                        fieldWithPath("data.confirmation.ready").type(JsonFieldType.BOOLEAN)
-                            .description("확정 가능 여부 (모집 중 && 일정 미경과 && 인원 >= 최소 인원)"),
-                        fieldWithPath("data.confirmation.blockReason").type(JsonFieldType.OBJECT).optional()
-                            .description("확정할 수 없는 사유. ready 가 true 면 null"),
-                        fieldWithPath("data.confirmation.blockReason.code").type(JsonFieldType.STRING).optional()
-                            .description("사유 코드 (ROOM_CONFIRMED | ROOM_IN_PROGRESS | ROOM_COMPLETED | ROOM_CANCELED | SCHEDULE_PASSED | BELOW_MIN_CAPACITY)"),
-                        fieldWithPath("data.confirmation.blockReason.label").type(JsonFieldType.STRING).optional()
-                            .description("화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다"),
                         fieldWithPath("data.resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성)"),
                         fieldWithPath("data.hostMemberId").type(JsonFieldType.STRING).description("방장 회원 식별자 (UUID)"),
-                        fieldWithPath("data.viewer").type(JsonFieldType.OBJECT)
-                            .description("조회자와 이 룸의 관계·행동. 목록과 같은 객체다"),
-                        fieldWithPath("data.viewer.relation").type(JsonFieldType.STRING)
-                            .description(viewerRelationDescription),
-                        fieldWithPath("data.viewer.actions").type(JsonFieldType.ARRAY)
-                            .description(viewerActionsDescription),
-                        fieldWithPath("data.viewer.blockReason").type(JsonFieldType.STRING).optional()
-                            .description(viewerBlockReasonDescription),
+                        *viewerFields("data.viewer"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
