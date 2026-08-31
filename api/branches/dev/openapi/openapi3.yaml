@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:02:24.209156576",
+                        "datetime" : "2026-08-31T02:26:30.391051508",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:02:24.243207343",
+                        "datetime" : "2026-08-31T02:26:30.425072486",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2372,7 +2372,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "948633e9-8a32-44b9-873f-5ba5a51558ad",
+                          "termsId" : "07e931c4-4072-4d68-b6cf-37254c247da7",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2380,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "9ca6c5cd-7374-452e-8e0e-af7449d8f3f6",
+                          "termsId" : "92868280-1a92-443b-a3c8-19563cad310a",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3154,12 +3154,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "a79f78f5-b252-4783-be1d-84e1d23c039e",
+                        "memberId" : "3b101be4-671c-4852-81d1-054133bd2356",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "a79f78f5-b252-4783-be1d-84e1d23c039e",
+                          "memberId" : "3b101be4-671c-4852-81d1-054133bd2356",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4614,7 +4614,7 @@ paths:
                         "method" : "OFFLINE",
                         "sigunguId" : 1,
                         "schedule" : {
-                          "startAt" : "2026-09-01T02:02:28.859888092",
+                          "startAt" : "2026-09-01T02:26:35.392400136",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4625,7 +4625,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "5866b716-b911-41b9-a266-32f6a5742e59",
+                        "hostMemberId" : "2af66b45-df1d-4233-864e-ca4afa3a258d",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4926,7 +4926,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b000fdbc-ceed-46b7-b92d-8d39dd996d06",
+                        "memberId" : "d0171960-ed81-4eea-adcf-963fe9076e52",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5619,18 +5619,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "2f310732-f14b-402b-861c-caf77e9eddc8"
+                    "resumeId" : "1d0f0cc4-247d-4130-bf84-92d0adc7cadf"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "5a6c3080-2aff-4913-ba13-56eb1d457fed",
+                    "resumeId" : "f088cc68-83c3-40ab-ace2-bb72c5ffa597",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "3f717b34-678c-4cdd-9243-37974366c068",
+                    "resumeId" : "52c3070c-7cb5-4f42-841a-2021928dddc3",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -7044,7 +7044,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "dd08c5c3-663e-491b-ac65-6f39b3c155ad",
+                          "resumeId" : "5e00e41f-3bcb-4483-92aa-3d7171cfb621",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7777,6 +7777,7 @@ components:
             postingName:
               type: string
               description: 공고명
+          nullable: true
     v1-job-postings-link-metadata-1427693842:
       required:
       - result
@@ -7810,6 +7811,7 @@ components:
               description: "공고명 후보 (og:title, 사용자가 확인·수정). fetch 실패·OG 없음이면 null →\
                 \ 직접 입력"
               nullable: true
+          nullable: true
     v1-rooms-roomId-participants-1711899011:
       required:
       - result
@@ -7865,6 +7867,7 @@ components:
                         description: AI 요약 상태 (PROCESSING | DONE). 생성 실패도 준비 중으로 내려간다
                         nullable: true
                     description: 이력서 AI 요약. 제출 이력서가 없으면 null
+                    nullable: true
                   canViewOriginal:
                     type: boolean
                     description: 이력서 원본을 열 수 있는지. 원본 공개 룸이고 진행이 확정됐으며 조회자가 확정 참여자일
@@ -7883,6 +7886,7 @@ components:
                   memberId:
                     type: string
                     description: 참여자 회원 식별자 (UUID)
+          nullable: true
     v1-job-postings-link-metadata34312967:
       required:
       - companyId
@@ -7903,42 +7907,6 @@ components:
         content:
           type: string
           description: "글 내용 (trim 후 1~1000자, 텍스트만)"
-    post191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
     v1-rooms-roomId-comments1495367468:
       required:
       - result
@@ -7999,6 +7967,7 @@ components:
                         description: 작성자 회원 id
                         nullable: true
                     description: 작성자. 삭제된 글은 null
+                    nullable: true
                   commentId:
                     type: number
                     description: 글 id
@@ -8012,6 +7981,44 @@ components:
             writable:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
+          nullable: true
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+          nullable: true
     v1-auth-logout198252895:
       required:
       - result
@@ -8077,6 +8084,7 @@ components:
                             memberId:
                               type: string
                               description: 꼬리질문 작성자 회원 id
+                          nullable: true
                         source:
                           type: string
                           description: PREPARATION | IN_PROGRESS
@@ -8101,6 +8109,7 @@ components:
                       memberId:
                         type: string
                         description: 원 질문 작성자 회원 id
+                    nullable: true
                   source:
                     type: string
                     description: PREPARATION | IN_PROGRESS
@@ -8120,6 +8129,8 @@ components:
                 memberId:
                   type: string
                   description: 현재 라운드 면접자 회원 id
+              nullable: true
+          nullable: true
     v1-members-me-rooms1592819168:
       required:
       - result
@@ -8347,6 +8358,7 @@ components:
                         type: string
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
+          nullable: true
     v1-closing-questions-me-207387725:
       required:
       - result
@@ -8383,6 +8395,7 @@ components:
                   content:
                     type: string
                     description: 질문 본문
+          nullable: true
     v1-follow-up-questions-140122441:
       required:
       - result
@@ -8399,6 +8412,7 @@ components:
             questionId:
               type: number
               description: 생성된 꼬리질문 id
+          nullable: true
     post-1780624183:
       required:
       - data
@@ -8509,6 +8523,7 @@ components:
                       description: 화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다
                       nullable: true
                   description: 확정할 수 없는 사유. ready 가 true 면 null
+                  nullable: true
               description: 진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다
             type:
               type: string
@@ -8532,6 +8547,7 @@ components:
                 startAt:
                   type: string
                   description: 진행 시작 일시 (ISO-8601)
+              nullable: true
             sigunguId:
               type: number
               description: 오프라인 지역 시군구 id (온라인이면 null)
@@ -8566,6 +8582,7 @@ components:
                 recruitStatus:
                   type: string
                   description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+              nullable: true
             jobRoleId:
               type: number
               description: 직무 id
@@ -8579,6 +8596,7 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+          nullable: true
     v1-rooms-roomId-reviews-1785905513:
       required:
       - result
@@ -8595,6 +8613,7 @@ components:
             reviewId:
               type: number
               description: 생성된 후기 id
+          nullable: true
     v1-progress-rails60461824:
       required:
       - result
@@ -8631,6 +8650,8 @@ components:
                         description: 면접 대상 회원 id
                         nullable: true
                     description: "ROUND 블록의 면접 대상, 그 외 null"
+                    nullable: true
+          nullable: true
     v1-questions-1610867609:
       required:
       - result
@@ -8647,6 +8668,7 @@ components:
             questionId:
               type: number
               description: 생성된 원 질문 id
+          nullable: true
     v1-self-feedbacks342673527:
       required:
       - result
@@ -8663,6 +8685,7 @@ components:
             feedbackId:
               type: number
               description: 저장된 자가 피드백 id
+          nullable: true
     v1-auth-dev-sessions1490138447:
       required:
       - result
@@ -8679,6 +8702,7 @@ components:
             accessToken:
               type: string
               description: 만료 시각이 없는 개발용 액세스 토큰
+          nullable: true
     v1-follow-up-questions1363007138:
       required:
       - content
@@ -8743,6 +8767,7 @@ components:
                   memberId:
                     type: string
                     description: 대상 회원 id
+          nullable: true
     v1-rooms-form-options-38619118:
       required:
       - result
@@ -8820,6 +8845,7 @@ components:
                 max:
                   type: number
                   description: 허용 최대 인원
+              nullable: true
             rounds:
               type: array
               description: 면접 회차 선택지
@@ -8835,6 +8861,7 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
+          nullable: true
     v1-members-me-participation-slots889288482:
       required:
       - result
@@ -8860,6 +8887,7 @@ components:
             occupied:
               type: number
               description: 활성 룸에서 참여 중(JOINED)인 룸 수. 방장으로 만든 룸도 센다
+          nullable: true
     v1-rooms-roomId-review-skips2104006349:
       required:
       - targetMemberId
@@ -8936,6 +8964,7 @@ components:
                   shortName:
                     type: string
                     description: "시도 축약명 (표시용, 예: 서울)"
+          nullable: true
     v1-rooms897804324:
       required:
       - jobRoleId
@@ -8989,6 +9018,7 @@ components:
             startTime:
               type: string
               description: 시작 시각 (HH:mm)
+          nullable: true
         postingId:
           type: number
           description: "채용 공고 id (필수, /v1/companies/{companyId}/job-postings 또는 POST\
@@ -9054,6 +9084,7 @@ components:
                     type: string
                     description: 대표 직무명 (선택)
                     nullable: true
+          nullable: true
     v1-members-me1349704155:
       required:
       - result
@@ -9118,6 +9149,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+          nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
       - content
@@ -9158,6 +9190,7 @@ components:
             memberId:
               type: string
               description: 제출자 회원 id
+          nullable: true
     v1-round-feedbacks-923155903:
       required:
       - result
@@ -9196,6 +9229,7 @@ components:
                       memberId:
                         type: string
                         description: 작성자 회원 id
+                    nullable: true
                   revealed:
                     type: boolean
                     description: 카드 열람 확인 여부
@@ -9220,6 +9254,7 @@ components:
                   description: 자가 피드백 본문
               description: "자가 피드백, 작성하지 않았으면 null"
               nullable: true
+          nullable: true
     v1-reviews-reviewId910352763:
       required:
       - result
@@ -9246,6 +9281,7 @@ components:
             message:
               type: string
               description: 사용자에게 표시 가능한 메시지
+          nullable: true
     v1-room-progresses1093163669:
       required:
       - attendances
@@ -9305,6 +9341,7 @@ components:
                 sizeBytes:
                   type: number
                   description: 파일 크기 (byte)
+              nullable: true
             resumeId:
               type: string
               description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
@@ -9321,12 +9358,14 @@ components:
                   type: string
                   description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
                     단건 조회를 폴링하고 최대 1분 뒤 DONE·FAILED에서 중단
+              nullable: true
             registeredAt:
               type: string
               description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
             name:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
+          nullable: true
     v1-room-progresses-1064909895:
       required:
       - result
@@ -9363,30 +9402,7 @@ components:
             status:
               type: string
               description: 시작 후 룸 상태 (IN_PROGRESS)
-    v1-members-me-profile466680720:
-      required:
-      - nickname
-      type: object
-      properties:
-        nickname:
-          type: string
-          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
           nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-companies1839974379:
       required:
       - result
@@ -9415,6 +9431,31 @@ components:
                   name:
                     type: string
                     description: 회사명
+          nullable: true
+    v1-members-me-profile466680720:
+      required:
+      - nickname
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-questions-questionId496267733:
       required:
       - asked
@@ -9470,6 +9511,7 @@ components:
                     sizeBytes:
                       type: number
                       description: 제출 당시 파일 크기 (bytes)
+                  nullable: true
                 resumeId:
                   type: string
                   description: 제출 원본이 된 보관 이력서 id (UUID)
@@ -9485,6 +9527,8 @@ components:
                     status:
                       type: string
                       description: AI 요약 상태 (PROCESSING | DONE | FAILED)
+                  nullable: true
+              nullable: true
             note:
               type: string
               description: 내가 입력한 전달 사항 (미입력 시 빈 문자열)
@@ -9504,6 +9548,7 @@ components:
               type: string
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
+          nullable: true
     v1-members-memberId-profile655149006:
       required:
       - result
@@ -9588,6 +9633,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+          nullable: true
     v1-rooms-roomId-question-sets-targetMemberId-906553040:
       required:
       - result
@@ -9642,6 +9688,7 @@ components:
                             memberId:
                               type: string
                               description: 꼬리질문 작성자 회원 id
+                          nullable: true
                         source:
                           type: string
                           description: 작성 단계 (PREPARATION | IN_PROGRESS)
@@ -9666,6 +9713,7 @@ components:
                       memberId:
                         type: string
                         description: 작성자 회원 id
+                    nullable: true
                   source:
                     type: string
                     description: 작성 단계 (PREPARATION | IN_PROGRESS)
@@ -9684,6 +9732,7 @@ components:
                 status:
                   type: string
                   description: AI 요약 상태 (DONE | PROCESSING | FAILED)
+              nullable: true
             target:
               required:
               - memberId
@@ -9696,6 +9745,8 @@ components:
                 memberId:
                   type: string
                   description: 질문 대상 회원 id
+              nullable: true
+          nullable: true
     v1-nicknames-availability-1805856748:
       required:
       - result
@@ -9712,6 +9763,7 @@ components:
             available:
               type: boolean
               description: 사용 가능 여부 (중복이면 false)
+          nullable: true
     v1-rooms-reject-reasons1951847967:
       required:
       - result
@@ -9737,6 +9789,8 @@ components:
                   label:
                     type: string
                     description: 화면 표시 문구
+              nullable: true
+          nullable: true
     v1-question-comments-469179710:
       required:
       - result
@@ -9762,6 +9816,7 @@ components:
                   description: 다음 커서 질문 메모 id
                   nullable: true
               description: "다음 페이지 커서, 없으면 null"
+              nullable: true
             comments:
               type: array
               description: 오래된 순 질문 메모 목록
@@ -9792,6 +9847,7 @@ components:
                       memberId:
                         type: string
                         description: 작성자 회원 id
+                    nullable: true
                   commentId:
                     type: number
                     description: 질문 메모 id
@@ -9801,6 +9857,7 @@ components:
                   content:
                     type: string
                     description: 질문 메모 본문
+          nullable: true
     v1-question-comments-commentId83412404:
       required:
       - content
@@ -9841,6 +9898,7 @@ components:
             commentId:
               type: number
               description: 생성된(또는 멱등 반환된 기존) 글 id
+          nullable: true
     v1-rooms-roomId-reviews1356104346:
       required:
       - tags
@@ -9884,6 +9942,7 @@ components:
             feedbackId:
               type: number
               description: 생성된 최종 피드백 id
+          nullable: true
     v1-rooms-roomId-participants-me837364537:
       required:
       - result
@@ -9904,6 +9963,7 @@ components:
             message:
               type: string
               description: 에러 메시지
+          nullable: true
     v1-question-comments1807061222:
       required:
       - content
@@ -9948,6 +10008,7 @@ components:
             status:
               type: string
               description: 룸 상태 (RECRUITING)
+          nullable: true
     v1-job-postings-1848070641:
       required:
       - companyId
@@ -9980,6 +10041,7 @@ components:
             nickname:
               type: string
               description: 추천 닉네임 (중복 아님 보장)
+          nullable: true
     v1-rooms-roomId-participants-me1338856208:
       required:
       - result
@@ -10000,6 +10062,7 @@ components:
             message:
               type: string
               description: 에러 메시지
+          nullable: true
     v1-feedback-disclosures-feedbackId-256087070:
       required:
       - intervieweeMemberId
@@ -10044,6 +10107,7 @@ components:
             commentId:
               type: number
               description: 생성된 질문 메모 id
+          nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-36237129:
       required:
       - result
@@ -10060,6 +10124,7 @@ components:
             questionId:
               type: number
               description: 생성된 질문 id
+          nullable: true
     v1-members-me-profile934225230:
       required:
       - result
@@ -10102,6 +10167,7 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+          nullable: true
     v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result
@@ -10137,6 +10203,7 @@ components:
                 recruitStatusLabel:
                   type: string
                   description: 모집 상태 표시명
+              nullable: true
             applicationId:
               type: number
               description: 처리된 신청 id
@@ -10146,6 +10213,7 @@ components:
             status:
               type: string
               description: 신청 상태 (REJECTED)
+          nullable: true
     v1-rooms-roomId-applications-applicationId-accept-674159690:
       required:
       - result
@@ -10181,6 +10249,7 @@ components:
                 recruitStatusLabel:
                   type: string
                   description: 모집 상태 표시명
+              nullable: true
             applicationId:
               type: number
               description: 처리된 신청 id
@@ -10190,6 +10259,7 @@ components:
             status:
               type: string
               description: 신청 상태 (ACCEPTED | SLOT_EXCEEDED)
+          nullable: true
     v1-reviews-reviewId1003704379:
       required:
       - result
@@ -10232,6 +10302,7 @@ components:
                 - type: boolean
                 - type: string
                 - type: number
+          nullable: true
     v1-members-me-web-push-subscriptions1250153706:
       required:
       - registration
@@ -10288,6 +10359,7 @@ components:
                         jobRoleId:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
+          nullable: true
     v1-final-feedbacks135367546:
       required:
       - content
@@ -10328,6 +10400,7 @@ components:
             status:
               type: string
               description: 신청 상태 (PENDING)
+          nullable: true
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -10414,6 +10487,8 @@ components:
                       memberId:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
+                    nullable: true
+          nullable: true
     v1-rooms1476531183:
       required:
       - result
@@ -10494,6 +10569,7 @@ components:
                         description: 채용 공고명
                         nullable: true
                     description: 채용 공고 (폐기됐으면 null)
+                    nullable: true
                   type:
                     type: string
                     description: 면접 유형 코드 (선택)
@@ -10520,6 +10596,7 @@ components:
                       startTime:
                         type: string
                         description: 시작 시각 (HH:mm)
+                    nullable: true
                   round:
                     type: string
                     description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
@@ -10547,6 +10624,7 @@ components:
                       recruitStatusLabel:
                         type: string
                         description: 모집 상태 표시명
+                    nullable: true
                   methodLabel:
                     type: string
                     description: 진행 방식 표시명
@@ -10566,6 +10644,7 @@ components:
                         description: 직무 id
                         nullable: true
                     description: 직무 (폐기됐으면 null)
+                    nullable: true
                   typeLabel:
                     type: string
                     description: 면접 유형 표시명 (선택)
@@ -10582,6 +10661,7 @@ components:
                         description: 회사명
                         nullable: true
                     description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                    nullable: true
                   region:
                     type: object
                     properties:
@@ -10594,6 +10674,7 @@ components:
                         description: 지역 표시명
                         nullable: true
                     description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                    nullable: true
                   roundLabel:
                     type: string
                     description: 면접 단계 표시명
@@ -10603,6 +10684,7 @@ components:
             totalCount:
               type: number
               description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
+          nullable: true
     v1-terms1673199050:
       required:
       - result
@@ -10651,6 +10733,7 @@ components:
                   content:
                     type: string
                     description: 약관 본문
+          nullable: true
     v1-members-me-received-reviews785981355:
       required:
       - result
@@ -10701,6 +10784,7 @@ components:
             totalCount:
               type: number
               description: 공개 가능한 받은 후기 전체 수
+          nullable: true
     v1-attendances-me427868787:
       required:
       - result
@@ -10721,6 +10805,7 @@ components:
             memberId:
               type: string
               description: 로그인 회원 id
+          nullable: true
     v1-job-postings-search1628359421:
       required:
       - result
@@ -10772,6 +10857,7 @@ components:
                       name:
                         type: string
                         description: 공고가 속한 회사명 (행 앞에 표시)
+                    nullable: true
                   postingName:
                     type: string
                     description: 공고명
@@ -10797,6 +10883,7 @@ components:
             query:
               type: string
               description: 요청 검색어 echo (stale 응답 판별용)
+          nullable: true
     v1-job-roles-search-1966453570:
       required:
       - result
@@ -10841,6 +10928,8 @@ components:
                       displayName:
                         type: string
                         description: 상위 직군 표시명
+                    nullable: true
+          nullable: true
     v1-question-records-me591289672:
       required:
       - result
@@ -10893,6 +10982,7 @@ components:
                   questionId:
                     type: number
                     description: 실제로 질문한 원 질문 id
+          nullable: true
     v1-questions-1653829861:
       required:
       - content
@@ -10950,9 +11040,11 @@ components:
                       memberId:
                         type: string
                         description: 질문 대상 회원 id (UUID)
+                    nullable: true
             myCardSetPreparerCount:
               type: number
               description: 내 카드셋에 활성 질문 또는 꼬리질문을 남긴 참여자 수
+          nullable: true
     v1-members-me-web-push-subscriptions615785551:
       required:
       - registration
@@ -11006,6 +11098,7 @@ components:
             remaining:
               type: number
               description: 더 만들 수 있는 개수. 0 이면 생성이 E1427 로 거부된다. 음수가 되지 않는다
+          nullable: true
     v1-members-me-resumes-1467612549:
       required:
       - result
@@ -11047,6 +11140,7 @@ components:
                         description: 최근 사용한 룸 식별자 (UUID)
                         nullable: true
                     description: 최근 사용 이력 (한 번도 사용하지 않았으면 null)
+                    nullable: true
                   isDefault:
                     type: boolean
                     description: 회원이 지정한 기본 이력서 여부 (최근 사용 여부와 별개)
@@ -11066,6 +11160,7 @@ components:
                       sizeBytes:
                         type: number
                         description: 파일 크기 (byte)
+                    nullable: true
                   resumeId:
                     type: string
                     description: "이력서 식별자 (UUID, 다른 화면에서 선택할 때 사용)"
@@ -11082,6 +11177,7 @@ components:
                         type: string
                         description: AI 요약 상태 (PROCESSING | DONE | FAILED). PROCESSING이면
                           단건 조회를 폴링하고 최대 1분 뒤 DONE·FAILED에서 중단
+                    nullable: true
                   registeredAt:
                     type: string
                     description: 등록 시각 (yyyy-MM-ddTHH:mm:ss)
@@ -11091,6 +11187,7 @@ components:
             maxCount:
               type: number
               description: 최대 보관 가능 개수 (10)
+          nullable: true
     v1-auth-dev-sessions-1806235479:
       required:
       - memberId
