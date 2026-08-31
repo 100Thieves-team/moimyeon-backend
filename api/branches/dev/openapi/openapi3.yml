@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:26:30.391051508",
+                        "datetime" : "2026-08-31T02:53:23.424648747",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:26:30.425072486",
+                        "datetime" : "2026-08-31T02:53:23.468032507",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -174,7 +174,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1803:
                   value: |-
@@ -203,7 +203,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1802:
                   value: |-
@@ -221,7 +221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1405:
                   value: |-
@@ -257,7 +257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1801:
                   value: |-
@@ -292,7 +292,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchCompanies-e400-length:
                   value: |-
@@ -386,7 +386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1903:
                   value: |-
@@ -415,7 +415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1902:
                   value: |-
@@ -433,7 +433,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e400:
                   value: |-
@@ -467,7 +467,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1405:
                   value: |-
@@ -564,7 +564,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e400:
                   value: |-
@@ -582,7 +582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1507:
                   value: |-
@@ -622,7 +622,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1502:
                   value: |-
@@ -651,7 +651,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1704:
                   value: |-
@@ -723,7 +723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createJobPosting-e400:
                   value: |-
@@ -761,7 +761,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createJobPosting-e1102:
                   value: |-
@@ -831,7 +831,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1405:
                   value: |-
@@ -877,7 +877,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1704:
                   value: |-
@@ -895,7 +895,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1703:
                   value: |-
@@ -953,7 +953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1507:
                   value: |-
@@ -982,7 +982,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1512:
                   value: |-
@@ -1000,7 +1000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e400:
                   value: |-
@@ -1048,7 +1048,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1509:
                   value: |-
@@ -1134,7 +1134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e400:
                   value: |-
@@ -1168,7 +1168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1405:
                   value: |-
@@ -1197,7 +1197,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1510:
                   value: |-
@@ -1215,7 +1215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1509:
                   value: |-
@@ -1297,7 +1297,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1503:
                   value: |-
@@ -1342,7 +1342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1704:
                   value: |-
@@ -1360,7 +1360,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e400:
                   value: |-
@@ -1378,7 +1378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1502:
                   value: |-
@@ -1526,7 +1526,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1706:
                   value: |-
@@ -1555,7 +1555,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1702:
                   value: |-
@@ -1573,7 +1573,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1405:
                   value: |-
@@ -1591,7 +1591,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1701:
                   value: |-
@@ -1609,7 +1609,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-room-progresses-1064909895"
+                $ref: "#/components/schemas/v1-room-progresses612761132"
               examples:
                 startRoomProgress:
                   value: |-
@@ -1620,9 +1620,11 @@ paths:
                         "hostMemberId" : "00000000-0000-0000-0000-000000000001",
                         "attendances" : [ {
                           "memberId" : "00000000-0000-0000-0000-000000000001",
+                          "nickname" : "영리한 부엉이 86",
                           "status" : "ATTENDED"
                         }, {
                           "memberId" : "00000000-0000-0000-0000-000000000002",
+                          "nickname" : "성실한 사슴 03",
                           "status" : "ABSENT"
                         } ]
                       },
@@ -1720,7 +1722,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 rooms-e400-cursor:
                   value: |-
@@ -1901,7 +1903,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoom-e1402:
                   value: |-
@@ -1988,7 +1990,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1904:
                   value: |-
@@ -2006,7 +2008,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1405:
                   value: |-
@@ -2062,7 +2064,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1902:
                   value: |-
@@ -2102,7 +2104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1704:
                   value: |-
@@ -2160,7 +2162,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1503:
                   value: |-
@@ -2189,7 +2191,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1703:
                   value: |-
@@ -2267,7 +2269,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1902:
                   value: |-
@@ -2285,7 +2287,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e400:
                   value: |-
@@ -2319,7 +2321,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1903:
                   value: |-
@@ -2337,7 +2339,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1405:
                   value: |-
@@ -2372,7 +2374,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "07e931c4-4072-4d68-b6cf-37254c247da7",
+                          "termsId" : "d8a178d1-0140-4352-9015-94e772ec9c51",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2380,7 +2382,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "92868280-1a92-443b-a3c8-19563cad310a",
+                          "termsId" : "42d51792-8ae6-4f4e-8540-470cc5511eb8",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -2412,7 +2414,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1703:
                   value: |-
@@ -2430,7 +2432,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1405:
                   value: |-
@@ -2459,7 +2461,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-attendances-me427868787"
+                $ref: "#/components/schemas/v1-attendances-me-438784568"
               examples:
                 getMyAttendance:
                   value: |-
@@ -2467,6 +2469,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "memberId" : "00000000-0000-0000-0000-000000000001",
+                        "nickname" : "영리한 부엉이 86",
                         "status" : "ATTENDED"
                       },
                       "error" : null
@@ -2476,7 +2479,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1704:
                   value: |-
@@ -2541,7 +2544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 issueDevSession-e1006:
                   value: |-
@@ -2559,7 +2562,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 issueDevSession-e400:
                   value: |-
@@ -2614,7 +2617,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -2666,7 +2669,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1405:
                   value: |-
@@ -2684,7 +2687,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1802:
                   value: |-
@@ -2702,7 +2705,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1801:
                   value: |-
@@ -2806,7 +2809,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1902:
                   value: |-
@@ -2824,7 +2827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1405:
                   value: |-
@@ -2853,7 +2856,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1904:
                   value: |-
@@ -2901,7 +2904,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 jobPostingLinkMetadata-e400:
                   value: |-
@@ -3025,7 +3028,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchJobPostings-e400-length:
                   value: |-
@@ -3058,7 +3061,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchJobRoles-e400-blank:
                   value: |-
@@ -3111,7 +3114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -3129,7 +3132,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -3154,12 +3157,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "3b101be4-671c-4852-81d1-054133bd2356",
+                        "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "3b101be4-671c-4852-81d1-054133bd2356",
+                          "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -3210,7 +3213,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -3343,7 +3346,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1510:
                   value: |-
@@ -3361,7 +3364,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e400:
                   value: |-
@@ -3379,7 +3382,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1511:
                   value: |-
@@ -3433,7 +3436,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1509:
                   value: |-
@@ -3485,7 +3488,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1507:
                   value: |-
@@ -3525,7 +3528,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1509:
                   value: |-
@@ -3557,7 +3560,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1510:
                   value: |-
@@ -3652,7 +3655,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1510:
                   value: |-
@@ -3670,7 +3673,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1405:
                   value: |-
@@ -3710,7 +3713,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1509:
                   value: |-
@@ -3742,7 +3745,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e400:
                   value: |-
@@ -3806,7 +3809,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1902:
                   value: |-
@@ -3824,7 +3827,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1405:
                   value: |-
@@ -3842,7 +3845,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1903:
                   value: |-
@@ -3937,7 +3940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1703:
                   value: |-
@@ -3966,7 +3969,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1704:
                   value: |-
@@ -3984,7 +3987,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e400:
                   value: |-
@@ -4002,7 +4005,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1405:
                   value: |-
@@ -4073,7 +4076,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e1102:
                   value: |-
@@ -4091,7 +4094,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e2006:
                   value: |-
@@ -4109,7 +4112,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId1003704379"
+                $ref: "#/components/schemas/v1-reviews-reviewId20839761"
               examples:
                 getReview:
                   value: |-
@@ -4119,6 +4122,7 @@ paths:
                         "reviewId" : 31,
                         "roomId" : "01920000-0000-7000-8000-000000000457",
                         "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                        "targetNickname" : "성실한 사슴 03",
                         "tags" : [ "시간을 잘 지켜요", "피드백이 구체적이에요" ],
                         "content" : "꼬리질문이 날카로워서 실전 같았어요.",
                         "anonymous" : false
@@ -4130,7 +4134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e2007:
                   value: |-
@@ -4214,7 +4218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e400:
                   value: |-
@@ -4232,7 +4236,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e1102:
                   value: |-
@@ -4250,7 +4254,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2007:
                   value: |-
@@ -4268,7 +4272,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2008:
                   value: |-
@@ -4286,7 +4290,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2006:
                   value: |-
@@ -4333,7 +4337,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2008:
                   value: |-
@@ -4351,7 +4355,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2007:
                   value: |-
@@ -4369,7 +4373,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e1102:
                   value: |-
@@ -4387,7 +4391,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2006:
                   value: |-
@@ -4429,7 +4433,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 roomCreationLimit-e400:
                   value: |-
@@ -4577,9 +4581,10 @@ paths:
       tags:
       - v1
       summary: 룸 단건 조회
-      description: "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자를 반환한다(§6 공개 데이터). 현재 인원 = 활성 참여\
-        \ 수, 모집 상태는 정원 충족 여부로 계산한다. 회사·공고·직무 표시명, 방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하\
-        지 않는 룸은 404(E1405)."
+      description: "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다(§6 공개 데이터). 현재 인원 =\
+        \ 활성 참여 수, 모집 상태는 정원 충족 여부로 계산한다. 회사·공고·직무·지역 표시명은 목록과 같은 규칙으로 내려간다 — 참조가\
+        \ 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 raw id(jobPostingId·jobRoleId·sigunguId)는\
+        \ 그대로 남는다. 방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하지 않는 룸은 404(E1405)."
       operationId: roomDetail
       parameters:
       - name: roomId
@@ -4594,7 +4599,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-1165715694"
+                $ref: "#/components/schemas/v1-rooms-roomId-593421515"
               examples:
                 roomDetail:
                   value: |-
@@ -4605,6 +4610,19 @@ paths:
                         "status" : "RECRUITING",
                         "jobPostingId" : 1,
                         "jobRoleId" : 1,
+                        "company" : {
+                          "companyId" : 1,
+                          "name" : "달빛페이"
+                        },
+                        "jobPosting" : {
+                          "jobPostingId" : 1,
+                          "postingName" : "프론트엔드 개발자 (결제플랫폼)"
+                        },
+                        "jobRole" : {
+                          "jobRoleId" : 1,
+                          "code" : "FRONTEND_DEVELOPER",
+                          "displayName" : "프론트엔드 개발"
+                        },
                         "title" : "달빛페이 프론트 1차, 실전처럼 봐요",
                         "description" : "실제 1차 면접 형식 그대로 진행해요. 결제·정산 도메인 위주로 준비할게요.",
                         "round" : "FIRST",
@@ -4612,9 +4630,14 @@ paths:
                         "type" : "JOB",
                         "typeLabel" : "직무 면접",
                         "method" : "OFFLINE",
+                        "methodLabel" : "오프라인",
                         "sigunguId" : 1,
+                        "region" : {
+                          "sigunguId" : 1,
+                          "label" : "서울 강남구"
+                        },
                         "schedule" : {
-                          "startAt" : "2026-09-01T02:26:35.392400136",
+                          "startAt" : "2026-09-01T02:53:30.556284723",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4622,10 +4645,11 @@ paths:
                           "min" : 3,
                           "max" : 6,
                           "recruitStatus" : "RECRUITING",
+                          "recruitStatusLabel" : "모집 중",
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "2af66b45-df1d-4233-864e-ca4afa3a258d",
+                        "hostMemberId" : "dd54bb42-497f-45ab-bfc3-ba17b215732f",
                         "confirmation" : {
                           "ready" : false,
                           "blockReason" : {
@@ -4670,7 +4694,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 jobPostings-e400-length:
                   value: |-
@@ -4832,7 +4856,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -4850,7 +4874,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -4868,7 +4892,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e400:
                   value: |-
@@ -4926,7 +4950,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "d0171960-ed81-4eea-adcf-963fe9076e52",
+                        "memberId" : "92d2ba99-2ca5-4d60-ab69-40e59ca6124b",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4944,7 +4968,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1007:
                   value: |-
@@ -5024,7 +5048,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReceivedReviews-e400:
                   value: |-
@@ -5042,7 +5066,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReceivedReviews-e1102:
                   value: |-
@@ -5154,7 +5178,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resumes-e1102:
                   value: |-
@@ -5183,7 +5207,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createResume-e400-file-size:
                   value: |-
@@ -5253,7 +5277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createResume-e1102:
                   value: |-
@@ -5297,7 +5321,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getInterviewOverview-e1102:
                   value: |-
@@ -5315,7 +5339,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-rooms1592819168"
+                $ref: "#/components/schemas/v1-members-me-rooms-257716809"
               examples:
                 getInterviewOverview:
                   value: |-
@@ -5331,10 +5355,30 @@ paths:
                             "title" : "달빛페이 백엔드 1차 모의면접",
                             "jobPostingId" : 1,
                             "jobRoleId" : 2,
+                            "company" : {
+                              "companyId" : 1,
+                              "name" : "달빛페이"
+                            },
+                            "jobPosting" : {
+                              "jobPostingId" : 1,
+                              "postingName" : "백엔드 개발자 채용"
+                            },
+                            "jobRole" : {
+                              "jobRoleId" : 2,
+                              "code" : "BACKEND",
+                              "displayName" : "서버·백엔드"
+                            },
                             "interviewStage" : "FIRST",
+                            "interviewStageLabel" : "1차",
                             "interviewType" : "JOB",
+                            "interviewTypeLabel" : "직무 면접",
                             "meetingType" : "OFFLINE",
+                            "meetingTypeLabel" : "오프라인",
                             "sigunguId" : 1,
+                            "region" : {
+                              "sigunguId" : 1,
+                              "label" : "서울 강남구"
+                            },
                             "startAt" : "2026-08-20T19:00:00",
                             "durationMinutes" : 60,
                             "participantCount" : 4,
@@ -5348,10 +5392,30 @@ paths:
                             "title" : "달빛페이 백엔드 1차 모의면접",
                             "jobPostingId" : 1,
                             "jobRoleId" : 2,
+                            "company" : {
+                              "companyId" : 1,
+                              "name" : "달빛페이"
+                            },
+                            "jobPosting" : {
+                              "jobPostingId" : 1,
+                              "postingName" : "백엔드 개발자 채용"
+                            },
+                            "jobRole" : {
+                              "jobRoleId" : 2,
+                              "code" : "BACKEND",
+                              "displayName" : "서버·백엔드"
+                            },
                             "interviewStage" : "FIRST",
+                            "interviewStageLabel" : "1차",
                             "interviewType" : "JOB",
+                            "interviewTypeLabel" : "직무 면접",
                             "meetingType" : "OFFLINE",
+                            "meetingTypeLabel" : "오프라인",
                             "sigunguId" : 1,
+                            "region" : {
+                              "sigunguId" : 1,
+                              "label" : "서울 강남구"
+                            },
                             "startAt" : "2026-08-20T19:00:00",
                             "durationMinutes" : 60,
                             "participantCount" : 4,
@@ -5365,10 +5429,30 @@ paths:
                             "title" : "달빛페이 백엔드 1차 모의면접",
                             "jobPostingId" : 1,
                             "jobRoleId" : 2,
+                            "company" : {
+                              "companyId" : 1,
+                              "name" : "달빛페이"
+                            },
+                            "jobPosting" : {
+                              "jobPostingId" : 1,
+                              "postingName" : "백엔드 개발자 채용"
+                            },
+                            "jobRole" : {
+                              "jobRoleId" : 2,
+                              "code" : "BACKEND",
+                              "displayName" : "서버·백엔드"
+                            },
                             "interviewStage" : "FIRST",
+                            "interviewStageLabel" : "1차",
                             "interviewType" : "JOB",
+                            "interviewTypeLabel" : "직무 면접",
                             "meetingType" : "OFFLINE",
+                            "meetingTypeLabel" : "오프라인",
                             "sigunguId" : 1,
+                            "region" : {
+                              "sigunguId" : 1,
+                              "label" : "서울 강남구"
+                            },
                             "startAt" : "2026-08-20T19:00:00",
                             "durationMinutes" : 60,
                             "participantCount" : 4,
@@ -5505,7 +5589,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 publicProfile-e400:
                   value: |-
@@ -5525,7 +5609,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 publicProfile-e1006:
                   value: |-
@@ -5619,18 +5703,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "1d0f0cc4-247d-4130-bf84-92d0adc7cadf"
+                    "resumeId" : "e0c6ef69-cb98-47b2-a5b3-aa0b9e8402bb"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "f088cc68-83c3-40ab-ace2-bb72c5ffa597",
+                    "resumeId" : "31107dd9-5d8e-456b-8d07-f208c5508fa2",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "52c3070c-7cb5-4f42-841a-2021928dddc3",
+                    "resumeId" : "aea00aee-d7e4-4cf6-985f-ea2b8db85b79",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -5639,7 +5723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitRoomApplication-e1010:
                   value: |-
@@ -5675,7 +5759,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitRoomApplication-e400-note-length:
                   value: |-
@@ -5724,7 +5808,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 cancelRoom-e1410:
                   value: |-
@@ -5784,7 +5868,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoomComments-e1419:
                   value: |-
@@ -5802,7 +5886,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoomComments-e400:
                   value: |-
@@ -5924,7 +6008,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e2101:
                   value: |-
@@ -5959,7 +6043,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e400:
                   value: |-
@@ -5977,7 +6061,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e1419:
                   value: |-
@@ -6027,7 +6111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoom-e1421:
                   value: |-
@@ -6155,7 +6239,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionCardSets-e1502:
                   value: |-
@@ -6173,7 +6257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionCardSets-e1102:
                   value: |-
@@ -6261,7 +6345,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationQuestion-e400-length:
                   value: |-
@@ -6306,7 +6390,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationQuestion-e1504:
                   value: |-
@@ -6381,7 +6465,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e1405:
                   value: |-
@@ -6399,7 +6483,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2004:
                   value: |-
@@ -6442,7 +6526,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2001:
                   value: |-
@@ -6460,7 +6544,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2002:
                   value: |-
@@ -6478,7 +6562,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e1102:
                   value: |-
@@ -6512,7 +6596,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e2001:
                   value: |-
@@ -6530,7 +6614,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e2002:
                   value: |-
@@ -6548,7 +6632,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e1405:
                   value: |-
@@ -6566,7 +6650,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e1102:
                   value: |-
@@ -6690,7 +6774,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2004:
                   value: |-
@@ -6746,7 +6830,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e1405:
                   value: |-
@@ -6764,7 +6848,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2001:
                   value: |-
@@ -6793,7 +6877,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e1102:
                   value: |-
@@ -6811,7 +6895,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2002:
                   value: |-
@@ -6847,7 +6931,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e1010:
                   value: |-
@@ -6865,7 +6949,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e400:
                   value: |-
@@ -6913,7 +6997,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e1102:
                   value: |-
@@ -6947,7 +7031,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e1010:
                   value: |-
@@ -6965,7 +7049,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e400:
                   value: |-
@@ -6985,7 +7069,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e1102:
                   value: |-
@@ -7044,7 +7128,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "5e00e41f-3bcb-4483-92aa-3d7171cfb621",
+                          "resumeId" : "a547acf0-3be4-4dde-8271-64750b6772b2",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7118,7 +7202,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2101:
                   value: |-
@@ -7136,7 +7220,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2102:
                   value: |-
@@ -7179,7 +7263,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2103:
                   value: |-
@@ -7349,7 +7433,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deletePreparationQuestion-e1508:
                   value: |-
@@ -7399,7 +7483,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 retryResumeSummary-e1013:
                   value: |-
@@ -7558,7 +7642,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 rejectApplication-e400-unknown-reason:
                   value: |-
@@ -7614,7 +7698,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationFollowUpQuestion-e1505:
                   value: |-
@@ -8131,234 +8215,6 @@ components:
                   description: 현재 라운드 면접자 회원 id
               nullable: true
           nullable: true
-    v1-members-me-rooms1592819168:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - completedRooms
-          - participatingRooms
-          - pendingApplications
-          type: object
-          properties:
-            pendingApplications:
-              type: array
-              description: 처리 대기 중인 참가 신청 (최근 신청 순)
-              items:
-                required:
-                - applicationId
-                - appliedAt
-                - resumeOriginalName
-                - room
-                type: object
-                properties:
-                  resumeOriginalName:
-                    type: string
-                    description: 신청에 제출한 이력서 원본 파일명
-                  applicationId:
-                    type: number
-                    description: 참가 신청 식별자
-                  room:
-                    required:
-                    - durationMinutes
-                    - interviewStage
-                    - jobPostingId
-                    - jobRoleId
-                    - maxParticipants
-                    - meetingType
-                    - participantCount
-                    - roomId
-                    - roomStatus
-                    - startAt
-                    - title
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                        description: 룸 제목
-                      meetingType:
-                        type: string
-                        description: 진행 방식 (ONLINE | OFFLINE)
-                      roomId:
-                        type: string
-                        description: 룸 식별자 (UUID)
-                      maxParticipants:
-                        type: number
-                        description: 최대 참여 인원
-                      roomStatus:
-                        type: string
-                        description: 룸 상태
-                      durationMinutes:
-                        type: number
-                        description: 진행 시간(분)
-                      sigunguId:
-                        type: number
-                        description: 오프라인 시군구 식별자. 값이 없으면 null
-                        nullable: true
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 식별자
-                      interviewType:
-                        type: string
-                        description: 면접 유형. 값이 없으면 null
-                        nullable: true
-                      participantCount:
-                        type: number
-                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
-                      jobRoleId:
-                        type: number
-                        description: 직무 식별자
-                      interviewStage:
-                        type: string
-                        description: 면접 단계
-                      startAt:
-                        type: string
-                        description: 시작 예정 시각
-                    description: 신청 대상 룸 요약
-                  appliedAt:
-                    type: string
-                    description: 신청 시각
-            participatingRooms:
-              type: array
-              description: 현재 참여 중인 룸 (가까운 일정 순)
-              items:
-                required:
-                - room
-                type: object
-                properties:
-                  room:
-                    required:
-                    - durationMinutes
-                    - interviewStage
-                    - jobPostingId
-                    - jobRoleId
-                    - maxParticipants
-                    - meetingType
-                    - participantCount
-                    - roomId
-                    - roomStatus
-                    - startAt
-                    - title
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                        description: 룸 제목
-                      meetingType:
-                        type: string
-                        description: 진행 방식 (ONLINE | OFFLINE)
-                      roomId:
-                        type: string
-                        description: 룸 식별자 (UUID)
-                      maxParticipants:
-                        type: number
-                        description: 최대 참여 인원
-                      roomStatus:
-                        type: string
-                        description: 룸 상태
-                      durationMinutes:
-                        type: number
-                        description: 진행 시간(분)
-                      sigunguId:
-                        type: number
-                        description: 오프라인 시군구 식별자. 값이 없으면 null
-                        nullable: true
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 식별자
-                      interviewType:
-                        type: string
-                        description: 면접 유형. 값이 없으면 null
-                        nullable: true
-                      participantCount:
-                        type: number
-                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
-                      jobRoleId:
-                        type: number
-                        description: 직무 식별자
-                      interviewStage:
-                        type: string
-                        description: 면접 단계
-                      startAt:
-                        type: string
-                        description: 시작 예정 시각
-                    description: 참여 중인 룸 요약
-            completedRooms:
-              type: array
-              description: 완료된 룸 (최근 일정 순)
-              items:
-                required:
-                - reviewStatus
-                - room
-                type: object
-                properties:
-                  reviewStatus:
-                    type: string
-                    description: 후기 상태 (WRITABLE | WRITTEN | NOT_ELIGIBLE_ABSENT |
-                      NOT_ELIGIBLE_NO_TARGET)
-                  room:
-                    required:
-                    - durationMinutes
-                    - interviewStage
-                    - jobPostingId
-                    - jobRoleId
-                    - maxParticipants
-                    - meetingType
-                    - participantCount
-                    - roomId
-                    - roomStatus
-                    - startAt
-                    - title
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                        description: 룸 제목
-                      meetingType:
-                        type: string
-                        description: 진행 방식 (ONLINE | OFFLINE)
-                      roomId:
-                        type: string
-                        description: 룸 식별자 (UUID)
-                      maxParticipants:
-                        type: number
-                        description: 최대 참여 인원
-                      roomStatus:
-                        type: string
-                        description: 룸 상태
-                      durationMinutes:
-                        type: number
-                        description: 진행 시간(분)
-                      sigunguId:
-                        type: number
-                        description: 오프라인 시군구 식별자. 값이 없으면 null
-                        nullable: true
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 식별자
-                      interviewType:
-                        type: string
-                        description: 면접 유형. 값이 없으면 null
-                        nullable: true
-                      participantCount:
-                        type: number
-                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
-                      jobRoleId:
-                        type: number
-                        description: 직무 식별자
-                      interviewStage:
-                        type: string
-                        description: 면접 단계
-                      startAt:
-                        type: string
-                        description: 시작 예정 시각
-                    description: 완료된 룸 요약
-          nullable: true
     v1-closing-questions-me-207387725:
       required:
       - result
@@ -8396,6 +8252,31 @@ components:
                     type: string
                     description: 질문 본문
           nullable: true
+    v1-attendances-me-438784568:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - memberId
+          - nickname
+          - status
+          type: object
+          properties:
+            nickname:
+              type: string
+              description: 로그인 회원 닉네임
+            status:
+              type: string
+              description: ATTENDED | ABSENT
+            memberId:
+              type: string
+              description: 로그인 회원 id
+          nullable: true
     v1-follow-up-questions-140122441:
       required:
       - result
@@ -8412,6 +8293,438 @@ components:
             questionId:
               type: number
               description: 생성된 꼬리질문 id
+          nullable: true
+    v1-members-me-rooms-257716809:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - completedRooms
+          - participatingRooms
+          - pendingApplications
+          type: object
+          properties:
+            pendingApplications:
+              type: array
+              description: 처리 대기 중인 참가 신청 (최근 신청 순)
+              items:
+                required:
+                - applicationId
+                - appliedAt
+                - resumeOriginalName
+                - room
+                type: object
+                properties:
+                  resumeOriginalName:
+                    type: string
+                    description: 신청에 제출한 이력서 원본 파일명
+                  applicationId:
+                    type: number
+                    description: 참가 신청 식별자
+                  room:
+                    required:
+                    - durationMinutes
+                    - interviewStage
+                    - interviewStageLabel
+                    - jobPostingId
+                    - jobRoleId
+                    - maxParticipants
+                    - meetingType
+                    - meetingTypeLabel
+                    - participantCount
+                    - roomId
+                    - roomStatus
+                    - startAt
+                    - title
+                    type: object
+                    properties:
+                      jobPosting:
+                        type: object
+                        properties:
+                          jobPostingId:
+                            type: number
+                            description: 채용 공고 id
+                            nullable: true
+                          postingName:
+                            type: string
+                            description: 채용 공고명
+                            nullable: true
+                        description: 채용 공고 (폐기됐으면 null)
+                        nullable: true
+                      interviewTypeLabel:
+                        type: string
+                        description: 면접 유형 표시명. 값이 없으면 null
+                        nullable: true
+                      title:
+                        type: string
+                        description: 룸 제목
+                      meetingType:
+                        type: string
+                        description: 진행 방식 (ONLINE | OFFLINE)
+                      roomId:
+                        type: string
+                        description: 룸 식별자 (UUID)
+                      maxParticipants:
+                        type: number
+                        description: 최대 참여 인원
+                      roomStatus:
+                        type: string
+                        description: 룸 상태
+                      durationMinutes:
+                        type: number
+                        description: 진행 시간(분)
+                      interviewStageLabel:
+                        type: string
+                        description: 면접 단계 표시명
+                      sigunguId:
+                        type: number
+                        description: 오프라인 시군구 식별자. 값이 없으면 null
+                        nullable: true
+                      meetingTypeLabel:
+                        type: string
+                        description: 진행 방식 표시명
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 식별자
+                      interviewType:
+                        type: string
+                        description: 면접 유형. 값이 없으면 null
+                        nullable: true
+                      participantCount:
+                        type: number
+                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
+                      jobRole:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            description: 직무 코드
+                            nullable: true
+                          displayName:
+                            type: string
+                            description: 직무 표시명
+                            nullable: true
+                          jobRoleId:
+                            type: number
+                            description: 직무 id
+                            nullable: true
+                        description: 직무 (폐기됐으면 null)
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 식별자
+                      company:
+                        type: object
+                        properties:
+                          companyId:
+                            type: number
+                            description: 회사 id
+                            nullable: true
+                          name:
+                            type: string
+                            description: 회사명
+                            nullable: true
+                        description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                        nullable: true
+                      interviewStage:
+                        type: string
+                        description: 면접 단계
+                      region:
+                        type: object
+                        properties:
+                          sigunguId:
+                            type: number
+                            description: 지역 시군구 id
+                            nullable: true
+                          label:
+                            type: string
+                            description: 지역 표시명
+                            nullable: true
+                        description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                        nullable: true
+                      startAt:
+                        type: string
+                        description: 시작 예정 시각
+                    description: 신청 대상 룸 요약
+                  appliedAt:
+                    type: string
+                    description: 신청 시각
+            participatingRooms:
+              type: array
+              description: 현재 참여 중인 룸 (가까운 일정 순)
+              items:
+                required:
+                - room
+                type: object
+                properties:
+                  room:
+                    required:
+                    - durationMinutes
+                    - interviewStage
+                    - interviewStageLabel
+                    - jobPostingId
+                    - jobRoleId
+                    - maxParticipants
+                    - meetingType
+                    - meetingTypeLabel
+                    - participantCount
+                    - roomId
+                    - roomStatus
+                    - startAt
+                    - title
+                    type: object
+                    properties:
+                      jobPosting:
+                        type: object
+                        properties:
+                          jobPostingId:
+                            type: number
+                            description: 채용 공고 id
+                            nullable: true
+                          postingName:
+                            type: string
+                            description: 채용 공고명
+                            nullable: true
+                        description: 채용 공고 (폐기됐으면 null)
+                        nullable: true
+                      interviewTypeLabel:
+                        type: string
+                        description: 면접 유형 표시명. 값이 없으면 null
+                        nullable: true
+                      title:
+                        type: string
+                        description: 룸 제목
+                      meetingType:
+                        type: string
+                        description: 진행 방식 (ONLINE | OFFLINE)
+                      roomId:
+                        type: string
+                        description: 룸 식별자 (UUID)
+                      maxParticipants:
+                        type: number
+                        description: 최대 참여 인원
+                      roomStatus:
+                        type: string
+                        description: 룸 상태
+                      durationMinutes:
+                        type: number
+                        description: 진행 시간(분)
+                      interviewStageLabel:
+                        type: string
+                        description: 면접 단계 표시명
+                      sigunguId:
+                        type: number
+                        description: 오프라인 시군구 식별자. 값이 없으면 null
+                        nullable: true
+                      meetingTypeLabel:
+                        type: string
+                        description: 진행 방식 표시명
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 식별자
+                      interviewType:
+                        type: string
+                        description: 면접 유형. 값이 없으면 null
+                        nullable: true
+                      participantCount:
+                        type: number
+                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
+                      jobRole:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            description: 직무 코드
+                            nullable: true
+                          displayName:
+                            type: string
+                            description: 직무 표시명
+                            nullable: true
+                          jobRoleId:
+                            type: number
+                            description: 직무 id
+                            nullable: true
+                        description: 직무 (폐기됐으면 null)
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 식별자
+                      company:
+                        type: object
+                        properties:
+                          companyId:
+                            type: number
+                            description: 회사 id
+                            nullable: true
+                          name:
+                            type: string
+                            description: 회사명
+                            nullable: true
+                        description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                        nullable: true
+                      interviewStage:
+                        type: string
+                        description: 면접 단계
+                      region:
+                        type: object
+                        properties:
+                          sigunguId:
+                            type: number
+                            description: 지역 시군구 id
+                            nullable: true
+                          label:
+                            type: string
+                            description: 지역 표시명
+                            nullable: true
+                        description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                        nullable: true
+                      startAt:
+                        type: string
+                        description: 시작 예정 시각
+                    description: 참여 중인 룸 요약
+            completedRooms:
+              type: array
+              description: 완료된 룸 (최근 일정 순)
+              items:
+                required:
+                - reviewStatus
+                - room
+                type: object
+                properties:
+                  reviewStatus:
+                    type: string
+                    description: 후기 상태 (WRITABLE | WRITTEN | NOT_ELIGIBLE_ABSENT |
+                      NOT_ELIGIBLE_NO_TARGET)
+                  room:
+                    required:
+                    - durationMinutes
+                    - interviewStage
+                    - interviewStageLabel
+                    - jobPostingId
+                    - jobRoleId
+                    - maxParticipants
+                    - meetingType
+                    - meetingTypeLabel
+                    - participantCount
+                    - roomId
+                    - roomStatus
+                    - startAt
+                    - title
+                    type: object
+                    properties:
+                      jobPosting:
+                        type: object
+                        properties:
+                          jobPostingId:
+                            type: number
+                            description: 채용 공고 id
+                            nullable: true
+                          postingName:
+                            type: string
+                            description: 채용 공고명
+                            nullable: true
+                        description: 채용 공고 (폐기됐으면 null)
+                        nullable: true
+                      interviewTypeLabel:
+                        type: string
+                        description: 면접 유형 표시명. 값이 없으면 null
+                        nullable: true
+                      title:
+                        type: string
+                        description: 룸 제목
+                      meetingType:
+                        type: string
+                        description: 진행 방식 (ONLINE | OFFLINE)
+                      roomId:
+                        type: string
+                        description: 룸 식별자 (UUID)
+                      maxParticipants:
+                        type: number
+                        description: 최대 참여 인원
+                      roomStatus:
+                        type: string
+                        description: 룸 상태
+                      durationMinutes:
+                        type: number
+                        description: 진행 시간(분)
+                      interviewStageLabel:
+                        type: string
+                        description: 면접 단계 표시명
+                      sigunguId:
+                        type: number
+                        description: 오프라인 시군구 식별자. 값이 없으면 null
+                        nullable: true
+                      meetingTypeLabel:
+                        type: string
+                        description: 진행 방식 표시명
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 식별자
+                      interviewType:
+                        type: string
+                        description: 면접 유형. 값이 없으면 null
+                        nullable: true
+                      participantCount:
+                        type: number
+                        description: "표시 참여 인원 (신청·참여 중은 현재 인원, 완료는 실제 출석 인원)"
+                      jobRole:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            description: 직무 코드
+                            nullable: true
+                          displayName:
+                            type: string
+                            description: 직무 표시명
+                            nullable: true
+                          jobRoleId:
+                            type: number
+                            description: 직무 id
+                            nullable: true
+                        description: 직무 (폐기됐으면 null)
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 식별자
+                      company:
+                        type: object
+                        properties:
+                          companyId:
+                            type: number
+                            description: 회사 id
+                            nullable: true
+                          name:
+                            type: string
+                            description: 회사명
+                            nullable: true
+                        description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                        nullable: true
+                      interviewStage:
+                        type: string
+                        description: 면접 단계
+                      region:
+                        type: object
+                        properties:
+                          sigunguId:
+                            type: number
+                            description: 지역 시군구 id
+                            nullable: true
+                          label:
+                            type: string
+                            description: 지역 표시명
+                            nullable: true
+                        description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                        nullable: true
+                      startAt:
+                        type: string
+                        description: 시작 예정 시각
+                    description: 완료된 룸 요약
           nullable: true
     post-1780624183:
       required:
@@ -8433,7 +8746,7 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
-    v1-rooms-roomId-1165715694:
+    v1-rooms-roomId-593421515:
       required:
       - result
       type: object
@@ -8448,6 +8761,7 @@ components:
           - jobPostingId
           - jobRoleId
           - method
+          - methodLabel
           - resumePublic
           - roomId
           - round
@@ -8501,6 +8815,19 @@ components:
             description:
               type: string
               description: 룸 설명 (선택)
+              nullable: true
+            jobPosting:
+              type: object
+              properties:
+                jobPostingId:
+                  type: number
+                  description: 채용 공고 id
+                  nullable: true
+                postingName:
+                  type: string
+                  description: 채용 공고명
+                  nullable: true
+              description: 채용 공고 (폐기됐으면 null)
               nullable: true
             confirmation:
               required:
@@ -8565,6 +8892,7 @@ components:
               - min
               - pendingApplicationCount
               - recruitStatus
+              - recruitStatusLabel
               type: object
               properties:
                 current:
@@ -8582,6 +8910,29 @@ components:
                 recruitStatus:
                   type: string
                   description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                recruitStatusLabel:
+                  type: string
+                  description: 모집 상태 표시명 (모집 중 | 모집 마감)
+              nullable: true
+            methodLabel:
+              type: string
+              description: 진행 방식 표시명
+            jobRole:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 직무 코드
+                  nullable: true
+                displayName:
+                  type: string
+                  description: 직무 표시명
+                  nullable: true
+                jobRoleId:
+                  type: number
+                  description: 직무 id
+                  nullable: true
+              description: 직무 (폐기됐으면 null)
               nullable: true
             jobRoleId:
               type: number
@@ -8590,12 +8941,39 @@ components:
               type: string
               description: 면접 유형 표시명 (선택)
               nullable: true
+            company:
+              type: object
+              properties:
+                companyId:
+                  type: number
+                  description: 회사 id
+                  nullable: true
+                name:
+                  type: string
+                  description: 회사명
+                  nullable: true
+              description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+              nullable: true
+            region:
+              type: object
+              properties:
+                sigunguId:
+                  type: number
+                  description: 지역 시군구 id
+                  nullable: true
+                label:
+                  type: string
+                  description: 지역 표시명
+                  nullable: true
+              description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+              nullable: true
             roundLabel:
               type: string
               description: 면접 회차 표시명
             status:
               type: string
-              description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
+              description: 룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED
+                | CANCELED)
           nullable: true
     v1-rooms-roomId-reviews-1785905513:
       required:
@@ -9150,6 +9528,47 @@ components:
               type: string
               description: 회원 식별자 (UUID)
           nullable: true
+    v1-room-progresses612761132:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - attendances
+          - hostMemberId
+          - status
+          type: object
+          properties:
+            hostMemberId:
+              type: string
+              description: 진행을 시작한 방장 회원 id
+            attendances:
+              type: array
+              description: 확정된 출석 목록
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+                  status:
+                    type: string
+                    description: ATTENDED | ABSENT
+                  memberId:
+                    type: string
+                    description: 참여자 회원 id
+            status:
+              type: string
+              description: 시작 후 룸 상태 (IN_PROGRESS)
+          nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
       - content
@@ -9255,7 +9674,7 @@ components:
               description: "자가 피드백, 작성하지 않았으면 null"
               nullable: true
           nullable: true
-    v1-reviews-reviewId910352763:
+    v1-rooms-creation-limit910352763:
       required:
       - result
       type: object
@@ -9366,43 +9785,6 @@ components:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
           nullable: true
-    v1-room-progresses-1064909895:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - attendances
-          - hostMemberId
-          - status
-          type: object
-          properties:
-            hostMemberId:
-              type: string
-              description: 진행을 시작한 방장 회원 id
-            attendances:
-              type: array
-              description: 확정된 출석 목록
-              items:
-                required:
-                - memberId
-                - status
-                type: object
-                properties:
-                  status:
-                    type: string
-                    description: ATTENDED | ABSENT
-                  memberId:
-                    type: string
-                    description: 참여자 회원 id
-            status:
-              type: string
-              description: 시작 후 룸 상태 (IN_PROGRESS)
-          nullable: true
     v1-companies1839974379:
       required:
       - result
@@ -9456,22 +9838,6 @@ components:
           nullable: true
           items:
             type: number
-    v1-questions-questionId496267733:
-      required:
-      - asked
-      - intervieweeMemberId
-      - roomId
-      type: object
-      properties:
-        intervieweeMemberId:
-          type: string
-          description: 라운드 면접자 회원 id (UUID)
-        asked:
-          type: boolean
-          description: "질문했으면 true, 되돌리면 false"
-        roomId:
-          type: string
-          description: 룸 id (UUID)
     v1-rooms-roomId-applications-me2061746466:
       required:
       - result
@@ -9549,6 +9915,22 @@ components:
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
           nullable: true
+    v1-questions-questionId496267733:
+      required:
+      - asked
+      - intervieweeMemberId
+      - roomId
+      type: object
+      properties:
+        intervieweeMemberId:
+          type: string
+          description: 라운드 면접자 회원 id (UUID)
+        asked:
+          type: boolean
+          description: "질문했으면 true, 되돌리면 false"
+        roomId:
+          type: string
+          description: 룸 id (UUID)
     v1-members-memberId-profile655149006:
       required:
       - result
@@ -10260,49 +10642,6 @@ components:
               type: string
               description: 신청 상태 (ACCEPTED | SLOT_EXCEEDED)
           nullable: true
-    v1-reviews-reviewId1003704379:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - anonymous
-          - reviewId
-          - roomId
-          - tags
-          - targetMemberId
-          type: object
-          properties:
-            targetMemberId:
-              type: string
-              description: 후기 대상 회원 id
-            anonymous:
-              type: boolean
-              description: 익명 작성 여부
-            reviewId:
-              type: number
-              description: 후기 id
-            content:
-              type: string
-              description: 한 줄 후기 (null 가능)
-              nullable: true
-            roomId:
-              type: string
-              description: 후기가 작성된 룸 id
-            tags:
-              type: array
-              description: 평가 태그 (빈 배열 가능)
-              items:
-                oneOf:
-                - type: object
-                - type: boolean
-                - type: string
-                - type: number
-          nullable: true
     v1-members-me-web-push-subscriptions1250153706:
       required:
       - registration
@@ -10488,6 +10827,53 @@ components:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
+          nullable: true
+    v1-reviews-reviewId20839761:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - anonymous
+          - reviewId
+          - roomId
+          - tags
+          - targetMemberId
+          - targetNickname
+          type: object
+          properties:
+            targetMemberId:
+              type: string
+              description: 후기 대상 회원 id
+            anonymous:
+              type: boolean
+              description: 익명 작성 여부
+            reviewId:
+              type: number
+              description: 후기 id
+            content:
+              type: string
+              description: 한 줄 후기 (null 가능)
+              nullable: true
+            targetNickname:
+              type: string
+              description: 후기 대상 회원 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+            roomId:
+              type: string
+              description: 후기가 작성된 룸 id
+            tags:
+              type: array
+              description: 평가 태그 (빈 배열 가능)
+              items:
+                oneOf:
+                - type: object
+                - type: boolean
+                - type: string
+                - type: number
           nullable: true
     v1-rooms1476531183:
       required:
@@ -10784,27 +11170,6 @@ components:
             totalCount:
               type: number
               description: 공개 가능한 받은 후기 전체 수
-          nullable: true
-    v1-attendances-me427868787:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - memberId
-          - status
-          type: object
-          properties:
-            status:
-              type: string
-              description: ATTENDED | ABSENT
-            memberId:
-              type: string
-              description: 로그인 회원 id
           nullable: true
     v1-job-postings-search1628359421:
       required:
