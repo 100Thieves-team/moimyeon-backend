@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T13:58:36.089230222",
+                        "datetime" : "2026-08-31T14:13:42.452703379",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T13:58:36.123061495",
+                        "datetime" : "2026-08-31T14:13:42.495553636",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -1740,7 +1740,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms16270181"
+                $ref: "#/components/schemas/v1-rooms501055666"
               examples:
                 rooms:
                   value: |-
@@ -1776,8 +1776,7 @@ paths:
                           "schedule" : {
                             "date" : "2026-09-05",
                             "startTime" : "14:00",
-                            "durationMinutes" : 90,
-                            "isPassed" : false
+                            "durationMinutes" : 90
                           },
                           "recruit" : {
                             "current" : 3,
@@ -2387,7 +2386,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "a4f3e608-1c23-4fdb-80bc-4d269f02ef65",
+                          "termsId" : "8ec897ba-2054-49d4-ad82-7f38304797ff",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2395,7 +2394,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "8a67a3fc-de02-4b14-a51a-2c4029e73fbe",
+                          "termsId" : "4f55475e-f6f4-44ca-a0cf-740334856cf7",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3170,12 +3169,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "994c084d-b8c5-45fb-9b61-9d1b6ac3e103",
+                        "memberId" : "779faa5f-b63e-4b29-afc8-33d00f3edfaf",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "994c084d-b8c5-45fb-9b61-9d1b6ac3e103",
+                          "memberId" : "779faa5f-b63e-4b29-afc8-33d00f3edfaf",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4612,7 +4611,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId2047243921"
+                $ref: "#/components/schemas/v1-rooms-roomId1048010400"
               examples:
                 roomDetail:
                   value: |-
@@ -4647,9 +4646,8 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-01T13:58:41.88342754",
-                          "durationMinutes" : 90,
-                          "isPassed" : false
+                          "startAt" : "2026-09-01T14:13:49.810132535",
+                          "durationMinutes" : 90
                         },
                         "recruit" : {
                           "current" : 1,
@@ -4660,7 +4658,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "f09b3bc0-34a4-4ffb-b159-13932a64b87d",
+                        "hostMemberId" : "766d9b3b-b541-4c56-a8df-5daa06a538d8",
                         "viewer" : {
                           "isHost" : false,
                           "isParticipating" : false,
@@ -4966,7 +4964,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "fc1069e1-4ab6-472d-ab40-168f30ef367e",
+                        "memberId" : "86348c3a-3e1f-434a-b9d8-79a101eceed0",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5719,18 +5717,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "6a72996c-26e3-483e-a033-13c33583d0e7"
+                    "resumeId" : "35627b17-b2a1-4f0a-8aad-2282b85a812d"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "2412a492-67b6-461c-90c1-8a41cebf4677",
+                    "resumeId" : "660ac173-6483-4d14-82dc-e556fb19674d",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "2070bdfd-b098-4a57-8a8a-064e688457aa",
+                    "resumeId" : "5d6f6475-31d3-47e2-8788-3c62dd4c2dd0",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -7144,7 +7142,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "9f05a0d1-01c8-488e-adee-7ccf5f65ca40",
+                          "resumeId" : "ce8786c5-91fc-4198-b0be-05974bd7ebd4",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -8007,7 +8005,7 @@ components:
         content:
           type: string
           description: "글 내용 (trim 후 1~1000자, 텍스트만)"
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -8310,14 +8308,6 @@ components:
               type: number
               description: 생성된 꼬리질문 id
           nullable: true
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-members-me-rooms-257716809:
       required:
       - result
@@ -8750,6 +8740,14 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -8762,232 +8760,6 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
-    v1-rooms-roomId2047243921:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - hostMemberId
-          - method
-          - methodLabel
-          - resumePublic
-          - roomId
-          - round
-          - roundLabel
-          - status
-          - title
-          type: object
-          properties:
-            viewer:
-              type: object
-              properties:
-                latestApplicationStatus:
-                  type: string
-                  description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
-                    | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
-                    신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저
-                    봐야 한다
-                  nullable: true
-                isParticipating:
-                  type: boolean
-                  description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
-                  nullable: true
-                isHost:
-                  type: boolean
-                  description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
-                  nullable: true
-                hasRemovalHistory:
-                  type: boolean
-                  description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
-                  nullable: true
-                member:
-                  type: object
-                  properties:
-                    pendingApplicationQuota:
-                      type: object
-                      properties:
-                        limit:
-                          type: number
-                          description: 대기 신청 한도
-                          nullable: true
-                        occupied:
-                          type: number
-                          description: 처리 대기 중인 내 신청 수
-                          nullable: true
-                      description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
-                      nullable: true
-                    participationSlots:
-                      type: object
-                      properties:
-                        limit:
-                          type: number
-                          description: 참여 슬롯 한도
-                          nullable: true
-                        occupied:
-                          type: number
-                          description: 참여 중인 룸 수 (방장 포함)
-                          nullable: true
-                      description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
-                      nullable: true
-                    isActive:
-                      type: boolean
-                      description: 이용 제한(제재) 중이면 false
-                      nullable: true
-                  description: 룸과 무관한 회원 축 사실
-                  nullable: true
-              description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, 신청 가\
-                능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415\
-                \ | E1416 | E1425)이 전담한다"
-              nullable: true
-            hostMemberId:
-              type: string
-              description: 방장 회원 식별자 (UUID)
-            resumePublic:
-              type: boolean
-              description: 이력서 원본 공개 여부 (룸 속성)
-            method:
-              type: string
-              description: 진행 방식 (ONLINE | OFFLINE)
-            description:
-              type: string
-              description: 룸 설명 (선택)
-              nullable: true
-            jobPosting:
-              type: object
-              properties:
-                jobPostingId:
-                  type: number
-                  description: 채용 공고 id
-                  nullable: true
-                postingName:
-                  type: string
-                  description: 채용 공고명
-                  nullable: true
-              description: 채용 공고 (폐기됐으면 null)
-              nullable: true
-            type:
-              type: string
-              description: 면접 유형 (선택)
-              nullable: true
-            title:
-              type: string
-              description: 룸 제목
-            roomId:
-              type: string
-              description: 룸 id (UUID)
-            schedule:
-              required:
-              - durationMinutes
-              - isPassed
-              - startAt
-              type: object
-              properties:
-                durationMinutes:
-                  type: number
-                  description: 예상 소요 시간(분)
-                isPassed:
-                  type: boolean
-                  description: 진행 일정 경과 여부 (서버 시각 기준). 신청·확정 검증과 같은 술어라 클라이언트 시계로
-                    재계산하지 않는다
-                startAt:
-                  type: string
-                  description: 진행 시작 일시 (ISO-8601)
-              nullable: true
-            round:
-              type: string
-              description: 면접 회차 (FIRST | SECOND | THIRD | ETC)
-            recruit:
-              required:
-              - current
-              - max
-              - min
-              - pendingApplicationCount
-              - recruitStatus
-              - recruitStatusLabel
-              type: object
-              properties:
-                current:
-                  type: number
-                  description: "현재 인원 (활성 참여 수, 방장 포함)"
-                min:
-                  type: number
-                  description: 최소 인원
-                pendingApplicationCount:
-                  type: number
-                  description: 대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다
-                max:
-                  type: number
-                  description: 최대 인원
-                recruitStatus:
-                  type: string
-                  description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
-                recruitStatusLabel:
-                  type: string
-                  description: 모집 상태 표시명 (모집 중 | 모집 마감)
-              nullable: true
-            methodLabel:
-              type: string
-              description: 진행 방식 표시명
-            jobRole:
-              type: object
-              properties:
-                code:
-                  type: string
-                  description: 직무 코드
-                  nullable: true
-                displayName:
-                  type: string
-                  description: 직무 표시명
-                  nullable: true
-                jobRoleId:
-                  type: number
-                  description: 직무 id
-                  nullable: true
-              description: 직무 (폐기됐으면 null)
-              nullable: true
-            typeLabel:
-              type: string
-              description: 면접 유형 표시명 (선택)
-              nullable: true
-            company:
-              type: object
-              properties:
-                companyId:
-                  type: number
-                  description: 회사 id
-                  nullable: true
-                name:
-                  type: string
-                  description: 회사명
-                  nullable: true
-              description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
-              nullable: true
-            region:
-              type: object
-              properties:
-                sigunguId:
-                  type: number
-                  description: 지역 시군구 id
-                  nullable: true
-                label:
-                  type: string
-                  description: 지역 표시명
-                  nullable: true
-              description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
-              nullable: true
-            roundLabel:
-              type: string
-              description: 면접 회차 표시명
-            status:
-              type: string
-              description: 룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED
-                | CANCELED)
-          nullable: true
     v1-rooms-roomId-reviews-1785905513:
       required:
       - result
@@ -9076,235 +8848,6 @@ components:
             feedbackId:
               type: number
               description: 저장된 자가 피드백 id
-          nullable: true
-    v1-rooms16270181:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - rooms
-          - sort
-          - totalCount
-          type: object
-          properties:
-            nextCursor:
-              type: string
-              description: 다음 페이지 커서. 마지막 페이지면 null
-              nullable: true
-            rooms:
-              type: array
-              description: 룸 목록
-              items:
-                required:
-                - method
-                - methodLabel
-                - roomId
-                - round
-                - roundLabel
-                - title
-                type: object
-                properties:
-                  viewer:
-                    type: object
-                    properties:
-                      latestApplicationStatus:
-                        type: string
-                        description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
-                          | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
-                          신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory
-                          를 먼저 봐야 한다
-                        nullable: true
-                      isParticipating:
-                        type: boolean
-                        description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
-                        nullable: true
-                      isHost:
-                        type: boolean
-                        description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
-                        nullable: true
-                      hasRemovalHistory:
-                        type: boolean
-                        description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
-                        nullable: true
-                      member:
-                        type: object
-                        properties:
-                          pendingApplicationQuota:
-                            type: object
-                            properties:
-                              limit:
-                                type: number
-                                description: 대기 신청 한도
-                                nullable: true
-                              occupied:
-                                type: number
-                                description: 처리 대기 중인 내 신청 수
-                                nullable: true
-                            description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
-                            nullable: true
-                          participationSlots:
-                            type: object
-                            properties:
-                              limit:
-                                type: number
-                                description: 참여 슬롯 한도
-                                nullable: true
-                              occupied:
-                                type: number
-                                description: 참여 중인 룸 수 (방장 포함)
-                                nullable: true
-                            description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
-                            nullable: true
-                          isActive:
-                            type: boolean
-                            description: 이용 제한(제재) 중이면 false
-                            nullable: true
-                        description: 룸과 무관한 회원 축 사실
-                        nullable: true
-                    description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고\
-                      , 신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413\
-                      \ | E1415 | E1416 | E1425)이 전담한다"
-                    nullable: true
-                  method:
-                    type: string
-                    description: 진행 방식 코드 (ONLINE | OFFLINE)
-                  jobPosting:
-                    type: object
-                    properties:
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 id
-                        nullable: true
-                      postingName:
-                        type: string
-                        description: 채용 공고명
-                        nullable: true
-                    description: 채용 공고 (폐기됐으면 null)
-                    nullable: true
-                  type:
-                    type: string
-                    description: 면접 유형 코드 (선택)
-                    nullable: true
-                  title:
-                    type: string
-                    description: 룸 제목
-                  roomId:
-                    type: string
-                    description: 룸 id (UUID)
-                  schedule:
-                    required:
-                    - date
-                    - durationMinutes
-                    - isPassed
-                    - startTime
-                    type: object
-                    properties:
-                      date:
-                        type: string
-                        description: 진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다
-                      durationMinutes:
-                        type: number
-                        description: 예상 소요 시간(분)
-                      isPassed:
-                        type: boolean
-                        description: 진행 일정 경과 여부 (서버 시각 기준). 클라이언트 시계로 재계산하지 않는다 —
-                          신청 API 와 어긋난다
-                      startTime:
-                        type: string
-                        description: 시작 시각 (HH:mm)
-                    nullable: true
-                  round:
-                    type: string
-                    description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
-                  recruit:
-                    required:
-                    - current
-                    - max
-                    - pending
-                    - recruitStatus
-                    - recruitStatusLabel
-                    type: object
-                    properties:
-                      current:
-                        type: number
-                        description: 현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)
-                      max:
-                        type: number
-                        description: 최대 인원
-                      pending:
-                        type: number
-                        description: 대기 중인 참가 신청 수
-                      recruitStatus:
-                        type: string
-                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
-                      recruitStatusLabel:
-                        type: string
-                        description: 모집 상태 표시명
-                    nullable: true
-                  methodLabel:
-                    type: string
-                    description: 진행 방식 표시명
-                  jobRole:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        description: 직무 코드
-                        nullable: true
-                      displayName:
-                        type: string
-                        description: 직무 표시명
-                        nullable: true
-                      jobRoleId:
-                        type: number
-                        description: 직무 id
-                        nullable: true
-                    description: 직무 (폐기됐으면 null)
-                    nullable: true
-                  typeLabel:
-                    type: string
-                    description: 면접 유형 표시명 (선택)
-                    nullable: true
-                  company:
-                    type: object
-                    properties:
-                      companyId:
-                        type: number
-                        description: 회사 id
-                        nullable: true
-                      name:
-                        type: string
-                        description: 회사명
-                        nullable: true
-                    description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
-                    nullable: true
-                  region:
-                    type: object
-                    properties:
-                      sigunguId:
-                        type: number
-                        description: 지역 시군구 id
-                        nullable: true
-                      label:
-                        type: string
-                        description: 지역 표시명
-                        nullable: true
-                    description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
-                    nullable: true
-                  roundLabel:
-                    type: string
-                    description: 면접 단계 표시명
-            sort:
-              type: string
-              description: 실제로 적용된 정렬
-            totalCount:
-              type: number
-              description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
           nullable: true
     v1-auth-dev-sessions1490138447:
       required:
@@ -9705,6 +9248,47 @@ components:
                     description: 대표 직무명 (선택)
                     nullable: true
           nullable: true
+    v1-room-progresses612761132:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - attendances
+          - hostMemberId
+          - status
+          type: object
+          properties:
+            hostMemberId:
+              type: string
+              description: 진행을 시작한 방장 회원 id
+            attendances:
+              type: array
+              description: 확정된 출석 목록
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+                  status:
+                    type: string
+                    description: ATTENDED | ABSENT
+                  memberId:
+                    type: string
+                    description: 참여자 회원 id
+            status:
+              type: string
+              description: 시작 후 룸 상태 (IN_PROGRESS)
+          nullable: true
     v1-members-me1349704155:
       required:
       - result
@@ -9769,47 +9353,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-          nullable: true
-    v1-room-progresses612761132:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - attendances
-          - hostMemberId
-          - status
-          type: object
-          properties:
-            hostMemberId:
-              type: string
-              description: 진행을 시작한 방장 회원 id
-            attendances:
-              type: array
-              description: 확정된 출석 목록
-              items:
-                required:
-                - memberId
-                - nickname
-                - status
-                type: object
-                properties:
-                  nickname:
-                    type: string
-                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
-                  status:
-                    type: string
-                    description: ATTENDED | ABSENT
-                  memberId:
-                    type: string
-                    description: 참여자 회원 id
-            status:
-              type: string
-              description: 시작 후 룸 상태 (IN_PROGRESS)
           nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
@@ -10027,6 +9570,30 @@ components:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
           nullable: true
+    v1-members-me-profile466680720:
+      required:
+      - nickname
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-companies1839974379:
       required:
       - result
@@ -10056,30 +9623,6 @@ components:
                     type: string
                     description: 회사명
           nullable: true
-    v1-members-me-profile466680720:
-      required:
-      - nickname
-      type: object
-      properties:
-        nickname:
-          type: string
-          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-questions-questionId496267733:
       required:
       - asked
@@ -10649,6 +10192,227 @@ components:
         url:
           type: string
           description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
+    v1-rooms-roomId1048010400:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - hostMemberId
+          - method
+          - methodLabel
+          - resumePublic
+          - roomId
+          - round
+          - roundLabel
+          - status
+          - title
+          type: object
+          properties:
+            viewer:
+              type: object
+              properties:
+                latestApplicationStatus:
+                  type: string
+                  description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
+                    | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
+                    신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저
+                    봐야 한다
+                  nullable: true
+                isParticipating:
+                  type: boolean
+                  description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
+                  nullable: true
+                isHost:
+                  type: boolean
+                  description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
+                  nullable: true
+                hasRemovalHistory:
+                  type: boolean
+                  description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
+                  nullable: true
+                member:
+                  type: object
+                  properties:
+                    pendingApplicationQuota:
+                      type: object
+                      properties:
+                        limit:
+                          type: number
+                          description: 대기 신청 한도
+                          nullable: true
+                        occupied:
+                          type: number
+                          description: 처리 대기 중인 내 신청 수
+                          nullable: true
+                      description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
+                      nullable: true
+                    participationSlots:
+                      type: object
+                      properties:
+                        limit:
+                          type: number
+                          description: 참여 슬롯 한도
+                          nullable: true
+                        occupied:
+                          type: number
+                          description: 참여 중인 룸 수 (방장 포함)
+                          nullable: true
+                      description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
+                      nullable: true
+                    isActive:
+                      type: boolean
+                      description: 이용 제한(제재) 중이면 false
+                      nullable: true
+                  description: 룸과 무관한 회원 축 사실
+                  nullable: true
+              description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, 신청 가\
+                능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415\
+                \ | E1416 | E1425)이 전담한다"
+              nullable: true
+            hostMemberId:
+              type: string
+              description: 방장 회원 식별자 (UUID)
+            resumePublic:
+              type: boolean
+              description: 이력서 원본 공개 여부 (룸 속성)
+            method:
+              type: string
+              description: 진행 방식 (ONLINE | OFFLINE)
+            description:
+              type: string
+              description: 룸 설명 (선택)
+              nullable: true
+            jobPosting:
+              type: object
+              properties:
+                jobPostingId:
+                  type: number
+                  description: 채용 공고 id
+                  nullable: true
+                postingName:
+                  type: string
+                  description: 채용 공고명
+                  nullable: true
+              description: 채용 공고 (폐기됐으면 null)
+              nullable: true
+            type:
+              type: string
+              description: 면접 유형 (선택)
+              nullable: true
+            title:
+              type: string
+              description: 룸 제목
+            roomId:
+              type: string
+              description: 룸 id (UUID)
+            schedule:
+              required:
+              - durationMinutes
+              - startAt
+              type: object
+              properties:
+                durationMinutes:
+                  type: number
+                  description: 예상 소요 시간(분)
+                startAt:
+                  type: string
+                  description: 진행 시작 일시 (ISO-8601)
+              nullable: true
+            round:
+              type: string
+              description: 면접 회차 (FIRST | SECOND | THIRD | ETC)
+            recruit:
+              required:
+              - current
+              - max
+              - min
+              - pendingApplicationCount
+              - recruitStatus
+              - recruitStatusLabel
+              type: object
+              properties:
+                current:
+                  type: number
+                  description: "현재 인원 (활성 참여 수, 방장 포함)"
+                min:
+                  type: number
+                  description: 최소 인원
+                pendingApplicationCount:
+                  type: number
+                  description: 대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다
+                max:
+                  type: number
+                  description: 최대 인원
+                recruitStatus:
+                  type: string
+                  description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                recruitStatusLabel:
+                  type: string
+                  description: 모집 상태 표시명 (모집 중 | 모집 마감)
+              nullable: true
+            methodLabel:
+              type: string
+              description: 진행 방식 표시명
+            jobRole:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 직무 코드
+                  nullable: true
+                displayName:
+                  type: string
+                  description: 직무 표시명
+                  nullable: true
+                jobRoleId:
+                  type: number
+                  description: 직무 id
+                  nullable: true
+              description: 직무 (폐기됐으면 null)
+              nullable: true
+            typeLabel:
+              type: string
+              description: 면접 유형 표시명 (선택)
+              nullable: true
+            company:
+              type: object
+              properties:
+                companyId:
+                  type: number
+                  description: 회사 id
+                  nullable: true
+                name:
+                  type: string
+                  description: 회사명
+                  nullable: true
+              description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+              nullable: true
+            region:
+              type: object
+              properties:
+                sigunguId:
+                  type: number
+                  description: 지역 시군구 id
+                  nullable: true
+                label:
+                  type: string
+                  description: 지역 표시명
+                  nullable: true
+              description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+              nullable: true
+            roundLabel:
+              type: string
+              description: 면접 회차 표시명
+            status:
+              type: string
+              description: 룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED
+                | CANCELED)
+          nullable: true
     v1-nicknames-suggestion679533277:
       required:
       - result
@@ -11116,6 +10880,230 @@ components:
                 - type: boolean
                 - type: string
                 - type: number
+          nullable: true
+    v1-rooms501055666:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - rooms
+          - sort
+          - totalCount
+          type: object
+          properties:
+            nextCursor:
+              type: string
+              description: 다음 페이지 커서. 마지막 페이지면 null
+              nullable: true
+            rooms:
+              type: array
+              description: 룸 목록
+              items:
+                required:
+                - method
+                - methodLabel
+                - roomId
+                - round
+                - roundLabel
+                - title
+                type: object
+                properties:
+                  viewer:
+                    type: object
+                    properties:
+                      latestApplicationStatus:
+                        type: string
+                        description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
+                          | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
+                          신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory
+                          를 먼저 봐야 한다
+                        nullable: true
+                      isParticipating:
+                        type: boolean
+                        description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
+                        nullable: true
+                      isHost:
+                        type: boolean
+                        description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
+                        nullable: true
+                      hasRemovalHistory:
+                        type: boolean
+                        description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
+                        nullable: true
+                      member:
+                        type: object
+                        properties:
+                          pendingApplicationQuota:
+                            type: object
+                            properties:
+                              limit:
+                                type: number
+                                description: 대기 신청 한도
+                                nullable: true
+                              occupied:
+                                type: number
+                                description: 처리 대기 중인 내 신청 수
+                                nullable: true
+                            description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
+                            nullable: true
+                          participationSlots:
+                            type: object
+                            properties:
+                              limit:
+                                type: number
+                                description: 참여 슬롯 한도
+                                nullable: true
+                              occupied:
+                                type: number
+                                description: 참여 중인 룸 수 (방장 포함)
+                                nullable: true
+                            description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
+                            nullable: true
+                          isActive:
+                            type: boolean
+                            description: 이용 제한(제재) 중이면 false
+                            nullable: true
+                        description: 룸과 무관한 회원 축 사실
+                        nullable: true
+                    description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고\
+                      , 신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413\
+                      \ | E1415 | E1416 | E1425)이 전담한다"
+                    nullable: true
+                  method:
+                    type: string
+                    description: 진행 방식 코드 (ONLINE | OFFLINE)
+                  jobPosting:
+                    type: object
+                    properties:
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 id
+                        nullable: true
+                      postingName:
+                        type: string
+                        description: 채용 공고명
+                        nullable: true
+                    description: 채용 공고 (폐기됐으면 null)
+                    nullable: true
+                  type:
+                    type: string
+                    description: 면접 유형 코드 (선택)
+                    nullable: true
+                  title:
+                    type: string
+                    description: 룸 제목
+                  roomId:
+                    type: string
+                    description: 룸 id (UUID)
+                  schedule:
+                    required:
+                    - date
+                    - durationMinutes
+                    - startTime
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        description: 진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다
+                      durationMinutes:
+                        type: number
+                        description: 예상 소요 시간(분)
+                      startTime:
+                        type: string
+                        description: 시작 시각 (HH:mm)
+                    nullable: true
+                  round:
+                    type: string
+                    description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
+                  recruit:
+                    required:
+                    - current
+                    - max
+                    - pending
+                    - recruitStatus
+                    - recruitStatusLabel
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                        description: 현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)
+                      max:
+                        type: number
+                        description: 최대 인원
+                      pending:
+                        type: number
+                        description: 대기 중인 참가 신청 수
+                      recruitStatus:
+                        type: string
+                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                      recruitStatusLabel:
+                        type: string
+                        description: 모집 상태 표시명
+                    nullable: true
+                  methodLabel:
+                    type: string
+                    description: 진행 방식 표시명
+                  jobRole:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: 직무 코드
+                        nullable: true
+                      displayName:
+                        type: string
+                        description: 직무 표시명
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 id
+                        nullable: true
+                    description: 직무 (폐기됐으면 null)
+                    nullable: true
+                  typeLabel:
+                    type: string
+                    description: 면접 유형 표시명 (선택)
+                    nullable: true
+                  company:
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                        nullable: true
+                      name:
+                        type: string
+                        description: 회사명
+                        nullable: true
+                    description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                    nullable: true
+                  region:
+                    type: object
+                    properties:
+                      sigunguId:
+                        type: number
+                        description: 지역 시군구 id
+                        nullable: true
+                      label:
+                        type: string
+                        description: 지역 표시명
+                        nullable: true
+                    description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                    nullable: true
+                  roundLabel:
+                    type: string
+                    description: 면접 단계 표시명
+            sort:
+              type: string
+              description: 실제로 적용된 정렬
+            totalCount:
+              type: number
+              description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
           nullable: true
     v1-terms1673199050:
       required:
