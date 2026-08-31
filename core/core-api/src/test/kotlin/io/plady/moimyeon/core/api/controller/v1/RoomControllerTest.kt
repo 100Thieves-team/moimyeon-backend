@@ -12,9 +12,9 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomRegionResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomScheduleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomViewerResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerMemberResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerQuotaResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomsResponse
 import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
@@ -26,6 +26,7 @@ import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.jobposting.JobPostingService
+import io.plady.moimyeon.core.domain.participation.ParticipationSlots
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
@@ -38,7 +39,6 @@ import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
 import io.plady.moimyeon.core.domain.room.RoomTitle
-import io.plady.moimyeon.core.domain.participation.ParticipationSlots
 import io.plady.moimyeon.core.domain.roomapplication.PendingApplicationQuota
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts

@@ -6,8 +6,9 @@ import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RoomCard
-import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
 import io.plady.moimyeon.core.enums.MeetingType
+import java.time.LocalDateTime
 import java.util.UUID
 
 // 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
@@ -40,8 +41,8 @@ data class RoomSummaryResponse(
     val region: RoomRegionResponse?,
     val schedule: RoomScheduleResponse,
     val recruit: RoomRecruitSummaryResponse,
-    // 보는 사람에 따라 다음 행동이 갈린다(MOI-387). 룸의 공개 정보 자체는 뷰어와 무관하다.
-    val viewer: RoomViewerResponse,
+    // 조회자 본인의 사실(MOI-500). 비로그인이면 null 이다 — 판정은 화면이 한다.
+    val viewer: RoomViewerResponse?,
 ) {
     companion object {
         fun from(
@@ -50,7 +51,8 @@ data class RoomSummaryResponse(
             company: Company?,
             jobRole: JobRole?,
             region: RegionLabel?,
-            viewer: RoomViewer,
+            viewer: ViewerFacts?,
+            now: LocalDateTime,
         ): RoomSummaryResponse {
             val room = card.room
             return RoomSummaryResponse(
@@ -66,9 +68,10 @@ data class RoomSummaryResponse(
                 method = room.meetingPlace.meetingType().name,
                 methodLabel = room.meetingPlace.meetingType().label,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
-                schedule = RoomScheduleResponse.from(room.schedule),
+                // 시작 시각과 같아지는 순간부터 지난 것으로 본다 — 신청 제출 검증과 같은 술어다.
+                schedule = RoomScheduleResponse.from(room.schedule, isPassed = !room.schedule.startAt.isAfter(now)),
                 recruit = RoomRecruitSummaryResponse.from(card),
-                viewer = RoomViewerResponse.from(viewer),
+                viewer = viewer?.let(RoomViewerResponse::from),
             )
         }
 
