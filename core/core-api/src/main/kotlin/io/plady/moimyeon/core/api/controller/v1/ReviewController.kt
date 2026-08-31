@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.api.controller.v1.request.UpdateReviewRequest
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewSubmittedResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.WrittenReviewResponse
 import io.plady.moimyeon.core.api.facade.ReviewFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
@@ -46,6 +47,16 @@ class ReviewController(
     ): ApiResponse<ReviewSubmittedResponse> {
         val reviewId = reviewService.submit(currentMember.id, roomId, request.toContent())
         return ApiResponse.success(ReviewSubmittedResponse.of(reviewId))
+    }
+
+    @GetMapping("/v1/reviews/{reviewId}")
+    fun review(
+        @LoginMember currentMember: CurrentMember,
+        @PathVariable reviewId: Long,
+    ): ApiResponse<WrittenReviewResponse> {
+        return ApiResponse.success(
+            WrittenReviewResponse.from(reviewService.getWrittenReview(currentMember.id, reviewId)),
+        )
     }
 
     @PutMapping("/v1/reviews/{reviewId}")

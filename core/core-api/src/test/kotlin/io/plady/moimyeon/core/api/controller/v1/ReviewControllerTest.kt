@@ -17,6 +17,7 @@ import io.plady.moimyeon.core.domain.trust.ReviewSkipContent
 import io.plady.moimyeon.core.domain.trust.ReviewSubmissionContent
 import io.plady.moimyeon.core.domain.trust.ReviewTargetStatus
 import io.plady.moimyeon.core.domain.trust.ReviewUpdateContent
+import io.plady.moimyeon.core.domain.trust.WrittenReview
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -57,6 +58,11 @@ class ReviewControllerTest : RestDocsTest() {
         "완료 룸의 출석자가 다른 출석자에게 익명 여부, 선택 태그와 선택 텍스트 후기를 제출한다. " +
             "잘못된 태그 E400, 미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002, 대상 결석 E2003, " +
             "본인 대상 E2004, 중복 제출 E2005로 응답한다."
+    private val getReviewSummary = "작성한 후기 조회"
+    private val getReviewDescription =
+        "후기 작성자가 리뷰 id로 자신이 작성한 후기의 태그, 텍스트, 익명 여부를 조회한다. " +
+            "수정 화면 진입 시 기존 내용을 채우는 용도이며 공개 기준 시각과 무관하게 조회할 수 있다. " +
+            "미인증 E1102, 후기 없음 E2006, 작성자 불일치 E2007로 응답한다."
     private val updateSummary = "후기 수정"
     private val updateDescription =
         "후기 작성자가 공개 기준 시각 전까지 태그와 텍스트를 교체한다. " +
@@ -210,6 +216,79 @@ class ReviewControllerTest : RestDocsTest() {
             .andExpect(status().isCreated)
 
         verify(exactly = 1) { reviewService.submit(memberId, roomId, content) }
+    }
+
+    @Test
+    fun `작성자가 리뷰 id로 자신이 작성한 후기를 조회한다`() {
+        every { reviewService.getWrittenReview(memberId, 31L) } returns WrittenReview(
+            id = 31L,
+            roomId = roomId,
+            targetMemberId = submittedTargetId,
+            tags = setOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+            content = "꼬리질문이 날카로워서 실전 같았어요.",
+            anonymous = false,
+        )
+
+        mockMvc.perform(get("/v1/reviews/{reviewId}", 31L).principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "getReview",
+                    getReviewSummary,
+                    getReviewDescription,
+                    pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.reviewId").type(JsonFieldType.NUMBER).description("후기 id"),
+                        fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("후기가 작성된 룸 id"),
+                        fieldWithPath("data.targetMemberId").type(JsonFieldType.STRING).description("후기 대상 회원 id"),
+                        fieldWithPath("data.tags").type(JsonFieldType.ARRAY).description("평가 태그 (빈 배열 가능)"),
+                        fieldWithPath("data.content").type(JsonFieldType.STRING).optional()
+                            .description("한 줄 후기 (null 가능)"),
+                        fieldWithPath("data.anonymous").type(JsonFieldType.BOOLEAN).description("익명 작성 여부"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+
+        verify(exactly = 1) { reviewService.getWrittenReview(memberId, 31L) }
+    }
+
+    @Test
+    fun `인증 없이 작성한 후기를 조회하면 E1102`() {
+        mockMvc.perform(get("/v1/reviews/{reviewId}", 31L))
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                documentApi(
+                    "getReview-e1102",
+                    getReviewSummary,
+                    getReviewDescription,
+                    pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                    errorResponseFields(),
+                ),
+            )
+    }
+
+    @Test
+    fun `작성한 후기 조회의 도메인 오류를 응답한다`() {
+        listOf(
+            CoreErrorType.REVIEW_NOT_FOUND,
+            CoreErrorType.REVIEW_FORBIDDEN,
+        ).forEach { errorType ->
+            every { reviewService.getWrittenReview(memberId, 31L) } throws CoreException(errorType)
+
+            mockMvc.perform(get("/v1/reviews/{reviewId}", 31L).principal(principal))
+                .andExpect(status().`is`(errorType.status.value()))
+                .andDo(
+                    documentApi(
+                        "getReview-${errorType.code.name.lowercase()}",
+                        getReviewSummary,
+                        getReviewDescription,
+                        pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                        errorResponseFields(),
+                    ),
+                )
+        }
     }
 
     @Test
