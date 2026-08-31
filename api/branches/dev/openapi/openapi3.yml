@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T13:22:50.331449998",
+                        "datetime" : "2026-08-31T13:58:36.089230222",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T13:22:50.374038886",
+                        "datetime" : "2026-08-31T13:58:36.123061495",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -174,7 +174,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1803:
                   value: |-
@@ -203,7 +203,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1802:
                   value: |-
@@ -221,7 +221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1405:
                   value: |-
@@ -257,7 +257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitClosingResponse-e1801:
                   value: |-
@@ -292,7 +292,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchCompanies-e400-length:
                   value: |-
@@ -386,7 +386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1903:
                   value: |-
@@ -415,7 +415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1902:
                   value: |-
@@ -433,7 +433,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e400:
                   value: |-
@@ -467,7 +467,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveFinalRoundFeedback-e1405:
                   value: |-
@@ -564,7 +564,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e400:
                   value: |-
@@ -582,7 +582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1507:
                   value: |-
@@ -622,7 +622,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1502:
                   value: |-
@@ -651,7 +651,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1704:
                   value: |-
@@ -723,7 +723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createJobPosting-e400:
                   value: |-
@@ -761,7 +761,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createJobPosting-e1102:
                   value: |-
@@ -831,7 +831,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1405:
                   value: |-
@@ -877,7 +877,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1704:
                   value: |-
@@ -895,7 +895,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getProgressRail-e1703:
                   value: |-
@@ -953,7 +953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1507:
                   value: |-
@@ -982,7 +982,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1512:
                   value: |-
@@ -1000,7 +1000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e400:
                   value: |-
@@ -1048,7 +1048,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionComments-e1509:
                   value: |-
@@ -1134,7 +1134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e400:
                   value: |-
@@ -1168,7 +1168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1405:
                   value: |-
@@ -1197,7 +1197,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1510:
                   value: |-
@@ -1215,7 +1215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveQuestionComment-e1509:
                   value: |-
@@ -1297,7 +1297,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1503:
                   value: |-
@@ -1342,7 +1342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1704:
                   value: |-
@@ -1360,7 +1360,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e400:
                   value: |-
@@ -1378,7 +1378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leaveProgressQuestion-e1502:
                   value: |-
@@ -1526,7 +1526,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1706:
                   value: |-
@@ -1555,7 +1555,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1702:
                   value: |-
@@ -1573,7 +1573,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1405:
                   value: |-
@@ -1591,7 +1591,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 startRoomProgress-e1701:
                   value: |-
@@ -1722,7 +1722,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 rooms-e400-cursor:
                   value: |-
@@ -1916,7 +1916,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoom-e1402:
                   value: |-
@@ -2003,7 +2003,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1904:
                   value: |-
@@ -2021,7 +2021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1405:
                   value: |-
@@ -2077,7 +2077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getIntervieweeRoundFeedback-e1902:
                   value: |-
@@ -2117,7 +2117,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1704:
                   value: |-
@@ -2175,7 +2175,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1503:
                   value: |-
@@ -2204,7 +2204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoundScreen-e1703:
                   value: |-
@@ -2282,7 +2282,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1902:
                   value: |-
@@ -2300,7 +2300,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e400:
                   value: |-
@@ -2334,7 +2334,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1903:
                   value: |-
@@ -2352,7 +2352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 saveSelfRoundFeedback-e1405:
                   value: |-
@@ -2387,7 +2387,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "d831144a-b269-4eab-9c71-8120e521a114",
+                          "termsId" : "a4f3e608-1c23-4fdb-80bc-4d269f02ef65",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2395,7 +2395,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "808927f9-16da-4030-83b6-fe60c8a8947a",
+                          "termsId" : "8a67a3fc-de02-4b14-a51a-2c4029e73fbe",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -2427,7 +2427,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1703:
                   value: |-
@@ -2445,7 +2445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1405:
                   value: |-
@@ -2492,7 +2492,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyAttendance-e1704:
                   value: |-
@@ -2557,7 +2557,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 issueDevSession-e1006:
                   value: |-
@@ -2575,7 +2575,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 issueDevSession-e400:
                   value: |-
@@ -2630,7 +2630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -2682,7 +2682,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1405:
                   value: |-
@@ -2700,7 +2700,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1802:
                   value: |-
@@ -2718,7 +2718,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyClosingQuestions-e1801:
                   value: |-
@@ -2822,7 +2822,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1902:
                   value: |-
@@ -2840,7 +2840,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1405:
                   value: |-
@@ -2869,7 +2869,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1904:
                   value: |-
@@ -2917,7 +2917,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 jobPostingLinkMetadata-e400:
                   value: |-
@@ -3041,7 +3041,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchJobPostings-e400-length:
                   value: |-
@@ -3074,7 +3074,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 searchJobRoles-e400-blank:
                   value: |-
@@ -3127,7 +3127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -3145,7 +3145,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -3170,12 +3170,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
+                        "memberId" : "994c084d-b8c5-45fb-9b61-9d1b6ac3e103",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
+                          "memberId" : "994c084d-b8c5-45fb-9b61-9d1b6ac3e103",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -3226,7 +3226,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -3359,7 +3359,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1510:
                   value: |-
@@ -3377,7 +3377,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e400:
                   value: |-
@@ -3395,7 +3395,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1511:
                   value: |-
@@ -3449,7 +3449,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 toggleQuestionCommentType-e1509:
                   value: |-
@@ -3501,7 +3501,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1507:
                   value: |-
@@ -3541,7 +3541,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1509:
                   value: |-
@@ -3573,7 +3573,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteQuestionComment-e1510:
                   value: |-
@@ -3668,7 +3668,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1510:
                   value: |-
@@ -3686,7 +3686,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1405:
                   value: |-
@@ -3726,7 +3726,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e1509:
                   value: |-
@@ -3758,7 +3758,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 editQuestionComment-e400:
                   value: |-
@@ -3822,7 +3822,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1902:
                   value: |-
@@ -3840,7 +3840,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1405:
                   value: |-
@@ -3858,7 +3858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getMyRoundQuestionRecords-e1903:
                   value: |-
@@ -3953,7 +3953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1703:
                   value: |-
@@ -3982,7 +3982,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1704:
                   value: |-
@@ -4000,7 +4000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e400:
                   value: |-
@@ -4018,7 +4018,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 changeQuestionAsked-e1405:
                   value: |-
@@ -4089,7 +4089,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e1102:
                   value: |-
@@ -4107,7 +4107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e2006:
                   value: |-
@@ -4147,7 +4147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReview-e2007:
                   value: |-
@@ -4231,7 +4231,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e400:
                   value: |-
@@ -4249,7 +4249,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e1102:
                   value: |-
@@ -4267,7 +4267,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2007:
                   value: |-
@@ -4285,7 +4285,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2008:
                   value: |-
@@ -4303,7 +4303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateReview-e2006:
                   value: |-
@@ -4350,7 +4350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2008:
                   value: |-
@@ -4368,7 +4368,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2007:
                   value: |-
@@ -4386,7 +4386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e1102:
                   value: |-
@@ -4404,7 +4404,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteReview-e2006:
                   value: |-
@@ -4446,7 +4446,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 roomCreationLimit-e400:
                   value: |-
@@ -4647,7 +4647,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-01T13:22:57.290456345",
+                          "startAt" : "2026-09-01T13:58:41.88342754",
                           "durationMinutes" : 90,
                           "isPassed" : false
                         },
@@ -4660,7 +4660,7 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "6c167295-66a6-46b4-b459-df90edf6c49e",
+                        "hostMemberId" : "f09b3bc0-34a4-4ffb-b159-13932a64b87d",
                         "viewer" : {
                           "isHost" : false,
                           "isParticipating" : false,
@@ -4710,7 +4710,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 jobPostings-e400-length:
                   value: |-
@@ -4872,7 +4872,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -4890,7 +4890,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -4908,7 +4908,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e400:
                   value: |-
@@ -4966,7 +4966,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "1537490c-d035-4e31-a0b9-a9836074d9c4",
+                        "memberId" : "fc1069e1-4ab6-472d-ab40-168f30ef367e",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4984,7 +4984,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 updateProfile-e1007:
                   value: |-
@@ -5064,7 +5064,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReceivedReviews-e400:
                   value: |-
@@ -5082,7 +5082,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReceivedReviews-e1102:
                   value: |-
@@ -5194,7 +5194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resumes-e1102:
                   value: |-
@@ -5223,7 +5223,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createResume-e400-file-size:
                   value: |-
@@ -5293,7 +5293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createResume-e1102:
                   value: |-
@@ -5337,7 +5337,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getInterviewOverview-e1102:
                   value: |-
@@ -5605,7 +5605,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 publicProfile-e400:
                   value: |-
@@ -5625,7 +5625,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 publicProfile-e1006:
                   value: |-
@@ -5719,18 +5719,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "cdb4c524-95ac-4689-89a8-ebaa4996d027"
+                    "resumeId" : "6a72996c-26e3-483e-a033-13c33583d0e7"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "64eb61de-ebaa-491c-9c61-5bee6e51c464",
+                    "resumeId" : "2412a492-67b6-461c-90c1-8a41cebf4677",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "fd067f0b-8861-483d-ae75-c50b73f445d0",
+                    "resumeId" : "2070bdfd-b098-4a57-8a8a-064e688457aa",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -5739,7 +5739,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitRoomApplication-e1010:
                   value: |-
@@ -5775,7 +5775,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitRoomApplication-e400-note-length:
                   value: |-
@@ -5824,7 +5824,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 cancelRoom-e1410:
                   value: |-
@@ -5884,7 +5884,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoomComments-e1419:
                   value: |-
@@ -5902,7 +5902,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getRoomComments-e400:
                   value: |-
@@ -6024,7 +6024,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e2101:
                   value: |-
@@ -6059,7 +6059,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e400:
                   value: |-
@@ -6077,7 +6077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 createRoomComment-e1419:
                   value: |-
@@ -6127,7 +6127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 confirmRoom-e1421:
                   value: |-
@@ -6255,7 +6255,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionCardSets-e1502:
                   value: |-
@@ -6273,7 +6273,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getQuestionCardSets-e1102:
                   value: |-
@@ -6361,7 +6361,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationQuestion-e400-length:
                   value: |-
@@ -6406,7 +6406,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationQuestion-e1504:
                   value: |-
@@ -6481,7 +6481,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e1405:
                   value: |-
@@ -6499,7 +6499,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2004:
                   value: |-
@@ -6542,7 +6542,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2001:
                   value: |-
@@ -6560,7 +6560,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e2002:
                   value: |-
@@ -6578,7 +6578,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 skipReview-e1102:
                   value: |-
@@ -6612,7 +6612,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e2001:
                   value: |-
@@ -6630,7 +6630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e2002:
                   value: |-
@@ -6648,7 +6648,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e1405:
                   value: |-
@@ -6666,7 +6666,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 getReviewTargets-e1102:
                   value: |-
@@ -6790,7 +6790,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2004:
                   value: |-
@@ -6846,7 +6846,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e1405:
                   value: |-
@@ -6864,7 +6864,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2001:
                   value: |-
@@ -6893,7 +6893,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e1102:
                   value: |-
@@ -6911,7 +6911,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 submitReview-e2002:
                   value: |-
@@ -6947,7 +6947,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e1010:
                   value: |-
@@ -6965,7 +6965,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e400:
                   value: |-
@@ -7013,7 +7013,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 resume-e1102:
                   value: |-
@@ -7047,7 +7047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e1010:
                   value: |-
@@ -7065,7 +7065,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e400:
                   value: |-
@@ -7085,7 +7085,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteResume-e1102:
                   value: |-
@@ -7144,7 +7144,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "58b2e3f0-2703-4933-a1b3-9f11bc1cfc03",
+                          "resumeId" : "9f05a0d1-01c8-488e-adee-7ccf5f65ca40",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7218,7 +7218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2101:
                   value: |-
@@ -7236,7 +7236,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2102:
                   value: |-
@@ -7279,7 +7279,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deleteRoomComment-e2103:
                   value: |-
@@ -7449,7 +7449,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 deletePreparationQuestion-e1508:
                   value: |-
@@ -7499,7 +7499,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 retryResumeSummary-e1013:
                   value: |-
@@ -7658,7 +7658,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 rejectApplication-e400-unknown-reason:
                   value: |-
@@ -7714,7 +7714,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-profile910352763"
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
               examples:
                 leavePreparationFollowUpQuestion-e1505:
                   value: |-
@@ -9705,47 +9705,6 @@ components:
                     description: 대표 직무명 (선택)
                     nullable: true
           nullable: true
-    v1-room-progresses612761132:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - attendances
-          - hostMemberId
-          - status
-          type: object
-          properties:
-            hostMemberId:
-              type: string
-              description: 진행을 시작한 방장 회원 id
-            attendances:
-              type: array
-              description: 확정된 출석 목록
-              items:
-                required:
-                - memberId
-                - nickname
-                - status
-                type: object
-                properties:
-                  nickname:
-                    type: string
-                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
-                  status:
-                    type: string
-                    description: ATTENDED | ABSENT
-                  memberId:
-                    type: string
-                    description: 참여자 회원 id
-            status:
-              type: string
-              description: 시작 후 룸 상태 (IN_PROGRESS)
-          nullable: true
     v1-members-me1349704155:
       required:
       - result
@@ -9810,6 +9769,47 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
+          nullable: true
+    v1-room-progresses612761132:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - attendances
+          - hostMemberId
+          - status
+          type: object
+          properties:
+            hostMemberId:
+              type: string
+              description: 진행을 시작한 방장 회원 id
+            attendances:
+              type: array
+              description: 확정된 출석 목록
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+                  status:
+                    type: string
+                    description: ATTENDED | ABSENT
+                  memberId:
+                    type: string
+                    description: 참여자 회원 id
+            status:
+              type: string
+              description: 시작 후 룸 상태 (IN_PROGRESS)
           nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
@@ -9916,7 +9916,7 @@ components:
               description: "자가 피드백, 작성하지 않았으면 null"
               nullable: true
           nullable: true
-    v1-members-me-profile910352763:
+    v1-rooms-creation-limit910352763:
       required:
       - result
       type: object
@@ -10027,30 +10027,6 @@ components:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
           nullable: true
-    v1-members-me-profile466680720:
-      required:
-      - nickname
-      type: object
-      properties:
-        nickname:
-          type: string
-          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-companies1839974379:
       required:
       - result
@@ -10080,6 +10056,46 @@ components:
                     type: string
                     description: 회사명
           nullable: true
+    v1-members-me-profile466680720:
+      required:
+      - nickname
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+    v1-questions-questionId496267733:
+      required:
+      - asked
+      - intervieweeMemberId
+      - roomId
+      type: object
+      properties:
+        intervieweeMemberId:
+          type: string
+          description: 라운드 면접자 회원 id (UUID)
+        asked:
+          type: boolean
+          description: "질문했으면 true, 되돌리면 false"
+        roomId:
+          type: string
+          description: 룸 id (UUID)
     v1-rooms-roomId-applications-me2061746466:
       required:
       - result
@@ -10157,22 +10173,6 @@ components:
               description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
                 | ROOM_CONFIRMED)
           nullable: true
-    v1-questions-questionId496267733:
-      required:
-      - asked
-      - intervieweeMemberId
-      - roomId
-      type: object
-      properties:
-        intervieweeMemberId:
-          type: string
-          description: 라운드 면접자 회원 id (UUID)
-        asked:
-          type: boolean
-          description: "질문했으면 true, 되돌리면 false"
-        roomId:
-          type: string
-          description: 룸 id (UUID)
     v1-members-memberId-profile655149006:
       required:
       - result
