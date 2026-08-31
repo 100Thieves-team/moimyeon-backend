@@ -1,21 +1,34 @@
 package io.plady.moimyeon.core.api.controller.v1.response
 
+import io.plady.moimyeon.core.domain.catalog.JobRole
+import io.plady.moimyeon.core.domain.catalog.RegionLabel
+import io.plady.moimyeon.core.domain.company.Company
+import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RoomConfirmation
 import io.plady.moimyeon.core.domain.room.RoomConfirmationBlockReason
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import java.time.LocalDateTime
 import java.util.UUID
 
-// 룸 단건 조회 응답 — 룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자.
-// 회사·공고·직무 표시명, 방장 프로필/신뢰 지표, 진행 방식 라벨 enrich 는 별도 이슈다(docs/room-progress.md).
+// 룸 단건 조회 응답 — 룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명(MOI-496).
+// 방장 프로필/신뢰 지표 enrich 는 별도 이슈다.
+//
+// company·jobPosting·jobRole·region 이 nullable 인 이유는 탐색 목록(RoomSummaryResponse)과 같다 —
+// 참조가 끊어져도(회사 미매칭 공고, 폐기된 공고·직무·시군구, 온라인 룸) 룸은 남기고 자리를 비운다.
+// jobPostingId·jobRoleId·sigunguId 는 표시명 객체와 별개로 유지한다: 수정 폼의 사전 선택값처럼
+// 참조가 끊어져도 id 는 필요한 자리가 있다.
 data class RoomReadResponse(
     val roomId: UUID,
     val status: String, // RoomStatus (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)
     val jobPostingId: Long,
     val jobRoleId: Long,
+    val company: CompanyResponse?,
+    val jobPosting: RoomJobPostingResponse?,
+    val jobRole: JobRoleResponse?,
     val title: String,
     val description: String?,
     val round: String, // InterviewStage
@@ -23,7 +36,9 @@ data class RoomReadResponse(
     val type: String?, // InterviewType (선택)
     val typeLabel: String?,
     val method: String, // ONLINE | OFFLINE
+    val methodLabel: String,
     val sigunguId: Long?, // OFFLINE 일 때만
+    val region: RoomRegionResponse?,
     val schedule: RoomReadScheduleResponse,
     val recruit: RoomReadRecruitResponse,
     val resumePublic: Boolean,
@@ -33,25 +48,38 @@ data class RoomReadResponse(
     val viewer: RoomViewerResponse,
 ) {
     companion object {
-        fun from(detail: RoomDetail, confirmation: RoomConfirmation, viewer: RoomViewer): RoomReadResponse {
+        fun from(
+            detail: RoomDetail,
+            jobPosting: JobPostingRef?,
+            company: Company?,
+            jobRole: JobRole?,
+            region: RegionLabel?,
+            confirmation: RoomConfirmation,
+            viewer: RoomViewer,
+        ): RoomReadResponse {
             val room = detail.room
-            val (method, sigunguId) = when (val place = room.meetingPlace) {
-                MeetingPlace.Online -> "ONLINE" to null
-                is MeetingPlace.Offline -> "OFFLINE" to place.sigunguId
+            val (meetingType, sigunguId) = when (val place = room.meetingPlace) {
+                MeetingPlace.Online -> MeetingType.ONLINE to null
+                is MeetingPlace.Offline -> MeetingType.OFFLINE to place.sigunguId
             }
             return RoomReadResponse(
                 roomId = room.id,
                 status = room.status.name,
                 jobPostingId = room.jobPostingId,
                 jobRoleId = room.jobRoleId,
+                company = company?.let { CompanyResponse(companyId = it.id, name = it.name) },
+                jobPosting = jobPosting?.let { RoomJobPostingResponse(it.id, it.postingName) },
+                jobRole = jobRole?.let(JobRoleResponse::from),
                 title = room.title.value,
                 description = room.description?.value,
                 round = room.interviewStage.name,
                 roundLabel = room.interviewStage.label,
                 type = room.interviewType?.name,
                 typeLabel = room.interviewType?.label,
-                method = method,
+                method = meetingType.name,
+                methodLabel = meetingType.label,
                 sigunguId = sigunguId,
+                region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
                 schedule = RoomReadScheduleResponse(
                     startAt = room.schedule.startAt,
                     durationMinutes = room.schedule.durationMinutes,
@@ -60,8 +88,8 @@ data class RoomReadResponse(
                     current = detail.currentParticipants,
                     min = room.capacity.min,
                     max = room.capacity.max,
-                    // 모집중/마감은 저장값이 아니라 정원 충족 여부로 계산한다(핵심 결정).
-                    recruitStatus = if (detail.currentParticipants >= room.capacity.max) "CLOSED" else "RECRUITING",
+                    recruitStatus = detail.recruitStatus.name,
+                    recruitStatusLabel = detail.recruitStatus.label,
                     pendingApplicationCount = detail.pendingApplicationCount,
                 ),
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
@@ -83,6 +111,7 @@ data class RoomReadRecruitResponse(
     val min: Int,
     val max: Int,
     val recruitStatus: String, // RECRUITING | CLOSED (정원 충족 시 CLOSED)
+    val recruitStatusLabel: String, // 모집 중 | 모집 마감
     // 「룸 참여」 §4.1·§6 이 공개로 지정한 값이다. 수만 공개하고 대기자 목록은 방장 외 비공개다.
     val pendingApplicationCount: Int,
 )

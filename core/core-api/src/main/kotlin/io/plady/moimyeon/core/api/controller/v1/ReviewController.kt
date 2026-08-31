@@ -54,9 +54,7 @@ class ReviewController(
         @LoginMember currentMember: CurrentMember,
         @PathVariable reviewId: Long,
     ): ApiResponse<WrittenReviewResponse> {
-        return ApiResponse.success(
-            WrittenReviewResponse.from(reviewService.getWrittenReview(currentMember.id, reviewId)),
-        )
+        return ApiResponse.success(reviewFacade.getWrittenReview(currentMember.id, reviewId))
     }
 
     @PutMapping("/v1/reviews/{reviewId}")

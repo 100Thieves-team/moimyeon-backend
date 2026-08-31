@@ -5,9 +5,9 @@ import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
-import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomCard
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.enums.MeetingType
 import java.util.UUID
 
 // 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
@@ -63,8 +63,8 @@ data class RoomSummaryResponse(
                 roundLabel = room.interviewStage.label,
                 type = room.interviewType?.name,
                 typeLabel = room.interviewType?.label,
-                method = room.meetingPlace.methodCode(),
-                methodLabel = room.meetingPlace.methodLabel(),
+                method = room.meetingPlace.meetingType().name,
+                methodLabel = room.meetingPlace.meetingType().label,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
                 schedule = RoomScheduleResponse.from(room.schedule),
                 recruit = RoomRecruitSummaryResponse.from(card),
@@ -72,14 +72,10 @@ data class RoomSummaryResponse(
             )
         }
 
-        private fun MeetingPlace.methodCode(): String = when (this) {
-            MeetingPlace.Online -> "ONLINE"
-            is MeetingPlace.Offline -> "OFFLINE"
-        }
-
-        private fun MeetingPlace.methodLabel(): String = when (this) {
-            MeetingPlace.Online -> "온라인"
-            is MeetingPlace.Offline -> "오프라인"
+        // 라벨의 단일 소스는 enum 이다(폼 선택지 계약과 같은 정의).
+        private fun MeetingPlace.meetingType(): MeetingType = when (this) {
+            MeetingPlace.Online -> MeetingType.ONLINE
+            is MeetingPlace.Offline -> MeetingType.OFFLINE
         }
     }
 }
@@ -99,10 +95,7 @@ data class RoomRecruitSummaryResponse(
             max = card.room.capacity.max,
             pending = card.pendingApplications,
             recruitStatus = card.recruitStatus.name,
-            recruitStatusLabel = when (card.recruitStatus) {
-                RecruitStatus.RECRUITING -> "모집 중"
-                RecruitStatus.CLOSED -> "모집 마감"
-            },
+            recruitStatusLabel = card.recruitStatus.label,
         )
     }
 }

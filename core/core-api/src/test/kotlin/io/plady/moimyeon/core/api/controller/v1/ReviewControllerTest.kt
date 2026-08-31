@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.WrittenReviewResponse
 import io.plady.moimyeon.core.api.facade.ReviewFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.trust.ReviewService
@@ -17,7 +18,6 @@ import io.plady.moimyeon.core.domain.trust.ReviewSkipContent
 import io.plady.moimyeon.core.domain.trust.ReviewSubmissionContent
 import io.plady.moimyeon.core.domain.trust.ReviewTargetStatus
 import io.plady.moimyeon.core.domain.trust.ReviewUpdateContent
-import io.plady.moimyeon.core.domain.trust.WrittenReview
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -220,11 +220,12 @@ class ReviewControllerTest : RestDocsTest() {
 
     @Test
     fun `작성자가 리뷰 id로 자신이 작성한 후기를 조회한다`() {
-        every { reviewService.getWrittenReview(memberId, 31L) } returns WrittenReview(
-            id = 31L,
+        every { reviewFacade.getWrittenReview(memberId, 31L) } returns WrittenReviewResponse(
+            reviewId = 31L,
             roomId = roomId,
             targetMemberId = submittedTargetId,
-            tags = setOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+            targetNickname = "성실한 사슴 03",
+            tags = listOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
             content = "꼬리질문이 날카로워서 실전 같았어요.",
             anonymous = false,
         )
@@ -242,6 +243,8 @@ class ReviewControllerTest : RestDocsTest() {
                         fieldWithPath("data.reviewId").type(JsonFieldType.NUMBER).description("후기 id"),
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("후기가 작성된 룸 id"),
                         fieldWithPath("data.targetMemberId").type(JsonFieldType.STRING).description("후기 대상 회원 id"),
+                        fieldWithPath("data.targetNickname").type(JsonFieldType.STRING)
+                            .description("후기 대상 회원 닉네임. 탈퇴한 회원은 대체 표기로 내려간다"),
                         fieldWithPath("data.tags").type(JsonFieldType.ARRAY).description("평가 태그 (빈 배열 가능)"),
                         fieldWithPath("data.content").type(JsonFieldType.STRING).optional()
                             .description("한 줄 후기 (null 가능)"),
@@ -251,7 +254,7 @@ class ReviewControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 1) { reviewService.getWrittenReview(memberId, 31L) }
+        verify(exactly = 1) { reviewFacade.getWrittenReview(memberId, 31L) }
     }
 
     @Test
@@ -275,7 +278,7 @@ class ReviewControllerTest : RestDocsTest() {
             CoreErrorType.REVIEW_NOT_FOUND,
             CoreErrorType.REVIEW_FORBIDDEN,
         ).forEach { errorType ->
-            every { reviewService.getWrittenReview(memberId, 31L) } throws CoreException(errorType)
+            every { reviewFacade.getWrittenReview(memberId, 31L) } throws CoreException(errorType)
 
             mockMvc.perform(get("/v1/reviews/{reviewId}", 31L).principal(principal))
                 .andExpect(status().`is`(errorType.status.value()))

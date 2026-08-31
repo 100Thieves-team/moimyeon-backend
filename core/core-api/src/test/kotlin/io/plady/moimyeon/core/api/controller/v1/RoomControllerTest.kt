@@ -17,6 +17,13 @@ import io.plady.moimyeon.core.api.facade.RoomFacade
 import io.plady.moimyeon.core.api.facade.RoomSearchFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.api.security.OptionalLoginMemberArgumentResolver
+import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.domain.catalog.JobRole
+import io.plady.moimyeon.core.domain.catalog.RegionLabel
+import io.plady.moimyeon.core.domain.company.Company
+import io.plady.moimyeon.core.domain.company.CompanyService
+import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
+import io.plady.moimyeon.core.domain.jobposting.JobPostingService
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
@@ -64,6 +71,9 @@ class RoomControllerTest : RestDocsTest() {
     private lateinit var roomService: RoomService
     private lateinit var roomSearchFacade: RoomSearchFacade
     private lateinit var roomViewerService: RoomViewerService
+    private lateinit var jobPostingService: JobPostingService
+    private lateinit var companyService: CompanyService
+    private lateinit var catalogService: CatalogService
     private val hostMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { hostMemberId.toString() }
     private val createdRoomId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000001")
@@ -96,8 +106,11 @@ class RoomControllerTest : RestDocsTest() {
             "회사·공고·직무·지역 표시명은 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 룸 자체는 목록에 남는다."
     private val detailSummary = "룸 단건 조회"
     private val detailDescription =
-        "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자를 반환한다(§6 공개 데이터). 현재 인원 = 활성 참여 수, " +
-            "모집 상태는 정원 충족 여부로 계산한다. 회사·공고·직무 표시명, 방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하지 않는 룸은 404(E1405)."
+        "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다(§6 공개 데이터). 현재 인원 = 활성 참여 수, " +
+            "모집 상태는 정원 충족 여부로 계산한다. " +
+            "회사·공고·직무·지역 표시명은 목록과 같은 규칙으로 내려간다 — 참조가 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) " +
+            "null 로 내려가고 raw id(jobPostingId·jobRoleId·sigunguId)는 그대로 남는다. " +
+            "방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하지 않는 룸은 404(E1405)."
 
     // 위저드가 모아 보내는 생성 페이로드. 형식 검증만 걸려 있어 유효한 값이면 그대로 통과한다.
     private val createRequestJson =
@@ -148,9 +161,24 @@ class RoomControllerTest : RestDocsTest() {
         roomService = mockk()
         roomSearchFacade = mockk()
         roomViewerService = mockk()
+        jobPostingService = mockk()
+        companyService = mockk()
+        catalogService = mockk()
         every { roomViewerService.getViewer(any(), any(), any()) } returns anonymousViewer()
+        // 상세 표시명 조립(MOI-496)이 읽는 참조들. sampleRoom() 의 공고 1·직무 1·시군구 1 과 짝이 맞아야
+        // 문서 예시가 목록(sampleRoomsResponse)과 같은 회사·직무·지역으로 나온다.
+        every { jobPostingService.getRefs(any()) } returns
+            listOf(JobPostingRef(id = 1L, companyId = 1L, postingName = "프론트엔드 개발자 (결제플랫폼)"))
+        every { companyService.getCompanies(any()) } returns listOf(Company(id = 1L, name = "달빛페이"))
+        every { catalogService.getJobRoles(any()) } returns
+            listOf(JobRole(id = 1L, code = "FRONTEND_DEVELOPER", displayName = "프론트엔드 개발"))
+        every { catalogService.getRegionLabels(any()) } returns listOf(RegionLabel(sigunguId = 1L, label = "서울 강남구"))
         mockMvc = mockController(
-            RoomController(RoomFacade(roomService, roomViewerService, fixedClock), roomSearchFacade, roomService),
+            RoomController(
+                RoomFacade(roomService, roomViewerService, jobPostingService, companyService, catalogService, fixedClock),
+                roomSearchFacade,
+                roomService,
+            ),
             LoginMemberArgumentResolver(),
             OptionalLoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
@@ -697,9 +725,19 @@ class RoomControllerTest : RestDocsTest() {
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
-                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)"),
                         fieldWithPath("data.jobPostingId").type(JsonFieldType.NUMBER).description("채용 공고 id (회사는 공고에서 파생)"),
                         fieldWithPath("data.jobRoleId").type(JsonFieldType.NUMBER).description("직무 id"),
+                        fieldWithPath("data.company").type(JsonFieldType.OBJECT).optional().description("회사 (공고에서 파생. 회사를 알 수 없으면 null)"),
+                        fieldWithPath("data.company.companyId").type(JsonFieldType.NUMBER).optional().description("회사 id"),
+                        fieldWithPath("data.company.name").type(JsonFieldType.STRING).optional().description("회사명"),
+                        fieldWithPath("data.jobPosting").type(JsonFieldType.OBJECT).optional().description("채용 공고 (폐기됐으면 null)"),
+                        fieldWithPath("data.jobPosting.jobPostingId").type(JsonFieldType.NUMBER).optional().description("채용 공고 id"),
+                        fieldWithPath("data.jobPosting.postingName").type(JsonFieldType.STRING).optional().description("채용 공고명"),
+                        fieldWithPath("data.jobRole").type(JsonFieldType.OBJECT).optional().description("직무 (폐기됐으면 null)"),
+                        fieldWithPath("data.jobRole.jobRoleId").type(JsonFieldType.NUMBER).optional().description("직무 id"),
+                        fieldWithPath("data.jobRole.code").type(JsonFieldType.STRING).optional().description("직무 코드"),
+                        fieldWithPath("data.jobRole.displayName").type(JsonFieldType.STRING).optional().description("직무 표시명"),
                         fieldWithPath("data.title").type(JsonFieldType.STRING).description("룸 제목"),
                         fieldWithPath("data.description").type(JsonFieldType.STRING).optional().description("룸 설명 (선택)"),
                         fieldWithPath("data.round").type(JsonFieldType.STRING).description("면접 회차 (FIRST | SECOND | THIRD | ETC)"),
@@ -707,13 +745,18 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.type").type(JsonFieldType.STRING).optional().description("면접 유형 (선택)"),
                         fieldWithPath("data.typeLabel").type(JsonFieldType.STRING).optional().description("면접 유형 표시명 (선택)"),
                         fieldWithPath("data.method").type(JsonFieldType.STRING).description("진행 방식 (ONLINE | OFFLINE)"),
+                        fieldWithPath("data.methodLabel").type(JsonFieldType.STRING).description("진행 방식 표시명"),
                         fieldWithPath("data.sigunguId").type(JsonFieldType.NUMBER).optional().description("오프라인 지역 시군구 id (온라인이면 null)"),
+                        fieldWithPath("data.region").type(JsonFieldType.OBJECT).optional().description("오프라인 지역 (온라인이거나 폐기된 지역이면 null)"),
+                        fieldWithPath("data.region.sigunguId").type(JsonFieldType.NUMBER).optional().description("지역 시군구 id"),
+                        fieldWithPath("data.region.label").type(JsonFieldType.STRING).optional().description("지역 표시명"),
                         fieldWithPath("data.schedule.startAt").type(JsonFieldType.STRING).description("진행 시작 일시 (ISO-8601)"),
                         fieldWithPath("data.schedule.durationMinutes").type(JsonFieldType.NUMBER).description("예상 소요 시간(분)"),
                         fieldWithPath("data.recruit.current").type(JsonFieldType.NUMBER).description("현재 인원 (활성 참여 수, 방장 포함)"),
                         fieldWithPath("data.recruit.min").type(JsonFieldType.NUMBER).description("최소 인원"),
                         fieldWithPath("data.recruit.max").type(JsonFieldType.NUMBER).description("최대 인원"),
                         fieldWithPath("data.recruit.recruitStatus").type(JsonFieldType.STRING).description("모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"),
+                        fieldWithPath("data.recruit.recruitStatusLabel").type(JsonFieldType.STRING).description("모집 상태 표시명 (모집 중 | 모집 마감)"),
                         fieldWithPath("data.recruit.pendingApplicationCount").type(JsonFieldType.NUMBER)
                             .description("대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다"),
                         fieldWithPath("data.confirmation").type(JsonFieldType.OBJECT)

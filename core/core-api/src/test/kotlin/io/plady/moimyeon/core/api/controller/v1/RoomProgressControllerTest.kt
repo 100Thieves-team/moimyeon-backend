@@ -5,15 +5,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.AttendanceResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ProgressBlockResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ProgressRailResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressStartResponse
 import io.plady.moimyeon.core.api.facade.RoomProgressFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.progress.Attendance
-import io.plady.moimyeon.core.domain.progress.RoomProgressService
-import io.plady.moimyeon.core.domain.progress.RoomProgressStartResult
 import io.plady.moimyeon.core.enums.AttendanceStatus
-import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -33,7 +32,6 @@ import java.security.Principal
 import java.util.UUID
 
 class RoomProgressControllerTest : RestDocsTest() {
-    private lateinit var progressService: RoomProgressService
     private lateinit var progressFacade: RoomProgressFacade
 
     private val roomId = UUID.fromString("01920000-0000-7000-8000-000000000440")
@@ -43,10 +41,9 @@ class RoomProgressControllerTest : RestDocsTest() {
 
     @BeforeEach
     fun setUp() {
-        progressService = mockk()
         progressFacade = mockk()
         mockMvc = mockController(
-            RoomProgressController(progressService, progressFacade),
+            RoomProgressController(progressFacade),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -58,10 +55,13 @@ class RoomProgressControllerTest : RestDocsTest() {
             Attendance(memberId, AttendanceStatus.ATTENDED),
             Attendance(otherMemberId, AttendanceStatus.ABSENT),
         )
-        every { progressService.start(memberId, roomId, attendances) } returns RoomProgressStartResult(
-            status = RoomStatus.IN_PROGRESS,
+        every { progressFacade.start(memberId, roomId, attendances) } returns RoomProgressStartResponse(
+            status = "IN_PROGRESS",
             hostMemberId = memberId,
-            attendances = attendances,
+            attendances = listOf(
+                AttendanceResponse(memberId, "영리한 부엉이 86", "ATTENDED"),
+                AttendanceResponse(otherMemberId, "성실한 사슴 03", "ABSENT"),
+            ),
         )
 
         mockMvc.perform(
@@ -100,6 +100,7 @@ class RoomProgressControllerTest : RestDocsTest() {
                         fieldWithPath("data.hostMemberId").description("진행을 시작한 방장 회원 id"),
                         fieldWithPath("data.attendances").description("확정된 출석 목록"),
                         fieldWithPath("data.attendances[].memberId").description("참여자 회원 id"),
+                        fieldWithPath("data.attendances[].nickname").description("참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다"),
                         fieldWithPath("data.attendances[].status").description("ATTENDED | ABSENT"),
                     ),
                 ),
@@ -149,8 +150,8 @@ class RoomProgressControllerTest : RestDocsTest() {
 
     @Test
     fun `본인의 출석 결과만 조회한다`() {
-        every { progressService.getMyAttendance(memberId, roomId) } returns
-            Attendance(memberId, AttendanceStatus.ATTENDED)
+        every { progressFacade.getMyAttendance(memberId, roomId) } returns
+            AttendanceResponse(memberId, "영리한 부엉이 86", "ATTENDED")
 
         mockMvc.perform(
             get("/v1/attendances/me").queryParam("roomId", roomId.toString()).principal(principal),
@@ -166,6 +167,7 @@ class RoomProgressControllerTest : RestDocsTest() {
                     queryParameters(parameterWithName("roomId").description("룸 id (UUID)")),
                     successResponseFields(
                         fieldWithPath("data.memberId").description("로그인 회원 id"),
+                        fieldWithPath("data.nickname").description("로그인 회원 닉네임"),
                         fieldWithPath("data.status").description("ATTENDED | ABSENT"),
                     ),
                 ),
@@ -197,7 +199,7 @@ class RoomProgressControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 0) { progressService.start(any(), any(), any()) }
+        verify(exactly = 0) { progressFacade.start(any(), any(), any()) }
     }
 
     @Test
@@ -208,7 +210,7 @@ class RoomProgressControllerTest : RestDocsTest() {
             CoreErrorType.ROOM_PROGRESS_START_FORBIDDEN,
             CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH,
         ).forEach { errorType ->
-            every { progressService.start(any(), roomId, any()) } throws CoreException(errorType)
+            every { progressFacade.start(any(), roomId, any()) } throws CoreException(errorType)
 
             mockMvc.perform(
                 post("/v1/room-progresses")
@@ -260,7 +262,7 @@ class RoomProgressControllerTest : RestDocsTest() {
             CoreErrorType.ROOM_PROGRESS_FORBIDDEN,
             CoreErrorType.ROOM_PROGRESS_ATTENDANCE_NOT_FOUND,
         ).forEach { errorType ->
-            every { progressService.getMyAttendance(memberId, roomId) } throws CoreException(errorType)
+            every { progressFacade.getMyAttendance(memberId, roomId) } throws CoreException(errorType)
 
             mockMvc.perform(
                 get("/v1/attendances/me").queryParam("roomId", roomId.toString()).principal(principal),
