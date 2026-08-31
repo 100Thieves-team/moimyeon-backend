@@ -31,12 +31,15 @@ data class RoomScheduleResponse(
     @get:JsonFormat(pattern = "HH:mm")
     val startTime: LocalTime,
     val durationMinutes: Int,
+    // 서버 시각 기준 일정 경과(MOI-500). 신청·확정 검증과 같은 술어라 화면이 시계로 재계산하지 않는다.
+    val isPassed: Boolean,
 ) {
     companion object {
-        fun from(schedule: RoomSchedule): RoomScheduleResponse = RoomScheduleResponse(
+        fun from(schedule: RoomSchedule, isPassed: Boolean): RoomScheduleResponse = RoomScheduleResponse(
             date = schedule.startAt.toLocalDate(),
             startTime = schedule.startAt.toLocalTime(),
             durationMinutes = schedule.durationMinutes,
+            isPassed = isPassed,
         )
     }
 }

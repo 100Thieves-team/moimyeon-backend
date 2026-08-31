@@ -60,11 +60,10 @@ class RoomApplicationSubmissionFinder(
             .mapValues { (_, applications) -> applications.first().status }
     }
 
-    // 막지 않고 묻는다 — ParticipationFinder.hasAvailableSlot 과 같은 성격이다.
-    // 룸 상세(MOI-387)는 예외 없이 차단 사유만 표시해야 한다. 막는 쪽은
-    // RoomApplicationSubmissionManager 가 자기 커밋 경계 안에서 갖는다.
-    fun hasAvailableQuota(applicantMemberId: UUID): Boolean {
-        return RoomApplicationQuota.isAvailable(
+    // 막지 않고 숫자를 묻는다(MOI-500) — 판정은 화면과 신청 경로가 각자 한다. 막는 쪽은
+    // RoomApplicationSubmissionManager 가 자기 커밋 경계 안에서 같은 집계로 갖는다.
+    fun getPendingApplicationQuota(applicantMemberId: UUID): PendingApplicationQuota {
+        return PendingApplicationQuota.of(
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
                 applicantMemberId,
                 RoomApplicationStatus.PENDING,
