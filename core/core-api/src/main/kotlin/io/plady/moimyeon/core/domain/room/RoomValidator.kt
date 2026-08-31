@@ -22,6 +22,6 @@ class RoomValidator(
         }
         requireBusiness(room.status == RoomStatus.RECRUITING, CoreErrorType.ROOM_NOT_RECRUITING)
         val now = LocalDateTime.now(clock)
-        requireBusiness(room.startAt.isAfter(now), CoreErrorType.ROOM_APPLICATION_SCHEDULE_PASSED)
+        requireBusiness(!RoomSchedule.isPassed(room.startAt, now), CoreErrorType.ROOM_APPLICATION_SCHEDULE_PASSED)
     }
 }

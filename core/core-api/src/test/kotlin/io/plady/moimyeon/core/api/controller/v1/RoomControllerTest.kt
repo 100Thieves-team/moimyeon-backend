@@ -744,11 +744,12 @@ class RoomControllerTest : RestDocsTest() {
         assertThat(viewerMemberId.captured).isNull()
     }
 
-    // 일정 경과는 서버 시각(fixedClock) 기준으로 계산된다 — 신청·확정 검증과 같은 술어다.
+    // 일정 경과는 서버 시각(fixedClock) 기준이고, 시작 시각과 같아지는 순간부터 경과다 —
+    // 신청·확정 검증과 같은 경계(§6-18). 술어가 isBefore 로 회귀하면 이 테스트가 빨간불이 된다.
     @Test
     fun `일정이 지난 룸은 상세에서 경과로 표시된다`() {
         every { roomService.getRoom(any()) } returns
-            sampleRoomDetail(startAt = LocalDateTime.of(2026, 8, 1, 11, 0)) // fixedClock(12:00) 직전
+            sampleRoomDetail(startAt = LocalDateTime.of(2026, 8, 1, 12, 0)) // fixedClock 과 정확히 같은 시각
 
         mockMvc.perform(get("/v1/rooms/{roomId}", createdRoomId.toString()))
             .andExpect(status().isOk)

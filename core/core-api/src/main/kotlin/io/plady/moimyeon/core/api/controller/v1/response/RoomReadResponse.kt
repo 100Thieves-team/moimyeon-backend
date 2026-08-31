@@ -76,8 +76,7 @@ data class RoomReadResponse(
                 schedule = RoomReadScheduleResponse(
                     startAt = room.schedule.startAt,
                     durationMinutes = room.schedule.durationMinutes,
-                    // 시작 시각과 같아지는 순간부터 지난 것으로 본다 — 신청·확정 검증과 같은 술어다.
-                    isPassed = !room.schedule.startAt.isAfter(now),
+                    isPassed = room.schedule.isPassedAt(now),
                 ),
                 recruit = RoomReadRecruitResponse(
                     current = detail.currentParticipants,

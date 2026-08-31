@@ -68,8 +68,7 @@ data class RoomSummaryResponse(
                 method = room.meetingPlace.meetingType().name,
                 methodLabel = room.meetingPlace.meetingType().label,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
-                // 시작 시각과 같아지는 순간부터 지난 것으로 본다 — 신청 제출 검증과 같은 술어다.
-                schedule = RoomScheduleResponse.from(room.schedule, isPassed = !room.schedule.startAt.isAfter(now)),
+                schedule = RoomScheduleResponse.from(room.schedule, isPassed = room.schedule.isPassedAt(now)),
                 recruit = RoomRecruitSummaryResponse.from(card),
                 viewer = viewer?.let(RoomViewerResponse::from),
             )
