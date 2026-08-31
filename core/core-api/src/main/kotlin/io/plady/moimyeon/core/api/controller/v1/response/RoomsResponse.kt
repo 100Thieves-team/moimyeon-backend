@@ -8,7 +8,6 @@ import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RoomCard
 import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
 import io.plady.moimyeon.core.enums.MeetingType
-import java.time.LocalDateTime
 import java.util.UUID
 
 // 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
@@ -52,7 +51,6 @@ data class RoomSummaryResponse(
             jobRole: JobRole?,
             region: RegionLabel?,
             viewer: ViewerFacts?,
-            now: LocalDateTime,
         ): RoomSummaryResponse {
             val room = card.room
             return RoomSummaryResponse(
@@ -68,7 +66,7 @@ data class RoomSummaryResponse(
                 method = room.meetingPlace.meetingType().name,
                 methodLabel = room.meetingPlace.meetingType().label,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
-                schedule = RoomScheduleResponse.from(room.schedule, isPassed = room.schedule.isPassedAt(now)),
+                schedule = RoomScheduleResponse.from(room.schedule),
                 recruit = RoomRecruitSummaryResponse.from(card),
                 viewer = viewer?.let(RoomViewerResponse::from),
             )

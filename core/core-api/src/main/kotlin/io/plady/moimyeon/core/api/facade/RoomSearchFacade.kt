@@ -14,8 +14,6 @@ import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import org.springframework.stereotype.Component
-import java.time.Clock
-import java.time.LocalDateTime
 import java.util.UUID
 
 // 탐색 목록의 표시명 조립 지점. 룸 조회는 room 개념이 끝내고, 여기서는 다른 개념의 이름만 붙인다.
@@ -30,7 +28,6 @@ class RoomSearchFacade(
     private val companyService: CompanyService,
     private val catalogService: CatalogService,
     private val roomViewerService: RoomViewerService,
-    private val clock: Clock,
 ) {
     fun search(
         condition: RoomSearchCondition,
@@ -51,8 +48,6 @@ class RoomSearchFacade(
             .associateBy { it.sigunguId }
         // 뷰어 사실도 한 페이지 분량을 일괄로 읽는다. 룸마다 물으면 표시명 조립과 같은 문제가 난다.
         val viewers = roomViewerService.getViewers(viewerMemberId, page.cards.map { it.room.id })
-        // 일정 경과는 서버 시각 기준 사실이다 — 페이지에 한 번 재서 카드 전부가 같은 시각으로 판정된다.
-        val now = LocalDateTime.now(clock)
 
         return RoomsResponse(
             rooms = page.cards.map { card ->
@@ -64,7 +59,6 @@ class RoomSearchFacade(
                     jobRole = jobRoles[card.room.jobRoleId],
                     region = card.offlineSigunguId()?.let { regions[it] },
                     viewer = viewers.getValue(card.room.id),
-                    now = now,
                 )
             },
             sort = sort.name,
