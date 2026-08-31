@@ -48,6 +48,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    // Boot 4 의 웹 직렬화는 Jackson 3(tools.jackson)이다. 루트가 깔아주는 kotlin 모듈은 Jackson 2 용이라
+    // 웹 응답에 적용되지 않는다 — 없으면 Kotlin `is` 접두 프로퍼티(isPassed·isHost)가 bean 규칙으로
+    // 접두가 잘린 이름(passed·host)으로 직렬화되어 REST Docs 계약과 실제 응답이 갈린다. (core-worker 와 같은 조치)
+    implementation("tools.jackson.module:jackson-module-kotlin")
     // 채용 링크 즉시 추가(BE-03/MOI-334): 서버측 OG 태그 fetch·파싱. HTML 스크래핑이라 Feign(JSON) 대신 Jsoup 을 쓴다.
     implementation("org.jsoup:jsoup:${property("jsoupVersion")}")
     testImplementation(kotlin("test"))
