@@ -19,6 +19,7 @@ class ReviewServiceTest {
     private val skipRecorder = mockk<ReviewSkipRecorder>()
     private val targetFinder = mockk<ReviewTargetFinder>()
     private val receivedReviewFinder = mockk<ReceivedReviewFinder>()
+    private val writtenReviewFinder = mockk<WrittenReviewFinder>()
     private val service = ReviewService(
         eligibilityValidator,
         submissionManager,
@@ -26,6 +27,7 @@ class ReviewServiceTest {
         skipRecorder,
         targetFinder,
         receivedReviewFinder,
+        writtenReviewFinder,
     )
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -330,6 +332,24 @@ class ReviewServiceTest {
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(remainingSubmission) }
+    }
+
+    @Test
+    fun `작성자는 리뷰 id로 자신이 작성한 후기를 조회한다`() {
+        val writtenReview = WrittenReview(
+            id = 1L,
+            roomId = roomId,
+            targetMemberId = targetMemberId,
+            tags = setOf("피드백이 구체적이에요"),
+            content = "개선할 부분을 명확히 알려주셨어요.",
+            anonymous = true,
+        )
+        every { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) } returns writtenReview
+
+        val result = service.getWrittenReview(authorMemberId, 1L)
+
+        assertThat(result).isEqualTo(writtenReview)
+        verify(exactly = 1) { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) }
     }
 
     @Test

@@ -11,6 +11,7 @@ class ReviewService(
     private val skipRecorder: ReviewSkipRecorder,
     private val targetFinder: ReviewTargetFinder,
     private val receivedReviewFinder: ReceivedReviewFinder,
+    private val writtenReviewFinder: WrittenReviewFinder,
 ) {
     fun submit(
         authorMemberId: UUID,
@@ -60,6 +61,10 @@ class ReviewService(
         )
         eligibilityValidator.validate(command.roomId, command.authorMemberId, command.targetMemberId)
         skipRecorder.record(command)
+    }
+
+    fun getWrittenReview(authorMemberId: UUID, reviewId: Long): WrittenReview {
+        return writtenReviewFinder.getWrittenReview(authorMemberId, reviewId)
     }
 
     fun getTargets(authorMemberId: UUID, roomId: UUID): List<ReviewTarget> {

@@ -13,6 +13,8 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
 
+    fun findByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
+
     fun existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
         roomId: UUID,
         authorMemberId: UUID,
