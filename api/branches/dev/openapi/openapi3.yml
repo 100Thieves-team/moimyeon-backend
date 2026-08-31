@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:53:23.424648747",
+                        "datetime" : "2026-08-31T13:22:50.331449998",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-08-31",
-                        "datetime" : "2026-08-31T02:53:23.468032507",
+                        "datetime" : "2026-08-31T13:22:50.374038886",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -174,7 +174,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitClosingResponse-e1803:
                   value: |-
@@ -203,7 +203,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitClosingResponse-e1802:
                   value: |-
@@ -221,7 +221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitClosingResponse-e1405:
                   value: |-
@@ -257,7 +257,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitClosingResponse-e1801:
                   value: |-
@@ -292,7 +292,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 searchCompanies-e400-length:
                   value: |-
@@ -386,7 +386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveFinalRoundFeedback-e1903:
                   value: |-
@@ -415,7 +415,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveFinalRoundFeedback-e1902:
                   value: |-
@@ -433,7 +433,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveFinalRoundFeedback-e400:
                   value: |-
@@ -467,7 +467,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveFinalRoundFeedback-e1405:
                   value: |-
@@ -564,7 +564,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressFollowUpQuestion-e400:
                   value: |-
@@ -582,7 +582,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1507:
                   value: |-
@@ -622,7 +622,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1502:
                   value: |-
@@ -651,7 +651,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressFollowUpQuestion-e1704:
                   value: |-
@@ -723,7 +723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createJobPosting-e400:
                   value: |-
@@ -761,7 +761,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createJobPosting-e1102:
                   value: |-
@@ -831,7 +831,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getProgressRail-e1405:
                   value: |-
@@ -877,7 +877,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getProgressRail-e1704:
                   value: |-
@@ -895,7 +895,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getProgressRail-e1703:
                   value: |-
@@ -953,7 +953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionComments-e1507:
                   value: |-
@@ -982,7 +982,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionComments-e1512:
                   value: |-
@@ -1000,7 +1000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionComments-e400:
                   value: |-
@@ -1048,7 +1048,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionComments-e1509:
                   value: |-
@@ -1134,7 +1134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveQuestionComment-e400:
                   value: |-
@@ -1168,7 +1168,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveQuestionComment-e1405:
                   value: |-
@@ -1197,7 +1197,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveQuestionComment-e1510:
                   value: |-
@@ -1215,7 +1215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveQuestionComment-e1509:
                   value: |-
@@ -1297,7 +1297,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressQuestion-e1503:
                   value: |-
@@ -1342,7 +1342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressQuestion-e1704:
                   value: |-
@@ -1360,7 +1360,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressQuestion-e400:
                   value: |-
@@ -1378,7 +1378,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leaveProgressQuestion-e1502:
                   value: |-
@@ -1526,7 +1526,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 startRoomProgress-e1706:
                   value: |-
@@ -1555,7 +1555,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 startRoomProgress-e1702:
                   value: |-
@@ -1573,7 +1573,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 startRoomProgress-e1405:
                   value: |-
@@ -1591,7 +1591,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 startRoomProgress-e1701:
                   value: |-
@@ -1722,7 +1722,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 rooms-e400-cursor:
                   value: |-
@@ -1740,7 +1740,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms1476531183"
+                $ref: "#/components/schemas/v1-rooms16270181"
               examples:
                 rooms:
                   value: |-
@@ -1776,7 +1776,8 @@ paths:
                           "schedule" : {
                             "date" : "2026-09-05",
                             "startTime" : "14:00",
-                            "durationMinutes" : 90
+                            "durationMinutes" : 90,
+                            "isPassed" : false
                           },
                           "recruit" : {
                             "current" : 3,
@@ -1786,9 +1787,21 @@ paths:
                             "recruitStatusLabel" : "모집 중"
                           },
                           "viewer" : {
-                            "relation" : "NONE",
-                            "actions" : [ "APPLY" ],
-                            "blockReason" : null
+                            "isHost" : false,
+                            "isParticipating" : false,
+                            "hasRemovalHistory" : false,
+                            "latestApplicationStatus" : null,
+                            "member" : {
+                              "isActive" : true,
+                              "participationSlots" : {
+                                "occupied" : 1,
+                                "limit" : 3
+                              },
+                              "pendingApplicationQuota" : {
+                                "occupied" : 0,
+                                "limit" : 3
+                              }
+                            }
                           }
                         } ],
                         "sort" : "SCHEDULE",
@@ -1903,7 +1916,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createRoom-e1402:
                   value: |-
@@ -1990,7 +2003,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getIntervieweeRoundFeedback-e1904:
                   value: |-
@@ -2008,7 +2021,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getIntervieweeRoundFeedback-e1405:
                   value: |-
@@ -2064,7 +2077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getIntervieweeRoundFeedback-e1902:
                   value: |-
@@ -2104,7 +2117,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getRoundScreen-e1704:
                   value: |-
@@ -2162,7 +2175,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getRoundScreen-e1503:
                   value: |-
@@ -2191,7 +2204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getRoundScreen-e1703:
                   value: |-
@@ -2269,7 +2282,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 saveSelfRoundFeedback-e1902:
                   value: |-
@@ -2287,7 +2300,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 saveSelfRoundFeedback-e400:
                   value: |-
@@ -2321,7 +2334,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 saveSelfRoundFeedback-e1903:
                   value: |-
@@ -2339,7 +2352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 saveSelfRoundFeedback-e1405:
                   value: |-
@@ -2374,7 +2387,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "d8a178d1-0140-4352-9015-94e772ec9c51",
+                          "termsId" : "d831144a-b269-4eab-9c71-8120e521a114",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2382,7 +2395,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "42d51792-8ae6-4f4e-8540-470cc5511eb8",
+                          "termsId" : "808927f9-16da-4030-83b6-fe60c8a8947a",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -2414,7 +2427,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyAttendance-e1703:
                   value: |-
@@ -2432,7 +2445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyAttendance-e1405:
                   value: |-
@@ -2479,7 +2492,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyAttendance-e1704:
                   value: |-
@@ -2544,7 +2557,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 issueDevSession-e1006:
                   value: |-
@@ -2562,7 +2575,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 issueDevSession-e400:
                   value: |-
@@ -2617,7 +2630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 authRefresh-e1104:
                   value: |-
@@ -2669,7 +2682,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyClosingQuestions-e1405:
                   value: |-
@@ -2687,7 +2700,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyClosingQuestions-e1802:
                   value: |-
@@ -2705,7 +2718,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyClosingQuestions-e1801:
                   value: |-
@@ -2809,7 +2822,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1902:
                   value: |-
@@ -2827,7 +2840,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1405:
                   value: |-
@@ -2856,7 +2869,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 confirmRoundFeedbackDisclosure-e1904:
                   value: |-
@@ -2904,7 +2917,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 jobPostingLinkMetadata-e400:
                   value: |-
@@ -3028,7 +3041,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 searchJobPostings-e400-length:
                   value: |-
@@ -3061,7 +3074,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 searchJobRoles-e400-blank:
                   value: |-
@@ -3114,7 +3127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 memberMe-e1006:
                   value: |-
@@ -3132,7 +3145,7 @@ paths:
           content:
             application/json;charset=UTF-8:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 memberMe-e1102:
                   value: |-
@@ -3157,12 +3170,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
+                        "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
+                          "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -3213,7 +3226,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 nicknameAvailability-e400:
                   value: |-
@@ -3346,7 +3359,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 toggleQuestionCommentType-e1510:
                   value: |-
@@ -3364,7 +3377,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 toggleQuestionCommentType-e400:
                   value: |-
@@ -3382,7 +3395,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 toggleQuestionCommentType-e1511:
                   value: |-
@@ -3436,7 +3449,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 toggleQuestionCommentType-e1509:
                   value: |-
@@ -3488,7 +3501,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteQuestionComment-e1507:
                   value: |-
@@ -3528,7 +3541,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteQuestionComment-e1509:
                   value: |-
@@ -3560,7 +3573,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteQuestionComment-e1510:
                   value: |-
@@ -3655,7 +3668,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 editQuestionComment-e1510:
                   value: |-
@@ -3673,7 +3686,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 editQuestionComment-e1405:
                   value: |-
@@ -3713,7 +3726,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 editQuestionComment-e1509:
                   value: |-
@@ -3745,7 +3758,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 editQuestionComment-e400:
                   value: |-
@@ -3809,7 +3822,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyRoundQuestionRecords-e1902:
                   value: |-
@@ -3827,7 +3840,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyRoundQuestionRecords-e1405:
                   value: |-
@@ -3845,7 +3858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getMyRoundQuestionRecords-e1903:
                   value: |-
@@ -3940,7 +3953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 changeQuestionAsked-e1703:
                   value: |-
@@ -3969,7 +3982,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 changeQuestionAsked-e1704:
                   value: |-
@@ -3987,7 +4000,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 changeQuestionAsked-e400:
                   value: |-
@@ -4005,7 +4018,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 changeQuestionAsked-e1405:
                   value: |-
@@ -4076,7 +4089,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReview-e1102:
                   value: |-
@@ -4094,7 +4107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReview-e2006:
                   value: |-
@@ -4134,7 +4147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReview-e2007:
                   value: |-
@@ -4218,7 +4231,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateReview-e400:
                   value: |-
@@ -4236,7 +4249,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateReview-e1102:
                   value: |-
@@ -4254,7 +4267,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateReview-e2007:
                   value: |-
@@ -4272,7 +4285,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateReview-e2008:
                   value: |-
@@ -4290,7 +4303,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateReview-e2006:
                   value: |-
@@ -4337,7 +4350,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteReview-e2008:
                   value: |-
@@ -4355,7 +4368,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteReview-e2007:
                   value: |-
@@ -4373,7 +4386,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteReview-e1102:
                   value: |-
@@ -4391,7 +4404,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteReview-e2006:
                   value: |-
@@ -4433,7 +4446,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 roomCreationLimit-e400:
                   value: |-
@@ -4581,10 +4594,10 @@ paths:
       tags:
       - v1
       summary: 룸 단건 조회
-      description: "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다(§6 공개 데이터). 현재 인원 =\
-        \ 활성 참여 수, 모집 상태는 정원 충족 여부로 계산한다. 회사·공고·직무·지역 표시명은 목록과 같은 규칙으로 내려간다 — 참조가\
-        \ 끊어졌을 때(회사 미매칭 공고, 폐기된 직무 등) null 로 내려가고 raw id(jobPostingId·jobRoleId·sigunguId)는\
-        \ 그대로 남는다. 방장 프로필/신뢰 지표 enrich 는 별도 이슈. 존재하지 않는 룸은 404(E1405)."
+      description: "룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명 + 조회자 본인의 사실(viewer)을 반환한다\
+        (§6 공개 데이터). 현재 인원 = 활성 참여 수, 모집 상태는 정원 충족 여부로 계산한다. 회사·공고·직무·지역 표시명은 목록과\
+        \ 같은 규칙이다 — 참조가 끊어지면(회사 미매칭 공고, 폐기된 직무 등) 해당 객체만 null 로 내려간다. 판정 결과(가능한 행동\
+        ·확정 준비 여부)는 내리지 않는다 — 버튼 판정은 화면이 하고, 강제는 신청·확정 API 가 한다. 존재하지 않는 룸은 404(E1405)."
       operationId: roomDetail
       parameters:
       - name: roomId
@@ -4599,7 +4612,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-593421515"
+                $ref: "#/components/schemas/v1-rooms-roomId2047243921"
               examples:
                 roomDetail:
                   value: |-
@@ -4608,8 +4621,6 @@ paths:
                       "data" : {
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "status" : "RECRUITING",
-                        "jobPostingId" : 1,
-                        "jobRoleId" : 1,
                         "company" : {
                           "companyId" : 1,
                           "name" : "달빛페이"
@@ -4631,14 +4642,14 @@ paths:
                         "typeLabel" : "직무 면접",
                         "method" : "OFFLINE",
                         "methodLabel" : "오프라인",
-                        "sigunguId" : 1,
                         "region" : {
                           "sigunguId" : 1,
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-01T02:53:30.556284723",
-                          "durationMinutes" : 90
+                          "startAt" : "2026-09-01T13:22:57.290456345",
+                          "durationMinutes" : 90,
+                          "isPassed" : false
                         },
                         "recruit" : {
                           "current" : 1,
@@ -4649,18 +4660,23 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "dd54bb42-497f-45ab-bfc3-ba17b215732f",
-                        "confirmation" : {
-                          "ready" : false,
-                          "blockReason" : {
-                            "code" : "BELOW_MIN_CAPACITY",
-                            "label" : "인원 1 / 6명 (최소 3명)"
-                          }
-                        },
+                        "hostMemberId" : "6c167295-66a6-46b4-b459-df90edf6c49e",
                         "viewer" : {
-                          "relation" : "ANONYMOUS",
-                          "actions" : [ "LOGIN_REQUIRED" ],
-                          "blockReason" : null
+                          "isHost" : false,
+                          "isParticipating" : false,
+                          "hasRemovalHistory" : false,
+                          "latestApplicationStatus" : null,
+                          "member" : {
+                            "isActive" : true,
+                            "participationSlots" : {
+                              "occupied" : 1,
+                              "limit" : 3
+                            },
+                            "pendingApplicationQuota" : {
+                              "occupied" : 0,
+                              "limit" : 3
+                            }
+                          }
                         }
                       },
                       "error" : null
@@ -4694,7 +4710,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 jobPostings-e400-length:
                   value: |-
@@ -4856,7 +4872,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateProfile-e1102:
                   value: |-
@@ -4874,7 +4890,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateProfile-e1009:
                   value: |-
@@ -4892,7 +4908,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateProfile-e400:
                   value: |-
@@ -4950,7 +4966,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "92d2ba99-2ca5-4d60-ab69-40e59ca6124b",
+                        "memberId" : "1537490c-d035-4e31-a0b9-a9836074d9c4",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4968,7 +4984,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 updateProfile-e1007:
                   value: |-
@@ -5048,7 +5064,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReceivedReviews-e400:
                   value: |-
@@ -5066,7 +5082,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReceivedReviews-e1102:
                   value: |-
@@ -5178,7 +5194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 resumes-e1102:
                   value: |-
@@ -5207,7 +5223,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createResume-e400-file-size:
                   value: |-
@@ -5277,7 +5293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createResume-e1102:
                   value: |-
@@ -5321,7 +5337,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getInterviewOverview-e1102:
                   value: |-
@@ -5589,7 +5605,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 publicProfile-e400:
                   value: |-
@@ -5609,7 +5625,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 publicProfile-e1006:
                   value: |-
@@ -5703,18 +5719,18 @@ paths:
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "e0c6ef69-cb98-47b2-a5b3-aa0b9e8402bb"
+                    "resumeId" : "cdb4c524-95ac-4689-89a8-ebaa4996d027"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "31107dd9-5d8e-456b-8d07-f208c5508fa2",
+                    "resumeId" : "64eb61de-ebaa-491c-9c61-5bee6e51c464",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "aea00aee-d7e4-4cf6-985f-ea2b8db85b79",
+                    "resumeId" : "fd067f0b-8861-483d-ae75-c50b73f445d0",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
       responses:
@@ -5723,7 +5739,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitRoomApplication-e1010:
                   value: |-
@@ -5759,7 +5775,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitRoomApplication-e400-note-length:
                   value: |-
@@ -5808,7 +5824,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 cancelRoom-e1410:
                   value: |-
@@ -5868,7 +5884,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getRoomComments-e1419:
                   value: |-
@@ -5886,7 +5902,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getRoomComments-e400:
                   value: |-
@@ -6008,7 +6024,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createRoomComment-e2101:
                   value: |-
@@ -6043,7 +6059,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createRoomComment-e400:
                   value: |-
@@ -6061,7 +6077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 createRoomComment-e1419:
                   value: |-
@@ -6081,7 +6097,7 @@ paths:
       summary: 룸 진행 확정
       description: "방장이 진행을 확정한다(「진행 확정」 §4.2). 룸 상태가 CONFIRMED 가 되고 참여자·인원이 고정되며\
         , 남아 있던 대기 신청은 같은 트랜잭션에서 일괄 종료된다(반려가 아니므로 재신청 차단에 걸리지 않는다). 확정 이후에는 룸 정보 수\
-        정·신규 신청·수락이 모두 막힌다(§4.3). 조건은 룸 상세의 confirmation 블록과 같은 판정을 쓴다 — 인원 미달은 E1421,\
+        정·신규 신청·수락이 모두 막힌다(§4.3). 확정 조건은 서버가 실행 시점에 룸 행을 잠근 뒤 검증한다 — 인원 미달은 E1421,\
         \ 일정 경과는 E1422, 이미 확정·취소·완료·진행 중인 룸은 E1410 이다. 같은 요청을 두 번 보내도 한 번만 처리된다."
       operationId: confirmRoom
       parameters:
@@ -6111,7 +6127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 confirmRoom-e1421:
                   value: |-
@@ -6239,7 +6255,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionCardSets-e1502:
                   value: |-
@@ -6257,7 +6273,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getQuestionCardSets-e1102:
                   value: |-
@@ -6345,7 +6361,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leavePreparationQuestion-e400-length:
                   value: |-
@@ -6390,7 +6406,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leavePreparationQuestion-e1504:
                   value: |-
@@ -6465,7 +6481,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 skipReview-e1405:
                   value: |-
@@ -6483,7 +6499,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 skipReview-e2004:
                   value: |-
@@ -6526,7 +6542,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 skipReview-e2001:
                   value: |-
@@ -6544,7 +6560,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 skipReview-e2002:
                   value: |-
@@ -6562,7 +6578,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 skipReview-e1102:
                   value: |-
@@ -6596,7 +6612,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReviewTargets-e2001:
                   value: |-
@@ -6614,7 +6630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReviewTargets-e2002:
                   value: |-
@@ -6632,7 +6648,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReviewTargets-e1405:
                   value: |-
@@ -6650,7 +6666,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 getReviewTargets-e1102:
                   value: |-
@@ -6774,7 +6790,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitReview-e2004:
                   value: |-
@@ -6830,7 +6846,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitReview-e1405:
                   value: |-
@@ -6848,7 +6864,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitReview-e2001:
                   value: |-
@@ -6877,7 +6893,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitReview-e1102:
                   value: |-
@@ -6895,7 +6911,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 submitReview-e2002:
                   value: |-
@@ -6931,7 +6947,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 resume-e1010:
                   value: |-
@@ -6949,7 +6965,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 resume-e400:
                   value: |-
@@ -6997,7 +7013,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 resume-e1102:
                   value: |-
@@ -7031,7 +7047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteResume-e1010:
                   value: |-
@@ -7049,7 +7065,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteResume-e400:
                   value: |-
@@ -7069,7 +7085,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteResume-e1102:
                   value: |-
@@ -7128,7 +7144,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "a547acf0-3be4-4dde-8271-64750b6772b2",
+                          "resumeId" : "58b2e3f0-2703-4933-a1b3-9f11bc1cfc03",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7202,7 +7218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteRoomComment-e2101:
                   value: |-
@@ -7220,7 +7236,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteRoomComment-e2102:
                   value: |-
@@ -7263,7 +7279,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deleteRoomComment-e2103:
                   value: |-
@@ -7433,7 +7449,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 deletePreparationQuestion-e1508:
                   value: |-
@@ -7483,7 +7499,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 retryResumeSummary-e1013:
                   value: |-
@@ -7642,7 +7658,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 rejectApplication-e400-unknown-reason:
                   value: |-
@@ -7698,7 +7714,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+                $ref: "#/components/schemas/v1-members-me-profile910352763"
               examples:
                 leavePreparationFollowUpQuestion-e1505:
                   value: |-
@@ -7798,18 +7814,6 @@ paths:
                   type: string
 components:
   schemas:
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -7829,6 +7833,18 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-job-postings1538643122:
       required:
       - result
@@ -7991,6 +8007,43 @@ components:
         content:
           type: string
           description: "글 내용 (trim 후 1~1000자, 텍스트만)"
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+          nullable: true
     v1-rooms-roomId-comments1495367468:
       required:
       - result
@@ -8065,43 +8118,6 @@ components:
             writable:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
-          nullable: true
-    post191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
           nullable: true
     v1-auth-logout198252895:
       required:
@@ -8294,6 +8310,14 @@ components:
               type: number
               description: 생성된 꼬리질문 id
           nullable: true
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-members-me-rooms-257716809:
       required:
       - result
@@ -8726,14 +8750,6 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -8746,7 +8762,7 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
-    v1-rooms-roomId-593421515:
+    v1-rooms-roomId2047243921:
       required:
       - result
       type: object
@@ -8756,10 +8772,7 @@ components:
           description: 처리 결과 (SUCCESS)
         data:
           required:
-          - confirmation
           - hostMemberId
-          - jobPostingId
-          - jobRoleId
           - method
           - methodLabel
           - resumePublic
@@ -8768,41 +8781,69 @@ components:
           - roundLabel
           - status
           - title
-          - viewer
           type: object
           properties:
             viewer:
-              required:
-              - actions
-              - relation
               type: object
               properties:
-                blockReason:
+                latestApplicationStatus:
                   type: string
-                  description: 할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED
-                    | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED | REMOVED_FROM_ROOM
-                    | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | APPLICATION_LIMIT_EXCEEDED).
-                    actions 가 비어 있을 때만 값이 있다. 정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST
-                    로 접수된다
+                  description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
+                    | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
+                    신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저
+                    봐야 한다
                   nullable: true
-                actions:
-                  type: array
-                  description: 취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED |
-                    APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION
-                    | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다
-                  items:
-                    oneOf:
-                    - type: object
-                    - type: boolean
-                    - type: string
-                    - type: number
-                relation:
-                  type: string
-                  description: 조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청
-                    대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯
-                    초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST 방장).
-                    배지(`참여 중`·`내가 만든 룸`)를 이 값으로 그린다
-              description: 조회자와 이 룸의 관계·행동. 목록과 같은 객체다
+                isParticipating:
+                  type: boolean
+                  description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
+                  nullable: true
+                isHost:
+                  type: boolean
+                  description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
+                  nullable: true
+                hasRemovalHistory:
+                  type: boolean
+                  description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
+                  nullable: true
+                member:
+                  type: object
+                  properties:
+                    pendingApplicationQuota:
+                      type: object
+                      properties:
+                        limit:
+                          type: number
+                          description: 대기 신청 한도
+                          nullable: true
+                        occupied:
+                          type: number
+                          description: 처리 대기 중인 내 신청 수
+                          nullable: true
+                      description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
+                      nullable: true
+                    participationSlots:
+                      type: object
+                      properties:
+                        limit:
+                          type: number
+                          description: 참여 슬롯 한도
+                          nullable: true
+                        occupied:
+                          type: number
+                          description: 참여 중인 룸 수 (방장 포함)
+                          nullable: true
+                      description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
+                      nullable: true
+                    isActive:
+                      type: boolean
+                      description: 이용 제한(제재) 중이면 false
+                      nullable: true
+                  description: 룸과 무관한 회원 축 사실
+                  nullable: true
+              description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, 신청 가\
+                능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415\
+                \ | E1416 | E1425)이 전담한다"
+              nullable: true
             hostMemberId:
               type: string
               description: 방장 회원 식별자 (UUID)
@@ -8829,29 +8870,6 @@ components:
                   nullable: true
               description: 채용 공고 (폐기됐으면 null)
               nullable: true
-            confirmation:
-              required:
-              - ready
-              type: object
-              properties:
-                ready:
-                  type: boolean
-                  description: 확정 가능 여부 (모집 중 && 일정 미경과 && 인원 >= 최소 인원)
-                blockReason:
-                  type: object
-                  properties:
-                    code:
-                      type: string
-                      description: 사유 코드 (ROOM_CONFIRMED | ROOM_IN_PROGRESS | ROOM_COMPLETED
-                        | ROOM_CANCELED | SCHEDULE_PASSED | BELOW_MIN_CAPACITY)
-                      nullable: true
-                    label:
-                      type: string
-                      description: 화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다
-                      nullable: true
-                  description: 확정할 수 없는 사유. ready 가 true 면 null
-                  nullable: true
-              description: 진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다
             type:
               type: string
               description: 면접 유형 (선택)
@@ -8865,26 +8883,24 @@ components:
             schedule:
               required:
               - durationMinutes
+              - isPassed
               - startAt
               type: object
               properties:
                 durationMinutes:
                   type: number
                   description: 예상 소요 시간(분)
+                isPassed:
+                  type: boolean
+                  description: 진행 일정 경과 여부 (서버 시각 기준). 신청·확정 검증과 같은 술어라 클라이언트 시계로
+                    재계산하지 않는다
                 startAt:
                   type: string
                   description: 진행 시작 일시 (ISO-8601)
               nullable: true
-            sigunguId:
-              type: number
-              description: 오프라인 지역 시군구 id (온라인이면 null)
-              nullable: true
             round:
               type: string
               description: 면접 회차 (FIRST | SECOND | THIRD | ETC)
-            jobPostingId:
-              type: number
-              description: 채용 공고 id (회사는 공고에서 파생)
             recruit:
               required:
               - current
@@ -8934,9 +8950,6 @@ components:
                   nullable: true
               description: 직무 (폐기됐으면 null)
               nullable: true
-            jobRoleId:
-              type: number
-              description: 직무 id
             typeLabel:
               type: string
               description: 면접 유형 표시명 (선택)
@@ -9063,6 +9076,235 @@ components:
             feedbackId:
               type: number
               description: 저장된 자가 피드백 id
+          nullable: true
+    v1-rooms16270181:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - rooms
+          - sort
+          - totalCount
+          type: object
+          properties:
+            nextCursor:
+              type: string
+              description: 다음 페이지 커서. 마지막 페이지면 null
+              nullable: true
+            rooms:
+              type: array
+              description: 룸 목록
+              items:
+                required:
+                - method
+                - methodLabel
+                - roomId
+                - round
+                - roundLabel
+                - title
+                type: object
+                properties:
+                  viewer:
+                    type: object
+                    properties:
+                      latestApplicationStatus:
+                        type: string
+                        description: 이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED
+                          | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED).
+                          신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory
+                          를 먼저 봐야 한다
+                        nullable: true
+                      isParticipating:
+                        type: boolean
+                        description: 내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다
+                        nullable: true
+                      isHost:
+                        type: boolean
+                        description: 내가 이 룸의 방장인가. `내가 만든 룸` 배지와 룸 관리 진입 판정용
+                        nullable: true
+                      hasRemovalHistory:
+                        type: boolean
+                        description: 이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다
+                        nullable: true
+                      member:
+                        type: object
+                        properties:
+                          pendingApplicationQuota:
+                            type: object
+                            properties:
+                              limit:
+                                type: number
+                                description: 대기 신청 한도
+                                nullable: true
+                              occupied:
+                                type: number
+                                description: 처리 대기 중인 내 신청 수
+                                nullable: true
+                            description: 대기 신청 사용량. occupied >= limit 면 신청이 거부된다(E1416)
+                            nullable: true
+                          participationSlots:
+                            type: object
+                            properties:
+                              limit:
+                                type: number
+                                description: 참여 슬롯 한도
+                                nullable: true
+                              occupied:
+                                type: number
+                                description: 참여 중인 룸 수 (방장 포함)
+                                nullable: true
+                            description: 참여 슬롯 사용량. occupied >= limit 면 신청이 거부된다(E1425)
+                            nullable: true
+                          isActive:
+                            type: boolean
+                            description: 이용 제한(제재) 중이면 false
+                            nullable: true
+                        description: 룸과 무관한 회원 축 사실
+                        nullable: true
+                    description: "조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고\
+                      , 신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413\
+                      \ | E1415 | E1416 | E1425)이 전담한다"
+                    nullable: true
+                  method:
+                    type: string
+                    description: 진행 방식 코드 (ONLINE | OFFLINE)
+                  jobPosting:
+                    type: object
+                    properties:
+                      jobPostingId:
+                        type: number
+                        description: 채용 공고 id
+                        nullable: true
+                      postingName:
+                        type: string
+                        description: 채용 공고명
+                        nullable: true
+                    description: 채용 공고 (폐기됐으면 null)
+                    nullable: true
+                  type:
+                    type: string
+                    description: 면접 유형 코드 (선택)
+                    nullable: true
+                  title:
+                    type: string
+                    description: 룸 제목
+                  roomId:
+                    type: string
+                    description: 룸 id (UUID)
+                  schedule:
+                    required:
+                    - date
+                    - durationMinutes
+                    - isPassed
+                    - startTime
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        description: 진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다
+                      durationMinutes:
+                        type: number
+                        description: 예상 소요 시간(분)
+                      isPassed:
+                        type: boolean
+                        description: 진행 일정 경과 여부 (서버 시각 기준). 클라이언트 시계로 재계산하지 않는다 —
+                          신청 API 와 어긋난다
+                      startTime:
+                        type: string
+                        description: 시작 시각 (HH:mm)
+                    nullable: true
+                  round:
+                    type: string
+                    description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
+                  recruit:
+                    required:
+                    - current
+                    - max
+                    - pending
+                    - recruitStatus
+                    - recruitStatusLabel
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                        description: 현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)
+                      max:
+                        type: number
+                        description: 최대 인원
+                      pending:
+                        type: number
+                        description: 대기 중인 참가 신청 수
+                      recruitStatus:
+                        type: string
+                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
+                      recruitStatusLabel:
+                        type: string
+                        description: 모집 상태 표시명
+                    nullable: true
+                  methodLabel:
+                    type: string
+                    description: 진행 방식 표시명
+                  jobRole:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: 직무 코드
+                        nullable: true
+                      displayName:
+                        type: string
+                        description: 직무 표시명
+                        nullable: true
+                      jobRoleId:
+                        type: number
+                        description: 직무 id
+                        nullable: true
+                    description: 직무 (폐기됐으면 null)
+                    nullable: true
+                  typeLabel:
+                    type: string
+                    description: 면접 유형 표시명 (선택)
+                    nullable: true
+                  company:
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                        nullable: true
+                      name:
+                        type: string
+                        description: 회사명
+                        nullable: true
+                    description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
+                    nullable: true
+                  region:
+                    type: object
+                    properties:
+                      sigunguId:
+                        type: number
+                        description: 지역 시군구 id
+                        nullable: true
+                      label:
+                        type: string
+                        description: 지역 표시명
+                        nullable: true
+                    description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
+                    nullable: true
+                  roundLabel:
+                    type: string
+                    description: 면접 단계 표시명
+            sort:
+              type: string
+              description: 실제로 적용된 정렬
+            totalCount:
+              type: number
+              description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
           nullable: true
     v1-auth-dev-sessions1490138447:
       required:
@@ -9463,6 +9705,47 @@ components:
                     description: 대표 직무명 (선택)
                     nullable: true
           nullable: true
+    v1-room-progresses612761132:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - attendances
+          - hostMemberId
+          - status
+          type: object
+          properties:
+            hostMemberId:
+              type: string
+              description: 진행을 시작한 방장 회원 id
+            attendances:
+              type: array
+              description: 확정된 출석 목록
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+                  status:
+                    type: string
+                    description: ATTENDED | ABSENT
+                  memberId:
+                    type: string
+                    description: 참여자 회원 id
+            status:
+              type: string
+              description: 시작 후 룸 상태 (IN_PROGRESS)
+          nullable: true
     v1-members-me1349704155:
       required:
       - result
@@ -9527,47 +9810,6 @@ components:
             memberId:
               type: string
               description: 회원 식별자 (UUID)
-          nullable: true
-    v1-room-progresses612761132:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - attendances
-          - hostMemberId
-          - status
-          type: object
-          properties:
-            hostMemberId:
-              type: string
-              description: 진행을 시작한 방장 회원 id
-            attendances:
-              type: array
-              description: 확정된 출석 목록
-              items:
-                required:
-                - memberId
-                - nickname
-                - status
-                type: object
-                properties:
-                  nickname:
-                    type: string
-                    description: 참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
-                  status:
-                    type: string
-                    description: ATTENDED | ABSENT
-                  memberId:
-                    type: string
-                    description: 참여자 회원 id
-            status:
-              type: string
-              description: 시작 후 룸 상태 (IN_PROGRESS)
           nullable: true
     v1-rooms-roomId-questions-questionId-follow-ups-1317980453:
       required:
@@ -9674,7 +9916,7 @@ components:
               description: "자가 피드백, 작성하지 않았으면 null"
               nullable: true
           nullable: true
-    v1-rooms-creation-limit910352763:
+    v1-members-me-profile910352763:
       required:
       - result
       type: object
@@ -9785,6 +10027,30 @@ components:
               type: string
               description: 업로드 당시 원본 파일명과 동일한 이력서 이름
           nullable: true
+    v1-members-me-profile466680720:
+      required:
+      - nickname
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
+        bio:
+          type: string
+          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
+          nullable: true
+        interestJobRoleIds:
+          type: array
+          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
+          nullable: true
+          items:
+            type: number
+        interestCompanyIds:
+          type: array
+          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
+          nullable: true
+          items:
+            type: number
     v1-companies1839974379:
       required:
       - result
@@ -9814,30 +10080,6 @@ components:
                     type: string
                     description: 회사명
           nullable: true
-    v1-members-me-profile466680720:
-      required:
-      - nickname
-      type: object
-      properties:
-        nickname:
-          type: string
-          description: "변경할 닉네임 (전체 중복 불가, 자신 제외)"
-        bio:
-          type: string
-          description: "자기소개 (미지정이면 빈 문자열, 최대 500자)"
-          nullable: true
-        interestJobRoleIds:
-          type: array
-          description: "관심 직무 id 목록 (미지정이면 빈 배열, /v1/job-roles — 전체 교체)"
-          nullable: true
-          items:
-            type: number
-        interestCompanyIds:
-          type: array
-          description: "관심 회사 id 목록 (미지정이면 빈 배열, /v1/companies 검색 — 전체 교체)"
-          nullable: true
-          items:
-            type: number
     v1-rooms-roomId-applications-me2061746466:
       required:
       - result
@@ -10874,202 +11116,6 @@ components:
                 - type: boolean
                 - type: string
                 - type: number
-          nullable: true
-    v1-rooms1476531183:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - rooms
-          - sort
-          - totalCount
-          type: object
-          properties:
-            nextCursor:
-              type: string
-              description: 다음 페이지 커서. 마지막 페이지면 null
-              nullable: true
-            rooms:
-              type: array
-              description: 룸 목록
-              items:
-                required:
-                - method
-                - methodLabel
-                - roomId
-                - round
-                - roundLabel
-                - title
-                - viewer
-                type: object
-                properties:
-                  viewer:
-                    required:
-                    - actions
-                    - relation
-                    type: object
-                    properties:
-                      blockReason:
-                        type: string
-                        description: 할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED
-                          | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED
-                          | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED
-                          | APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다.
-                          정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다
-                        nullable: true
-                      actions:
-                        type: array
-                        description: 취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED
-                          | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION
-                          | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다
-                        items:
-                          oneOf:
-                          - type: object
-                          - type: boolean
-                          - type: string
-                          - type: number
-                      relation:
-                        type: string
-                        description: 조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED
-                          신청 대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여
-                          슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST
-                          방장). 배지(`참여 중`·`내가 만든 룸`)를 이 값으로 그린다
-                    description: 조회자와 이 룸의 관계·행동. 상세와 같은 객체라 렌더러를 하나만 만들면 된다
-                  method:
-                    type: string
-                    description: 진행 방식 코드 (ONLINE | OFFLINE)
-                  jobPosting:
-                    type: object
-                    properties:
-                      jobPostingId:
-                        type: number
-                        description: 채용 공고 id
-                        nullable: true
-                      postingName:
-                        type: string
-                        description: 채용 공고명
-                        nullable: true
-                    description: 채용 공고 (폐기됐으면 null)
-                    nullable: true
-                  type:
-                    type: string
-                    description: 면접 유형 코드 (선택)
-                    nullable: true
-                  title:
-                    type: string
-                    description: 룸 제목
-                  roomId:
-                    type: string
-                    description: 룸 id (UUID)
-                  schedule:
-                    required:
-                    - date
-                    - durationMinutes
-                    - startTime
-                    type: object
-                    properties:
-                      date:
-                        type: string
-                        description: 진행 날짜 (yyyy-MM-dd). 요일 등 표시 문구는 화면이 만든다
-                      durationMinutes:
-                        type: number
-                        description: 예상 소요 시간(분)
-                      startTime:
-                        type: string
-                        description: 시작 시각 (HH:mm)
-                    nullable: true
-                  round:
-                    type: string
-                    description: 면접 단계 코드 (FIRST | SECOND | THIRD | ETC)
-                  recruit:
-                    required:
-                    - current
-                    - max
-                    - pending
-                    - recruitStatus
-                    - recruitStatusLabel
-                    type: object
-                    properties:
-                      current:
-                        type: number
-                        description: 현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)
-                      max:
-                        type: number
-                        description: 최대 인원
-                      pending:
-                        type: number
-                        description: 대기 중인 참가 신청 수
-                      recruitStatus:
-                        type: string
-                        description: "모집 상태 (RECRUITING | CLOSED, 정원 충족 시 CLOSED)"
-                      recruitStatusLabel:
-                        type: string
-                        description: 모집 상태 표시명
-                    nullable: true
-                  methodLabel:
-                    type: string
-                    description: 진행 방식 표시명
-                  jobRole:
-                    type: object
-                    properties:
-                      code:
-                        type: string
-                        description: 직무 코드
-                        nullable: true
-                      displayName:
-                        type: string
-                        description: 직무 표시명
-                        nullable: true
-                      jobRoleId:
-                        type: number
-                        description: 직무 id
-                        nullable: true
-                    description: 직무 (폐기됐으면 null)
-                    nullable: true
-                  typeLabel:
-                    type: string
-                    description: 면접 유형 표시명 (선택)
-                    nullable: true
-                  company:
-                    type: object
-                    properties:
-                      companyId:
-                        type: number
-                        description: 회사 id
-                        nullable: true
-                      name:
-                        type: string
-                        description: 회사명
-                        nullable: true
-                    description: 회사 (공고에서 파생. 회사를 알 수 없으면 null)
-                    nullable: true
-                  region:
-                    type: object
-                    properties:
-                      sigunguId:
-                        type: number
-                        description: 지역 시군구 id
-                        nullable: true
-                      label:
-                        type: string
-                        description: 지역 표시명
-                        nullable: true
-                    description: 오프라인 지역 (온라인이거나 폐기된 지역이면 null)
-                    nullable: true
-                  roundLabel:
-                    type: string
-                    description: 면접 단계 표시명
-            sort:
-              type: string
-              description: 실제로 적용된 정렬
-            totalCount:
-              type: number
-              description: 조건에 맞는 전체 룸 수 (페이지 크기와 무관)
           nullable: true
     v1-terms1673199050:
       required:

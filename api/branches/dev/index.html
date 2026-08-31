@@ -1229,7 +1229,7 @@ Content-Length: 236
   "data" : {
     "result" : "BYE_GET",
     "date" : "2026-08-31",
-    "datetime" : "2026-08-31T02:53:23.424648747",
+    "datetime" : "2026-08-31T13:22:50.331449998",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1343,7 +1343,7 @@ Content-Length: 237
   "data" : {
     "result" : "BYE_POST",
     "date" : "2026-08-31",
-    "datetime" : "2026-08-31T02:53:23.468032507",
+    "datetime" : "2026-08-31T13:22:50.374038886",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1662,7 +1662,7 @@ Content-Length: 97
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Mon, 31 Aug 2026 03:23:21 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Mon, 31 Aug 2026 13:52:48 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1868,7 +1868,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "d8a178d1-0140-4352-9015-94e772ec9c51",
+      "termsId" : "d831144a-b269-4eab-9c71-8120e521a114",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1876,7 +1876,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "42d51792-8ae6-4f4e-8540-470cc5511eb8",
+      "termsId" : "808927f9-16da-4030-83b6-fe60c8a8947a",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1981,12 +1981,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
+    "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "799a7cb2-6016-4285-81b0-8c4f0af44ed5",
+      "memberId" : "01321d16-826a-48eb-8bac-9739e4874701",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2680,7 +2680,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "92d2ba99-2ca5-4d60-ab69-40e59ca6124b",
+    "memberId" : "1537490c-d035-4e31-a0b9-a9836074d9c4",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -4577,15 +4577,13 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1672
+Content-Length: 1733
 
 {
   "result" : "SUCCESS",
   "data" : {
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "status" : "RECRUITING",
-    "jobPostingId" : 1,
-    "jobRoleId" : 1,
     "company" : {
       "companyId" : 1,
       "name" : "달빛페이"
@@ -4607,14 +4605,14 @@ Content-Length: 1672
     "typeLabel" : "직무 면접",
     "method" : "OFFLINE",
     "methodLabel" : "오프라인",
-    "sigunguId" : 1,
     "region" : {
       "sigunguId" : 1,
       "label" : "서울 강남구"
     },
     "schedule" : {
-      "startAt" : "2026-09-01T02:53:30.556284723",
-      "durationMinutes" : 90
+      "startAt" : "2026-09-01T13:22:57.290456345",
+      "durationMinutes" : 90,
+      "isPassed" : false
     },
     "recruit" : {
       "current" : 1,
@@ -4625,18 +4623,23 @@ Content-Length: 1672
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "dd54bb42-497f-45ab-bfc3-ba17b215732f",
-    "confirmation" : {
-      "ready" : false,
-      "blockReason" : {
-        "code" : "BELOW_MIN_CAPACITY",
-        "label" : "인원 1 / 6명 (최소 3명)"
-      }
-    },
+    "hostMemberId" : "6c167295-66a6-46b4-b459-df90edf6c49e",
     "viewer" : {
-      "relation" : "ANONYMOUS",
-      "actions" : [ "LOGIN_REQUIRED" ],
-      "blockReason" : null
+      "isHost" : false,
+      "isParticipating" : false,
+      "hasRemovalHistory" : false,
+      "latestApplicationStatus" : null,
+      "member" : {
+        "isActive" : true,
+        "participationSlots" : {
+          "occupied" : 1,
+          "limit" : 3
+        },
+        "pendingApplicationQuota" : {
+          "occupied" : 0,
+          "limit" : 3
+        }
+      }
     }
   },
   "error" : null
@@ -4674,16 +4677,6 @@ Content-Length: 1672
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobPostingId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">채용 공고 id (회사는 공고에서 파생)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.jobRoleId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">직무 id</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.company</code></p></td>
@@ -4776,11 +4769,6 @@ Content-Length: 1672
 <td class="tableblock halign-left valign-top"><p class="tableblock">진행 방식 표시명</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sigunguId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 시군구 id (온라인이면 null)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.region</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">오프라인 지역 (온라인이거나 폐기된 지역이면 null)</p></td>
@@ -4804,6 +4792,11 @@ Content-Length: 1672
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.durationMinutes</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">예상 소요 시간(분)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.schedule.isPassed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 일정 경과 여부 (서버 시각 기준). 신청·확정 검증과 같은 술어라 클라이언트 시계로 재계산하지 않는다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.recruit.current</code></p></td>
@@ -4836,31 +4829,6 @@ Content-Length: 1672
 <td class="tableblock halign-left valign-top"><p class="tableblock">대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">진행 확정 준비 여부. 이 룸의 사실이며 조회자가 확정할 수 있는지와는 다르다</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.ready</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">확정 가능 여부 (모집 중 &amp;&amp; 일정 미경과 &amp;&amp; 인원 &gt;= 최소 인원)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">확정할 수 없는 사유. ready 가 true 면 null</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason.code</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">사유 코드 (ROOM_CONFIRMED | ROOM_IN_PROGRESS | ROOM_COMPLETED | ROOM_CANCELED | SCHEDULE_PASSED | BELOW_MIN_CAPACITY)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.confirmation.blockReason.label</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">화면에 그대로 쓰는 사유 문구. 인원 미달이면 현재 인원과 최소 인원이 들어간다</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.resumePublic</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">이력서 원본 공개 여부 (룸 속성)</p></td>
@@ -4873,22 +4841,67 @@ Content-Length: 1672
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계·행동. 목록과 같은 객체다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, 신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415 | E1416 | E1425)이 전담한다</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.relation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.isHost</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">내가 이 룸의 방장인가. <code>내가 만든 룸</code> 배지와 룸 관리 진입 판정용</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.isParticipating</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.hasRemovalHistory</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.latestApplicationStatus</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST 방장). 배지(<code>참여 중</code>·<code>내가 만든 룸</code>)를 이 값으로 그린다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED). 신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저 봐야 한다</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.actions</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸과 무관한 회원 축 사실</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.blockReason</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. 정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.isActive</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이용 제한(제재) 중이면 false</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.participationSlots</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 슬롯 사용량. occupied &gt;= limit 면 신청이 거부된다(E1425)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.participationSlots.occupied</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 중인 룸 수 (방장 포함)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.participationSlots.limit</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 슬롯 한도</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.pendingApplicationQuota</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 신청 사용량. occupied &gt;= limit 면 신청이 거부된다(E1416)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.pendingApplicationQuota.occupied</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 대기 중인 내 신청 수</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer.member.pendingApplicationQuota.limit</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 신청 한도</p></td>
 </tr>
 </tbody>
 </table>
@@ -4978,7 +4991,7 @@ Content-Length: 1672
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1375
+Content-Length: 1716
 
 {
   "result" : "SUCCESS",
@@ -5012,7 +5025,8 @@ Content-Length: 1375
       "schedule" : {
         "date" : "2026-09-05",
         "startTime" : "14:00",
-        "durationMinutes" : 90
+        "durationMinutes" : 90,
+        "isPassed" : false
       },
       "recruit" : {
         "current" : 3,
@@ -5022,9 +5036,21 @@ Content-Length: 1375
         "recruitStatusLabel" : "모집 중"
       },
       "viewer" : {
-        "relation" : "NONE",
-        "actions" : [ "APPLY" ],
-        "blockReason" : null
+        "isHost" : false,
+        "isParticipating" : false,
+        "hasRemovalHistory" : false,
+        "latestApplicationStatus" : null,
+        "member" : {
+          "isActive" : true,
+          "participationSlots" : {
+            "occupied" : 1,
+            "limit" : 3
+          },
+          "pendingApplicationQuota" : {
+            "occupied" : 0,
+            "limit" : 3
+          }
+        }
       }
     } ],
     "sort" : "SCHEDULE",
@@ -5183,6 +5209,11 @@ Content-Length: 1375
 <td class="tableblock halign-left valign-top"><p class="tableblock">예상 소요 시간(분)</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].schedule.isPassed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">진행 일정 경과 여부 (서버 시각 기준). 클라이언트 시계로 재계산하지 않는다 — 신청 API 와 어긋난다</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].recruit.current</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">현재 인원 (참여 중인 사람만. 나간 사람은 빠진다)</p></td>
@@ -5210,22 +5241,67 @@ Content-Length: 1375
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계·행동. 상세와 같은 객체라 렌더러를 하나만 만들면 된다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">조회자 본인에 대한 사실. 비로그인이면 null 이다. 버튼·배지 판정은 화면 소관이고, 신청 가능 여부의 강제와 사유는 신청 API 의 에러 응답(E1002 | E1410 | E1412 | E1413 | E1415 | E1416 | E1425)이 전담한다</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.relation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.isHost</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">내가 이 룸의 방장인가. <code>내가 만든 룸</code> 배지와 룸 관리 진입 판정용</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.isParticipating</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">내가 참여 중인가. 방장도 참여자라 true — isHost 를 먼저 본다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.hasRemovalHistory</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이 룸에서 강퇴당한 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.latestApplicationStatus</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">조회자와 이 룸의 관계 (ANONYMOUS 비로그인 | NONE 무관계 | APPLIED 신청 대기 | WITHDRAWN 철회 | APPLICATION_CLOSED 시스템이 끝낸 신청(룸 취소·확정·참여 슬롯 초과) | REJECTED 반려 | REMOVED 강퇴 | PARTICIPANT 참여 중 | HOST 방장). 배지(<code>참여 중</code>·<code>내가 만든 룸</code>)를 이 값으로 그린다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이 룸에 대한 가장 최근 신청 상태 (PENDING | WITHDRAWN | REJECTED | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED | ACCEPTED). 신청 이력이 없으면 null. 강퇴자는 ACCEPTED 가 남아 있으므로 hasRemovalHistory 를 먼저 봐야 한다</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.actions</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">취할 수 있는 행동. 순서가 계약이며 첫 원소가 주 버튼이다 (LOGIN_REQUIRED | APPLY | APPLY_WAITLIST | VIEW_MY_APPLICATION | WITHDRAW_APPLICATION | VIEW_MY_ROOM | MANAGE_ROOM). 표시 문구는 클라이언트가 만든다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸과 무관한 회원 축 사실</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.blockReason</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">할 수 있는 것이 하나도 없는 이유 (ROOM_CONFIRMED | ROOM_CANCELED | ROOM_COMPLETED | SCHEDULE_PASSED | APPLICATION_REJECTED | REMOVED_FROM_ROOM | MEMBER_SUSPENDED | PARTICIPATION_SLOT_EXCEEDED | APPLICATION_LIMIT_EXCEEDED). actions 가 비어 있을 때만 값이 있다. 정원 도달은 사유가 아니다 — 확정 전이면 APPLY_WAITLIST 로 접수된다</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.isActive</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이용 제한(제재) 중이면 false</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.participationSlots</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 슬롯 사용량. occupied &gt;= limit 면 신청이 거부된다(E1425)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.participationSlots.occupied</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 중인 룸 수 (방장 포함)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.participationSlots.limit</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여 슬롯 한도</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.pendingApplicationQuota</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 신청 사용량. occupied &gt;= limit 면 신청이 거부된다(E1416)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.pendingApplicationQuota.occupied</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 대기 중인 내 신청 수</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.rooms[].viewer.member.pendingApplicationQuota.limit</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대기 신청 한도</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.sort</code></p></td>
@@ -5259,7 +5335,7 @@ Content-Length: 1375
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "31107dd9-5d8e-456b-8d07-f208c5508fa2",
+  "resumeId" : "64eb61de-ebaa-491c-9c61-5bee6e51c464",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5493,7 +5569,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "a547acf0-3be4-4dde-8271-64750b6772b2",
+      "resumeId" : "58b2e3f0-2703-4933-a1b3-9f11bc1cfc03",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -11540,7 +11616,7 @@ Content-Length: 61
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-08-31 02:51:53 UTC
+Last updated 2026-08-31 13:21:35 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
