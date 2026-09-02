@@ -37,7 +37,16 @@ class Room(
     var status: RoomStatus = status
         private set
 
+    // 원본 열람 창(「룸 참여」 §4.3, MOI-414 D3-6): 확정 이후 ~ 종료 전.
+    // 명부의 canViewOriginal 과 발급 게이트가 이 판정을 공유한다 - 갈리면 버튼과 발급이 다른 말을 한다.
+    fun opensResumeOriginal(): Boolean {
+        return resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION &&
+            status in RESUME_ORIGINAL_OPEN_STATUSES
+    }
+
     companion object {
+        private val RESUME_ORIGINAL_OPEN_STATUSES = setOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS)
+
         fun create(
             id: UUID,
             jobPostingId: Long,

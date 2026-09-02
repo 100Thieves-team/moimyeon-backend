@@ -6,8 +6,6 @@ import io.plady.moimyeon.core.domain.room.RoomParticipantResume
 import io.plady.moimyeon.core.domain.room.RoomParticipantResumeFinder
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
-import io.plady.moimyeon.core.enums.ResumeSharingPolicy
-import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.springframework.stereotype.Component
@@ -40,11 +38,11 @@ class RoomParticipantReader(
             .sortedBy { !it.isHost }
     }
 
-    // 세 조건의 AND 다. 뷰어가 확정 참여자인지를 묻는 것이지 대상자별로 갈리지 않는다(§4.3·§4.5).
+    // 열람 창(Room.opensResumeOriginal)과 뷰어가 확정 참여자인지의 AND 다. 대상자별로 갈리지 않는다(§4.3·§4.5).
+    // 창 판정은 발급 게이트(MOI-414)와 공유한다 - 여기가 갈리면 버튼은 없는데 발급은 되는 화면이 나온다.
     private fun canViewOriginal(roomId: UUID, viewerMemberId: UUID): Boolean {
         val room = roomFinder.getRoom(roomId)
-        return room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION &&
-            room.status == RoomStatus.CONFIRMED &&
+        return room.opensResumeOriginal() &&
             participationFinder.wasConfirmedParticipant(roomId, viewerMemberId)
     }
 

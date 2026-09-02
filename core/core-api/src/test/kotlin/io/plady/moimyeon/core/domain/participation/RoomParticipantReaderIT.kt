@@ -86,6 +86,30 @@ class RoomParticipantReaderIT(
     }
 
     @Test
+    fun `진행 중인 룸의 명부에서도 원본을 열 수 있다`() {
+        persistRoom(resumePublic = true, status = RoomStatus.IN_PROGRESS)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+        recordConfirmation()
+
+        val participants = roomParticipantReader.getAllByRoom(roomId, participantMemberId)
+
+        assertThat(participants).isNotEmpty().allMatch { it.canViewOriginal }
+    }
+
+    @Test
+    fun `종료된 룸의 명부에서는 원본을 열 수 없다`() {
+        persistRoom(resumePublic = true, status = RoomStatus.COMPLETED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+        recordConfirmation()
+
+        val participants = roomParticipantReader.getAllByRoom(roomId, participantMemberId)
+
+        assertThat(participants).isNotEmpty().allMatch { !it.canViewOriginal }
+    }
+
+    @Test
     fun `확정 후에 합류한 참여자는 원본을 열 수 없다`() {
         givenConfirmedRoom(resumePublic = true)
         val lateMemberId = UUID.randomUUID()
