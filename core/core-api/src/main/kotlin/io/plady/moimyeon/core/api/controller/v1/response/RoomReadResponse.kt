@@ -4,6 +4,7 @@ import io.plady.moimyeon.core.domain.catalog.JobRole
 import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
+import io.plady.moimyeon.core.domain.participation.JoinedParticipant
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.RoomDetail
 import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
@@ -40,6 +41,9 @@ data class RoomReadResponse(
     val recruit: RoomReadRecruitResponse,
     val resumePublic: Boolean,
     val hostMemberId: UUID,
+    // 참여자 공개 명단(MOI-504) — 참여 시각 순, 비로그인에도 공개(PRD §6 공개 데이터: 닉네임).
+    // 방장 표시는 hostMemberId 와 매칭한다. 직무·활동·이력서 요약은 참여자 전용 명부 API 소관.
+    val participants: List<RoomReadParticipantResponse>,
     // 조회자 본인의 사실(MOI-500). 비로그인이면 null 이다.
     val viewer: RoomViewerResponse?,
 ) {
@@ -50,6 +54,8 @@ data class RoomReadResponse(
             company: Company?,
             jobRole: JobRole?,
             region: RegionLabel?,
+            joinedParticipants: List<JoinedParticipant>,
+            nicknames: Map<UUID, String>,
             viewer: ViewerFacts?,
         ): RoomReadResponse {
             val room = detail.room
@@ -86,6 +92,12 @@ data class RoomReadResponse(
                 ),
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
                 hostMemberId = detail.hostMemberId,
+                participants = joinedParticipants.map {
+                    RoomReadParticipantResponse(
+                        memberId = it.memberId,
+                        nickname = nicknames[it.memberId] ?: WITHDRAWN_PARTICIPANT_NICKNAME,
+                    )
+                },
                 viewer = viewer?.let(RoomViewerResponse::from),
             )
         }
@@ -105,4 +117,9 @@ data class RoomReadRecruitResponse(
     val recruitStatusLabel: String, // 모집 중 | 모집 마감
     // 「룸 참여」 §4.1·§6 이 공개로 지정한 값이다. 수만 공개하고 대기자 목록은 방장 외 비공개다.
     val pendingApplicationCount: Int,
+)
+
+data class RoomReadParticipantResponse(
+    val memberId: UUID,
+    val nickname: String,
 )
