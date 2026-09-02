@@ -1236,8 +1236,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-09-01",
-    "datetime" : "2026-09-01T08:32:47.809900912",
+    "date" : "2026-09-02",
+    "datetime" : "2026-09-02T08:44:28.060739457",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1350,8 +1350,8 @@ Content-Length: 237
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-09-01",
-    "datetime" : "2026-09-01T08:32:47.858896958",
+    "date" : "2026-09-02",
+    "datetime" : "2026-09-02T08:44:28.101452795",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1670,7 +1670,7 @@ Content-Length: 97
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Tue, 1 Sep 2026 09:02:45 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Wed, 2 Sep 2026 09:14:26 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1876,7 +1876,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "d1ef3c2a-27d2-40b6-9765-8a684252b0e9",
+      "termsId" : "d042ff0c-3ae7-4527-afdc-d95fd74b444d",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1884,7 +1884,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "3425bd50-95ef-4140-af4a-d2f60315699e",
+      "termsId" : "4548347d-61c0-459f-a189-45f79cf11efb",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1989,12 +1989,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "0492207b-19a3-492f-afe0-cd842c65353e",
+    "memberId" : "cd1d241f-8003-476c-ad9e-3a8cc7b66818",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "0492207b-19a3-492f-afe0-cd842c65353e",
+      "memberId" : "cd1d241f-8003-476c-ad9e-3a8cc7b66818",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2688,7 +2688,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "a7db6859-55f8-4c65-bfdd-1db4cf836307",
+    "memberId" : "1c94c041-ac28-47ef-9cd1-9c43ec750735",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -4708,7 +4708,7 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1707
+Content-Length: 1844
 
 {
   "result" : "SUCCESS",
@@ -4741,7 +4741,7 @@ Content-Length: 1707
       "label" : "서울 강남구"
     },
     "schedule" : {
-      "startAt" : "2026-09-02T08:32:55.302458181",
+      "startAt" : "2026-09-03T08:44:34.575747012",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4753,7 +4753,11 @@ Content-Length: 1707
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "26551ae7-621f-4439-9940-0ca0542ec8a1",
+    "hostMemberId" : "589f862b-7a03-433c-b6a5-8bfcef4679df",
+    "participants" : [ {
+      "memberId" : "589f862b-7a03-433c-b6a5-8bfcef4679df",
+      "nickname" : "영리한 부엉이 86"
+    } ],
     "viewer" : {
       "isHost" : false,
       "isParticipating" : false,
@@ -4962,6 +4966,21 @@ Content-Length: 1707
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.hostMemberId</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">방장 회원 식별자 (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.participants</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자 공개 명단 (참여 시각 순, 비로그인에도 공개 — §6 공개 데이터). 방장 표시는 hostMemberId 와 매칭한다</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.participants[].memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자 회원 id (UUID)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.participants[].nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.viewer</code></p></td>
@@ -5454,7 +5473,7 @@ Content-Length: 1688
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "98508a83-5259-429f-8508-3daa918e7221",
+  "resumeId" : "20deb340-7479-4fba-8823-db7c3c324a71",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5688,7 +5707,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "5feb5aa1-4f27-484e-85a2-a86d85201eb3",
+      "resumeId" : "1f5ba5ca-f50c-419f-877d-9af46f994ecf",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -11735,7 +11754,7 @@ Content-Length: 61
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-09-01 08:31:14 UTC
+Last updated 2026-09-02 08:43:08 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
