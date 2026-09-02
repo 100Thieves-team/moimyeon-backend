@@ -26,7 +26,14 @@ import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.company.CompanyService
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.jobposting.JobPostingService
+import io.plady.moimyeon.core.domain.member.Email
+import io.plady.moimyeon.core.domain.member.Member
+import io.plady.moimyeon.core.domain.member.MemberService
+import io.plady.moimyeon.core.domain.member.Nickname
+import io.plady.moimyeon.core.domain.member.SocialAccount
+import io.plady.moimyeon.core.domain.participation.JoinedParticipant
 import io.plady.moimyeon.core.domain.participation.ParticipationSlots
+import io.plady.moimyeon.core.domain.participation.RoomParticipantService
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
 import io.plady.moimyeon.core.domain.room.RoomCapacity
@@ -46,8 +53,11 @@ import io.plady.moimyeon.core.domain.roomviewer.ViewerMemberFacts
 import io.plady.moimyeon.core.domain.roomviewer.ViewerRoomFacts
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
+import io.plady.moimyeon.core.enums.MemberRole
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.test.api.RestDocsTest
@@ -76,6 +86,8 @@ class RoomControllerTest : RestDocsTest() {
     private lateinit var jobPostingService: JobPostingService
     private lateinit var companyService: CompanyService
     private lateinit var catalogService: CatalogService
+    private lateinit var roomParticipantService: RoomParticipantService
+    private lateinit var memberService: MemberService
     private val hostMemberId: UUID = UUID.randomUUID()
     private val principal = Principal { hostMemberId.toString() }
     private val createdRoomId: UUID = UUID.fromString("01920000-0000-7000-8000-000000000001")
@@ -160,7 +172,13 @@ class RoomControllerTest : RestDocsTest() {
         jobPostingService = mockk()
         companyService = mockk()
         catalogService = mockk()
+        roomParticipantService = mockk()
+        memberService = mockk()
         every { roomViewerService.getViewer(any(), any()) } returns null
+        // 참여자 공개 명단(MOI-504). sampleRoomDetail 의 currentParticipants=1 과 정합해야 한다(방장 1명).
+        every { roomParticipantService.getJoinedParticipants(any()) } returns
+            listOf(JoinedParticipant(memberId = hostMemberId, isHost = true))
+        every { memberService.getMembers(any()) } returns listOf(member(hostMemberId, "영리한 부엉이 86"))
         // 상세 표시명 조립(MOI-496)이 읽는 참조들. sampleRoom() 의 공고 1·직무 1·시군구 1 과 짝이 맞아야
         // 문서 예시가 목록(sampleRoomsResponse)과 같은 회사·직무·지역으로 나온다.
         every { jobPostingService.getRefs(any()) } returns
@@ -171,7 +189,15 @@ class RoomControllerTest : RestDocsTest() {
         every { catalogService.getRegionLabels(any()) } returns listOf(RegionLabel(sigunguId = 1L, label = "서울 강남구"))
         mockMvc = mockController(
             RoomController(
-                RoomFacade(roomService, roomViewerService, jobPostingService, companyService, catalogService),
+                RoomFacade(
+                    roomService,
+                    roomViewerService,
+                    jobPostingService,
+                    companyService,
+                    catalogService,
+                    roomParticipantService,
+                    memberService,
+                ),
                 roomSearchFacade,
                 roomService,
             ),
@@ -278,6 +304,16 @@ class RoomControllerTest : RestDocsTest() {
     )
 
     private fun emptyRoomsResponse(): RoomsResponse = RoomsResponse(rooms = emptyList(), sort = RoomSortOrder.SCHEDULE.name, totalCount = 0, nextCursor = null)
+
+    private fun member(id: UUID, nickname: String): Member = Member(
+        id = id,
+        email = Email("$id@example.com"),
+        nickname = Nickname(nickname),
+        status = MemberStatus.ACTIVE,
+        socialAccounts = listOf(SocialAccount(SocialLoginProvider.GOOGLE, id.toString(), null)),
+        lastLoginAt = LocalDateTime.of(2026, 8, 14, 12, 0),
+        role = MemberRole.USER,
+    )
 
     // 생성 응답은 도메인 Room(id·status)만 쓰므로, 서비스는 목으로 두고 고정 Room 을 돌려준다.
     private fun sampleRoom(): Room = Room.create(
@@ -784,6 +820,11 @@ class RoomControllerTest : RestDocsTest() {
                             .description("대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다"),
                         fieldWithPath("data.resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성)"),
                         fieldWithPath("data.hostMemberId").type(JsonFieldType.STRING).description("방장 회원 식별자 (UUID)"),
+                        fieldWithPath("data.participants").type(JsonFieldType.ARRAY)
+                            .description("참여자 공개 명단 (참여 시각 순, 비로그인에도 공개 — §6 공개 데이터). 방장 표시는 hostMemberId 와 매칭한다"),
+                        fieldWithPath("data.participants[].memberId").type(JsonFieldType.STRING).description("참여자 회원 id (UUID)"),
+                        fieldWithPath("data.participants[].nickname").type(JsonFieldType.STRING)
+                            .description("참여자 닉네임. 탈퇴한 회원은 대체 표기로 내려간다"),
                         *viewerFields("data.viewer"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
