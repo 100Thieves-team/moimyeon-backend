@@ -6,6 +6,8 @@ import io.mockk.slot
 import io.mockk.verify
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFileStorageException
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryDeadline
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryTimeSource
 import io.plady.moimyeon.core.domain.resume.ResumeUpload
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -26,6 +28,7 @@ class S3ResumeFileStoreTest {
     private val fileStore = S3ResumeFileStore(
         s3Client,
         properties(),
+        ResumeSummaryTimeSource { 0L },
     )
 
     @Test
@@ -48,7 +51,7 @@ class S3ResumeFileStoreTest {
             s3Client.putObject(capture(request), any<RequestBody>())
         } returns PutObjectResponse.builder().build()
 
-        val storedFile = fileStore.store(memberId, upload)
+        val storedFile = fileStore.store(memberId, upload, deadline())
 
         assertThat(request.captured.bucket()).isEqualTo("resume-bucket")
         assertThat(request.captured.key()).isEqualTo(storedFile.key)
@@ -58,6 +61,8 @@ class S3ResumeFileStoreTest {
         assertThat(storedFile.contentType).isEqualTo(upload.contentType)
         assertThat(request.captured.contentType()).isEqualTo("application/pdf")
         assertThat(request.captured.contentLength()).isEqualTo(11)
+        assertThat(request.captured.overrideConfiguration().flatMap { it.apiCallTimeout() })
+            .contains(Duration.ofSeconds(30))
         verify(exactly = 1) { s3Client.putObject(any<PutObjectRequest>(), any<RequestBody>()) }
     }
 
@@ -70,11 +75,13 @@ class S3ResumeFileStoreTest {
         } returns ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), content)
 
         val file = ResumeFile("resumes/member/resume.pdf", "resume.pdf", 11, "application/pdf")
-        val storedContent = fileStore.read(file)
+        val storedContent = fileStore.read(file, deadline())
 
         assertThat(storedContent).isEqualTo(content)
         assertThat(request.captured.bucket()).isEqualTo("resume-bucket")
         assertThat(request.captured.key()).isEqualTo("resumes/member/resume.pdf")
+        assertThat(request.captured.overrideConfiguration().flatMap { it.apiCallTimeout() })
+            .contains(Duration.ofSeconds(30))
     }
 
     @Test
@@ -83,9 +90,31 @@ class S3ResumeFileStoreTest {
         every { s3Client.getObjectAsBytes(any<GetObjectRequest>()) } throws cause
         val file = ResumeFile("resumes/member/resume.pdf", "resume.pdf", 11, "application/pdf")
 
-        assertThatThrownBy { fileStore.read(file) }
+        assertThatThrownBy { fileStore.read(file, deadline()) }
             .isInstanceOf(ResumeFileStorageException::class.java)
             .hasCause(cause)
+    }
+
+    @Test
+    fun `S3 요청 제한 시간은 전체 처리 기한의 남은 시간을 넘지 않는다`() {
+        val request = slot<GetObjectRequest>()
+        val content = "pdf-content".toByteArray()
+        val constrainedStore = S3ResumeFileStore(
+            s3Client,
+            properties(),
+            ResumeSummaryTimeSource { Duration.ofSeconds(20).toNanos() },
+        )
+        every {
+            s3Client.getObjectAsBytes(capture(request))
+        } returns ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), content)
+
+        constrainedStore.read(
+            ResumeFile("resumes/member/resume.pdf", "resume.pdf", 11, "application/pdf"),
+            deadline(),
+        )
+
+        assertThat(request.captured.overrideConfiguration().flatMap { it.apiCallTimeout() })
+            .contains(Duration.ofSeconds(25))
     }
 
     private fun properties() = S3ObjectStorageProperties(
@@ -94,4 +123,6 @@ class S3ResumeFileStoreTest {
         apiCallTimeout = Duration.ofSeconds(30),
         apiCallAttemptTimeout = Duration.ofSeconds(10),
     )
+
+    private fun deadline(): ResumeSummaryDeadline = ResumeSummaryDeadline.start(0L)
 }
