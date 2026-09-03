@@ -4,7 +4,7 @@
 # 보안 (public 저장소 + self-hosted 러너 조합이라 특히 중요):
 #   - 트리거는 `pull_request`다. 절대 `pull_request_target`으로 바꾸지 마라.
 #   - 아래 `if` 가드가 fork PR을 제외한다. public 저장소는 누구나 fork 후 PR을 열 수 있고,
-#     self-hosted 러너에서 fork PR을 돌리면 남의 코드를 우리 맥에서 실행하는 것이 된다.
+#     self-hosted 러너에서 fork PR을 돌리면 남의 코드를 우리 러너(팀 EC2)에서 실행하는 것이 된다.
 #     이 가드를 지우지 마라.
 #   - 추가로 저장소 Settings → Actions → General → Fork pull request workflows 에서
 #     "Require approval for all external contributors"를 켜 둘 것.
@@ -26,11 +26,10 @@ concurrency:
 
 jobs:
   review:
-    # 리뷰를 돌릴 PR 작성자. 러너가 개인 맥이고 모델 호출도 개인 구독이라
-    # 우선 본인 PR만 대상으로 한다. 팀에 열 때 배열에 로그인 아이디를 추가하면 된다.
-    #   예: '["bebeis", "dbwp031", "2wndrhs"]'
+    # 리뷰를 돌릴 PR 작성자. 러너가 팀 공용 EC2(org 러너 agent-platform-ec2)로 옮겨져
+    # 팀원 전원의 PR 을 대상으로 한다. 사람을 더할 때 이 배열에 로그인 아이디를 추가한다.
     if: >-
-      contains(fromJSON('["bebeis"]'), github.event.pull_request.user.login) &&
+      contains(fromJSON('["bebeis", "dbwp031", "2wndrhs"]'), github.event.pull_request.user.login) &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.draft == false
     runs-on: [self-hosted, review-swarm]
@@ -58,7 +57,7 @@ jobs:
         # 러너에서 실행되므로, @main 같은 mutable 참조를 쓰면 그 브랜치에 들어간 코드가
         # 다음 PR에서 그대로 돌게 된다.
         # 업데이트할 때는 review-swarm의 새 커밋을 확인한 뒤 이 SHA를 올린다.
-        uses: 100Thieves-team/review-swarm@76bbe3edbe5616c7a71ce418f46b40fdd2f57fd6
+        uses: 100Thieves-team/review-swarm@9143597244805231bcf45d2bd4e77a326c34efd6
         with:
           fail-on: never
           upload-artifacts: 'true'
