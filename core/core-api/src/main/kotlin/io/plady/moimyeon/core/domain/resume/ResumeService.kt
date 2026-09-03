@@ -17,6 +17,7 @@ class ResumeService(
     private val resumeManager: ResumeManager,
     private val resumeRegistrar: ResumeRegistrar,
     private val summaryGenerator: ResumeSummaryGenerator,
+    private val summaryTimeSource: ResumeSummaryTimeSource,
     private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -44,13 +45,14 @@ class ResumeService(
     }
 
     fun register(memberId: UUID, upload: ResumeUpload): UUID {
+        val summaryDeadline = ResumeSummaryDeadline.start(summaryTimeSource.nanoTime())
         resumeRegistrar.validateCapacity(memberId)
         val newResume = fileStorage.store(memberId, upload).toNewResume()
         // TODO: DB에 참조되지 않은 업로드 객체를 주기적으로 찾아 삭제한다.
         val attemptStartedAt = now()
         val resumeId = resumeRegistrar.register(memberId, newResume, attemptStartedAt)
         val summary = try {
-            summaryGenerator.generate(upload.content)
+            summaryGenerator.generate(upload.content, summaryDeadline)
         } catch (exception: ResumeSummaryGenerationException) {
             log.warn("Resume summarization failed: memberId={}, resumeId={}", memberId, resumeId, exception)
             resumeManager.failSummary(memberId, resumeId, attemptStartedAt)
@@ -61,13 +63,14 @@ class ResumeService(
     }
 
     fun retrySummary(memberId: UUID, resumeId: UUID): UUID {
+        val summaryDeadline = ResumeSummaryDeadline.start(summaryTimeSource.nanoTime())
         val attemptStartedAt = now()
         resumeManager.failExpiredSummaries(memberId, attemptStartedAt)
         val resume = resumeFinder.get(memberId, resumeId)
         resumeManager.startSummaryRetry(memberId, resumeId, attemptStartedAt)
         val summary = try {
             val content = fileStorage.read(resume.file)
-            summaryGenerator.generate(content)
+            summaryGenerator.generate(content, summaryDeadline)
         } catch (exception: ResumeSummaryGenerationException) {
             log.warn("Resume summarization retry failed: memberId={}, resumeId={}", memberId, resumeId, exception)
             resumeManager.failSummary(memberId, resumeId, attemptStartedAt)
