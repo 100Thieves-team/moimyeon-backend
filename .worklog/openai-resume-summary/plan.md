@@ -87,6 +87,8 @@
   사용자 "진행하자")
 - [ ] code-reviewer·llm-reviewer 리뷰 — 필수 지적 반영, 공유 deadline 보강 후
   code-reviewer 최종 통과
+- [ ] PR review-swarm 제안 — 운영 출력 검증을 live eval에서 재사용하도록 반영,
+  프롬프트·정규식 단일 정책화는 TBD로 기록
 - [ ] 애플리케이션 테스트·ktlint 검증 — Bedrock 모듈 및 전체 저장소 통과
 - [ ] ship-pr QA 게이트 — BLOCK: 최대 2회 모델 호출의 aggregate deadline과
   PDF 파싱 페이지·추출 자원 상한 보강 필요. 사용자 승인 후 45초 전체 예산,
@@ -97,4 +99,4 @@
 - [ ] Terraform plan 승인 (infra-change 체크포인트)
 - [ ] 커밋·PR
 
-검증한 커밋: 9d244291de016758e17057f9e66ff12b41c6d1d0
+검증한 커밋: 51a0e1040eb2eb67e28cfb2cc729a86357ec43ea
