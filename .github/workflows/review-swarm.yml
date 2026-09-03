@@ -57,7 +57,7 @@ jobs:
         # 러너에서 실행되므로, @main 같은 mutable 참조를 쓰면 그 브랜치에 들어간 코드가
         # 다음 PR에서 그대로 돌게 된다.
         # 업데이트할 때는 review-swarm의 새 커밋을 확인한 뒤 이 SHA를 올린다.
-        uses: 100Thieves-team/review-swarm@76bbe3edbe5616c7a71ce418f46b40fdd2f57fd6
+        uses: 100Thieves-team/review-swarm@9143597244805231bcf45d2bd4e77a326c34efd6
         with:
           fail-on: never
           upload-artifacts: 'true'
