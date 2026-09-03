@@ -101,4 +101,4 @@
 - [ ] Terraform plan 승인 (infra-change 체크포인트)
 - [ ] 커밋·PR
 
-검증한 커밋: 51a0e1040eb2eb67e28cfb2cc729a86357ec43ea
+검증한 커밋: d06b121321f1530dd4afb04cd162363b9e90d09b
