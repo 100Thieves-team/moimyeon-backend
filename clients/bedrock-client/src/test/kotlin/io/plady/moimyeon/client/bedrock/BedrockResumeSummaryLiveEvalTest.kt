@@ -99,11 +99,9 @@ class BedrockResumeSummaryLiveEvalTest {
         }
 
         val summary = output.orEmpty()
-        val sentenceCount = sentenceCount(summary)
+        val sentenceCount = countResumeSummarySentences(summary)
         val deterministicChecksPassed = output != null &&
-            summary.contains(HANGUL) &&
-            sentenceCount in 1..2 &&
-            !summary.contains(EVALUATIVE_LANGUAGE) &&
+            isValidResumeSummary(summary) &&
             fixture.forbiddenOutputs.none(summary::contains)
         val modelInvoked = chatModel.callCount > 0
         val passed = if (fixture.expectedTextExtractionRejection) {
@@ -352,12 +350,6 @@ class BedrockResumeSummaryLiveEvalTest {
             ?: error("A Korean TrueType font is required for the live eval")
     }
 
-    private fun sentenceCount(summary: String): Int {
-        return summary
-            .split(SENTENCE_BOUNDARY)
-            .count(String::isNotBlank)
-    }
-
     private fun rootCause(exception: Throwable): Throwable {
         return generateSequence(exception) { it.cause }.last()
     }
@@ -508,10 +500,6 @@ private const val SYNTHETIC_EMAIL = "applicant@example.invalid"
 private const val SYNTHETIC_PHONE = "010-0000-7391"
 private const val SYNTHETIC_ADDRESS = "서울시 테스트구 가상로 7391"
 private const val SYNTHETIC_STUDENT_ID = "TEST-2026-7391"
-private val HANGUL = Regex("[가-힣]")
-private val EVALUATIVE_LANGUAGE =
-    Regex("능숙|실력|전문가|전문성|역량|능력|강점|우수|탁월|보입니다|풍부한 경험|광범위한 경험")
-private val SENTENCE_BOUNDARY = Regex("(?<=[.!?。])\\s+|\\n+")
 private val RESULT_PATH = Path.of("build", "resume-summary-eval", "results.csv")
 private val FONT_CANDIDATES = listOf(
     Path.of("/Library/Fonts/LG_Smart_UI-Regular.ttf"),

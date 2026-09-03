@@ -32,7 +32,7 @@ internal class BedrockResumeSummaryGenerator(
             }
             val response = requestSummary(resumeText, attempt)
             val redactedResponse = response?.let(ResumePersonalInfoRedactor::redact)
-            if (redactedResponse != null && isValidSummary(redactedResponse)) {
+            if (redactedResponse != null && isValidResumeSummary(redactedResponse)) {
                 return redactedResponse
             }
         }
@@ -65,13 +65,16 @@ private fun userPrompt(attempt: Int): String {
     }
 }
 
-private fun isValidSummary(summary: String): Boolean {
-    val sentenceCount = summary
+internal fun countResumeSummarySentences(summary: String): Int {
+    return summary
         .split(SUMMARY_SENTENCE_BOUNDARY)
         .count(String::isNotBlank)
+}
+
+internal fun isValidResumeSummary(summary: String): Boolean {
     return summary.isNotBlank() &&
         summary.contains(SUMMARY_HANGUL) &&
-        sentenceCount in 1..2 &&
+        countResumeSummarySentences(summary) in 1..2 &&
         !summary.contains(SUMMARY_EVALUATIVE_LANGUAGE)
 }
 
