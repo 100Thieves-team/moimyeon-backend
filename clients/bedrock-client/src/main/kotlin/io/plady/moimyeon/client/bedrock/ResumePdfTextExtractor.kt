@@ -1,16 +1,29 @@
 package io.plady.moimyeon.client.bedrock
 
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryDeadline
 import io.plady.moimyeon.core.domain.resume.ResumeSummaryGenerationException
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryTimeSource
 import org.apache.pdfbox.Loader
+import org.apache.pdfbox.contentstream.operator.Operator
+import org.apache.pdfbox.cos.COSBase
 import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.pdfbox.text.TextPosition
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.text.Normalizer
+import java.time.Duration
 
 @Component
-internal class ResumePdfTextExtractor {
-    fun extract(content: ByteArray): String {
+internal class ResumePdfTextExtractor(
+    private val timeSource: ResumeSummaryTimeSource,
+) {
+    fun extract(content: ByteArray, deadline: ResumeSummaryDeadline): String {
+        val checkDeadline = {
+            if (!deadline.hasTimeFor(Duration.ZERO, timeSource.nanoTime())) {
+                throw ResumeSummaryGenerationException()
+            }
+        }
+        checkDeadline()
         val text = try {
             Loader.loadPDF(content).use { document ->
                 if (document.isEncrypted) {
@@ -19,7 +32,7 @@ internal class ResumePdfTextExtractor {
                 if (document.numberOfPages > MAX_RESUME_PDF_PAGES) {
                     throw ResumeSummaryGenerationException()
                 }
-                LimitedPdfTextStripper(MAX_RESUME_EXTRACTED_TEXT_LENGTH).apply {
+                LimitedPdfTextStripper(MAX_RESUME_EXTRACTED_TEXT_LENGTH, checkDeadline).apply {
                     sortByPosition = true
                 }.getText(document)
             }
@@ -60,10 +73,17 @@ internal fun normalizeExtractedResumeText(text: String): String {
 
 private class LimitedPdfTextStripper(
     private val maxCharacters: Int,
+    private val checkDeadline: () -> Unit,
 ) : PDFTextStripper() {
     private var extractedCharacters = 0
 
+    override fun processOperator(operator: Operator, operands: MutableList<COSBase>) {
+        checkDeadline()
+        super.processOperator(operator, operands)
+    }
+
     override fun processTextPosition(text: TextPosition) {
+        checkDeadline()
         val characterCount = text.unicode.length
         if (characterCount > maxCharacters - extractedCharacters) {
             throw PdfTextExtractionLimitExceededException()

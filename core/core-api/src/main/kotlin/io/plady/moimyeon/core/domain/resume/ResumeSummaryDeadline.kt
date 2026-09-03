@@ -7,9 +7,16 @@ class ResumeSummaryDeadline private constructor(
     private val totalBudgetNanos: Long,
 ) {
     fun hasTimeFor(requiredDuration: Duration, currentTimeNanos: Long): Boolean {
+        val remaining = remainingDuration(currentTimeNanos)
+        return !remaining.isZero && remaining >= requiredDuration
+    }
+
+    fun remainingDuration(currentTimeNanos: Long): Duration {
         val elapsedNanos = currentTimeNanos - startedAtNanos
-        val latestStartNanos = totalBudgetNanos - requiredDuration.toNanos()
-        return elapsedNanos >= 0 && latestStartNanos >= 0 && elapsedNanos <= latestStartNanos
+        if (elapsedNanos < 0 || elapsedNanos >= totalBudgetNanos) {
+            return Duration.ZERO
+        }
+        return Duration.ofNanos(totalBudgetNanos - elapsedNanos)
     }
 
     companion object {

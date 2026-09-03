@@ -226,7 +226,8 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - 응답은 한국어 1~2문장이고 평가 표현이 없어야 한다. 규칙을 어기면 최대 한 번 다시 생성하고 재차 위반하면
   `ResumeSummaryGenerationException`으로 처리한다.
 - PDF는 최대 50페이지·추출 문자열 60,000자로 제한한다. 서비스 시작 시 만든 45초 monotonic deadline을
-  S3 저장·조회와 생성기가 공유하며, 회당 20초 모델 호출을 마칠 시간이 남아 있을 때만 시작한다.
+  S3 저장·조회와 생성기가 공유한다. S3 요청은 설정 상한과 남은 시간 중 짧은 timeout을 사용하고, PDFBox는
+  content stream 연산 중 deadline을 확인한다. 회당 20초 모델 호출은 마칠 시간이 남아 있을 때만 시작한다.
 - 표·다단 레이아웃의 줄·순서 변화는 모델이 문맥으로 해석하도록 허용한다. 텍스트가 없거나 이미지 전용·암호화·손상 PDF는
   `ResumeSummaryGenerationException`으로 거부한다.
 - `Resume`이나 DB 식별자를 알지 않으며 `PDF 바이트 → 요약문` 계약만 구현한다.

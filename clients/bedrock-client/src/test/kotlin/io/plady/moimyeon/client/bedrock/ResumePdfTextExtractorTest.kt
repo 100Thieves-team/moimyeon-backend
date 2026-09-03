@@ -1,6 +1,8 @@
 package io.plady.moimyeon.client.bedrock
 
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryDeadline
 import io.plady.moimyeon.core.domain.resume.ResumeSummaryGenerationException
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryTimeSource
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -17,13 +19,13 @@ import java.io.ByteArrayOutputStream
 import java.text.Normalizer
 
 class ResumePdfTextExtractorTest {
-    private val extractor = ResumePdfTextExtractor()
+    private val extractor = ResumePdfTextExtractor(ResumeSummaryTimeSource { 0L })
 
     @Test
     fun `텍스트 PDF를 화면 위치 순서로 추출한다`() {
         val content = pdfWithTwoColumns()
 
-        val text = extractor.extract(content)
+        val text = extract(content)
 
         assertThat(text).containsSubsequence(
             "Left column Right column",
@@ -57,38 +59,48 @@ class ResumePdfTextExtractorTest {
 
     @Test
     fun `텍스트가 없거나 이미지로만 구성된 PDF는 거부한다`() {
-        assertThatThrownBy { extractor.extract(imageOnlyPdf()) }
+        assertThatThrownBy { extract(imageOnlyPdf()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     @Test
     fun `암호화된 PDF는 거부한다`() {
-        assertThatThrownBy { extractor.extract(encryptedPdf()) }
+        assertThatThrownBy { extract(encryptedPdf()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     @Test
     fun `손상된 PDF는 거부한다`() {
-        assertThatThrownBy { extractor.extract("%PDF-broken".toByteArray()) }
+        assertThatThrownBy { extract("%PDF-broken".toByteArray()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     @Test
     fun `최대 페이지 수를 초과한 PDF는 거부한다`() {
-        assertThatThrownBy { extractor.extract(pdfWithPageCount(51)) }
+        assertThatThrownBy { extract(pdfWithPageCount(51)) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     @Test
     fun `추출 문자 수 상한을 초과한 PDF는 거부한다`() {
-        assertThatThrownBy { extractor.extract(textPdf("A".repeat(60_001))) }
+        assertThatThrownBy { extract(textPdf("A".repeat(60_001))) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     @Test
     fun `최대 50페이지와 60000자 경계는 허용한다`() {
-        assertThat(extractor.extract(pdfWithTextPageCount(50))).contains("Page 50")
-        assertThat(extractor.extract(textPdf("A".repeat(60_000)))).hasSize(60_000)
+        assertThat(extract(pdfWithTextPageCount(50))).contains("Page 50")
+        assertThat(extract(textPdf("A".repeat(60_000)))).hasSize(60_000)
+    }
+
+    @Test
+    fun `텍스트 추출 중 전체 처리 기한이 만료되면 거부한다`() {
+        val timeSource = ExtractorSequenceTimeSource(listOf(0L, java.time.Duration.ofSeconds(46).toNanos()))
+        val deadlineExtractor = ResumePdfTextExtractor(timeSource)
+
+        assertThatThrownBy {
+            deadlineExtractor.extract(textPdf("Backend developer"), ResumeSummaryDeadline.start(0L))
+        }.isInstanceOf(ResumeSummaryGenerationException::class.java)
     }
 
     private fun pdfWithTwoColumns(): ByteArray {
@@ -199,4 +211,16 @@ class ResumePdfTextExtractorTest {
             output.toByteArray()
         }
     }
+
+    private fun extract(content: ByteArray): String {
+        return extractor.extract(content, ResumeSummaryDeadline.start(0L))
+    }
+}
+
+private class ExtractorSequenceTimeSource(
+    private val values: List<Long>,
+) : ResumeSummaryTimeSource {
+    private var index = 0
+
+    override fun nanoTime(): Long = values.getOrElse(index++) { values.last() }
 }

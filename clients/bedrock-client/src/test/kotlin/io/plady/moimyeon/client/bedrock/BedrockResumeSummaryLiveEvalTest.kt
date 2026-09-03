@@ -62,13 +62,14 @@ class BedrockResumeSummaryLiveEvalTest {
 
     private fun evaluate(variant: EvalVariant, fixtures: List<EvalFixture>): List<EvalResult> {
         val chatModel = UsageCapturingChatModel(createChatModel(variant))
+        val timeSource = ResumeSummaryTimeSource(System::nanoTime)
         val generator = if (variant.legacyPipeline) {
             LegacyBedrockResumeSummaryGenerator(ChatClient.builder(chatModel))
         } else {
             BedrockResumeSummaryGenerator(
                 ChatClient.builder(chatModel),
-                ResumePdfTextExtractor(),
-                ResumeSummaryTimeSource(System::nanoTime),
+                ResumePdfTextExtractor(timeSource),
+                timeSource,
                 variant.timeout,
             )
         }
@@ -102,7 +103,8 @@ class BedrockResumeSummaryLiveEvalTest {
         val sentenceCount = countResumeSummarySentences(summary)
         val deterministicChecksPassed = output != null &&
             isValidResumeSummary(summary) &&
-            fixture.forbiddenOutputs.none(summary::contains)
+            fixture.forbiddenOutputs.none(summary::contains) &&
+            (variant.id != CANDIDATE_VARIANT_ID || chatModel.callCount in 1..2)
         val modelInvoked = chatModel.callCount > 0
         val passed = if (fixture.expectedTextExtractionRejection) {
             output == null && !modelInvoked

@@ -46,13 +46,17 @@ class ResumePersonalInfoRedactorTest {
 
     @Test
     fun `라벨 없는 도로명 주소를 마스킹하되 경력 날짜와 성과 숫자는 보존한다`() {
-        val text = "서울시 강남구 테헤란로 123에서 거주 / 20200101 / 2020-01-01 / 처리량 20191231"
+        val text = """
+            서울시 강남구 테헤란로 123에서 거주
+            경기도 성남시 분당구 판교역로 123에서 근무
+            20200101 / 2020-01-01 / 처리량 20191231
+        """.trimIndent()
 
         val redacted = ResumePersonalInfoRedactor.redact(text)
 
         assertThat(redacted)
             .contains("[REDACTED]")
             .contains("20200101", "2020-01-01", "20191231")
-            .doesNotContain("서울시 강남구 테헤란로 123")
+            .doesNotContain("서울시 강남구 테헤란로 123", "경기도 성남시 분당구 판교역로 123")
     }
 }

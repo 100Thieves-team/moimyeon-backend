@@ -24,7 +24,7 @@ internal class BedrockResumeSummaryGenerator(
     private val chatClient = chatClientBuilder.build()
 
     override fun generate(content: ByteArray, deadline: ResumeSummaryDeadline): String {
-        val extractedText = textExtractor.extract(content)
+        val extractedText = textExtractor.extract(content, deadline)
         val resumeText = ResumePersonalInfoRedactor.redact(extractedText)
         repeat(MAX_SUMMARY_ATTEMPTS) { attempt ->
             if (!deadline.hasTimeFor(modelCallTimeout, timeSource.nanoTime())) {
@@ -101,4 +101,4 @@ private const val MAX_SUMMARY_ATTEMPTS = 2
 private val SUMMARY_HANGUL = Regex("[가-힣]")
 private val SUMMARY_EVALUATIVE_LANGUAGE =
     Regex("능숙|실력|전문가|전문성|역량|능력|강점|우수|탁월|보입니다|풍부한 경험|광범위한 경험")
-private val SUMMARY_SENTENCE_BOUNDARY = Regex("(?<=[.!?。])\\s+|\\n+")
+private val SUMMARY_SENTENCE_BOUNDARY = Regex("(?<=[!?。])\\s*|(?<=\\.)(?!\\d)\\s*|\\n+")

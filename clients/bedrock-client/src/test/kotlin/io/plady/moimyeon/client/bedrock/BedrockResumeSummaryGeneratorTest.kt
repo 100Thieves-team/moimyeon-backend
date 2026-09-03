@@ -36,7 +36,7 @@ class BedrockResumeSummaryGeneratorTest {
             timeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns """
+        every { textExtractor.extract(any(), any()) } returns """
             이메일: applicant@example.com
             전화번호: 010-1234-5678
             주소: 서울시 테스트구 가상로 123
@@ -72,7 +72,7 @@ class BedrockResumeSummaryGeneratorTest {
             timeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns "Kotlin backend developer"
+        every { textExtractor.extract(any(), any()) } returns "Kotlin backend developer"
 
         assertThatThrownBy { generator.generate("pdf-content".toByteArray(), deadline()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
@@ -90,7 +90,7 @@ class BedrockResumeSummaryGeneratorTest {
             timeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns "Kotlin backend developer"
+        every { textExtractor.extract(any(), any()) } returns "Kotlin backend developer"
 
         val summary = generator.generate("pdf-content".toByteArray(), deadline())
 
@@ -113,7 +113,7 @@ class BedrockResumeSummaryGeneratorTest {
             timeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns "Kotlin과 Spring으로 백엔드 API를 개발했습니다."
+        every { textExtractor.extract(any(), any()) } returns "Kotlin과 Spring으로 백엔드 API를 개발했습니다."
 
         val summary = generator.generate("pdf-content".toByteArray(), deadline())
 
@@ -136,7 +136,7 @@ class BedrockResumeSummaryGeneratorTest {
             timeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns "Kotlin과 Spring으로 백엔드 API를 개발했습니다."
+        every { textExtractor.extract(any(), any()) } returns "Kotlin과 Spring으로 백엔드 API를 개발했습니다."
 
         assertThatThrownBy { generator.generate("pdf-content".toByteArray(), deadline()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
@@ -160,11 +160,17 @@ class BedrockResumeSummaryGeneratorTest {
             budgetTimeSource,
             MODEL_CALL_TIMEOUT,
         )
-        every { textExtractor.extract(any()) } returns "Kotlin으로 백엔드 API를 개발했습니다."
+        every { textExtractor.extract(any(), any()) } returns "Kotlin으로 백엔드 API를 개발했습니다."
 
         assertThatThrownBy { generator.generate("pdf-content".toByteArray(), deadline()) }
             .isInstanceOf(ResumeSummaryGenerationException::class.java)
         assertThat(chatModel.prompts).hasSize(1)
+    }
+
+    @Test
+    fun `공백 없이 이어진 세 문장 응답은 거부한다`() {
+        assertThat(isValidResumeSummary("경력 3년입니다.백엔드 API를 개발했습니다.Spring을 사용했습니다."))
+            .isFalse()
     }
 
     private fun deadline(): ResumeSummaryDeadline = ResumeSummaryDeadline.start(0L)

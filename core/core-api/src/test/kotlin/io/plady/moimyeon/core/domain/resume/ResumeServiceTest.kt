@@ -126,10 +126,14 @@ class ResumeServiceTest {
             contentType = upload.contentType,
         )
         val newResume = NewResume(storedFile.originalName, storedFile)
+        val storageDeadline = slot<ResumeSummaryDeadline>()
+        val generatorDeadline = slot<ResumeSummaryDeadline>()
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
-        every { fileStorage.store(memberId, upload) } returns storedFile
+        every { fileStorage.store(memberId, upload, capture(storageDeadline)) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
-        every { summaryGenerator.generate(upload.content, any()) } returns "Kotlin Spring 백엔드 개발자"
+        every {
+            summaryGenerator.generate(upload.content, capture(generatorDeadline))
+        } returns "Kotlin Spring 백엔드 개발자"
         every {
             resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         } just Runs
@@ -137,11 +141,13 @@ class ResumeServiceTest {
         val registeredResumeId = resumeService.register(memberId, upload)
 
         assertThat(registeredResumeId).isEqualTo(resumeId)
+        assertThat(generatorDeadline.captured).isSameAs(storageDeadline.captured)
         verifyOrder {
+            summaryTimeSource.nanoTime()
             resumeRegistrar.validateCapacity(memberId)
-            fileStorage.store(memberId, upload)
+            fileStorage.store(memberId, upload, storageDeadline.captured)
             resumeRegistrar.register(memberId, newResume, now)
-            summaryGenerator.generate(upload.content, any())
+            summaryGenerator.generate(upload.content, generatorDeadline.captured)
             resumeManager.completeSummary(memberId, resumeId, "Kotlin Spring 백엔드 개발자", now, now)
         }
     }
@@ -154,7 +160,7 @@ class ResumeServiceTest {
         val storedFile = resumeFile(memberId, upload)
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
-        every { fileStorage.store(memberId, upload) } returns storedFile
+        every { fileStorage.store(memberId, upload, any()) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every {
             summaryGenerator.generate(upload.content, any())
@@ -166,7 +172,7 @@ class ResumeServiceTest {
         assertThat(registeredResumeId).isEqualTo(resumeId)
         verifyOrder {
             resumeRegistrar.validateCapacity(memberId)
-            fileStorage.store(memberId, upload)
+            fileStorage.store(memberId, upload, any())
             resumeRegistrar.register(memberId, newResume, now)
             summaryGenerator.generate(upload.content, any())
             resumeManager.failSummary(memberId, resumeId, now)
@@ -183,7 +189,7 @@ class ResumeServiceTest {
         every { resumeManager.failExpiredSummaries(memberId, now) } returns 1
         every { resumeFinder.get(memberId, resumeId) } returns resume(resumeId, file)
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
-        every { fileStorage.read(file) } returns content
+        every { fileStorage.read(file, any()) } returns content
         every { summaryGenerator.generate(content, any()) } returns "재생성한 요약"
         every { resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now) } just Runs
 
@@ -194,7 +200,7 @@ class ResumeServiceTest {
             resumeManager.failExpiredSummaries(memberId, now)
             resumeFinder.get(memberId, resumeId)
             resumeManager.startSummaryRetry(memberId, resumeId, now)
-            fileStorage.read(file)
+            fileStorage.read(file, any())
             summaryGenerator.generate(content, any())
             resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now)
         }
@@ -206,26 +212,28 @@ class ResumeServiceTest {
         val resumeId = UUID.randomUUID()
         val file = resumeFile(memberId, resumeUpload())
         val content = "stored-pdf-content".toByteArray()
-        val deadline = slot<ResumeSummaryDeadline>()
+        val storageDeadline = slot<ResumeSummaryDeadline>()
+        val generatorDeadline = slot<ResumeSummaryDeadline>()
         every { resumeManager.failExpiredSummaries(memberId, now) } returns 0
         every { resumeFinder.get(memberId, resumeId) } returns resume(resumeId, file)
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
-        every { fileStorage.read(file) } returns content
-        every { summaryGenerator.generate(content, capture(deadline)) } returns "재생성한 요약"
+        every { fileStorage.read(file, capture(storageDeadline)) } returns content
+        every { summaryGenerator.generate(content, capture(generatorDeadline)) } returns "재생성한 요약"
         every { resumeManager.completeSummary(memberId, resumeId, "재생성한 요약", now, now) } just Runs
 
         resumeService.retrySummary(memberId, resumeId)
 
         assertThat(
-            deadline.captured.hasTimeFor(
+            generatorDeadline.captured.hasTimeFor(
                 requiredDuration = Duration.ofSeconds(20),
                 currentTimeNanos = Duration.ofSeconds(26).toNanos(),
             ),
         ).isFalse()
+        assertThat(generatorDeadline.captured).isSameAs(storageDeadline.captured)
         verifyOrder {
             summaryTimeSource.nanoTime()
-            fileStorage.read(file)
-            summaryGenerator.generate(content, deadline.captured)
+            fileStorage.read(file, storageDeadline.captured)
+            summaryGenerator.generate(content, generatorDeadline.captured)
         }
     }
 
@@ -238,7 +246,7 @@ class ResumeServiceTest {
         every { resumeManager.failExpiredSummaries(memberId, now) } returns 0
         every { resumeFinder.get(memberId, resumeId) } returns resume(resumeId, file)
         every { resumeManager.startSummaryRetry(memberId, resumeId, now) } just Runs
-        every { fileStorage.read(file) } returns content
+        every { fileStorage.read(file, any()) } returns content
         every {
             summaryGenerator.generate(content, any())
         } throws ResumeSummaryGenerationException(IllegalStateException("bedrock unavailable"))
@@ -259,7 +267,7 @@ class ResumeServiceTest {
         val storedFile = resumeFile(memberId, upload)
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
-        every { fileStorage.store(memberId, upload) } returns storedFile
+        every { fileStorage.store(memberId, upload, any()) } returns storedFile
         every { resumeRegistrar.register(memberId, newResume, now) } returns resumeId
         every {
             summaryGenerator.generate(upload.content, any())
@@ -287,7 +295,7 @@ class ResumeServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_LIMIT_EXCEEDED)
             }
-        verify(exactly = 0) { fileStorage.store(any(), any()) }
+        verify(exactly = 0) { fileStorage.store(any(), any(), any()) }
         verify(exactly = 0) { resumeRegistrar.register(any(), any(), any()) }
         verify(exactly = 0) { summaryGenerator.generate(any(), any()) }
     }
@@ -297,7 +305,9 @@ class ResumeServiceTest {
         val memberId = UUID.randomUUID()
         val upload = resumeUpload()
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
-        every { fileStorage.store(memberId, upload) } throws IllegalStateException("file storage unavailable")
+        every {
+            fileStorage.store(memberId, upload, any())
+        } throws IllegalStateException("file storage unavailable")
 
         assertThatThrownBy { resumeService.register(memberId, upload) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -312,7 +322,7 @@ class ResumeServiceTest {
         val storedFile = resumeFile(memberId, upload)
         val newResume = NewResume(storedFile.originalName, storedFile)
         every { resumeRegistrar.validateCapacity(memberId) } just Runs
-        every { fileStorage.store(memberId, upload) } returns storedFile
+        every { fileStorage.store(memberId, upload, any()) } returns storedFile
         every {
             resumeRegistrar.register(memberId, newResume, now)
         } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)

@@ -47,7 +47,7 @@ class ResumeService(
     fun register(memberId: UUID, upload: ResumeUpload): UUID {
         val summaryDeadline = ResumeSummaryDeadline.start(summaryTimeSource.nanoTime())
         resumeRegistrar.validateCapacity(memberId)
-        val newResume = fileStorage.store(memberId, upload).toNewResume()
+        val newResume = fileStorage.store(memberId, upload, summaryDeadline).toNewResume()
         // TODO: DB에 참조되지 않은 업로드 객체를 주기적으로 찾아 삭제한다.
         val attemptStartedAt = now()
         val resumeId = resumeRegistrar.register(memberId, newResume, attemptStartedAt)
@@ -69,7 +69,7 @@ class ResumeService(
         val resume = resumeFinder.get(memberId, resumeId)
         resumeManager.startSummaryRetry(memberId, resumeId, attemptStartedAt)
         val summary = try {
-            val content = fileStorage.read(resume.file)
+            val content = fileStorage.read(resume.file, summaryDeadline)
             summaryGenerator.generate(content, summaryDeadline)
         } catch (exception: ResumeSummaryGenerationException) {
             log.warn("Resume summarization retry failed: memberId={}, resumeId={}", memberId, resumeId, exception)

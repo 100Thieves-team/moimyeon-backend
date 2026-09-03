@@ -89,6 +89,8 @@
   code-reviewer 최종 통과
 - [ ] PR review-swarm 제안 — 운영 출력 검증을 live eval에서 재사용하도록 반영,
   프롬프트·정규식 단일 정책화는 TBD로 기록
+- [ ] CodeRabbit 리뷰 — 6건을 5개 유효 항목으로 분류: PDF·S3 deadline,
+  공백 없는 문장 경계, 다단계 도로명 주소, eval 호출 횟수 검증 반영
 - [ ] 애플리케이션 테스트·ktlint 검증 — Bedrock 모듈 및 전체 저장소 통과
 - [ ] ship-pr QA 게이트 — BLOCK: 최대 2회 모델 호출의 aggregate deadline과
   PDF 파싱 페이지·추출 자원 상한 보강 필요. 사용자 승인 후 45초 전체 예산,
