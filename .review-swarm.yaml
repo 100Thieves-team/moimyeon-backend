@@ -10,8 +10,10 @@ version: 1
 
 engine:
   default: claude
-  # router.maxAgents와 같게 둔다. 이보다 작으면 전문가들이 슬롯 대기로 직렬화된다.
-  concurrency: 5
+  # 러너가 agent-platform EC2(t3.small, 2 GB) 한 대라 동시 claude 프로세스를 2로 제한한다.
+  # 이보다 작으면 전문가들이 슬롯 대기로 직렬화되고, 크면 그 박스에서 OOM 이 난다.
+  # 인스턴스를 키우면 router.maxAgents(5)까지 올린다 — plady-agent-platform/docs/self-hosted-runner.md.
+  concurrency: 2
   timeoutMs: 900000
   retries: 1
   claude:
