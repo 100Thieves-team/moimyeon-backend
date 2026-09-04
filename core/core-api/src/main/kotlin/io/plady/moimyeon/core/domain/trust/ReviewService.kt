@@ -67,6 +67,10 @@ class ReviewService(
         return writtenReviewFinder.getWrittenReview(authorMemberId, reviewId)
     }
 
+    fun getWrittenReviews(authorMemberId: UUID, roomId: UUID): List<WrittenReview> {
+        return writtenReviewFinder.getWrittenReviews(authorMemberId, roomId)
+    }
+
     fun getTargets(authorMemberId: UUID, roomId: UUID): List<ReviewTarget> {
         return targetFinder.getTargets(authorMemberId, roomId)
     }

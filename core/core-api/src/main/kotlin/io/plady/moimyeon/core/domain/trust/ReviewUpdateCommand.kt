@@ -6,5 +6,5 @@ data class ReviewUpdateCommand(
     val reviewId: Long,
     val authorMemberId: UUID,
     val tags: Set<String>,
-    val content: String?,
+    val content: String,
 )

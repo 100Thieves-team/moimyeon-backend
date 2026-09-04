@@ -24,7 +24,7 @@ data class ReceivedReviewResponse(
     val reviewId: Long,
     val authorNickname: String,
     val tags: List<String>,
-    val content: String?,
+    val content: String,
 ) {
     companion object {
         fun from(review: ReceivedReview, authorNicknames: Map<UUID, String>): ReceivedReviewResponse {

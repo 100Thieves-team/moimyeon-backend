@@ -9,7 +9,7 @@ data class WrittenReviewResponse(
     val targetMemberId: UUID,
     val targetNickname: String,
     val tags: List<String>,
-    val content: String?,
+    val content: String,
     val anonymous: Boolean,
 ) {
     companion object {

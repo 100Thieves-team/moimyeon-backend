@@ -1,7 +1,7 @@
 package io.plady.moimyeon.core.api.facade
 
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
-import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewOverviewResponse
 import io.plady.moimyeon.core.api.controller.v1.response.WrittenReviewResponse
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.trust.ReceivedReview
@@ -15,11 +15,12 @@ class ReviewFacade(
     private val reviewService: ReviewService,
     private val memberService: MemberService,
 ) {
-    fun getTargets(authorMemberId: UUID, roomId: UUID): ReviewTargetsResponse {
+    fun getOverview(authorMemberId: UUID, roomId: UUID): ReviewOverviewResponse {
         val targets = reviewService.getTargets(authorMemberId, roomId)
+        val writtenReviews = reviewService.getWrittenReviews(authorMemberId, roomId)
         val nicknames = memberService.getMembers(targets.map(ReviewTarget::memberId))
             .associate { it.id to it.nickname.value }
-        return ReviewTargetsResponse.from(targets, nicknames)
+        return ReviewOverviewResponse.from(targets, writtenReviews, nicknames)
     }
 
     // 수정 화면 헤더가 "누구에게 쓴 후기"인지 그릴 수 있게 대상자 닉네임을 붙인다(MOI-496).

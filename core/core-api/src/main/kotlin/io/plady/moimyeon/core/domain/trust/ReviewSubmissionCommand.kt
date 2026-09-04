@@ -7,6 +7,6 @@ data class ReviewSubmissionCommand(
     val authorMemberId: UUID,
     val targetMemberId: UUID,
     val tags: Set<String>,
-    val content: String?,
+    val content: String,
     val anonymous: Boolean,
 )
