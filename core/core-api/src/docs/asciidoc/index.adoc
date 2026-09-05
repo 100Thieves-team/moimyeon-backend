@@ -1238,8 +1238,8 @@ include::{snippets}/submitClosingResponse/response-fields.adoc[]
 
 == Review (유저 후기) API
 
-=== 후기 작성 대상 조회
-완료 룸의 출석자 중 본인을 제외한 후기 대상과 제출 진행 상태를 조회한다. 건너뛴 대상은 다시 작성할 수 있도록 `WRITABLE`로 제공한다. `SUBMITTED` 대상은 수정·삭제에 사용할 후기 id를 함께 제공한다.
+=== 후기 작성 대상 조회 (Deprecated)
+`GET /v1/rooms/{roomId}/reviews/overview`로 이전한다. 기존 클라이언트의 전환 기간에만 이전 응답 계약을 유지하며, 프론트 전환과 잔존 호출 확인 후 제거한다.
 ==== Curl Request
 include::{snippets}/getReviewTargets/curl-request.adoc[]
 ==== Path Parameters
@@ -1248,6 +1248,28 @@ include::{snippets}/getReviewTargets/path-parameters.adoc[]
 include::{snippets}/getReviewTargets/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/getReviewTargets/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 액세스 토큰 없음·만료·무효
+| 404 | E1405 | 룸을 찾을 수 없음
+| 409 | E2001 | 룸이 완료 상태가 아님
+| 403 | E2002 | 작성자가 출석하지 않음
+|===
+
+'''
+
+=== 룸별 후기 작성 개요 조회
+완료 룸의 출석자 중 본인을 제외한 후기 대상, 대상별 작성 상태와 작성자가 해당 룸에 제출한 후기를 한 번에 조회한다. 건너뛴 대상은 다시 작성할 수 있도록 `WRITABLE`로 제공한다. 작성한 후기는 대상과 별도 목록으로 제공하며 `targetMemberId`로 연결한다.
+==== Curl Request
+include::{snippets}/getReviewOverview/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/getReviewOverview/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/getReviewOverview/http-response.adoc[]
+==== Response Fields
+include::{snippets}/getReviewOverview/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스

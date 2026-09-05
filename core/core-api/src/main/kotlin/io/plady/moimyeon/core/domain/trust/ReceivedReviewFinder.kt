@@ -40,7 +40,7 @@ class ReceivedReviewFinder(
                 authorMemberId = review.authorMemberId,
                 anonymous = review.anonymous,
                 tags = review.tags(),
-                content = review.content,
+                content = review.content.orEmpty(),
             )
         }
         return ReceivedReviewPage(

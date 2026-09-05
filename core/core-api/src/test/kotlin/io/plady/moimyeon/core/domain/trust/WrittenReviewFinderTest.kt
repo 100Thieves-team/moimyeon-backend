@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.trust
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ReviewEntity
@@ -60,8 +61,58 @@ class WrittenReviewFinderTest {
         val result = finder.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result.tags).isEmpty()
-        assertThat(result.content).isNull()
+        assertThat(result.content).isEmpty()
         assertThat(result.anonymous).isTrue()
+    }
+
+    @Test
+    fun `작성자는 룸에 작성한 활성 후기를 태그와 함께 모두 조회한다`() {
+        val anotherTargetMemberId = UUID.randomUUID()
+        val firstReview = reviewEntity(
+            reviewId = 31L,
+            targetId = targetMemberId,
+            reviewContent = "꼬리질문이 날카로워서 실전 같았어요.",
+            reviewTags = setOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+        )
+        val emptyReview = reviewEntity(
+            reviewId = 32L,
+            targetId = anotherTargetMemberId,
+            reviewContent = null,
+            reviewTags = emptySet(),
+        )
+        every {
+            reviewRepository.findAllWithTagsByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(
+                roomId,
+                authorMemberId,
+            )
+        } returns listOf(firstReview, emptyReview)
+
+        val result = finder.getWrittenReviews(authorMemberId, roomId)
+
+        assertThat(result).containsExactly(
+            WrittenReview(
+                id = 31L,
+                roomId = roomId,
+                targetMemberId = targetMemberId,
+                tags = setOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+                content = "꼬리질문이 날카로워서 실전 같았어요.",
+                anonymous = true,
+            ),
+            WrittenReview(
+                id = 32L,
+                roomId = roomId,
+                targetMemberId = anotherTargetMemberId,
+                tags = emptySet(),
+                content = "",
+                anonymous = true,
+            ),
+        )
+        verify(exactly = 1) {
+            reviewRepository.findAllWithTagsByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(
+                roomId,
+                authorMemberId,
+            )
+        }
     }
 
     @Test
@@ -118,5 +169,21 @@ class WrittenReviewFinderTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_FORBIDDEN)
             }
+    }
+
+    private fun reviewEntity(
+        reviewId: Long,
+        targetId: UUID,
+        reviewContent: String?,
+        reviewTags: Set<String>,
+    ): ReviewEntity {
+        return mockk<ReviewEntity> {
+            every { id } returns reviewId
+            every { roomId } returns this@WrittenReviewFinderTest.roomId
+            every { targetMemberId } returns targetId
+            every { content } returns reviewContent
+            every { anonymous } returns true
+            every { tags() } returns reviewTags
+        }
     }
 }

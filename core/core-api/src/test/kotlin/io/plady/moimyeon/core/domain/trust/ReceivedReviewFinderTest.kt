@@ -72,7 +72,28 @@ class ReceivedReviewFinderTest {
         verify(exactly = 0) { reviewRepository.findAllWithTagsByIdIn(any()) }
     }
 
-    private fun review(id: Long, visibleAt: LocalDateTime, content: String): ReviewEntity {
+    @Test
+    fun `저장된 텍스트가 없으면 받은 후기에는 빈 문자열을 반환한다`() {
+        val emptyReview = review(1L, LocalDateTime.of(2026, 8, 14, 2, 59), null)
+        every {
+            reviewRepository.findVisibleReceivedReviewPage(
+                memberId,
+                LocalDateTime.of(2026, 8, 14, 3, 0),
+                null,
+                PageRequest.of(0, 21),
+            )
+        } returns listOf(emptyReview)
+        every { reviewRepository.findAllWithTagsByIdIn(listOf(1L)) } returns listOf(emptyReview)
+        every {
+            reviewRepository.countVisibleReceivedReviews(memberId, LocalDateTime.of(2026, 8, 14, 3, 0))
+        } returns 1L
+
+        val page = finder.getPage(memberId, lastReviewId = null, size = 20)
+
+        assertThat(page.reviews.single().content).isEmpty()
+    }
+
+    private fun review(id: Long, visibleAt: LocalDateTime, content: String?): ReviewEntity {
         return mockk<ReviewEntity>().also { review ->
             every { review.id } returns id
             every { review.visibleAt } returns visibleAt

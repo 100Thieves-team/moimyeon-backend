@@ -19,7 +19,7 @@ data class SubmitReviewRequest(
         return ReviewSubmissionContent(
             targetMemberId = targetMemberId,
             tags = tags.toCollection(linkedSetOf()),
-            content = content?.trim()?.takeIf(String::isNotEmpty),
+            content = content?.trim().orEmpty(),
             anonymous = anonymous,
         )
     }
