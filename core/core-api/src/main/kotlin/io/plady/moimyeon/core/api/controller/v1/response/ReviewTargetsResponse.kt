@@ -9,22 +9,17 @@ data class ReviewTargetsResponse(
 ) {
     companion object {
         fun from(overview: ReviewOverviewResponse): ReviewTargetsResponse {
-            val writtenReviewsByTargetId = overview.reviews.associateBy { it.targetMemberId }
+            val reviewIdByTargetId = overview.reviews.associate { it.targetMemberId to it.reviewId }
 
             return ReviewTargetsResponse(
                 submittedCount = overview.submittedCount,
                 totalCount = overview.totalCount,
                 targets = overview.targets.map { target ->
-                    val writtenReview = writtenReviewsByTargetId[target.memberId]
                     LegacyReviewTargetResponse(
                         memberId = target.memberId,
                         nickname = target.nickname,
-                        status = if (writtenReview == null) {
-                            ReviewTargetStatus.WRITABLE
-                        } else {
-                            ReviewTargetStatus.SUBMITTED
-                        },
-                        reviewId = writtenReview?.reviewId,
+                        status = target.status,
+                        reviewId = reviewIdByTargetId[target.memberId],
                     )
                 },
             )
