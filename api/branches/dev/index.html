@@ -962,7 +962,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_review_유저_후기_api">Review (유저 후기) API</a>
 <ul class="sectlevel2">
-<li><a href="#_후기_작성_대상_조회">후기 작성 대상 조회</a>
+<li><a href="#_후기_작성_대상_조회_deprecated">후기 작성 대상 조회 (Deprecated)</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_24">Path Parameters</a></li>
 <li><a href="#_http_response_57">Http Response</a></li>
@@ -970,47 +970,55 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_error_responses_43">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_후기_제출">후기 제출</a>
+<li><a href="#_룸별_후기_작성_개요_조회">룸별 후기 작성 개요 조회</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_25">Path Parameters</a></li>
-<li><a href="#_request_fields_22">Request Fields</a></li>
 <li><a href="#_http_response_58">Http Response</a></li>
 <li><a href="#_response_fields_58">Response Fields</a></li>
 <li><a href="#_error_responses_44">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_후기_수정">후기 수정</a>
+<li><a href="#_후기_제출">후기 제출</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_26">Path Parameters</a></li>
-<li><a href="#_request_fields_23">Request Fields</a></li>
+<li><a href="#_request_fields_22">Request Fields</a></li>
 <li><a href="#_http_response_59">Http Response</a></li>
 <li><a href="#_response_fields_59">Response Fields</a></li>
 <li><a href="#_error_responses_45">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_후기_삭제">후기 삭제</a>
+<li><a href="#_후기_수정">후기 수정</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_27">Path Parameters</a></li>
+<li><a href="#_request_fields_23">Request Fields</a></li>
 <li><a href="#_http_response_60">Http Response</a></li>
 <li><a href="#_response_fields_60">Response Fields</a></li>
 <li><a href="#_error_responses_46">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_후기_건너뛰기">후기 건너뛰기</a>
+<li><a href="#_후기_삭제">후기 삭제</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_28">Path Parameters</a></li>
-<li><a href="#_request_fields_24">Request Fields</a></li>
 <li><a href="#_http_response_61">Http Response</a></li>
 <li><a href="#_response_fields_61">Response Fields</a></li>
 <li><a href="#_error_responses_47">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_내가_받은_후기_조회">내가 받은 후기 조회</a>
+<li><a href="#_후기_건너뛰기">후기 건너뛰기</a>
 <ul class="sectlevel3">
-<li><a href="#_query_parameters_13">Query Parameters</a></li>
+<li><a href="#_path_parameters_29">Path Parameters</a></li>
+<li><a href="#_request_fields_24">Request Fields</a></li>
 <li><a href="#_http_response_62">Http Response</a></li>
 <li><a href="#_response_fields_62">Response Fields</a></li>
 <li><a href="#_error_responses_48">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_내가_받은_후기_조회">내가 받은 후기 조회</a>
+<ul class="sectlevel3">
+<li><a href="#_query_parameters_13">Query Parameters</a></li>
+<li><a href="#_http_response_63">Http Response</a></li>
+<li><a href="#_response_fields_63">Response Fields</a></li>
+<li><a href="#_error_responses_49">Error Responses</a></li>
 </ul>
 </li>
 </ul>
@@ -1019,28 +1027,28 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_방명록_글_목록_조회">방명록 글 목록 조회</a>
 <ul class="sectlevel3">
-<li><a href="#_path_parameters_29">Path Parameters</a></li>
-<li><a href="#_query_parameters_14">Query Parameters</a></li>
-<li><a href="#_http_response_63">Http Response</a></li>
-<li><a href="#_response_fields_63">Response Fields</a></li>
-<li><a href="#_error_responses_49">Error Responses</a></li>
-</ul>
-</li>
-<li><a href="#_방명록_글_작성">방명록 글 작성</a>
-<ul class="sectlevel3">
 <li><a href="#_path_parameters_30">Path Parameters</a></li>
-<li><a href="#_request_fields_25">Request Fields</a></li>
+<li><a href="#_query_parameters_14">Query Parameters</a></li>
 <li><a href="#_http_response_64">Http Response</a></li>
 <li><a href="#_response_fields_64">Response Fields</a></li>
 <li><a href="#_error_responses_50">Error Responses</a></li>
 </ul>
 </li>
-<li><a href="#_방명록_글_삭제">방명록 글 삭제</a>
+<li><a href="#_방명록_글_작성">방명록 글 작성</a>
 <ul class="sectlevel3">
 <li><a href="#_path_parameters_31">Path Parameters</a></li>
+<li><a href="#_request_fields_25">Request Fields</a></li>
 <li><a href="#_http_response_65">Http Response</a></li>
 <li><a href="#_response_fields_65">Response Fields</a></li>
 <li><a href="#_error_responses_51">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_방명록_글_삭제">방명록 글 삭제</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_32">Path Parameters</a></li>
+<li><a href="#_http_response_66">Http Response</a></li>
+<li><a href="#_response_fields_66">Response Fields</a></li>
+<li><a href="#_error_responses_52">Error Responses</a></li>
 </ul>
 </li>
 </ul>
@@ -1236,8 +1244,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-09-03",
-    "datetime" : "2026-09-03T14:12:48.215913929",
+    "date" : "2026-09-05",
+    "datetime" : "2026-09-05T05:04:10.519262841",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1350,8 +1358,8 @@ Content-Length: 237
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-09-03",
-    "datetime" : "2026-09-03T14:12:48.249174995",
+    "date" : "2026-09-05",
+    "datetime" : "2026-09-05T05:04:10.552314477",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1670,7 +1678,7 @@ Content-Length: 97
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Thu, 3 Sep 2026 14:42:46 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Sat, 5 Sep 2026 05:34:09 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -1876,7 +1884,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "79be8cbd-5edc-414a-ab55-212e5b64b5bb",
+      "termsId" : "0d4f03bf-7df1-4da8-a637-3d3ee1944f33",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -1884,7 +1892,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "c48bb4c0-9d83-48f5-b9a3-047e77eaafa7",
+      "termsId" : "ed31e458-5e05-4ba7-84dd-7913409f006d",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -1989,12 +1997,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "e1026802-89af-4428-939a-f445a774a627",
+    "memberId" : "3d503ee8-fb65-45b8-8200-00e772375f40",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "e1026802-89af-4428-939a-f445a774a627",
+      "memberId" : "3d503ee8-fb65-45b8-8200-00e772375f40",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2688,7 +2696,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "e80c0456-f0f3-417b-a71d-c9765505dd1a",
+    "memberId" : "c6d921e5-c5cd-4440-8f21-45667ebf05c0",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -4741,7 +4749,7 @@ Content-Length: 1844
       "label" : "서울 강남구"
     },
     "schedule" : {
-      "startAt" : "2026-09-04T14:12:53.570920334",
+      "startAt" : "2026-09-06T05:04:15.286559082",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -4753,9 +4761,9 @@ Content-Length: 1844
       "pendingApplicationCount" : 5
     },
     "resumePublic" : false,
-    "hostMemberId" : "6744ef65-440f-40ad-9cd8-577d1a279657",
+    "hostMemberId" : "654f89b8-1cc5-4d7f-9a6f-7bed722a5a0a",
     "participants" : [ {
-      "memberId" : "6744ef65-440f-40ad-9cd8-577d1a279657",
+      "memberId" : "654f89b8-1cc5-4d7f-9a6f-7bed722a5a0a",
       "nickname" : "영리한 부엉이 86"
     } ],
     "viewer" : {
@@ -5473,7 +5481,7 @@ Content-Length: 1688
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "57b6503f-cb5c-4bfa-8f85-e40d9d6fd05f",
+  "resumeId" : "6e2a657e-5697-4121-855c-35510d2afe1d",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -5707,7 +5715,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "93f264d2-dfd8-4543-a36a-7c333440c63c",
+      "resumeId" : "32ab98fd-086f-4a9a-8b94-25397bc85454",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -10300,9 +10308,9 @@ Content-Length: 216
 <h2 id="_review_유저_후기_api"><a class="link" href="#_review_유저_후기_api">Review (유저 후기) API</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_후기_작성_대상_조회"><a class="link" href="#_후기_작성_대상_조회">후기 작성 대상 조회</a></h3>
+<h3 id="_후기_작성_대상_조회_deprecated"><a class="link" href="#_후기_작성_대상_조회_deprecated">후기 작성 대상 조회 (Deprecated)</a></h3>
 <div class="paragraph">
-<p>완료 룸의 출석자 중 본인을 제외한 후기 대상과 제출 진행 상태를 조회한다. 건너뛴 대상은 다시 작성할 수 있도록 <code>WRITABLE`로 제공한다. `SUBMITTED</code> 대상은 수정·삭제에 사용할 후기 id를 함께 제공한다.
+<p>`GET /v1/rooms/{roomId}/reviews/overview`로 이전한다. 기존 클라이언트의 전환 기간에만 이전 응답 계약을 유지하며, 프론트 전환과 잔존 호출 확인 후 제거한다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
@@ -10463,6 +10471,199 @@ Content-Length: 454
 </div>
 </div>
 <div class="sect2">
+<h3 id="_룸별_후기_작성_개요_조회"><a class="link" href="#_룸별_후기_작성_개요_조회">룸별 후기 작성 개요 조회</a></h3>
+<div class="paragraph">
+<p>완료 룸의 출석자 중 본인을 제외한 후기 대상, 대상별 작성 상태와 작성자가 해당 룸에 제출한 후기를 한 번에 조회한다. 건너뛴 대상은 다시 작성할 수 있도록 `WRITABLE`로 제공한다. 작성한 후기는 대상과 별도 목록으로 제공하며 `targetMemberId`로 연결한다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000457/reviews/overview' -i -X GET</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_25"><a class="link" href="#_path_parameters_25">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 25. /v1/rooms/{roomId}/reviews/overview</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">완료된 룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_58"><a class="link" href="#_http_response_58">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 703
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "submittedCount" : 1,
+    "totalCount" : 2,
+    "targets" : [ {
+      "memberId" : "00000000-0000-0000-0000-000000000002",
+      "nickname" : "꼼꼼한 여우 12",
+      "status" : "SUBMITTED"
+    }, {
+      "memberId" : "00000000-0000-0000-0000-000000000003",
+      "nickname" : "성실한 사슴 03",
+      "status" : "WRITABLE"
+    } ],
+    "reviews" : [ {
+      "reviewId" : 31,
+      "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+      "tags" : [ "시간을 잘 지켜요", "피드백이 구체적이에요" ],
+      "content" : "꼬리질문이 날카로워서 실전 같았어요.",
+      "anonymous" : true
+    } ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_58"><a class="link" href="#_response_fields_58">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.submittedCount</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">제출 완료한 대상 수</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.totalCount</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">후기 작성 대상 수</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.targets</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">후기 작성 대상</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.targets[].memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대상 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.targets[].nickname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">대상 닉네임</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.targets[].status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성 상태 (WRITABLE | SUBMITTED)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자가 이 룸에 제출한 후기 (빈 배열 가능)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].reviewId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Number</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">후기 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].targetMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">후기 대상 회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].tags</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">평가 태그 (빈 배열 가능)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].content</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">텍스트 후기 (작성하지 않았으면 빈 문자열)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].anonymous</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자 닉네임 비공개 여부</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_44"><a class="link" href="#_error_responses_44">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸을 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸이 완료 상태가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자가 출석하지 않음</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_후기_제출"><a class="link" href="#_후기_제출">후기 제출</a></h3>
 <div class="paragraph">
 <p>완료 룸의 출석자가 다른 출석자에게 익명 여부, 평가 태그와 텍스트 후기를 선택 입력해 제출한다.
@@ -10483,9 +10684,9 @@ Content-Length: 454
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_25"><a class="link" href="#_path_parameters_25">Path Parameters</a></h4>
+<h4 id="_path_parameters_26"><a class="link" href="#_path_parameters_26">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 25. /v1/rooms/{roomId}/reviews</caption>
+<caption class="title">Table 26. /v1/rooms/{roomId}/reviews</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -10544,7 +10745,7 @@ Content-Length: 454
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_58"><a class="link" href="#_http_response_58">Http Response</a></h4>
+<h4 id="_http_response_59"><a class="link" href="#_http_response_59">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 201 Created
@@ -10562,7 +10763,7 @@ Content-Length: 82
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_58"><a class="link" href="#_response_fields_58">Response Fields</a></h4>
+<h4 id="_response_fields_59"><a class="link" href="#_response_fields_59">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -10591,7 +10792,7 @@ Content-Length: 82
 </table>
 </div>
 <div class="sect3">
-<h4 id="_error_responses_44"><a class="link" href="#_error_responses_44">Error Responses</a></h4>
+<h4 id="_error_responses_45"><a class="link" href="#_error_responses_45">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -10668,9 +10869,9 @@ Content-Length: 82
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_26"><a class="link" href="#_path_parameters_26">Path Parameters</a></h4>
+<h4 id="_path_parameters_27"><a class="link" href="#_path_parameters_27">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 26. /v1/reviews/{reviewId}</caption>
+<caption class="title">Table 27. /v1/reviews/{reviewId}</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -10714,125 +10915,6 @@ Content-Length: 82
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">교체할 한 줄 후기 (선택)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_http_response_59"><a class="link" href="#_http_response_59">Http Response</a></h4>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Content-Type: application/json
-Content-Length: 61
-
-{
-  "result" : "SUCCESS",
-  "data" : null,
-  "error" : null
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_response_fields_59"><a class="link" href="#_response_fields_59">Response Fields</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Path</th>
-<th class="tableblock halign-left valign-top">Type</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_error_responses_45"><a class="link" href="#_error_responses_45">Error Responses</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">HTTP</th>
-<th class="tableblock halign-left valign-top">error.code</th>
-<th class="tableblock halign-left valign-top">케이스</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">와이어프레임에 없는 평가 태그를 요청함</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E2006</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">후기를 찾을 수 없음</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E2007</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">작성자가 아님</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">E2008</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">공개 기준 시각이 지나 수정 창이 닫힘</p></td>
-</tr>
-</tbody>
-</table>
-<hr>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_후기_삭제"><a class="link" href="#_후기_삭제">후기 삭제</a></h3>
-<div class="paragraph">
-<p>작성자가 공개 기준 시각 전까지 후기를 삭제한다. 삭제 후 같은 룸의 같은 대상자에게 다시 제출할 수 있다.
-==== Curl Request</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/reviews/31' -i -X DELETE</code></pre>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_path_parameters_27"><a class="link" href="#_path_parameters_27">Path Parameters</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 27. /v1/reviews/{reviewId}</caption>
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Parameter</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>reviewId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">삭제할 후기 id</p></td>
 </tr>
 </tbody>
 </table>
@@ -10894,6 +10976,11 @@ Content-Length: 61
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">와이어프레임에 없는 평가 태그를 요청함</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효</p></td>
@@ -10919,24 +11006,20 @@ Content-Length: 61
 </div>
 </div>
 <div class="sect2">
-<h3 id="_후기_건너뛰기"><a class="link" href="#_후기_건너뛰기">후기 건너뛰기</a></h3>
+<h3 id="_후기_삭제"><a class="link" href="#_후기_삭제">후기 삭제</a></h3>
 <div class="paragraph">
-<p>후기 대상을 개별로 건너뛴다. 건너뛴 뒤에도 다시 진입해 후기를 제출할 수 있다.
+<p>작성자가 공개 기준 시각 전까지 후기를 삭제한다. 삭제 후 같은 룸의 같은 대상자에게 다시 제출할 수 있다.
 ==== Curl Request</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000457/review-skips' -i -X POST \
-    -H 'Content-Type: application/json' \
-    -d '{
-  "targetMemberId" : "00000000-0000-0000-0000-000000000003"
-}'</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/reviews/31' -i -X DELETE</code></pre>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_path_parameters_28"><a class="link" href="#_path_parameters_28">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 28. /v1/rooms/{roomId}/review-skips</caption>
+<caption class="title">Table 28. /v1/reviews/{reviewId}</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -10949,32 +11032,8 @@ Content-Length: 61
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">완료된 룸 id (UUID)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_request_fields_24"><a class="link" href="#_request_fields_24">Request Fields</a></h4>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Path</th>
-<th class="tableblock halign-left valign-top">Type</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>targetMemberId</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">건너뛸 대상 회원 id</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>reviewId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">삭제할 후기 id</p></td>
 </tr>
 </tbody>
 </table>
@@ -11021,6 +11080,148 @@ Content-Length: 61
 </div>
 <div class="sect3">
 <h4 id="_error_responses_47"><a class="link" href="#_error_responses_47">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1102</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">액세스 토큰 없음·만료·무효</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">후기를 찾을 수 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">작성자가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">공개 기준 시각이 지나 수정 창이 닫힘</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_후기_건너뛰기"><a class="link" href="#_후기_건너뛰기">후기 건너뛰기</a></h3>
+<div class="paragraph">
+<p>후기 대상을 개별로 건너뛴다. 건너뛴 뒤에도 다시 진입해 후기를 제출할 수 있다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000457/review-skips' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "targetMemberId" : "00000000-0000-0000-0000-000000000003"
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_29"><a class="link" href="#_path_parameters_29">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 29. /v1/rooms/{roomId}/review-skips</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">완료된 룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_24"><a class="link" href="#_request_fields_24">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>targetMemberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">건너뛸 대상 회원 id</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_62"><a class="link" href="#_http_response_62">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 61
+
+{
+  "result" : "SUCCESS",
+  "data" : null,
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_62"><a class="link" href="#_response_fields_62">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_48"><a class="link" href="#_error_responses_48">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11107,7 +11308,7 @@ Content-Length: 61
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_62"><a class="link" href="#_http_response_62">Http Response</a></h4>
+<h4 id="_http_response_63"><a class="link" href="#_http_response_63">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
@@ -11132,7 +11333,7 @@ Content-Length: 351
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_62"><a class="link" href="#_response_fields_62">Response Fields</a></h4>
+<h4 id="_response_fields_63"><a class="link" href="#_response_fields_63">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11180,7 +11381,7 @@ Content-Length: 351
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.reviews[].content</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">한 줄 후기 (null 가능)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">한 줄 후기 (작성하지 않았으면 빈 문자열)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.hasNext</code></p></td>
@@ -11191,7 +11392,7 @@ Content-Length: 351
 </table>
 </div>
 <div class="sect3">
-<h4 id="_error_responses_48"><a class="link" href="#_error_responses_48">Error Responses</a></h4>
+<h4 id="_error_responses_49"><a class="link" href="#_error_responses_49">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11244,9 +11445,9 @@ Content-Length: 351
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_29"><a class="link" href="#_path_parameters_29">Path Parameters</a></h4>
+<h4 id="_path_parameters_30"><a class="link" href="#_path_parameters_30">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 29. /v1/rooms/{roomId}/comments</caption>
+<caption class="title">Table 30. /v1/rooms/{roomId}/comments</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -11291,7 +11492,7 @@ Content-Length: 351
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_63"><a class="link" href="#_http_response_63">Http Response</a></h4>
+<h4 id="_http_response_64"><a class="link" href="#_http_response_64">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
@@ -11355,7 +11556,7 @@ Content-Length: 1605
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_63"><a class="link" href="#_response_fields_63">Response Fields</a></h4>
+<h4 id="_response_fields_64"><a class="link" href="#_response_fields_64">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11449,7 +11650,7 @@ Content-Length: 1605
 </table>
 </div>
 <div class="sect3">
-<h4 id="_error_responses_49"><a class="link" href="#_error_responses_49">Error Responses</a></h4>
+<h4 id="_error_responses_50"><a class="link" href="#_error_responses_50">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11496,9 +11697,9 @@ Content-Length: 1605
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_30"><a class="link" href="#_path_parameters_30">Path Parameters</a></h4>
+<h4 id="_path_parameters_31"><a class="link" href="#_path_parameters_31">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 30. /v1/rooms/{roomId}/comments</caption>
+<caption class="title">Table 31. /v1/rooms/{roomId}/comments</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -11542,7 +11743,7 @@ Content-Length: 1605
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_64"><a class="link" href="#_http_response_64">Http Response</a></h4>
+<h4 id="_http_response_65"><a class="link" href="#_http_response_65">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
@@ -11561,7 +11762,7 @@ Content-Length: 124
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_64"><a class="link" href="#_response_fields_64">Response Fields</a></h4>
+<h4 id="_response_fields_65"><a class="link" href="#_response_fields_65">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11595,7 +11796,7 @@ Content-Length: 124
 </table>
 </div>
 <div class="sect3">
-<h4 id="_error_responses_50"><a class="link" href="#_error_responses_50">Error Responses</a></h4>
+<h4 id="_error_responses_51"><a class="link" href="#_error_responses_51">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11643,9 +11844,9 @@ Content-Length: 124
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_parameters_31"><a class="link" href="#_path_parameters_31">Path Parameters</a></h4>
+<h4 id="_path_parameters_32"><a class="link" href="#_path_parameters_32">Path Parameters</a></h4>
 <table class="tableblock frame-all grid-all stretch">
-<caption class="title">Table 31. /v1/rooms/{roomId}/comments/{commentId}</caption>
+<caption class="title">Table 32. /v1/rooms/{roomId}/comments/{commentId}</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -11669,7 +11870,7 @@ Content-Length: 124
 </table>
 </div>
 <div class="sect3">
-<h4 id="_http_response_65"><a class="link" href="#_http_response_65">Http Response</a></h4>
+<h4 id="_http_response_66"><a class="link" href="#_http_response_66">Http Response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
@@ -11685,7 +11886,7 @@ Content-Length: 61
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_fields_65"><a class="link" href="#_response_fields_65">Response Fields</a></h4>
+<h4 id="_response_fields_66"><a class="link" href="#_response_fields_66">Response Fields</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11709,7 +11910,7 @@ Content-Length: 61
 </table>
 </div>
 <div class="sect3">
-<h4 id="_error_responses_51"><a class="link" href="#_error_responses_51">Error Responses</a></h4>
+<h4 id="_error_responses_52"><a class="link" href="#_error_responses_52">Error Responses</a></h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -11754,7 +11955,7 @@ Content-Length: 61
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-09-03 14:11:51 UTC
+Last updated 2026-09-05 05:02:55 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-09-03",
-                        "datetime" : "2026-09-03T14:12:48.215913929",
+                        "date" : "2026-09-05",
+                        "datetime" : "2026-09-05T05:04:10.519262841",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-09-03",
-                        "datetime" : "2026-09-03T14:12:48.249174995",
+                        "date" : "2026-09-05",
+                        "datetime" : "2026-09-05T05:04:10.552314477",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2386,7 +2386,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "79be8cbd-5edc-414a-ab55-212e5b64b5bb",
+                          "termsId" : "0d4f03bf-7df1-4da8-a637-3d3ee1944f33",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2394,7 +2394,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "c48bb4c0-9d83-48f5-b9a3-047e77eaafa7",
+                          "termsId" : "ed31e458-5e05-4ba7-84dd-7913409f006d",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3151,12 +3151,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "e1026802-89af-4428-939a-f445a774a627",
+                        "memberId" : "3d503ee8-fb65-45b8-8200-00e772375f40",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "e1026802-89af-4428-939a-f445a774a627",
+                          "memberId" : "3d503ee8-fb65-45b8-8200-00e772375f40",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4124,7 +4124,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-reviews-reviewId20839761"
+                $ref: "#/components/schemas/v1-reviews-reviewId-949065321"
               examples:
                 getReview:
                   value: |-
@@ -4646,7 +4646,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-04T14:12:53.570920334",
+                          "startAt" : "2026-09-06T05:04:15.286559082",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4658,9 +4658,9 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "6744ef65-440f-40ad-9cd8-577d1a279657",
+                        "hostMemberId" : "654f89b8-1cc5-4d7f-9a6f-7bed722a5a0a",
                         "participants" : [ {
-                          "memberId" : "6744ef65-440f-40ad-9cd8-577d1a279657",
+                          "memberId" : "654f89b8-1cc5-4d7f-9a6f-7bed722a5a0a",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -4950,7 +4950,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "e80c0456-f0f3-417b-a71d-c9765505dd1a",
+                        "memberId" : "c6d921e5-c5cd-4440-8f21-45667ebf05c0",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5063,7 +5063,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me-received-reviews785981355"
+                $ref: "#/components/schemas/v1-members-me-received-reviews-2000779045"
               examples:
                 getReceivedReviews-default-size:
                   value: |-
@@ -5075,7 +5075,7 @@ paths:
                           "reviewId" : 31,
                           "authorNickname" : "꼼꼼한 여우 12",
                           "tags" : [ "시간을 잘 지켜요" ],
-                          "content" : null
+                          "content" : ""
                         } ],
                         "hasNext" : false
                       },
@@ -5721,19 +5721,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "a0022a6d-664e-4152-8a94-95423baaff78",
+                    "resumeId" : "64d04f05-bb43-46e5-8658-827dcef58ba5",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "57b6503f-cb5c-4bfa-8f85-e40d9d6fd05f",
+                    "resumeId" : "6e2a657e-5697-4121-855c-35510d2afe1d",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "59a8933f-b0eb-4377-a324-fa69b8b954bd"
+                    "resumeId" : "f992b2ea-88b5-4614-aed5-bba6ede69978"
                   }
       responses:
         "400":
@@ -6597,9 +6597,9 @@ paths:
     get:
       tags:
       - v1
-      summary: 후기 작성 대상 조회
-      description: "완료 룸의 출석자 중 본인을 제외한 후기 대상과 제출 진행 상태를 조회한다. 미인증 E1102, 룸 없음 E1405,\
-        \ 완료 전 E2001, 작성자 결석 E2002로 응답한다."
+      summary: 후기 작성 대상 조회 (Deprecated)
+      description: "Deprecated: GET /v1/rooms/{roomId}/reviews/overview로 이전한다. 기존\
+        \ 클라이언트의 전환 기간에만 후기 대상과 제출 진행 상태를 이전 응답 계약으로 제공한다."
       operationId: getReviewTargets
       parameters:
       - name: roomId
@@ -6709,6 +6709,7 @@ paths:
                         "data" : null
                       }
                     }
+      deprecated: true
   /v1/rooms/{roomId}/reviews:
     post:
       tags:
@@ -7146,7 +7147,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "93f264d2-dfd8-4543-a36a-7c333440c63c",
+                          "resumeId" : "32ab98fd-086f-4a9a-8b94-25397bc85454",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7481,6 +7482,127 @@ paths:
                         "message" : "다른 참여자의 꼬리질문이 있는 원 질문은 삭제할 수 없습니다.",
                         "data" : null
                       }
+                    }
+  /v1/rooms/{roomId}/reviews/overview:
+    get:
+      tags:
+      - v1
+      summary: 룸별 후기 작성 개요 조회
+      description: "완료 룸의 출석자 중 본인을 제외한 후기 대상, 대상별 작성 상태와 작성자가 해당 룸에 제출한 후기를 조회한다\
+        . 미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002로 응답한다."
+      operationId: getReviewOverview
+      parameters:
+      - name: roomId
+        in: path
+        description: 완료된 룸 id (UUID)
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: "404"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+              examples:
+                getReviewOverview-e1405:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1405",
+                        "message" : "방을 찾을 수 없습니다.",
+                        "data" : null
+                      }
+                    }
+        "401":
+          description: "401"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+              examples:
+                getReviewOverview-e1102:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1102",
+                        "message" : "인증이 필요합니다.",
+                        "data" : null
+                      }
+                    }
+        "409":
+          description: "409"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+              examples:
+                getReviewOverview-e2001:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2001",
+                        "message" : "완료된 룸에서만 후기를 작성할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "403":
+          description: "403"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-creation-limit910352763"
+              examples:
+                getReviewOverview-e2002:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E2002",
+                        "message" : "출석한 참여자만 후기를 작성할 수 있습니다.",
+                        "data" : null
+                      }
+                    }
+        "200":
+          description: "200"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-rooms-roomId-reviews-overview-1524615499"
+              examples:
+                getReviewOverview:
+                  value: |-
+                    {
+                      "result" : "SUCCESS",
+                      "data" : {
+                        "submittedCount" : 1,
+                        "totalCount" : 2,
+                        "targets" : [ {
+                          "memberId" : "00000000-0000-0000-0000-000000000002",
+                          "nickname" : "꼼꼼한 여우 12",
+                          "status" : "SUBMITTED"
+                        }, {
+                          "memberId" : "00000000-0000-0000-0000-000000000003",
+                          "nickname" : "성실한 사슴 03",
+                          "status" : "WRITABLE"
+                        } ],
+                        "reviews" : [ {
+                          "reviewId" : 31,
+                          "targetMemberId" : "00000000-0000-0000-0000-000000000002",
+                          "tags" : [ "시간을 잘 지켜요", "피드백이 구체적이에요" ],
+                          "content" : "꼬리질문이 날카로워서 실전 같았어요.",
+                          "anonymous" : true
+                        } ]
+                      },
+                      "error" : null
                     }
   /v1/members/me/resumes/{resumeId}/make-default:
     post:
@@ -7938,6 +8060,18 @@ paths:
                   type: string
 components:
   schemas:
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -7957,18 +8091,6 @@ components:
             - type: boolean
             - type: string
             - type: number
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-job-postings1538643122:
       required:
       - result
@@ -8886,6 +9008,81 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
+    v1-rooms-roomId-reviews-overview-1524615499:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - reviews
+          - submittedCount
+          - targets
+          - totalCount
+          type: object
+          properties:
+            reviews:
+              type: array
+              description: 작성자가 이 룸에 제출한 후기 (빈 배열 가능)
+              items:
+                required:
+                - anonymous
+                - content
+                - reviewId
+                - tags
+                - targetMemberId
+                type: object
+                properties:
+                  targetMemberId:
+                    type: string
+                    description: 후기 대상 회원 id
+                  anonymous:
+                    type: boolean
+                    description: 작성자 닉네임 비공개 여부
+                  reviewId:
+                    type: number
+                    description: 후기 id
+                  content:
+                    type: string
+                    description: 텍스트 후기 (작성하지 않았으면 빈 문자열)
+                  tags:
+                    type: array
+                    description: 평가 태그 (빈 배열 가능)
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+            submittedCount:
+              type: number
+              description: 제출 완료한 대상 수
+            totalCount:
+              type: number
+              description: 후기 작성 대상 수
+            targets:
+              type: array
+              description: 후기 작성 대상
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 대상 닉네임
+                  status:
+                    type: string
+                    description: 작성 상태 (WRITABLE | SUBMITTED)
+                  memberId:
+                    type: string
+                    description: 대상 회원 id
+          nullable: true
     v1-rooms-roomId-reviews-1785905513:
       required:
       - result
@@ -9012,51 +9209,6 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
-    v1-rooms-roomId-review-targets-2072286757:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - submittedCount
-          - targets
-          - totalCount
-          type: object
-          properties:
-            submittedCount:
-              type: number
-              description: 제출 완료한 대상 수
-            totalCount:
-              type: number
-              description: 후기 작성 대상 수
-            targets:
-              type: array
-              description: 후기 작성 대상
-              items:
-                required:
-                - memberId
-                - nickname
-                - status
-                type: object
-                properties:
-                  nickname:
-                    type: string
-                    description: 대상 닉네임
-                  reviewId:
-                    type: number
-                    description: 제출된 후기 id. WRITABLE 대상이면 null
-                    nullable: true
-                  status:
-                    type: string
-                    description: 작성 상태 (WRITABLE | SUBMITTED)
-                  memberId:
-                    type: string
-                    description: 대상 회원 id
-          nullable: true
     v1-rooms-form-options-38619118:
       required:
       - result
@@ -9150,6 +9302,51 @@ components:
                   label:
                     type: string
                     description: 회차 표시명
+          nullable: true
+    v1-rooms-roomId-review-targets-2072286757:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - submittedCount
+          - targets
+          - totalCount
+          type: object
+          properties:
+            submittedCount:
+              type: number
+              description: 제출 완료한 대상 수
+            totalCount:
+              type: number
+              description: 후기 작성 대상 수
+            targets:
+              type: array
+              description: 후기 작성 대상
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 대상 닉네임
+                  reviewId:
+                    type: number
+                    description: 제출된 후기 id. WRITABLE 대상이면 null
+                    nullable: true
+                  status:
+                    type: string
+                    description: 작성 상태 (WRITABLE | SUBMITTED)
+                  memberId:
+                    type: string
+                    description: 대상 회원 id
           nullable: true
     v1-members-me-participation-slots889288482:
       required:
@@ -9765,6 +9962,83 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
+    v1-rooms-roomId-applications-me2061746466:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - appliedAt
+          - note
+          - roomId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            resume:
+              required:
+              - resumeId
+              type: object
+              properties:
+                file:
+                  required:
+                  - contentType
+                  - originalName
+                  - sizeBytes
+                  type: object
+                  properties:
+                    originalName:
+                      type: string
+                      description: 제출 당시 파일명
+                    contentType:
+                      type: string
+                      description: 제출 당시 파일 MIME 타입
+                    sizeBytes:
+                      type: number
+                      description: 제출 당시 파일 크기 (bytes)
+                  nullable: true
+                resumeId:
+                  type: string
+                  description: 제출 원본이 된 보관 이력서 id (UUID)
+                aiSummary:
+                  required:
+                  - status
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: AI 요약 내용 (DONE일 때 제공)
+                      nullable: true
+                    status:
+                      type: string
+                      description: AI 요약 상태 (PROCESSING | DONE | FAILED)
+                  nullable: true
+              nullable: true
+            note:
+              type: string
+              description: 내가 입력한 전달 사항 (미입력 시 빈 문자열)
+            applicationId:
+              type: number
+              description: 참가 신청 id
+            appliedAt:
+              type: string
+              description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
+            statusLabel:
+              type: string
+              description: 신청자에게 표시할 상태명
+            roomId:
+              type: string
+              description: 룸 id (UUID)
+            status:
+              type: string
+              description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
+                | ROOM_CONFIRMED)
+          nullable: true
     v1-rooms-roomId-349770905:
       required:
       - result
@@ -10002,83 +10276,6 @@ components:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED
                 | CANCELED)
-          nullable: true
-    v1-rooms-roomId-applications-me2061746466:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - appliedAt
-          - note
-          - roomId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            resume:
-              required:
-              - resumeId
-              type: object
-              properties:
-                file:
-                  required:
-                  - contentType
-                  - originalName
-                  - sizeBytes
-                  type: object
-                  properties:
-                    originalName:
-                      type: string
-                      description: 제출 당시 파일명
-                    contentType:
-                      type: string
-                      description: 제출 당시 파일 MIME 타입
-                    sizeBytes:
-                      type: number
-                      description: 제출 당시 파일 크기 (bytes)
-                  nullable: true
-                resumeId:
-                  type: string
-                  description: 제출 원본이 된 보관 이력서 id (UUID)
-                aiSummary:
-                  required:
-                  - status
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                      description: AI 요약 내용 (DONE일 때 제공)
-                      nullable: true
-                    status:
-                      type: string
-                      description: AI 요약 상태 (PROCESSING | DONE | FAILED)
-                  nullable: true
-              nullable: true
-            note:
-              type: string
-              description: 내가 입력한 전달 사항 (미입력 시 빈 문자열)
-            applicationId:
-              type: number
-              description: 참가 신청 id
-            appliedAt:
-              type: string
-              description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
-            statusLabel:
-              type: string
-              description: 신청자에게 표시할 상태명
-            roomId:
-              type: string
-              description: 룸 id (UUID)
-            status:
-              type: string
-              description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
-                | ROOM_CONFIRMED)
           nullable: true
     v1-members-memberId-profile655149006:
       required:
@@ -10699,6 +10896,57 @@ components:
               type: string
               description: 회원 식별자 (UUID)
           nullable: true
+    v1-members-me-received-reviews-2000779045:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - hasNext
+          - reviews
+          - totalCount
+          type: object
+          properties:
+            reviews:
+              type: array
+              description: 현재 페이지의 받은 후기
+              items:
+                required:
+                - authorNickname
+                - content
+                - reviewId
+                - tags
+                type: object
+                properties:
+                  authorNickname:
+                    type: string
+                    description: "작성자 표시명. 익명이면 익명의 참여자, 공개이면 현재 닉네임"
+                  reviewId:
+                    type: number
+                    description: 후기 id
+                  content:
+                    type: string
+                    description: 한 줄 후기 (작성하지 않았으면 빈 문자열)
+                  tags:
+                    type: array
+                    description: 평가 태그
+                    items:
+                      oneOf:
+                      - type: object
+                      - type: boolean
+                      - type: string
+                      - type: number
+            hasNext:
+              type: boolean
+              description: 다음 페이지 존재 여부
+            totalCount:
+              type: number
+              description: 공개 가능한 받은 후기 전체 수
+          nullable: true
     v1-rooms-roomId-applications-applicationId-reject855969760:
       required:
       - result
@@ -10977,53 +11225,6 @@ components:
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
           nullable: true
-    v1-reviews-reviewId20839761:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - anonymous
-          - reviewId
-          - roomId
-          - tags
-          - targetMemberId
-          - targetNickname
-          type: object
-          properties:
-            targetMemberId:
-              type: string
-              description: 후기 대상 회원 id
-            anonymous:
-              type: boolean
-              description: 익명 작성 여부
-            reviewId:
-              type: number
-              description: 후기 id
-            content:
-              type: string
-              description: 한 줄 후기 (null 가능)
-              nullable: true
-            targetNickname:
-              type: string
-              description: 후기 대상 회원 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
-            roomId:
-              type: string
-              description: 후기가 작성된 룸 id
-            tags:
-              type: array
-              description: 평가 태그 (빈 배열 가능)
-              items:
-                oneOf:
-                - type: object
-                - type: boolean
-                - type: string
-                - type: number
-          nullable: true
     v1-rooms501055666:
       required:
       - result
@@ -11297,57 +11498,6 @@ components:
                     type: string
                     description: 약관 본문
           nullable: true
-    v1-members-me-received-reviews785981355:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - hasNext
-          - reviews
-          - totalCount
-          type: object
-          properties:
-            reviews:
-              type: array
-              description: 현재 페이지의 받은 후기
-              items:
-                required:
-                - authorNickname
-                - reviewId
-                - tags
-                type: object
-                properties:
-                  authorNickname:
-                    type: string
-                    description: "작성자 표시명. 익명이면 익명의 참여자, 공개이면 현재 닉네임"
-                  reviewId:
-                    type: number
-                    description: 후기 id
-                  content:
-                    type: string
-                    description: 한 줄 후기 (null 가능)
-                    nullable: true
-                  tags:
-                    type: array
-                    description: 평가 태그
-                    items:
-                      oneOf:
-                      - type: object
-                      - type: boolean
-                      - type: string
-                      - type: number
-            hasNext:
-              type: boolean
-              description: 다음 페이지 존재 여부
-            totalCount:
-              type: number
-              description: 공개 가능한 받은 후기 전체 수
-          nullable: true
     v1-job-postings-search1628359421:
       required:
       - result
@@ -11586,6 +11736,53 @@ components:
             myCardSetPreparerCount:
               type: number
               description: 내 카드셋에 활성 질문 또는 꼬리질문을 남긴 참여자 수
+          nullable: true
+    v1-reviews-reviewId-949065321:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - anonymous
+          - content
+          - reviewId
+          - roomId
+          - tags
+          - targetMemberId
+          - targetNickname
+          type: object
+          properties:
+            targetMemberId:
+              type: string
+              description: 후기 대상 회원 id
+            anonymous:
+              type: boolean
+              description: 익명 작성 여부
+            reviewId:
+              type: number
+              description: 후기 id
+            content:
+              type: string
+              description: 한 줄 후기 (작성하지 않았으면 빈 문자열)
+            targetNickname:
+              type: string
+              description: 후기 대상 회원 닉네임. 탈퇴한 회원은 대체 표기로 내려간다
+            roomId:
+              type: string
+              description: 후기가 작성된 룸 id
+            tags:
+              type: array
+              description: 평가 태그 (빈 배열 가능)
+              items:
+                oneOf:
+                - type: object
+                - type: boolean
+                - type: string
+                - type: number
           nullable: true
     v1-members-me-web-push-subscriptions615785551:
       required:
