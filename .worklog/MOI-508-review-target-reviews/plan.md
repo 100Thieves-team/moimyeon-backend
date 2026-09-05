@@ -1,6 +1,6 @@
 # MOI-508 구현 계획
 
-검증한 커밋: 미정
+검증한 커밋: f3ca70018f61822269fd0dbb1fcbc6d8ba7ac5bf
 
 ## 자연어 흐름
 
@@ -78,7 +78,9 @@
   - 재검토: code-reviewer 통과, db-reviewer 통과
   - 이름·URI 변경 재검토: code-reviewer 필수·권장 지적 없이 통과
   - PR 전 QA 1차: API 병행 제공 필수, 공개 전 작성 후기 회귀 테스트 권고
+  - PR #121 리뷰: CodeRabbit 조치 항목 0건, Multi-Agent 상태 중복 계산 제안 반영
 - [x] `./gradlew test ktlintCheck` 검증
   - 이름·URI 변경 후 `./gradlew test ktlintCheck restDocsTest` 통과
+  - 리뷰 반영 후 `./gradlew test ktlintCheck restDocsTest` 재통과
 - [x] 구현 승인 (2026-09-04: 사용자 승인)
-- [ ] 커밋·PR
+- [x] 커밋·PR (PR #121)
