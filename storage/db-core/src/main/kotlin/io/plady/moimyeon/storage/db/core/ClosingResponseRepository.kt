@@ -5,4 +5,6 @@ import java.util.UUID
 
 interface ClosingResponseRepository : JpaRepository<ClosingResponseEntity, Long> {
     fun findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId: UUID, memberId: UUID): ClosingResponseEntity?
+
+    fun findAllByRoomIdAndDeletedAtIsNull(roomId: UUID): List<ClosingResponseEntity>
 }

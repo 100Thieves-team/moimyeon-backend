@@ -87,6 +87,13 @@ class RoomEntity(
         status = RoomStatus.CONFIRMED
     }
 
+    // 완료에도 canComplete() 짝을 두지 않는다(confirm 과 같은 이유). 전원 제출 판정은
+    // 클로징 제출자·출석자 집합을 아는 호출자(ClosingSubmissionManager)의 몫이다.
+    fun complete() {
+        check(status == RoomStatus.IN_PROGRESS)
+        status = RoomStatus.COMPLETED
+    }
+
     // 나갈 수 있는 상태를 화이트리스트로 둔다. 못 나가는 쪽을 열거하면 상태가 늘 때
     // 기본값이 "나갈 수 있음"이 되어 조용히 열린다.
     fun canLeave(): Boolean = status == RoomStatus.RECRUITING || status == RoomStatus.CONFIRMED
