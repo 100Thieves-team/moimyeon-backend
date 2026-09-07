@@ -1,9 +1,9 @@
 # Terraform dev 적용 생략 수정
 
 - [x] 원인 진단 및 수정 착수: 사용자 “진행해” 승인 (2026-09-07).
-- [ ] 변경 검증 및 QA 리뷰 결과 승인.
+- [x] 변경 검증 및 QA 리뷰 결과 승인: 사용자 승인 (2026-09-07).
 - [ ] 인프라 plan 승인: 머지 후 CI 자동 apply 대상 확인.
-- [ ] PR 초안 승인.
+- [x] PR 초안 승인: 사용자 “승인. 다음단계 진행해” (2026-09-07).
 
 범위: apply-dev 실행 조건과 회귀 계약. shared/live 설정·권한·AMI 선택은 변경하지 않는다.
 별도 worktree: `.worktrees/terraform-dev-apply-skip`, branch: `fix/terraform-dev-apply-skip`.
@@ -27,4 +27,15 @@
 - 읽기 전용 QA: PASS. 블로킹 지적 없음. 조건식 검사는 CI에서 구조적 회귀를 잡고,
   전체 dependency scheduler는 로컬 검증 범위 밖이라는 한계를 유지한다.
 - 애플리케이션/Kotlin 변경 없음. `./gradlew test ktlintCheck` 통과 (191 tasks, 1m 22s).
-- 로컬 커밋 준비 완료. push·PR 생성·apply는 아직 하지 않았다.
+- PR #122 생성. 최초 head e53b7e31의 CI·Terraform plan·팀 리뷰·CodeRabbit 검사 통과. apply는 하지 않았다.
+
+검증한 커밋: e53b7e31cbb8e73f7d316abf4d81fdf13b30b10b
+
+## PR CI 및 리뷰 반영
+
+- https://github.com/100Thieves-team/moimyeon-backend/pull/122 (자동 연결 MOI-514).
+- PR Terraform plan run 34092789778: shared 0건, dev update 2건(IAM task 정책 / ECS 시작 템플릿), 생성·삭제·replacement 없음.
+- CodeRabbit의 조건 토큰 존재 검사 한계 지적을 수용했다. 공백을 제거한 전체 conjunction을
+  비교해 || 분기로 가드를 우회하는 조건도 거부한다. baseline 통과, OR 우회·취소 가드 삭제·
+  freshness 가드 삭제 변형은 모두 계약 실패를 확인했다.
+- 리뷰 반영은 계약 검사만 변경한다. workflow 및 AWS 리소스 정의는 최초 검증과 동일하다.

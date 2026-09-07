@@ -1,4 +1,4 @@
-Linear 이슈 없음. 사용자 요청에 따른 Terraform dev 적용 생략 수정.
+사용자 요청으로 시작한 Terraform dev 적용 생략 수정. PR #122 생성 후 자동으로 MOI-514가 연결됐다.
 
 # Terraform 아침 drift 알림 원인 진단
 

@@ -86,6 +86,7 @@ assert_contains "${APPLY_WORKFLOW}" 'needs:.*apply-shared' "shared 적용 성공
 # 다른 job의 조건으로 우연히 통과하지 않도록 apply-dev 블록만 검사한다.
 dev_apply_job="$(sed -n '/^  apply-dev:/,/^  sync-dev-variables:/p' "${APPLY_WORKFLOW}")"
 dev_apply_condition="$(printf '%s\n' "${dev_apply_job}" | sed -n 's/^    if: //p')"
+expected_dev_apply_condition=''
 for required_guard in \
   '!cancelled()' \
   "vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true'" \
@@ -93,9 +94,13 @@ for required_guard in \
   "needs.plan-dev.result == 'success'" \
   "needs.plan-dev.outputs.current == 'true'" \
   "needs.plan-dev.outputs.apply_required == 'true'"; do
-  printf '%s\n' "${dev_apply_condition}" | grep -Fq -- "${required_guard}" \
-    || fail "dev apply 조건에 ${required_guard} 가 필요하다 (shared no-op 허용, 취소·실패·stale 차단)."
+  expected_dev_apply_condition="${expected_dev_apply_condition}${required_guard} && "
 done
+expected_dev_apply_condition="${expected_dev_apply_condition% && }"
+normalized_dev_apply_condition="$(printf '%s' "${dev_apply_condition}" | tr -d '[:space:]' | sed 's/^\${{//; s/}}$//')"
+normalized_expected_condition="$(printf '%s' "${expected_dev_apply_condition}" | tr -d '[:space:]')"
+[ "${normalized_dev_apply_condition}" = "${normalized_expected_condition}" ] \
+  || fail "dev apply 조건은 취소·실패·stale·no-op 차단 가드를 모두 &&로 연결해야 한다."
 
 assert_contains "${APPLY_WORKFLOW}" 'uses:[[:space:]]*\./\.github/workflows/terraform-plan-environment\.yml' "merged plan은 trusted reusable boundary를 사용해야 한다."
 assert_contains "${APPLY_WORKFLOW}" 'uses:[[:space:]]*\./\.github/workflows/terraform-apply-environment\.yml' "apply는 environment reusable boundary를 사용해야 한다."
