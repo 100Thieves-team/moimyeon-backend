@@ -81,6 +81,22 @@ assert_contains "${APPLY_WORKFLOW}" 'branches:[[:space:]]*\[[[:space:]]*dev,[[:s
 assert_not_contains "${APPLY_WORKFLOW}" 'MOIMYEON_TERRAFORM_REVIEW_PLAN_ROLE_TO_ASSUME' "PR plan role이 apply artifact prefix를 쓰면 안 된다."
 assert_contains "${APPLY_WORKFLOW}" '^  plan-dev:' "dev apply 전에 별도 dev plan을 다시 만들어야 한다."
 assert_contains "${APPLY_WORKFLOW}" 'needs:.*apply-shared' "shared 적용 성공 뒤 dev plan을 생성해야 한다."
+
+# shared no-op은 정상이다. 그때 skipped가 의존 체인을 따라 dev apply까지 전파되지 않아야 한다.
+# 다른 job의 조건으로 우연히 통과하지 않도록 apply-dev 블록만 검사한다.
+dev_apply_job="$(sed -n '/^  apply-dev:/,/^  sync-dev-variables:/p' "${APPLY_WORKFLOW}")"
+dev_apply_condition="$(printf '%s\n' "${dev_apply_job}" | sed -n 's/^    if: //p')"
+for required_guard in \
+  '!cancelled()' \
+  "vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true'" \
+  "needs.select.result == 'success'" \
+  "needs.plan-dev.result == 'success'" \
+  "needs.plan-dev.outputs.current == 'true'" \
+  "needs.plan-dev.outputs.apply_required == 'true'"; do
+  printf '%s\n' "${dev_apply_condition}" | grep -Fq -- "${required_guard}" \
+    || fail "dev apply 조건에 ${required_guard} 가 필요하다 (shared no-op 허용, 취소·실패·stale 차단)."
+done
+
 assert_contains "${APPLY_WORKFLOW}" 'uses:[[:space:]]*\./\.github/workflows/terraform-plan-environment\.yml' "merged plan은 trusted reusable boundary를 사용해야 한다."
 assert_contains "${APPLY_WORKFLOW}" 'uses:[[:space:]]*\./\.github/workflows/terraform-apply-environment\.yml' "apply는 environment reusable boundary를 사용해야 한다."
 assert_contains "${APPLY_WORKFLOW}" 'uses:[[:space:]]*\./\.github/workflows/terraform-sync-variables\.yml' "apply 뒤 resumable variable sync boundary가 필요하다."
