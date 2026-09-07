@@ -4,6 +4,13 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-07: shared plan이 no-op이면 `apply-shared`의 skipped가 의존 체인에 전파돼,
+  dev plan에 변경이 있어도 `apply-dev`가 생략되고 Terraform Apply 전체는 성공으로 표시됐다
+  (9/3 run 33767410322, 9/5 run 33946394794). `plan-dev`는 `always()`로 실행되지만
+  `apply-dev`에는 status 함수가 없어 암묵적 `success()`가 적용된다. 수정 시 취소를 차단하는
+  `!cancelled()`와 기존 성공·freshness·변경 여부 조건을 함께 유지하고 shared no-op/dev 변경
+  시나리오를 검증한다. Bedrock IAM 변경 미반영과 AWS 권장 AMI 갱신이 매일 drift로 감지됐으며,
+  9/7 진단 시점에는 수정·적용하지 않았다.
 - 2026-08-27: REST Docs가 동일 스키마에 붙인 component 이름을 재생성하면서 실제 1개 API 변경이
   64개 변경으로 Slack에 오탐됐다. 원인: 비교기가 local `$ref`를 확장한 내용과 원래 이름을 함께
   fingerprint에 넣었다. 재발 방지: local ref 이름은 버리고 확장 내용과 이름 독립적인 cycle 위치만 비교한다.

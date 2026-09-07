@@ -71,7 +71,8 @@ jobs:
 
   apply-dev:
     needs: [ select, plan-dev ]
-    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.plan-dev.result == 'success' && needs.plan-dev.outputs.current == 'true' && needs.plan-dev.outputs.apply_required == 'true' }}
+    # shared no-op으로 생략된 apply-shared가 dev 적용까지 생략시키지 않게 한다.
+    if: ${{ !cancelled() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.plan-dev.result == 'success' && needs.plan-dev.outputs.current == 'true' && needs.plan-dev.outputs.apply_required == 'true' }}
     permissions:
       actions: read
       contents: read
