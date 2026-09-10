@@ -347,9 +347,19 @@ data "aws_iam_policy_document" "terraform_plan_refresh" {
     actions = ["ssm:GetParameter"]
     resources = [
       "arn:aws:ssm:*::parameter/aws/service/ecs/optimized-ami/*",
+      "arn:aws:ssm:${data.aws_region.current.region}::parameter/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-api/IMAGE_URI",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-worker/IMAGE_URI",
     ]
+  }
+
+  # aws_s3_object refresh uses HeadObject (authorized by GetObject) and tag
+  # reads. This narrow prefix contains only committed non-secret dev configs,
+  # never application logs, upload objects, or SecureString values.
+  statement {
+    sid       = "RefreshDevMonitoringConfigObjects"
+    actions   = ["s3:GetObject", "s3:GetObjectTagging"]
+    resources = ["arn:aws:s3:::${var.project}-dev-monitoring-config-${data.aws_caller_identity.current.account_id}/releases/*"]
   }
 }
 
@@ -479,6 +489,9 @@ data "aws_iam_policy_document" "terraform_plan" {
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/notification-redis/PASSWORD",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/shared/STORAGE_REDIS_URL",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-api/SENTRY_DSN",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-worker/SENTRY_DSN",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/monitoring/GRAFANA_ADMIN_PASSWORD",
     ]
   }
 

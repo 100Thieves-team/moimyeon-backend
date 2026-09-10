@@ -133,3 +133,27 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_monitoring" {
+  description = "Enable dev monitoring after the Grafana password and both Sentry DSNs have been pre-created in SSM."
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_instance_type" {
+  description = "Dedicated x86_64 monitoring EC2 type."
+  type        = string
+  default     = "t3.small"
+}
+
+variable "monitoring_data_volume_size" {
+  description = "Retained monitoring gp3 EBS volume size in GiB."
+  type        = number
+  default     = 20
+}
+
+variable "monitoring_ami_id" {
+  description = "Optional pinned Amazon Linux 2023 x86_64 monitoring AMI."
+  type        = string
+  default     = null
+}

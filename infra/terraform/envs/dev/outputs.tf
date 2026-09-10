@@ -142,3 +142,28 @@ output "notification_worker_task_definition_arn" {
   description = "Terraform-managed Notification Worker task definition template ARN."
   value       = module.dev.notification_worker_task_definition_arn
 }
+
+output "monitoring_instance_id" {
+  description = "SSM port-forward target for private Grafana (port 3000)."
+  value       = module.dev.monitoring_instance_id
+}
+
+output "monitoring_otlp_metrics_url" {
+  description = "Private OTLP HTTP metrics receiver URL."
+  value       = module.dev.monitoring_otlp_metrics_url
+}
+
+output "monitoring_data_volume_id" {
+  description = "Retained encrypted monitoring data volume."
+  value       = module.dev.monitoring_data_volume_id
+}
+
+output "monitoring_grafana_password_parameter_name" {
+  description = "Pre-created Grafana SecureString expected by the monitoring host."
+  value       = module.dev.monitoring_grafana_password_parameter_name
+}
+
+output "monitoring_sentry_parameter_names" {
+  description = "Pre-created API and Worker Sentry DSN SecureStrings."
+  value       = module.dev.monitoring_sentry_parameter_names
+}

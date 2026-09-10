@@ -20,3 +20,12 @@ firebase_project_id                   = "moimyeon-development"
 notification_web_push_action_base_url = "https://dev.moimyeon.plady.io"
 notification_email_ses_from_address   = "no-reply@moimyeon.plady.io"
 notification_email_gmail_address      = "100dodukteam@gmail.com"
+
+# Target configuration only. Do not merge/apply before pre-creating the three
+# documented SecureStrings and approving the sanitized CI plan.
+enable_monitoring           = true
+monitoring_instance_type    = "t3.small"
+monitoring_data_volume_size = 20
+# Public AL2023 x86_64 AMI in ap-northeast-2, verified 2026-09-11. Pinning avoids
+# unreviewed host replacement when the upstream "latest" SSM parameter changes.
+monitoring_ami_id = "ami-0fad23d064f9e8330"

@@ -335,14 +335,17 @@ jobs:
             exit 1
           fi
 
-          # Swap only the container image; keep every other field (env, secrets,
-          # roles, log config) that Terraform put in the definition. Drop the
-          # read-only fields the register call rejects.
+          # Preserve Terraform wiring and attach the verified source revision.
+          # Exact task definitions keep this release during promotion/rollback.
           jq \
             --arg container "${container}" \
-            --arg image_uri "${image_uri}" '
+            --arg image_uri "${image_uri}" \
+            --arg release "${DEPLOY_SHA}" '
             .containerDefinitions |= map(
-              if .name == $container then .image = $image_uri else . end
+              if .name == $container then
+                .image = $image_uri
+                | .environment = ((.environment // [] | map(select(.name != "APP_RELEASE"))) + [{name: "APP_RELEASE", value: $release}])
+              else . end
             )
             | del(
               .taskDefinitionArn,
@@ -638,9 +641,13 @@ jobs:
 
           jq \
             --arg container "${container}" \
-            --arg image_uri "${image_uri}" '
+            --arg image_uri "${image_uri}" \
+            --arg release "${DEPLOY_SHA}" '
             .containerDefinitions |= map(
-              if .name == $container then .image = $image_uri else . end
+              if .name == $container then
+                .image = $image_uri
+                | .environment = ((.environment // [] | map(select(.name != "APP_RELEASE"))) + [{name: "APP_RELEASE", value: $release}])
+              else . end
             )
             | del(
               .taskDefinitionArn,

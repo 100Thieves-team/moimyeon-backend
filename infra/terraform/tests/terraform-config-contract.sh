@@ -69,7 +69,11 @@ common_keys=(
   vpc_cidr
 )
 
-assert_keys "${TERRAFORM_DIR}/envs/dev/dev.tfvars" "${common_keys[@]}"
+assert_keys "${TERRAFORM_DIR}/envs/dev/dev.tfvars" "${common_keys[@]}" \
+  enable_monitoring \
+  monitoring_ami_id \
+  monitoring_data_volume_size \
+  monitoring_instance_type
 assert_keys "${TERRAFORM_DIR}/envs/live/live.tfvars" "${common_keys[@]}"
 assert_keys "${TERRAFORM_DIR}/envs/shared/shared.tfvars" \
   aws_region \
