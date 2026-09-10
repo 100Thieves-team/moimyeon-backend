@@ -37,3 +37,11 @@ QA에서 EBS/SSM 준비 unit의 dependency 실패는 상위 unit의 Restart로 �
 비밀값은 사전 생성한 SSM SecureString ARN으로만 참조한다. 로컬에서는 값과
 raw plan/state를 읽지 않고 apply도 실행하지 않는다. PR 초안 승인 후 CI의 sanitized plan을
 검토한다. 사람이 dev에 머지하면 CI apply가 자동 실행되므로 머지 승인은 apply 승인이다.
+
+## checkout pin CI 회귀
+
+고정된 checkout 개수 조건은 job 추가를 보안 정책 위반으로 오인했다. 숫자만 3으로
+바꾸지 않고 YAML의 실제 jobs/steps/uses를 읽어 모든 checkout을 기존 승인 SHA와
+비교한다. 태그·브랜치·다른 SHA·무버전 사용 및 checkout 부재는 실패시킨다.
+합성 양성/음성 사례와 실제 CI 파일을 gate self-test에서 함께 검사한다.
+PR 전 로컬 검증에는 개별 게이트뿐 아니라 `bash .agents/gates/tests/run.sh`도 포함한다.

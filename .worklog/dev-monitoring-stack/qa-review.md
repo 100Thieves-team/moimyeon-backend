@@ -26,3 +26,10 @@ Throwable 없는 ERROR의 서로 다른 원인을 분류할 안전한 오류 코
 - 실제 EC2 준비 실패 후 수동 복구, 재부팅·EBS 재연결과 데이터 보존.
 - 실제 API·Worker 지표 및 Sentry SaaS 수신, 환경·릴리스·개인정보 제거.
 - 배포 전 세 SSM SecureString 준비와 sanitized CI plan의 사람 승인.
+
+## CI checkout pin 수정 재리뷰
+
+2026-09-11 HEAD 27fc4b2d 이후 gate 수정분의 읽기 전용 QA **PASS**, 위험 low.
+고정 개수 검사를 실제 YAML uses의 승인 SHA 비교로 전환하고 중복 문자열 검사를 제거했다.
+주석/run 문자열의 오탐과 공백·대소문자 변형 우회를 회귀 테스트로 확인한다.
+시크릿 스캔 범위와 다른 보안 검사는 유지되며 추가 지적·검증 공백은 없다.

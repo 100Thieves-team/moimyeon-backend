@@ -2,6 +2,8 @@
 
 기준: 2026-09-11에 fetch한 `origin/dev` (`8f873640`). 이슈 없는 사용자 요청.
 
+검증한 커밋: 27fc4b2d37ce0311abd7ecba13aa440ce11f4d7e
+
 - [x] 컨텍스트 수집 및 구현: Grafana, Prometheus, Sentry 중심의 승인된 구성도 반영
 - [x] 정적 검증, 계측 회귀 테스트, 로컬 수집 경로 검증
 - [x] 리뷰 및 PR 초안 승인
@@ -44,4 +46,18 @@ dev 머지는 CI apply와 앱 배포를 유발하므로 plan 검토 후 사람�
   자동 재시도 주장을 제거하고 실패 탐지·운영자 재시도 절차를 추가함. 읽기 전용 재리뷰 PASS.
 - 확장 smoke에서 초 단위 histogram, 전체 대시보드 PromQL, Collector가 정상인 상태의
   앱 heartbeat 만료까지 통과. 테스트 컨테이너는 종료했고 기존 컨테이너는 변경하지 않음.
-- PR 초안 승인 후 ship-pr 절차로 커밋·push·draft PR 생성 진행. CI plan 승인은 별도 대기.
+- 사용자 승인 후 두 커밋(a5ced207, 27fc4b2d)을 push하고 Draft PR #123 생성.
+  https://github.com/100Thieves-team/moimyeon-backend/pull/123
+- 최종 커밋의 전체 test/ktlintCheck/API·Worker bootJar 재검증 통과.
+- CI plan 승인은 별도 대기. 머지·AWS apply/deploy는 실행하지 않음.
+
+이후의 PR 생성·검증 커밋 기록은 ship-pr 규칙에 따라 push 후 로컬에 갱신했다.
+
+## CI 수정 승인 및 검증
+
+- 사용자 "반영해줘"로 checkout pin 검사 수정과 기존 PR 반영 승인.
+- 이전 CI 실패: Gate self-test의 checkout 개수 `2` 고정 조건. 신규 monitoring-smoke로 실제 3개.
+- 승인된 SHA 정책은 유지하고 YAML의 실제 checkout step 각각을 검증하는 방식으로 수정.
+- 로컬 gate self-test 전체와 신규 13개 회귀 테스트, 전체 Gradle test/ktlintCheck 통과.
+- 런타임·Terraform·배포 workflow 변경 없음. 수정분 QA PASS, 커밋·push 및 새 CI 결과 확인 진행.
+- 기존 CI에서 앱 build와 monitoring-smoke, Terraform static/plan은 통과. 실패는 gate self-test 한 곳.
