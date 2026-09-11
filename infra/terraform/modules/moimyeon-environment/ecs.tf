@@ -36,6 +36,8 @@ locals {
     var.oauth_google_client_id == null ? {} : { GOOGLE_OAUTH_CLIENT_ID = var.oauth_google_client_id },
     var.jwt_issuer == null ? {} : { JWT_ISSUER = var.jwt_issuer },
     var.additional_environment,
+    local.monitoring_environment,
+    var.enable_monitoring ? { OTEL_SERVICE_NAME = "core-api" } : {},
   )
 
   container_environment = [

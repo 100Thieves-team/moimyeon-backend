@@ -1,4 +1,4 @@
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
+    implementation("io.sentry:sentry-spring-boot-4-starter:${property("sentryVersion")}")
     implementation("io.sentry:sentry-logback:${property("sentryVersion")}")
 }

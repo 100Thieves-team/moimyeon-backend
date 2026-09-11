@@ -26,6 +26,8 @@ locals {
     var.notification_email_gmail_address == null ? {} : {
       NOTIFICATION_EMAIL_GMAIL_ADDRESS = var.notification_email_gmail_address
     },
+    local.monitoring_environment,
+    var.enable_monitoring ? { OTEL_SERVICE_NAME = "core-worker" } : {},
   )
 
   notification_worker_environment = [

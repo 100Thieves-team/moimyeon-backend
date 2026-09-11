@@ -5,6 +5,7 @@ on:
     branches: [ dev, main ]
     paths:
       - "infra/terraform/**"
+      - "infra/observability/**"
       - ".github/workflows/terraform-plan.yml"
       - ".github/workflows/terraform-apply.yml"
       - ".github/workflows/terraform-plan-environment.yml"

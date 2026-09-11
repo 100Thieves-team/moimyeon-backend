@@ -77,6 +77,13 @@ locals {
   notification_redis_password_ssm_arn    = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_password_param_name}"
   notification_redis_url_ssm_arn         = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.notification_redis_url_param_name}"
 
+  # Monitoring only references pre-created SecureStrings. Never read DSN values
+  # through Terraform or create them here (both would persist values in state).
+  sentry_api_parameter_name    = "/${var.project}/${var.environment}/core-api/SENTRY_DSN"
+  sentry_worker_parameter_name = "/${var.project}/${var.environment}/core-worker/SENTRY_DSN"
+  sentry_api_parameter_arn     = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.sentry_api_parameter_name}"
+  sentry_worker_parameter_arn  = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.sentry_worker_parameter_name}"
+
   # Injected into the container as `secrets` (valueFrom SSM). The `name` is the
   # runtime env var the app reads; these match moimyeon's config contract.
   container_secrets = concat(
@@ -100,6 +107,12 @@ locals {
         valueFrom = local.notification_redis_url_ssm_arn
       },
     ] : [],
+    var.enable_monitoring ? [
+      {
+        name      = "SENTRY_DSN"
+        valueFrom = local.sentry_api_parameter_arn
+      },
+    ] : [],
   )
 
   ssm_parameter_arns = concat(
@@ -109,6 +122,7 @@ locals {
       local.oauth_google_client_secret_ssm_arn,
     ],
     var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
+    var.enable_monitoring ? [local.sentry_api_parameter_arn] : [],
   )
 
 
@@ -133,6 +147,12 @@ locals {
         valueFrom = local.notification_redis_url_ssm_arn
       },
     ] : [],
+    var.enable_monitoring ? [
+      {
+        name      = "SENTRY_DSN"
+        valueFrom = local.sentry_worker_parameter_arn
+      },
+    ] : [],
   )
 
   notification_worker_ssm_parameter_arns = concat(
@@ -142,5 +162,6 @@ locals {
       local.gmail_app_password_ssm_arn,
     ],
     var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
+    var.enable_monitoring ? [local.sentry_worker_parameter_arn] : [],
   )
 }

@@ -80,6 +80,9 @@ jobs:
       - name: Config profile sync
         run: python3 .agents/gates/check_config_profiles.py
 
+      - name: Monitoring runtime contract
+        run: python3 infra/observability/tests/test_contract.py
+
       # 정합성 페어링(WARN) — hooksPath 미설정 기여자에게도 경고가 닿게 한다.
       # 차단하지 않고 로그로만 노출한다(로컬 pre-commit과 동일 수위).
       - name: Pairing check
@@ -141,6 +144,9 @@ jobs:
       - name: Check Terraform configuration authority
         run: bash infra/terraform/tests/terraform-config-contract.sh
 
+      - name: Check private monitoring infrastructure
+        run: bash infra/terraform/tests/monitoring-infra-contract.sh
+
       - name: Check Terraform CI contract
         run: bash infra/terraform/tests/terraform-ci-contract.sh
 
@@ -172,3 +178,13 @@ jobs:
           JWT_SECRET: ci-dummy-jwt-secret-0123456789abcdef0123456789abcdef
           GOOGLE_OAUTH_CLIENT_ID: ci-dummy-client-id
           GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
+
+  monitoring-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify pinned monitoring containers and synthetic OTLP ingestion
+        run: bash infra/observability/tests/smoke.sh

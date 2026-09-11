@@ -88,6 +88,13 @@ module "dev" {
   notification_email_ses_from_address     = var.notification_email_ses_from_address
   notification_email_gmail_address        = var.notification_email_gmail_address
 
+  # Separate private monitoring host. The feature is absent from live unless a
+  # later, separately reviewed design explicitly enables it there.
+  enable_monitoring           = var.enable_monitoring
+  monitoring_instance_type    = var.monitoring_instance_type
+  monitoring_data_volume_size = var.monitoring_data_volume_size
+  monitoring_ami_id           = var.monitoring_ami_id
+
   # Transitional (blue/green): keep the existing app-host SG (moimyeon-dev-sg-app)
   # and the existing bastion SG (moimyeon-dev-sg-db-access) able to reach RDS so
   # the current container/tunnel keep working during the absorb. Drop after cutover.
