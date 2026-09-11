@@ -14,7 +14,7 @@
 
 ## 실행 결과
 
-실행 상태: 구현·검증·code-reviewer·qa-reviewer 검토 통과, 커밋·PR 생성 대기.
+구현·검증·code-reviewer·qa-reviewer 검토 통과. 커밋·PR 현황은 Git 이력과 연결된 GitHub PR에서 확인한다.
 
 - JDK 25: `./gradlew test ktlintCheck :core:core-api:openapi3 -x check` 통과.
   `-x check`는 문서 CI와 동일하게 추가 suite 실행을 제외하며 명시한 `test`와 `ktlintCheck`는 실행한다.
@@ -26,4 +26,6 @@
 - `git diff --check`, 변경 파일 시크릿 검사 통과.
 - code-reviewer 통과, qa-reviewer PASS. 진행 기록의 승인/실행 구분 권고 반영.
 
-검증한 커밋: 미정
+검증한 커밋: 385f53e5aa1793fd57f9d88948ef5c130d6e2ae5
+
+검증 기록을 추가한 후속 커밋은 이 파일만 변경하며 위 커밋의 테스트·문서 생성 코드를 유지한다.
