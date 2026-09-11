@@ -179,13 +179,36 @@ resource "aws_volume_attachment" "monitoring_data" {
   force_detach                   = false
 }
 
-# Reuse the existing private hosted zone without modifying its Redis service.
-resource "aws_route53_record" "monitoring" {
+# Cloud Map owns this namespace's hosted zone and rejects direct Route53 writes.
+# Add a separate service; do not modify the existing Redis service or namespace.
+resource "aws_service_discovery_service" "monitoring" {
   count = var.enable_monitoring ? 1 : 0
 
-  zone_id = aws_service_discovery_private_dns_namespace.notification[0].hosted_zone
-  name    = local.monitoring_hostname
-  type    = "A"
-  ttl     = 30
-  records = [aws_instance.monitoring[0].private_ip]
+  name = "monitoring"
+
+  dns_config {
+    namespace_id   = aws_service_discovery_private_dns_namespace.notification[0].id
+    routing_policy = "MULTIVALUE"
+
+    dns_records {
+      ttl  = 30
+      type = "A"
+    }
+  }
+
+  # No custom health publisher exists for this EC2 host. DNS discovery is not a
+  # readiness check; Collector health and fresh app heartbeats are checked separately.
+  tags = local.tags
+}
+
+resource "aws_service_discovery_instance" "monitoring" {
+  count = var.enable_monitoring ? 1 : 0
+
+  instance_id = "monitoring"
+  service_id  = aws_service_discovery_service.monitoring[0].id
+
+  # A stable registration ID updates the address when the EC2 host is replaced.
+  attributes = {
+    AWS_INSTANCE_IPV4 = aws_instance.monitoring[0].private_ip
+  }
 }

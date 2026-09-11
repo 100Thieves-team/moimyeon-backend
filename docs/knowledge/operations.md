@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-11: 모니터링 DNS를 `aws_route53_record`로 Cloud Map 관리 hosted zone에 직접
+  생성하려다 dev apply가 403으로 실패했다. Cloud Map 서비스·인스턴스로 IP를 등록해야 하며,
+  plan 성공은 생성 API 제약 검증이 아니다. 재배포 전 부분 생성된 EC2·EBS의 보존을 새 plan에서 확인한다.
 - 2026-09-07: shared plan이 no-op이면 `apply-shared`의 skipped가 의존 체인에 전파돼,
   dev plan에 변경이 있어도 `apply-dev`가 생략되고 Terraform Apply 전체는 성공으로 표시됐다
   (9/3 run 33767410322, 9/5 run 33946394794). `plan-dev`는 `always()`로 실행되지만

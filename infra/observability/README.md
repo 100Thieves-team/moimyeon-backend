@@ -13,6 +13,19 @@
 - Tempo, Loki, FireLens, EC2/Redis exporters, 부하·비용 최적화 실험은 이번 범위가 아니다.
 - 프론트엔드 SDK 변경은 이 저장소에 포함되지 않는다. 별도 저장소 확인이 필요하다.
 
+## 내부 DNS 등록
+
+`monitoring.moimyeon-dev.internal`은 기존 Cloud Map private DNS namespace에 별도
+`monitoring` 서비스를 만들고 EC2 사설 IP를 `AWS_INSTANCE_IPV4`로 등록해 제공한다.
+Cloud Map이 A 레코드(TTL 30초)를 관리하며, 그 hosted zone에 `aws_route53_record`를
+직접 생성하지 않는다. 기존 Redis 서비스와 namespace는 변경하지 않는다.
+등록 ID는 `monitoring`으로 고정하고 호스트 교체 시 IP를 갱신한다. DNS 캐시의 TTL 동안
+이전 IP가 조회될 수 있으며 단일 호스트 교체 중 관측 공백을 없애는 구성은 아니다.
+
+DNS 등록에 별도 health check는 없다. 이름이 조회된다고 Collector가 정상이라는 뜻은
+아니며, 배포 후 Collector readiness와 실제 API·Worker heartbeat 최근성을 확인해야 한다.
+[AWS RegisterInstance 문서](https://docs.aws.amazon.com/cloud-map/latest/api/API_RegisterInstance.html).
+
 ## Sentry 수집 정책
 
 ERROR 로그와 SDK 예외를 오류 이벤트로 처리하고 중복 예외 수집을 방지한다.
@@ -71,6 +84,19 @@ smoke는 고유한 Compose 프로젝트와 임의 loopback 포트를 사용한�
 Collector가 살아 있어도 앱의 오래된 지표는 사라져야 한다. 종료 시 자신의 테스트
 컨테이너만 내리고 테스트 데이터 경로를 출력한다.
 실제 Sentry SaaS 전송과 AWS EBS 재연결은 이 테스트가 증명하지 않는다.
+
+### Cloud Map DNS 수정 배포 시 확인
+
+이전 apply가 직접 Route53 레코드 생성에서 실패했더라도 EC2·EBS 등은 이미 생성됐을 수 있다.
+수정 PR의 CI sanitized plan에서 Cloud Map 서비스·인스턴스 추가와 기존 EC2·EBS·Redis·namespace의
+삭제/교체가 없는지 확인한다. 예상과 다르면 머지하지 않고 원인을 먼저 확인한다.
+실패한 Route53 리소스의 생성 여부를 추측해 state를 수동 편집하거나 새 타입으로 이동하지 않는다.
+shared IAM·앱 설정 변경 없이 DNS 등록만 수정하며, live monitoring 비활성 기본값을 유지한다.
+실제 변경 수는 부분 적용 상태를 반영한 새 CI plan에서 판정한다.
+
+인프라 배포 뒤 VPC 내부에서 `monitoring.moimyeon-dev.internal`이 모니터링 EC2의 현재
+사설 IP로 조회되는지 확인한다. 그 후 아래의 컨테이너·수집 확인을 수행한다.
+이 DNS 수정만으로 첫 부팅 실패 unit이 자동 재시작된다고 가정하지 않는다.
 
 ### 배포 후 읽기 전용 확인
 
