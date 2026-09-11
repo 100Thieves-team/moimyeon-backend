@@ -431,8 +431,7 @@ class ReviewControllerTest : RestDocsTest() {
 
         mockMvc.perform(
             get("/v1/members/me/received-reviews")
-                .principal(principal)
-                .param("size", "20"),
+                .principal(principal),
         )
             .andExpect(status().isOk)
             .andDo(
@@ -440,12 +439,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId").optional()
-                            .description("직전 페이지 마지막 후기 id (선택). 첫 페이지는 생략한다"),
-                        parameterWithName("size").optional()
-                            .description("페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다"),
-                    ),
+                    receivedReviewQueryParameters(),
                     receivedReviewResponseFields(),
                 ),
             )
@@ -480,12 +474,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews-default-size",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId")
-                            .description("직전 페이지 마지막 후기 id"),
-                        parameterWithName("size")
-                            .description("페이지 크기. 허용 범위 1~50 밖이면 기본값 20을 사용한다"),
-                    ),
+                    receivedReviewQueryParameters(),
                     receivedReviewResponseFields(),
                 ),
             )
@@ -506,9 +495,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews-e400",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId").description("양수가 아닌 마지막 후기 id"),
-                    ),
+                    receivedReviewQueryParameters(),
                     errorResponseFields(),
                 ),
             )
@@ -864,6 +851,13 @@ class ReviewControllerTest : RestDocsTest() {
             ),
         )
     }
+
+    private fun receivedReviewQueryParameters() = queryParameters(
+        parameterWithName("lastReviewId").optional()
+            .description("직전 페이지 마지막 후기 id (양수, 선택). 첫 페이지는 생략한다"),
+        parameterWithName("size").optional()
+            .description("페이지 크기 (1~50, 기본 20). 생략하거나 범위 밖이면 기본값으로 조회한다"),
+    )
 
     private fun receivedReviewResponseFields() = responseFields(
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
