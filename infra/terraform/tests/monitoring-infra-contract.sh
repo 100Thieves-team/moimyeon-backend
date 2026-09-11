@@ -22,6 +22,15 @@ reject_pattern() {
   fi
 }
 
+require_resource_literal() {
+  local resource_type="$1" resource_name="$2" literal="$3"
+  if ! sed -n "/^resource \"${resource_type}\" \"${resource_name}\" {/,/^}/p" "${MONITORING_TF}" |
+    grep -Fq -- "${literal}"; then
+    echo "Missing monitoring resource contract: ${resource_type}.${resource_name}: ${literal}" >&2
+    exit 1
+  fi
+}
+
 # No accidental live activation or public administrative network surface.
 sed -n '/variable "enable_monitoring" {/,/^}/p' "${MONITORING_MODULE}/monitoring_variables.tf" |
   grep -Eq 'default[[:space:]]*=[[:space:]]*false' || exit 1
@@ -39,7 +48,27 @@ if sed -n '/resource "aws_vpc_security_group_ingress_rule"/,/^}/p' "${MONITORING
 fi
 require_literal 'resource "aws_vpc_security_group_egress_rule" "monitoring_worker_otlp"' "${MONITORING_TF}"
 require_literal 'monitoring_otlp_metrics_url       = "http://${local.monitoring_hostname}:4318/v1/metrics"' "${MONITORING_TF}"
-require_literal 'aws_service_discovery_private_dns_namespace.notification[0].hosted_zone' "${MONITORING_TF}"
+
+# Cloud Map owns the existing namespace's hosted zone. Direct Route53 writes
+# fail at apply even when validate/plan succeed. Keep the existing hostname and
+# register the host through Cloud Map without taking over Redis or its namespace.
+reject_pattern '^resource[[:space:]]+"aws_route53_record"' "${MONITORING_TF}"
+reject_pattern 'aws_service_discovery_private_dns_namespace\.notification\[0\]\.hosted_zone' "${MONITORING_TF}"
+require_literal '"monitoring.${local.name}.internal"' "${MONITORING_TF}"
+for resource_type in aws_service_discovery_service aws_service_discovery_instance; do
+  require_resource_literal "${resource_type}" monitoring 'count = var.enable_monitoring ? 1 : 0'
+done
+require_resource_literal aws_service_discovery_service monitoring 'name = "monitoring"'
+require_resource_literal aws_service_discovery_service monitoring 'namespace_id   = aws_service_discovery_private_dns_namespace.notification[0].id'
+require_resource_literal aws_service_discovery_service monitoring 'routing_policy = "MULTIVALUE"'
+require_resource_literal aws_service_discovery_service monitoring 'ttl  = 30'
+require_resource_literal aws_service_discovery_service monitoring 'type = "A"'
+require_resource_literal aws_service_discovery_instance monitoring 'instance_id = "monitoring"'
+require_resource_literal aws_service_discovery_instance monitoring 'service_id  = aws_service_discovery_service.monitoring[0].id'
+require_resource_literal aws_service_discovery_instance monitoring 'AWS_INSTANCE_IPV4 = aws_instance.monitoring[0].private_ip'
+# No component updates Cloud Map health; DNS registration must not imply a
+# Collector readiness check or copy Redis's ECS-managed custom health contract.
+reject_pattern '^[[:space:]]*health_check(_custom)?_config[[:space:]]*\{' "${MONITORING_TF}"
 
 # Data survives normal host replacement. No forced or live volume detach.
 require_literal 'resource "aws_ebs_volume" "monitoring_data"' "${MONITORING_TF}"
