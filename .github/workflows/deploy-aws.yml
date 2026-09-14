@@ -5,8 +5,8 @@ name: Deploy AWS
 # Each image gets its own ECR repository and ECS task-definition revision.
 #
 # Live is intentionally absent until the build-once promotion workflow and its
-# approval gate are implemented. Repository variables come from
-# `infra/terraform/scripts/sync-github-variables.sh`.
+# approval gate are implemented. Deployment wiring comes from the successful
+# Terraform run's SHA/attempt-bound, non-secret artifact, not a vars snapshot.
 
 on:
   workflow_run:
@@ -74,6 +74,8 @@ jobs:
       contents: read
     outputs:
       sha: ${{ steps.source.outputs.sha }}
+      terraform_run_id: ${{ steps.source.outputs.terraform_run_id }}
+      terraform_run_attempt: ${{ steps.source.outputs.terraform_run_attempt }}
 
     steps:
       - name: Check out CI-verified revision and history
@@ -148,37 +150,23 @@ jobs:
           fi
           echo "Deploying Terraform-ready dev revision ${DEPLOY_SHA}."
 
-      - name: Select environment
+      - name: Load source-bound Terraform deployment config
         id: env
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TERRAFORM_RUN_ID: ${{ needs.candidate.outputs.terraform_run_id }}
+          TERRAFORM_RUN_ATTEMPT: ${{ needs.candidate.outputs.terraform_run_attempt }}
         run: |
           set -euo pipefail
-
-          case "${DEPLOY_BRANCH}" in
-            dev)
-              echo "name=dev" >> "$GITHUB_OUTPUT"
-              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecr_repository_url=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_cluster=${{ vars.MOIMYEON_ECS_CLUSTER_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_service=${{ vars.MOIMYEON_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_task_definition=${{ vars.MOIMYEON_ECS_TASK_DEFINITION_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "image_uri_parameter=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "app_url=${{ vars.MOIMYEON_APP_URL_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "bundle_parameter_prefix=${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecr_repository_url=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "worker_ecs_task_definition=${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "worker_image_uri_parameter=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
-              echo "ecs_health_check_grace_seconds=240" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "::error::Unsupported branch ${DEPLOY_BRANCH}"
-              exit 1
-              ;;
-          esac
+          test "${DEPLOY_BRANCH}" = dev
+          config_dir="${RUNNER_TEMP}/dev-deploy-config"
+          gh run download "${TERRAFORM_RUN_ID}" --repo "${GITHUB_REPOSITORY}" \
+            --name "dev-deploy-config-${DEPLOY_SHA}-${TERRAFORM_RUN_ATTEMPT}" \
+            --dir "${config_dir}"
+          python3 infra/terraform/scripts/deploy_config.py read \
+            --file "${config_dir}/dev-deploy-config.json" --sha "${DEPLOY_SHA}" \
+            --run-id "${TERRAFORM_RUN_ID}" --attempt "${TERRAFORM_RUN_ATTEMPT}"
 
       - name: Validate deployment variables
         id: deployment_config
@@ -201,8 +189,8 @@ jobs:
           )
           for value in "${required[@]}"; do
             if [ -z "$value" ]; then
-              echo "::error::One or more MOIMYEON_* repository variables are missing for ${{ steps.env.outputs.name }}."
-              echo "::error::Run infra/terraform/scripts/sync-github-variables.sh --env ${{ steps.env.outputs.name }} after terraform apply."
+              echo "::error::One or more Terraform deployment config fields are missing for ${{ steps.env.outputs.name }}."
+              echo "::error::Regenerate deployment config through the matching Terraform Apply workflow."
               exit 1
             fi
           done
@@ -240,8 +228,8 @@ jobs:
             echo "worker_enabled=false" >> "$GITHUB_OUTPUT"
             echo "Notification Worker deployment is not configured yet; deploying Core API only."
           elif [ "${configured_worker_values}" -ne "${#worker_values[@]}" ]; then
-            echo "::error::Notification Worker repository variables are only partially configured."
-            echo "::error::Run infra/terraform/scripts/sync-github-variables.sh --env ${{ steps.env.outputs.name }} after terraform apply."
+            echo "::error::Notification Worker Terraform deployment config is only partially configured."
+            echo "::error::Regenerate deployment config through the matching Terraform Apply workflow."
             exit 1
           else
             echo "worker_enabled=true" >> "$GITHUB_OUTPUT"
@@ -252,6 +240,29 @@ jobs:
         with:
           role-to-assume: ${{ steps.env.outputs.role_arn }}
           aws-region: ${{ steps.env.outputs.aws_region }}
+
+      - name: Validate both Terraform task templates before image build
+        shell: bash
+        env:
+          API_TEMPLATE: ${{ steps.env.outputs.ecs_task_definition }}
+          API_CONTAINER: ${{ steps.env.outputs.ecs_container }}
+          WORKER_TEMPLATE: ${{ steps.env.outputs.worker_ecs_task_definition }}
+          WORKER_CONTAINER: ${{ steps.env.outputs.worker_ecs_container }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+        run: |
+          set -euo pipefail
+          aws ecs describe-task-definition --task-definition "${API_TEMPLATE}" \
+            --query taskDefinition > "${RUNNER_TEMP}/task-definition.json"
+          python3 infra/terraform/scripts/prepare_ecs_task.py \
+            --file "${RUNNER_TEMP}/task-definition.json" --expected-arn "${API_TEMPLATE}" \
+            --container "${API_CONTAINER}" --validate-only
+          if [ "${WORKER_ENABLED}" = true ]; then
+            aws ecs describe-task-definition --task-definition "${WORKER_TEMPLATE}" \
+              --query taskDefinition > "${RUNNER_TEMP}/worker-task-definition.json"
+            python3 infra/terraform/scripts/prepare_ecs_task.py \
+              --file "${RUNNER_TEMP}/worker-task-definition.json" --expected-arn "${WORKER_TEMPLATE}" \
+              --container "${WORKER_CONTAINER}" --validate-only
+          fi
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
@@ -322,44 +333,13 @@ jobs:
           template_task_def_arn="${{ steps.env.outputs.ecs_task_definition }}"
           image_uri="${{ steps.image.outputs.image_uri }}"
 
-          aws ecs describe-task-definition \
-            --task-definition "${template_task_def_arn}" \
-            --query taskDefinition \
-            > task-definition.json
-
-          if ! jq -e \
-            --arg container "${container}" \
-            '.containerDefinitions | any(.name == $container)' \
-            task-definition.json >/dev/null; then
-            echo "::error::Container ${container} is absent from Core API task definition."
-            exit 1
-          fi
-
-          # Preserve Terraform wiring and attach the verified source revision.
-          # Exact task definitions keep this release during promotion/rollback.
-          jq \
-            --arg container "${container}" \
-            --arg image_uri "${image_uri}" \
-            --arg release "${DEPLOY_SHA}" '
-            .containerDefinitions |= map(
-              if .name == $container then
-                .image = $image_uri
-                | .environment = ((.environment // [] | map(select(.name != "APP_RELEASE"))) + [{name: "APP_RELEASE", value: $release}])
-              else . end
-            )
-            | del(
-              .taskDefinitionArn,
-              .revision,
-              .status,
-              .requiresAttributes,
-              .compatibilities,
-              .registeredAt,
-              .registeredBy
-            )
-          ' task-definition.json > task-definition-next.json
+          python3 infra/terraform/scripts/prepare_ecs_task.py \
+            --file "${RUNNER_TEMP}/task-definition.json" --expected-arn "${template_task_def_arn}" \
+            --container "${container}" --image "${image_uri}" --release "${DEPLOY_SHA}" \
+            > "${RUNNER_TEMP}/task-definition-next.json"
 
           next_task_def_arn="$(aws ecs register-task-definition \
-            --cli-input-json file://task-definition-next.json \
+            --cli-input-json "file://${RUNNER_TEMP}/task-definition-next.json" \
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)"
 
@@ -416,11 +396,11 @@ jobs:
           aws ecs describe-task-definition \
             --task-definition "${previous_task_definition}" \
             --query taskDefinition \
-            > previous-task-definition.json
+            > "${RUNNER_TEMP}/previous-task-definition.json"
           previous_image_uri="$(jq -r \
             --arg container "${{ steps.env.outputs.ecs_container }}" \
             '.containerDefinitions[] | select(.name == $container) | .image' \
-            previous-task-definition.json)"
+            "${RUNNER_TEMP}/previous-task-definition.json")"
 
           abort_worker_build() {
             if [ -n "${worker_build_pid}" ]; then
@@ -626,42 +606,13 @@ jobs:
           template_task_def_arn="${{ steps.env.outputs.worker_ecs_task_definition }}"
           image_uri="${{ steps.worker_image.outputs.image_uri }}"
 
-          aws ecs describe-task-definition \
-            --task-definition "${template_task_def_arn}" \
-            --query taskDefinition \
-            > worker-task-definition.json
-
-          if ! jq -e \
-            --arg container "${container}" \
-            '.containerDefinitions | any(.name == $container)' \
-            worker-task-definition.json > /dev/null; then
-            echo "::error::Container ${container} is absent from Notification Worker task definition."
-            exit 1
-          fi
-
-          jq \
-            --arg container "${container}" \
-            --arg image_uri "${image_uri}" \
-            --arg release "${DEPLOY_SHA}" '
-            .containerDefinitions |= map(
-              if .name == $container then
-                .image = $image_uri
-                | .environment = ((.environment // [] | map(select(.name != "APP_RELEASE"))) + [{name: "APP_RELEASE", value: $release}])
-              else . end
-            )
-            | del(
-              .taskDefinitionArn,
-              .revision,
-              .status,
-              .requiresAttributes,
-              .compatibilities,
-              .registeredAt,
-              .registeredBy
-            )
-          ' worker-task-definition.json > worker-task-definition-next.json
+          python3 infra/terraform/scripts/prepare_ecs_task.py \
+            --file "${RUNNER_TEMP}/worker-task-definition.json" --expected-arn "${template_task_def_arn}" \
+            --container "${container}" --image "${image_uri}" --release "${DEPLOY_SHA}" \
+            > "${RUNNER_TEMP}/worker-task-definition-next.json"
 
           next_task_def_arn="$(aws ecs register-task-definition \
-            --cli-input-json file://worker-task-definition-next.json \
+            --cli-input-json "file://${RUNNER_TEMP}/worker-task-definition-next.json" \
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)"
 
@@ -694,11 +645,11 @@ jobs:
           aws ecs describe-task-definition \
             --task-definition "${previous_task_definition}" \
             --query taskDefinition \
-            > worker-previous-task-definition.json
+            > "${RUNNER_TEMP}/worker-previous-task-definition.json"
           previous_image_uri="$(jq -r \
             --arg container "${{ steps.env.outputs.worker_ecs_container }}" \
             '.containerDefinitions[] | select(.name == $container) | .image' \
-            worker-previous-task-definition.json)"
+            "${RUNNER_TEMP}/worker-previous-task-definition.json")"
           echo "previous_task_definition_arn=${previous_task_definition}" >> "$GITHUB_OUTPUT"
           echo "previous_image_uri=${previous_image_uri}" >> "$GITHUB_OUTPUT"
 

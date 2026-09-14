@@ -92,8 +92,8 @@ task definition revision with the built image and updates the service.
 
 ## GitHub Repository Variables
 
-After `apply`, sync Terraform outputs into the repo variables the deploy workflow
-will consume (workflow itself is the next step — Pattern A CD):
+After `apply`, sync Terraform outputs into repository variables for the existing
+promotion/rollback consumers and operator reference:
 
 ```bash
 ./infra/terraform/scripts/sync-github-variables.sh --env dev        # --dry-run to preview
@@ -123,11 +123,46 @@ does not deploy until `MOIMYEON_LIVE_DEPLOY_ENABLED=true`: the promotion workflo
 is fail-closed until native ECS blue/green and the promotion IAM role have been
 planned and applied by a person.
 
-Before the five Worker variables are synced, the workflow keeps deploying only
-Core API. Once they are all present, it builds the Worker image while the API
-stabilizes, then registers and deploys the Worker only after both sides succeed.
+Dev deployment now requires the complete Terraform output set for API and Worker.
+It builds the Worker image while the API stabilizes, then registers and deploys
+the Worker only after both sides succeed.
 A Worker service with desired count `0` receives the new task definition without
 starting a task, so vendor credentials can be prepared before activation.
+
+### Dev deployment configuration handoff
+
+Dev no longer reads task templates or deployment wiring from a workflow's
+repository-variable snapshot. The successful Terraform sync job, while holding
+the same `deploy-aws-dev` lock as apply/deploy, publishes
+`dev-deploy-config-<source-sha>-<run-attempt>` (30-day retention).
+`deploy_config.py` reads only 15 explicitly allowlisted, non-secret outputs through
+`terraform-command.sh output-raw`. The artifact contains identifiers, URLs and
+exact task-template ARNs; no raw plan, state, task definitions or secret values.
+
+The deploy waiter returns the successful Terraform run ID and attempt. The app
+downloads only that run's named artifact and validates SHA, environment, run ID,
+attempt and exact API/Worker ARN account/region/family before AWS credentials.
+Both templates must be ACTIVE and contain the expected container before building
+images. `prepare_ecs_task.py` preserves Terraform wiring and changes only the
+target image and `APP_RELEASE`, then emits the
+[RegisterTaskDefinition request fields](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RegisterTaskDefinition.html).
+Response-only metadata such as `deregisteredAt` never enters registration.
+
+Failure/retry rules:
+
+- Missing/expired artifacts, stale SHA/attempt or inactive templates fail closed.
+  Do not fall back to an earlier artifact, family latest revision, currently
+  running task, or a hardcoded revision number.
+- A partial Terraform retry can increment the attempt without rerunning an
+  already successful sync job. If that attempt's artifact is absent, rerun the
+  Terraform workflow including sync for the same still-eligible source SHA, then
+  rerun the app candidate so it resolves that successful run/attempt again.
+- Deploy retries reuse the selected immutable artifact. If a newer
+  runtime-changing source has advanced, its own CI/Terraform boundary is required.
+- The first rollout of this fix must use a new merged SHA. Rerunning the old
+  failed workflow does not introduce the new workflow code or its artifact.
+- Live promotion/rollback keep their existing exact deployment-bundle path.
+  This change creates no AWS resources and adds no AWS IAM permissions.
 
 ## Release promotion and rollback
 

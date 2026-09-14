@@ -121,3 +121,21 @@ jobs:
           echo "::add-mask::${variable_sync_token}"
           GH_TOKEN="${variable_sync_token}" \
             bash infra/terraform/scripts/sync-github-variables.sh --env "${{ inputs.environment }}"
+
+      - name: Export non-secret dev deployment config
+        if: steps.freshness.outputs.current == 'true' && inputs.environment == 'dev'
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          python3 infra/terraform/scripts/deploy_config.py export \
+            --sha "${SOURCE_SHA}" --run-id "${GITHUB_RUN_ID}" --attempt "${GITHUB_RUN_ATTEMPT}" \
+            > dev-deploy-config.json
+
+      - name: Publish source-bound dev deployment config
+        if: steps.freshness.outputs.current == 'true' && inputs.environment == 'dev'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dev-deploy-config-${{ inputs.source_sha }}-${{ github.run_attempt }}
+          path: dev-deploy-config.json
+          if-no-files-found: error
+          retention-days: 30
