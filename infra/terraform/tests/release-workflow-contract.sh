@@ -131,7 +131,13 @@ assert_contains "${DEPLOY_SCRIPT}" 'automatic compensation also failed' "순방�
 assert_contains "${DEPLOY_SCRIPT}" '@sha256:\[0-9a-f\]\{64\}' "ECS에는 immutable digest만 적용해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'Smoke failed; restoring previous task definition' "smoke 실패는 이전 ECS revision을 실제 복원해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'Historical task definition belongs to a different ECS family' "rollback task definition은 같은 service family여야 한다."
-assert_contains "${DEV_WORKFLOW}" 'Container .* is absent from Core API task definition' "Core API container mismatch는 marker 생성 전에 실패해야 한다."
+assert_contains "${ROOT_DIR}/infra/terraform/scripts/prepare_ecs_task.py" 'Expected exactly one deployment container' "Core API container mismatch는 marker 생성 전에 실패해야 한다."
+assert_contains "${DEV_WORKFLOW}" 'Validate both Terraform task templates before image build' "API와 Worker 모두 배포 시작 전에 템플릿을 검사해야 한다."
+template_check_line="$(line_of "${DEV_WORKFLOW}" 'name: Validate both Terraform task templates')"
+api_register_line="$(line_of "${DEV_WORKFLOW}" 'name: Register task definition revision')"
+if [ "${template_check_line}" -ge "${api_register_line}" ]; then
+  fail "템플릿 검사는 API 등록·배포·marker보다 먼저 실행해야 한다."
+fi
 assert_contains "${COPY_SCRIPT}" 'target_digest.*source_digest' "registry 복사 뒤 digest 동일성을 확인해야 한다."
 assert_contains "${SMOKE_SCRIPT}" '/actuator/health/readiness' "readiness smoke가 필요하다."
 assert_contains "${SMOKE_SCRIPT}" '/v1/terms' "공개 DB read smoke가 필요하다."

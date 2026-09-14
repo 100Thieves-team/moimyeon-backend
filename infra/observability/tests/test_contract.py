@@ -3,6 +3,8 @@
 import json
 import re
 import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -82,24 +84,35 @@ class MonitoringContractTest(unittest.TestCase):
 
     def test_deployment_release_preserves_unrelated_task_wiring(self):
         workflow = (ROOT / ".github/workflows/deploy-aws.yml").read_text()
-        # Execute the actual jq transformations, not a hand-copied implementation.
-        scripts = re.findall(r"--arg release \"\$\{DEPLOY_SHA\}\" '(.*?)' (?:worker-)?task-definition.json", workflow, re.S)
+        # Execute the request builder used by both actual registration steps.
+        steps = yaml.safe_load(workflow)["jobs"]["deploy"]["steps"]
+        scripts = [re.search(r"python3 (\S+)", step["run"])[1]
+                   for step in steps if step.get("id") in {"task_def", "worker_task_def"}]
         self.assertEqual(len(scripts), 2)
         fixture = {
-            "taskDefinitionArn": "template",
+            "taskDefinitionArn": "arn:aws:ecs:ap-northeast-2:123456789012:task-definition/template:1",
+            "family": "template", "status": "ACTIVE", "deregisteredAt": "response-only",
             "containerDefinitions": [
                 {"name": "target", "image": "old", "environment": [{"name": "APP_RELEASE", "value": "old"}, {"name": "KEEP", "value": "yes"}], "secrets": [{"name": "SENTRY_DSN", "valueFrom": "ssm-ref"}]},
                 {"name": "other", "image": "unchanged", "environment": [{"name": "KEEP", "value": "other"}]},
             ],
         }
         for script in scripts:
-            result = subprocess.run(["jq", "--arg", "container", "target", "--arg", "image_uri", "repo@sha256:digest", "--arg", "release", "a" * 40, script], input=json.dumps(fixture), text=True, capture_output=True, check=True)
+            with tempfile.TemporaryDirectory() as directory:
+                source = Path(directory) / "task.json"
+                source.write_text(json.dumps(fixture))
+                result = subprocess.run([
+                    sys.executable, str(ROOT / script), "--file", str(source),
+                    "--expected-arn", fixture["taskDefinitionArn"], "--container", "target",
+                    "--image", "repo@sha256:digest", "--release", "a" * 40,
+                ], text=True, capture_output=True, check=True)
             output = json.loads(result.stdout)
             target, other = output["containerDefinitions"]
             self.assertEqual(other, fixture["containerDefinitions"][1])
             self.assertEqual(target["secrets"], fixture["containerDefinitions"][0]["secrets"])
             self.assertEqual(target["environment"], [{"name": "KEEP", "value": "yes"}, {"name": "APP_RELEASE", "value": "a" * 40}])
             self.assertNotIn("taskDefinitionArn", output)
+            self.assertNotIn("deregisteredAt", output)
 
 
 if __name__ == "__main__":

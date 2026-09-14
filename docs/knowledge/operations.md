@@ -4,6 +4,11 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-11: Terraform sync가 API 템플릿 변수를 `:95`로 갱신했지만 동시에 시작된
+  앱 배포는 이전 `:43`을 참조했다. 비활성 템플릿의 `deregisteredAt`을 등록 요청에 복사해
+  AWS CLI 입력 검증도 실패했다. 재발 방지는 같은 source SHA·run·attempt에 고정된 비민감
+  Terraform 출력 전달, 두 템플릿의 ACTIVE 사전 검사, ECS 등록 입력 allowlist를 함께 적용한다.
+
 - 2026-09-11: 모니터링 DNS를 `aws_route53_record`로 Cloud Map 관리 hosted zone에 직접
   생성하려다 dev apply가 403으로 실패했다. Cloud Map 서비스·인스턴스로 IP를 등록해야 하며,
   plan 성공은 생성 API 제약 검증이 아니다. 재배포 전 부분 생성된 EC2·EBS의 보존을 새 plan에서 확인한다.

@@ -156,6 +156,9 @@ jobs:
       - name: Check Terraform apply boundary waiter
         run: bash infra/terraform/tests/wait-for-terraform-apply-test.sh
 
+      - name: Check source-bound deployment config and ECS requests
+        run: python3 -m unittest discover -s infra/terraform/tests -p 'test_deploy_*.py' -v
+
       # gradle.properties 의 javaVersion(toolchain)=25 와 일치시킨다.
       # settings.gradle.kts 에 toolchain 리졸버(foojay)가 없으므로 러너에 JDK 25 를 직접 설치해야 한다.
       - name: Set up JDK

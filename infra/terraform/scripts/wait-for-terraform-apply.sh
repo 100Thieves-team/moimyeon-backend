@@ -43,6 +43,14 @@ while [ "${SECONDS}" -lt "${deadline}" ]; do
 
   if [ "${status}" = "completed" ]; then
     if [ "${conclusion}" = "success" ]; then
+      if [ -n "${GITHUB_OUTPUT:-}" ]; then
+        run_id="$(jq -r '.id' <<< "${run}")"
+        run_attempt="$(jq -r '.run_attempt' <<< "${run}")"
+        [[ "${run_id}" =~ ^[1-9][0-9]*$ ]] || exit 1
+        [[ "${run_attempt}" =~ ^[1-9][0-9]*$ ]] || exit 1
+        echo "terraform_run_id=${run_id}" >> "$GITHUB_OUTPUT"
+        echo "terraform_run_attempt=${run_attempt}" >> "$GITHUB_OUTPUT"
+      fi
       exit 0
     fi
     echo "Terraform Apply did not succeed for ${branch}@${source_sha}: ${conclusion}." >&2
