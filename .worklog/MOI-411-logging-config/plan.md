@@ -1,5 +1,7 @@
 # MOI-411 설계 작업
 
+- [x] 2026-09-18 구현 세부 정책 승인: 미등록 메시지 숨김·안전 설정 강제·로컬 외부 전송 OFF·환경 정규화·추가 상한·메타데이터 및 요청 형식 제약, 라이브러리·의존성·Bean 구성을 사용자에게 설명하고 승인받았다. DR-26 참조.
+
 - [x] 2026-09-14 사용자 운영 정책 확정: 추천안 채택, live는 팀원 3명 전원이 공동 담당. 상세는 `decisions.md` DR-22.
 
 사용자가 요청한 범위는 강의와 현재 저장소를 근거로 한 설계다. 실행 코드·인프라 배포는 포함하지 않는다.
@@ -31,3 +33,15 @@
 테스트는 staging과 dev/perf 부팅, test/local 상속, 환경 충돌, 로컬 외부 전송 차단, kotlin-logging의 실제 출력 및 민감값·SQL 출력 차단을 먼저 작성한다. 변경 범위는 support:logging과 필요한 공통 빌드·DB 로깅 설정이다. HTTP 필터·ErrorType 재분류·S3 전송·알림은 다음 슬라이스이며 API 계약은 바꾸지 않는다.
 
 설계 커밋 전 검증: 최신 origin/dev(e65ebcdc)에서 `./gradlew test ktlintCheck` 통과. 문서 링크·공백·시크릿 게이트 통과. 앞선 읽기 전용 QA의 설계 지적은 반영 완료 상태로 가져왔다.
+
+## 설정 슬라이스 결과
+
+설계 선행 커밋은 `de130a92`다. 실제 Boot 설정 테스트를 먼저 실패시킨 뒤 공통 facade 의존·고정 XML·환경 선택·안전한 출력·SQL 우회 차단을 구현했다. 코드 리뷰의 부팅 순서 지적과 QA의 logging.config 우회 지적을 회귀 테스트로 확인해 수정했다.
+
+최종 `./gradlew test ktlintCheck` 통과, 로깅 테스트 20개 중 신규 14개다. code-reviewer와 qa-reviewer 재검토도 통과했다. 구체적인 동작과 후속 범위는 [구현 기록](implementation.md)에 있다. 구현 변경은 미커밋 상태이며 push·PR·배포는 수행하지 않았다.
+
+예제 반영 최종 검증: 로깅 테스트 28개(이번 후속 작업에서 8개 추가)와 루트 `./gradlew test ktlintCheck` 통과. code-reviewer·qa-reviewer 모두 추가 필수 지적 없음. 경로 템플릿의 신뢰할 출처는 후속 HTTP 연결의 책임임을 README와 코드에 명시했다. 변경은 미커밋 상태다.
+
+환경별 XML 유지 요청 반영: local/local-dev/dev/live XML을 복구하고 test/staging/dev-perf/bootstrap XML을 추가했다. 공통 encoder만 include로 공유하며 수준·형식·appender 연결은 환경별 파일이 소유한다. Kotlin enum의 수준·형식 필드는 제거했다. dev,perf와 perf,dev의 같은 파일 선택, test/local 상속, 잘못된 환경의 안전한 부팅 실패를 검증했다. code-reviewer 재검토 통과.
+
+환경별 XML 변경 후 최종 `./gradlew test ktlintCheck` 통과. XML 파싱·공통 include 경로·커밋 전 게이트 통과. 변경은 미커밋 상태로 유지한다.

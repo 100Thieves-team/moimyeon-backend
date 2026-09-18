@@ -56,7 +56,9 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 
 ## 로깅
 
-- SLF4J: `private val log: Logger = LoggerFactory.getLogger(javaClass)`.
+- 새 로깅 호출은 kotlin-logging의 `private val log = KotlinLogging.logger {}`를 사용한다.
+  실행 모듈은 `support:logging`에서 facade를 제공받고, facade만 필요한 모듈은 직접 의존한다.
+  기존 SLF4J 호출도 같은 Logback 출력 정책을 거친다. 메시지·인자에 DTO·Entity·토큰·개인정보 원문을 넣지 않는다.
 - 예외 로깅 레벨은 ErrorType 의 `logLevel` 이 결정한다(어드바이스에서 분기). 개별 코드에서
   같은 예외를 중복 로깅하지 않는다.
 

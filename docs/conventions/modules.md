@@ -23,7 +23,7 @@ moimyeon/
 │   ├── email-client      SES 기본 발송과 Gmail 폴백 격벽
 │   └── web-push-client   Firebase Admin SDK 기반 FCM 웹 푸시 격벽
 ├── support/
-│   ├── logging          로깅 설정(yml)
+│   ├── logging          출력·환경 정책, kotlin-logging facade, Sentry 정제
 │   └── monitoring       모니터링 설정(yml)
 └── tests/
     └── api-docs         RestDocs 테스트 베이스 (테스트 전용 공유 모듈)
@@ -49,6 +49,10 @@ moimyeon/
 - 설정은 `spring.config.import` 로 모듈별 yml(`db-core.yml`, `object-storage.yml`, `redis-core.yml`, `bedrock-client.yml`, `email-client.yml`,
   `web-push-client.yml`, `client-example.yml`, `security-core.yml`, `logging.yml`, `monitoring.yml`)을 합성한다. 프로파일: `local`, `local-dev`, `dev`, `staging`, `live`
   (+`test` 는 프로파일 그룹으로 local 상속 — [storage.md](storage.md)).
+
+- `support:logging`은 kotlin-logging facade를 `api` 의존으로 제공한다. Logback·Sentry는 내부 구현 의존이며,
+  facade만 필요한 모듈은 kotlin-logging을 직접 의존해 실행 모듈·로깅 starter를 끌어오지 않는다.
+  프로파일별 출력과 안전한 기본값은 [공통 로깅 설정](../../support/logging/README.md)을 따른다.
 
 ## core-worker: 백그라운드 작업 조립
 

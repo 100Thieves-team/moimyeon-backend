@@ -1,5 +1,7 @@
 # MOI-411 로깅 설계
 
+설정 슬라이스 구현 결과는 [구현 기록](implementation.md)을 따른다. 아래는 전체 목표 설계이며 아직 구현하지 않은 S3·알림·요청 사건 계약도 포함한다.
+
 2026-09-14 · 코드 기준 `b3ae0040` · 운영 정책 확정, 구현 전
 
 사용자가 추천 운영 정책을 채택했다. live 담당자는 팀원 3명 전원이며 live 알림을 함께 받는다. 채널은 dev/staging과 분리한다. 보존·유실 허용·알림 간격의 확정 범위는 결정 기록 DR-22에 남겼다.
@@ -163,7 +165,7 @@ DEBUG는 수집기에서 메모리 버퍼만 사용하고 손실을 허용한다
 
 ## 7. 환경별 출력 정책
 
-현재 `logging.config`는 `spring.profiles.active` 전체를 XML 파일명에 넣는다. `dev,perf`에서는 파일명이 깨지고 staging XML도 없다. 프로파일별 파일을 더 복제하기보다 고정된 `logback-spring.xml` 하나에서 환경과 출력 형식을 선택한다. [Spring Boot Logback 확장](https://docs.spring.io/spring-boot/reference/features/logging.html)
+환경별 XML을 유지하고 공통 encoder·정제 부분만 include로 공유한다. local·local-dev·test·dev·staging·live와 dev/perf 조합은 각각 설정 파일을 가진다. 조합 프로파일은 정규화된 파일 선택값으로 처리하며 수준·형식·목적지는 각 XML에서 정한다. 단일 XML로 합쳤던 초기 선택은 사용자의 환경별 확장 요구를 반영해 변경했다. [Spring Boot Logback 확장](https://docs.spring.io/spring-boot/reference/features/logging.html)
 
 | 환경 | 기본 수준·형식 | 외부 저장·알림 | DEBUG·TRACE |
 | --- | --- | --- | --- |
@@ -264,7 +266,7 @@ ALB·WAF·DB 로그는 앱 마스킹 밖에 있다. 현재 WAF는 authorization�
 | 단계 | 바꿀 것 | 통과 조건 |
 | --- | --- | --- |
 | 1. 출력 계약 | kotlin-logging, 사건별 스키마, stdout·Sentry 정제, show_sql 차단 | body·message·MDC·KV·cause에 넣은 합성 민감값이 최종 출력에 없음. 실패 시 raw fallback 없음 |
-| 2. 수준·환경 | ErrorType 분류, 고정 Logback 설정, DEBUG 종료 정책 | local/test/local-dev/dev/staging/live/perf 조합에서 형식·수준·전송·원문 차단 일치 |
+| 2. 수준·환경 | ErrorType 분류, 환경별 Logback 설정, DEBUG 종료 정책 | local/test/local-dev/dev/staging/live/perf 조합에서 형식·수준·전송·원문 차단 일치 |
 | 3. 요청 연결 | 필터·완료 훅·requestId/traceId·비동기 복원 | 401/403/404/500/OAuth/async에서 최종 status·한 번 기록·context 누출 없음 |
 | 4. S3 수집 | FireLens·IAM·보존 등급·자원·종료 설정 | DEBUG의 S3 유입 없음·원래 timestamp 유지, ops 90일 만료, S3 장애·router 종료·배포·포화의 손실과 서비스 영향 확인 |
 | 5. 알림·보고 | WARN metric filter, Sentry 규칙, 일일 조회 작업 | 4/5회 경계·분 경계·다중 task·누락·중복·재발·다른 오류·보고 실패 검증 |
