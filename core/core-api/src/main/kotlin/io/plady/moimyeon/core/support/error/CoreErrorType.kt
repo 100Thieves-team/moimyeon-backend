@@ -121,6 +121,15 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
+    // 제3자 차단(E1419·403)과 다르다 - 참여자인데 열 수 없는 상태(확정 전·비공개 룸·종료·제출자 이탈 회수)라
+    // 화면 안내가 갈린다(MOI-414 D3-5). 어느 사유인지는 코드로 가르지 않는다 - 새로고침하면 정확한 상태를 다시 받는다.
+    RESUME_ORIGINAL_NOT_VIEWABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1429,
+        "지금은 이력서 원본을 열 수 없습니다.",
+        LogLevel.WARN,
+    ),
+
     QUESTION_CARD_SET_NOT_OPEN(
         HttpStatus.CONFLICT,
         ErrorCode.E1501,
