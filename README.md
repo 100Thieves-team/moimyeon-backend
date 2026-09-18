@@ -25,6 +25,7 @@ moimyeon/
 ├── core/
 │   ├── core-batch      배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum       공통 Enum 정의
+│   ├── core-worker     알림·룸 자동 종료 실행 모듈 (독립 bootJar)
 │   └── core-api        API 서버 실행 모듈 — 외부 연동 계약과 런타임 조립 소유
 │
 ├── security/
@@ -93,6 +94,15 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 - 포함: `BatchApplication`, `@EnableScheduling` 설정, `batch.job.*` 잡 클래스 (`Batch` 접두사 컨벤션)
 
 > **admin 과 실행 모델이 다른 이유.** admin 은 요청 주도라 core-api 에 조립해도 안전하지만, 배치는 시간 주도라 조립 상태에서 core-api 를 스케일 아웃하면 같은 잡이 중복 실행된다. 그래서 처음부터 독립 부트 앱으로 분리했다. 엔티티는 격리 목적이 없으므로 db-core 를 `implementation`으로 직접 물어 재사용한다.
+
+---
+
+### `core:core-worker`
+알림 전송과 룸 자동 종료를 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
+
+- `worker.room`: 진행 시작 8시간이 지난 룸을 기본 10분마다 종료한다. DB 행 잠금으로 클로징 제출·다중 worker와의 중복 전이를 방지한다.
+- 배포 프로파일에서는 자동 종료가 활성화되고 local에서는 꺼진다. `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다.
+- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다. live는 worker 수가 0이므로 worker 활성화 전에는 자동 종료도 실행되지 않는다.
 
 ---
 
@@ -194,7 +204,7 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 ```
 
 핵심 설계 원칙:
-- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트)와 `core-batch`(배치) 둘뿐이다.
+- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트), `core-batch`(배치), `core-worker`(알림·룸 자동 종료)이다.
 - `admin ↔ core`는 컴파일 타임 완전 격리. 어드민은 도메인 객체·에러 체계·설정을 전부 자체 보유하고, 접점은 런타임 조립(컴포넌트 스캔 + split package 엔티티 스캔)뿐이다.
 - 배치는 시간 주도 워크로드라 조립하지 않고 독립 앱으로 둔다 (스케일 아웃 시 잡 중복 방지).
 - security 는 presentation 앞단 모듈로, 서비스 레이어에는 인증 컨텍스트가 아닌 평범한 값(`userId`)만 흘러 들어간다.

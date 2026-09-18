@@ -233,7 +233,7 @@ class QuestionCommentLifecycleIT(
             ),
         )
         roomStatusLogRepository.saveAndFlush(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = roomId,
                 transitionType = RoomStatus.CONFIRMED,
                 handlerMemberId = hostMemberId,

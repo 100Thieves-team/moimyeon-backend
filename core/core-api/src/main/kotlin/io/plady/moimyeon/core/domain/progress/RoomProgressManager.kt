@@ -52,7 +52,7 @@ class RoomProgressManager(
             },
         )
         roomStatusLogRepository.save(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = command.roomId,
                 transitionType = RoomStatus.IN_PROGRESS,
                 handlerMemberId = command.startedByMemberId,

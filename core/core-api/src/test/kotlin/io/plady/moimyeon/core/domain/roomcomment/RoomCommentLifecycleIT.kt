@@ -214,7 +214,7 @@ class RoomCommentLifecycleIT(
         room.cancel()
         roomRepository.saveAndFlush(room)
         roomStatusLogRepository.saveAndFlush(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = roomId,
                 transitionType = RoomStatus.CANCELED,
                 handlerMemberId = hostMemberId,

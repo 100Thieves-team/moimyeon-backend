@@ -9,7 +9,7 @@ moimyeon/
 ├── core/
 │   ├── core-batch       배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum        도메인 전역 공유 Enum 만 격리 (최하위 모듈)
-│   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, 현재 notification 패키지)
+│   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, notification·room 패키지)
 │   └── core-api         API 서버 실행 모듈. 도메인 + api + 영역이 소유하는 외부 연동 계약
 ├── security/
 │   └── security-core    Spring Security 필터 체인·JWT·OAuth (인증 기술 격벽)
@@ -52,7 +52,12 @@ moimyeon/
 
 ## core-worker: 백그라운드 작업 조립
 
-- 현재는 `worker.notification` 패키지만 두고 알림 작업을 실행한다.
+- `worker.notification`은 알림을 처리하고 `worker.room`은 진행 시작 후 8시간이 지난 룸을 10분마다 자동 종료한다.
+- 자동 종료는 `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. local은 비활성이다.
+- 스케줄러 풀은 2개 스레드로 구성해 알림 전송과 자동 종료가 서로를 막지 않게 한다.
+- 자동 종료는 API와 같은 룸 행 잠금을 사용하며, 상태 변경과 SYSTEM 로그를 하나의 트랜잭션으로 저장한다. 작업의 중복 실행은 이미 완료된 룸을 건너뛴다.
+- 현재 배포 경로의 API → worker 순서를 유지한다. V27은 구버전 INSERT 호환성을 위해 handler_type 기본값 MEMBER를 유지한다.
+- core-batch에는 자동 종료 작업을 등록하지 않는다. dev worker는 실행 중이며 live는 worker desired count가 0이므로 활성화 시 자동 종료도 시작된다.
 - `NotificationMessageHandler` 한 클래스가 `EventType`에 따라 Stream payload와 채널을 검증하고 수신자·제목·본문·이동 경로를
   담은 채널별 `Notification`으로 변환한다. 이벤트별 Handler 인터페이스와 구현체는 두지 않는다.
 - 이벤트별 발송 경로는 `core-enum`의 `EventType.notificationChannels`가 소유한다. 새 이벤트를 추가할 때 이벤트 종류와

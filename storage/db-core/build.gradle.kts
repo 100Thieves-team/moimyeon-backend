@@ -19,6 +19,8 @@ dependencies {
     runtimeOnly("org.flywaydb:flyway-core")
     runtimeOnly("org.flywaydb:flyway-mysql")
 
+    testImplementation("org.flywaydb:flyway-core")
+
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:${property("testcontainersVersion")}")
     testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
 }

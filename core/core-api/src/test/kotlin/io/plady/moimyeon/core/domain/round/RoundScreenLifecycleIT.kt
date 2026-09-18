@@ -113,7 +113,7 @@ class RoundScreenLifecycleIT(
             ),
         )
         roomStatusLogRepository.saveAndFlush(
-            RoomStatusLogEntity(
+            RoomStatusLogEntity.byMember(
                 roomId = roomId,
                 transitionType = RoomStatus.CONFIRMED,
                 handlerMemberId = firstMemberId,

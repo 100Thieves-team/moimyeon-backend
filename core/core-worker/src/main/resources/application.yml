@@ -13,6 +13,13 @@ spring:
       # db-core.yml의 환경별 기본값보다 Worker 런타임 계약이 우선해야 하므로 마지막에 둔다.
       - worker-runtime.yml
 
+# 알림 전송과 자동 종료가 서로의 스케줄을 막지 않게 한다.
+spring.task.scheduling.pool.size: 2
+
+room.auto-complete:
+  enabled: false
+  cron: ${ROOM_AUTO_COMPLETE_CRON:0 */10 * * * *}
+
 notification.worker.consumer:
   enabled: false
   fixed-delay: ${NOTIFICATION_WORKER_CONSUMER_FIXED_DELAY:1s}
@@ -26,21 +33,25 @@ spring.config.activate.on-profile: local
 spring.config.activate.on-profile: local-dev
 
 notification.worker.consumer.enabled: true
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: dev
 
 notification.worker.consumer.enabled: true
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: staging
 
 notification.worker.consumer.enabled: true
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: live
 
 notification.worker.consumer.enabled: true
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
