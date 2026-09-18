@@ -1,0 +1,377 @@
+name: Rollback AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment selected by the development platform
+        required: true
+        type: choice
+        options: [ dev, live ]
+      source_sha:
+        description: Full 40-character SHA from a previously successful deployment bundle
+        required: true
+        type: string
+      scope:
+        description: Services to restore from the selected bundle
+        required: true
+        default: both
+        type: choice
+        options: [ both, api, worker ]
+      reason:
+        description: Platform audit reason or break-glass incident reference
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    env:
+      ROLLBACK_ENV: ${{ inputs.environment }}
+      ROLLBACK_SCOPE: ${{ inputs.scope }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      ACTOR: ${{ github.actor }}
+      PLATFORM_ACTOR: ${{ vars.MOIMYEON_DEVELOPMENT_PLATFORM_ACTOR }}
+      BREAK_GLASS_ACTORS: ${{ vars.MOIMYEON_ROLLBACK_BREAK_GLASS_ACTORS }}
+      ROLLBACK_ENABLED: ${{ vars.MOIMYEON_ROLLBACK_ENABLED }}
+      LIVE_ROLLBACK_ENABLED: ${{ vars.MOIMYEON_LIVE_ROLLBACK_ENABLED }}
+    outputs:
+      tooling_sha: ${{ steps.tooling.outputs.sha }}
+
+    steps:
+      - name: Reject non-dev dispatch ref
+        env:
+          WORKFLOW_REF: ${{ github.ref }}
+        run: |
+          if [ "${WORKFLOW_REF}" != "refs/heads/dev" ]; then
+            echo "::error::Rollback must be dispatched from the dev branch."
+            exit 1
+          fi
+
+      - name: Check out trusted dev tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+
+      - name: Pin release tooling revision
+        id: tooling
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Authorize request and validate bundle inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${ROLLBACK_ENABLED}" != "true" ]; then
+            echo "::error::Rollback is disabled until IAM and environment boundaries are applied."
+            exit 1
+          fi
+          case "${ROLLBACK_ENV}" in dev|live) ;; *) exit 1 ;; esac
+          if [ "${ROLLBACK_ENV}" = "live" ] && [ "${LIVE_ROLLBACK_ENABLED}" != "true" ]; then
+            echo "::error::Live rollback is disabled."
+            exit 1
+          fi
+          case "${ROLLBACK_SCOPE}" in both|api|worker) ;; *) exit 1 ;; esac
+          if [[ ! "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Rollback source must be a full lowercase SHA."
+            exit 1
+          fi
+          if [ -z "${PLATFORM_ACTOR}" ]; then
+            echo "::error::Development platform actor is not configured."
+            exit 1
+          fi
+          if [ "${ACTOR}" = "${PLATFORM_ACTOR}" ]; then
+            exit 0
+          fi
+          allowed=false
+          IFS=',' read -r -a actors <<< "${BREAK_GLASS_ACTORS}"
+          for actor in "${actors[@]}"; do
+            if [ "${ACTOR}" = "${actor}" ]; then
+              allowed=true
+              break
+            fi
+          done
+          if [ "${allowed}" != "true" ]; then
+            echo "::error::Actor ${ACTOR} is not authorized to dispatch rollback."
+            exit 1
+          fi
+
+      - name: Validate deployment bundle source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/dev:refs/remotes/origin/dev"
+          bash infra/terraform/scripts/verify-release-source.sh "${SOURCE_SHA}"
+
+  rollback:
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'live' && 'live-app' || 'dev-app' }}
+    concurrency:
+      group: deploy-aws-${{ inputs.environment }}
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      ROLLBACK_ENV: ${{ inputs.environment }}
+      ROLLBACK_SCOPE: ${{ inputs.scope }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      ROLLBACK_REASON: ${{ inputs.reason }}
+    outputs:
+      api_result: ${{ steps.rollback_api.outcome }}
+      worker_result: ${{ steps.rollback_worker.outcome }}
+
+    steps:
+      - name: Recheck live rollback freeze
+        env:
+          LIVE_ROLLBACK_ENABLED: ${{ vars.MOIMYEON_LIVE_ROLLBACK_ENABLED }}
+        run: |
+          if [ "${ROLLBACK_ENV}" = "live" ] \
+            && [ "${LIVE_ROLLBACK_ENABLED}" != "true" ]; then
+            echo "::error::Live rollback is disabled before AWS credential use."
+            exit 1
+          fi
+
+      - name: Check out release tooling and dev history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.authorize.outputs.tooling_sha }}
+          fetch-depth: 0
+
+      - name: Select environment configuration
+        id: config
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${ROLLBACK_ENV}" in
+            dev)
+              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "cluster=${{ vars.MOIMYEON_ECS_CLUSTER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "api_repository=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "api_service=${{ vars.MOIMYEON_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "api_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "api_ssm=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_repository=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ssm=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "app_url=${{ vars.MOIMYEON_APP_URL_DEV }}" >> "$GITHUB_OUTPUT"
+              echo "bundle_parameter_prefix=${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}" >> "$GITHUB_OUTPUT"
+              ;;
+            live)
+              echo "role_arn=${{ vars.MOIMYEON_AWS_ROLLBACK_ROLE_TO_ASSUME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "aws_region=${{ vars.MOIMYEON_AWS_REGION_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "cluster=${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "api_repository=${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "api_service=${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "api_container=${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "api_ssm=${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_repository=${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_service=${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_container=${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "worker_ssm=${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "app_url=${{ vars.MOIMYEON_APP_URL_LIVE }}" >> "$GITHUB_OUTPUT"
+              echo "bundle_parameter_prefix=${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_LIVE }}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unsupported rollback environment."
+              exit 1
+              ;;
+          esac
+
+      - name: Validate rollback configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${ROLLBACK_SCOPE}" in
+            both|api|worker) ;;
+            *)
+              echo "::error::Unsupported rollback scope."
+              exit 1
+              ;;
+          esac
+          required=(
+            "${{ steps.config.outputs.role_arn }}"
+            "${{ steps.config.outputs.aws_region }}"
+            "${{ steps.config.outputs.cluster }}"
+            "${{ steps.config.outputs.bundle_parameter_prefix }}"
+          )
+          if [ "${ROLLBACK_SCOPE}" != "worker" ]; then
+            required+=(
+              "${{ steps.config.outputs.api_repository }}"
+              "${{ steps.config.outputs.api_service }}"
+              "${{ steps.config.outputs.api_container }}"
+              "${{ steps.config.outputs.api_ssm }}"
+              "${{ steps.config.outputs.app_url }}"
+            )
+          fi
+          if [ "${ROLLBACK_SCOPE}" != "api" ]; then
+            required+=(
+              "${{ steps.config.outputs.worker_repository }}"
+              "${{ steps.config.outputs.worker_service }}"
+              "${{ steps.config.outputs.worker_container }}"
+              "${{ steps.config.outputs.worker_ssm }}"
+            )
+          fi
+          for value in "${required[@]}"; do
+            if [ -z "${value}" ]; then
+              echo "::error::Rollback variables are incomplete for the selected scope."
+              exit 1
+            fi
+          done
+
+      - name: Configure rollback AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ steps.config.outputs.role_arn }}
+          aws-region: ${{ steps.config.outputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Resolve immutable bundle images
+        id: images
+        shell: bash
+        env:
+          API_REPOSITORY: ${{ steps.config.outputs.api_repository }}
+          WORKER_REPOSITORY: ${{ steps.config.outputs.worker_repository }}
+          BUNDLE_PARAMETER_PREFIX: ${{ steps.config.outputs.bundle_parameter_prefix }}
+        run: |
+          set -euo pipefail
+          sha12="${SOURCE_SHA:0:12}"
+          env_name="${ROLLBACK_ENV}"
+          manifest="$(bash infra/terraform/scripts/read-deployment-bundle.sh \
+            "${BUNDLE_PARAMETER_PREFIX}" \
+            "${env_name}" \
+            "${SOURCE_SHA}")"
+          if [ "${ROLLBACK_SCOPE}" != "worker" ]; then
+            api_tag="${API_REPOSITORY}:deployed-${env_name}-${sha12}"
+            marker_digest="$(docker buildx imagetools inspect \
+              "${api_tag}" --format '{{.Manifest.Digest}}')"
+            api_uri="$(jq -r '.api.imageUri' <<< "${manifest}")"
+            api_task_definition="$(jq -r '.api.taskDefinitionArn' <<< "${manifest}")"
+            if [ "${api_uri}" != "${API_REPOSITORY}@${marker_digest}" ]; then
+              echo "::error::Core API marker and deployment ledger disagree."
+              exit 1
+            fi
+            echo "api_uri=${api_uri}" >> "$GITHUB_OUTPUT"
+            echo "api_task_definition=${api_task_definition}" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${ROLLBACK_SCOPE}" != "api" ]; then
+            worker_tag="${WORKER_REPOSITORY}:deployed-${env_name}-${sha12}"
+            marker_digest="$(docker buildx imagetools inspect \
+              "${worker_tag}" --format '{{.Manifest.Digest}}')"
+            worker_uri="$(jq -r '.worker.imageUri // empty' <<< "${manifest}")"
+            worker_task_definition="$(jq -r '.worker.taskDefinitionArn // empty' <<< "${manifest}")"
+            if [ -z "${worker_uri}" ] \
+              || [ "${worker_uri}" != "${WORKER_REPOSITORY}@${marker_digest}" ]; then
+              echo "::error::Worker marker and deployment ledger disagree or Worker is absent."
+              exit 1
+            fi
+            echo "worker_uri=${worker_uri}" >> "$GITHUB_OUTPUT"
+            echo "worker_task_definition=${worker_task_definition}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Roll back Core API
+        id: rollback_api
+        if: ${{ inputs.scope != 'worker' }}
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ steps.config.outputs.cluster }}" \
+            --service "${{ steps.config.outputs.api_service }}" \
+            --container "${{ steps.config.outputs.api_container }}" \
+            --existing-task-definition "${{ steps.images.outputs.api_task_definition }}" \
+            --image-uri "${{ steps.images.outputs.api_uri }}" \
+            --ssm-parameter "${{ steps.config.outputs.api_ssm }}" \
+            --health-grace-seconds 240 \
+            --smoke-base-url "${{ steps.config.outputs.app_url }}"
+
+      - name: Roll back Worker
+        id: rollback_worker
+        if: ${{ inputs.scope != 'api' }}
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ steps.config.outputs.cluster }}" \
+            --service "${{ steps.config.outputs.worker_service }}" \
+            --container "${{ steps.config.outputs.worker_container }}" \
+            --existing-task-definition "${{ steps.images.outputs.worker_task_definition }}" \
+            --image-uri "${{ steps.images.outputs.worker_uri }}" \
+            --ssm-parameter "${{ steps.config.outputs.worker_ssm }}"
+
+      - name: Restore Core API when Worker rollback fails
+        if: ${{ failure() && inputs.scope == 'both' && steps.rollback_api.outcome == 'success' && steps.rollback_worker.outcome == 'failure' }}
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ steps.config.outputs.cluster }}" \
+            --service "${{ steps.config.outputs.api_service }}" \
+            --container "${{ steps.config.outputs.api_container }}" \
+            --existing-task-definition "${{ steps.rollback_api.outputs.previous_task_definition_arn }}" \
+            --image-uri "${{ steps.rollback_api.outputs.previous_image_uri }}" \
+            --ssm-parameter "${{ steps.config.outputs.api_ssm }}" \
+            --health-grace-seconds 240 \
+            --smoke-base-url "${{ steps.config.outputs.app_url }}"
+
+
+  notify:
+    needs: [ authorize, rollback ]
+    if: ${{ always() && github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ROLLBACK_ENV: ${{ inputs.environment }}
+
+    steps:
+      - name: Check out notification tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.authorize.outputs.tooling_sha || github.workflow_sha }}
+
+      - name: Notify Slack
+        continue-on-error: true
+        shell: bash
+        env:
+          DEV_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_DEV }}
+          LIVE_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_LIVE }}
+          DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+          DEPLOY_KIND: rollback
+          AUTHORIZATION_RESULT: ${{ needs.authorize.result }}
+          ROLLBACK_RESULT: ${{ needs.rollback.result }}
+          DEPLOY_SHA: ${{ inputs.source_sha }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          API_RESULT: ${{ needs.rollback.outputs.api_result }}
+          WORKER_RESULT: ${{ needs.rollback.outputs.worker_result }}
+          DEPLOY_REASON: ${{ inputs.reason }}
+        run: |
+          if [ "${ROLLBACK_ENV}" = "live" ]; then
+            export SLACK_WEBHOOK_URL="${LIVE_WEBHOOK_URL}"
+          else
+            export SLACK_WEBHOOK_URL="${DEV_WEBHOOK_URL}"
+          fi
+          if [ "${AUTHORIZATION_RESULT}" != "success" ]; then
+            export DEPLOY_OUTCOME="authorization-failed"
+          else
+            export DEPLOY_OUTCOME="${ROLLBACK_RESULT}"
+          fi
+          bash infra/terraform/scripts/notify-deployment.sh

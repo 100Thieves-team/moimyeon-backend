@@ -37,8 +37,10 @@ spring:
       mode: always
       schema-locations: classpath:schema.sql
       # seed.sql(참조 데이터)은 스키마의 일부로 취급 — 테스트 포함 항상 로드된다.
-      # 로컬 개발용 테스트 데이터(data-local.sql)는 docker-compose initdb 전용이라 여기 없다.
-      data-locations: classpath:seed.sql
+      # data-local.sql은 사람용 local 데이터이며, test 문서가 아래에서 seed.sql만으로 다시 제한한다.
+      data-locations:
+        - classpath:seed.sql
+        - classpath:data-local.sql
   h2:
     console:
       enabled: true

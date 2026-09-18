@@ -1,0 +1,5 @@
+# Exact historical fingerprints from MOI-474's secret-scanner implementation
+# fixtures/documentation. Do not broaden these to path or commit allowlists.
+e5e428c3ed481be62adac8bd51c3efb4f90aef13:.agents/gates/scan_secrets.py:generic-api-key:32
+e5e428c3ed481be62adac8bd51c3efb4f90aef13:.agents/gates/tests/run.sh:generic-api-key:41
+e5e428c3ed481be62adac8bd51c3efb4f90aef13:.worklog/MOI-474/decisions.md:generic-api-key:1649

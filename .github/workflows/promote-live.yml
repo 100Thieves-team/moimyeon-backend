@@ -1,0 +1,588 @@
+name: Promote Live
+
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  select:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      enabled: ${{ steps.gate.outputs.enabled }}
+      deploy_required: ${{ steps.changes.outputs.deploy_required }}
+
+    steps:
+      - name: Check live promotion gate
+        id: gate
+        shell: bash
+        env:
+          LIVE_DEPLOY_ENABLED: ${{ vars.MOIMYEON_LIVE_DEPLOY_ENABLED }}
+          DEPLOYMENT_LEDGER_ENABLED: ${{ vars.MOIMYEON_DEPLOYMENT_LEDGER_ENABLED }}
+        run: |
+          if [ "${LIVE_DEPLOY_ENABLED}" = "true" ] \
+            && [ "${DEPLOYMENT_LEDGER_ENABLED}" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "### Live promotion disabled" >> "$GITHUB_STEP_SUMMARY"
+            echo "IAM, ECS blue/green, deployment ledger, and environment boundaries must be applied first." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Check out CI-verified main revision
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Skip documentation-only main revisions
+        if: steps.gate.outputs.enabled == 'true'
+        id: changes
+        shell: bash
+        env:
+          MAIN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          first_parent="$(git rev-parse "${MAIN_SHA}^1")"
+          deploy_required=false
+          while IFS= read -r changed_file; do
+            case "${changed_file}" in
+              docs/*|*.md|*.mdx)
+                ;;
+              *)
+                deploy_required=true
+                break
+                ;;
+            esac
+          done < <(git diff --name-only --no-renames "${first_parent}" "${MAIN_SHA}")
+          echo "deploy_required=${deploy_required}" >> "$GITHUB_OUTPUT"
+
+  candidate:
+    needs: select
+    if: ${{ needs.select.outputs.deploy_required == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      main_sha: ${{ steps.source.outputs.main_sha }}
+      source_sha: ${{ steps.source.outputs.source_sha }}
+      source_sha12: ${{ steps.source.outputs.source_sha12 }}
+
+    steps:
+      - name: Check out CI-verified main history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Resolve Terraform-ready main release
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_MAIN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/main:refs/remotes/origin/main" \
+            "+refs/heads/dev:refs/remotes/origin/dev"
+          resolved_main="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            refs/remotes/origin/main main "${TRIGGER_MAIN_SHA}")"
+
+          read -r commit parent_one parent_two extra \
+            < <(git rev-list --parents -n 1 "${resolved_main}")
+          if [ -z "${parent_two:-}" ] || [ -n "${extra:-}" ]; then
+            echo "::error::Live promotion requires a two-parent main merge commit."
+            exit 1
+          fi
+
+          while IFS= read -r changed_file; do
+            case "${changed_file}" in
+              docs/*|*.md|*.mdx)
+                ;;
+              *)
+                echo "::error::Main merge contains runtime changes not present in its dev source: ${changed_file}."
+                exit 1
+                ;;
+            esac
+          done < <(git diff --name-only --no-renames "${parent_two}" "${resolved_main}")
+
+          bash infra/terraform/scripts/verify-release-source.sh "${parent_two}"
+          bash infra/terraform/scripts/wait-for-terraform-apply.sh \
+            main "${resolved_main}"
+
+          echo "main_sha=${commit}" >> "$GITHUB_OUTPUT"
+          echo "source_sha=${parent_two}" >> "$GITHUB_OUTPUT"
+          echo "source_sha12=${parent_two:0:12}" >> "$GITHUB_OUTPUT"
+
+  promote:
+    needs: candidate
+    if: ${{ needs.candidate.result == 'success' }}
+    runs-on: ubuntu-latest
+    environment: live-app
+    concurrency:
+      group: deploy-aws-live
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Recheck live mutation freeze
+        env:
+          LIVE_DEPLOY_ENABLED: ${{ vars.MOIMYEON_LIVE_DEPLOY_ENABLED }}
+          LIVE_TERRAFORM_ENABLED: ${{ vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED }}
+        run: |
+          if [ "${LIVE_DEPLOY_ENABLED}" != "true" ] \
+            || [ "${LIVE_TERRAFORM_ENABLED}" != "true" ]; then
+            echo "::error::Live promotion is disabled before AWS credential use."
+            exit 1
+          fi
+
+      - name: Check out release tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.candidate.outputs.main_sha }}
+          fetch-depth: 0
+
+      - name: Verify Terraform-ready main candidate freshness
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_MAIN_SHA: ${{ needs.candidate.outputs.main_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            "+refs/heads/main:refs/remotes/origin/main" \
+            "+refs/heads/dev:refs/remotes/origin/dev"
+          resolved_main="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
+            refs/remotes/origin/main main "${CANDIDATE_MAIN_SHA}")"
+          if [ "${resolved_main}" != "${CANDIDATE_MAIN_SHA}" ]; then
+            if ! git merge-base --is-ancestor "${CANDIDATE_MAIN_SHA}" "${resolved_main}"; then
+              echo "::error::Resolved main revision is not a descendant of the Terraform-ready candidate."
+              exit 1
+            fi
+            while IFS= read -r changed_file; do
+              case "${changed_file}" in
+                docs/*|*.md|*.mdx)
+                  ;;
+                *)
+                  echo "::error::A newer runtime-changing main revision requires its own Terraform boundary: ${changed_file}."
+                  exit 1
+                  ;;
+              esac
+            done < <(git diff --name-only --no-renames "${CANDIDATE_MAIN_SHA}" "${resolved_main}")
+            echo "Allowing Terraform-ready main candidate across documentation-only successors."
+          fi
+
+      - name: Validate promotion configuration
+        id: config
+        shell: bash
+        env:
+          AWS_REGION: ${{ vars.MOIMYEON_AWS_REGION_LIVE }}
+          ROLE_ARN: ${{ vars.MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE }}
+          DEV_API_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}
+          LIVE_API_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}
+          LIVE_CLUSTER: ${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}
+          LIVE_API_SERVICE: ${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}
+          LIVE_API_CONTAINER: ${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}
+          LIVE_API_TASK_DEFINITION: ${{ vars.MOIMYEON_ECS_TASK_DEFINITION_LIVE }}
+          LIVE_API_SSM: ${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}
+          LIVE_APP_URL: ${{ vars.MOIMYEON_APP_URL_LIVE }}
+          DEV_BUNDLE_PREFIX: ${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}
+          LIVE_BUNDLE_PREFIX: ${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_LIVE }}
+          DEV_WORKER_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}
+          LIVE_WORKER_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}
+          LIVE_WORKER_SERVICE: ${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}
+          LIVE_WORKER_CONTAINER: ${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}
+          LIVE_WORKER_TASK_DEFINITION: ${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_LIVE }}
+          LIVE_WORKER_SSM: ${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}
+        run: |
+          set -euo pipefail
+          for value in \
+            "${AWS_REGION}" \
+            "${ROLE_ARN}" \
+            "${DEV_API_REPOSITORY}" \
+            "${LIVE_API_REPOSITORY}" \
+            "${LIVE_CLUSTER}" \
+            "${LIVE_API_SERVICE}" \
+            "${LIVE_API_CONTAINER}" \
+            "${LIVE_API_TASK_DEFINITION}" \
+            "${LIVE_API_SSM}" \
+            "${LIVE_APP_URL}" \
+            "${DEV_BUNDLE_PREFIX}" \
+            "${LIVE_BUNDLE_PREFIX}"; do
+            if [ -z "${value}" ]; then
+              echo "::error::Live promotion variables are incomplete."
+              exit 1
+            fi
+          done
+
+          worker_values=(
+            "${DEV_WORKER_REPOSITORY}"
+            "${LIVE_WORKER_REPOSITORY}"
+            "${LIVE_WORKER_SERVICE}"
+            "${LIVE_WORKER_CONTAINER}"
+            "${LIVE_WORKER_TASK_DEFINITION}"
+            "${LIVE_WORKER_SSM}"
+          )
+          configured_worker_values=0
+          for value in "${worker_values[@]}"; do
+            if [ -n "${value}" ]; then
+              configured_worker_values=$((configured_worker_values + 1))
+            fi
+          done
+          if [ "${configured_worker_values}" -eq 0 ]; then
+            echo "worker_enabled=false" >> "$GITHUB_OUTPUT"
+          elif [ "${configured_worker_values}" -eq "${#worker_values[@]}" ]; then
+            echo "worker_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Live Worker promotion variables are only partially configured."
+            exit 1
+          fi
+
+      - name: Configure promotion AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE }}
+          aws-region: ${{ vars.MOIMYEON_AWS_REGION_LIVE }}
+
+      - name: Require active live service capacity
+        shell: bash
+        env:
+          LIVE_CLUSTER: ${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}
+          LIVE_API_SERVICE: ${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}
+          LIVE_WORKER_SERVICE: ${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}
+          WORKER_ENABLED: ${{ steps.config.outputs.worker_enabled }}
+        run: |
+          set -euo pipefail
+
+          require_running_service() {
+            local service="$1"
+            local expected_strategy="$2"
+            local service_json
+            local service_status
+            local desired_count
+            local deployment_controller
+            local deployment_strategy
+
+            service_json="$(aws ecs describe-services \
+              --cluster "${LIVE_CLUSTER}" \
+              --services "${service}" \
+              --output json)"
+            if [ "$(jq -r '.failures | length' <<< "${service_json}")" != "0" ] \
+              || [ "$(jq -r '.services | length' <<< "${service_json}")" != "1" ]; then
+              echo "::error::Live service ${service} is unavailable."
+              jq '.failures' <<< "${service_json}"
+              exit 1
+            fi
+
+            service_status="$(jq -r '.services[0].status' <<< "${service_json}")"
+            desired_count="$(jq -r '.services[0].desiredCount' <<< "${service_json}")"
+            if [ "${service_status}" != "ACTIVE" ] \
+              || [[ ! "${desired_count}" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::Live service ${service} must be ACTIVE with desiredCount > 0 before promotion is enabled."
+              exit 1
+            fi
+
+            deployment_controller="$(jq -r '.services[0].deploymentController.type' <<< "${service_json}")"
+            deployment_strategy="$(jq -r '.services[0].deploymentConfiguration.strategy // "ROLLING"' <<< "${service_json}")"
+            if [ "${deployment_controller}" != "ECS" ] \
+              || [ "${deployment_strategy}" != "${expected_strategy}" ]; then
+              echo "::error::Live service ${service} must use ECS ${expected_strategy} before promotion is enabled."
+              exit 1
+            fi
+
+            if [ "${expected_strategy}" = "BLUE_GREEN" ] \
+              && ! jq -e '
+                any(.services[0].loadBalancers[]?;
+                  (.advancedConfiguration.alternateTargetGroupArn // "") != ""
+                  and (.advancedConfiguration.productionListenerRule // "") != ""
+                  and (.advancedConfiguration.roleArn // "") != ""
+                )
+              ' <<< "${service_json}" > /dev/null; then
+              echo "::error::Live Core API lacks native ECS blue/green load balancer configuration."
+              exit 1
+            fi
+          }
+
+          require_running_service "${LIVE_API_SERVICE}" BLUE_GREEN
+          if [ "${WORKER_ENABLED}" = "true" ]; then
+            require_running_service "${LIVE_WORKER_SERVICE}" ROLLING
+          fi
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Read immutable dev deployment bundle
+        id: bundle
+        shell: bash
+        env:
+          DEV_API_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}
+          DEV_WORKER_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}
+          DEV_BUNDLE_PREFIX: ${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}
+          MAIN_SOURCE_SHA: ${{ needs.candidate.outputs.source_sha }}
+          WORKER_ENABLED: ${{ steps.config.outputs.worker_enabled }}
+        run: |
+          set -euo pipefail
+
+          deploy_sha=""
+          manifest=""
+          while IFS= read -r revision; do
+            runtime_equivalent=true
+            while IFS= read -r changed_file; do
+              case "${changed_file}" in
+                docs/*|*.md|*.mdx)
+                  ;;
+                *)
+                  runtime_equivalent=false
+                  break
+                  ;;
+              esac
+            done < <(git diff --name-only --no-renames "${revision}" "${MAIN_SOURCE_SHA}")
+            if [ "${runtime_equivalent}" != "true" ]; then
+              continue
+            fi
+
+            if ! manifest="$(bash infra/terraform/scripts/read-deployment-bundle.sh \
+              "${DEV_BUNDLE_PREFIX}" dev "${revision}" 2>/dev/null)"; then
+              continue
+            fi
+
+            candidate_worker_image_uri="$(jq -r '.worker.imageUri // empty' <<< "${manifest}")"
+            if { [ "${WORKER_ENABLED}" = "true" ] && [ -z "${candidate_worker_image_uri}" ]; } \
+              || { [ "${WORKER_ENABLED}" != "true" ] && [ -n "${candidate_worker_image_uri}" ]; }; then
+              continue
+            fi
+
+            deploy_sha="${revision}"
+            break
+          done < <(git rev-list --first-parent "${MAIN_SOURCE_SHA}")
+
+          if [ -z "${deploy_sha}" ]; then
+            echo "::error::No runtime-equivalent dev deployment bundle exists for the selected main source."
+            exit 1
+          fi
+          deploy_sha12="${deploy_sha:0:12}"
+
+          api_image_uri="$(jq -r '.api.imageUri' <<< "${manifest}")"
+          worker_image_uri="$(jq -r '.worker.imageUri // empty' <<< "${manifest}")"
+          case "${api_image_uri}" in
+            "${DEV_API_REPOSITORY}"@sha256:*) ;;
+            *) echo "::error::Dev API bundle points outside its repository."; exit 1 ;;
+          esac
+
+          api_marker_digest="$(docker buildx imagetools inspect \
+            "${DEV_API_REPOSITORY}:deployed-dev-${deploy_sha12}" \
+            --format '{{.Manifest.Digest}}')"
+          if [ "${api_image_uri}" != "${DEV_API_REPOSITORY}@${api_marker_digest}" ]; then
+            echo "::error::Dev API deployment ledger and marker digest disagree."
+            exit 1
+          fi
+
+          if [ "${WORKER_ENABLED}" = "true" ]; then
+            case "${worker_image_uri}" in
+              "${DEV_WORKER_REPOSITORY}"@sha256:*) ;;
+              *) echo "::error::Worker is configured but absent or invalid in the dev bundle."; exit 1 ;;
+            esac
+            worker_marker_digest="$(docker buildx imagetools inspect \
+              "${DEV_WORKER_REPOSITORY}:deployed-dev-${deploy_sha12}" \
+              --format '{{.Manifest.Digest}}')"
+            if [ "${worker_image_uri}" != "${DEV_WORKER_REPOSITORY}@${worker_marker_digest}" ]; then
+              echo "::error::Dev Worker deployment ledger and marker digest disagree."
+              exit 1
+            fi
+          elif [ -n "${worker_image_uri}" ]; then
+            echo "::error::Dev bundle contains Worker but live Worker configuration is disabled."
+            exit 1
+          fi
+          echo "DEPLOY_SHA=${deploy_sha}" >> "$GITHUB_ENV"
+          echo "DEPLOY_SHA12=${deploy_sha12}" >> "$GITHUB_ENV"
+          echo "source_sha=${deploy_sha}" >> "$GITHUB_OUTPUT"
+          echo "api_image_uri=${api_image_uri}" >> "$GITHUB_OUTPUT"
+          echo "worker_image_uri=${worker_image_uri}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve and copy Core API image
+        id: api_image
+        shell: bash
+        env:
+          DEV_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_DEV }}
+          LIVE_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}
+        run: |
+          set -euo pipefail
+          immutable_source="${{ steps.bundle.outputs.api_image_uri }}"
+          target_image="${LIVE_REPOSITORY}:live-${DEPLOY_SHA12}"
+          promoted_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${immutable_source}" "${target_image}")"
+          echo "uri=${promoted_image}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve and copy Worker image
+        id: worker_image
+        if: steps.config.outputs.worker_enabled == 'true'
+        shell: bash
+        env:
+          DEV_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_DEV }}
+          LIVE_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}
+        run: |
+          set -euo pipefail
+          immutable_source="${{ steps.bundle.outputs.worker_image_uri }}"
+          target_image="${LIVE_REPOSITORY}:live-${DEPLOY_SHA12}"
+          promoted_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${immutable_source}" "${target_image}")"
+          echo "uri=${promoted_image}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Core API
+        id: deploy_api
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
+            --service "${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" \
+            --container "${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" \
+            --template-task-definition "${{ vars.MOIMYEON_ECS_TASK_DEFINITION_LIVE }}" \
+            --image-uri "${{ steps.api_image.outputs.uri }}" \
+            --ssm-parameter "${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" \
+            --health-grace-seconds 240 \
+            --smoke-base-url "${{ vars.MOIMYEON_APP_URL_LIVE }}"
+
+      - name: Deploy Worker
+        id: deploy_worker
+        if: steps.config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
+            --service "${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" \
+            --container "${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" \
+            --template-task-definition "${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_LIVE }}" \
+            --image-uri "${{ steps.worker_image.outputs.uri }}" \
+            --ssm-parameter "${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}"
+
+      - name: Restore Core API when Worker promotion fails
+        if: ${{ failure() && steps.config.outputs.worker_enabled == 'true' && steps.deploy_api.outcome == 'success' && steps.deploy_worker.outcome == 'failure' }}
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
+            --service "${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" \
+            --container "${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" \
+            --existing-task-definition "${{ steps.deploy_api.outputs.previous_task_definition_arn }}" \
+            --image-uri "${{ steps.deploy_api.outputs.previous_image_uri }}" \
+            --ssm-parameter "${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" \
+            --health-grace-seconds 240 \
+            --smoke-base-url "${{ vars.MOIMYEON_APP_URL_LIVE }}"
+
+      - name: Mark Core API live deployment bundle
+        id: api_bundle
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${{ steps.api_image.outputs.uri }}" \
+            "${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}:deployed-live-${DEPLOY_SHA12}" \
+            > promoted-api-marker.txt
+          echo "image_uri=$(cat promoted-api-marker.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Mark Worker live deployment bundle
+        id: worker_bundle
+        if: steps.config.outputs.worker_enabled == 'true'
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${{ steps.worker_image.outputs.uri }}" \
+            "${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}:deployed-live-${DEPLOY_SHA12}" \
+            > promoted-worker-marker.txt
+          echo "image_uri=$(cat promoted-worker-marker.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Record immutable live deployment bundle
+        id: record_bundle
+        shell: bash
+        run: |
+          bash infra/terraform/scripts/record-deployment-bundle.sh \
+            "${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_LIVE }}" \
+            live \
+            "${DEPLOY_SHA}" \
+            "${{ steps.api_bundle.outputs.image_uri }}" \
+            "${{ steps.deploy_api.outputs.task_definition_arn }}" \
+            "${{ steps.worker_bundle.outputs.image_uri }}" \
+            "${{ steps.deploy_worker.outputs.task_definition_arn }}"
+
+      - name: Restore previous live bundle when bundle commit fails
+        if: ${{ failure() && steps.deploy_api.outcome == 'success' && steps.deploy_worker.outcome != 'failure' && steps.record_bundle.outcome != 'success' }}
+        shell: bash
+        run: |
+          if [ "${{ steps.config.outputs.worker_enabled }}" = "true" ]; then
+            bash infra/terraform/scripts/deploy-ecs-image.sh \
+              --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
+              --service "${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" \
+              --container "${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" \
+              --existing-task-definition "${{ steps.deploy_worker.outputs.previous_task_definition_arn }}" \
+              --image-uri "${{ steps.deploy_worker.outputs.previous_image_uri }}" \
+              --ssm-parameter "${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}"
+          fi
+          bash infra/terraform/scripts/deploy-ecs-image.sh \
+            --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
+            --service "${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" \
+            --container "${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" \
+            --existing-task-definition "${{ steps.deploy_api.outputs.previous_task_definition_arn }}" \
+            --image-uri "${{ steps.deploy_api.outputs.previous_image_uri }}" \
+            --ssm-parameter "${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" \
+            --health-grace-seconds 240 \
+            --smoke-base-url "${{ vars.MOIMYEON_APP_URL_LIVE }}"
+
+      - name: Notify Slack
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_LIVE }}
+          DEPLOY_ENVIRONMENT: live
+          DEPLOY_KIND: promotion
+          DEPLOY_OUTCOME: ${{ job.status }}
+          DEPLOY_SHA: ${{ env.DEPLOY_SHA }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          API_RESULT: ${{ steps.deploy_api.outcome }}
+          WORKER_RESULT: ${{ steps.deploy_worker.outcome }}
+        run: bash infra/terraform/scripts/notify-deployment.sh
+
+  notify-selection-failure:
+    needs: [ select, candidate ]
+    if: ${{ always() && needs.select.outputs.enabled == 'true' && (needs.select.result == 'failure' || (needs.select.outputs.deploy_required == 'true' && needs.candidate.result == 'failure')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out notification tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.workflow_sha }}
+
+      - name: Notify Slack
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_LIVE }}
+          DEPLOY_ENVIRONMENT: live
+          DEPLOY_KIND: promotion-selection
+          DEPLOY_OUTCOME: failure
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          API_RESULT: not-started
+          WORKER_RESULT: not-started
+        run: bash infra/terraform/scripts/notify-deployment.sh

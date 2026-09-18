@@ -25,7 +25,7 @@ class ResumeOriginalViewService(
     fun issueViewUrl(viewerMemberId: UUID, roomId: UUID, resumeSubmissionId: Long): ResumeOriginalViewUrl {
         participationValidator.validateParticipant(roomId, viewerMemberId)
         val file = resumeOriginalViewFinder.getViewableFile(roomId, resumeSubmissionId)
-        val url = resumeFileStore.issueViewUrl(file, VIEW_URL_TTL)
+        val signed = resumeFileStore.issueViewUrl(file, VIEW_URL_TTL)
 
         // 조회 이력 테이블은 후속(D3-4): 발급 사실은 로그로만 남긴다.
         log.info(
@@ -34,7 +34,10 @@ class ResumeOriginalViewService(
             roomId,
             resumeSubmissionId,
         )
-        return ResumeOriginalViewUrl(url = url, expiresAt = LocalDateTime.now(clock).plus(VIEW_URL_TTL))
+        return ResumeOriginalViewUrl(
+            url = signed.url,
+            expiresAt = LocalDateTime.ofInstant(signed.expiresAt, clock.zone),
+        )
     }
 
     companion object {

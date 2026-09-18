@@ -2,10 +2,12 @@ package io.plady.moimyeon.core.domain.room
 
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 
@@ -16,6 +18,7 @@ class ResumeOriginalViewFinder(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val roomApplicationRepository: RoomApplicationRepository,
 ) {
     fun getViewableFile(roomId: UUID, resumeSubmissionId: Long): ResumeFile {
         val room = roomFinder.getRoom(roomId)
@@ -28,6 +31,14 @@ class ResumeOriginalViewFinder(
         // 이탈·강퇴된 제출자의 원본은 회수된다(「참여」 - LEFT 시 원본·요약 회수).
         requireBusiness(
             participationFinder.isParticipating(roomId, submission.memberId),
+            CoreErrorType.RESUME_ORIGINAL_NOT_VIEWABLE,
+        )
+
+        // 재신청·재참여 후에도 옛 제출 ID로 이전 파일을 다시 열 수 없어야 한다.
+        val application = roomApplicationRepository
+            .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(roomId, submission.memberId)
+        requireBusiness(
+            application?.id == submission.roomApplicationId && application.status == RoomApplicationStatus.ACCEPTED,
             CoreErrorType.RESUME_ORIGINAL_NOT_VIEWABLE,
         )
 

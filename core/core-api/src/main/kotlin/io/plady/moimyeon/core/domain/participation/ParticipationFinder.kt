@@ -31,13 +31,13 @@ class ParticipationFinder(
     // 안내(remaining=0)와 실제(신청·수락·생성 거부)가 어긋나지 않는다.
     fun getSlots(memberId: UUID): ParticipationSlots = ParticipationSlots.of(countOccupiedSlots(memberId))
 
-    // 막지 않고 묻는다 — MemberFinder.isActive 와 같은 성격이다(MOI-427). 위임 순회는 후보를 건너뛰어야 하고
-    // 룸 상세(MOI-387)는 예외 없이 차단 사유만 표시해야 한다. 막는 쪽은 ParticipationValidator 가 갖는다.
+    // 막지 않고 묻는다 — MemberFinder.isActive 와 같은 성격이다(MOI-427). 수락·자동 위임 순회가
+    // 후보를 건너뛸 때 쓴다. 막는 쪽은 ParticipationValidator 가 갖는다.
     fun hasAvailableSlot(memberId: UUID): Boolean {
         return ParticipationSlot.isAvailable(countOccupiedSlots(memberId))
     }
 
-    // 룸 목록의 뷰어 관계 판정용(MOI-387). 룸 수에 비례해 쿼리가 늘지 않게 한 번에 읽는다.
+    // 룸 목록의 뷰어 사실 조회용(MOI-500). 룸 수에 비례해 쿼리가 늘지 않게 한 번에 읽는다.
     // 술어는 단건 판정과 같아야 한다 — 참여는 isParticipating, 강퇴는 existsRemovalHistory 와 같다.
     // 갈리면 목록과 상세가 서로 다른 관계를 말한다.
     fun getRoomParticipations(memberId: UUID, roomIds: Collection<UUID>): List<MemberRoomParticipation> {
@@ -55,6 +55,15 @@ class ParticipationFinder(
             }
     }
 
+    // 방명록 작성자 뱃지 판정용(MOI-461). 작성자가 명단에 없으면 (퇴장), 방장 행이면 방장 뱃지다.
+    // 술어는 validateParticipant 와 같은 JOINED 기준이어야 한다 - 갈리면 게이트는 통과한 사람이
+    // 자기 글에서 (퇴장)으로 보이는 상태가 된다.
+    fun getJoinedParticipants(roomId: UUID): List<JoinedParticipant> {
+        return participationRepository
+            .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
+            .map { JoinedParticipant(memberId = it.memberId, isHost = it.participationRole == ParticipationRole.HOST) }
+    }
+
     fun isParticipating(roomId: UUID, memberId: UUID): Boolean {
         return participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
             roomId,
@@ -64,7 +73,7 @@ class ParticipationFinder(
     }
 
     fun wasConfirmedParticipant(roomId: UUID, memberId: UUID): Boolean {
-        return participationRepository.existsAtRoomConfirmation(roomId, memberId)
+        return participationRepository.countAtRoomConfirmation(roomId, memberId) > 0
     }
 
     fun getConfirmedParticipantIds(roomId: UUID): List<UUID> {

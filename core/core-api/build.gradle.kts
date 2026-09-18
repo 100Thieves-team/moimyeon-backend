@@ -48,6 +48,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    // Boot 4 의 웹 직렬화는 Jackson 3(tools.jackson)이다. 루트가 깔아주는 kotlin 모듈은 Jackson 2 용이라
+    // 웹 응답에 적용되지 않는다 — 없으면 Kotlin `is` 접두 프로퍼티(isPassed·isHost)가 bean 규칙으로
+    // 접두가 잘린 이름(passed·host)으로 직렬화되어 REST Docs 계약과 실제 응답이 갈린다. (core-worker 와 같은 조치)
+    implementation("tools.jackson.module:jackson-module-kotlin")
     // 채용 링크 즉시 추가(BE-03/MOI-334): 서버측 OG 태그 fetch·파싱. HTML 스크래핑이라 Feign(JSON) 대신 Jsoup 을 쓴다.
     implementation("org.jsoup:jsoup:${property("jsoupVersion")}")
     testImplementation(kotlin("test"))
@@ -134,6 +138,9 @@ fun collectNonObjectComposedSchemas(node: JsonNode, path: String, problems: Muta
 // - 숫자 id 스칼라 배열: 아이템 타입 문서화(a[] + 타입)를 생성기가 지원하지 않음.
 //   요청에서는 최상위 프로퍼티, 응답에서는 data 아래에 나타나므로 트리 전체를 훑는다.
 // - 제한 문자열 스칼라 배열도 같은 제약이 있어 아이템 타입과 enum 값을 보강한다.
+// - optional 객체·배열 필드: 생성기가 스칼라 optional 에는 nullable 을 붙이지만 객체·배열에는 붙이지 않는다.
+//   이 서버는 null 필드를 생략하지 않고 그대로 직렬화하므로("region": null), optional = nullable 이다.
+//   required 에 없는 객체·배열 프로퍼티 전부에 nullable 을 보강한다.
 // - nullable 로 문서화한 필드는 생성기가 required 에서 빼므로, 항상 키를 반환하는 필드는 다시 넣는다.
 // - multipart 요청 파트: 생성기가 비 JSON request body 를 스펙에 싣지 않아 직접 계약을 보강한다.
 // - OAuth 로그인: Spring Security 필터 엔드포인트라 REST Docs 리소스가 없어 경로와 리다이렉트 계약을 보강한다.
@@ -142,7 +149,6 @@ val numberIdArrayProperties = setOf("interestCompanyIds", "interestJobRoleIds")
 val stringEnumArrayTypes = mapOf(
     "recentAttendances" to "io.plady.moimyeon.core.enums.AttendanceStatus",
 )
-
 fun resolveStringEnumArrayProperties(classpath: Set<File>): Map<String, List<String>> {
     val urls = classpath.map { it.toURI().toURL() }.toTypedArray()
     return URLClassLoader(urls, ClassLoader.getPlatformClassLoader()).use { classLoader ->
@@ -161,6 +167,7 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
     var errorDataPatched = 0
     val numberArraysPatched = mutableSetOf<String>()
     val stringEnumArraysPatched = mutableSetOf<String>()
+    var optionalCompositePatched = 0
     var nullableRequiredPatched = 0
     root.path("components").path("schemas").forEach { schema ->
         val errorData = schema.path("properties").path("error").path("properties").path("data")
@@ -173,6 +180,7 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
         }
         patchNumberIdArrays(schema, mapper, numberArraysPatched)
         patchStringEnumArrays(schema, mapper, stringEnumArrayProperties, stringEnumArraysPatched)
+        optionalCompositePatched += patchOptionalCompositeProperties(schema)
         nullableRequiredPatched += requireNullableProperty(schema, mapper, "activityTopPercent")
     }
     // 생성기 출력 형태가 바뀌어 보정 대상을 못 찾으면(예: $ref 공유 스키마로 전환) 조용히
@@ -182,6 +190,7 @@ fun patchGeneratedSchemas(yamlFile: File, stringEnumArrayProperties: Map<String,
     check(missing.isEmpty()) { "스칼라 배열 보정 대상을 스펙에서 찾지 못했다: $missing" }
     val missingStringEnums = stringEnumArrayProperties.keys - stringEnumArraysPatched
     check(missingStringEnums.isEmpty()) { "문자열 enum 배열 보정 대상을 스펙에서 찾지 못했다: $missingStringEnums" }
+    check(optionalCompositePatched > 0) { "optional 객체·배열 nullable 보정 대상을 스펙에서 찾지 못했다" }
     check(nullableRequiredPatched == 1) { "nullable 필수 필드 보정 대상이 하나가 아니다: $nullableRequiredPatched" }
     check(patchResumeMultipartRequest(root, mapper)) { "이력서 multipart 요청 보정 대상을 스펙에서 찾지 못했다" }
     check(patchOAuthLoginContract(root, mapper)) { "OAuth 로그인 OpenAPI 계약을 보정하지 못했다" }
@@ -365,6 +374,32 @@ fun patchStringEnumArrays(
     } else if (node.isArray) {
         node.forEach { patchStringEnumArrays(it, mapper, stringEnumArrayProperties, patched) }
     }
+}
+
+fun patchOptionalCompositeProperties(node: JsonNode): Int {
+    if (node !is ObjectNode) {
+        if (node.isArray) return node.sumOf { patchOptionalCompositeProperties(it) }
+        return 0
+    }
+
+    var patched = 0
+    val properties = node.path("properties")
+    if (properties is ObjectNode) {
+        val required = (node.get("required") as? ArrayNode)?.map { it.asText() }?.toSet() ?: emptySet()
+        properties.fields().forEach { (name, property) ->
+            if (
+                property is ObjectNode &&
+                property.path("type").asText() in setOf("object", "array") &&
+                name !in required &&
+                !property.path("nullable").asBoolean(false)
+            ) {
+                property.put("nullable", true)
+                patched++
+            }
+        }
+    }
+    node.forEach { patched += patchOptionalCompositeProperties(it) }
+    return patched
 }
 
 fun requireNullableProperty(node: JsonNode, mapper: ObjectMapper, propertyName: String): Int {

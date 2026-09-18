@@ -62,6 +62,15 @@ class ResumeApiController(
         return ApiResponse.success(ResumeResponse.from(resumeService.get(currentMember.id, resumeId)))
     }
 
+    @PostMapping("/v1/members/me/resumes/{resumeId}/make-default")
+    fun makeDefault(
+        @LoginMember currentMember: CurrentMember,
+        @PathVariable resumeId: UUID,
+    ): ApiResponse<Any> {
+        resumeService.makeDefault(currentMember.id, resumeId)
+        return ApiResponse.success()
+    }
+
     @DeleteMapping("/v1/members/me/resumes/{resumeId}")
     fun delete(
         @LoginMember currentMember: CurrentMember,

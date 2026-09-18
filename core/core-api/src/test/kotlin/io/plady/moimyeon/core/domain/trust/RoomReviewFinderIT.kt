@@ -113,6 +113,7 @@ class RoomReviewFinderIT(
                 authorMemberId = memberId,
                 targetMemberId = targetMemberId,
                 visibleAt = LocalDateTime.of(2026, 8, 10, 22, 0),
+                anonymous = true,
                 tags = listOf("좋은 질문을 해요"),
             ),
         )

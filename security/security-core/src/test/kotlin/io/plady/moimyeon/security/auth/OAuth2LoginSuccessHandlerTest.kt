@@ -136,6 +136,8 @@ class OAuth2LoginSuccessHandlerTest {
 
     private fun authProperties(): AuthProperties = AuthProperties(
         cookie = AuthProperties.Cookie(
+            accessTokenName = AuthCookieFactory.ACCESS_TOKEN,
+            refreshTokenName = AuthCookieFactory.REFRESH_TOKEN,
             domain = "moimyeon.plady.io",
             secure = true,
             sameSite = "Lax",

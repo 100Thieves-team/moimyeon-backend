@@ -8,11 +8,11 @@ import java.util.UUID
 class RoomViewerService(
     private val roomViewerReader: RoomViewerReader,
 ) {
-    fun getViewers(viewerMemberId: UUID?, rooms: Map<UUID, RoomApplicability>): Map<UUID, RoomViewer> {
-        return roomViewerReader.readAll(viewerMemberId, rooms)
+    fun getViewers(viewerMemberId: UUID?, roomIds: Collection<UUID>): Map<UUID, ViewerFacts?> {
+        return roomViewerReader.readAll(viewerMemberId, roomIds)
     }
 
-    fun getViewer(viewerMemberId: UUID?, roomId: UUID, room: RoomApplicability): RoomViewer {
-        return roomViewerReader.readAll(viewerMemberId, mapOf(roomId to room)).getValue(roomId)
+    fun getViewer(viewerMemberId: UUID?, roomId: UUID): ViewerFacts? {
+        return roomViewerReader.readAll(viewerMemberId, setOf(roomId)).getValue(roomId)
     }
 }

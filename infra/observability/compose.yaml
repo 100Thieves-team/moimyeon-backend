@@ -1,0 +1,81 @@
+name: moimyeon-monitoring
+
+x-runtime: &runtime
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  otel-collector:
+    <<: *runtime
+    image: otel/opentelemetry-collector-contrib:0.160.0@sha256:799dc6cf12c96192af37b5bdba804da8c10b3bc563b43cb90c3f3c58d9572ad6
+    command: [--config=/etc/otelcol/config.yaml]
+    read_only: true
+    mem_limit: 256m
+    environment:
+      GOMEMLIMIT: 150MiB
+    ports:
+      # AWS SG accepts this port only from the API and Worker task SGs.
+      - "${OTLP_BIND_ADDRESS:-0.0.0.0}:${OTLP_HTTP_PORT:-4318}:4318"
+      - "127.0.0.1:${COLLECTOR_HEALTH_PORT:-13133}:13133"
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+
+  prometheus:
+    <<: *runtime
+    image: prom/prometheus:v3.14.0@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0
+    user: "65534:65534"
+    mem_limit: 768m
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=8GB
+      - --web.listen-address=0.0.0.0:9090
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ${MONITORING_DATA_DIR:-/var/lib/moimyeon-monitoring}/prometheus:/prometheus
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:9090/-/ready]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    <<: *runtime
+    image: grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
+    user: "472:0"
+    mem_limit: 512m
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_SNAPSHOTS_EXTERNAL_ENABLED: "false"
+      GF_LOG_MODE: console
+    secrets: [grafana_admin_password]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - ${MONITORING_DATA_DIR:-/var/lib/moimyeon-monitoring}/grafana:/var/lib/grafana
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:3000/api/health]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+secrets:
+  grafana_admin_password:
+    file: ${GRAFANA_ADMIN_PASSWORD_FILE:?Use a local secret file; never commit its contents}

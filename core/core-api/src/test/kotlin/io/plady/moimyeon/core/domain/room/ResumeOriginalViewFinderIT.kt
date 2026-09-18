@@ -55,7 +55,7 @@ class ResumeOriginalViewFinderIT(
 
     @Test
     fun `확정 전이거나 종료된 룸이면 E1429 를 던진다`() {
-        listOf(RoomStatus.RECRUITING, RoomStatus.COMPLETED).forEach { status ->
+        listOf(RoomStatus.RECRUITING, RoomStatus.COMPLETED, RoomStatus.CANCELED).forEach { status ->
             val roomId = persistRoom(resumePublic = true, status = status)
             persistParticipation(roomId, submitterMemberId)
             val submissionId = persistSubmission(roomId, submitterMemberId)
@@ -93,6 +93,48 @@ class ResumeOriginalViewFinderIT(
         val submissionId = persistSubmission(roomId, submitterMemberId)
 
         assertNotViewable(roomId, submissionId)
+    }
+
+    @Test
+    fun `철회 후 새 이력서로 참여하면 옛 제출은 막고 현재 제출만 허용한다`() {
+        val roomId = persistRoom(resumePublic = true, status = RoomStatus.CONFIRMED)
+        val withdrawnId = persistSubmission(roomId, submitterMemberId, RoomApplicationStatus.WITHDRAWN, name = "old.pdf")
+        val currentId = persistSubmission(roomId, submitterMemberId, at = submittedAt.plusDays(1), name = "current.pdf")
+        persistParticipation(roomId, submitterMemberId)
+
+        assertNotViewable(roomId, withdrawnId)
+        assertThat(resumeOriginalViewFinder.getViewableFile(roomId, currentId).originalName).isEqualTo("current.pdf")
+    }
+
+    @Test
+    fun `이탈 후 재참여하면 수락 상태로 남은 옛 신청의 제출도 막는다`() {
+        val roomId = persistRoom(resumePublic = true, status = RoomStatus.CONFIRMED)
+        persistParticipation(roomId, submitterMemberId, status = ParticipationStatus.LEFT)
+        val oldId = persistSubmission(roomId, submitterMemberId, name = "old.pdf")
+        // 시각이 같으면 최신 신청 ID로 구분한다.
+        val currentId = persistSubmission(roomId, submitterMemberId, name = "current.pdf")
+        persistParticipation(roomId, submitterMemberId)
+
+        assertNotViewable(roomId, oldId)
+        assertThat(resumeOriginalViewFinder.getViewableFile(roomId, currentId).originalName).isEqualTo("current.pdf")
+    }
+
+    @Test
+    fun `최신 신청이라도 수락되지 않은 제출은 열 수 없다`() {
+        val roomId = persistRoom(resumePublic = true, status = RoomStatus.CONFIRMED)
+        persistParticipation(roomId, submitterMemberId)
+        val submissionId = persistSubmission(roomId, submitterMemberId, RoomApplicationStatus.WITHDRAWN)
+
+        assertNotViewable(roomId, submissionId)
+    }
+
+    @Test
+    fun `진행 중에도 현재 제출 원본을 열 수 있다`() {
+        val roomId = persistRoom(resumePublic = true, status = RoomStatus.IN_PROGRESS)
+        persistParticipation(roomId, submitterMemberId)
+        val submissionId = persistSubmission(roomId, submitterMemberId)
+
+        assertThat(resumeOriginalViewFinder.getViewableFile(roomId, submissionId).originalName).isEqualTo("backend.pdf")
     }
 
     @Test
@@ -160,14 +202,20 @@ class ResumeOriginalViewFinderIT(
         )
     }
 
-    private fun persistSubmission(roomId: UUID, memberId: UUID): Long {
+    private fun persistSubmission(
+        roomId: UUID,
+        memberId: UUID,
+        status: RoomApplicationStatus = RoomApplicationStatus.ACCEPTED,
+        at: LocalDateTime = submittedAt,
+        name: String = "backend.pdf",
+    ): Long {
         val application = roomApplicationRepository.saveAndFlush(
             RoomApplicationEntity(
                 roomId = roomId,
                 applicantMemberId = memberId,
                 note = "",
-                appliedAt = submittedAt,
-                status = RoomApplicationStatus.ACCEPTED,
+                appliedAt = at,
+                status = status,
                 pendingMemberId = null,
             ),
         )
@@ -177,11 +225,11 @@ class ResumeOriginalViewFinderIT(
                 roomId = roomId,
                 memberId = memberId,
                 sourceResumeId = UUID.randomUUID(),
-                fileKey = "resumes/$memberId/backend.pdf",
-                originalName = "backend.pdf",
+                fileKey = "resumes/$memberId/$name",
+                originalName = name,
                 sizeBytes = 1024L,
                 contentType = "application/pdf",
-                submittedAt = submittedAt,
+                submittedAt = at,
             ),
         ).id
     }

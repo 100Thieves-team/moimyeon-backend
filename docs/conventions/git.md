@@ -9,6 +9,21 @@
   Linear 가 제안하는 한글 브랜치명은 쓰지 않는다.
 - **PR 이 열린 브랜치는 rename 금지** — GitHub 이 PR 을 닫아버린다.
 
+## worktree
+
+- 작업은 **별도 worktree**에서 한다. 여러 이슈를 오가며 작업할 때 브랜치
+  전환으로 빌드 산출물·IDE 인덱스가 깨지는 것을 막는다.
+- 생성 전 기준 브랜치를 최신화한다.
+
+  ```bash
+  git fetch origin
+  git worktree add .worktrees/moi-351 -b feat/MOI-351-error-response-docs origin/dev
+  ```
+
+- dev 변경을 반영해야 하면 worktree 안에서 리베이스한다(`git rebase origin/dev`).
+  보호 브랜치(main·dev)로의 non-fast-forward push 는 훅이 차단한다.
+- PR 이 머지되면 정리한다: `git worktree remove .worktrees/moi-351`.
+
 ## 커밋 메시지
 
 **Angular 커밋 컨벤션**을 따른다. 제목·본문 한글 허용.

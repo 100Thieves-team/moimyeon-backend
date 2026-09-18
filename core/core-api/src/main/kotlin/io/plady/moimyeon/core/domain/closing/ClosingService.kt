@@ -6,7 +6,14 @@ import java.util.UUID
 @Service
 class ClosingService(
     private val submissionManager: ClosingSubmissionManager,
+    private val accessValidator: ClosingAccessValidator,
+    private val questionReader: ClosingQuestionReader,
 ) {
+    fun getQuestions(memberId: UUID, roomId: UUID): List<ClosingQuestion> {
+        accessValidator.validateParticipant(roomId, memberId)
+        return questionReader.getQuestions(roomId, memberId)
+    }
+
     fun submit(
         memberId: UUID,
         roomId: UUID,

@@ -33,3 +33,10 @@ CLAUDE.local.md
 
 # review-swarm run artefacts
 .review-swarm/
+
+# eval raw 트랜스크립트는 로컬 보존 (요약·CSV만 커밋)
+.worklog/**/evals/raw/
+__pycache__/
+
+# 리뷰 위임용 임시 산출물 (DR-024) — 커밋 대상 아님
+.worklog/**/review-diff.patch

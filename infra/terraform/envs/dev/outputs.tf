@@ -88,6 +88,11 @@ output "notification_redis_password_parameter_name" {
   value       = module.dev.notification_redis_password_parameter_name
 }
 
+output "jwt_secret_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the JWT signing secret."
+  value       = module.dev.jwt_secret_parameter_name
+}
+
 output "upload_bucket_name" {
   description = "S3 upload bucket."
   value       = module.dev.upload_bucket_name
@@ -101,6 +106,11 @@ output "image_uri_parameter_name" {
 output "notification_worker_image_uri_parameter_name" {
   description = "SSM parameter updated with the deployed core-worker image URI."
   value       = module.dev.notification_worker_image_uri_parameter_name
+}
+
+output "deployment_bundle_parameter_prefix" {
+  description = "SSM prefix containing immutable dev deployment bundles."
+  value       = module.dev.deployment_bundle_parameter_prefix
 }
 
 output "firebase_service_account_parameter_name" {
@@ -131,4 +141,29 @@ output "ecs_task_definition_arn" {
 output "notification_worker_task_definition_arn" {
   description = "Terraform-managed Notification Worker task definition template ARN."
   value       = module.dev.notification_worker_task_definition_arn
+}
+
+output "monitoring_instance_id" {
+  description = "SSM port-forward target for private Grafana (port 3000)."
+  value       = module.dev.monitoring_instance_id
+}
+
+output "monitoring_otlp_metrics_url" {
+  description = "Private OTLP HTTP metrics receiver URL."
+  value       = module.dev.monitoring_otlp_metrics_url
+}
+
+output "monitoring_data_volume_id" {
+  description = "Retained encrypted monitoring data volume."
+  value       = module.dev.monitoring_data_volume_id
+}
+
+output "monitoring_grafana_password_parameter_name" {
+  description = "Pre-created Grafana SecureString expected by the monitoring host."
+  value       = module.dev.monitoring_grafana_password_parameter_name
+}
+
+output "monitoring_sentry_parameter_names" {
+  description = "Pre-created API and Worker Sentry DSN SecureStrings."
+  value       = module.dev.monitoring_sentry_parameter_names
 }

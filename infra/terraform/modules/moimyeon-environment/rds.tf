@@ -1,5 +1,5 @@
 resource "random_password" "db" {
-  count = var.generate_db_password ? 1 : 0
+  count = var.generate_db_password && !var.manage_db_master_password ? 1 : 0
 
   length           = 32
   special          = true
@@ -30,9 +30,10 @@ resource "aws_db_instance" "core" {
   db_name = var.db_name
   # generate mode: TF-managed random password. reference mode: null = unmanaged,
   # so importing an existing DB never resets its master password.
-  username = var.db_username
-  password = var.generate_db_password ? random_password.db[0].result : null
-  port     = 3306
+  username                    = coalesce(var.db_master_username, var.db_username)
+  password                    = var.generate_db_password && !var.manage_db_master_password ? random_password.db[0].result : null
+  manage_master_user_password = var.manage_db_master_password ? true : null
+  port                        = 3306
 
   db_subnet_group_name   = aws_db_subnet_group.core.name
   vpc_security_group_ids = [aws_security_group.rds.id]
@@ -47,6 +48,13 @@ resource "aws_db_instance" "core" {
 
   apply_immediately = var.environment == "dev"
 
+  lifecycle {
+    precondition {
+      condition     = !(var.generate_db_password && var.manage_db_master_password)
+      error_message = "generate_db_password and manage_db_master_password cannot both be true."
+    }
+  }
+
   tags = merge(local.tags, {
     Name = "${local.name}-rds-mysql"
   })
@@ -55,7 +63,7 @@ resource "aws_db_instance" "core" {
 # Only in generate mode. In reference mode the parameter is pre-created out of
 # band (with the existing password) and its ARN is constructed in secrets.tf.
 resource "aws_ssm_parameter" "db_password" {
-  count = var.generate_db_password ? 1 : 0
+  count = var.generate_db_password && !var.manage_db_master_password ? 1 : 0
 
   name        = "/${var.project}/${var.environment}/core-api/DB_PASSWORD"
   description = "RDS password for ${local.name} core-api"

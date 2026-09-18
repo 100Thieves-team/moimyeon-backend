@@ -5,9 +5,9 @@ import io.plady.moimyeon.core.domain.catalog.RegionLabel
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
 import io.plady.moimyeon.core.domain.room.MeetingPlace
-import io.plady.moimyeon.core.domain.room.RecruitStatus
 import io.plady.moimyeon.core.domain.room.RoomCard
-import io.plady.moimyeon.core.domain.roomviewer.RoomViewer
+import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
+import io.plady.moimyeon.core.enums.MeetingType
 import java.util.UUID
 
 // 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
@@ -40,8 +40,8 @@ data class RoomSummaryResponse(
     val region: RoomRegionResponse?,
     val schedule: RoomScheduleResponse,
     val recruit: RoomRecruitSummaryResponse,
-    // 보는 사람에 따라 다음 행동이 갈린다(MOI-387). 룸의 공개 정보 자체는 뷰어와 무관하다.
-    val viewer: RoomViewerResponse,
+    // 조회자 본인의 사실(MOI-500). 비로그인이면 null 이다 — 판정은 화면이 한다.
+    val viewer: RoomViewerResponse?,
 ) {
     companion object {
         fun from(
@@ -50,7 +50,7 @@ data class RoomSummaryResponse(
             company: Company?,
             jobRole: JobRole?,
             region: RegionLabel?,
-            viewer: RoomViewer,
+            viewer: ViewerFacts?,
         ): RoomSummaryResponse {
             val room = card.room
             return RoomSummaryResponse(
@@ -63,23 +63,19 @@ data class RoomSummaryResponse(
                 roundLabel = room.interviewStage.label,
                 type = room.interviewType?.name,
                 typeLabel = room.interviewType?.label,
-                method = room.meetingPlace.methodCode(),
-                methodLabel = room.meetingPlace.methodLabel(),
+                method = room.meetingPlace.meetingType().name,
+                methodLabel = room.meetingPlace.meetingType().label,
                 region = region?.let { RoomRegionResponse(it.sigunguId, it.label) },
                 schedule = RoomScheduleResponse.from(room.schedule),
                 recruit = RoomRecruitSummaryResponse.from(card),
-                viewer = RoomViewerResponse.from(viewer),
+                viewer = viewer?.let(RoomViewerResponse::from),
             )
         }
 
-        private fun MeetingPlace.methodCode(): String = when (this) {
-            MeetingPlace.Online -> "ONLINE"
-            is MeetingPlace.Offline -> "OFFLINE"
-        }
-
-        private fun MeetingPlace.methodLabel(): String = when (this) {
-            MeetingPlace.Online -> "온라인"
-            is MeetingPlace.Offline -> "오프라인"
+        // 라벨의 단일 소스는 enum 이다(폼 선택지 계약과 같은 정의).
+        private fun MeetingPlace.meetingType(): MeetingType = when (this) {
+            MeetingPlace.Online -> MeetingType.ONLINE
+            is MeetingPlace.Offline -> MeetingType.OFFLINE
         }
     }
 }
@@ -99,10 +95,7 @@ data class RoomRecruitSummaryResponse(
             max = card.room.capacity.max,
             pending = card.pendingApplications,
             recruitStatus = card.recruitStatus.name,
-            recruitStatusLabel = when (card.recruitStatus) {
-                RecruitStatus.RECRUITING -> "모집 중"
-                RecruitStatus.CLOSED -> "모집 마감"
-            },
+            recruitStatusLabel = card.recruitStatus.label,
         )
     }
 }

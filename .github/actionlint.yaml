@@ -1,0 +1,11 @@
+self-hosted-runner:
+  labels:
+    - review-swarm
+
+# GitHub added concurrency.queue in May 2026. actionlint 1.7.12 predates the
+# parser support; keep the exception limited to that one schema error until the
+# upstream queue-support release is available.
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'

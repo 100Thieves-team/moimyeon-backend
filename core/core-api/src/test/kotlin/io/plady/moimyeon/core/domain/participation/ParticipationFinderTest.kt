@@ -62,8 +62,8 @@ class ParticipationFinderTest {
         val roomId = UUID.randomUUID()
         val memberId = UUID.randomUUID()
         every {
-            participationRepository.existsAtRoomConfirmation(roomId, memberId)
-        } returns true
+            participationRepository.countAtRoomConfirmation(roomId, memberId)
+        } returns 1L
 
         assertThat(participationFinder.wasConfirmedParticipant(roomId, memberId)).isTrue()
     }

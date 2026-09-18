@@ -17,6 +17,8 @@ import java.net.URI
 class OAuth2LoginFailureHandlerTest {
     private val authProperties = AuthProperties(
         cookie = AuthProperties.Cookie(
+            accessTokenName = AuthCookieFactory.ACCESS_TOKEN,
+            refreshTokenName = AuthCookieFactory.REFRESH_TOKEN,
             domain = "moimyeon.plady.io",
             secure = true,
             sameSite = "Lax",

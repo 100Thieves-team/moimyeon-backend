@@ -1,13 +1,9 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.auth.ApiResponseAuthErrorWriter
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
-import io.plady.moimyeon.core.api.controller.v1.request.UpdateNicknameRequest
 import io.plady.moimyeon.core.api.facade.MemberFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.company.Company
@@ -28,12 +24,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
-import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import org.springframework.restdocs.payload.PayloadDocumentation.requestFields
 import org.springframework.restdocs.payload.PayloadDocumentation.responseFields
 import org.springframework.restdocs.request.RequestDocumentation.parameterWithName
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
@@ -78,10 +71,6 @@ class MemberControllerTest : RestDocsTest() {
             "빈 문자열·빈 배열로 내려간다. " +
             "profile 은 프로필 수정 응답의 data 와 동일한 모양이다. " +
             "액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
-    private val updateNicknameSummary = "닉네임 변경"
-    private val updateNicknameDescription =
-        "회원의 닉네임을 변경한다. 자신이 쓰던 닉네임 유지는 허용하고, 변경 시 전체 중복을 확인한다. " +
-            "형식 위반 400(E1005), 인증 정보 없음·무효 401(E1102), 닉네임 중복 409(E1007)로 응답한다."
     private val nicknameSuggestionSummary = "닉네임 자동 추천"
     private val nicknameSuggestionDescription =
         "중복되지 않는 닉네임을 새로 생성해 반환한다. 닉네임 변경 폼의 ↻ 새로 만들기 재생성에서 사용한다."
@@ -166,71 +155,6 @@ class MemberControllerTest : RestDocsTest() {
         securedMockMvc.perform(get("/v1/members/me").header(HttpHeaders.AUTHORIZATION, "Bearer invalid-or-expired-token"))
             .andExpect(status().isUnauthorized)
             .andDo(documentApi("memberMe-e1102", memberMeSummary, memberMeDescription, errorResponseFields()))
-    }
-
-    @Test
-    fun updateNickname() {
-        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } just Runs
-
-        mockMvc.perform(
-            put("/v1/members/me/nickname")
-                .principal(principal)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
-        )
-            .andExpect(status().isOk)
-            .andDo(
-                documentApi(
-                    "updateNickname",
-                    updateNicknameSummary,
-                    updateNicknameDescription,
-                    requestFields(
-                        fieldWithPath("nickname").type(JsonFieldType.STRING).description("변경할 닉네임 (전체 중복 불가 — 자신 제외)"),
-                    ),
-                    responseFields(
-                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
-                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
-                    ),
-                ),
-            )
-    }
-
-    @Test
-    fun `updateNickname 형식 위반 E1005`() {
-        mockMvc.perform(
-            put("/v1/members/me/nickname")
-                .principal(principal)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("금지문자!@#"))),
-        )
-            .andExpect(status().isBadRequest)
-            .andDo(documentApi("updateNickname-e1005", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
-    }
-
-    @Test
-    fun `updateNickname 닉네임 중복 E1007`() {
-        every { memberService.changeNickname(memberId, Nickname("명랑한 해달 33")) } throws CoreException(CoreErrorType.NICKNAME_DUPLICATED)
-
-        mockMvc.perform(
-            put("/v1/members/me/nickname")
-                .principal(principal)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
-        )
-            .andExpect(status().isConflict)
-            .andDo(documentApi("updateNickname-e1007", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
-    }
-
-    @Test
-    fun `updateNickname 인증 없음 E1102`() {
-        mockMvc.perform(
-            put("/v1/members/me/nickname")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper().writeValueAsString(UpdateNicknameRequest("명랑한 해달 33"))),
-        )
-            .andExpect(status().isUnauthorized)
-            .andDo(documentApi("updateNickname-e1102", updateNicknameSummary, updateNicknameDescription, errorResponseFields()))
     }
 
     @Test

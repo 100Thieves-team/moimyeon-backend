@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.progress
 
+import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.AttendanceRepository
@@ -10,6 +11,11 @@ import java.util.UUID
 class RoomProgressReader(
     private val attendanceRepository: AttendanceRepository,
 ) {
+    fun isAttended(roomId: UUID, memberId: UUID): Boolean {
+        return attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId)
+            ?.status == AttendanceStatus.ATTENDED
+    }
+
     fun getAttendance(roomId: UUID, memberId: UUID): Attendance {
         val attendance = requireFound(
             findAttendance(roomId, memberId),

@@ -30,6 +30,7 @@ class ReviewEntity(
     @JdbcTypeCode(SqlTypes.BINARY)
     val targetMemberId: UUID,
     content: String? = null,
+    val anonymous: Boolean,
     val visibleAt: LocalDateTime,
     val hiddenAt: LocalDateTime? = null,
     val reportedAt: LocalDateTime? = null,

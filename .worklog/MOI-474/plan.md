@@ -1,0 +1,31 @@
+# MOI-474 하네스 구축 — 계획
+
+설계-검토-구현 사이클로 진행한다. 각 스텝이 체크포인트다(승인 후 다음 스텝).
+설계 근거는 [decisions.md](decisions.md), 미결정 사항은 [tbd.md](tbd.md).
+
+- [x] Step 1 — 골격: `.agents/` 단일 소스 + symlink 3개, worklog 파일 계약,
+      의사결정 기록, 아키텍처 도면. 양 런타임 스킬 발견 검증 (2026-08-19 승인·커밋)
+- [x] Step 2 — `requirement-implementation` + `issue-context` 스킬,
+      `.agents/execution-policy.md`(공유 실행 정책), `code-reviewer` 에이전트,
+      eval 러너 + requirement-implementation eval 세트 (DR-012 스킬의 TDD)
+      (2026-08-24 승인·메타 리뷰 통과)
+- [x] Step 3 — `api-spec-definition` · `api-connection` · `entity-design` 스킬,
+      `db-reviewer` 에이전트 (DR-014) (2026-08-24 승인·메타 리뷰 통과)
+- [x] Step 4 — `ship-pr` 스킬 및 공통부 정리, `qa-reviewer` 에이전트,
+      `docs/knowledge/release-checklist.md` 시드 (DR-014)
+      (2026-08-24 승인 — 트리거 5/5·오호출 0, DR-021·022)
+- [x] Step 4b — 전문 도메인 확장 (DR-014): `data-reviewer` · `llm-reviewer`
+      에이전트, `prompt-change` · `infra-change` · `incident-response`
+      워크플로우, `docs/knowledge/llm.md` · `data.md` 시드. 각 스킬 eval 동반
+      (2026-08-24 승인 — 트리거 9/9·오호출 0, sonnet 메타 리뷰 + Claude·Codex
+      이중 평가 반영, DR-023·024)
+- [x] Step 5 — 결정론 게이트: 변경 파일 대응 테스트·ktlint 훅, 스킬 구조·
+      필수 정책 라인·plan.md 계약(생성/재개/실패 기록) lint, 시크릿 검출,
+      의존성 변경 검증(멘토 §30), 권한 통제 이관(deny·훅·sandbox —
+      DR-020 결정론 층)
+      (2026-08-24 승인 — 검사기 6종×3층, 셀프 테스트 8/8, 메타 리뷰 반영, DR-025)
+- [x] Step 6 — 진화 루프(랩업→레슨→승격), AGENTS.md 라우팅·포인터 등록(9행),
+      트리거 양성/음성 검증 + With/Without 1회, 완공 정리(도면 Step 라벨 제거,
+      유효 결정의 knowledge 승격)
+      (2026-08-25 승인 — 라우팅 9행·문서 경계·스킬 규약·도면 v0.9·재측정 완료)
+- [ ] (예약) SLO·에러버짓 검토 — 런칭·실트래픽 발생 시점에 도입 (DR-014)

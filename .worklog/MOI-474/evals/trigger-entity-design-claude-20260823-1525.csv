@@ -1,0 +1,26 @@
+run_id,runtime,version,prompt_id,expected,iter,detected,duration_s,raw_file
+# runtime=claude version=2.1.239 (Claude Code) N=2 date=20260823-1525 workdir=/private/tmp/claude-501/-Users-luna-Desktop-nonsync-teams-100-thieves-moimyeon-backend/2a6a6fb7-656c-4acb-b38a-4e6e13bebc18/scratchpad/eval3-claude timeout=240s
+20260823-1525,claude,2.1.239 (Claude Code),p1,yes,1,yes,32,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p1-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p1,yes,2,yes,34,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p1-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p2,yes,1,yes,33,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p2-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p2,yes,2,yes,35,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p2-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p3,yes,1,yes,51,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p3-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p3,yes,2,yes,17,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p3-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p4,yes,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p4-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p4,yes,2,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p4-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p5,yes,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p5-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),p5,yes,2,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/p5-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n1,no,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n1-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n1,no,2,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n1-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n2,no,1,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n2-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n2,no,2,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n2-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n3,no,1,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n3-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n3,no,2,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n3-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n4,no,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n4-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n4,no,2,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n4-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n5,no,1,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n5-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),n5,no,2,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/n5-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),b1,boundary,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/b1-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),b1,boundary,2,no,4,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/b1-2.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),b2,boundary,1,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/b2-1.jsonl
+20260823-1525,claude,2.1.239 (Claude Code),b2,boundary,2,no,5,/Users/luna/Desktop_nonsync/teams/100-thieves/moimyeon-backend/worklog/MOI-474/evals/raw/entity-design-claude-20260823-1525/b2-2.jsonl

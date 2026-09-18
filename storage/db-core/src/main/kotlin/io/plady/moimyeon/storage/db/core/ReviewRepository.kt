@@ -13,6 +13,8 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
 
+    fun findByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
+
     fun existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
         roomId: UUID,
         authorMemberId: UUID,
@@ -24,6 +26,21 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
         authorMemberId: UUID,
     ): List<ReviewEntity>
 
+    @Query(
+        """
+        SELECT DISTINCT r
+        FROM ReviewEntity r LEFT JOIN FETCH r.tags
+        WHERE r.roomId = :roomId
+          AND r.authorMemberId = :authorMemberId
+          AND r.deletedAt IS NULL
+        ORDER BY r.id ASC
+        """,
+    )
+    fun findAllWithTagsByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(
+        @Param("roomId") roomId: UUID,
+        @Param("authorMemberId") authorMemberId: UUID,
+    ): List<ReviewEntity>
+
     fun findByRoomIdInAndAuthorMemberIdAndDeletedAtIsNull(
         roomIds: Collection<UUID>,
         authorMemberId: UUID,
@@ -31,19 +48,46 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
 
     @Query(
         """
-        SELECT DISTINCT r
-        FROM ReviewEntity r LEFT JOIN FETCH r.tags
+        SELECT r
+        FROM ReviewEntity r
         WHERE r.targetMemberId = :memberId
           AND r.visibleAt <= :now
           AND r.hiddenAt IS NULL
           AND r.deletedAt IS NULL
-        ORDER BY r.visibleAt DESC, r.id DESC
+          AND (:lastReviewId IS NULL OR r.id < :lastReviewId)
+        ORDER BY r.id DESC
         """,
     )
-    fun findVisibleReceivedReviews(
+    fun findVisibleReceivedReviewPage(
         @Param("memberId") memberId: UUID,
         @Param("now") now: LocalDateTime,
+        @Param("lastReviewId") lastReviewId: Long?,
+        pageable: Pageable,
     ): List<ReviewEntity>
+
+    @Query(
+        """
+        SELECT DISTINCT r
+        FROM ReviewEntity r LEFT JOIN FETCH r.tags
+        WHERE r.id IN :reviewIds
+        """,
+    )
+    fun findAllWithTagsByIdIn(@Param("reviewIds") reviewIds: Collection<Long>): List<ReviewEntity>
+
+    @Query(
+        """
+        SELECT COUNT(r)
+        FROM ReviewEntity r
+        WHERE r.targetMemberId = :memberId
+          AND r.visibleAt <= :now
+          AND r.hiddenAt IS NULL
+          AND r.deletedAt IS NULL
+        """,
+    )
+    fun countVisibleReceivedReviews(
+        @Param("memberId") memberId: UUID,
+        @Param("now") now: LocalDateTime,
+    ): Long
 
     @Query(
         """

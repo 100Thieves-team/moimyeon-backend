@@ -9,6 +9,7 @@ import io.mockk.verify
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFileStore
+import io.plady.moimyeon.core.domain.resume.ResumeFileViewUrl
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -39,16 +40,21 @@ class ResumeOriginalViewServiceTest {
     private val roomId = UUID.randomUUID()
 
     @Test
-    fun `게이트를 모두 통과하면 URL 과 5분 뒤 만료 시각을 돌려준다`() {
+    fun `응답 조립 시각 대신 서명 결과의 만료 시각을 돌려준다`() {
         val file = ResumeFile("resumes/member/resume.pdf", "resume.pdf", 11, "application/pdf")
         every { participationValidator.validateParticipant(roomId, viewerMemberId) } just Runs
         every { resumeOriginalViewFinder.getViewableFile(roomId, 42L) } returns file
-        every { resumeFileStore.issueViewUrl(file, Duration.ofMinutes(5)) } returns "https://s3.example.com/presigned"
+        // 서명 후 2초가 지났어도 응답 만료 시각이 2초 늘어나면 안 된다.
+        val signedExpiry = now.plusMinutes(5).minusSeconds(2)
+        every { resumeFileStore.issueViewUrl(file, Duration.ofMinutes(5)) } returns ResumeFileViewUrl(
+            "https://s3.example.com/presigned",
+            signedExpiry.atZone(clock.zone).toInstant(),
+        )
 
         val view = service.issueViewUrl(viewerMemberId, roomId, 42L)
 
         assertThat(view.url).isEqualTo("https://s3.example.com/presigned")
-        assertThat(view.expiresAt).isEqualTo(now.plusMinutes(5))
+        assertThat(view.expiresAt).isEqualTo(signedExpiry)
     }
 
     @Test
