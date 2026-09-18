@@ -1,6 +1,6 @@
 resource "aws_ecr_repository" "app" {
   name                 = coalesce(var.ecr_repository_name, "${local.name}-core-api")
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -22,11 +22,12 @@ resource "aws_ecr_lifecycle_policy" "app" {
     rules = [
       {
         rulePriority = 1
-        description  = "Keep the most recent images"
+        description  = "Expire untagged image data"
         selection = {
-          tagStatus   = "any"
-          countType   = "imageCountMoreThan"
-          countNumber = var.ecr_image_retention_count
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 7
         }
         action = {
           type = "expire"
@@ -60,11 +61,12 @@ resource "aws_ecr_lifecycle_policy" "notification_worker" {
     rules = [
       {
         rulePriority = 1
-        description  = "Keep the most recent worker images"
+        description  = "Expire untagged worker image data"
         selection = {
-          tagStatus   = "any"
-          countType   = "imageCountMoreThan"
-          countNumber = var.ecr_image_retention_count
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 7
         }
         action = {
           type = "expire"

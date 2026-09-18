@@ -12,7 +12,6 @@ import io.plady.moimyeon.core.domain.room.RoomCursor
 import io.plady.moimyeon.core.domain.room.RoomSearchCondition
 import io.plady.moimyeon.core.domain.room.RoomService
 import io.plady.moimyeon.core.domain.room.RoomSortOrder
-import io.plady.moimyeon.core.domain.roomviewer.RoomApplicability
 import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -47,11 +46,8 @@ class RoomSearchFacade(
             .associateBy { it.id }
         val regions = catalogService.getRegionLabels(page.cards.mapNotNull { it.offlineSigunguId() }.toSet())
             .associateBy { it.sigunguId }
-        // 뷰어 관계도 한 페이지 분량을 일괄로 읽는다. 룸마다 물으면 표시명 조립과 같은 문제가 난다.
-        val viewers = roomViewerService.getViewers(
-            viewerMemberId,
-            page.cards.associate { it.room.id to RoomApplicability.of(it) },
-        )
+        // 뷰어 사실도 한 페이지 분량을 일괄로 읽는다. 룸마다 물으면 표시명 조립과 같은 문제가 난다.
+        val viewers = roomViewerService.getViewers(viewerMemberId, page.cards.map { it.room.id })
 
         return RoomsResponse(
             rooms = page.cards.map { card ->

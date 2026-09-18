@@ -1,0 +1,34 @@
+package io.plady.moimyeon.worker.room
+
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+
+class RoomAutoCompleteJobTest {
+    private val completer = mockk<OverdueRoomCompleter>()
+    private val clock = Clock.fixed(Instant.parse("2026-09-18T03:00:00Z"), ZoneOffset.UTC)
+    private val now = LocalDateTime.now(clock)
+    private val job = RoomAutoCompleteJob(completer, clock)
+
+    @Test
+    fun `한 룸의 실패가 다른 룸의 전이를 막지 않는다`() {
+        val failing = UUID.randomUUID()
+        val next = UUID.randomUUID()
+        every { completer.findOverdueRoomIds(any()) } returns listOf(failing, next)
+        every { completer.complete(failing, any()) } throws IllegalStateException("전이 실패")
+        every { completer.complete(next, any()) } returns true
+
+        job.run()
+
+        verify(exactly = 1) {
+            completer.findOverdueRoomIds(now)
+            completer.complete(next, now)
+        }
+    }
+}

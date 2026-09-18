@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetStatus
 import io.plady.moimyeon.core.domain.member.Email
 import io.plady.moimyeon.core.domain.member.Member
 import io.plady.moimyeon.core.domain.member.MemberService
@@ -13,7 +14,7 @@ import io.plady.moimyeon.core.domain.trust.ReceivedReview
 import io.plady.moimyeon.core.domain.trust.ReceivedReviewPage
 import io.plady.moimyeon.core.domain.trust.ReviewService
 import io.plady.moimyeon.core.domain.trust.ReviewTarget
-import io.plady.moimyeon.core.domain.trust.ReviewTargetStatus
+import io.plady.moimyeon.core.domain.trust.WrittenReview
 import io.plady.moimyeon.core.enums.MemberRole
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
@@ -35,27 +36,67 @@ class ReviewFacadeTest {
     private val anonymousReviewAuthorId = UUID.randomUUID()
 
     @Test
-    fun `후기 대상에 닉네임과 작성 진행 수를 조립한다`() {
+    fun `후기 대상과 작성한 후기를 조립해 대상별 작성 상태를 표시한다`() {
         val targets = listOf(
-            ReviewTarget(submittedTargetId, ReviewTargetStatus.SUBMITTED, reviewId = 31L),
-            ReviewTarget(withdrawnTargetId, ReviewTargetStatus.WRITABLE),
+            ReviewTarget(submittedTargetId),
+            ReviewTarget(withdrawnTargetId),
+        )
+        val writtenReviews = listOf(
+            WrittenReview(
+                id = 31L,
+                roomId = roomId,
+                targetMemberId = submittedTargetId,
+                tags = setOf("피드백이 구체적이에요"),
+                content = "약점을 정확히 알았어요.",
+                anonymous = true,
+            ),
         )
         every { reviewService.getTargets(authorMemberId, roomId) } returns targets
+        every { reviewService.getWrittenReviews(authorMemberId, roomId) } returns writtenReviews
         every { memberService.getMembers(listOf(submittedTargetId, withdrawnTargetId)) } returns listOf(
             member(submittedTargetId, "꼼꼼한 여우 12"),
         )
 
-        val result = facade.getTargets(authorMemberId, roomId)
+        val result = facade.getOverview(authorMemberId, roomId)
 
         assertThat(result.submittedCount).isEqualTo(1)
         assertThat(result.totalCount).isEqualTo(2)
-        assertThat(result.targets[0].reviewId).isEqualTo(31L)
         assertThat(result.targets[0].nickname).isEqualTo("꼼꼼한 여우 12")
+        assertThat(result.targets[0].status).isEqualTo(ReviewTargetStatus.SUBMITTED)
         assertThat(result.targets[1].nickname).isEqualTo("탈퇴한 회원")
+        assertThat(result.targets[1].status).isEqualTo(ReviewTargetStatus.WRITABLE)
+        assertThat(result.reviews.single().reviewId).isEqualTo(31L)
+        assertThat(result.reviews.single().targetMemberId).isEqualTo(submittedTargetId)
+        assertThat(result.reviews.single().tags).containsExactly("피드백이 구체적이에요")
+        assertThat(result.reviews.single().content).isEqualTo("약점을 정확히 알았어요.")
+        assertThat(result.reviews.single().anonymous).isTrue()
         verifyOrder {
             reviewService.getTargets(authorMemberId, roomId)
+            reviewService.getWrittenReviews(authorMemberId, roomId)
             memberService.getMembers(listOf(submittedTargetId, withdrawnTargetId))
         }
+    }
+
+    @Test
+    fun `현재 후기 대상에서 제외된 회원의 작성 후기도 룸별 후기 목록에는 유지한다`() {
+        val excludedTargetId = UUID.randomUUID()
+        val targets = listOf(ReviewTarget(submittedTargetId))
+        val writtenReviews = listOf(
+            writtenReview(id = 31L, targetMemberId = submittedTargetId),
+            writtenReview(id = 32L, targetMemberId = excludedTargetId),
+        )
+        every { reviewService.getTargets(authorMemberId, roomId) } returns targets
+        every { reviewService.getWrittenReviews(authorMemberId, roomId) } returns writtenReviews
+        every { memberService.getMembers(listOf(submittedTargetId)) } returns listOf(
+            member(submittedTargetId, "꼼꼼한 여우 12"),
+        )
+
+        val result = facade.getOverview(authorMemberId, roomId)
+
+        assertThat(result.submittedCount).isEqualTo(1)
+        assertThat(result.totalCount).isEqualTo(1)
+        assertThat(result.reviews.map { it.reviewId }).containsExactly(31L, 32L)
+        assertThat(result.reviews.map { it.targetMemberId }).containsExactly(submittedTargetId, excludedTargetId)
     }
 
     @Test
@@ -121,6 +162,17 @@ class ReviewFacadeTest {
             anonymous = anonymous,
             tags = setOf("피드백이 구체적이에요"),
             content = "약점을 정확히 알았어요.",
+        )
+    }
+
+    private fun writtenReview(id: Long, targetMemberId: UUID): WrittenReview {
+        return WrittenReview(
+            id = id,
+            roomId = roomId,
+            targetMemberId = targetMemberId,
+            tags = emptySet(),
+            content = "",
+            anonymous = true,
         )
     }
 

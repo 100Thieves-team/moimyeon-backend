@@ -5,8 +5,10 @@ import io.plady.moimyeon.core.api.controller.v1.request.SkipReviewRequest
 import io.plady.moimyeon.core.api.controller.v1.request.SubmitReviewRequest
 import io.plady.moimyeon.core.api.controller.v1.request.UpdateReviewRequest
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewOverviewResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewSubmittedResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.WrittenReviewResponse
 import io.plady.moimyeon.core.api.facade.ReviewFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
@@ -29,12 +31,22 @@ class ReviewController(
     private val reviewFacade: ReviewFacade,
     private val reviewService: ReviewService,
 ) {
+    @Deprecated("GET /v1/rooms/{roomId}/reviews/overview 사용")
     @GetMapping("/v1/rooms/{roomId}/review-targets")
     fun targets(
         @LoginMember currentMember: CurrentMember,
         @PathVariable roomId: UUID,
     ): ApiResponse<ReviewTargetsResponse> {
-        return ApiResponse.success(reviewFacade.getTargets(currentMember.id, roomId))
+        val overview = reviewFacade.getOverview(currentMember.id, roomId)
+        return ApiResponse.success(ReviewTargetsResponse.from(overview))
+    }
+
+    @GetMapping("/v1/rooms/{roomId}/reviews/overview")
+    fun overview(
+        @LoginMember currentMember: CurrentMember,
+        @PathVariable roomId: UUID,
+    ): ApiResponse<ReviewOverviewResponse> {
+        return ApiResponse.success(reviewFacade.getOverview(currentMember.id, roomId))
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -46,6 +58,14 @@ class ReviewController(
     ): ApiResponse<ReviewSubmittedResponse> {
         val reviewId = reviewService.submit(currentMember.id, roomId, request.toContent())
         return ApiResponse.success(ReviewSubmittedResponse.of(reviewId))
+    }
+
+    @GetMapping("/v1/reviews/{reviewId}")
+    fun review(
+        @LoginMember currentMember: CurrentMember,
+        @PathVariable reviewId: Long,
+    ): ApiResponse<WrittenReviewResponse> {
+        return ApiResponse.success(reviewFacade.getWrittenReview(currentMember.id, reviewId))
     }
 
     @PutMapping("/v1/reviews/{reviewId}")

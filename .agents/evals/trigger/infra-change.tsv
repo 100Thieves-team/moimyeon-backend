@@ -1,0 +1,8 @@
+p1	positive	yes	MOI-751 dev ECS 태스크 메모리 좀 늘려줘
+p2	positive	yes	deploy-aws 워크플로에 paths-ignore 추가해줘 MOI-752
+p3	positive	yes	MOI-753 live 환경에 WAF 룰 하나 추가해야 해
+n1	negative	no	도커로 로컬 띄워서 API 실호출 확인해줘
+n2	negative	no	MOI-754 구현해줘
+n3	negative	no	dev 서버가 지금 왜 죽었는지 봐줘
+b1	boundary	boundary	MOI-755 배포 시간 줄여보자
+b2	boundary	boundary	이 terraform plan 결과 좀 봐줘

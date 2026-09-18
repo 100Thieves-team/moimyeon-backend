@@ -148,10 +148,10 @@ class ReviewSubmissionManagerTest {
         val savedReview = mockk<ReviewEntity> { every { id } returns 1L }
         every { reviewRepository.saveAndFlush(capture(reviewSlot)) } returns savedReview
 
-        manager.submit(command.copy(tags = emptySet(), content = null))
+        manager.submit(command.copy(tags = emptySet(), content = ""))
 
         assertThat(reviewSlot.captured.tags()).isEmpty()
-        assertThat(reviewSlot.captured.content).isNull()
+        assertThat(reviewSlot.captured.content).isEmpty()
     }
 
     @Test

@@ -1,5 +1,5 @@
--- 로컬 개발(docker-compose MySQL) 전용 테스트 데이터 — initdb 로만 로드된다.
--- 앱 설정(sql.init)에 태우지 않으므로 테스트(H2)에는 절대 들어가지 않는다. dev/live 에도 실행하지 않는다.
+-- 사람용 로컬 테스트 데이터 — local(H2 sql.init)과 docker-compose MySQL initdb에서 로드한다.
+-- test 프로파일은 db-core.yml에서 seed.sql만 지정하므로 이 파일을 로드하지 않는다. dev/live에도 실행하지 않는다.
 -- 테스트 회원 1명: 소개 작성 완료 상태이며 figma 목업 닉네임('집요한 수달 07')을 점유해
 -- FE 가 닉네임 사용 불가(available=false) 플로우를 재현할 수 있다.
 

@@ -1,3 +1,28 @@
 logging.config: classpath:logback/logback-${spring.profiles.active}.xml
 
-management.otlp.metrics.export.enabled: false
+sentry:
+  enabled: ${SENTRY_ENABLED:false}
+  dsn: ${SENTRY_DSN:}
+  environment: ${DEPLOYMENT_ENVIRONMENT:${spring.profiles.active:local}}
+  release: ${APP_RELEASE:local}
+  send-default-pii: false
+  max-request-body-size: none
+  attach-server-name: false
+  attach-threads: false
+  enable-deduplication: true
+  enable-external-configuration: false
+  traces-sample-rate: 0.0
+  profiles-sample-rate: 0.0
+  trace-propagation-targets: []
+  max-breadcrumbs: 30
+  max-queue-size: 50
+  connection-timeout-millis: 1000
+  read-timeout-millis: 3000
+  logging:
+    enabled: ${SENTRY_ENABLED:false}
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+    minimum-level: info
+  logs:
+    # Only explicitly allowlisted event codes pass the before-send callback.
+    enabled: ${SENTRY_LOGS_ENABLED:false}

@@ -13,7 +13,7 @@ class ParticipationValidator(
     private val participationRepository: ParticipationRepository,
 ) {
     // 참여 슬롯 게이트(「룸 참여」 §4.1, MOI-427). 규칙은 ParticipationSlot 이 갖고 여기는 막기만 한다 —
-    // 같은 판정의 묻는 형태는 ParticipationFinder.hasAvailableSlot 이다(수락·자동 위임·룸 상세가 쓴다).
+    // 같은 판정의 묻는 형태는 ParticipationFinder.hasAvailableSlot(수락·자동 위임), 숫자는 getSlots(뷰어 사실)다.
     fun validateSlotAvailable(memberId: UUID) {
         val occupied = participationRepository.countOccupiedSlotsByMemberId(
             memberId,

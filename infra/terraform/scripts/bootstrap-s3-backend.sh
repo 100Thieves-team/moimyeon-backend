@@ -137,5 +137,7 @@ Next:
   terraform init
   terraform apply
 
-Then apply dev/live after copying shared outputs into their terraform.tfvars files.
+The reviewed non-secret environment sources are committed as shared.tfvars,
+dev.tfvars, and live.tfvars. Do not create terraform.tfvars. Use
+scripts/terraform-command.sh for official validate and plan commands.
 EOF

@@ -92,12 +92,13 @@ class RoomConfirmationTest {
         startAt: LocalDateTime,
         status: RoomStatus = RoomStatus.RECRUITING,
     ): RoomConfirmation {
-        val detail = RoomDetail(
-            room = room(min = min, startAt = startAt, status = status),
-            hostMemberId = UUID.randomUUID(),
+        return RoomConfirmation.of(
+            status = status,
+            startAt = startAt,
+            minCapacity = min,
             currentParticipants = currentParticipants,
+            now = now,
         )
-        return RoomConfirmation.of(detail, now)
     }
 
     private fun room(min: Int, startAt: LocalDateTime, status: RoomStatus): Room {

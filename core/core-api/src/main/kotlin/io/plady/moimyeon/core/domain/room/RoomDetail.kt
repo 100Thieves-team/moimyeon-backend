@@ -8,4 +8,7 @@ data class RoomDetail(
     val hostMemberId: UUID,
     val currentParticipants: Int,
     val pendingApplicationCount: Int = 0,
-)
+) {
+    // 모집중/마감은 저장값이 아니라 정원 충족 여부로 계산한다(핵심 결정). RoomCard 와 같은 파생이다.
+    val recruitStatus: RecruitStatus get() = RecruitStatus.of(currentParticipants, room.capacity)
+}

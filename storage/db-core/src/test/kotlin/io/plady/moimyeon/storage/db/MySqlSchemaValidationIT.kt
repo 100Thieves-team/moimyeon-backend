@@ -204,7 +204,7 @@ class MySqlSchemaValidationIT(
         private const val MYSQL_PORT = 3306
         private const val DATABASE_NAME = "core"
         private const val USERNAME = "moimyeon"
-        private const val PASSWORD = "moimyeon"
+        private const val PASSWORD = "moimyeon" // gate:allow-secret (Testcontainers 로컬 자격증명)
 
         @Container
         @JvmStatic

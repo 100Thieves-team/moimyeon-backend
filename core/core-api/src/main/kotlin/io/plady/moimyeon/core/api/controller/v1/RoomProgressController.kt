@@ -7,7 +7,6 @@ import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressStartRespon
 import io.plady.moimyeon.core.api.facade.RoomProgressFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
-import io.plady.moimyeon.core.domain.progress.RoomProgressService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,7 +17,6 @@ import java.util.UUID
 
 @RestController
 class RoomProgressController(
-    private val progressService: RoomProgressService,
     private val progressFacade: RoomProgressFacade,
 ) {
     @PostMapping("/v1/room-progresses")
@@ -26,8 +24,7 @@ class RoomProgressController(
         @LoginMember currentMember: CurrentMember,
         @RequestBody request: StartRoomProgressRequest,
     ): ApiResponse<RoomProgressStartResponse> {
-        val result = progressService.start(currentMember.id, request.roomId, request.toAttendances())
-        return ApiResponse.success(RoomProgressStartResponse.from(result))
+        return ApiResponse.success(progressFacade.start(currentMember.id, request.roomId, request.toAttendances()))
     }
 
     @GetMapping("/v1/progress-rails")
@@ -43,8 +40,6 @@ class RoomProgressController(
         @LoginMember currentMember: CurrentMember,
         @RequestParam roomId: UUID,
     ): ApiResponse<AttendanceResponse> {
-        return ApiResponse.success(
-            AttendanceResponse.from(progressService.getMyAttendance(currentMember.id, roomId)),
-        )
+        return ApiResponse.success(progressFacade.getMyAttendance(currentMember.id, roomId))
     }
 }

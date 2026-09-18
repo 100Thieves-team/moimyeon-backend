@@ -115,8 +115,8 @@ class RoomController(
         )
     }
 
-    // GET /v1/rooms/{roomId} — 룸 단건 조회. 룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자를 반환한다.
-    // 회사·공고·직무 표시명, 방장 프로필/신뢰 지표, 탐색 목록 enrich 는 별도 이슈다(docs/room-progress.md).
+    // GET /v1/rooms/{roomId} — 룸 단건 조회. 룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다.
+    // 방장 프로필/신뢰 지표 enrich 는 별도 이슈다.
     @GetMapping("/v1/rooms/{roomId}")
     fun detail(
         @OptionalLoginMember currentMember: CurrentMember?,

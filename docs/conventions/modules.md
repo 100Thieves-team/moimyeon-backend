@@ -9,7 +9,7 @@ moimyeon/
 ├── core/
 │   ├── core-batch       배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum        도메인 전역 공유 Enum 만 격리 (최하위 모듈)
-│   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, 현재 notification 패키지)
+│   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, notification·room 패키지)
 │   └── core-api         API 서버 실행 모듈. 도메인 + api + 영역이 소유하는 외부 연동 계약
 ├── security/
 │   └── security-core    Spring Security 필터 체인·JWT·OAuth (인증 기술 격벽)
@@ -18,7 +18,7 @@ moimyeon/
 │   ├── object-storage   AWS SDK S3 객체 저장·조회 격벽
 │   └── redis-core       Redis 기반 저장·동기화 기술 격벽
 ├── clients/
-│   ├── bedrock-client   Spring AI · Bedrock 외부 모델 클라이언트
+│   ├── bedrock-client   PDF 텍스트 전처리 · Spring AI · Bedrock 외부 모델 클라이언트
 │   ├── client-example   외부 HTTP 클라이언트 (HTTP Interface)
 │   ├── email-client      SES 기본 발송과 Gmail 폴백 격벽
 │   └── web-push-client   Firebase Admin SDK 기반 FCM 웹 푸시 격벽
@@ -52,7 +52,12 @@ moimyeon/
 
 ## core-worker: 백그라운드 작업 조립
 
-- 현재는 `worker.notification` 패키지만 두고 알림 작업을 실행한다.
+- `worker.notification`은 알림을 처리하고 `worker.room`은 진행 시작 후 8시간이 지난 룸을 10분마다 자동 종료한다.
+- 자동 종료는 `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. local은 비활성이다.
+- 스케줄러 풀은 2개 스레드로 구성해 알림 전송과 자동 종료가 서로를 막지 않게 한다.
+- 자동 종료는 API와 같은 룸 행 잠금을 사용하며, 상태 변경과 SYSTEM 로그를 하나의 트랜잭션으로 저장한다. 작업의 중복 실행은 이미 완료된 룸을 건너뛴다.
+- 현재 배포 경로의 API → worker 순서를 유지한다. V27은 구버전 INSERT 호환성을 위해 handler_type 기본값 MEMBER를 유지한다.
+- core-batch에는 자동 종료 작업을 등록하지 않는다. dev worker는 실행 중이며 live는 worker desired count가 0이므로 활성화 시 자동 종료도 시작된다.
 - `NotificationMessageHandler` 한 클래스가 `EventType`에 따라 Stream payload와 채널을 검증하고 수신자·제목·본문·이동 경로를
   담은 채널별 `Notification`으로 변환한다. 이벤트별 Handler 인터페이스와 구현체는 두지 않는다.
 - 이벤트별 발송 경로는 `core-enum`의 `EventType.notificationChannels`가 소유한다. 새 이벤트를 추가할 때 이벤트 종류와
@@ -219,11 +224,17 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 
 - core-api의 이력서 영역이 `ResumeSummaryGenerator` 계약과 실패 의미를 소유한다.
 - `bedrock-client`는 Spring AI, 모델 제공자와 프롬프트를 소유하고 이 계약을 구현한다.
-- 현재 구현은 서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필에 PDF 바이트를
-  문서 입력으로 전달한다. Sonnet 5는 현재 서울 In-Region 추론을 지원하지 않는다.
-- 글로벌 추론 프로필은 요청을 다른 AWS 상용 리전에서 처리할 수 있으므로 한국 내 처리만을 보장하지 않는다.
-  이력서에는 개인정보가 포함될 수 있어 운영 활성화 전에 국외 처리 고지, 적법한 처리 근거, 보존·삭제 기준과
-  조직의 개인정보·보안 승인을 확정해야 한다. 이 조건을 충족하지 못하면 글로벌 프로필을 사용하지 않는다.
+- 현재 구현은 PDFBox로 이력서 텍스트를 추출해 NFC로 정규화하고 명백히 깨진 문자를 거부한 뒤,
+  이메일·한국 유·무선 전화번호·주민등록번호, 대표 도로명 주소와 라벨이 있는 학번을 입출력에서 마스킹한다.
+  OCR이나 PDF 원본 fallback은 사용하지 않는다.
+- 검증·마스킹한 텍스트만 서울 리전 Bedrock Converse 엔드포인트의 Claude 3.5 Sonnet In-Region direct model로 전달한다.
+- 응답은 한국어 1~2문장이고 평가 표현이 없어야 한다. 규칙을 어기면 최대 한 번 다시 생성하고 재차 위반하면
+  `ResumeSummaryGenerationException`으로 처리한다.
+- PDF는 최대 50페이지·추출 문자열 60,000자로 제한한다. 서비스 시작 시 만든 45초 monotonic deadline을
+  S3 저장·조회와 생성기가 공유한다. S3 요청은 설정 상한과 남은 시간 중 짧은 timeout을 사용하고, PDFBox는
+  content stream 연산 중 deadline을 확인한다. 회당 20초 모델 호출은 마칠 시간이 남아 있을 때만 시작한다.
+- 표·다단 레이아웃의 줄·순서 변화는 모델이 문맥으로 해석하도록 허용한다. 텍스트가 없거나 이미지 전용·암호화·손상 PDF는
+  `ResumeSummaryGenerationException`으로 거부한다.
 - `Resume`이나 DB 식별자를 알지 않으며 `PDF 바이트 → 요약문` 계약만 구현한다.
 - `core-api`는 이 모듈을 `runtimeOnly`로 조립하므로 특정 AI 구현에 컴파일 의존하지 않는다.
 - `bedrock-client`는 `ResumeSummaryGenerator` 계약 구현을 위해 core-api를 compile-time에 의존한다.

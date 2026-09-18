@@ -109,7 +109,7 @@ class ReviewSubmissionManagerIT(
                 authorMemberId = authorMemberId,
                 targetMemberId = targetMemberId,
                 tags = emptySet(),
-                content = null,
+                content = "",
                 anonymous = true,
             ),
         )
@@ -128,7 +128,7 @@ class ReviewSubmissionManagerIT(
                     authorMemberId = authorMemberId,
                     targetMemberId = targetMemberId,
                     tags = emptySet(),
-                    content = null,
+                    content = "",
                     anonymous = true,
                 ),
             )
@@ -220,7 +220,7 @@ class ReviewSubmissionManagerIT(
             },
         ).hasSize(1)
         assertThat(targetFinder.getTargets(authorMemberId, roomId)).containsExactly(
-            ReviewTarget(targetMemberId, ReviewTargetStatus.WRITABLE),
+            ReviewTarget(targetMemberId),
         )
     }
 
@@ -239,7 +239,7 @@ class ReviewSubmissionManagerIT(
                 authorMemberId = authorMemberId,
                 targetMemberId = remainingTargetMemberId,
                 tags = emptySet(),
-                content = null,
+                content = "",
                 anonymous = true,
             ),
         )
@@ -249,7 +249,7 @@ class ReviewSubmissionManagerIT(
                 authorMemberId = authorMemberId,
                 targetMemberId = targetMemberId,
                 tags = emptySet(),
-                content = null,
+                content = "",
                 anonymous = true,
             ),
         )

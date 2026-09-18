@@ -22,12 +22,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.context.annotation.Import
 import java.time.LocalDateTime
 import java.util.UUID
 
 // 생성 경로의 참여 슬롯 게이트(MOI-446)와 판정 순서(멱등 → 슬롯 → 활성3, MOI-447 D1-1).
 // 슬롯 규칙 자체(어느 상태를 세나, 방장 포함)는 ParticipationFinderIT 가 본다 — 여기는
 // 생성이 그 판정을 타는지, 그리고 어느 순서로 타는지만 본다.
+@Import(FixedClockTestConfiguration::class)
 class ParticipationSlotCreationIT(
     private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,

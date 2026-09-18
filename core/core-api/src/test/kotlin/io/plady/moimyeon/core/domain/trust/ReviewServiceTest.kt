@@ -19,6 +19,7 @@ class ReviewServiceTest {
     private val skipRecorder = mockk<ReviewSkipRecorder>()
     private val targetFinder = mockk<ReviewTargetFinder>()
     private val receivedReviewFinder = mockk<ReceivedReviewFinder>()
+    private val writtenReviewFinder = mockk<WrittenReviewFinder>()
     private val service = ReviewService(
         eligibilityValidator,
         submissionManager,
@@ -26,6 +27,7 @@ class ReviewServiceTest {
         skipRecorder,
         targetFinder,
         receivedReviewFinder,
+        writtenReviewFinder,
     )
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -141,16 +143,6 @@ class ReviewServiceTest {
     @Test
     fun `동시 제출의 유니크 충돌도 중복 후기 오류로 전파한다`() {
         assertSubmissionFails(CoreErrorType.REVIEW_DUPLICATED)
-    }
-
-    @Test
-    fun `제출된 후기는 작성자에게 즉시 제출됨으로 표시한다`() {
-        val targets = listOf(ReviewTarget(targetMemberId, ReviewTargetStatus.SUBMITTED))
-        every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
-
-        val result = service.getTargets(authorMemberId, roomId)
-
-        assertThat(result.single().status).isEqualTo(ReviewTargetStatus.SUBMITTED)
     }
 
     @Test
@@ -333,10 +325,48 @@ class ReviewServiceTest {
     }
 
     @Test
+    fun `작성자는 리뷰 id로 자신이 작성한 후기를 조회한다`() {
+        val writtenReview = WrittenReview(
+            id = 1L,
+            roomId = roomId,
+            targetMemberId = targetMemberId,
+            tags = setOf("피드백이 구체적이에요"),
+            content = "개선할 부분을 명확히 알려주셨어요.",
+            anonymous = true,
+        )
+        every { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) } returns writtenReview
+
+        val result = service.getWrittenReview(authorMemberId, 1L)
+
+        assertThat(result).isEqualTo(writtenReview)
+        verify(exactly = 1) { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) }
+    }
+
+    @Test
+    fun `작성자는 룸에 작성한 후기를 모두 조회한다`() {
+        val reviews = listOf(
+            WrittenReview(
+                id = 1L,
+                roomId = roomId,
+                targetMemberId = targetMemberId,
+                tags = setOf("피드백이 구체적이에요"),
+                content = "개선할 부분을 명확히 알려주셨어요.",
+                anonymous = true,
+            ),
+        )
+        every { writtenReviewFinder.getWrittenReviews(authorMemberId, roomId) } returns reviews
+
+        val result = service.getWrittenReviews(authorMemberId, roomId)
+
+        assertThat(result).isSameAs(reviews)
+        verify(exactly = 1) { writtenReviewFinder.getWrittenReviews(authorMemberId, roomId) }
+    }
+
+    @Test
     fun `후기 작성 대상은 완료 룸 출석자 중 본인을 제외한 참여자다`() {
         val targets = listOf(
-            ReviewTarget(targetMemberId, ReviewTargetStatus.WRITABLE),
-            ReviewTarget(UUID.randomUUID(), ReviewTargetStatus.WRITABLE),
+            ReviewTarget(targetMemberId),
+            ReviewTarget(UUID.randomUUID()),
         )
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
 
@@ -347,22 +377,9 @@ class ReviewServiceTest {
     }
 
     @Test
-    fun `이미 제출한 대상자는 제출됨이고 나머지는 작성 가능으로 표시한다`() {
-        val targets = listOf(
-            ReviewTarget(targetMemberId, ReviewTargetStatus.SUBMITTED),
-            ReviewTarget(UUID.randomUUID(), ReviewTargetStatus.WRITABLE),
-        )
-        every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
-
-        val result = service.getTargets(authorMemberId, roomId)
-
-        assertThat(result).containsExactlyElementsOf(targets)
-    }
-
-    @Test
     fun `건너뛴 대상자는 재진입했을 때 작성 가능으로 표시한다`() {
         val skip = skipCommand()
-        val targets = listOf(ReviewTarget(targetMemberId, ReviewTargetStatus.WRITABLE))
+        val targets = listOf(ReviewTarget(targetMemberId))
         givenEligible(skip)
         every { skipRecorder.record(skip) } just Runs
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
@@ -381,7 +398,7 @@ class ReviewServiceTest {
             authorMemberId = authorMemberId,
             targetMemberId = targetMemberId,
             tags = emptySet(),
-            content = null,
+            content = "",
             anonymous = true,
         )
     }

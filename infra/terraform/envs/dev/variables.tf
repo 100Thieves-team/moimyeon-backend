@@ -16,11 +16,6 @@ variable "github_repository" {
   default     = "100Thieves-team/moimyeon-backend"
 }
 
-variable "github_oidc_provider_arn" {
-  description = "Shared GitHub Actions OIDC provider ARN (from envs/shared output, or the existing account provider)."
-  type        = string
-}
-
 variable "route53_zone_id" {
   description = "Route 53 hosted zone ID. Leave null for external (Cloudflare) DNS."
   type        = string
@@ -86,15 +81,16 @@ variable "db_username" {
   default     = "moimyeon_admin"
 }
 
+variable "db_master_username" {
+  description = "Optional RDS master username when it differs from the application DB username."
+  type        = string
+  default     = null
+}
+
 variable "oauth_google_client_id" {
   description = "Google OAuth client ID (required to boot)."
   type        = string
-}
-
-variable "oauth_google_client_secret" {
-  description = "Google OAuth client secret (required to boot)."
-  type        = string
-  sensitive   = true
+  default     = null
 }
 
 variable "notification_worker_desired_count" {
@@ -136,4 +132,28 @@ variable "tags" {
   description = "Extra tags."
   type        = map(string)
   default     = {}
+}
+
+variable "enable_monitoring" {
+  description = "Enable dev monitoring after the Grafana password and both Sentry DSNs have been pre-created in SSM."
+  type        = bool
+  default     = false
+}
+
+variable "monitoring_instance_type" {
+  description = "Dedicated x86_64 monitoring EC2 type."
+  type        = string
+  default     = "t3.small"
+}
+
+variable "monitoring_data_volume_size" {
+  description = "Retained monitoring gp3 EBS volume size in GiB."
+  type        = number
+  default     = 20
+}
+
+variable "monitoring_ami_id" {
+  description = "Optional pinned Amazon Linux 2023 x86_64 monitoring AMI."
+  type        = string
+  default     = null
 }

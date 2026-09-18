@@ -7,5 +7,5 @@ data class ReceivedReview(
     val authorMemberId: UUID,
     val anonymous: Boolean,
     val tags: Set<String>,
-    val content: String?,
+    val content: String,
 )

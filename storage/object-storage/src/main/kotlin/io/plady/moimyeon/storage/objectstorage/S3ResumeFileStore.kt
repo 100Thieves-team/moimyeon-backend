@@ -3,6 +3,8 @@ package io.plady.moimyeon.storage.objectstorage
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFileStorageException
 import io.plady.moimyeon.core.domain.resume.ResumeFileStore
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryDeadline
+import io.plady.moimyeon.core.domain.resume.ResumeSummaryTimeSource
 import io.plady.moimyeon.core.domain.resume.ResumeUpload
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -18,14 +20,16 @@ import java.util.UUID
 internal class S3ResumeFileStore(
     private val s3Client: S3Client,
     private val properties: S3ObjectStorageProperties,
+    private val timeSource: ResumeSummaryTimeSource,
 ) : ResumeFileStore {
-    override fun store(memberId: UUID, upload: ResumeUpload): ResumeFile {
+    override fun store(memberId: UUID, upload: ResumeUpload, deadline: ResumeSummaryDeadline): ResumeFile {
         val key = "resumes/$memberId/${UUID.randomUUID()}.pdf"
         val request = PutObjectRequest.builder()
             .bucket(properties.bucket)
             .key(key)
             .contentType(upload.contentType)
             .contentLength(upload.content.size.toLong())
+            .overrideConfiguration { it.apiCallTimeout(requestTimeout(deadline)) }
             .build()
 
         try {
@@ -42,15 +46,24 @@ internal class S3ResumeFileStore(
         )
     }
 
-    override fun read(file: ResumeFile): ByteArray {
+    override fun read(file: ResumeFile, deadline: ResumeSummaryDeadline): ByteArray {
         val request = GetObjectRequest.builder()
             .bucket(properties.bucket)
             .key(file.key)
+            .overrideConfiguration { it.apiCallTimeout(requestTimeout(deadline)) }
             .build()
         return try {
             s3Client.getObjectAsBytes(request).asByteArray()
         } catch (exception: SdkException) {
             throw ResumeFileStorageException(exception)
         }
+    }
+
+    private fun requestTimeout(deadline: ResumeSummaryDeadline): java.time.Duration {
+        val remaining = deadline.remainingDuration(timeSource.nanoTime())
+        if (remaining.isZero || remaining.isNegative) {
+            throw ResumeFileStorageException(IllegalStateException("Resume summary deadline exceeded"))
+        }
+        return minOf(remaining, properties.apiCallTimeout)
     }
 }

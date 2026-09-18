@@ -8,14 +8,16 @@ import io.mockk.verify
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReceivedReviewsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewOverviewResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewOverviewWrittenReviewResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetResponse
-import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetsResponse
+import io.plady.moimyeon.core.api.controller.v1.response.ReviewTargetStatus
+import io.plady.moimyeon.core.api.controller.v1.response.WrittenReviewResponse
 import io.plady.moimyeon.core.api.facade.ReviewFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
 import io.plady.moimyeon.core.domain.trust.ReviewService
 import io.plady.moimyeon.core.domain.trust.ReviewSkipContent
 import io.plady.moimyeon.core.domain.trust.ReviewSubmissionContent
-import io.plady.moimyeon.core.domain.trust.ReviewTargetStatus
 import io.plady.moimyeon.core.domain.trust.ReviewUpdateContent
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -48,15 +50,24 @@ class ReviewControllerTest : RestDocsTest() {
     private val writableTargetId = UUID.fromString("00000000-0000-0000-0000-000000000003")
     private val principal = Principal { memberId.toString() }
 
-    private val targetsSummary = "후기 작성 대상 조회"
-    private val targetsDescription =
-        "완료 룸의 출석자 중 본인을 제외한 후기 대상과 제출 진행 상태를 조회한다. " +
+    private val overviewSummary = "룸별 후기 작성 개요 조회"
+    private val overviewDescription =
+        "완료 룸의 출석자 중 본인을 제외한 후기 대상, 대상별 작성 상태와 작성자가 해당 룸에 제출한 후기를 조회한다. " +
             "미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002로 응답한다."
+    private val deprecatedTargetsSummary = "후기 작성 대상 조회 (Deprecated)"
+    private val deprecatedTargetsDescription =
+        "Deprecated: GET /v1/rooms/{roomId}/reviews/overview로 이전한다. " +
+            "기존 클라이언트의 전환 기간에만 후기 대상과 제출 진행 상태를 이전 응답 계약으로 제공한다."
     private val submitSummary = "후기 제출"
     private val submitDescription =
         "완료 룸의 출석자가 다른 출석자에게 익명 여부, 선택 태그와 선택 텍스트 후기를 제출한다. " +
             "잘못된 태그 E400, 미인증 E1102, 룸 없음 E1405, 완료 전 E2001, 작성자 결석 E2002, 대상 결석 E2003, " +
             "본인 대상 E2004, 중복 제출 E2005로 응답한다."
+    private val getReviewSummary = "작성한 후기 조회"
+    private val getReviewDescription =
+        "후기 작성자가 리뷰 id로 자신이 작성한 후기의 태그, 텍스트, 익명 여부를 조회한다. " +
+            "수정 화면 진입 시 기존 내용을 채우는 용도이며 공개 기준 시각과 무관하게 조회할 수 있다. " +
+            "미인증 E1102, 후기 없음 E2006, 작성자 불일치 E2007로 응답한다."
     private val updateSummary = "후기 수정"
     private val updateDescription =
         "후기 작성자가 공개 기준 시각 전까지 태그와 텍스트를 교체한다. " +
@@ -87,25 +98,59 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `완료 룸의 후기 대상과 작성 진행 수를 조회한다`() {
-        every { reviewFacade.getTargets(memberId, roomId) } returns ReviewTargetsResponse(
-            submittedCount = 1,
-            totalCount = 2,
-            targets = listOf(
-                ReviewTargetResponse(submittedTargetId, "꼼꼼한 여우 12", ReviewTargetStatus.SUBMITTED, 31L),
-                ReviewTargetResponse(writableTargetId, "성실한 사슴 03", ReviewTargetStatus.WRITABLE, null),
-            ),
+    fun `완료 룸의 후기 작성 개요를 조회한다`() {
+        every { reviewFacade.getOverview(memberId, roomId) } returns reviewOverviewResponse()
+
+        mockMvc.perform(
+            get("/v1/rooms/{roomId}/reviews/overview", roomId).principal(principal),
         )
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "getReviewOverview",
+                    overviewSummary,
+                    overviewDescription,
+                    pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.submittedCount").type(JsonFieldType.NUMBER).description("제출 완료한 대상 수"),
+                        fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("후기 작성 대상 수"),
+                        fieldWithPath("data.targets").type(JsonFieldType.ARRAY).description("후기 작성 대상"),
+                        fieldWithPath("data.targets[].memberId").type(JsonFieldType.STRING).description("대상 회원 id"),
+                        fieldWithPath("data.targets[].nickname").type(JsonFieldType.STRING).description("대상 닉네임"),
+                        fieldWithPath("data.targets[].status").type(JsonFieldType.STRING)
+                            .description("작성 상태 (WRITABLE | SUBMITTED)"),
+                        fieldWithPath("data.reviews").type(JsonFieldType.ARRAY)
+                            .description("작성자가 이 룸에 제출한 후기 (빈 배열 가능)"),
+                        fieldWithPath("data.reviews[].reviewId").type(JsonFieldType.NUMBER)
+                            .description("후기 id"),
+                        fieldWithPath("data.reviews[].targetMemberId").type(JsonFieldType.STRING)
+                            .description("후기 대상 회원 id"),
+                        fieldWithPath("data.reviews[].tags").type(JsonFieldType.ARRAY)
+                            .description("평가 태그 (빈 배열 가능)"),
+                        fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING)
+                            .description("텍스트 후기 (작성하지 않았으면 빈 문자열)"),
+                        fieldWithPath("data.reviews[].anonymous").type(JsonFieldType.BOOLEAN)
+                            .description("작성자 닉네임 비공개 여부"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `deprecated 후기 대상 조회는 이전 응답 계약을 유지한다`() {
+        every { reviewFacade.getOverview(memberId, roomId) } returns reviewOverviewResponse()
 
         mockMvc.perform(
             get("/v1/rooms/{roomId}/review-targets", roomId).principal(principal),
         )
             .andExpect(status().isOk)
             .andDo(
-                documentApi(
+                documentDeprecatedApi(
                     "getReviewTargets",
-                    targetsSummary,
-                    targetsDescription,
+                    deprecatedTargetsSummary,
+                    deprecatedTargetsDescription,
                     pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
@@ -196,7 +241,7 @@ class ReviewControllerTest : RestDocsTest() {
         val content = ReviewSubmissionContent(
             targetMemberId = writableTargetId,
             tags = emptySet(),
-            content = null,
+            content = "",
             anonymous = true,
         )
         every { reviewService.submit(memberId, roomId, content) } returns 32L
@@ -210,6 +255,82 @@ class ReviewControllerTest : RestDocsTest() {
             .andExpect(status().isCreated)
 
         verify(exactly = 1) { reviewService.submit(memberId, roomId, content) }
+    }
+
+    @Test
+    fun `작성자가 리뷰 id로 자신이 작성한 후기를 조회한다`() {
+        every { reviewFacade.getWrittenReview(memberId, 31L) } returns WrittenReviewResponse(
+            reviewId = 31L,
+            roomId = roomId,
+            targetMemberId = submittedTargetId,
+            targetNickname = "성실한 사슴 03",
+            tags = listOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+            content = "꼬리질문이 날카로워서 실전 같았어요.",
+            anonymous = false,
+        )
+
+        mockMvc.perform(get("/v1/reviews/{reviewId}", 31L).principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "getReview",
+                    getReviewSummary,
+                    getReviewDescription,
+                    pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data.reviewId").type(JsonFieldType.NUMBER).description("후기 id"),
+                        fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("후기가 작성된 룸 id"),
+                        fieldWithPath("data.targetMemberId").type(JsonFieldType.STRING).description("후기 대상 회원 id"),
+                        fieldWithPath("data.targetNickname").type(JsonFieldType.STRING)
+                            .description("후기 대상 회원 닉네임. 탈퇴한 회원은 대체 표기로 내려간다"),
+                        fieldWithPath("data.tags").type(JsonFieldType.ARRAY).description("평가 태그 (빈 배열 가능)"),
+                        fieldWithPath("data.content").type(JsonFieldType.STRING)
+                            .description("한 줄 후기 (작성하지 않았으면 빈 문자열)"),
+                        fieldWithPath("data.anonymous").type(JsonFieldType.BOOLEAN).description("익명 작성 여부"),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+
+        verify(exactly = 1) { reviewFacade.getWrittenReview(memberId, 31L) }
+    }
+
+    @Test
+    fun `인증 없이 작성한 후기를 조회하면 E1102`() {
+        mockMvc.perform(get("/v1/reviews/{reviewId}", 31L))
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                documentApi(
+                    "getReview-e1102",
+                    getReviewSummary,
+                    getReviewDescription,
+                    pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                    errorResponseFields(),
+                ),
+            )
+    }
+
+    @Test
+    fun `작성한 후기 조회의 도메인 오류를 응답한다`() {
+        listOf(
+            CoreErrorType.REVIEW_NOT_FOUND,
+            CoreErrorType.REVIEW_FORBIDDEN,
+        ).forEach { errorType ->
+            every { reviewFacade.getWrittenReview(memberId, 31L) } throws CoreException(errorType)
+
+            mockMvc.perform(get("/v1/reviews/{reviewId}", 31L).principal(principal))
+                .andExpect(status().`is`(errorType.status.value()))
+                .andDo(
+                    documentApi(
+                        "getReview-${errorType.code.name.lowercase()}",
+                        getReviewSummary,
+                        getReviewDescription,
+                        pathParameters(parameterWithName("reviewId").description("조회할 후기 id")),
+                        errorResponseFields(),
+                    ),
+                )
+        }
     }
 
     @Test
@@ -310,8 +431,7 @@ class ReviewControllerTest : RestDocsTest() {
 
         mockMvc.perform(
             get("/v1/members/me/received-reviews")
-                .principal(principal)
-                .param("size", "20"),
+                .principal(principal),
         )
             .andExpect(status().isOk)
             .andDo(
@@ -319,12 +439,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId").optional()
-                            .description("직전 페이지 마지막 후기 id (선택). 첫 페이지는 생략한다"),
-                        parameterWithName("size").optional()
-                            .description("페이지 크기 (1~50, 기본 20). 범위 밖이면 기본값으로 조회한다"),
-                    ),
+                    receivedReviewQueryParameters(),
                     receivedReviewResponseFields(),
                 ),
             )
@@ -340,7 +455,7 @@ class ReviewControllerTest : RestDocsTest() {
                     reviewId = 31L,
                     authorNickname = "꼼꼼한 여우 12",
                     tags = listOf("시간을 잘 지켜요"),
-                    content = null,
+                    content = "",
                 ),
             ),
             totalCount = 1,
@@ -359,12 +474,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews-default-size",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId")
-                            .description("직전 페이지 마지막 후기 id"),
-                        parameterWithName("size")
-                            .description("페이지 크기. 허용 범위 1~50 밖이면 기본값 20을 사용한다"),
-                    ),
+                    receivedReviewQueryParameters(),
                     receivedReviewResponseFields(),
                 ),
             )
@@ -385,9 +495,7 @@ class ReviewControllerTest : RestDocsTest() {
                     "getReceivedReviews-e400",
                     receivedSummary,
                     receivedDescription,
-                    queryParameters(
-                        parameterWithName("lastReviewId").description("양수가 아닌 마지막 후기 id"),
-                    ),
+                    receivedReviewQueryParameters(),
                     errorResponseFields(),
                 ),
             )
@@ -396,14 +504,29 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `인증 없이 후기 작성 대상을 조회하면 E1102`() {
-        mockMvc.perform(get("/v1/rooms/{roomId}/review-targets", roomId))
+    fun `인증 없이 룸별 후기 작성 개요를 조회하면 E1102`() {
+        mockMvc.perform(get("/v1/rooms/{roomId}/reviews/overview", roomId))
             .andExpect(status().isUnauthorized)
             .andDo(
                 documentApi(
+                    "getReviewOverview-e1102",
+                    overviewSummary,
+                    overviewDescription,
+                    pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
+                    errorResponseFields(),
+                ),
+            )
+    }
+
+    @Test
+    fun `인증 없이 deprecated 후기 작성 대상을 조회하면 E1102`() {
+        mockMvc.perform(get("/v1/rooms/{roomId}/review-targets", roomId))
+            .andExpect(status().isUnauthorized)
+            .andDo(
+                documentDeprecatedApi(
                     "getReviewTargets-e1102",
-                    targetsSummary,
-                    targetsDescription,
+                    deprecatedTargetsSummary,
+                    deprecatedTargetsDescription,
                     pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
                     errorResponseFields(),
                 ),
@@ -483,21 +606,44 @@ class ReviewControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `후기 작성 대상 조회의 도메인 오류를 응답한다`() {
+    fun `룸별 후기 작성 개요 조회의 도메인 오류를 응답한다`() {
         listOf(
             CoreErrorType.ROOM_NOT_FOUND,
             CoreErrorType.REVIEW_NOT_AVAILABLE,
             CoreErrorType.REVIEW_AUTHOR_NOT_ATTENDED,
         ).forEach { errorType ->
-            every { reviewFacade.getTargets(memberId, roomId) } throws CoreException(errorType)
+            every { reviewFacade.getOverview(memberId, roomId) } throws CoreException(errorType)
+
+            mockMvc.perform(get("/v1/rooms/{roomId}/reviews/overview", roomId).principal(principal))
+                .andExpect(status().`is`(errorType.status.value()))
+                .andDo(
+                    documentApi(
+                        "getReviewOverview-${errorType.code.name.lowercase()}",
+                        overviewSummary,
+                        overviewDescription,
+                        pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
+                        errorResponseFields(),
+                    ),
+                )
+        }
+    }
+
+    @Test
+    fun `deprecated 후기 작성 대상 조회의 도메인 오류를 응답한다`() {
+        listOf(
+            CoreErrorType.ROOM_NOT_FOUND,
+            CoreErrorType.REVIEW_NOT_AVAILABLE,
+            CoreErrorType.REVIEW_AUTHOR_NOT_ATTENDED,
+        ).forEach { errorType ->
+            every { reviewFacade.getOverview(memberId, roomId) } throws CoreException(errorType)
 
             mockMvc.perform(get("/v1/rooms/{roomId}/review-targets", roomId).principal(principal))
                 .andExpect(status().`is`(errorType.status.value()))
                 .andDo(
-                    documentApi(
+                    documentDeprecatedApi(
                         "getReviewTargets-${errorType.code.name.lowercase()}",
-                        targetsSummary,
-                        targetsDescription,
+                        deprecatedTargetsSummary,
+                        deprecatedTargetsDescription,
                         pathParameters(parameterWithName("roomId").description("완료된 룸 id (UUID)")),
                         errorResponseFields(),
                     ),
@@ -541,7 +687,7 @@ class ReviewControllerTest : RestDocsTest() {
             CoreErrorType.REVIEW_SELF_NOT_ALLOWED,
             CoreErrorType.REVIEW_DUPLICATED,
         ).forEach { errorType ->
-            val content = ReviewSubmissionContent(writableTargetId, emptySet(), null, anonymous = true)
+            val content = ReviewSubmissionContent(writableTargetId, emptySet(), "", anonymous = true)
             every { reviewService.submit(memberId, roomId, content) } throws CoreException(errorType)
 
             mockMvc.perform(
@@ -596,7 +742,7 @@ class ReviewControllerTest : RestDocsTest() {
             CoreErrorType.REVIEW_FORBIDDEN,
             CoreErrorType.REVIEW_EDIT_WINDOW_CLOSED,
         ).forEach { errorType ->
-            val content = ReviewUpdateContent(emptySet(), null)
+            val content = ReviewUpdateContent(emptySet(), "")
             every { reviewService.update(memberId, 31L, content) } throws CoreException(errorType)
 
             mockMvc.perform(
@@ -686,6 +832,33 @@ class ReviewControllerTest : RestDocsTest() {
             )
     }
 
+    private fun reviewOverviewResponse(): ReviewOverviewResponse {
+        return ReviewOverviewResponse(
+            submittedCount = 1,
+            totalCount = 2,
+            targets = listOf(
+                ReviewTargetResponse(submittedTargetId, "꼼꼼한 여우 12", ReviewTargetStatus.SUBMITTED),
+                ReviewTargetResponse(writableTargetId, "성실한 사슴 03", ReviewTargetStatus.WRITABLE),
+            ),
+            reviews = listOf(
+                ReviewOverviewWrittenReviewResponse(
+                    reviewId = 31L,
+                    targetMemberId = submittedTargetId,
+                    tags = listOf("시간을 잘 지켜요", "피드백이 구체적이에요"),
+                    content = "꼬리질문이 날카로워서 실전 같았어요.",
+                    anonymous = true,
+                ),
+            ),
+        )
+    }
+
+    private fun receivedReviewQueryParameters() = queryParameters(
+        parameterWithName("lastReviewId").optional()
+            .description("직전 페이지 마지막 후기 id (양수, 선택). 첫 페이지는 생략한다"),
+        parameterWithName("size").optional()
+            .description("페이지 크기 (1~50, 기본 20). 생략하거나 범위 밖이면 기본값으로 조회한다"),
+    )
+
     private fun receivedReviewResponseFields() = responseFields(
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
         fieldWithPath("data.totalCount").type(JsonFieldType.NUMBER).description("공개 가능한 받은 후기 전체 수"),
@@ -694,8 +867,8 @@ class ReviewControllerTest : RestDocsTest() {
         fieldWithPath("data.reviews[].authorNickname").type(JsonFieldType.STRING)
             .description("작성자 표시명. 익명이면 익명의 참여자, 공개이면 현재 닉네임"),
         fieldWithPath("data.reviews[].tags").type(JsonFieldType.ARRAY).description("평가 태그"),
-        fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING).optional()
-            .description("한 줄 후기 (null 가능)"),
+        fieldWithPath("data.reviews[].content").type(JsonFieldType.STRING)
+            .description("한 줄 후기 (작성하지 않았으면 빈 문자열)"),
         fieldWithPath("data.hasNext").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부"),
         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
     )

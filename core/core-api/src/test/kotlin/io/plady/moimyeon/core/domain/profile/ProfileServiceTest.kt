@@ -4,8 +4,10 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
 import io.plady.moimyeon.core.domain.company.CompanyValidator
+import io.plady.moimyeon.core.domain.member.Nickname
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.assertj.core.api.Assertions.assertThat
@@ -17,10 +19,11 @@ class ProfileServiceTest {
     private val catalogRefValidator = mockk<CatalogRefValidator>()
     private val companyValidator = mockk<CompanyValidator>()
     private val profileFinder = mockk<ProfileFinder>()
-    private val profileManager = mockk<ProfileManager>()
-    private val profileService = ProfileService(catalogRefValidator, companyValidator, profileFinder, profileManager)
+    private val profileUpdater = mockk<ProfileUpdater>()
+    private val profileService = ProfileService(catalogRefValidator, companyValidator, profileFinder, profileUpdater)
 
     private val memberId = UUID.randomUUID()
+    private val nickname = Nickname("명랑한 해달 33")
     private val content = ProfileContent(
         bio = "자기소개",
         interestJobRoleIds = listOf(1L),
@@ -33,7 +36,7 @@ class ProfileServiceTest {
     }
 
     private fun assertUpdateFails(errorType: CoreErrorType) {
-        assertThatThrownBy { profileService.update(memberId, content) }
+        assertThatThrownBy { profileService.update(memberId, nickname, content) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -42,9 +45,14 @@ class ProfileServiceTest {
     @Test
     fun `카탈로그 참조를 검증한 뒤 저장하고 식별자를 반환한다`() {
         givenValidCatalogRefs()
-        every { profileManager.update(memberId, content) } returns memberId
+        every { profileUpdater.update(memberId, nickname, content) } returns memberId
 
-        assertThat(profileService.update(memberId, content)).isEqualTo(memberId)
+        assertThat(profileService.update(memberId, nickname, content)).isEqualTo(memberId)
+        verifyOrder {
+            catalogRefValidator.validateJobRoles(content.interestJobRoleIds)
+            companyValidator.validateSelectable(content.interestCompanyIds)
+            profileUpdater.update(memberId, nickname, content)
+        }
     }
 
     @Test
@@ -65,7 +73,7 @@ class ProfileServiceTest {
     @Test
     fun `update 가 던진 도메인 에러는 그대로 전파한다`() {
         givenValidCatalogRefs()
-        every { profileManager.update(memberId, content) } throws CoreException(CoreErrorType.PROFILE_NOT_FOUND)
+        every { profileUpdater.update(memberId, nickname, content) } throws CoreException(CoreErrorType.PROFILE_NOT_FOUND)
 
         assertUpdateFails(CoreErrorType.PROFILE_NOT_FOUND)
     }

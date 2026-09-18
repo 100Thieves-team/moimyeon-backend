@@ -1,0 +1,12 @@
+p1	positive	yes	새 PRD 나왔어. MOI-721 엔티티 모델링부터 하자
+p2	positive	yes	MOI-722 리뷰 도메인 테이블 설계해줘
+p3	positive	yes	MOI-723 ERD 초안 잡아서 회의 준비해줘
+p4	positive	yes	결제 기능 들어온대. MOI-724 엔티티 관계랑 상태 필드 초안 그려줘
+p5	positive	yes	MOI-725 합의된 설계 schema.sql이랑 마이그레이션까지 반영해줘
+n1	negative	no	MOI-726 구현해줘
+n2	negative	no	이 쿼리 왜 느린지 봐줘
+n3	negative	no	room 테이블에 인덱스 하나만 추가해줘
+n4	negative	no	participation 도메인 구조가 어떻게 돼있는지 설명해줘
+n5	negative	no	seed.sql 참조 데이터 갱신해줘
+b1	boundary	boundary	MOI-727 이 기능은 테이블부터 API까지 다 새로 필요해
+b2	boundary	boundary	MOI-728 room 테이블에 컬럼 두 개 추가하고 엔티티도 맞춰줘

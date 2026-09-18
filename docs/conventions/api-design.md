@@ -8,6 +8,18 @@
 - 버저닝은 경로 기반(`/v1`). 리소스는 복수형, kebab-case(`/v1/job-roles`).
 - 인증 주체 자원은 `/v1/members/me/...`, 타인 조회는 `/v1/members/{memberId}/...`.
 - Parameter/Body 는 camelCase.
+- **포함 관계만 path 로 중첩한다.** 하위 개념이 상위에 수명 종속이면 중첩
+  (`/v1/rooms/{roomId}/questions`), 늘어날 수 있는 조회 조건이면 RequestParam
+  (`/v1/rooms?sigunguId=`). 판정 기준: 조건이 하나 추가될 때 path 가 그대로면 필터다.
+- **path 의 리소스 ID 는 1개까지** — `/a/{aId}/b/{bId}` 를 만들지 않는다. 상위 ID 가
+  있어야만 하위를 찾을 수 있다면 하위 ID 가 유니크하지 않다는 설계 신호다.
+  **신규 엔드포인트부터 적용한다.** 이 규칙 이전에 작성된 일부 엔드포인트
+  (`rooms/{roomId}/comments/{commentId}` 등)는 그대로 두고 별도 리팩토링
+  이슈로 정리한다 — 기존 패턴을 근거로 신규 설계를 정당화하지는 않는다.
+- **URI 는 호출 주체가 아니라 제공 정보를 표현한다.** `/summary`·`/detail` ○,
+  `/by-admin`·`/for-user` ✗ — 권한이 늘어도 URI 가 재사용되어야 한다.
+- **CRUD 로 표현되지 않는 도메인 행위는 동사를 쓰되 `/리소스/{id}/행위` 템플릿을
+  지킨다** (`POST /v1/rooms/{roomId}/participations/leave`). 삭제와 취소는 다른 행위다.
 
 ## DTO
 

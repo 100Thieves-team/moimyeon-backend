@@ -4,6 +4,57 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-11: Terraform sync가 API 템플릿 변수를 `:95`로 갱신했지만 동시에 시작된
+  앱 배포는 이전 `:43`을 참조했다. 비활성 템플릿의 `deregisteredAt`을 등록 요청에 복사해
+  AWS CLI 입력 검증도 실패했다. 재발 방지는 같은 source SHA·run·attempt에 고정된 비민감
+  Terraform 출력 전달, 두 템플릿의 ACTIVE 사전 검사, ECS 등록 입력 allowlist를 함께 적용한다.
+
+- 2026-09-11: 모니터링 DNS를 `aws_route53_record`로 Cloud Map 관리 hosted zone에 직접
+  생성하려다 dev apply가 403으로 실패했다. Cloud Map 서비스·인스턴스로 IP를 등록해야 하며,
+  plan 성공은 생성 API 제약 검증이 아니다. 재배포 전 부분 생성된 EC2·EBS의 보존을 새 plan에서 확인한다.
+- 2026-09-07: shared plan이 no-op이면 `apply-shared`의 skipped가 의존 체인에 전파돼,
+  dev plan에 변경이 있어도 `apply-dev`가 생략되고 Terraform Apply 전체는 성공으로 표시됐다
+  (9/3 run 33767410322, 9/5 run 33946394794). `plan-dev`는 `always()`로 실행되지만
+  `apply-dev`에는 status 함수가 없어 암묵적 `success()`가 적용된다. 수정 시 취소를 차단하는
+  `!cancelled()`와 기존 성공·freshness·변경 여부 조건을 함께 유지하고 shared no-op/dev 변경
+  시나리오를 검증한다. Bedrock IAM 변경 미반영과 AWS 권장 AMI 갱신이 매일 drift로 감지됐으며,
+  9/7 진단 시점에는 수정·적용하지 않았다.
+- 2026-08-27: REST Docs가 동일 스키마에 붙인 component 이름을 재생성하면서 실제 1개 API 변경이
+  64개 변경으로 Slack에 오탐됐다. 원인: 비교기가 local `$ref`를 확장한 내용과 원래 이름을 함께
+  fingerprint에 넣었다. 재발 방지: local ref 이름은 버리고 확장 내용과 이름 독립적인 cycle 위치만 비교한다.
+- 2026-08-27: Slack 테스트의 `API_SPEC_SHA`에 40자리 hex 리터럴을 넣자 Gitleaks가 generic API key로
+  판정해 CI가 애플리케이션 테스트 전에 실패했다. 재발 방지: credential처럼 보이는 변수의 fixture는 긴
+  토큰 리터럴을 커밋하지 않고 짧은 비민감 조각으로 조립하며 push 전에 PR 커밋 범위의 Gitleaks를 실행한다.
+- 2026-08-27: OpenAPI 전체 operation 비교가 실행 시각 example을 계약 변경으로 오탐했고, 생성기가 읽는
+  `core-enum`은 workflow path filter에서 빠져 실제 enum 변경을 놓쳤다. 재발 방지: 동적 예시는 계약 fingerprint에서
+  제외하고 문서 workflow trigger를 OpenAPI 생성 태스크의 전이 입력과 정적 계약으로 맞춘다.
+- 2026-08-27: PR #106에서 변경 범위 scanner는 통과했지만 build job의 전체 Git 이력 Gitleaks가
+  재현되지 않는 누출 1건으로 실패했다. 원인: 같은 CI 안에서 Gitleaks만 공통 `GATE_RANGE`를 쓰지 않고
+  전체 ref 이력을 다시 검사했으며 config·ignore 경로도 container 기본값에 의존했다. 재발 방지:
+  PR·push 변경 범위를 공유하고, 범위가 없는 새 ref는 HEAD에 도달 가능한 이력을 검사하며 두 경로를 명시한다.
+- 2026-08-26: Terraform AWS provider가 Application Auto Scaling target을 refresh하며
+  `application-autoscaling:ListTagsForResource`를 별도로 호출해 plan이 실패했다. 재발 방지:
+  metadata-only plan role에 tag 조회 권한을 명시하고 bootstrap 계약 검사로 고정한다.
+- 2026-08-25: ignored `terraform.tfvars`를 환경 설정 원본으로 두자 개발자별 plan 입력과 CI 입력을
+  재현할 수 없었다. 재발 방지: 비민감 환경값은 reviewed `{env}.tfvars`로 커밋하고 공식 command는
+  explicit `-var-file`만 허용한다. 로컬 override와 자동 로드 tfvars는 승인 plan에서 거부한다.
+- 2026-08-25: SSM SecureString을 Terraform이 생성하면 런타임 저장소가 SSM이어도 값은 state·plan에
+  남는다. 재발 방지: 앱 시크릿은 pre-created SSM ARN만 참조하고, 신규 RDS master password는
+  RDS-managed Secrets Manager를 사용하며 raw plan은 private KMS artifact로만 취급한다.
+- 2026-08-25: GitHub concurrency의 기본 single pending은 늦게 도착한 과거 run도 최신 pending run을
+  취소·대체한다. 재발 방지: 배포·Terraform mutation queue는 `queue: max`로 pending을 보존하고, 실제 실행
+  직전에 latest CI-successful revision freshness를 검사한다. actionlint 1.7.12가 새 queue schema를 아직
+  모르므로 `.github/actionlint.yaml`은 그 parser error 하나만 임시 ignore한다.
+- 2026-08-25: live Terraform을 기존 환경의 in-place 변경으로 가정했지만 remote state가 없었다.
+  초기 plan은 RDS·VPC·ALB를 포함한 전체 생성이다. 재발 방지: live 변경은 state 존재를 먼저
+  확인하고, state가 없으면 기능 diff가 아니라 신규 환경 bootstrap plan으로 분류한다.
+- 2026-08-25: API·Worker multi-target Dockerfile에서 Spring Boot layer 추출 뒤 runtime COPY가 실패했다.
+  원인: Spring Boot 4 tools 추출이 입력 jar 파일명을 application layer에도 유지했다. 재발 방지:
+  runtime이 `app.jar`를 기대하면 추출 전에 입력을 같은 이름으로 정규화한다.
+- 2026-08-18: `ParticipationSlotCreationIT`가 고정 테스트 시각이 실제 시각을 지난 뒤 CI에서 실패했다.
+  원인: 테스트 데이터만 `FIXED_NOW`를 사용하고 `RoomManager`의 `Clock`을 고정하는
+  `FixedClockTestConfiguration` import를 빠뜨렸다. 재발 방지: 룸 시각 기반 ContextTest는 같은 설정을
+  import해 도메인 입력과 커밋 경계가 동일한 Clock을 보게 한다.
 - 2026-08-14: dev API가 운영 프론트 오리진과 apex 쿠키 도메인을 그대로 사용해 preview 프론트
   도입 시 운영·개발 세션이 충돌할 수 있었다. 재발 방지: dev OAuth·CORS·쿠키 범위를
   `dev.moimyeon.plady.io`로 묶고 `DEV_ACCESS_TOKEN`·`DEV_REFRESH_TOKEN` 이름으로 기존 apex 쿠키를

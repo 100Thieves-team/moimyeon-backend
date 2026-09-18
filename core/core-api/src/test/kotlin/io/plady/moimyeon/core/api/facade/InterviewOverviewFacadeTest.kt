@@ -3,6 +3,12 @@ package io.plady.moimyeon.core.api.facade
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.catalog.CatalogService
+import io.plady.moimyeon.core.domain.catalog.JobRole
+import io.plady.moimyeon.core.domain.company.Company
+import io.plady.moimyeon.core.domain.company.CompanyService
+import io.plady.moimyeon.core.domain.jobposting.JobPostingRef
+import io.plady.moimyeon.core.domain.jobposting.JobPostingService
 import io.plady.moimyeon.core.domain.participation.RoomParticipantService
 import io.plady.moimyeon.core.domain.room.MeetingPlace
 import io.plady.moimyeon.core.domain.room.Room
@@ -31,7 +37,18 @@ class InterviewOverviewFacadeTest {
     private val participantService = mockk<RoomParticipantService>()
     private val roomService = mockk<RoomService>()
     private val trustService = mockk<TrustService>()
-    private val facade = InterviewOverviewFacade(applicationService, participantService, roomService, trustService)
+    private val jobPostingService = mockk<JobPostingService>()
+    private val companyService = mockk<CompanyService>()
+    private val catalogService = mockk<CatalogService>()
+    private val facade = InterviewOverviewFacade(
+        applicationService,
+        participantService,
+        roomService,
+        trustService,
+        jobPostingService,
+        companyService,
+        catalogService,
+    )
 
     @Test
     fun `신청과 참여 영역의 결과를 화면 응답으로만 조립한다`() {
@@ -65,6 +82,12 @@ class InterviewOverviewFacadeTest {
         every { participantService.getParticipatingRoomIds(memberId) } returns participatingRoomIds
         every { roomService.getRoomSummariesByStatus(participatingRoomIds) } returns roomSummariesByStatus
         every { trustService.getRoomReviewSummaries(memberId, listOf(completedRoom.id)) } returns reviewSummaries
+        every { jobPostingService.getRefs(setOf(1L)) } returns
+            listOf(JobPostingRef(id = 1L, companyId = 1L, postingName = "백엔드 개발자 채용"))
+        every { companyService.getCompanies(setOf(1L)) } returns listOf(Company(id = 1L, name = "달빛페이"))
+        every { catalogService.getJobRoles(setOf(2L)) } returns
+            listOf(JobRole(id = 2L, code = "BACKEND", displayName = "서버·백엔드"))
+        every { catalogService.getRegionLabels(emptySet()) } returns emptyList()
 
         val result = facade.getOverview(memberId)
 
@@ -73,6 +96,11 @@ class InterviewOverviewFacadeTest {
         assertThat(result.participatingRooms.single().room.participantCount).isEqualTo(4)
         assertThat(result.completedRooms.single().room.participantCount).isEqualTo(2)
         assertThat(result.completedRooms.single().reviewStatus).isEqualTo("WRITABLE")
+        // 표시명은 세 구분 공통 참조에서 붙는다(MOI-496). 온라인 룸이라 region 은 비어 있다.
+        assertThat(result.participatingRooms.single().room.company?.name).isEqualTo("달빛페이")
+        assertThat(result.participatingRooms.single().room.jobPosting?.postingName).isEqualTo("백엔드 개발자 채용")
+        assertThat(result.participatingRooms.single().room.jobRole?.displayName).isEqualTo("서버·백엔드")
+        assertThat(result.participatingRooms.single().room.region).isNull()
         verifyOrder {
             applicationService.getPendingApplications(memberId)
             roomService.getRoomSummaries(listOf(pendingRoom.id))

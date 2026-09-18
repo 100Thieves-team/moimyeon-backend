@@ -62,12 +62,12 @@ class ReviewEditorTest {
                 reviewId = 1L,
                 authorMemberId = authorMemberId,
                 tags = emptySet(),
-                content = null,
+                content = "",
             ),
         )
 
         assertThat(review.tags()).isEmpty()
-        assertThat(review.content).isNull()
+        assertThat(review.content).isEmpty()
     }
 
     @Test

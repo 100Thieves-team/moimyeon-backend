@@ -1,81 +1,90 @@
 # syntax=docker/dockerfile:1
 
 # =============================================================================
-# Moimyeon Backend deployment image
+# Moimyeon Backend deployment images
 #
-# - Multi-stage build (build stage separate from runtime stage)
+# - One Gradle build produces both executable bootJars
+# - Named runtime targets: core-api and core-worker
 # - Java 25 (matches gradle.properties javaVersion=25 / Spring Boot 4.1.0)
-# - Builds an executable Spring Boot bootJar selected by GRADLE_BOOT_JAR_TASK
-#   (NOT the Gradle plain jar, which is disabled for that module anyway)
 # - Runtime image contains only a JRE + the extracted application layers
 # - Runs as a non-root user
-# - No secrets are baked in (DB / OAuth / JWT / AWS creds are injected at
-#   runtime via environment variables — see core-api application.yml)
+# - No secrets are baked in; runtime configuration is injected by ECS
 #
-# Target runtime architecture is x86_64, so always build with:
-#   docker buildx build --platform linux/amd64 ...
+# Build a specific image with:
+#   docker buildx build --platform linux/amd64 --target core-api ...
+#   docker buildx build --platform linux/amd64 --target core-worker ...
 # =============================================================================
 
 
 # -----------------------------------------------------------------------------
-# Stage 1: build — compile and produce the executable bootJar, then explode it
-#          into Spring Boot layers for better runtime-image layer caching.
+# Stage 1: build both executable bootJars in one Gradle invocation.
 # -----------------------------------------------------------------------------
 FROM eclipse-temurin:25-jdk AS builder
 
 WORKDIR /workspace
 
-ARG GRADLE_BOOT_JAR_TASK=:core:core-api:bootJar
-ARG BOOT_JAR_DIRECTORY=core/core-api
-
-# Copy the full multi-module project. .dockerignore keeps build outputs,
-# IDE files and secrets out of the build context.
 COPY . .
 
-# Build only the selected runnable module's bootJar. Gradle resolves the required
-# sibling modules automatically. Tests are skipped for the image build.
-# A BuildKit cache mount keeps the Gradle dependency cache warm across builds.
 RUN --mount=type=cache,target=/root/.gradle \
     chmod +x ./gradlew && \
-    ./gradlew "${GRADLE_BOOT_JAR_TASK}" --no-daemon -x test && \
-    APP_JAR="$(find "${BOOT_JAR_DIRECTORY}/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' | head -n 1)" && \
-    echo "Selected boot jar: ${APP_JAR}" && \
-    cp "${APP_JAR}" /workspace/app.jar
-
-# Explode the bootJar into layers (Spring Boot 4 'tools' jarmode).
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination extracted
+    ./gradlew :core:core-api:bootJar :core:core-worker:bootJar --no-daemon -x test && \
+    CORE_API_JAR="$(find core/core-api/build/libs -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' | head -n 1)" && \
+    CORE_WORKER_JAR="$(find core/core-worker/build/libs -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' | head -n 1)" && \
+    test -n "${CORE_API_JAR}" && \
+    test -n "${CORE_WORKER_JAR}" && \
+    cp "${CORE_API_JAR}" /workspace/core-api.jar && \
+    cp "${CORE_WORKER_JAR}" /workspace/core-worker.jar
 
 
 # -----------------------------------------------------------------------------
-# Stage 2: runtime — JRE only, non-root, contains just the exploded app layers.
+# Stage 2: extract Spring Boot layers independently for each runtime image.
 # -----------------------------------------------------------------------------
-FROM eclipse-temurin:25-jre AS runtime
+FROM builder AS core-api-layers
 
-# Create a dedicated non-root user/group to run the application.
-# IDs are auto-assigned to avoid colliding with users baked into the base image.
+RUN cp core-api.jar app.jar && \
+    java -Djarmode=tools -jar app.jar extract \
+    --layers \
+    --destination extracted/core-api
+
+FROM builder AS core-worker-layers
+
+RUN cp core-worker.jar app.jar && \
+    java -Djarmode=tools -jar app.jar extract \
+    --layers \
+    --destination extracted/core-worker
+
+
+# -----------------------------------------------------------------------------
+# Stage 3: shared JRE runtime boundary.
+# -----------------------------------------------------------------------------
+FROM eclipse-temurin:25-jre AS runtime-base
+
 RUN groupadd --system app && \
     useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app
 
 WORKDIR /app
 
-# Reconstruct the thin-jar runtime layout. Spring Boot 4's `extract --layers`
-# splits libraries into separate layer directories purely for caching, but the
-# app.jar manifest expects them all in a single sibling `lib/` directory.
-# Copy the most-stable layer (external dependencies) first, then the app's own
-# module jars, then the launcher jar itself — so an app-only change reuses the
-# large dependency layer from cache.
-COPY --from=builder --chown=app:app /workspace/extracted/dependencies/lib/ ./lib/
-COPY --from=builder --chown=app:app /workspace/extracted/application/lib/ ./lib/
-COPY --from=builder --chown=app:app /workspace/extracted/application/app.jar ./app.jar
-
 USER app
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+ENTRYPOINT ["java", "-jar", "app.jar"]
 
-# Harmless for the non-web Worker image; used by the default Core API image.
+
+# -----------------------------------------------------------------------------
+# Stage 4: deployable targets. Each image sees only its own application layers.
+# -----------------------------------------------------------------------------
+FROM runtime-base AS core-api
+
+COPY --from=core-api-layers --chown=app:app /workspace/extracted/core-api/dependencies/lib/ ./lib/
+COPY --from=core-api-layers --chown=app:app /workspace/extracted/core-api/application/lib/ ./lib/
+COPY --from=core-api-layers --chown=app:app /workspace/extracted/core-api/application/app.jar ./app.jar
+
 EXPOSE 8080
 
-# Container-aware JVM defaults; override at deploy time as needed.
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+FROM runtime-base AS core-worker
 
-# NOTE: the active profile is intentionally NOT baked in. Provide it at runtime,
-# e.g. `-e SPRING_PROFILES_ACTIVE=dev`.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=core-worker-layers --chown=app:app /workspace/extracted/core-worker/dependencies/lib/ ./lib/
+COPY --from=core-worker-layers --chown=app:app /workspace/extracted/core-worker/application/lib/ ./lib/
+COPY --from=core-worker-layers --chown=app:app /workspace/extracted/core-worker/application/app.jar ./app.jar
+
+# Keep `docker build .` backward-compatible with the Core API image.
+FROM core-api AS runtime

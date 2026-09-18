@@ -13,6 +13,8 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
 
+    fun findByIdAndDeletedAtIsNull(reviewId: Long): ReviewEntity?
+
     fun existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(
         roomId: UUID,
         authorMemberId: UUID,
@@ -22,6 +24,21 @@ interface ReviewRepository : JpaRepository<ReviewEntity, Long> {
     fun findByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(
         roomId: UUID,
         authorMemberId: UUID,
+    ): List<ReviewEntity>
+
+    @Query(
+        """
+        SELECT DISTINCT r
+        FROM ReviewEntity r LEFT JOIN FETCH r.tags
+        WHERE r.roomId = :roomId
+          AND r.authorMemberId = :authorMemberId
+          AND r.deletedAt IS NULL
+        ORDER BY r.id ASC
+        """,
+    )
+    fun findAllWithTagsByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(
+        @Param("roomId") roomId: UUID,
+        @Param("authorMemberId") authorMemberId: UUID,
     ): List<ReviewEntity>
 
     fun findByRoomIdInAndAuthorMemberIdAndDeletedAtIsNull(

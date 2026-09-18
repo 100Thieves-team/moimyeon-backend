@@ -15,7 +15,7 @@ data class UpdateReviewRequest(
 
         return ReviewUpdateContent(
             tags = tags.toCollection(linkedSetOf()),
-            content = content?.trim()?.takeIf(String::isNotEmpty),
+            content = content?.trim().orEmpty(),
         )
     }
 }
