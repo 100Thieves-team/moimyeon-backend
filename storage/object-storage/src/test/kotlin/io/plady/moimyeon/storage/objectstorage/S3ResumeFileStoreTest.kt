@@ -12,24 +12,50 @@ import io.plady.moimyeon.core.domain.resume.ResumeUpload
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectResponse
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import java.net.URI
 import java.time.Duration
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class S3ResumeFileStoreTest {
     private val s3Client = mockk<S3Client>()
     private val fileStore = S3ResumeFileStore(
         s3Client,
+        presigner(),
         properties(),
         ResumeSummaryTimeSource { 0L },
     )
+
+    @Test
+    fun `열람 URL 은 객체 키와 5분 만료를 서명에 담는다`() {
+        val file = ResumeFile("resumes/member/resume.pdf", "resume.pdf", 11, "application/pdf")
+
+        val view = fileStore.issueViewUrl(file, Duration.ofMinutes(5))
+
+        assertThat(view.url)
+            .contains("resume-bucket")
+            .contains("resumes/member/resume.pdf")
+            .contains("X-Amz-Expires=300")
+        val query = URI.create(view.url).rawQuery.split("&").associate {
+            val (name, value) = it.split("=", limit = 2)
+            name to value
+        }
+        val signedAt = Instant.from(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssX").parse(query.getValue("X-Amz-Date")))
+        assertThat(view.expiresAt).isEqualTo(signedAt.plusSeconds(query.getValue("X-Amz-Expires").toLong()))
+    }
 
     @Test
     fun `S3 호출 전체와 개별 시도에 제한 시간을 적용한다`() {
@@ -101,6 +127,7 @@ class S3ResumeFileStoreTest {
         val content = "pdf-content".toByteArray()
         val constrainedStore = S3ResumeFileStore(
             s3Client,
+            presigner(),
             properties(),
             ResumeSummaryTimeSource { Duration.ofSeconds(20).toNanos() },
         )
@@ -123,6 +150,14 @@ class S3ResumeFileStoreTest {
         apiCallTimeout = Duration.ofSeconds(30),
         apiCallAttemptTimeout = Duration.ofSeconds(10),
     )
+
+    // 서명은 로컬 계산이라 네트워크 없이 실제 presigner 로 검증한다. 자격 증명만 고정 값으로 채운다.
+    private fun presigner(): S3Presigner = S3Presigner.builder()
+        .region(Region.of("ap-northeast-2"))
+        .credentialsProvider(
+            StaticCredentialsProvider.create(AwsBasicCredentials.create("test-access-key", "test-secret-key")),
+        )
+        .build()
 
     private fun deadline(): ResumeSummaryDeadline = ResumeSummaryDeadline.start(0L)
 }

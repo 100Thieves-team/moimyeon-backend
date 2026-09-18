@@ -3,6 +3,7 @@ package io.plady.moimyeon.storage.objectstorage
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFileStorageException
 import io.plady.moimyeon.core.domain.resume.ResumeFileStore
+import io.plady.moimyeon.core.domain.resume.ResumeFileViewUrl
 import io.plady.moimyeon.core.domain.resume.ResumeSummaryDeadline
 import io.plady.moimyeon.core.domain.resume.ResumeSummaryTimeSource
 import io.plady.moimyeon.core.domain.resume.ResumeUpload
@@ -13,12 +14,17 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Profile("local-dev", "dev", "staging", "live")
 @Component
 internal class S3ResumeFileStore(
     private val s3Client: S3Client,
+    private val s3Presigner: S3Presigner,
     private val properties: S3ObjectStorageProperties,
     private val timeSource: ResumeSummaryTimeSource,
 ) : ResumeFileStore {
@@ -54,6 +60,27 @@ internal class S3ResumeFileStore(
             .build()
         return try {
             s3Client.getObjectAsBytes(request).asByteArray()
+        } catch (exception: SdkException) {
+            throw ResumeFileStorageException(exception)
+        }
+    }
+
+    override fun issueViewUrl(file: ResumeFile, ttl: Duration): ResumeFileViewUrl {
+        val request = GetObjectRequest.builder()
+            .bucket(properties.bucket)
+            .key(file.key)
+            .build()
+        val presignRequest = GetObjectPresignRequest.builder()
+            .signatureDuration(ttl)
+            .getObjectRequest(request)
+            .build()
+        return try {
+            val signed = s3Presigner.presignGetObject(presignRequest)
+            ResumeFileViewUrl(
+                url = signed.url().toExternalForm(),
+                // SigV4의 서명 시각과 유효 기간은 초 단위다.
+                expiresAt = signed.expiration().truncatedTo(ChronoUnit.SECONDS),
+            )
         } catch (exception: SdkException) {
             throw ResumeFileStorageException(exception)
         }
