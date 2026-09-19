@@ -1,5 +1,7 @@
 # 첫 설정 슬라이스 구현 기록
 
+2026-09-18 공통 기반을 `77801ac9`로 커밋한 뒤 HTTP 요청 연결을 추가했다. 최신 동작은 아래 HTTP 연결 절과 DR-27을 따른다.
+
 후속 예제 반영으로 타입 설정·요청 로그 객체·정제 분리를 추가했다. 아래의 최초 20개 테스트와 service.ready 단독 허용은 초기 단계 기록이며, 최신 내용은 마지막 절과 DR-24를 따른다.
 
 2026-09-14. 설계는 `de130a92`로 먼저 커밋했다. 이후 사용자 요청에 따라 공통 로깅 설정과 테스트를 구현했다.
@@ -61,3 +63,34 @@ ConfigData 이전의 YAML 파싱·파일 로드 실패는 아직 이 정책의 �
 예제 반영 최종 검증: 로깅 테스트 28개(이번 후속 작업에서 8개 추가)와 루트 `./gradlew test ktlintCheck` 통과. code-reviewer·qa-reviewer 모두 추가 필수 지적 없음. 경로 템플릿의 신뢰할 출처는 후속 HTTP 연결의 책임임을 README와 코드에 명시했다. 변경은 미커밋 상태다.
 
 환경별 XML 유지 요청 반영: local/local-dev/dev/live XML을 복구하고 test/staging/dev-perf/bootstrap XML을 추가했다. 공통 encoder만 include로 공유하며 수준·형식·appender 연결은 환경별 파일이 소유한다. Kotlin enum의 수준·형식 필드는 제거했다. dev,perf와 perf,dev의 같은 파일 선택, test/local 상속, 잘못된 환경의 안전한 부팅 실패를 검증했다. code-reviewer 재검토 통과.
+
+## HTTP 연결
+
+core-api에 HTTP 필터·요청 상태·완료 리스너·매핑 인터셉터·오류 응답 메타데이터 연결을 추가했다. 응답 status/body는 바꾸지 않는다. Security의 401/403과 OAuth 리다이렉트도 필터를 통과하고, 비동기·오류 페이지 처리 뒤 요약을 남긴다. 경로는 등록된 최초 패턴이며 raw URI fallback은 없다.
+
+requestId는 서버가 발급한다. 필터의 요청 스레드와 완료 리스너에서 context를 일시적으로 적용하고 기존 MDC를 복원한다. 실제 OTel sampling=0에서 핸들러와 완료 JSON의 trace 연결을 검증한다. 완료 로그는 HTTP span을 사용하며 내부 Security span과 ID가 다를 수 있다.
+
+Servlet 처리 시간과 상태만 측정하며 마지막 네트워크 flush·클라이언트 수신 여부는 보장하지 않는다. 일반 비동기 작업 내부의 MDC 전파, ErrorType 재분류, S3·알림 배포는 아직 후속 범위다.
+
+```mermaid
+sequenceDiagram
+    participant C as Servlet container
+    participant F as 요청 로깅 필터
+    participant A as Security / MVC
+    participant L as 완료 리스너
+    C->>F: REQUEST
+    F->>A: requestId·관측 context 적용
+    A-->>F: 동기 반환 또는 async 시작
+    F-->>C: 이전 MDC 복원
+    opt ASYNC 또는 ERROR dispatch
+        C->>F: 같은 요청 상태 재사용
+        F->>A: 후속 처리·최초 경로 보존
+        A-->>F: 최종 응답 처리
+        F-->>C: 이전 MDC 복원
+    end
+    C->>L: requestDestroyed
+    L->>L: 최종 상태·시간·오류 코드 한 번 기록
+    L-->>C: 완료 스레드의 이전 MDC 복원
+```
+
+HTTP 단위·실제 서버 테스트 14개와 공통 로깅 테스트 29개, 루트 `test ktlintCheck`를 통과했다. 실제 400·404·500 및 Security 401·403, OAuth 리다이렉트, 직접 async complete·timeout·dispatch, body 보존과 requestId·trace 연결을 확인했다. code-reviewer와 qa-reviewer의 최종 판정은 PASS다. 로그 전달 성공·성능이나 외부 배포를 검증했다는 의미는 아니다.

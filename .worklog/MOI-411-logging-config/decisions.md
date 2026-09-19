@@ -371,3 +371,17 @@ local·local-dev·test·dev·staging·live의 개별 XML과 dev/perf 전용 `log
 kotlin-logging 8.0.4 사용, support:logging의 api 의존으로 facade 제공, RequestLogWriter 자동 Bean 등록도 설명한 구현 방식으로 승인받았다.
 
 이 승인은 위 정책과 현재 구현 방식의 채택이다. 테스트가 운영 적합성을 증명한 것으로 해석하지 않으며, 환경별 XML을 단일 파일로 다시 합치는 승인도 아니다. 이번 승인 기록에서 실행 코드·커밋·push·배포·외부 통지를 추가로 수행하지 않았다.
+
+### DR-27. Servlet 처리 완료를 기준으로 요청 요약을 기록한다
+
+**상태: 2026-09-18 요청 연결 구현.** 공통 기반을 77801ac9로 커밋한 뒤 실제 HTTP 요청의 수집을 추가했다.
+
+2026-09-19 사용자 승인: HTTP 연결의 동작·검증 결과와 후속 범위를 보고한 뒤 승인을 받았다. 해당 구현을 로컬 커밋으로 정리한다.
+
+필터 finally는 async와 오류 페이지의 최종 상태를 보장하지 않는다. 수동 AsyncListener 등록은 조기 complete와 여러 dispatch의 순서를 다뤄야 한다. 현재 Tomcat의 requestDestroyed가 sync 오류 페이지 처리 뒤, async completion 뒤에 호출되는 동작을 확인하고 ServletRequestListener를 완료 지점으로 선택했다. 실제 RANDOM_PORT 테스트로 직접 complete·timeout·async 실패·재디스패치·sendError를 검증했다. 네트워크 전달 완료나 클라이언트 수신 성공의 보장은 아니다.
+
+요청 상태는 request attribute에 두고 원자적 완료 표시로 한 번만 기록한다. route는 최초 MVC 매핑 패턴을 보존하며 ERROR와 async의 후속 경로로 덮어쓰지 않는다. MVC에 도달하지 않는 OAuth·health는 고정 분류, 다른 조기 종료는 UNMATCHED다. 확장 HTTP method는 UNKNOWN으로 정규화해 엄격한 로그 객체 검증 때문에 기록이 사라지지 않게 했다.
+
+서버 requestId는 UUID로 만들고 외부 헤더 값을 신뢰하지 않는다. 새 응답 헤더·body를 추가하지 않았다. 기존 ApiResponse와 AuthErrorWriter가 안전한 오류 코드만 전달하며 response wrapper는 스트림을 가로채거나 캐싱하지 않는다. 일반 실패 요약 INFO와 기존 Advice 진단 로그의 역할을 유지한다.
+
+필터는 observation 다음·Security 이전에서 동작한다. 완료 로그는 캡처한 HTTP span을 사용하고 핸들러의 자식 span과 trace ID로 연결한다. sampling=0에서 실제 ID가 존재함을 확인했으며 span ID까지 같다고 잘못 가정한 테스트는 scope에 맞춰 수정했다. 필터·완료 리스너의 MDC는 이전 값을 복원한다. 일반 Callable/@Async 작업 내부로의 전파는 다음 범위다.

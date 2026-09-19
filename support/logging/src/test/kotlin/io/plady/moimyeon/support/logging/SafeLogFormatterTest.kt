@@ -57,6 +57,15 @@ class SafeLogFormatterTest {
     }
 
     @Test
+    fun `요청 처리 중 발생한 일반 오류 로그에도 서버 요청 ID를 보존한다`() {
+        val requestId = "00000000-0000-0000-0000-000000000011"
+        val record = event(message = "unregistered failure", mdc = mapOf("requestId" to requestId), level = Level.ERROR)
+        assertThat(json(formatter.format(record))).containsEntry("requestId", requestId)
+        val invalid = event(mdc = mapOf("requestId" to "private@example.invalid"))
+        assertThat(json(formatter.format(invalid))).doesNotContainKey("requestId")
+    }
+
+    @Test
     fun `예외 체인과 긴 코드 위치가 있어도 출력은 유효한 JSON과 제한된 크기를 유지한다`() {
         var error: Throwable = IllegalStateException("private@example.invalid")
         repeat(10) {
@@ -84,9 +93,9 @@ class SafeLogFormatterTest {
         assertThat(output).doesNotContain("private@example.invalid")
     }
 
-    private fun event(message: String = "service.ready", mdc: Map<String, String> = emptyMap()): LoggingEvent = LoggingEvent().apply {
+    private fun event(message: String = "service.ready", mdc: Map<String, String> = emptyMap(), level: Level = Level.INFO): LoggingEvent = LoggingEvent().apply {
         timeStamp = 1_700_000_000_000
-        level = Level.INFO
+        this.level = level
         loggerName = "io.plady.moimyeon.Test"
         this.message = message
         mdcPropertyMap = mdc

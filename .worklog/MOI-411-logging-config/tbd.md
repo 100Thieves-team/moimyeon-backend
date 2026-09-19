@@ -42,4 +42,4 @@
 | Sentry 연결 | 안전한 eventCode/errorCode/requestId/traceId/spanId 보존, 원본 context 전체 복사 금지 |
 | IAM | task role 공유를 명시하고 로그 Get/Delete 권한 제외. 실제 최소 권한 확인 |
 
-공통 로깅 설정과 요청 요약 작성기는 구현·검증했고 미커밋 상태다. HTTP 필터 연결·인프라 배포·외부 통지는 아직 수행하지 않았다.
+공통 기반은 77801ac9로 커밋했다. HTTP 필터·완료 리스너·오류 코드 연결은 구현·검증을 마치고 2026-09-19 사용자 승인을 받아 후속 로컬 커밋으로 정리한다. 일반 Callable/@Async 작업 내부의 MDC 전파, 인프라 배포·외부 통지는 아직 수행하지 않았다.

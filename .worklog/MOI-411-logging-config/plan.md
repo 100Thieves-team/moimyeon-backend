@@ -1,5 +1,7 @@
 # MOI-411 설계 작업
 
+- [x] 2026-09-19 HTTP 요청 로깅 구현 승인: 사용자가 완료 보고를 승인했다. 검증·리뷰를 통과한 HTTP 연결 변경을 공통 기반 다음의 로컬 커밋으로 정리한다. push·PR·배포는 포함하지 않는다.
+
 - [x] 2026-09-18 구현 세부 정책 승인: 미등록 메시지 숨김·안전 설정 강제·로컬 외부 전송 OFF·환경 정규화·추가 상한·메타데이터 및 요청 형식 제약, 라이브러리·의존성·Bean 구성을 사용자에게 설명하고 승인받았다. DR-26 참조.
 
 - [x] 2026-09-14 사용자 운영 정책 확정: 추천안 채택, live는 팀원 3명 전원이 공동 담당. 상세는 `decisions.md` DR-22.
@@ -45,3 +47,12 @@
 환경별 XML 유지 요청 반영: local/local-dev/dev/live XML을 복구하고 test/staging/dev-perf/bootstrap XML을 추가했다. 공통 encoder만 include로 공유하며 수준·형식·appender 연결은 환경별 파일이 소유한다. Kotlin enum의 수준·형식 필드는 제거했다. dev,perf와 perf,dev의 같은 파일 선택, test/local 상속, 잘못된 환경의 안전한 부팅 실패를 검증했다. code-reviewer 재검토 통과.
 
 환경별 XML 변경 후 최종 `./gradlew test ktlintCheck` 통과. XML 파싱·공통 include 경로·커밋 전 게이트 통과. 변경은 미커밋 상태로 유지한다.
+
+
+## HTTP 요청 연결
+
+2026-09-18 사용자 진행 승인에 따라 공통 기반을 77801ac9로 커밋했다. 다음 동작을 테스트부터 구현한다: 요청별 서버 발급 ID와 MDC scope를 열고, 인증 필터·MVC·오류 및 비동기 처리가 끝난 뒤 최종 상태와 등록된 경로를 한 번 기록한다. 로그 실패는 응답을 바꾸지 않는다.
+
+실제 내장 Tomcat으로 성공·400·401·403·OAuth·미매칭·예외·비동기 완료를 확인한다. 본문을 캐싱하지 않고 응답 payload를 보존한다. 공통 모듈은 Servlet/Security 의존 없이 유지하며 HTTP 어댑터는 core-api에 둔다. S3·알림과 비즈니스 ErrorType 수준 변경은 이번 범위에서 제외한다.
+
+HTTP 연결 구현 완료: 단위·실제 Tomcat 테스트 14개, 공통 로깅 테스트 29개와 전체 `test ktlintCheck` 통과. async 재디스패치가 최초 경로를 덮는 문제를 실패 테스트로 확인해 수정했다. QA의 실제 OTel 검증 요구를 반영해 sampling=0인 HTTP span·handler trace·완료 JSON 연결을 확인했고 최종 code/QA 리뷰를 통과했다. HTTP 후속 변경은 미커밋 상태로 남기며 push·PR·배포는 수행하지 않았다.

@@ -4,6 +4,8 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-18: HTTP 로깅 IT에서 sampling=0이어도 trace ID가 생성되고 Security가 자식 span을 여는 것을 확인했다. 핸들러와 완료 로그는 trace ID로 연결하고, 완료 로그의 span은 HTTP 관측 scope 기준으로 검증한다. async 재디스패치가 다른 핸들러를 타더라도 최초 route를 보존한다(`HttpRequestLoggingIT`).
+
 - 2026-09-11: Terraform sync가 API 템플릿 변수를 `:95`로 갱신했지만 동시에 시작된
   앱 배포는 이전 `:43`을 참조했다. 비활성 템플릿의 `deregisteredAt`을 등록 요청에 복사해
   AWS CLI 입력 검증도 실패했다. 재발 방지는 같은 source SHA·run·attempt에 고정된 비민감

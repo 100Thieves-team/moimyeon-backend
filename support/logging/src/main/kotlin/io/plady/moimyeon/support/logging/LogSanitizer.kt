@@ -46,6 +46,9 @@ class LogSanitizer(
         )
         request?.let { fields.putAll(it.fields()) }
         val context = event.mdcPropertyMap
+        if (!fields.containsKey("requestId")) {
+            context["requestId"]?.takeIf(RequestLogEntry::isRequestId)?.let { fields["requestId"] = it }
+        }
         val traceId = context["traceId"]?.takeIf { TRACE_ID.matches(it) && it.any { character -> character != '0' } }
         if (traceId != null) {
             fields["traceId"] = traceId
