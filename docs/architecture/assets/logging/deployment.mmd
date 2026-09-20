@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant G as Git / CI
+    participant T as Terraform
+    participant B as 설정 S3
+    participant P as 기존 앱 배포 파이프라인
+    participant E as ECS task
+    G->>T: PR의 sanitized plan 검토<br/>머지 후 CI·환경 게이트 통과 시 적용
+    T->>T: shared 권한 적용 → dev plan / 적용
+    T->>B: revision + 내용 hash의 설정 객체
+    T->>P: 새 exact task template ARN 제공
+    Note over T,E: Terraform이 실행 중 service의 task ARN을 직접 전환하지 않음
+    P->>P: 검증한 앱 image digest와 APP_RELEASE 결합<br/>sidecar·볼륨·로그 설정 보존
+    P->>E: 새 task 배포
+    E->>B: execution role로 지정한 설정 읽기
+    E->>E: 라우터 생존 확인 후 앱 시작
+    alt 이전 FireLens task ARN으로 복귀
+        P->>E: 기존 deployment bundle 복원
+        E->>B: 해당 revision의 설정 다시 읽기
+    else 라우터를 빼는 provision 모드로 배포
+        P->>E: 새 우회 template 배포
+        Note over E: 전체 로그 → non-blocking awslogs<br/>fallback 3일 · S3 수집 중지
+    end
+    Note over B,E: 그림은 코드에 작성한 배포 절차 · 실제 AWS 전환은 아직 미검증

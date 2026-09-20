@@ -43,3 +43,5 @@
 | IAM | task role 공유를 명시하고 로그 Get/Delete 권한 제외. 실제 최소 권한 확인 |
 
 공통 기반은 77801ac9로 커밋했다. HTTP 필터·완료 리스너·오류 코드 연결은 구현·검증을 마치고 2026-09-19 사용자 승인을 받아 후속 로컬 커밋으로 정리한다. 일반 Callable/@Async 작업 내부의 MDC 전파, 인프라 배포·외부 통지는 아직 수행하지 않았다.
+
+S3 저장 코드 추가(2026-09-19): dev FireLens, S3 ops/growth 90일, CW ops 7일/debug 3일, 로그 라우팅 비상 우회 3일을 구현했다. live는 disabled로 유지한다. 설정과 권한을 보존하는 provision 모드 및 revision별 rollback 계약을 추가했다. 실환경 CI plan과 수신·배치·포화 검증 전에는 MOI-411 완료로 처리하지 않는다.

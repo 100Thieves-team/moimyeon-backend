@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant A as 앱 / stdout
+    participant D as ECS 로그 드라이버
+    participant R as Fluent Bit
+    participant B as task 디스크 버퍼
+    participant S as S3
+    A->>D: 정제된 JSON
+    D->>R: 비차단 전달
+    R->>B: ops / growth 저장
+    R->>S: 묶음 gzip PutObject
+    alt 저장 성공
+        S-->>R: 성공 응답
+        R->>B: 전송한 버퍼 정리
+    else S3 일시 실패
+        S-->>R: 예: 503
+        R->>B: 미전송 데이터 유지 후 재시도
+        opt 라우터 종료 후 같은 볼륨에서 재시작
+            R->>B: 남은 버퍼 다시 읽기
+            R->>S: 복구한 데이터 업로드
+        end
+    end
+    Note over D,R: 장기 장애 / 큐 포화 / OOM에서는 로그 유실 가능
+    Note over B,S: task 교체·호스트 소실의 복구와 중복 없는 전달은 보장하지 않음
+    Note over A,S: 로컬 테스트는 503 → SIGKILL → 동일 볼륨 복구까지 확인

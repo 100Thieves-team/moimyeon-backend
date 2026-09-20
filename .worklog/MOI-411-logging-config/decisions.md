@@ -385,3 +385,30 @@ kotlin-logging 8.0.4 사용, support:logging의 api 의존으로 facade 제공, 
 서버 requestId는 UUID로 만들고 외부 헤더 값을 신뢰하지 않는다. 새 응답 헤더·body를 추가하지 않았다. 기존 ApiResponse와 AuthErrorWriter가 안전한 오류 코드만 전달하며 response wrapper는 스트림을 가로채거나 캐싱하지 않는다. 일반 실패 요약 INFO와 기존 Advice 진단 로그의 역할을 유지한다.
 
 필터는 observation 다음·Security 이전에서 동작한다. 완료 로그는 캡처한 HTTP span을 사용하고 핸들러의 자식 span과 trace ID로 연결한다. sampling=0에서 실제 ID가 존재함을 확인했으며 span ID까지 같다고 잘못 가정한 테스트는 scope에 맞춰 수정했다. 필터·완료 리스너의 MDC는 이전 값을 복원한다. 일반 Callable/@Async 작업 내부로의 전파는 다음 범위다.
+
+### DR-28. 로그 저장은 ECS 라우터가 맡는다
+
+**상태: 2026-09-19 S3 저장 슬라이스 구현. AWS 적용 전.** 앱 SDK 업로드는 요청·스케줄러가 저장소 장애를 떠안는다. 기존 ECS EC2에 FireLens를 붙이면 앱은 stdout 계약만 지키면 된다. 설정 전용 모듈을 추가하고 Kotlin 모듈에 AWS 의존성을 넣지 않았다.
+
+운영 로그는 CloudWatch 7일과 S3 90일, DEBUG/TRACE는 CloudWatch 3일로 나눈다. S3는 PutObject로 gzip 파일을 묶어서 쓴다. multipart의 권한·정리 절차를 늘리지 않는 대신 작은 파일 수와 요청 비용을 부담한다. 10MiB·1분은 초기 설정이며 비용 측정 결과가 아니다. growth 경로는 준비하지만 그로스 발행기는 이번 구현에 없다.
+
+라우터를 essential로 두면 종료 즉시 앱 task도 종료된다. 일반 로그는 손실을 허용하기로 했으므로 non-essential + 재시작을 택했다. 시작할 때는 라우터 엔진의 HEALTHY를 기다린다. 시작 뒤 실패는 앱을 직접 중단하지 않고 버퍼 포화 후 로그를 잃는다. S3 도착 감시가 따로 필요하며, 재시작 정책만으로 모든 장애를 복구한다고 보지 않는다.
+
+라우터 128MiB·CPU 64 shares, 드라이버 계획 여유 32MiB를 잡았다. API/Worker의 앱 메모리를 줄이지 않고 task 메모리를 각각 1760/928MiB로 올린다. 실제 EC2 배치·blue/green 여유·부하 때 손실량은 dev 배포 후 확인한다. 현재 수치를 운영 적정 용량으로 확정하지 않는다.
+
+### DR-29. 라우터를 되돌려도 설정 파일과 짧은 보존 정책을 지킨다
+
+**상태: 2026-09-19 구현·읽기 전용 리뷰 반영.** 설정 객체를 매번 같은 키로 덮거나 이전 hash 키를 지우면 이전 task ARN이 다른 설정을 읽거나 시작에 실패한다. revision별 파일을 추가하고 객체 키에 내용 hash를 넣는다. 이전 revision 객체와 읽기 권한을 유지하며 prevent_destroy로 실수로 지우는 plan을 막는다. 버킷 versioning만으로는 이 조건을 대신할 수 없다.
+
+이미 저장소를 만든 환경은 disabled로 되돌리지 않는다. provision 모드로 라우터만 빼고 S3·설정·권한을 남긴다. 이때 모든 로그를 별도 CloudWatch fallback 그룹에 non-blocking으로 보내 3일 보존한다. 기존 30일 그룹으로 보내면 DEBUG 보존 약속을 깨므로 선택한 비상 우회다. 그동안 ops의 7일·S3 보관은 제공하지 않는다는 대가가 있다. 도입 전 exact task ARN 복귀는 당시 정책까지 복원하므로 별도로 구분한다.
+
+CI plan이 새 설정 객체를 refresh하려면 HeadObject/GetObjectTagging 권한이 필요하다. Shared plan 역할에 dev 설정 revision prefix만 허용했다. 로그 데이터 읽기는 열지 않았다. 기존 파이프라인의 shared 적용 → dev plan 순서를 그대로 사용한다. live 활성화 때는 해당 환경의 설정 refresh 권한도 별도로 검토한다.
+
+구체 설정·검증·현장 확인은 [저장 모듈 README](../../infra/terraform/modules/application-logging/README.md)에 둔다.
+
+
+### DR-30. stable 태그보다 지원 계열과 실패 복구 검증을 함께 본다
+
+**상태: 2026-09-19 구현 검증.** AWS stable 표시는 당시 2.34.3.20260918이었지만, AL2 기반 2.x와 AL2023 기반 3.x의 지원 정책은 다르다. 또한 2.x에서 S3 장애 중 강제 종료 후 복구한 객체의 JSON 파싱 실패를 재현했다. stable 표시만으로 이미지를 정하면 이 경로를 놓친다.
+
+실제로 배포된 3.4.17을 digest로 고정하고 같은 테스트를 통과한 것을 확인했다. 문서에 나온 3.4.18은 확인 시점의 public ECR에서 조회되지 않아 선택하지 않았다. 테스트는 버퍼가 남아 있는 컨테이너 재시작에 한정하며 task·호스트 소실을 보장하지 않는다. [AWS 배포 버전·지원 지침](https://github.com/aws/aws-for-fluent-bit#consuming-aws-for-fluent-bit-versions)을 함께 확인했다.

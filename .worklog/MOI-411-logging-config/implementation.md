@@ -94,3 +94,34 @@ sequenceDiagram
 ```
 
 HTTP 단위·실제 서버 테스트 14개와 공통 로깅 테스트 29개, 루트 `test ktlintCheck`를 통과했다. 실제 400·404·500 및 Security 401·403, OAuth 리다이렉트, 직접 async complete·timeout·dispatch, body 보존과 requestId·trace 연결을 확인했다. code-reviewer와 qa-reviewer의 최종 판정은 PASS다. 로그 전달 성공·성능이나 외부 배포를 검증했다는 의미는 아니다.
+
+## S3 저장 슬라이스 (2026-09-19)
+
+`application-logging` Terraform 모듈로 로그/설정 S3 버킷, 서비스별 ops/debug/router/fallback CloudWatch 그룹, task·execution 권한, 라우터 설정을 묶었다. 부모 환경 모듈은 task 정의에 라우터와 볼륨을 연결한다. dev에서만 활성화하며 live는 기존 경로를 유지한다.
+
+```mermaid
+sequenceDiagram
+    participant App as Kotlin 앱
+    participant Driver as ECS 로그 드라이버
+    participant Router as Fluent Bit
+    participant CW as CloudWatch
+    participant S3 as S3
+    App->>Driver: 정제한 JSON stdout
+    Driver-->>App: non-blocking, 포화 시 로그 유실
+    Driver->>Router: Forward 레코드
+    Router->>Router: 허용 필드·시각 검증
+    alt TRACE 또는 DEBUG
+        Router->>CW: debug 그룹 (3일)
+    else 운영 INFO/WARN/ERROR
+        Router->>CW: ops 그룹 (7일)
+        Router->>S3: 디스크 버퍼 → gzip PutObject (90일)
+    else growth INFO
+        Router->>S3: growth prefix (90일)
+    end
+    Note over Router,S3: 실패 시 제한된 버퍼에서 재시도. task/호스트 소실은 유실 가능
+```
+
+Terraform 변경은 AWS에 적용하지 않았다. 실제 CI plan, task 설정 다운로드, IAM 수신, 용량·포화·드라이버 재접속과 canary 감시는 현장 검증으로 남긴다. 알림 규칙·SID/UTM·업무 ErrorType 재분류는 별도 구현 범위다.
+
+
+최종 로컬 검증: Terraform mock plan 4개와 shared/dev/live validate, 배포 입력 테스트 17개, 인프라 셸 계약, 전체 Gradle test·ktlintCheck 통과. AWS for Fluent Bit 3.4.17(Fluent Bit 5.0.9) 실컨테이너는 S3 503 → SIGKILL → 같은 볼륨 재시작 후 gzip NDJSON 복구와 CW 분류·DEBUG 만료·허용 필드 제거·실제 HTTP 생존 명령을 통과했다. 이는 소량 합성 로그 테스트이며 처리량·p99·적정 메모리 측정이 아니다.

@@ -1,0 +1,24 @@
+flowchart TB
+    APP["core-api / core-worker<br/>HTTP 요청 · 작업 로그"]
+    SAFE["support:logging<br/>허용 필드 정제 → 환경별 Logback → stdout"]
+    APP --> SAFE
+    subgraph NEW["새 ECS 저장 경로 · dev 적용 전"]
+        DRIVER["awsfirelens 드라이버<br/>비차단 · 유한 큐"]
+        ROUTER["Fluent Bit sidecar<br/>스키마 검사 · 수준별 분류"]
+        CW["CloudWatch<br/>ops 7일 · debug 3일"]
+        S3["로그 S3 · gzip NDJSON<br/>ops / growth 90일"]
+        DRIVER --> ROUTER
+        ROUTER --> CW
+        ROUTER --> S3
+    end
+    SAFE --> DRIVER
+    CONFIG["설정 S3<br/>revision + 내용 hash<br/>과거 객체 보존"]
+    CONFIG -. "ECS 시작 시 읽기" .-> ROUTER
+    DIAG["CloudWatch router · 7일<br/>자체 진단 · 별도 awslogs"]
+    ROUTER --> DIAG
+    EXISTING["기존 관측 경로<br/>Sentry + 전용 개인정보 필터<br/>OTLP → Collector → Prometheus / Grafana"]
+    APP -. "오류 이벤트 / 메트릭<br/>stdout과 별도" .-> EXISTING
+    classDef added fill:#eaf2ff,stroke:#42649a,color:#142b4f
+    classDef existing fill:#f1f3f5,stroke:#68717a,color:#26323b
+    class DRIVER,ROUTER,CW,S3,DIAG,CONFIG added
+    class EXISTING existing

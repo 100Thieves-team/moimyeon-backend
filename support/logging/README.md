@@ -1,5 +1,7 @@
 # 공통 로깅 설정
 
+전체 문제·선택 이유·실제 사용 흐름은 [로깅 기반 작업 보고서](../../docs/architecture/logging-report.md)에 정리했다.
+
 실행 모듈은 `support:logging`과 `logging.yml`을 조립한다. 이 모듈은 kotlin-logging facade를 `api` 의존으로 제공하고 Logback·Sentry 구현은 내부 의존으로 둔다. 외부 클라이언트나 security 모듈이 facade만 필요하면 kotlin-logging을 직접 의존한다.
 
 환경별 `logback-*.xml`을 유지한다. 각 파일에서 로그 수준·출력 형식·appender 연결을 정하고, 공통 STDOUT encoder와 민감 logger 차단만 `common-appenders.xml`로 공유한다. 환경별 목적지가 달라지면 해당 XML에서 독립적으로 변경한다.
@@ -65,7 +67,7 @@ Sentry는 기존 `SentryPrivacyFilter`를 계속 사용한다. JSON encoder의 �
 
 core-api에는 실제 요청 수집을 연결했다. 공통 모듈에는 Servlet 의존이 없으며 HTTP 필터·리스너·인터셉터는 core-api에 둔다. worker와 batch에는 HTTP 필터를 추가하지 않았다.
 
-S3·FireLens·로그 보존·알림·일반 비동기 작업의 context 전파는 후속 범위다. stdout은 기존 배포 수집 경로를 사용한다. AsyncAppender도 전송 부하·손실을 검증하는 슬라이스에서 추가한다.
+S3·FireLens·보존 정책은 [별도 인프라 모듈](../../infra/terraform/modules/application-logging/README.md)에 작성했고 실제 AWS 적용은 아직이다. 적용 전 실행 환경은 기존 수집 경로를 사용한다. 알림·일반 비동기 작업 context 전파는 후속 범위이며 Logback AsyncAppender는 추가하지 않았다.
 
 ## HTTP 완료 기록
 
