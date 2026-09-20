@@ -1,6 +1,7 @@
 """Exercise the pinned production router against isolated S3/CW protocol doubles."""
 import gzip
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -127,6 +128,13 @@ def main():
                 print(result.stderr[-6000:])
             docker("rm", "-f", router, sink, check=False)
             docker("network", "rm", name, check=False)
+            # Linux bind mounts retain the router's root ownership. Give only this
+            # disposable buffer back to the caller before TemporaryDirectory cleanup.
+            docker("run", "--rm", "--network", "none", "-v", f"{root / 'buffers'}:/buffers", PYTHON,
+                   "python", "-c", "import os, sys; uid, gid = map(int, sys.argv[1:]); "
+                   "paths = ['/buffers'] + [os.path.join(base, entry) for base, dirs, files in os.walk('/buffers') for entry in dirs + files]; "
+                   "[os.chown(path, uid, gid, follow_symlinks=False) for path in paths]",
+                   str(os.getuid()), str(os.getgid()))
 
 
 if __name__ == "__main__":

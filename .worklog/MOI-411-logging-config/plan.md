@@ -81,6 +81,11 @@ PR 전 재검증: 최신 origin/dev 추가 변경 없음. 전체 Gradle test·kt
 
 Draft PR #127 게시: https://github.com/100Thieves-team/moimyeon-backend/pull/127
 
-검증한 커밋: 3a8412da068dea23b48ff1a9910abb7c3fcfa76c
+검증한 커밋: 4e1e9786f2dc439ed327cc9326d840699e2f6ee0
 
 최초 CI의 Terraform mock test가 Linux provider 캐시 checksum 불일치로 시작하지 못했다. provider 버전은 바꾸지 않고 HashiCorp 서명을 검증한 linux_amd64 checksum을 잠금 파일에 추가했다. Darwin과 Linux checksum을 함께 유지하고 lockfile=readonly 정책도 유지한다. 변경 뒤 로컬 mock plan 4개 통과. Draft이므로 CodeRabbit·review-swarm 자동 리뷰는 건너뛰었으며 이를 리뷰 통과로 세지 않는다.
+
+
+두 번째 CI에서 Linux mock plan과 실제 Fluent Bit 검증은 통과했지만, 종료 후 임시 디렉터리의 root 소유권 때문에 cleanup이 실패했다. production 라우터 설정은 바꾸지 않고 테스트 버퍼의 소유권만 반환하도록 수정했다. 로컬 실컨테이너 복구·정리까지 종료 코드 0을 확인했다.
+
+임시 버퍼 소유권 보완은 읽기 전용 코드 리뷰를 통과했다.

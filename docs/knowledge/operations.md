@@ -4,6 +4,11 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-20: 로그 수집기 smoke가 Linux CI에서 검증 PASS 뒤 임시 버퍼 정리에 실패했다.
+  원인: Docker root 프로세스가 bind mount에 만든 하위 디렉터리의 소유권이 호스트 runner와 달랐다.
+  테스트 컨테이너를 제거한 뒤 그 테스트의 버퍼만 runner 소유권으로 돌려주고 TemporaryDirectory가 정리하도록 했다.
+
+
 - 2026-09-19: MOI-411의 격리된 S3 503 → 라우터 SIGKILL → 같은 볼륨 재시작 테스트에서
   AWS for Fluent Bit 2.34.3.20260918(Fluent Bit 1.9.10)의 복구 객체에 NUL 문자가 섞여 JSON 파싱이 실패했다.
   내부 원인은 미확정이다. AWS for Fluent Bit 3.4.17(Fluent Bit 5.0.9)에서는 같은 시나리오를 통과했다.
