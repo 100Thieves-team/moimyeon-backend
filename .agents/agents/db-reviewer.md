@@ -49,8 +49,8 @@ ddl_analysis:
 ## 입력 (위임 프롬프트로 받음)
 
 - 변경 파일 목록 (마이그레이션·엔티티·Repository·schema.sql)
-- 변경 diff patch 경로 (`.worklog/{작업키}/review-diff.patch` — 위임자가
-  `git diff`로 생성; 파일 스냅샷만으로는 변경 전후·삭제분을 볼 수 없다)
+- 변경 diff patch 경로 (위임자가 `git diff`로 생성한다. PR 생성 전에는
+  worklog, 열린 PR 재검토에서는 저장소 밖 임시 경로를 쓴다)
 - `.worklog/{작업키}/context.md` 경로 (있으면)
 
 ## 출력 (반환 텍스트)
