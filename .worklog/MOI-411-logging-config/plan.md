@@ -78,3 +78,9 @@ S3 로컬 검증: Terraform 1.15.9 fmt, shared/dev/live validate, mock provider 
 - [x] 2026-09-20 사용자가 PR 게시를 요청했다. 기존 초안을 기준으로 커밋·push·draft PR 생성과 CI sanitized plan 확인을 진행한다. 머지·apply 승인은 포함하지 않는다.
 
 PR 전 재검증: 최신 origin/dev 추가 변경 없음. 전체 Gradle test·ktlintCheck, Terraform fmt·mock plan 4개, 배포 입력 17개와 인프라 셸 계약 통과. 기존 코드·QA PASS와 문서 사실 검토를 유지한다. 팀 가이드는 LLM Wiki `topics/t-moimyeon-로깅-아키텍처와-사용-가이드`에 게시했고, Mermaid 4개·본문 재조회·Wiki lint 검증을 마쳤다.
+
+Draft PR #127 게시: https://github.com/100Thieves-team/moimyeon-backend/pull/127
+
+검증한 커밋: 3a8412da068dea23b48ff1a9910abb7c3fcfa76c
+
+최초 CI의 Terraform mock test가 Linux provider 캐시 checksum 불일치로 시작하지 못했다. provider 버전은 바꾸지 않고 HashiCorp 서명을 검증한 linux_amd64 checksum을 잠금 파일에 추가했다. Darwin과 Linux checksum을 함께 유지하고 lockfile=readonly 정책도 유지한다. 변경 뒤 로컬 mock plan 4개 통과. Draft이므로 CodeRabbit·review-swarm 자동 리뷰는 건너뛰었으며 이를 리뷰 통과로 세지 않는다.
