@@ -196,6 +196,31 @@ class EcsRegistrationTest(unittest.TestCase):
                     if key in template:
                         self.assertEqual(result[key], template[key])
 
+    def test_firelens_router_and_buffers_survive_image_promotion(self):
+        for worker in (False, True):
+            with self.subTest(worker=worker):
+                template = task_template(worker)
+                app = template["containerDefinitions"][0]
+                app["dependsOn"] = [{"containerName": "log-router", "condition": "HEALTHY"}]
+                app["logConfiguration"] = {"logDriver": "awsfirelens", "options": {"Name": "null", "mode": "non-blocking"}}
+                router = {
+                    "name": "log-router", "image": "router@sha256:" + "a" * 64,
+                    "essential": False, "memory": 128, "cpu": 64,
+                    "restartPolicy": {"enabled": True, "restartAttemptPeriod": 60},
+                    "firelensConfiguration": {"type": "fluentbit", "options": {
+                        "config-file-type": "s3", "config-file-value": "arn:aws:s3:::config/revisions/v1/immutable.conf"}},
+                    "mountPoints": [{"sourceVolume": "log-router-buffer", "containerPath": "/buffers", "readOnly": False}],
+                }
+                template["containerDefinitions"].append(router)
+                template["volumes"] = [{"name": "log-router-buffer"}]
+                template["memory"] = "928" if worker else "1760"
+                result = task_module.prepare(template, template["taskDefinitionArn"], app["name"], "new@sha256:" + "b" * 64, SHA)
+                self.assertEqual(result["containerDefinitions"][-1], router)
+                self.assertEqual(result["volumes"], template["volumes"])
+                self.assertEqual(result["memory"], template["memory"])
+                self.assertEqual(result["containerDefinitions"][0]["dependsOn"], app["dependsOn"])
+                self.assertEqual(result["containerDefinitions"][0]["logConfiguration"], app["logConfiguration"])
+
     def test_inactive_api_or_worker_is_rejected(self):
         for worker in (False, True):
             for status in ("INACTIVE", "DELETE_IN_PROGRESS", None):

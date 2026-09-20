@@ -1,0 +1,83 @@
+[SERVICE]
+    Flush        1
+    Grace        25
+    Log_Level    warn
+    Parsers_File /fluent-bit/etc/parsers.conf
+    HTTP_Server  On
+    HTTP_Listen  127.0.0.1
+    HTTP_Port    2020
+
+[FILTER]
+    Name         parser
+    Match        ${container_name}-firelens-*
+    Key_Name     log
+    Parser       json
+    Reserve_Data Off
+    Preserve_Key Off
+
+[FILTER]
+    Name          lua
+    Match         ${container_name}-firelens-*
+    call          sanitize
+    code          ${lua_code}
+    time_as_table On
+    type_int_key  schemaVersion status durationMs line
+
+[FILTER]
+    Name                  rewrite_tag
+    Match                 ${container_name}-firelens-*
+    Rule                  $level ^(TRACE|DEBUG)$ debug.$TAG false
+    Rule                  $category ^growth$ growth.$TAG false
+    Rule                  $level ^(INFO|WARN|ERROR)$ ops.$TAG false
+    Emitter_Storage.type  memory
+    Emitter_Mem_Buf_Limit  5M
+
+[OUTPUT]
+    Name              cloudwatch_logs
+    Match             ops.*
+    region            ${region}
+    log_group_name    ${ops_group}
+    log_stream_prefix task-
+    auto_create_group false
+    Retry_Limit       5
+    ${cloudwatch_endpoint_configuration}
+
+[OUTPUT]
+    Name              cloudwatch_logs
+    Match             debug.*
+    region            ${region}
+    log_group_name    ${debug_group}
+    log_stream_prefix task-
+    auto_create_group false
+    Retry_Limit       2
+    ${cloudwatch_endpoint_configuration}
+
+[OUTPUT]
+    Name                 s3
+    Match                ops.*
+    bucket               ${bucket}
+    region               ${region}
+    use_put_object       On
+    compression          gzip
+    total_file_size      10M
+    upload_timeout       ${upload_timeout}
+    store_dir            /buffers/ops
+    store_dir_limit_size  224M
+    s3_key_format        /env=${environment}/service=${service_name}/retention=ops/dt=%Y-%m-%d/hour=%H/$UUID.json.gz
+    json_date_key        false
+    ${s3_endpoint_configuration}
+
+[OUTPUT]
+    Name                 s3
+    Match                growth.*
+    bucket               ${bucket}
+    region               ${region}
+    use_put_object       On
+    compression          gzip
+    total_file_size      10M
+    upload_timeout       ${upload_timeout}
+    store_dir            /buffers/growth
+    store_dir_limit_size  32M
+    s3_key_format        /env=${environment}/service=${service_name}/retention=growth/dt=%Y-%m-%d/hour=%H/$UUID.json.gz
+    json_date_key        false
+    ${s3_endpoint_configuration}

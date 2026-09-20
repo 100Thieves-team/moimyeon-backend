@@ -22,3 +22,5 @@ firebase_project_id                   = null
 notification_web_push_action_base_url = "https://moimyeon.plady.io"
 notification_email_ses_from_address   = null
 notification_email_gmail_address      = null
+
+application_logging_mode = "disabled"

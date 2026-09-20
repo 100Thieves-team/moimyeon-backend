@@ -106,4 +106,7 @@ assert_not_contains "${SYNC_SCRIPT}" 'MOIMYEON_LIVE_ROLLBACK_ENABLED true' "boot
 assert_not_contains "${SYNC_SCRIPT}" 'gh secret set.*MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN' "Variables-write credential 값은 자동화가 취급하면 안 된다."
 assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER' "GitHub에는 Variables-write credential의 SSM 이름만 동기화해야 한다."
 
+assert_contains "${BOOTSTRAP_TF}" 'RefreshDevApplicationLogConfigObjects' "로그 설정 객체도 다음 plan에서 refresh할 수 있어야 한다."
+assert_contains "${BOOTSTRAP_TF}" 'dev-app-config-.*account_id.*/revisions/\*' "로그 설정 읽기는 dev의 non-secret revision prefix로 제한해야 한다."
+
 echo "Terraform bootstrap 계약을 만족한다."
