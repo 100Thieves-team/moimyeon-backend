@@ -89,6 +89,10 @@
   PR 은 커밋 본문의 맥락을 취합하고 `Closes MOI-xxx` 포함.
   → [git.md](git.md)
 
+## 문서 배치
+
+`docs/` 아래에는 `conventions/`와 `knowledge/`만 둔다. 팀 규칙은 conventions, 운영에서 확인한 경험과 주의점은 knowledge에 기록한다. 시스템 아키텍처·시퀀스·사용 가이드는 LLM Wiki에서 관리하며 별도 `docs/architecture/` 디렉터리를 만들지 않는다. 이슈별 설계·결정·검증 이력은 `.worklog/`에 남긴다.
+
 ## 2. 문서 목록
 
 | 문서 | 내용 |

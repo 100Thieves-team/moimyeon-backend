@@ -1,6 +1,6 @@
 # 공통 로깅 설정
 
-전체 문제·선택 이유·실제 사용 흐름은 [로깅 기반 작업 보고서](../../docs/architecture/logging-report.md)에 정리했다.
+로깅 구조·시퀀스·설계 근거와 작성 규칙은 [팀 로깅 가이드](https://wiki.agent.plady.io/topics/t-moimyeon-로깅-아키텍처와-사용-가이드/)에 정리했다.
 
 실행 모듈은 `support:logging`과 `logging.yml`을 조립한다. 이 모듈은 kotlin-logging facade를 `api` 의존으로 제공하고 Logback·Sentry 구현은 내부 의존으로 둔다. 외부 클라이언트나 security 모듈이 facade만 필요하면 kotlin-logging을 직접 의존한다.
 

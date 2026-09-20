@@ -99,3 +99,6 @@ PR #127의 최신 Terraform Plan(run 35495199562)이 성공했다. Linux 정적 
 
 
 사용자 승인 후 소비 측 정책 공통화: application_logging.tf의 서비스별 local map으로 예산·mode·의존성·볼륨 규칙을 합쳤다. 부모 모듈 mock plan 6개와 CI 실행을 추가했다. 같은 테스트를 HEAD 스냅샷과 변경본에 적용해 모두 통과하고 CPU·memory·container JSON·volume 일치를 확인했다. 전체 Gradle test·ktlintCheck 통과, code/QA 읽기 전용 리뷰 PASS. 기존 모니터링 셸 검사의 문자열 위치를 새 정책·소비 연결·native test CI 연결로 갱신했다. 이 변경을 먼저 커밋한 뒤 docs/architecture 삭제를 별도 후속 커밋으로 처리한다.
+
+
+사용자 요청에 따른 별도 후속 문서 정리: 공통화 커밋 55603209 다음에 docs/architecture 전체를 제거한다. README와 설계 문서의 현재 링크는 게시된 LLM Wiki 팀 가이드로 전환하고 docs/conventions/README.md에 docs 하위는 conventions·knowledge만 허용하는 규칙을 기록한다. 과거 작업 이력의 일반 텍스트 경로는 역사적 기록으로 유지한다. Wiki의 Mermaid·가이드는 삭제하지 않는다.
