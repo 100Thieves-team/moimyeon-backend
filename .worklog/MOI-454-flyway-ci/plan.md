@@ -4,7 +4,7 @@
 
 - [x] 컨텍스트 및 구현 착수 승인: 사용자 "진행해줘" (2026-09-20)
 - [x] 정적 검증·시나리오 검증 및 인프라 plan 승인: 사용자 "지정했어. 다음 단계 진행해줘" (2026-09-20)
-- [ ] 커밋·PR 승인
+- [x] 커밋·PR 승인: 사용자 "승인할게" (2026-09-20)
 - [x] GitHub dev strict required-check ruleset 활성화 확인 (2026-09-20)
 
 ## 변경 방향
@@ -45,3 +45,5 @@
 - 최종 읽기 전용 qa-reviewer: PASS, 위험도 low, coverage gap 없음.
 - Terraform plan: 해당 없음. AWS·live 자원·권한·DB schema 변경 없음.
 - GitHub ruleset `dev-protection`: active, target `refs/heads/dev`, required check `build`, strict=true, bypass actor 없음.
+
+검증한 커밋: 208c901a488e2ee4a49dcfe813cdbdb521d9fef7
