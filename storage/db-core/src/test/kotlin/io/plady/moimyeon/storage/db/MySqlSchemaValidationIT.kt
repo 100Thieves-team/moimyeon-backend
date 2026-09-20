@@ -6,6 +6,7 @@ import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
+import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -36,9 +37,16 @@ import javax.sql.DataSource
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MySqlSchemaValidationIT(
     private val dataSource: DataSource,
+    private val flyway: Flyway,
     private val participationRepository: ParticipationRepository,
     private val entityManager: EntityManager,
 ) {
+    @Test
+    fun `빈 MySQL에 모든 Flyway migration을 적용한다`() {
+        assertThat(flyway.info().applied()).isNotEmpty()
+        assertThat(flyway.info().pending()).isEmpty()
+    }
+
     @Test
     @Transactional
     fun `확정 시점 참여 여부를 MySQL에서 조회한다`() {
