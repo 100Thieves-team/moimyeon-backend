@@ -46,7 +46,7 @@
 - Terraform plan: 해당 없음. AWS·live 자원·권한·DB schema 변경 없음.
 - GitHub ruleset `dev-protection`: active, target `refs/heads/dev`, required check `build`, strict=true, bypass actor 없음.
 
-검증한 커밋: 208c901a488e2ee4a49dcfe813cdbdb521d9fef7
+검증한 커밋: 9ad3f1b8e5aaf8a9504a13e9afe27ba05c67f800
 
 ## PR CI 및 리뷰 반영
 
