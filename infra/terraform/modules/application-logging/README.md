@@ -57,9 +57,13 @@ terraform -chdir=infra/terraform/modules/application-logging init -backend=false
 terraform -chdir=infra/terraform/modules/application-logging test
 python3 infra/terraform/tests/logging_smoke.py
 python3 infra/terraform/tests/test_deploy_inputs.py
+
+# API/Worker 소비 측 task 정의 (모든 provider는 mock)
+terraform -chdir=infra/terraform/modules/moimyeon-environment init -backend=false -lockfile=readonly
+terraform -chdir=infra/terraform/modules/moimyeon-environment test
 ```
 
-Native Terraform test는 mock provider plan으로 보존·자원·모드 계약을 검사한다. Docker smoke는 운영과 동일 digest의 Fluent Bit과 네트워크가 격리된 S3/CloudWatch 대역을 사용한다. 실제 gzip 객체, 로그 분류, 만료된 debug 제거, 비허용 필드 차단, S3 503 뒤 라우터 강제 종료와 같은 볼륨에서의 재시작 복구, task health check 명령을 검사한다. timeout만 1초로 줄이며 테스트용 TLS 인증서와 엔드포인트는 운영 설정에 들어가지 않는다.
+수집 모듈의 native Terraform test는 mock provider plan으로 보존·자원·모드 계약을 검사한다. 환경 모듈의 소비 측 테스트는 다른 라우터 예산을 주입하고 API·Worker task JSON의 예산·목적지·의존성·볼륨과 CPU 부족 거부를 확인한다. Docker smoke는 운영과 동일 digest의 Fluent Bit과 네트워크가 격리된 S3/CloudWatch 대역을 사용한다. 실제 gzip 객체, 로그 분류, 만료된 debug 제거, 비허용 필드 차단, S3 503 뒤 라우터 강제 종료와 같은 볼륨에서의 재시작 복구, task health check 명령을 검사한다. timeout만 1초로 줄이며 테스트용 TLS 인증서와 엔드포인트는 운영 설정에 들어가지 않는다.
 
 이 검증은 ECS agent의 S3 설정 다운로드·IAM·실제 AWS 수신·EC2 배치 여유를 증명하지 않는다. PR CI의 sanitized plan을 먼저 판독한다. Shared의 plan refresh 권한이 dev보다 먼저 적용돼야 하며, 기존 파이프라인은 shared 적용 뒤 dev plan을 만든다. 에이전트는 apply하지 않으며, 이 저장소는 머지 후 자동 apply하므로 머지가 적용 승인이다.
 

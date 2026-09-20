@@ -52,6 +52,12 @@ jobs:
           terraform -chdir=infra/terraform/modules/application-logging init -backend=false -input=false -lockfile=readonly
           terraform -chdir=infra/terraform/modules/application-logging test -no-color
 
+      - name: Test API and worker logging integration without AWS
+        if: matrix.environment == 'dev'
+        run: |
+          terraform -chdir=infra/terraform/modules/moimyeon-environment init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infra/terraform/modules/moimyeon-environment test -no-color
+
       - name: Test real log router with isolated AWS protocol doubles
         if: matrix.environment == 'dev' && github.event_name == 'pull_request'
         timeout-minutes: 6

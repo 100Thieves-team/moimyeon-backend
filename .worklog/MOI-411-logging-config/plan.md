@@ -81,7 +81,7 @@ PR 전 재검증: 최신 origin/dev 추가 변경 없음. 전체 Gradle test·kt
 
 Draft PR #127 게시: https://github.com/100Thieves-team/moimyeon-backend/pull/127
 
-검증한 커밋: 4e1e9786f2dc439ed327cc9326d840699e2f6ee0
+검증한 커밋: dc3872a4566de00208eced94eef1c347ba6615aa
 
 최초 CI의 Terraform mock test가 Linux provider 캐시 checksum 불일치로 시작하지 못했다. provider 버전은 바꾸지 않고 HashiCorp 서명을 검증한 linux_amd64 checksum을 잠금 파일에 추가했다. Darwin과 Linux checksum을 함께 유지하고 lockfile=readonly 정책도 유지한다. 변경 뒤 로컬 mock plan 4개 통과. Draft이므로 CodeRabbit·review-swarm 자동 리뷰는 건너뛰었으며 이를 리뷰 통과로 세지 않는다.
 
@@ -89,3 +89,13 @@ Draft PR #127 게시: https://github.com/100Thieves-team/moimyeon-backend/pull/1
 두 번째 CI에서 Linux mock plan과 실제 Fluent Bit 검증은 통과했지만, 종료 후 임시 디렉터리의 root 소유권 때문에 cleanup이 실패했다. production 라우터 설정은 바꾸지 않고 테스트 버퍼의 소유권만 반환하도록 수정했다. 로컬 실컨테이너 복구·정리까지 종료 코드 0을 확인했다.
 
 임시 버퍼 소유권 보완은 읽기 전용 코드 리뷰를 통과했다.
+
+
+PR #127의 최신 Terraform Plan(run 35495199562)이 성공했다. Linux 정적 검사·mock plan·실제 수집기 smoke와 shared/dev plan을 통과했다. Sanitized 요약만 판독했으며 raw plan·state는 접근하지 않았다. Shared 1 update, dev 26 create + 1 update + task definition 2 replacement다. 재생성을 add/destroy에 포함하면 dev add28/change1/destroy2다. Live는 정적 검사만 통과했으며 실환경 plan 미실행이다.
+
+직접 수정하지 않은 `module.dev.aws_launch_template.ecs` update가 포함됐다. 코드가 권장 AMI SSM 조회값을 참조하는 것은 확인했지만 요약에는 속성 diff가 없어 원인을 확정하지 않았다. 이 변경의 속성·원인·인스턴스 영향을 담당자가 확인하기 전 draft를 유지하도록 PR 본문에 명시했다. 머지·apply는 수행하지 않았다.
+
+이 마지막 plan 판독 메모는 PR 게시 후 로컬 기록이며 아직 별도 커밋하지 않았다.
+
+
+사용자 승인 후 소비 측 정책 공통화: application_logging.tf의 서비스별 local map으로 예산·mode·의존성·볼륨 규칙을 합쳤다. 부모 모듈 mock plan 6개와 CI 실행을 추가했다. 같은 테스트를 HEAD 스냅샷과 변경본에 적용해 모두 통과하고 CPU·memory·container JSON·volume 일치를 확인했다. 전체 Gradle test·ktlintCheck 통과, code/QA 읽기 전용 리뷰 PASS. 기존 모니터링 셸 검사의 문자열 위치를 새 정책·소비 연결·native test CI 연결로 갱신했다. 이 변경을 먼저 커밋한 뒤 docs/architecture 삭제를 별도 후속 커밋으로 처리한다.

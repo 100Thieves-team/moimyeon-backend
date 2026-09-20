@@ -65,7 +65,6 @@ locals {
       name      = var.container_name
       image     = local.image_uri
       essential = true
-      cpu       = var.task_cpu - (local.log_routing_enabled ? module.application_logging.router_cpu : 0)
       memory    = var.task_memory
 
       portMappings = [
@@ -78,18 +77,9 @@ locals {
 
       environment = local.container_environment
       secrets     = local.container_secrets
-
-      logConfiguration = local.log_routing_enabled ? module.application_logging.app_log_configurations["api"] : var.application_logging_mode == "provision" ? module.application_logging.fallback_log_configurations["api"] : {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.app.name
-          awslogs-region        = data.aws_region.current.region
-          awslogs-stream-prefix = var.container_name
-        }
-      }
     },
     local.container_health_check,
-    local.log_routing_enabled ? { dependsOn = [{ containerName = "log-router", condition = "HEALTHY" }] } : {},
+    local.logging_task_policy["api"].app_settings,
   )
 }
 
@@ -107,7 +97,7 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = tostring(var.task_cpu)
-  memory                   = tostring(var.task_memory + (local.log_routing_enabled ? module.application_logging.extra_memory : 0))
+  memory                   = tostring(local.logging_task_policy["api"].memory)
   execution_role_arn       = aws_iam_role.task_execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
@@ -116,16 +106,16 @@ resource "aws_ecs_task_definition" "app" {
     cpu_architecture        = "X86_64"
   }
 
-  container_definitions = jsonencode(concat([local.container_definition], local.log_routing_enabled ? [module.application_logging.routers["api"]] : []))
+  container_definitions = jsonencode(concat([local.container_definition], local.logging_task_policy["api"].containers))
 
   dynamic "volume" {
-    for_each = local.log_routing_enabled ? [1] : []
-    content { name = "log-router-buffer" }
+    for_each = local.logging_task_policy["api"].volumes
+    content { name = volume.value.name }
   }
 
   lifecycle {
     precondition {
-      condition     = !local.log_routing_enabled || var.task_cpu > module.application_logging.router_cpu
+      condition     = local.logging_task_policy["api"].cpu_budget_valid
       error_message = "The API task CPU budget must leave shares for the log router."
     }
   }

@@ -412,3 +412,10 @@ CI plan이 새 설정 객체를 refresh하려면 HeadObject/GetObjectTagging 권
 **상태: 2026-09-19 구현 검증.** AWS stable 표시는 당시 2.34.3.20260918이었지만, AL2 기반 2.x와 AL2023 기반 3.x의 지원 정책은 다르다. 또한 2.x에서 S3 장애 중 강제 종료 후 복구한 객체의 JSON 파싱 실패를 재현했다. stable 표시만으로 이미지를 정하면 이 경로를 놓친다.
 
 실제로 배포된 3.4.17을 digest로 고정하고 같은 테스트를 통과한 것을 확인했다. 문서에 나온 3.4.18은 확인 시점의 public ECR에서 조회되지 않아 선택하지 않았다. 테스트는 버퍼가 남아 있는 컨테이너 재시작에 한정하며 task·호스트 소실을 보장하지 않는다. [AWS 배포 버전·지원 지침](https://github.com/aws/aws-for-fluent-bit#consuming-aws-for-fluent-bit-versions)을 함께 확인했다.
+
+
+### DR-31. API와 Worker가 소비하는 라우터 정책을 한곳에 둔다
+
+CPU 64·추가 메모리 값은 이미 수집 모듈에서 공유했지만, 이를 task에 적용하는 산식과 mode 분기를 각 ECS 파일에 반복하고 있었다. 서비스별 원래 예산·기존 로그 그룹을 입력으로 받는 `logging_task_policy` local map을 환경 모듈에 둔다. CPU 차감·task 메모리·로그 경로·HEALTHY 의존성·sidecar·볼륨·예산 유효성은 이 map이 소유한다. 리소스 주소·고유 앱 설정·precondition 블록은 각 ECS 리소스에 남긴다.
+
+수집 모듈은 기존 테스트로 검증하고, 소비 측은 별도 모듈 출력 fixture의 96 CPU·192MiB·추가224MiB를 실제 task JSON에 적용하는지 확인한다. 기본값 64/160을 다시 하드코딩하는 회귀도 잡기 위한 선택이다. AWS provider·metadata는 mock만 사용한다. refactor 전후 같은 테스트 6개가 통과하고 10개 planned task의 CPU·memory·전체 container JSON·volume이 동일함을 확인했다. 실제 AWS plan이나 배치 능력을 이 비교로 대신하지 않는다.

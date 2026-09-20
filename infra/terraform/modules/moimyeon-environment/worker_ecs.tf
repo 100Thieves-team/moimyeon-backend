@@ -43,7 +43,7 @@ resource "aws_ecs_task_definition" "notification_worker" {
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = tostring(var.notification_worker_task_cpu)
-  memory                   = tostring(var.notification_worker_task_memory + (local.log_routing_enabled ? module.application_logging.extra_memory : 0))
+  memory                   = tostring(local.logging_task_policy["worker"].memory)
   execution_role_arn       = aws_iam_role.notification_worker_execution.arn
   task_role_arn            = aws_iam_role.notification_worker.arn
 
@@ -57,30 +57,20 @@ resource "aws_ecs_task_definition" "notification_worker" {
       name        = var.notification_worker_container_name
       image       = local.notification_worker_image_uri
       essential   = true
-      cpu         = var.notification_worker_task_cpu - (local.log_routing_enabled ? module.application_logging.router_cpu : 0)
       memory      = var.notification_worker_task_memory
       environment = local.notification_worker_environment
       secrets     = local.notification_worker_secrets
-
-      logConfiguration = local.log_routing_enabled ? module.application_logging.app_log_configurations["worker"] : var.application_logging_mode == "provision" ? module.application_logging.fallback_log_configurations["worker"] : {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.notification_worker.name
-          awslogs-region        = data.aws_region.current.region
-          awslogs-stream-prefix = var.notification_worker_container_name
-        }
-      }
-    }, local.log_routing_enabled ? { dependsOn = [{ containerName = "log-router", condition = "HEALTHY" }] } : {}),
-  ], local.log_routing_enabled ? [module.application_logging.routers["worker"]] : []))
+    }, local.logging_task_policy["worker"].app_settings),
+  ], local.logging_task_policy["worker"].containers))
 
   dynamic "volume" {
-    for_each = local.log_routing_enabled ? [1] : []
-    content { name = "log-router-buffer" }
+    for_each = local.logging_task_policy["worker"].volumes
+    content { name = volume.value.name }
   }
 
   lifecycle {
     precondition {
-      condition     = !local.log_routing_enabled || var.notification_worker_task_cpu > module.application_logging.router_cpu
+      condition     = local.logging_task_policy["worker"].cpu_budget_valid
       error_message = "The worker task CPU budget must leave shares for the log router."
     }
   }
