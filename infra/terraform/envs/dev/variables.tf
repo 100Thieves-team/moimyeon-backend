@@ -157,3 +157,13 @@ variable "monitoring_ami_id" {
   type        = string
   default     = null
 }
+
+variable "application_logging_mode" {
+  description = "Application log storage/routing: disabled, provision, or enabled."
+  type        = string
+  default     = "disabled"
+  validation {
+    condition     = contains(["disabled", "provision", "enabled"], var.application_logging_mode)
+    error_message = "Application logging mode must be disabled, provision, or enabled."
+  }
+}

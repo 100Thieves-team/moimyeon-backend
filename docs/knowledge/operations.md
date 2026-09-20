@@ -4,6 +4,19 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-20: 로그 수집기 smoke가 Linux CI에서 검증 PASS 뒤 임시 버퍼 정리에 실패했다.
+  원인: Docker root 프로세스가 bind mount에 만든 하위 디렉터리의 소유권이 호스트 runner와 달랐다.
+  테스트 컨테이너를 제거한 뒤 그 테스트의 버퍼만 runner 소유권으로 돌려주고 TemporaryDirectory가 정리하도록 했다.
+
+
+- 2026-09-19: MOI-411의 격리된 S3 503 → 라우터 SIGKILL → 같은 볼륨 재시작 테스트에서
+  AWS for Fluent Bit 2.34.3.20260918(Fluent Bit 1.9.10)의 복구 객체에 NUL 문자가 섞여 JSON 파싱이 실패했다.
+  내부 원인은 미확정이다. AWS for Fluent Bit 3.4.17(Fluent Bit 5.0.9)에서는 같은 시나리오를 통과했다.
+  재발 방지: `infra/terraform/tests/logging_smoke.py`에서 재시작 후 gzip 해제와 모든 행의 JSON 파싱을 확인한다.
+
+
+- 2026-09-18: HTTP 로깅 IT에서 sampling=0이어도 trace ID가 생성되고 Security가 자식 span을 여는 것을 확인했다. 핸들러와 완료 로그는 trace ID로 연결하고, 완료 로그의 span은 HTTP 관측 scope 기준으로 검증한다. async 재디스패치가 다른 핸들러를 타더라도 최초 route를 보존한다(`HttpRequestLoggingIT`).
+
 - 2026-09-11: Terraform sync가 API 템플릿 변수를 `:95`로 갱신했지만 동시에 시작된
   앱 배포는 이전 `:43`을 참조했다. 비활성 템플릿의 `deregisteredAt`을 등록 요청에 복사해
   AWS CLI 입력 검증도 실패했다. 재발 방지는 같은 source SHA·run·attempt에 고정된 비민감

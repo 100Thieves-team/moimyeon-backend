@@ -1,8 +1,8 @@
 package io.plady.moimyeon.support.logging
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.sentry.SentryOptions
 import io.sentry.spring.boot4.SentryAutoConfiguration
-import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.Bean
@@ -15,7 +15,8 @@ class SentryPrivacyAutoConfiguration {
     fun sentryPrivacyFilter(environment: Environment): SentryPrivacyFilter = SentryPrivacyFilter(
         serviceName = environment.getProperty("OTEL_SERVICE_NAME")
             ?: environment.getProperty("spring.application.name", "unknown-service"),
-        environment = environment.getProperty("DEPLOYMENT_ENVIRONMENT")
+        environment = environment.getProperty("moimyeon.logging.environment")
+            ?: environment.getProperty("DEPLOYMENT_ENVIRONMENT")
             ?: environment.getProperty("spring.profiles.active", "local"),
         release = environment.getProperty("APP_RELEASE", "local"),
     )
@@ -31,7 +32,10 @@ class SentryPrivacyAutoConfiguration {
 
     @EventListener(ApplicationReadyEvent::class)
     fun ready() {
-        LoggerFactory.getLogger(SentryPrivacyAutoConfiguration::class.java)
-            .info(SentryPrivacyFilter.SERVICE_READY)
+        log.info { SentryPrivacyFilter.SERVICE_READY }
+    }
+
+    companion object {
+        private val log = KotlinLogging.logger {}
     }
 }

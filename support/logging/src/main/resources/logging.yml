@@ -1,9 +1,9 @@
-logging.config: classpath:logback/logback-${spring.profiles.active}.xml
+logging.config: classpath:logback/logback-${moimyeon.logging.profile:local}.xml
 
 sentry:
   enabled: ${SENTRY_ENABLED:false}
   dsn: ${SENTRY_DSN:}
-  environment: ${DEPLOYMENT_ENVIRONMENT:${spring.profiles.active:local}}
+  environment: ${DEPLOYMENT_ENVIRONMENT:${moimyeon.logging.environment:${spring.profiles.active:local}}}
   release: ${APP_RELEASE:local}
   send-default-pii: false
   max-request-body-size: none

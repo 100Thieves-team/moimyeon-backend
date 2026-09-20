@@ -9,6 +9,8 @@ data "aws_iam_openid_connect_provider" "github" {
 module "live" {
   source = "../../modules/moimyeon-environment"
 
+  application_logging_mode = var.application_logging_mode
+
   project                  = var.project
   environment              = "live"
   github_repository        = var.github_repository

@@ -51,6 +51,7 @@ assert_keys() {
 }
 
 common_keys=(
+  application_logging_mode
   app_domain_name
   aws_region
   db_master_username

@@ -65,7 +65,6 @@ locals {
       name      = var.container_name
       image     = local.image_uri
       essential = true
-      cpu       = var.task_cpu
       memory    = var.task_memory
 
       portMappings = [
@@ -78,17 +77,9 @@ locals {
 
       environment = local.container_environment
       secrets     = local.container_secrets
-
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.app.name
-          awslogs-region        = data.aws_region.current.region
-          awslogs-stream-prefix = var.container_name
-        }
-      }
     },
     local.container_health_check,
+    local.logging_task_policy["api"].app_settings,
   )
 }
 
@@ -106,7 +97,7 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = tostring(var.task_cpu)
-  memory                   = tostring(var.task_memory)
+  memory                   = tostring(local.logging_task_policy["api"].memory)
   execution_role_arn       = aws_iam_role.task_execution.arn
   task_role_arn            = aws_iam_role.task.arn
 
@@ -115,7 +106,19 @@ resource "aws_ecs_task_definition" "app" {
     cpu_architecture        = "X86_64"
   }
 
-  container_definitions = jsonencode([local.container_definition])
+  container_definitions = jsonencode(concat([local.container_definition], local.logging_task_policy["api"].containers))
+
+  dynamic "volume" {
+    for_each = local.logging_task_policy["api"].volumes
+    content { name = volume.value.name }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = local.logging_task_policy["api"].cpu_budget_valid
+      error_message = "The API task CPU budget must leave shares for the log router."
+    }
+  }
 
   tags = local.tags
 }

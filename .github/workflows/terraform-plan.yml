@@ -46,6 +46,23 @@ jobs:
       - name: Validate ${{ matrix.environment }}
         run: bash infra/terraform/scripts/terraform-command.sh validate "${{ matrix.environment }}"
 
+      - name: Test logging resources without AWS
+        if: matrix.environment == 'dev'
+        run: |
+          terraform -chdir=infra/terraform/modules/application-logging init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infra/terraform/modules/application-logging test -no-color
+
+      - name: Test API and worker logging integration without AWS
+        if: matrix.environment == 'dev'
+        run: |
+          terraform -chdir=infra/terraform/modules/moimyeon-environment init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infra/terraform/modules/moimyeon-environment test -no-color
+
+      - name: Test real log router with isolated AWS protocol doubles
+        if: matrix.environment == 'dev' && github.event_name == 'pull_request'
+        timeout-minutes: 6
+        run: python3 infra/terraform/tests/logging_smoke.py
+
   plan:
     needs: static
     if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}

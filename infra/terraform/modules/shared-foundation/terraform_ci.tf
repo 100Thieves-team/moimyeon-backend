@@ -361,6 +361,13 @@ data "aws_iam_policy_document" "terraform_plan_refresh" {
     actions   = ["s3:GetObject", "s3:GetObjectTagging"]
     resources = ["arn:aws:s3:::${var.project}-dev-monitoring-config-${data.aws_caller_identity.current.account_id}/releases/*"]
   }
+
+  statement {
+    sid       = "RefreshDevApplicationLogConfigObjects"
+    actions   = ["s3:GetObject", "s3:GetObjectTagging"]
+    resources = ["arn:aws:s3:::${var.project}-dev-app-config-${data.aws_caller_identity.current.account_id}/revisions/*"]
+  }
+
 }
 
 resource "aws_iam_policy" "terraform_plan_refresh" {
