@@ -120,10 +120,11 @@ jobs:
       # 같은 버전 번호를 가진 마이그레이션이 둘이면 Flyway 는 애플리케이션 부팅에서야 터진다.
       # 브랜치 두 개가 각자 같은 번호를 달고 나란히 머지되면 git 은 충돌 없이 통과시키므로
       # 배포까지 가서 드러난다. JDK 설치보다 먼저 걸러낸다.
+      - name: Check Flyway migration checker self-test
+        run: python3 .github/scripts/test_check_flyway_migrations.py
+
       - name: Check Flyway migration contract
-        run: |
-          python3 .github/scripts/test_check_flyway_migrations.py
-          python3 .github/scripts/check_flyway_migrations.py
+        run: python3 .github/scripts/check_flyway_migrations.py
 
       - name: Check ECS capacity ownership
         run: bash infra/terraform/tests/ecs-capacity-ownership.sh

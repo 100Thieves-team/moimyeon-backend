@@ -47,3 +47,9 @@
 - GitHub ruleset `dev-protection`: active, target `refs/heads/dev`, required check `build`, strict=true, bypass actor 없음.
 
 검증한 커밋: 208c901a488e2ee4a49dcfe813cdbdb521d9fef7
+
+## PR CI 및 리뷰 반영
+
+- PR #129: https://github.com/100Thieves-team/moimyeon-backend/pull/129
+- CodeRabbit: actionable comment 없음. Docstring coverage 경고는 Python·Kotlin 테스트 함수까지 일괄 계산한 비차단 일반 경고로, 저장소 컨벤션과 무관해 반영하지 않는다.
+- review-swarm 권고 1건 수용: 검사기 자체 회귀와 실제 migration 계약 위반을 로그에서 즉시 구분하도록 CI 스텝을 분리한다.
