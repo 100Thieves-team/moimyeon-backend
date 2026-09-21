@@ -10,15 +10,15 @@
 
 | 프로파일 | 설정 파일 | 출력·앱 기본 수준 | 외부 관측 전송 |
 | --- | --- | --- | --- |
-| 없음, local | logback-local.xml | 정제된 텍스트·DEBUG | OFF |
-| local-dev | logback-local-dev.xml | 정제된 텍스트·INFO | OFF |
-| test, test/local, test/perf | logback-test.xml | 정제된 텍스트·WARN | OFF |
-| dev | logback-dev.xml | JSON Lines·INFO | 기존 Sentry·메트릭 설정 유지 |
+| 없음, local | logback-local.xml | 텍스트·DEBUG | OFF |
+| local-dev | logback-local-dev.xml | 텍스트·INFO | OFF |
+| test, test/local, test/perf | logback-test.xml | 텍스트·WARN | OFF |
+| dev | logback-dev.xml | JSON Lines·DEBUG | 기존 Sentry·메트릭 설정 유지 |
 | dev/perf, perf/dev | logback-dev-perf.xml | JSON Lines·INFO | dev 전송 설정 유지 |
 | staging | logback-staging.xml | JSON Lines·INFO | 기존 Sentry·메트릭 설정 유지 |
 | live | logback-live.xml | JSON Lines·INFO | 기존 Sentry·메트릭 설정 유지 |
 
-`dev,perf`와 `perf,dev`는 같은 전용 파일을 선택한다. 현재 수준이 dev와 같더라도 perf 설정은 따로 유지해 부하 테스트의 출력 정책을 독립적으로 조정할 수 있다.
+`dev,perf`와 `perf,dev`는 같은 전용 파일을 선택한다. dev는 흐름 추적을 위해 앱 logger를 DEBUG로 두고, perf는 부하 테스트 출력량을 위해 INFO를 유지한다. staging·live는 INFO다.
 
 기본 환경은 하나만 둔다. `dev,perf`, `test,perf`처럼 보조 프로파일을 함께 사용할 수 있다. test가 local을 상속하는 경우만 두 기본 프로파일을 허용한다. `dev,live`, `test,live`처럼 서로 다른 환경은 시작을 거부한다. `DEPLOYMENT_ENVIRONMENT`를 지정했다면 선택한 환경과 일치해야 한다.
 
@@ -26,13 +26,35 @@
 
 이 정책은 ConfigData를 읽은 뒤 적용된다. YAML 파싱이나 설정 파일 로드 자체가 실패한 경우처럼 그 이전 단계의 부팅 로그까지 정제한다고 보장하지 않는다. 비밀값을 설정 파일에 직접 쓰지 않는 기존 원칙을 유지한다.
 
-## 이번 설정에서 출력하는 정보
+## 출력하는 정보
 
-서비스·환경·릴리스·시각·수준·logger와 유효한 traceId/spanId를 기록한다. 예외는 제한된 타입과 코드 위치만 남긴다. 자유 형식 메시지, 포맷 인자, 임의 MDC와 key-value, 예외 메시지·suppressed 원문은 출력하지 않는다. 로컬도 같은 정제 규칙을 쓴다.
+일반적인 애플리케이션 로그 계약을 따른다. 서비스·환경·릴리스·시각·수준·logger·thread에 더해
+**메시지(인자 포맷 포함)**, kotlin-logging `payload`와 SLF4J key-value, MDC 전체, 예외의 타입·메시지·코드 위치를
+기록한다. 로컬 텍스트와 배포 JSON은 같은 필드 정책을 쓴다.
 
-허용된 사건은 `service.ready`와 타입이 있는 요청 요약이다. `RequestLogWriter`에 `RequestLogEntry`를 전달하면 `http.request.completed` 또는 `http.request.slow`로 기록하고 method·route·status·durationMs·errorCode·서버 발급 requestId를 보존한다. 요청 사건명만 붙인 임의 Map은 통과하지 않는다. 나머지 자유 형식 로그는 `application.log` 또는 `application.error`로 표시하며 유효한 MDC requestId로 요청 요약과 연결한다.
+민감값은 formatter가 아니라 호출 지점에서 막는다. 메시지·인자·MDC에 DTO·Entity·토큰·이메일·요청 본문 원문을
+넣지 않는 것이 [코틀린 스타일 규칙](../../docs/conventions/kotlin-style.md#로깅)이며 리뷰에서 확인한다.
+`LogMasker`는 실수 방어로 `Bearer ...` 헤더값과 JWT 형태만 `[MASKED]`·`[MASKED_JWT]`로 가린다. 다른 값은 가리지 않는다.
+Hibernate SQL·bind·HTTP wire logger 차단은 유지한다.
 
-`LogSanitizer`는 Spring 환경 조회나 전송 없이 이벤트를 정제한다. `SafeLogFormatter`는 정제 결과를 JSON 또는 텍스트로 출력한다. 두 형식은 같은 필드 정책을 따른다.
+예외는 타입·코드 위치를 체인 전체에 남기되, **메시지는 `io.plady.*` 타입에서만** 남긴다. 앱 예외의 메시지는 ErrorType의 정적 문구지만,
+프레임워크·드라이버 예외의 메시지는 거부된 입력값이나 `Duplicate entry '<값>'`처럼 사용자 데이터를 되풀이하기 때문이다. 같은 이유로
+`ApiControllerAdvice`·`AsyncExceptionHandler`는 프레임워크 예외의 `e.message`를 메시지에 넣지 않고 파라미터 이름·타입만 남긴다.
+
+출력 스키마 필드와 Fluent Bit 라우터가 읽는 필드(`method`·`route`·`status`·`durationMs`·`errorCode`·`requestId`·`traceId`·`spanId`·
+`category`·`impact`)는 예약되어 MDC·key-value로 주입할 수 없다. `requestId`는 서버 발급 UUID 형식, `traceId`·`spanId`는 16진수
+32·16자리이며 0이 아닐 때만 MDC에서 채운다.
+
+상한은 메시지 4096자, key-value·MDC 값 1024자, 식별자 256자, 예외 체인은 설정한 깊이·프레임 수다. 넘치는 값은 잘라서
+`…`를 붙인다. 이벤트 자체를 읽다 실패하면 `logging.serialization_failed` 한 줄만 남긴다.
+
+`eventCode`는 Fluent Bit 라우터와 대시보드가 쓰는 분류 필드다. `service.ready`, 타입이 있는 요청 요약
+(`http.request.completed`·`http.request.slow`), 그 외 ERROR 이상은 `application.error`, 나머지는 `application.log`다.
+요청 사건명만 붙인 임의 Map은 요청 요약으로 승격하지 않는다. 검색은 `eventCode`가 아니라 `message` 접두어와
+`requestId`·`traceId`로 한다. 메시지는 `room.create memberId=... roomId=...`처럼 **고정 접두어 + key=value**로 쓴다.
+
+`LogSanitizer`는 Spring 환경 조회나 전송 없이 이벤트를 필드로 바꾼다. `SafeLogFormatter`는 그 결과를 JSON 또는 텍스트로
+출력한다. 이 이름은 MOI-411 당시의 allowlist 정책에서 왔고, 지금은 길이 상한과 토큰 마스킹만 담당한다.
 
 ## 요청 요약과 설정
 
@@ -83,4 +105,4 @@ ApiResponse의 오류 코드는 ResponseBodyAdvice가 객체에서 읽고, 인�
 
 ## 검증
 
-`./gradlew :support:logging:test :support:logging:ktlintCheck`로 실제 Spring Boot 로깅 초기화, 프로파일 조합과 전송 차단, 출력 정제를 검증한다. API·worker·batch 조립에 대한 회귀는 루트의 `./gradlew test ktlintCheck`로 확인한다.
+`./gradlew :support:logging:test :support:logging:ktlintCheck`로 실제 Spring Boot 로깅 초기화, 프로파일 조합과 전송 차단, 메시지·MDC·예외 보존과 토큰 마스킹을 검증한다. API·worker·batch 조립에 대한 회귀는 루트의 `./gradlew test ktlintCheck`로 확인한다.

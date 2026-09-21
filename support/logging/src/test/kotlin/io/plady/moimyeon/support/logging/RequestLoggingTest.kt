@@ -67,7 +67,7 @@ class RequestLoggingTest {
     }
 
     @Test
-    fun `요청 사건명을 흉내 낸 임의 payload는 출력하지 않는다`() {
+    fun `요청 사건명을 흉내 낸 임의 payload는 요청 요약으로 승격하지 않는다`() {
         capture { _, events ->
             KotlinLogging.logger(LOGGER_NAME).atInfo {
                 message = "http.request.completed"

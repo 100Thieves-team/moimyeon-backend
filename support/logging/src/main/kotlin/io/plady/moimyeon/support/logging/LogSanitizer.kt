@@ -5,6 +5,10 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
 import java.time.Instant
 
+// Logback 이벤트를 출력용 필드로 바꾼다. 메시지·key-value·MDC·예외 메시지를 보존하고,
+// 자격 증명 형태만 LogMasker로 가리며 길이와 예외 깊이에 상한을 둔다.
+// 라우터가 읽는 필드는 예약해 MDC·key-value로 주입할 수 없고, 앱 밖 예외의 메시지는
+// 요청값·DB 값이 섞일 수 있어 타입만 남긴다.
 class LogSanitizer(
     private val properties: LoggingProperties,
     service: String?,
@@ -41,11 +45,13 @@ class LogSanitizer(
             "environment" to deployment,
             "release" to release,
             "level" to event.level.toString(),
-            "logger" to (identifier(event.loggerName) ?: "unknown-logger"),
+            "logger" to text(event.loggerName, MAX_IDENTIFIER_LENGTH, "unknown-logger"),
+            "thread" to text(event.threadName, MAX_IDENTIFIER_LENGTH, "unknown-thread"),
             "eventCode" to eventCode,
+            "message" to text(event.formattedMessage, MAX_MESSAGE_LENGTH, ""),
         )
         request?.let { fields.putAll(it.fields()) }
-        val context = event.mdcPropertyMap
+        val context = event.mdcPropertyMap.orEmpty()
         if (!fields.containsKey("requestId")) {
             context["requestId"]?.takeIf(RequestLogEntry::isRequestId)?.let { fields["requestId"] = it }
         }
@@ -55,8 +61,18 @@ class LogSanitizer(
             context["spanId"]?.takeIf { SPAN_ID.matches(it) && it.any { character -> character != '0' } }
                 ?.let { fields["spanId"] = it }
         }
+        event.keyValuePairs.orEmpty()
+            .filter { request == null || it.key != RequestLogEntry.PAYLOAD_KEY }
+            .forEach { pair -> put(fields, pair.key, pair.value) }
+        context.forEach { (key, value) -> put(fields, key, value) }
         event.throwableProxy?.let { fields["exceptions"] = exceptions(it) }
         return fields
+    }
+
+    private fun put(fields: MutableMap<String, Any>, key: String?, value: Any?) {
+        val name = key?.takeIf { it.isNotBlank() && it.length <= MAX_IDENTIFIER_LENGTH } ?: return
+        if (name in RESERVED_FIELDS || name in fields) return
+        fields[name] = text(value?.toString(), MAX_VALUE_LENGTH, "")
     }
 
     private fun exceptions(source: IThrowableProxy): List<Map<String, Any>> {
@@ -67,25 +83,45 @@ class LogSanitizer(
             val frames = current.stackTraceElementProxyArray.orEmpty().take(remainingFrames).map { proxy ->
                 val frame = proxy.stackTraceElement
                 mapOf(
-                    "class" to (identifier(frame.className) ?: "unknown"),
-                    "method" to (identifier(frame.methodName) ?: "unknown"),
-                    "file" to (identifier(frame.fileName) ?: "unknown"),
+                    "class" to text(frame.className, MAX_IDENTIFIER_LENGTH, "unknown"),
+                    "method" to text(frame.methodName, MAX_IDENTIFIER_LENGTH, "unknown"),
+                    "file" to text(frame.fileName, MAX_IDENTIFIER_LENGTH, "unknown"),
                     "line" to frame.lineNumber,
                 )
             }
-            result.add(mapOf("type" to (identifier(current.className) ?: "unknown"), "frames" to frames))
+            val type = text(current.className, MAX_IDENTIFIER_LENGTH, "unknown")
+            val item = linkedMapOf<String, Any>("type" to type)
+            // 앱 예외의 메시지는 ErrorType의 정적 문구다. 프레임워크·드라이버 예외의 메시지는
+            // 거부된 입력값이나 "Duplicate entry '<값>'"처럼 사용자 데이터를 되풀이하므로 남기지 않는다.
+            if (type.startsWith(APPLICATION_PACKAGE)) item["message"] = text(current.message, MAX_MESSAGE_LENGTH, "")
+            item["frames"] = frames
+            result.add(item)
             remainingFrames -= frames.size
             current = current.cause
         }
         return result
     }
 
+    private fun text(value: String?, limit: Int, fallback: String): String {
+        val masked = LogMasker.mask(value ?: return fallback)
+        return if (masked.length <= limit) masked else masked.take(limit) + "…"
+    }
+
     private fun identifier(value: String?): String? = value?.takeIf { it.length <= MAX_IDENTIFIER_LENGTH && IDENTIFIER.matches(it) }
 
     companion object {
-        private const val MAX_IDENTIFIER_LENGTH = 128
+        private const val MAX_IDENTIFIER_LENGTH = 256
+        private const val MAX_VALUE_LENGTH = 1024
+        private const val MAX_MESSAGE_LENGTH = 4096
+        private const val APPLICATION_PACKAGE = "io.plady."
         private val IDENTIFIER = Regex("[A-Za-z0-9_.$<>:/-]+")
         private val TRACE_ID = Regex("[0-9a-f]{32}")
         private val SPAN_ID = Regex("[0-9a-f]{16}")
+
+        // 출력 스키마와 Fluent Bit 라우터(router/v1/sanitize.lua)가 읽는 필드. MDC·key-value로 덮어쓰지 못한다.
+        internal val RESERVED_FIELDS = setOf(
+            "schemaVersion", "timestamp", "service", "environment", "release", "level", "logger", "thread", "eventCode", "message",
+            "method", "route", "status", "durationMs", "errorCode", "requestId", "traceId", "spanId", "exceptions", "category", "impact",
+        )
     }
 }

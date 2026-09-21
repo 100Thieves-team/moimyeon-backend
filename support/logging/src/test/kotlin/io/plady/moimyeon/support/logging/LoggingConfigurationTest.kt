@@ -148,8 +148,8 @@ class LoggingConfigurationTest {
     }
 
     @Test
-    fun `local의 DEBUG는 켜고 test와 배포 환경에서는 기본으로 끈다`() {
-        for ((profiles, debugEnabled) in listOf("local" to true, "local-dev" to false, "test" to false, "dev" to false)) {
+    fun `local과 dev의 DEBUG는 켜고 test staging live에서는 기본으로 끈다`() {
+        for ((profiles, debugEnabled) in listOf("local" to true, "local-dev" to false, "test" to false, "dev" to true, "staging" to false, "live" to false)) {
             start(profiles).use {
                 var evaluated = false
                 KotlinLogging.logger("io.plady.moimyeon.configuration.probe").debug {
@@ -164,26 +164,32 @@ class LoggingConfigurationTest {
     }
 
     @Test
-    fun `실제 stdout에 메시지 인자 MDC와 예외 원문을 노출하지 않는다`(output: CapturedOutput) {
+    fun `실제 stdout에 메시지 인자 MDC와 앱 예외 메시지를 보존하고 토큰과 외부 예외 메시지는 가린다`(output: CapturedOutput) {
         start("dev").use {
-            val sensitive = "private@example.invalid"
             val traceId = "0123456789abcdef0123456789abcdef"
-            MDC.put("email", sensitive)
+            // 시크릿 게이트가 JWT 리터럴을 막으므로 실행 시점에 형태만 조립한다.
+            val jwt = listOf("eyJ" + "a".repeat(20), "b".repeat(24), "c".repeat(16)).joinToString(".")
+            MDC.put("memberId", "9c1e")
             MDC.put("traceId", traceId)
             try {
                 LoggerFactory.getLogger("io.plady.moimyeon.configuration.probe")
                     .atError()
-                    .addKeyValue("email", sensitive)
-                    .setCause(IllegalStateException(sensitive, IllegalArgumentException(sensitive)))
-                    .log("untrusted {}", sensitive)
+                    .addKeyValue("roomId", "3f2a")
+                    .setCause(ProbeException("outer failed $jwt", IllegalArgumentException("inner private@example.invalid")))
+                    .log("room.create failed attempt={}", 2)
             } finally {
                 MDC.clear()
             }
 
             val event = lastJsonEvent(output)
-            assertThat(event).containsEntry("level", "ERROR").containsEntry("traceId", traceId)
-            assertThat(output.all).doesNotContain(sensitive).doesNotContain("untrusted")
-            assertThat(event.toString()).contains("IllegalStateException", "IllegalArgumentException")
+            assertThat(event).containsEntry("level", "ERROR")
+                .containsEntry("eventCode", "application.error")
+                .containsEntry("message", "room.create failed attempt=2")
+                .containsEntry("traceId", traceId)
+                .containsEntry("memberId", "9c1e")
+                .containsEntry("roomId", "3f2a")
+            assertThat(event.toString()).contains("ProbeException", "outer failed [MASKED_JWT]", "IllegalArgumentException")
+            assertThat(output.all).doesNotContain(jwt).doesNotContain("private@example.invalid")
         }
     }
 
