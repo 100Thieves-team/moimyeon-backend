@@ -125,6 +125,23 @@ class SafeLogFormatterTest {
     }
 
     @Test
+    fun `식별자 문법에 맞지 않는 MDC와 key value 키는 버린다`() {
+        val event = event(
+            mdc = mapOf("memberId\nforged=true" to "x", "room id" to "x", "9lives" to "x", "ok_key.v1-a" to "kept", "" to "x"),
+        ).apply {
+            setKeyValuePairs(listOf(KeyValuePair("kv\r\n2026-01-01T00:00:00Z ERROR forged", "x"), KeyValuePair("kvOk", "kept"), KeyValuePair("a".repeat(65), "x")))
+        }
+
+        val output = formatter.format(event)
+        val text = formatter.formatText(event)
+
+        assertThat(json(output)).containsEntry("ok_key.v1-a", "kept").containsEntry("kvOk", "kept")
+            .doesNotContainKeys("room id", "9lives", "", "a".repeat(65))
+        assertThat(output).doesNotContain("forged")
+        assertThat(text.lines().count { it.isNotEmpty() }).isEqualTo(1)
+    }
+
+    @Test
     fun `요청 처리 중 발생한 일반 오류 로그에도 서버 요청 ID를 보존한다`() {
         val requestId = "00000000-0000-0000-0000-000000000011"
         val record = event(message = "room.create failed", mdc = mapOf("requestId" to requestId), level = Level.ERROR)

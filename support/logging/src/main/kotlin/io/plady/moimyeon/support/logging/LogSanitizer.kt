@@ -36,8 +36,8 @@ class LogSanitizer(
         val eventCode = when {
             request != null -> event.message
             event.message == SentryPrivacyFilter.SERVICE_READY -> SentryPrivacyFilter.SERVICE_READY
-            event.level.isGreaterOrEqual(Level.ERROR) -> "application.error"
-            else -> "application.log"
+            event.level.isGreaterOrEqual(Level.ERROR) -> DEFAULT_ERROR_EVENT
+            else -> DEFAULT_EVENT
         }
         val fields = linkedMapOf<String, Any>(
             "schemaVersion" to 1,
@@ -70,8 +70,9 @@ class LogSanitizer(
         return fields
     }
 
+    // 키 이름은 이스케이프하지 않고 식별자 문법에 맞을 때만 받는다. 텍스트 로그의 key=value 자리에 그대로 찍히기 때문이다.
     private fun put(fields: MutableMap<String, Any>, key: String?, value: Any?) {
-        val name = key?.takeIf { it.isNotBlank() && it.length <= MAX_IDENTIFIER_LENGTH } ?: return
+        val name = key?.takeIf { it.length <= MAX_FIELD_NAME_LENGTH && FIELD_NAME.matches(it) } ?: return
         if (name in RESERVED_FIELDS || name in fields) return
         fields[name] = text(value?.toString(), MAX_VALUE_LENGTH, "")
     }
@@ -123,10 +124,14 @@ class LogSanitizer(
     private fun identifier(value: String?): String? = value?.takeIf { it.length <= MAX_IDENTIFIER_LENGTH && IDENTIFIER.matches(it) }
 
     companion object {
+        internal const val DEFAULT_EVENT = "application.log"
+        internal const val DEFAULT_ERROR_EVENT = "application.error"
+        private const val MAX_FIELD_NAME_LENGTH = 64
         private const val MAX_IDENTIFIER_LENGTH = 256
         private const val MAX_VALUE_LENGTH = 1024
         private const val MAX_MESSAGE_LENGTH = 4096
         private val IDENTIFIER = Regex("[A-Za-z0-9_.$<>:/-]+")
+        private val FIELD_NAME = Regex("[A-Za-z][A-Za-z0-9_.-]*")
 
         private val TRACE_ID = Regex("[0-9a-f]{32}")
         private val SPAN_ID = Regex("[0-9a-f]{16}")

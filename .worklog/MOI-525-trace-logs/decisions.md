@@ -59,3 +59,9 @@ Linear가 제안한 한글 브랜치명을 `feat/MOI-525-trace-logs`로 바꿨�
   `NotificationProcessingException` 계열은 메시지에 식별자를 보간하므로 마커를 붙이지 않았고, 로그에는 타입·스택만 남는다.
 - 제안: 어드바이스·비동기 핸들러의 LogLevel 3분기 중복을 `KLogger.at(level, cause, message)` 확장 하나로 모았다.
 
+## D-07. 리뷰봇 3차 반영: 필드 키 이름은 문법으로 제한
+
+2026-09-21 PR #131 3차 리뷰(CodeRabbit Major 1·제안 2). 값 이스케이프만 있고 키 이름 검증이 없어 개행이 든 MDC 키로 텍스트 로그를
+위조할 수 있었다. 키는 영문자로 시작하는 `[A-Za-z0-9_.-]` 64자 이하만 받고 나머지는 버린다. `errors.md`에 `exception.async.*` 접두어를
+추가했고, 기본 eventCode 리터럴은 `LogSanitizer` 상수로 공유한다. 리뷰 대응 상한(2회)을 넘긴 반영이며 사용자 승인으로 진행했다.
+

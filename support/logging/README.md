@@ -46,6 +46,9 @@ Hibernate SQL·bind·HTTP wire logger 차단은 유지한다.
 모든 문자열 값(메시지·key-value·MDC·예외 메시지·logger·thread)의 개행·캐리지리턴·탭은 `\n`·`\r`·`\t`로 이스케이프하고 그 외 제어
 문자는 제거한다. 텍스트 로그에서 한 줄이 이벤트 하나임을 보장해 로그 위조를 막는다.
 
+MDC·key-value의 키 이름은 영문자로 시작하는 `[A-Za-z0-9_.-]` 64자 이하만 받고 나머지는 버린다. 키는 텍스트 로그의 `key=value`
+자리에 그대로 찍히므로 이스케이프 대신 문법으로 제한한다.
+
 출력 스키마 필드와 Fluent Bit 라우터가 읽는 필드(`method`·`route`·`status`·`durationMs`·`errorCode`·`requestId`·`traceId`·`spanId`·
 `category`·`impact`)는 예약되어 MDC·key-value로 주입할 수 없다. `requestId`는 서버 발급 UUID 형식, `traceId`·`spanId`는 16진수
 32·16자리이며 0이 아닐 때만 MDC에서 채운다.

@@ -39,6 +39,6 @@ class SafeLogFormatter(environment: Environment) : StructuredLogFormatter<ILoggi
 
     companion object {
         private val TEXT_METADATA = setOf("schemaVersion", "timestamp", "level", "service", "environment", "release", "logger", "thread", "eventCode", "message", "exceptions")
-        private val TEXT_DEFAULT_EVENTS = setOf("application.log", "application.error")
+        private val TEXT_DEFAULT_EVENTS = setOf(LogSanitizer.DEFAULT_EVENT, LogSanitizer.DEFAULT_ERROR_EVENT)
     }
 }

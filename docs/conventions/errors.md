@@ -64,7 +64,8 @@
 | `HttpMessageNotReadableException` (깨진 JSON 등) | 400 E400 |
 | 그 외 `Exception` | 500 E500 |
 
-어드바이스 로그는 `exception.core`·`exception.core-api`·`exception.transport`·`exception.unhandled` 접두어를 쓰고
+어드바이스 로그는 `exception.core`·`exception.core-api`·`exception.transport`·`exception.unhandled` 접두어를 쓰고,
+`@Async` 작업의 미처리 예외는 `AsyncExceptionHandler` 가 `exception.async.core`·`exception.async.unhandled` 로 남긴다.
 항상 예외 객체를 함께 넘긴다. 프레임워크 예외의 `e.message` 는 거부된 입력값을 담으므로 메시지에 넣지 않는다.
 
 여기 남은 것은 **프레임워크가 컨트롤러 진입 전에 던지는 것뿐**이다. 값 규칙 위반은 요청 DTO 의
