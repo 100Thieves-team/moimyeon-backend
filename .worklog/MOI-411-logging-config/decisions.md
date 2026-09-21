@@ -419,3 +419,23 @@ CI plan이 새 설정 객체를 refresh하려면 HeadObject/GetObjectTagging 권
 CPU 64·추가 메모리 값은 이미 수집 모듈에서 공유했지만, 이를 task에 적용하는 산식과 mode 분기를 각 ECS 파일에 반복하고 있었다. 서비스별 원래 예산·기존 로그 그룹을 입력으로 받는 `logging_task_policy` local map을 환경 모듈에 둔다. CPU 차감·task 메모리·로그 경로·HEALTHY 의존성·sidecar·볼륨·예산 유효성은 이 map이 소유한다. 리소스 주소·고유 앱 설정·precondition 블록은 각 ECS 리소스에 남긴다.
 
 수집 모듈은 기존 테스트로 검증하고, 소비 측은 별도 모듈 출력 fixture의 96 CPU·192MiB·추가224MiB를 실제 task JSON에 적용하는지 확인한다. 기본값 64/160을 다시 하드코딩하는 회귀도 잡기 위한 선택이다. AWS provider·metadata는 mock만 사용한다. refactor 전후 같은 테스트 6개가 통과하고 10개 planned task의 CPU·memory·전체 container JSON·volume이 동일함을 확인했다. 실제 AWS plan이나 배치 능력을 이 비교로 대신하지 않는다.
+
+
+### DR-32. 출력 allowlist를 일반 로그 계약으로 되돌린다 (DR-26 일부 폐기)
+
+**상태: 2026-09-21 사용자 결정. MOI-525에서 구현.**
+
+DR-26의 "미등록 메시지는 원문을 숨기고 application.log로 표시"는 MOI-525에서 흐름 추적 로그를 넣어 보니 실용성이 없었다.
+`log.debug { "room.create" }`와 `log.debug { "room.cancel" }`이 stdout에서 구분되지 않았고, 식별자를 넣을 방법도 없었다.
+정적 메시지까지 숨기는 것은 개인정보 방어의 필수 조건이 아니라 formatter가 정적 문자열과 보간 문자열을 구분할 수 없어
+택한 과잉 보수였다. 사용자가 "일반적으로 회사에서 쓰는 방식"으로 전환을 결정했다.
+
+**선택:** 메시지(인자 포맷 포함)·key-value·MDC 전체·예외 메시지를 출력한다. 민감값은 호출 지점 규칙과 리뷰로 막고,
+`LogMasker`가 `Bearer` 헤더값과 JWT 형태만 방어적으로 가린다. 길이 상한(메시지 4096·값 1024·식별자 256)과 예외 깊이·프레임
+상한은 유지한다. `eventCode`·`schemaVersion`·`exceptions` 구조는 Fluent Bit 라우터 호환을 위해 유지한다. dev의 앱 logger를
+DEBUG로 올리고 staging·live는 INFO를 유지한다. Sentry `SentryPrivacyFilter`는 이번에 바꾸지 않는다.
+
+**남은 것:** 인프라 `router/v1/sanitize.lua`는 여전히 `message`·MDC를 버린다. 앱 완화와 같은 방향으로 `strings` 목록에
+`message`를 추가하고 예외 `message`를 허용하는 변경을 별도 infra-change PR로 진행한다. 그 전까지 FireLens가 켜진 환경의
+CloudWatch·S3에는 메시지가 도달하지 않는다. 팀 위키 로깅 가이드도 같은 내용으로 갱신해야 한다.
+

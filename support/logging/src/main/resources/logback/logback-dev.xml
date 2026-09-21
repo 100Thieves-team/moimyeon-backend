@@ -3,7 +3,7 @@
     <property name="LOG_FORMATTER" value="io.plady.moimyeon.support.logging.SafeLogFormatter"/>
     <include resource="logback/common-appenders.xml"/>
 
-    <logger name="io.plady.moimyeon" level="INFO"/>
+    <logger name="io.plady.moimyeon" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>

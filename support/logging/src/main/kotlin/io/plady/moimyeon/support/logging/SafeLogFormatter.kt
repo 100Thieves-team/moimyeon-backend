@@ -21,12 +21,24 @@ class SafeLogFormatter(environment: Environment) : StructuredLogFormatter<ILoggi
     fun formatText(event: ILoggingEvent): String {
         val fields = sanitizer.sanitize(event)
         val details = fields.filterKeys { it !in TEXT_METADATA }.entries.joinToString(" ") { "${it.key}=${it.value}" }
-        return "${fields["timestamp"] ?: "-"} ${fields["level"]} [${fields["service"]}/${fields["environment"]}] " +
-            "${fields["logger"] ?: "logging"} ${fields["eventCode"]}" +
-            (if (details.isEmpty()) "" else " $details") + "\n"
+        val eventCode = fields["eventCode"]?.takeIf { it !in TEXT_DEFAULT_EVENTS }
+        val header = "${fields["timestamp"] ?: "-"} ${fields["level"]} [${fields["service"]}/${fields["environment"]}] " +
+            "${fields["logger"] ?: "logging"}" + (if (eventCode == null) "" else " $eventCode") +
+            " - ${fields["message"] ?: ""}" + (if (details.isEmpty()) "" else " | $details")
+        val exceptions = (fields["exceptions"] as? List<*>).orEmpty().joinToString("") { exception ->
+            val item = exception as? Map<*, *> ?: return@joinToString ""
+            val frames = (item["frames"] as? List<*>).orEmpty().joinToString("") { frame ->
+                val f = frame as? Map<*, *> ?: return@joinToString ""
+                "\n    at ${f["class"]}.${f["method"]}(${f["file"]}:${f["line"]})"
+            }
+            val message = item["message"]?.toString()?.takeIf { it.isNotEmpty() }
+            "\n  ! ${item["type"]}" + (if (message == null) "" else ": $message") + frames
+        }
+        return "$header$exceptions\n"
     }
 
     companion object {
-        private val TEXT_METADATA = setOf("schemaVersion", "timestamp", "level", "service", "environment", "release", "logger", "eventCode")
+        private val TEXT_METADATA = setOf("schemaVersion", "timestamp", "level", "service", "environment", "release", "logger", "thread", "eventCode", "message", "exceptions")
+        private val TEXT_DEFAULT_EVENTS = setOf(LogSanitizer.DEFAULT_EVENT, LogSanitizer.DEFAULT_ERROR_EVENT)
     }
 }

@@ -18,7 +18,7 @@ object LoggingBootstrapProbe {
             }.run("--spring.config.location=classpath:logging.yml", "--spring.profiles.active=dev,live").close()
         } catch (_: IllegalArgumentException) {
             KotlinLogging.logger("io.plady.moimyeon.bootstrap.probe")
-                .error(IllegalStateException("private@example.invalid")) { "private@example.invalid" }
+                .error(IllegalStateException("conflicting profiles")) { "bootstrap.probe.failed" }
             exitProcess(2)
         }
     }

@@ -13,6 +13,11 @@
 
 - 두 ErrorType 모두 `(status, code, message, logLevel)` 을 갖는다. 메시지는 사용자에게 그대로
   표시 가능한 한국어로 쓴다.
+- **예외 메시지를 로그에 남기려면 `SafeLogMessage` 마커를 구현하고, 그 메시지는 정적 문구만 쓴다.** 로그
+  formatter 는 마커를 구현한 예외의 메시지만 남기고 나머지는 타입·코드 위치만 남긴다
+  ([support/logging](../../support/logging/README.md)). `CoreException`·`CoreApiException` 이 구현한다.
+  마커를 붙이는 예외에는 사용자 입력·DB 값·외부 응답 원문을 메시지에 보간하지 않는다. 문맥이 필요하면
+  예외 필드(`data`)나 로그의 key=value 로 전달한다.
 - **`ErrorCode` 네임스페이스는 공유한다** — 와이어에 나가는 식별자는 하나의 체계다.
   두 enum 의 합집합이 중복·미사용 없이 유지되는지 `ErrorTypeConsistencyTest` 가 강제한다.
 
@@ -58,6 +63,10 @@
 | `MethodArgumentTypeMismatchException` | 400 E400 |
 | `HttpMessageNotReadableException` (깨진 JSON 등) | 400 E400 |
 | 그 외 `Exception` | 500 E500 |
+
+어드바이스 로그는 `exception.core`·`exception.core-api`·`exception.transport`·`exception.unhandled` 접두어를 쓰고,
+`@Async` 작업의 미처리 예외는 `AsyncExceptionHandler` 가 `exception.async.core`·`exception.async.unhandled` 로 남긴다.
+항상 예외 객체를 함께 넘긴다. 프레임워크 예외의 `e.message` 는 거부된 입력값을 담으므로 메시지에 넣지 않는다.
 
 여기 남은 것은 **프레임워크가 컨트롤러 진입 전에 던지는 것뿐**이다. 값 규칙 위반은 요청 DTO 의
 `toXxx()` 가 `CoreApiException` 으로 직접 던지므로 첫 행에서 처리된다
