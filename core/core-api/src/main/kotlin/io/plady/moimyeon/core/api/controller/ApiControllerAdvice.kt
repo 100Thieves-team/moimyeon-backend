@@ -23,9 +23,9 @@ class ApiControllerAdvice {
     @ExceptionHandler(CoreException::class)
     fun handleCoreException(e: CoreException): ResponseEntity<ApiResponse<Any>> {
         when (e.errorType.logLevel) {
-            LogLevel.ERROR -> log.error(e) { "CoreException code=${e.errorType.code} message=${e.message}" }
-            LogLevel.WARN -> log.warn(e) { "CoreException code=${e.errorType.code} message=${e.message}" }
-            else -> log.info(e) { "CoreException code=${e.errorType.code} message=${e.message}" }
+            LogLevel.ERROR -> log.error(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
+            LogLevel.WARN -> log.warn(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
+            else -> log.info(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
         }
         return ResponseEntity(ApiResponse.error(e.errorType, e.data), e.errorType.status)
     }
@@ -33,9 +33,9 @@ class ApiControllerAdvice {
     @ExceptionHandler(CoreApiException::class)
     fun handleCoreApiException(e: CoreApiException): ResponseEntity<ApiResponse<Any>> {
         when (e.errorType.logLevel) {
-            LogLevel.ERROR -> log.error(e) { "CoreApiException code=${e.errorType.code} message=${e.message}" }
-            LogLevel.WARN -> log.warn(e) { "CoreApiException code=${e.errorType.code} message=${e.message}" }
-            else -> log.info(e) { "CoreApiException code=${e.errorType.code} message=${e.message}" }
+            LogLevel.ERROR -> log.error(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
+            LogLevel.WARN -> log.warn(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
+            else -> log.info(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
         }
         return ResponseEntity(ApiResponse.error(e.errorType, e.data), e.errorType.status)
     }
@@ -43,7 +43,7 @@ class ApiControllerAdvice {
     // 요청 형태 오류(수송 계층): 필수 쿼리 파라미터 누락
     @ExceptionHandler(MissingServletRequestParameterException::class)
     fun handleMissingServletRequestParameter(e: MissingServletRequestParameterException): ResponseEntity<ApiResponse<Any>> {
-        log.warn { "MissingServletRequestParameterException parameter=${e.parameterName}" }
+        log.warn(e) { "exception.transport type=MissingServletRequestParameter parameter=${e.parameterName}" }
         val data = mapOf(e.parameterName to "required parameter is missing")
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, data), CoreApiErrorType.INVALID_REQUEST.status)
     }
@@ -51,7 +51,7 @@ class ApiControllerAdvice {
     // 요청 형태 오류(수송 계층): multipart 필수 파트 누락
     @ExceptionHandler(MissingServletRequestPartException::class)
     fun handleMissingServletRequestPart(e: MissingServletRequestPartException): ResponseEntity<ApiResponse<Any>> {
-        log.warn { "MissingServletRequestPartException part=${e.requestPartName}" }
+        log.warn(e) { "exception.transport type=MissingServletRequestPart part=${e.requestPartName}" }
         val data = mapOf(e.requestPartName to "required part is missing")
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, data), CoreApiErrorType.INVALID_REQUEST.status)
     }
@@ -59,14 +59,14 @@ class ApiControllerAdvice {
     // 요청 형태 오류(수송 계층): 서버 multipart 상한 초과
     @ExceptionHandler(MaxUploadSizeExceededException::class)
     fun handleMaxUploadSizeExceeded(e: MaxUploadSizeExceededException): ResponseEntity<ApiResponse<Any>> {
-        log.warn { "MaxUploadSizeExceededException maxUploadSize=${e.maxUploadSize}" }
+        log.warn(e) { "exception.transport type=MaxUploadSizeExceeded maxUploadSize=${e.maxUploadSize}" }
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST), CoreApiErrorType.INVALID_REQUEST.status)
     }
 
     // 요청 형태 오류(수송 계층): 쿼리/경로 파라미터 타입 불일치(UUID 아님, 숫자 아님 등)
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
     fun handleMethodArgumentTypeMismatch(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse<Any>> {
-        log.warn { "MethodArgumentTypeMismatchException parameter=${e.name} requiredType=${e.requiredType?.simpleName}" }
+        log.warn(e) { "exception.transport type=MethodArgumentTypeMismatch parameter=${e.name} requiredType=${e.requiredType?.simpleName}" }
         val data = mapOf(e.name to "type mismatch")
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST, data), CoreApiErrorType.INVALID_REQUEST.status)
     }
@@ -74,13 +74,13 @@ class ApiControllerAdvice {
     // 요청 형태 오류(수송 계층): 본문 해석 실패(깨진 JSON·필수 필드 누락·타입 불일치) — 클라이언트 잘못이므로 500 이 아니라 400
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<ApiResponse<Any>> {
-        log.warn { "HttpMessageNotReadableException cause=${e.cause?.javaClass?.simpleName}" }
+        log.warn(e) { "exception.transport type=HttpMessageNotReadable cause=${e.cause?.javaClass?.simpleName}" }
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.INVALID_REQUEST), CoreApiErrorType.INVALID_REQUEST.status)
     }
 
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ApiResponse<Any>> {
-        log.error(e) { "Exception type=${e.javaClass.name}" }
+        log.error(e) { "exception.unhandled type=${e.javaClass.name}" }
         return ResponseEntity(ApiResponse.error(CoreApiErrorType.DEFAULT_ERROR), CoreApiErrorType.DEFAULT_ERROR.status)
     }
 }

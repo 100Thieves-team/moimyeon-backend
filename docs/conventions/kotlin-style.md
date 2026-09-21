@@ -68,6 +68,8 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
   배치 결과 요약은 INFO, 예외는 ErrorType의 `logLevel`을 따른다. DEBUG는 local·dev에서 켜지고 staging·live는 INFO다.
 - 접두어 규칙: Service는 `도메인.동작` (`room.create`), Implement는 `개념.역할.메서드`
   (`room.manager.create`, `participation.validator.validateHost`). 역할은 클래스명 마지막 단어의 소문자다.
+  예외 어드바이스·핸들러는 `exception.<계층>[.<결과>]` (`exception.core code=E1001`, `exception.transport type=...`,
+  `exception.async.unhandled type=...`)이며 예외 객체를 항상 함께 넘긴다.
 - 외부 계정 식별자(`providerId`)·이메일·닉네임·자유 입력·자격 증명은 식별자여도 넣지 않는다.
 - 프레임워크·드라이버 예외의 `e.message`를 메시지에 넣지 않는다. 거부된 입력값이나 DB 값이 섞인다. 예외 객체를
   `log.warn(e) { ... }`로 넘기면 formatter가 타입·스택을 남기고 앱 예외(`io.plady.*`)의 메시지만 보존한다.
