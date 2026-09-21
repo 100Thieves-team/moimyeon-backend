@@ -20,7 +20,6 @@ class RoomAutoCompleteJob(
     // 룸마다 트랜잭션을 따로 열어 한 룸의 실패가 나머지 전이를 막지 않게 한다.
     @Scheduled(cron = "\${room.auto-complete.cron:0 */10 * * * *}")
     fun run() {
-        log.debug { "room.auto-complete.run" }
         val now = LocalDateTime.now(clock)
         val overdueRoomIds = overdueRoomCompleter.findOverdueRoomIds(now)
         if (overdueRoomIds.isEmpty()) return
