@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.catalog.CatalogRefValidator
 import io.plady.moimyeon.core.domain.jobposting.JobPostingFinder
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
@@ -7,6 +8,8 @@ import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RoomService(
@@ -24,6 +27,7 @@ class RoomService(
     // 결과를 여기서 만들지 않고 Manager 것을 그대로 통과시킨다 — 중복 요청이면 여기서 만든 room 이 아니라
     // 이미 있던 룸이 돌아오기 때문이다(MOI-331). 그 판정은 쓰기 트랜잭션 안에서만 확정된다.
     fun createRoom(hostMemberId: UUID, command: RoomCreationCommand): RoomCreationResult {
+        log.debug { "room.create hostMemberId=$hostMemberId" }
         catalogRefValidator.validateJobRoles(listOf(command.jobRoleId))
         (command.meetingPlace as? MeetingPlace.Offline)?.let { catalogRefValidator.validateSigungu(it.sigunguId) }
         // TODO(BE-02B): job_posting 엔티티/리포지토리가 생기면 postingId 존재·활성 검증을 추가한다.
@@ -51,17 +55,20 @@ class RoomService(
 
     // 방(룸) 수정. 방장 검증은 RoomManager 에서(participation 기반). 오프라인이면 지역 참조를 검증한다.
     fun updateRoom(memberId: UUID, roomId: UUID, command: RoomUpdateCommand) {
+        log.debug { "room.update memberId=$memberId roomId=$roomId" }
         (command.meetingPlace as? MeetingPlace.Offline)?.let { catalogRefValidator.validateSigungu(it.sigunguId) }
         roomManager.update(roomId, memberId, command)
     }
 
     // 룸 취소. 조건 판정(모집 중인가, 참여자가 남았는가)은 전부 RoomManager 가 자기 트랜잭션 안에서 한다.
     fun cancelRoom(memberId: UUID, roomId: UUID) {
+        log.debug { "room.cancel memberId=$memberId roomId=$roomId" }
         roomManager.cancel(roomId, memberId)
     }
 
     // 진행 확정. 조건 판정은 RoomConfirmation 이 소유하고 RoomManager 가 락 안에서 부른다.
     fun confirmRoom(memberId: UUID, roomId: UUID) {
+        log.debug { "room.confirm memberId=$memberId roomId=$roomId" }
         roomManager.confirm(roomId, memberId)
     }
 

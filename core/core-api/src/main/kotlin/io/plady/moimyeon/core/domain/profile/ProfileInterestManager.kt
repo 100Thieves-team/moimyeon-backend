@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.profile
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.AbstractEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestCompanyEntity
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestCompanyRepository
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ProfileInterestManager(
     private val interestCompanyRepository: MemberProfileInterestCompanyRepository,
@@ -18,12 +21,14 @@ class ProfileInterestManager(
 ) {
     @Transactional
     fun replaceAll(profileId: UUID, companyIds: List<Long>, jobRoleIds: List<Long>, now: LocalDateTime) {
+        log.debug { "profile-interest.manager.replaceAll profileId=$profileId companyIdsCount=${companyIds.size} jobRoleIdsCount=${jobRoleIds.size}" }
         replaceCompanies(profileId, companyIds, now)
         replaceJobRoles(profileId, jobRoleIds, now)
     }
 
     @Transactional
     fun deleteAll(profileId: UUID, now: LocalDateTime) {
+        log.debug { "profile-interest.manager.deleteAll profileId=$profileId" }
         replaceAll(profileId, emptyList(), emptyList(), now)
     }
 

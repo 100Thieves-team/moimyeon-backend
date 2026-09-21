@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.QuestionCommentType
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class QuestionCommentManager(
@@ -25,6 +28,7 @@ class QuestionCommentManager(
         type: QuestionCommentType,
         content: String,
     ): Long {
+        log.debug { "question-comment.manager.record roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId authorMemberId=$authorMemberId type=$type" }
         targetValidator.validate(roomId, targetMemberId, questionId)
         return questionCommentRepository.save(
             QuestionCommentEntity(
@@ -45,6 +49,7 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         type: QuestionCommentType,
     ) {
+        log.debug { "question-comment.manager.toggleType roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId commentId=$commentId authorMemberId=$authorMemberId type=$type" }
         targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).toggleType(type)
     }
@@ -58,6 +63,7 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         content: String,
     ) {
+        log.debug { "question-comment.manager.edit roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId commentId=$commentId authorMemberId=$authorMemberId" }
         targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).edit(content)
     }
@@ -71,6 +77,7 @@ class QuestionCommentManager(
         authorMemberId: UUID,
         deletedAt: LocalDateTime,
     ) {
+        log.debug { "question-comment.manager.remove roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId commentId=$commentId authorMemberId=$authorMemberId" }
         targetValidator.validate(roomId, targetMemberId, questionId)
         getOwnedComment(questionId, commentId, authorMemberId).delete(deletedAt)
     }

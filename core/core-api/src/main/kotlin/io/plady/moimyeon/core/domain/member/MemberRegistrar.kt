@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.profile.ProfileManager
 import io.plady.moimyeon.core.domain.terms.TermsAgreementManager
 import io.plady.moimyeon.core.enums.SocialLoginProvider
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class MemberRegistrar(
@@ -25,6 +28,7 @@ class MemberRegistrar(
         nickname: Nickname,
         registeredAt: LocalDateTime,
     ): UUID {
+        log.debug { "member.registrar.register provider=$provider" }
         requireBusiness(
             !memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
                 provider,

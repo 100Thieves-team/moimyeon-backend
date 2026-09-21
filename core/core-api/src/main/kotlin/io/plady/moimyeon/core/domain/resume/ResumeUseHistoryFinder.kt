@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.resume
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class ResumeUseHistoryFinder(
@@ -11,6 +14,7 @@ class ResumeUseHistoryFinder(
     private val roomFinder: RoomFinder,
 ) {
     fun getLatest(memberId: UUID, resumeIds: Collection<UUID>): Map<UUID, ResumeLastUsed> {
+        log.debug { "resume-use-history.finder.getLatest memberId=$memberId resumeIdsCount=${resumeIds.size}" }
         if (resumeIds.isEmpty()) return emptyMap()
 
         val latestSubmissions = resumeSubmissionRepository

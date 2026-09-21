@@ -1,9 +1,12 @@
 package io.plady.moimyeon.worker.notification
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.redis.NotificationStreamConsumer
 import io.plady.moimyeon.storage.redis.NotificationStreamHandlingResult
 import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import org.springframework.scheduling.annotation.Scheduled
+
+private val log = KotlinLogging.logger {}
 
 class NotificationMessageWorker(
     private val messageConsumer: NotificationStreamConsumer,
@@ -19,6 +22,7 @@ class NotificationMessageWorker(
     }
 
     private fun handle(message: NotificationStreamMessage): NotificationStreamHandlingResult = try {
+        log.debug { "notification.message.handle eventId=${message.eventId} eventType=${message.eventType} channel=${message.channel}" }
         messageHandler.handle(message)
         NotificationStreamHandlingResult.success()
     } catch (exception: PermanentNotificationProcessingException) {

@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.QuestionCommentType
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class QuestionCommentService(
@@ -22,6 +25,7 @@ class QuestionCommentService(
         type: QuestionCommentType,
         content: String,
     ): Long {
+        log.debug { "question.comment.leave memberId=$actorMemberId roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId type=$type" }
         accessValidator.validateWriter(roomId, actorMemberId, targetMemberId)
         return commentManager.record(roomId, targetMemberId, questionId, actorMemberId, type, content)
     }
@@ -34,6 +38,7 @@ class QuestionCommentService(
         commentId: Long,
         type: QuestionCommentType,
     ) {
+        log.debug { "question.comment.type.toggle memberId=$actorMemberId roomId=$roomId questionId=$questionId commentId=$commentId type=$type" }
         accessValidator.validateWriter(roomId, actorMemberId, targetMemberId)
         commentManager.toggleType(roomId, targetMemberId, questionId, commentId, actorMemberId, type)
     }
@@ -46,6 +51,7 @@ class QuestionCommentService(
         commentId: Long,
         content: String,
     ) {
+        log.debug { "question.comment.edit memberId=$actorMemberId roomId=$roomId questionId=$questionId commentId=$commentId" }
         accessValidator.validateWriter(roomId, actorMemberId, targetMemberId)
         commentManager.edit(roomId, targetMemberId, questionId, commentId, actorMemberId, content)
     }
@@ -57,6 +63,7 @@ class QuestionCommentService(
         questionId: Long,
         commentId: Long,
     ) {
+        log.debug { "question.comment.delete memberId=$actorMemberId roomId=$roomId questionId=$questionId commentId=$commentId" }
         accessValidator.validateWriter(roomId, actorMemberId, targetMemberId)
         commentManager.remove(roomId, targetMemberId, questionId, commentId, actorMemberId, now())
     }

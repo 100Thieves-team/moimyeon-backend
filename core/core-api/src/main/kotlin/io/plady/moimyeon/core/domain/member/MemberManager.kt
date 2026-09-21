@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -12,12 +13,15 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class MemberManager(
     private val memberRepository: MemberRepository,
 ) {
     @Transactional
     fun recordLogin(provider: SocialLoginProvider, providerId: String): UUID {
+        log.debug { "member.manager.recordLogin provider=$provider" }
         val entity = requireFound(
             memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNull(provider, providerId),
             CoreErrorType.MEMBER_NOT_FOUND,
@@ -28,6 +32,7 @@ class MemberManager(
 
     @Transactional
     fun changeNickname(memberId: UUID, nickname: Nickname) {
+        log.debug { "member.manager.changeNickname memberId=$memberId" }
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         requireBusiness(
             !memberRepository.existsByNicknameAndIdNot(nickname.value, memberId),
@@ -48,6 +53,7 @@ class MemberManager(
 
     @Transactional
     fun restrict(memberId: UUID) {
+        log.debug { "member.manager.restrict memberId=$memberId" }
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
         entity.restrict()
@@ -55,6 +61,7 @@ class MemberManager(
 
     @Transactional
     fun withdraw(memberId: UUID, now: LocalDateTime) {
+        log.debug { "member.manager.withdraw memberId=$memberId" }
         val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         entity.delete(now)
     }

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
@@ -12,6 +13,8 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class RoomFinder(
@@ -29,6 +32,7 @@ class RoomFinder(
     // 지금은 별개로 둔다. 한쪽은 생성 한도 정책이고 한쪽은 표시 묶음이라 갈릴 수 있다.
     // 합칠지는 MOI-330 PR 리뷰에서 정한다.
     fun getCreationLimit(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): RoomCreationLimit {
+        log.debug { "room.finder.getCreationLimit hostMemberId=$hostMemberId jobPostingId=$jobPostingId jobRoleId=$jobRoleId" }
         return RoomCreationLimit.of(
             roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES),
         )
@@ -36,11 +40,13 @@ class RoomFinder(
 
     @Transactional(readOnly = true)
     fun getSummaries(roomIds: Collection<UUID>): List<RoomSummary> {
+        log.debug { "room.finder.getSummaries roomIdsCount=${roomIds.size}" }
         return readSummaries(roomIds)
     }
 
     @Transactional(readOnly = true)
     fun getSummariesByStatus(roomIds: Collection<UUID>): RoomSummariesByStatus {
+        log.debug { "room.finder.getSummariesByStatus roomIdsCount=${roomIds.size}" }
         val summaries = readSummaries(roomIds)
         return RoomSummariesByStatus(
             active = summaries
@@ -85,6 +91,7 @@ class RoomFinder(
     // 이 술어는 정원 확정(RoomApplicationManager)·탐색 목록과 반드시 같아야 한다. 갈리면 목록에서는
     // 자리가 있어 보이는데 수락 단계에서 정원 초과가 나는 상태가 된다.
     fun getDetail(roomId: UUID): RoomDetail {
+        log.debug { "room.finder.getDetail roomId=$roomId" }
         val entity = requireFound(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
@@ -113,6 +120,7 @@ class RoomFinder(
 
     // 룸 자체만 필요한 경로용. 인원·대기 수 집계를 건너뛴다 - 상태나 공개 정책만 보는 호출부가 여럿이다.
     fun getRoom(roomId: UUID): Room {
+        log.debug { "room.finder.getRoom roomId=$roomId" }
         val entity = requireFound(
             roomRepository.findById(roomId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
@@ -121,6 +129,7 @@ class RoomFinder(
     }
 
     fun getAllByIds(roomIds: Collection<UUID>): List<Room> {
+        log.debug { "room.finder.getAllByIds roomIdsCount=${roomIds.size}" }
         if (roomIds.isEmpty()) return emptyList()
         return roomRepository.findAllById(roomIds)
             .filter { it.isActive() }

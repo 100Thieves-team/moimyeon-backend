@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -15,6 +16,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 private const val REVIEW_ACTIVE_UNIQUE_CONSTRAINT = "uk_review_room_author_target_active"
 
 @Component
@@ -27,6 +30,7 @@ class ReviewSubmissionManager(
 ) {
     @Transactional
     fun submit(command: ReviewSubmissionCommand): Long {
+        log.debug { "review-submission.manager.submit roomId=${command.roomId} authorMemberId=${command.authorMemberId} targetMemberId=${command.targetMemberId} anonymous=${command.anonymous}" }
         val room = lockRoom(command)
         val authorAttendance = lockAttendance(command.roomId, command.authorMemberId)
         val targetAttendance = if (command.targetMemberId == command.authorMemberId) {

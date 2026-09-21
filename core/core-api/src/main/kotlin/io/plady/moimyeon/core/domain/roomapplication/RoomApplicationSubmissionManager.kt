@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.room.RoomValidator
@@ -19,6 +20,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 private const val ROOM_APPLICATION_PENDING_UNIQUE_CONSTRAINT = "uk_room_application_room_pending_active"
 
 @Component
@@ -37,6 +40,7 @@ class RoomApplicationSubmissionManager(
         note: String,
         resumeSubmission: ResumeSubmission,
     ): Long {
+        log.debug { "room-application-submission.manager.submit applicantMemberId=$applicantMemberId roomId=$roomId" }
         // 회원 축 판정 둘을 나란히 둔다. 참여 슬롯을 앞에 두는 이유는 더 근본적인 제한이기 때문이다 —
         // 둘 다 초과면 "참여 중인 룸을 정리하라"가 신청자에게 더 정확한 안내다(MOI-427 D8).
         memberValidator.validateActive(applicantMemberId)
@@ -66,6 +70,7 @@ class RoomApplicationSubmissionManager(
 
     @Transactional
     fun withdraw(applicantMemberId: UUID, roomId: UUID) {
+        log.debug { "room-application-submission.manager.withdraw applicantMemberId=$applicantMemberId roomId=$roomId" }
         val application = requireFound(
             roomApplicationRepository
                 .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
@@ -27,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class RoomManager(
@@ -58,6 +61,7 @@ class RoomManager(
     //    새 생성 경로(일괄 생성 등)를 만들면 반드시 이 잠금을 함께 가져간다.
     @Transactional
     fun create(room: Room, hostMemberId: UUID, resumeId: UUID, resumeFile: ResumeFile): RoomCreationResult {
+        log.debug { "room.manager.create hostMemberId=$hostMemberId resumeId=$resumeId" }
         memberValidator.validateActive(hostMemberId)
 
         findDuplicate(hostMemberId, room)?.let { return RoomCreationResult(it.id, it.status) }
@@ -117,6 +121,7 @@ class RoomManager(
     // 편집 가능한 필드 수정. 방장만 가능. 오프라인 지역 참조 검증은 RoomService 가 트랜잭션 밖에서 한다.
     @Transactional
     fun update(roomId: UUID, hostMemberId: UUID, command: RoomUpdateCommand) {
+        log.debug { "room.manager.update roomId=$roomId hostMemberId=$hostMemberId" }
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
 
         // 확정 이후 변경은 CS 문의로만 푼다(「진행 확정」§4.3).
@@ -149,6 +154,7 @@ class RoomManager(
     //    대기 한도 한 칸을 영원히 물고 있게 된다. 테스트로 드러나지 않으므로 지우지 않는다.
     @Transactional
     fun cancel(roomId: UUID, hostMemberId: UUID) {
+        log.debug { "room.manager.cancel roomId=$roomId hostMemberId=$hostMemberId" }
         val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
         requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
         requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
@@ -162,6 +168,7 @@ class RoomManager(
     // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
     // 호출 트랜잭션이 RoomApplicationEntity 를 로드했다면 벌크 뒤 그 행을 다시 읽으면 안 된다.
     fun cancelWithoutGuard(room: RoomEntity, handlerMemberId: UUID, now: LocalDateTime) {
+        log.debug { "room.manager.cancelWithoutGuard handlerMemberId=$handlerMemberId" }
         room.cancel()
         roomStatusLogRepository.save(
             RoomStatusLogEntity.byMember(
@@ -182,6 +189,7 @@ class RoomManager(
     // 락은 취소와 같은 이유로 잡는다(취소·수락·신청 제출이 모두 같은 룸 행을 잠근다).
     @Transactional
     fun confirm(roomId: UUID, hostMemberId: UUID) {
+        log.debug { "room.manager.confirm roomId=$roomId hostMemberId=$hostMemberId" }
         val entity = loadRoomForUpdateAsHost(roomId, hostMemberId)
         val currentParticipants =
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()

@@ -65,3 +65,9 @@ Linear가 제안한 한글 브랜치명을 `feat/MOI-525-trace-logs`로 바꿨�
 위조할 수 있었다. 키는 영문자로 시작하는 `[A-Za-z0-9_.-]` 64자 이하만 받고 나머지는 버린다. `errors.md`에 `exception.async.*` 접두어를
 추가했고, 기본 eventCode 리터럴은 `LogSanitizer` 상수로 공유한다. 리뷰 대응 상한(2회)을 넘긴 반영이며 사용자 승인으로 진행했다.
 
+## D-08. PR #132 리뷰 반영: 자동 종료 job의 매 tick 로그 제거
+
+2026-09-21 PR #132 멀티에이전트 리뷰 1건. `RoomAutoCompleteJob.run()` 진입 DEBUG가 "매 tick 로그는 두지 않는다" 원칙과
+`PendingOutboxRelayScheduler` 패턴에 어긋났다. 진입 로그를 지우고, 처리 대상이 있을 때만 남는 `room.auto-complete.completed` 요약과
+건별 실패 로그로 관측한다. 이 시점에 #131은 dev에 머지됐고 #132의 base는 dev로 바뀌었다.
+

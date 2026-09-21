@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.enums.ParticipationRole
@@ -21,6 +22,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomApplicationManager(
     private val roomRepository: RoomRepository,
@@ -40,6 +43,7 @@ class RoomApplicationManager(
     //    (제출 경로가 그 순서라 반대로 넣으면 데드락이 난다).
     @Transactional
     fun accept(roomId: UUID, applicationId: Long, hostMemberId: UUID): ApplicationDecision {
+        log.debug { "room-application.manager.accept roomId=$roomId applicationId=$applicationId hostMemberId=$hostMemberId" }
         val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
         requireBusiness(room.status == RoomStatus.RECRUITING, CoreErrorType.ROOM_NOT_RECRUITING)
 
@@ -93,6 +97,7 @@ class RoomApplicationManager(
     // 사유는 코드의 name 으로 저장한다 — 컬럼에 코드 도입 전 자유 텍스트가 남아 있어 엔티티는 String 이다(MOI-451 D2-4).
     @Transactional
     fun reject(roomId: UUID, applicationId: Long, hostMemberId: UUID, reason: RejectReason?): ApplicationDecision {
+        log.debug { "room-application.manager.reject roomId=$roomId applicationId=$applicationId hostMemberId=$hostMemberId reason=$reason" }
         val room = loadActiveRoomAsHost(roomId, hostMemberId)
         val application = loadPendingApplication(roomId, applicationId)
 

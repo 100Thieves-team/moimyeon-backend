@@ -1,7 +1,10 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class ReviewService(
@@ -18,6 +21,7 @@ class ReviewService(
         roomId: UUID,
         content: ReviewSubmissionContent,
     ): Long {
+        log.debug { "review.submit memberId=$authorMemberId roomId=$roomId" }
         return submissionManager.submit(
             ReviewSubmissionCommand(
                 roomId = roomId,
@@ -35,6 +39,7 @@ class ReviewService(
         reviewId: Long,
         content: ReviewUpdateContent,
     ) {
+        log.debug { "review.update memberId=$authorMemberId reviewId=$reviewId" }
         reviewEditor.update(
             ReviewUpdateCommand(
                 reviewId = reviewId,
@@ -46,6 +51,7 @@ class ReviewService(
     }
 
     fun delete(authorMemberId: UUID, reviewId: Long) {
+        log.debug { "review.delete memberId=$authorMemberId reviewId=$reviewId" }
         reviewEditor.delete(authorMemberId, reviewId)
     }
 
@@ -54,6 +60,7 @@ class ReviewService(
         roomId: UUID,
         content: ReviewSkipContent,
     ) {
+        log.debug { "review.skip memberId=$authorMemberId roomId=$roomId" }
         val command = ReviewSkipCommand(
             roomId = roomId,
             authorMemberId = authorMemberId,

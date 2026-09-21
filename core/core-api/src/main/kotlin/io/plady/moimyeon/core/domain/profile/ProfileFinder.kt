@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.profile
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberProfileInterestCompanyRepository
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ProfileFinder(
     private val memberProfileRepository: MemberProfileRepository,
@@ -17,11 +20,13 @@ class ProfileFinder(
 ) {
     @Transactional(readOnly = true)
     fun getProfile(memberId: UUID): MemberProfile {
+        log.debug { "profile.finder.getProfile memberId=$memberId" }
         return getProfile(memberId, CoreErrorType.PROFILE_NOT_FOUND)
     }
 
     @Transactional(readOnly = true)
     fun getPublicProfile(memberId: UUID): MemberProfile {
+        log.debug { "profile.finder.getPublicProfile memberId=$memberId" }
         return getProfile(memberId, CoreErrorType.MEMBER_NOT_FOUND)
     }
 
@@ -36,6 +41,7 @@ class ProfileFinder(
 
     @Transactional(readOnly = true)
     fun getAllByMemberIds(memberIds: Collection<UUID>): List<MemberProfile> {
+        log.debug { "profile.finder.getAllByMemberIds memberIdsCount=${memberIds.size}" }
         if (memberIds.isEmpty()) return emptyList()
         val profileEntitiesByMemberId = memberProfileRepository
             .findByMemberIdInAndDeletedAtIsNull(memberIds)
@@ -58,5 +64,8 @@ class ProfileFinder(
         }
     }
 
-    fun exists(memberId: UUID): Boolean = memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
+    fun exists(memberId: UUID): Boolean {
+        log.debug { "profile.finder.exists memberId=$memberId" }
+        return memberProfileRepository.existsByMemberIdAndDeletedAtIsNull(memberId)
+    }
 }

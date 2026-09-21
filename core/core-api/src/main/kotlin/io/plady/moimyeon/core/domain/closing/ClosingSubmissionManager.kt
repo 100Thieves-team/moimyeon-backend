@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.closing
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.progress.Attendance
 import io.plady.moimyeon.core.domain.progress.RoomProgressReader
 import io.plady.moimyeon.core.enums.AttendanceStatus
@@ -18,6 +19,8 @@ import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ClosingSubmissionManager(
     private val roomRepository: RoomRepository,
@@ -28,6 +31,7 @@ class ClosingSubmissionManager(
 ) {
     @Transactional
     fun submit(command: ClosingSubmissionCommand): ClosingSubmission {
+        log.debug { "closing-submission.manager.submit roomId=${command.roomId} memberId=${command.memberId} evaluations=${command.evaluations.size}" }
         val room = requireFound(
             roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,

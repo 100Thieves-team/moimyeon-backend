@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.participation
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -8,6 +9,8 @@ import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ParticipationValidator(
     private val participationRepository: ParticipationRepository,
@@ -15,6 +18,7 @@ class ParticipationValidator(
     // 참여 슬롯 게이트(「룸 참여」 §4.1, MOI-427). 규칙은 ParticipationSlot 이 갖고 여기는 막기만 한다 —
     // 같은 판정의 묻는 형태는 ParticipationFinder.hasAvailableSlot(수락·자동 위임), 숫자는 getSlots(뷰어 사실)다.
     fun validateSlotAvailable(memberId: UUID) {
+        log.debug { "participation.validator.validateSlotAvailable memberId=$memberId" }
         val occupied = participationRepository.countOccupiedSlotsByMemberId(
             memberId,
             ParticipationSlot.OCCUPYING_ROOM_STATUSES,
@@ -23,6 +27,7 @@ class ParticipationValidator(
     }
 
     fun validateHost(roomId: UUID, memberId: UUID) {
+        log.debug { "participation.validator.validateHost roomId=$roomId memberId=$memberId" }
         requireBusiness(
             participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
@@ -37,6 +42,7 @@ class ParticipationValidator(
     // 방장·참여자 공통 게이트. 방장도 JOINED 참여 행을 가지므로 역할은 보지 않는다.
     // validateHost 와 다르다 — 여기는 참여자도 통과한다(「룸 참여」 §3).
     fun validateParticipant(roomId: UUID, memberId: UUID) {
+        log.debug { "participation.validator.validateParticipant roomId=$roomId memberId=$memberId" }
         requireBusiness(
             participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
                 roomId,
@@ -48,6 +54,7 @@ class ParticipationValidator(
     }
 
     fun validateNotHost(roomId: UUID, memberId: UUID) {
+        log.debug { "participation.validator.validateNotHost roomId=$roomId memberId=$memberId" }
         requireBusiness(
             !participationRepository.existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
                 roomId,
@@ -60,6 +67,7 @@ class ParticipationValidator(
     }
 
     fun validateNotParticipating(roomId: UUID, memberId: UUID) {
+        log.debug { "participation.validator.validateNotParticipating roomId=$roomId memberId=$memberId" }
         requireBusiness(
             !participationRepository.existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
                 roomId,
@@ -71,6 +79,7 @@ class ParticipationValidator(
     }
 
     fun validateNoRemovalHistory(roomId: UUID, memberId: UUID) {
+        log.debug { "participation.validator.validateNoRemovalHistory roomId=$roomId memberId=$memberId" }
         requireBusiness(
             !participationRepository.existsRemovalHistory(roomId, memberId),
             CoreErrorType.ROOM_REAPPLICATION_NOT_ALLOWED,

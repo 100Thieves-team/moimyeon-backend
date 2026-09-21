@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.roomviewer
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionFinder
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 // 뷰어 사실을 여러 개념에서 모아 그대로 돌려준다. 판정하지 않는다(MOI-500) —
 // 버튼 판정은 화면이, 강제는 신청 경로의 Validator 가 갖는다.
@@ -23,6 +26,7 @@ class RoomViewerReader(
 ) {
     @Transactional(readOnly = true)
     fun readAll(viewerMemberId: UUID?, roomIds: Collection<UUID>): Map<UUID, ViewerFacts?> {
+        log.debug { "room-viewer.reader.readAll viewerMemberId=$viewerMemberId roomIdsCount=${roomIds.size}" }
         // 비로그인은 내려줄 사실 자체가 없어 조회할 이유가 없다.
         // 룸이 없으면 빈 IN 절이 쿼리에 들어가지 않게 여기서 끝낸다(RoomSearchReader 와 같은 이유).
         if (viewerMemberId == null || roomIds.isEmpty()) {

@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.QuestionSource
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class QuestionPreparationService(
@@ -19,6 +22,7 @@ class QuestionPreparationService(
         targetMemberId: UUID,
         content: String,
     ): Long {
+        log.debug { "question.preparation.leave memberId=$authorMemberId roomId=$roomId targetMemberId=$targetMemberId" }
         accessValidator.validateAuthor(roomId, authorMemberId)
         accessValidator.validateTarget(roomId, authorMemberId, targetMemberId)
         return questionRecorder.record(
@@ -37,6 +41,7 @@ class QuestionPreparationService(
         parentQuestionId: Long,
         content: String,
     ): Long {
+        log.debug { "question.preparation.follow-up.leave memberId=$authorMemberId roomId=$roomId parentQuestionId=$parentQuestionId" }
         accessValidator.validateAuthor(roomId, authorMemberId)
         return questionRecorder.recordFollowUp(
             roomId,
@@ -48,6 +53,7 @@ class QuestionPreparationService(
     }
 
     fun deleteQuestion(authorMemberId: UUID, roomId: UUID, questionId: Long) {
+        log.debug { "question.preparation.delete memberId=$authorMemberId roomId=$roomId questionId=$questionId" }
         accessValidator.validateAuthor(roomId, authorMemberId)
         questionRecorder.removeOwnedBy(roomId, questionId, authorMemberId, now())
     }

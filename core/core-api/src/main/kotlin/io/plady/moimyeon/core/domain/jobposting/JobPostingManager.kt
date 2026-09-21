@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.jobposting
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.JobPostingEntity
 import io.plady.moimyeon.storage.db.core.JobPostingRepository
 import org.springframework.dao.DataIntegrityViolationException
@@ -8,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class JobPostingManager(
@@ -19,6 +22,7 @@ class JobPostingManager(
     // verified=false·is_open=true 로 저장해 탐색 필터에선 숨되 그 공고로 룸 생성은 바로 가능하다.
     @Transactional
     fun create(command: JobPostingCreationCommand, createdByMemberId: UUID): Long {
+        log.debug { "job-posting.manager.create createdByMemberId=$createdByMemberId" }
         val sourceUid = sourceUidOf(command.url)
         jobPostingRepository.findBySourceUidAndDeletedAtIsNull(sourceUid)?.let { return it.id }
         return try {

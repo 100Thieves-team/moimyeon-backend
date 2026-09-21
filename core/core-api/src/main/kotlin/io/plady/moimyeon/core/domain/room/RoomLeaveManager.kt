@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.ParticipationRole
@@ -20,6 +21,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 // 나가기는 방장도 참여자도 하는 행위라 RoomManager(생성·수정·취소·확정)의 일만은 아니다.
 // 패키지는 room 에 둔다 — 위임 대상이 없으면 룸을 취소하는 데까지 간다.
 @Component
@@ -37,6 +40,7 @@ class RoomLeaveManager(
     //    확정된 룸이 최소 밑으로 내려간다. 결과 예외가 없어 테스트로도 드러나지 않는다.
     @Transactional
     fun leave(roomId: UUID, memberId: UUID) {
+        log.debug { "room-leave.manager.leave roomId=$roomId memberId=$memberId" }
         val room = loadRoomForUpdate(roomId)
         requireBusiness(room.canLeave(), CoreErrorType.ROOM_ALREADY_CLOSED)
 

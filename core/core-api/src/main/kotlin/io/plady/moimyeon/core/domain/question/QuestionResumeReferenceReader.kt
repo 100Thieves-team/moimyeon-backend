@@ -1,16 +1,20 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.resume.ResumeSummary
 import io.plady.moimyeon.core.domain.room.RoomParticipantResumeFinder
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class QuestionResumeReferenceReader(
     private val roomParticipantResumeFinder: RoomParticipantResumeFinder,
 ) {
     fun getByRoomAndTarget(roomId: UUID, targetMemberId: UUID): QuestionResumeReference {
+        log.debug { "question-resume-reference.reader.getByRoomAndTarget roomId=$roomId targetMemberId=$targetMemberId" }
         val participantResume = roomParticipantResumeFinder.get(roomId, targetMemberId)
         return QuestionResumeReference(
             targetMemberId = targetMemberId,

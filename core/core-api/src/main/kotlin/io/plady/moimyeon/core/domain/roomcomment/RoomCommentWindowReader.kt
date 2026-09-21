@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.roomcomment
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 // 방명록의 작성 가능 여부는 룸의 생명주기에서 파생된다 - 판정이 개념 경계를 넘으므로 별도 도구다.
 // 룸은 로직 클래스(RoomFinder)에 위임하고, 전이 로그는 노출된 로직 클래스가 없어 Repository 를
@@ -16,6 +19,7 @@ class RoomCommentWindowReader(
     private val roomStatusLogRepository: RoomStatusLogRepository,
 ) {
     fun getWindow(roomId: UUID, now: LocalDateTime): RoomCommentWindow {
+        log.debug { "room-comment-window.reader.getWindow roomId=$roomId" }
         val room = roomFinder.getRoom(roomId)
         val terminalTransitionAt = when (room.status) {
             RoomStatus.CANCELED, RoomStatus.COMPLETED ->

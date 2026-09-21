@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.ReviewSkipEntity
 import io.plady.moimyeon.storage.db.core.ReviewSkipRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 private const val REVIEW_SKIP_UNIQUE_CONSTRAINT = "uk_review_skip_room_author_target"
 
@@ -12,6 +15,7 @@ class ReviewSkipRecorder(
     private val skipRepository: ReviewSkipRepository,
 ) {
     fun record(command: ReviewSkipCommand) {
+        log.debug { "review-skip.recorder.record roomId=${command.roomId} authorMemberId=${command.authorMemberId} targetMemberId=${command.targetMemberId}" }
         if (skipRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberId(
                 command.roomId,
                 command.authorMemberId,

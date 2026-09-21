@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -7,6 +8,8 @@ import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Component
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class RoundFeedbackAccessValidator(
@@ -18,6 +21,7 @@ class RoundFeedbackAccessValidator(
         memberId: UUID,
         intervieweeMemberId: UUID,
     ) {
+        log.debug { "round-feedback-access.validator.validateOtherParticipantWriter roomId=$roomId memberId=$memberId intervieweeMemberId=$intervieweeMemberId" }
         validateEditableRoom(roomId)
         validateConfirmedParticipant(roomId, memberId)
         validateConfirmedParticipant(roomId, intervieweeMemberId)
@@ -29,6 +33,7 @@ class RoundFeedbackAccessValidator(
         memberId: UUID,
         intervieweeMemberId: UUID,
     ) {
+        log.debug { "round-feedback-access.validator.validateIntervieweeWriter roomId=$roomId memberId=$memberId intervieweeMemberId=$intervieweeMemberId" }
         validateEditableRoom(roomId)
         validateInterviewee(roomId, memberId, intervieweeMemberId)
     }
@@ -38,6 +43,7 @@ class RoundFeedbackAccessValidator(
         memberId: UUID,
         intervieweeMemberId: UUID,
     ) {
+        log.debug { "round-feedback-access.validator.validateIntervieweeViewer roomId=$roomId memberId=$memberId intervieweeMemberId=$intervieweeMemberId" }
         requireBusiness(
             roomFinder.getRoom(roomId).status in VIEWABLE_STATUSES,
             CoreErrorType.ROUND_FEEDBACK_NOT_VIEWABLE,

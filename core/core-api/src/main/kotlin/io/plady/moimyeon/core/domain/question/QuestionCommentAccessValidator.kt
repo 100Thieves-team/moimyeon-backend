@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -8,12 +9,15 @@ import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class QuestionCommentAccessValidator(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
 ) {
     fun validateWriter(roomId: UUID, memberId: UUID, targetMemberId: UUID) {
+        log.debug { "question-comment-access.validator.validateWriter roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
         val room = roomFinder.getRoom(roomId)
         requireBusiness(
             room.status == RoomStatus.IN_PROGRESS,
@@ -25,6 +29,7 @@ class QuestionCommentAccessValidator(
     }
 
     fun validateViewer(roomId: UUID, memberId: UUID, targetMemberId: UUID) {
+        log.debug { "question-comment-access.validator.validateViewer roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
         val room = roomFinder.getRoom(roomId)
         requireBusiness(
             room.status == RoomStatus.IN_PROGRESS || room.status == RoomStatus.COMPLETED,

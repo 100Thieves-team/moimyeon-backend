@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.progress
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -13,6 +14,8 @@ import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomProgressManager(
     private val roomRepository: RoomRepository,
@@ -22,6 +25,7 @@ class RoomProgressManager(
 ) {
     @Transactional
     fun start(command: RoomProgressStartCommand): RoomProgressStartResult {
+        log.debug { "room-progress.manager.start roomId=${command.roomId} startedByMemberId=${command.startedByMemberId} attendances=${command.attendances.size}" }
         val room = requireFound(
             roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,

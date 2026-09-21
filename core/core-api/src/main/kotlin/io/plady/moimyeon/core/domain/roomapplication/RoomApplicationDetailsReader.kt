@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.resume.ResumeFinder
 import io.plady.moimyeon.core.domain.resume.ResumeSummary
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomApplicationDetailsReader(
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -21,6 +24,7 @@ class RoomApplicationDetailsReader(
 ) {
     @Transactional(readOnly = true)
     fun getAllByRoom(roomId: UUID): List<RoomApplicationDetails> {
+        log.debug { "room-application-details.reader.getAllByRoom roomId=$roomId" }
         val applications = roomApplicationRepository
             .findByRoomIdAndStatusNotAndDeletedAtIsNullOrderByAppliedAtAsc(
                 roomId,

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.progress
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -11,12 +12,15 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomProgressAccessValidator(
     private val roomRepository: RoomRepository,
     private val participationFinder: ParticipationFinder,
 ) {
     fun validateStarter(roomId: UUID, memberId: UUID, at: LocalDateTime) {
+        log.debug { "room-progress-access.validator.validateStarter roomId=$roomId memberId=$memberId" }
         requireBusiness(
             findActiveRoom(roomId).canStartProgress(at),
             CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
@@ -29,6 +33,7 @@ class RoomProgressAccessValidator(
     }
 
     fun validateAttendanceViewer(roomId: UUID, memberId: UUID) {
+        log.debug { "room-progress-access.validator.validateAttendanceViewer roomId=$roomId memberId=$memberId" }
         requireBusiness(
             findActiveRoom(roomId).status in ATTENDANCE_VIEWABLE_STATUSES,
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
@@ -37,6 +42,7 @@ class RoomProgressAccessValidator(
     }
 
     fun validateInProgressParticipant(roomId: UUID, memberId: UUID) {
+        log.debug { "room-progress-access.validator.validateInProgressParticipant roomId=$roomId memberId=$memberId" }
         requireBusiness(
             findActiveRoom(roomId).status == RoomStatus.IN_PROGRESS,
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -8,12 +9,15 @@ import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class QuestionPreparationAccessValidator(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
 ) {
     fun validateAuthor(roomId: UUID, authorMemberId: UUID) {
+        log.debug { "question-preparation-access.validator.validateAuthor roomId=$roomId authorMemberId=$authorMemberId" }
         val room = roomFinder.getRoom(roomId)
         requireBusiness(
             room.status == RoomStatus.CONFIRMED,
@@ -26,6 +30,7 @@ class QuestionPreparationAccessValidator(
     }
 
     fun validateTarget(roomId: UUID, authorMemberId: UUID, targetMemberId: UUID) {
+        log.debug { "question-preparation-access.validator.validateTarget roomId=$roomId authorMemberId=$authorMemberId targetMemberId=$targetMemberId" }
         requireBusiness(
             authorMemberId != targetMemberId,
             CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,

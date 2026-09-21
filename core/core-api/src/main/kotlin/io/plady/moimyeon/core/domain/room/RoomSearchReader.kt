@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomCount
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 // 탐색 목록의 복합 조회 + 조립. 단건 조회의 RoomFinder 와 책임이 다르다.
 // 다른 개념(회사·공고·직무·지역)은 보지 않는다 — 회사 → 공고 id 변환은 호출자가 끝내서 넘기고,
@@ -31,6 +34,7 @@ class RoomSearchReader(
         cursor: RoomCursor?,
         size: Int,
     ): RoomCardPage {
+        log.debug { "room-search.reader.search jobPostingIdsCount=${jobPostingIds?.size} size=$size" }
         val now = LocalDateTime.now(clock)
 
         // 다음 페이지 유무는 한 건 더 읽어 판정한다. "꽉 찼으면 다음이 있다"고 추측하면

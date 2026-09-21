@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomcomment
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.GuestbookPostEntity
@@ -9,12 +10,15 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomCommentReader(
     private val roomGuestbookRepository: RoomGuestbookRepository,
     private val guestbookPostRepository: GuestbookPostRepository,
 ) {
     fun getPage(roomId: UUID, cursor: RoomCommentCursor?, size: Int): RoomCommentPage {
+        log.debug { "room-comment.reader.getPage roomId=$roomId size=$size" }
         // 방명록 행은 첫 글 작성 때 lazy 생성되므로(RoomCommentManager) 행이 없으면 글이 없는 것이다.
         val guestbook = roomGuestbookRepository.findByRoomIdAndDeletedAtIsNull(roomId)
             ?: return RoomCommentPage(comments = emptyList(), nextCursor = null)
@@ -33,6 +37,7 @@ class RoomCommentReader(
     }
 
     fun getComment(commentId: Long): RoomComment {
+        log.debug { "room-comment.reader.getComment commentId=$commentId" }
         return requireFound(
             guestbookPostRepository.findById(commentId).orElse(null)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_COMMENT_NOT_FOUND,

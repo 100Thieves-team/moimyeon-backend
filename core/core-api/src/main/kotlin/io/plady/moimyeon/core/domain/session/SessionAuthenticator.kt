@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.session
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -10,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class SessionAuthenticator(
     private val refreshTokenRepository: RefreshTokenRepository,
@@ -17,6 +20,7 @@ class SessionAuthenticator(
 ) {
     @Transactional(readOnly = true)
     fun authenticate(credential: SessionCredential, authenticatedAt: LocalDateTime): UUID {
+        log.debug { "session.authenticator.authenticate" }
         val session = requireFound(
             refreshTokenRepository.findByTokenHash(credential.hash()),
             CoreErrorType.INVALID_SESSION,

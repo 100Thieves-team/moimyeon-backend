@@ -1,8 +1,11 @@
 package io.plady.moimyeon.core.domain.jobposting
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.company.CompanyValidator
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class JobPostingService(
@@ -26,6 +29,7 @@ class JobPostingService(
     // 링크로 공고를 즉시 생성한다. 회사가 카탈로그의 선택 가능한 회사인지 먼저 검증하고(쓰기 밖),
     // 실제 생성·멱등 처리는 Manager 트랜잭션이 맡는다. 응답은 저장된 값으로 재조립해 돌려준다.
     fun create(createdByMemberId: UUID, command: JobPostingCreationCommand): JobPosting {
+        log.debug { "job-posting.create memberId=$createdByMemberId" }
         companyValidator.validateSelectable(listOf(command.companyId))
         val jobPostingId = jobPostingManager.create(command, createdByMemberId)
         return jobPostingFinder.getById(jobPostingId)

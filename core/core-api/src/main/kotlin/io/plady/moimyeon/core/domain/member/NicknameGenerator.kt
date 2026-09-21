@@ -1,20 +1,25 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 import kotlin.random.Random
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class NicknameGenerator(
     private val memberRepository: MemberRepository,
 ) {
     fun generate(): Nickname {
+        log.debug { "nickname.generator.generate" }
         return Nickname("${ADJECTIVES.random()} ${ANIMALS.random()} ${"%02d".format(Random.nextInt(1, 100))}")
     }
 
     // TODO: 실 배포 전에 닉네임 생성 설계 다시하기
     fun generateUnique(): Nickname {
+        log.debug { "nickname.generator.generateUnique" }
         repeat(MAX_ATTEMPTS) {
             val candidate = generate()
             if (!memberRepository.existsByNickname(candidate.value)) {

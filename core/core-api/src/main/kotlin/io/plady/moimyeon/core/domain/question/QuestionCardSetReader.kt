@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.storage.db.core.QuestionEntity
 import io.plady.moimyeon.storage.db.core.QuestionRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class QuestionCardSetReader(
@@ -14,6 +17,7 @@ class QuestionCardSetReader(
 ) {
     @Transactional(readOnly = true)
     fun getAllByRoomExceptTarget(roomId: UUID, excludedTargetMemberId: UUID): List<QuestionCardSet> {
+        log.debug { "question-card-set.reader.getAllByRoomExceptTarget roomId=$roomId excludedTargetMemberId=$excludedTargetMemberId" }
         val targetMemberIds = participationFinder.getConfirmedParticipantIds(roomId)
             .filterNot { it == excludedTargetMemberId }
         if (targetMemberIds.isEmpty()) return emptyList()
@@ -32,6 +36,7 @@ class QuestionCardSetReader(
 
     @Transactional(readOnly = true)
     fun getByRoomAndTarget(roomId: UUID, targetMemberId: UUID): QuestionCardSet {
+        log.debug { "question-card-set.reader.getByRoomAndTarget roomId=$roomId targetMemberId=$targetMemberId" }
         val questions = questionRepository
             .findByRoomIdAndTargetMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
                 roomId,
@@ -42,6 +47,7 @@ class QuestionCardSetReader(
 
     @Transactional(readOnly = true)
     fun countPreparers(roomId: UUID, targetMemberId: UUID): Int {
+        log.debug { "question-card-set.reader.countPreparers roomId=$roomId targetMemberId=$targetMemberId" }
         return questionRepository
             .countDistinctAuthorsByRoomIdAndTargetMemberIdAndDeletedAtIsNull(roomId, targetMemberId)
             .toInt()
