@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeValidator
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RoomApplicationSubmissionService(
@@ -18,6 +21,7 @@ class RoomApplicationSubmissionService(
         roomId: UUID,
         applicationForm: RoomApplicationForm,
     ): Long {
+        log.debug { "room-application.submit memberId=$applicantMemberId roomId=$roomId" }
         val submittedFile = resumeValidator.validateOwnedBy(applicantMemberId, applicationForm.resumeId)
         return roomApplicationSubmissionManager.submit(
             applicantMemberId,
@@ -41,6 +45,7 @@ class RoomApplicationSubmissionService(
     }
 
     fun withdraw(applicantMemberId: UUID, roomId: UUID) {
+        log.debug { "room-application.withdraw memberId=$applicantMemberId roomId=$roomId" }
         roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
     }
 }

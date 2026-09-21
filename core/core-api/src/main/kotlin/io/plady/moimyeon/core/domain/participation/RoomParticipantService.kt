@@ -1,8 +1,11 @@
 package io.plady.moimyeon.core.domain.participation
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.room.RoomLeaveManager
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RoomParticipantService(
@@ -30,6 +33,7 @@ class RoomParticipantService(
     // 나가기(「룸 참여」 §4.6). 참여 여부 판정이 나가기 규칙과 한 잠금 안에 있어야 해서
     // 여기서 validateParticipant 를 먼저 부르지 않는다 — Manager 가 룸을 잠근 뒤 함께 본다.
     fun leave(memberId: UUID, roomId: UUID) {
+        log.debug { "room-participant.leave memberId=$memberId roomId=$roomId" }
         roomLeaveManager.leave(roomId, memberId)
     }
 }

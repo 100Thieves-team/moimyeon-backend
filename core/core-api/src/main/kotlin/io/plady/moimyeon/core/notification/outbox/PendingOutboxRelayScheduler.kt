@@ -1,7 +1,10 @@
 package io.plady.moimyeon.core.notification.outbox
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class PendingOutboxRelayScheduler(
@@ -18,6 +21,8 @@ class PendingOutboxRelayScheduler(
     }
 
     private fun relayPendingBatch() {
-        outboxClaimManager.claimPendingBatch().forEach(notificationRelay::publish)
+        val claims = outboxClaimManager.claimPendingBatch()
+        if (claims.isNotEmpty()) log.debug { "outbox.relay.batch size=${claims.size}" }
+        claims.forEach(notificationRelay::publish)
     }
 }

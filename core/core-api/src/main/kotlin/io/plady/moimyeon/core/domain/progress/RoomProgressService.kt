@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.progress
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RoomProgressService(
@@ -20,6 +23,7 @@ class RoomProgressService(
         roomId: UUID,
         attendances: List<Attendance>,
     ): RoomProgressStartResult {
+        log.debug { "room.progress.start memberId=$startedByMemberId roomId=$roomId attendances=${attendances.size}" }
         val startedAt = now()
         accessValidator.validateStarter(roomId, startedByMemberId, startedAt)
         return progressManager.start(

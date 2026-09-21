@@ -1,7 +1,10 @@
 package io.plady.moimyeon.core.domain.closing
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class ClosingService(
@@ -19,6 +22,7 @@ class ClosingService(
         roomId: UUID,
         evaluations: List<QuestionEvaluation>,
     ): ClosingSubmission {
+        log.debug { "closing.submit memberId=$memberId roomId=$roomId evaluations=${evaluations.size}" }
         return submissionManager.submit(
             ClosingSubmissionCommand(
                 roomId = roomId,

@@ -1,7 +1,10 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class RoundFeedbackService(
@@ -24,6 +27,7 @@ class RoundFeedbackService(
         intervieweeMemberId: UUID,
         content: String,
     ): Long {
+        log.debug { "round.feedback.final.leave memberId=$memberId roomId=$roomId intervieweeMemberId=$intervieweeMemberId" }
         accessValidator.validateOtherParticipantWriter(roomId, memberId, intervieweeMemberId)
         return feedbackManager.registerFinalFeedback(
             RoundFeedbackCommand(
@@ -41,6 +45,7 @@ class RoundFeedbackService(
         intervieweeMemberId: UUID,
         content: String,
     ): Long {
+        log.debug { "round.feedback.self.leave memberId=$memberId roomId=$roomId intervieweeMemberId=$intervieweeMemberId" }
         accessValidator.validateIntervieweeWriter(roomId, memberId, intervieweeMemberId)
         return feedbackManager.upsertSelfFeedback(
             RoundFeedbackCommand(
@@ -67,6 +72,7 @@ class RoundFeedbackService(
         intervieweeMemberId: UUID,
         feedbackId: Long,
     ) {
+        log.debug { "round.feedback.disclosure.confirm memberId=$memberId roomId=$roomId intervieweeMemberId=$intervieweeMemberId feedbackId=$feedbackId" }
         accessValidator.validateIntervieweeViewer(roomId, memberId, intervieweeMemberId)
         feedbackManager.confirmDisclosure(roomId, intervieweeMemberId, feedbackId)
     }

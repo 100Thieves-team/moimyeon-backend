@@ -1,10 +1,13 @@
 package io.plady.moimyeon.core.domain.roomcomment
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 // 세 흐름 모두 룸 참여자 게이트(E1419)가 맨 앞이다 - 제3자·신청자·회수자·없는 룸은 존재 여부조차
 // 알 수 없다(「룸 방명록」 §3, 명부와 같은 게이트 재사용).
@@ -27,11 +30,13 @@ class RoomCommentService(
     fun getComment(commentId: Long): RoomComment = commentReader.getComment(commentId)
 
     fun leaveComment(authorMemberId: UUID, roomId: UUID, content: String): Long {
+        log.debug { "room.comment.leave memberId=$authorMemberId roomId=$roomId" }
         participationValidator.validateParticipant(roomId, authorMemberId)
         return commentManager.post(roomId, authorMemberId, content, now())
     }
 
     fun deleteComment(memberId: UUID, roomId: UUID, commentId: Long) {
+        log.debug { "room.comment.delete memberId=$memberId roomId=$roomId commentId=$commentId" }
         participationValidator.validateParticipant(roomId, memberId)
         commentManager.remove(roomId, memberId, commentId, now())
     }
