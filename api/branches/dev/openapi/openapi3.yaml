@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-09-20",
-                        "datetime" : "2026-09-20T07:51:54.528172013",
+                        "date" : "2026-09-21",
+                        "datetime" : "2026-09-21T11:12:24.372222611",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-09-20",
-                        "datetime" : "2026-09-20T07:51:54.574243031",
+                        "date" : "2026-09-21",
+                        "datetime" : "2026-09-21T11:12:24.422149121",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -2386,7 +2386,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "7fd73936-4241-4a2d-891b-54eda590f94c",
+                          "termsId" : "a2d44b60-7ae6-466b-943a-0a26f608dcdf",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -2394,7 +2394,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "f201b89a-6c58-495f-9fdb-05f0560f61c2",
+                          "termsId" : "604dd9c8-a4f9-4020-872f-245ac2b63801",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -3151,12 +3151,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "2535d041-6cf3-40ae-a31f-1674a2eedbbf",
+                        "memberId" : "a998e946-bbd4-4c5f-b92f-3852e85fea27",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "2535d041-6cf3-40ae-a31f-1674a2eedbbf",
+                          "memberId" : "a998e946-bbd4-4c5f-b92f-3852e85fea27",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -4646,7 +4646,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-21T07:52:02.693574336",
+                          "startAt" : "2026-09-22T11:12:33.079127981",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -4658,9 +4658,9 @@ paths:
                           "pendingApplicationCount" : 5
                         },
                         "resumePublic" : false,
-                        "hostMemberId" : "1d8572a9-5eff-42ed-9e7c-3ef3ad18d443",
+                        "hostMemberId" : "73c58ab6-2f9b-4f76-a39b-156878d9f690",
                         "participants" : [ {
-                          "memberId" : "1d8572a9-5eff-42ed-9e7c-3ef3ad18d443",
+                          "memberId" : "73c58ab6-2f9b-4f76-a39b-156878d9f690",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -4950,7 +4950,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "389a6c60-fa41-48a3-b37a-2c70d8d3a1f1",
+                        "memberId" : "09406c79-f6b4-4e6a-bf09-d9fc0f1d65b2",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -5721,19 +5721,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "522af8ed-5479-4faf-968d-4cb6b09678c8",
+                    "resumeId" : "14189cb9-abf4-448b-b68a-4d4ec5df1499",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "ec5d31b7-9440-4ead-85be-0bc193f9dda2",
+                    "resumeId" : "1c44c6d6-d4ff-4915-94eb-9686fd866d97",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "51af787c-8fb4-47dc-b77c-f1da19ecc54d"
+                    "resumeId" : "47f07dc4-8541-4eae-ab3a-09ce6e46a604"
                   }
       responses:
         "400":
@@ -7147,7 +7147,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "4cdb9019-8b5c-4e51-ac7d-227d0ee20bd5",
+                          "resumeId" : "8dd5706a-d1c4-4792-91d2-c9ae5c94b42e",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -8185,18 +8185,6 @@ paths:
                   type: string
 components:
   schemas:
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -8216,6 +8204,18 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-job-postings1538643122:
       required:
       - result
@@ -8453,7 +8453,7 @@ components:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
           nullable: true
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -8681,14 +8681,6 @@ components:
               type: number
               description: 생성된 꼬리질문 id
           nullable: true
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-members-me-rooms-257716809:
       required:
       - result
@@ -9121,6 +9113,14 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -10092,6 +10092,83 @@ components:
           nullable: true
           items:
             type: number
+    v1-rooms-roomId-applications-me2061746466:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - appliedAt
+          - note
+          - roomId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            resume:
+              required:
+              - resumeId
+              type: object
+              properties:
+                file:
+                  required:
+                  - contentType
+                  - originalName
+                  - sizeBytes
+                  type: object
+                  properties:
+                    originalName:
+                      type: string
+                      description: 제출 당시 파일명
+                    contentType:
+                      type: string
+                      description: 제출 당시 파일 MIME 타입
+                    sizeBytes:
+                      type: number
+                      description: 제출 당시 파일 크기 (bytes)
+                  nullable: true
+                resumeId:
+                  type: string
+                  description: 제출 원본이 된 보관 이력서 id (UUID)
+                aiSummary:
+                  required:
+                  - status
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: AI 요약 내용 (DONE일 때 제공)
+                      nullable: true
+                    status:
+                      type: string
+                      description: AI 요약 상태 (PROCESSING | DONE | FAILED)
+                  nullable: true
+              nullable: true
+            note:
+              type: string
+              description: 내가 입력한 전달 사항 (미입력 시 빈 문자열)
+            applicationId:
+              type: number
+              description: 참가 신청 id
+            appliedAt:
+              type: string
+              description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
+            statusLabel:
+              type: string
+              description: 신청자에게 표시할 상태명
+            roomId:
+              type: string
+              description: 룸 id (UUID)
+            status:
+              type: string
+              description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
+                | ROOM_CONFIRMED)
+          nullable: true
     v1-rooms-roomId-349770905:
       required:
       - result
@@ -10346,83 +10423,6 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
-    v1-rooms-roomId-applications-me2061746466:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - appliedAt
-          - note
-          - roomId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            resume:
-              required:
-              - resumeId
-              type: object
-              properties:
-                file:
-                  required:
-                  - contentType
-                  - originalName
-                  - sizeBytes
-                  type: object
-                  properties:
-                    originalName:
-                      type: string
-                      description: 제출 당시 파일명
-                    contentType:
-                      type: string
-                      description: 제출 당시 파일 MIME 타입
-                    sizeBytes:
-                      type: number
-                      description: 제출 당시 파일 크기 (bytes)
-                  nullable: true
-                resumeId:
-                  type: string
-                  description: 제출 원본이 된 보관 이력서 id (UUID)
-                aiSummary:
-                  required:
-                  - status
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                      description: AI 요약 내용 (DONE일 때 제공)
-                      nullable: true
-                    status:
-                      type: string
-                      description: AI 요약 상태 (PROCESSING | DONE | FAILED)
-                  nullable: true
-              nullable: true
-            note:
-              type: string
-              description: 내가 입력한 전달 사항 (미입력 시 빈 문자열)
-            applicationId:
-              type: number
-              description: 참가 신청 id
-            appliedAt:
-              type: string
-              description: 신청 시각 (yyyy-MM-ddTHH:mm:ss)
-            statusLabel:
-              type: string
-              description: 신청자에게 표시할 상태명
-            roomId:
-              type: string
-              description: 룸 id (UUID)
-            status:
-              type: string
-              description: 신청 상태 (PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED
-                | ROOM_CONFIRMED)
-          nullable: true
     v1-members-memberId-profile655149006:
       required:
       - result
@@ -11258,31 +11258,6 @@ components:
         roomId:
           type: string
           description: 룸 id (UUID)
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
-          nullable: true
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -11370,6 +11345,31 @@ components:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
+          nullable: true
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
           nullable: true
     v1-rooms501055666:
       required:
