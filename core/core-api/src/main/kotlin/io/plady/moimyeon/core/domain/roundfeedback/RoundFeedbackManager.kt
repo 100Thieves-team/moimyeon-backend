@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.enums.RoundFeedbackType
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -16,6 +17,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoundFeedbackManager(
     private val roomRepository: RoomRepository,
@@ -24,6 +27,7 @@ class RoundFeedbackManager(
 ) {
     @Transactional
     fun registerFinalFeedback(command: RoundFeedbackCommand): Long {
+        log.debug { "round-feedback.manager.registerFinalFeedback roomId=${command.roomId} intervieweeMemberId=${command.intervieweeMemberId} authorMemberId=${command.authorMemberId}" }
         lockEditableRoom(command.roomId)
         if (findByAuthor(command) != null) {
             throw CoreException(CoreErrorType.ROUND_FEEDBACK_ALREADY_EXISTS)
@@ -41,6 +45,7 @@ class RoundFeedbackManager(
 
     @Transactional
     fun upsertSelfFeedback(command: RoundFeedbackCommand): Long {
+        log.debug { "round-feedback.manager.upsertSelfFeedback roomId=${command.roomId} intervieweeMemberId=${command.intervieweeMemberId} authorMemberId=${command.authorMemberId}" }
         // 아직 없는 피드백 행은 잠글 수 없다. 항상 존재하는 룸 행을 먼저 잠가 같은 룸의 최초 INSERT를
         // 직렬화하면, 두 요청이 모두 existing == null을 보고 유니크 충돌로 가는 레이스가 사라진다.
         lockEditableRoom(command.roomId)
@@ -58,6 +63,7 @@ class RoundFeedbackManager(
         intervieweeMemberId: UUID,
         feedbackId: Long,
     ) {
+        log.debug { "round-feedback.manager.confirmDisclosure roomId=$roomId intervieweeMemberId=$intervieweeMemberId feedbackId=$feedbackId" }
         val feedback = requireFound(
             feedbackRepository.findForUpdateByRoomIdAndIntervieweeMemberIdAndIdAndFeedbackTypeAndDeletedAtIsNull(
                 roomId,

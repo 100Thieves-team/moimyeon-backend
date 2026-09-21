@@ -1,12 +1,14 @@
 package io.plady.moimyeon.core.domain.jobposting
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.IDN
 import java.net.InetAddress
 import java.net.URI
+
+private val log = KotlinLogging.logger {}
 
 // OG 메타데이터를 Jsoup 으로 fetch·파싱한다. 사용자가 준 임의 URL 을 서버가 대신 여는 만큼,
 // (1) 사설·루프백·링크로컬(클라우드 메타데이터 169.254.169.254 포함) 대상은 SSRF 방어로 연결 전 차단하고,
@@ -18,9 +20,9 @@ import java.net.URI
 // 연결 시점에 해석된 IP 를 고정해야 하며, 그건 후속 과제로 둔다. 여기서는 명백한 내부 대상만 막는다.
 @Component
 class JsoupOpenGraphClient : OpenGraphClient {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun fetch(url: String): LinkMetadata {
+        log.debug { "jsoup-open-graph.client.fetch" }
         val empty = LinkMetadata(postingName = null, imageUrl = null, description = null, sourceUrl = url)
         return try {
             val document = fetchFollowingRedirects(url) ?: return empty
@@ -31,7 +33,7 @@ class JsoupOpenGraphClient : OpenGraphClient {
                 sourceUrl = document.metaContent("og:url", asUrl = true) ?: url,
             )
         } catch (e: Exception) {
-            log.info("OG fetch 실패 url={} cause={}", url, e.message)
+            log.debug { "jsoup-open-graph.client.fetch.failed url=$url cause=${e.javaClass.simpleName}" }
             empty
         }
     }
@@ -43,7 +45,7 @@ class JsoupOpenGraphClient : OpenGraphClient {
         var current = startUrl
         repeat(MAX_REDIRECTS + 1) {
             if (!isFetchable(current)) {
-                log.info("OG fetch 차단(SSRF·스킴) url={}", current)
+                log.info { "jsoup-open-graph.client.fetch.blocked host=${runCatching { URI(current).host }.getOrNull()}" }
                 return null
             }
             val response = Jsoup.connect(current)
@@ -72,7 +74,7 @@ class JsoupOpenGraphClient : OpenGraphClient {
                 }
             }
         }
-        log.info("OG fetch 리다이렉트 한도 초과 startUrl={}", startUrl)
+        log.debug { "jsoup-open-graph.client.fetch.redirect-limit startUrl=$startUrl" }
         return null
     }
 

@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -11,6 +12,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ReviewEditor(
     private val reviewRepository: ReviewRepository,
@@ -18,6 +21,7 @@ class ReviewEditor(
 ) {
     @Transactional
     fun update(command: ReviewUpdateCommand) {
+        log.debug { "review.editor.update reviewId=${command.reviewId} authorMemberId=${command.authorMemberId}" }
         val review = getEditableReview(
             reviewId = command.reviewId,
             authorMemberId = command.authorMemberId,
@@ -28,6 +32,7 @@ class ReviewEditor(
 
     @Transactional
     fun delete(authorMemberId: UUID, reviewId: Long) {
+        log.debug { "review.editor.delete authorMemberId=$authorMemberId reviewId=$reviewId" }
         val now = LocalDateTime.now(clock)
         val review = getEditableReview(reviewId, authorMemberId, now)
         review.delete(now)

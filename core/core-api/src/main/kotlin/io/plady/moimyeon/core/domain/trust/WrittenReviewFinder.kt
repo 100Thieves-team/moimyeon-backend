@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -9,12 +10,15 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class WrittenReviewFinder(
     private val reviewRepository: ReviewRepository,
 ) {
     @Transactional(readOnly = true)
     fun getWrittenReview(authorMemberId: UUID, reviewId: Long): WrittenReview {
+        log.debug { "written-review.finder.getWrittenReview authorMemberId=$authorMemberId reviewId=$reviewId" }
         val review = requireFound(
             reviewRepository.findByIdAndDeletedAtIsNull(reviewId),
             CoreErrorType.REVIEW_NOT_FOUND,
@@ -26,6 +30,7 @@ class WrittenReviewFinder(
 
     @Transactional(readOnly = true)
     fun getWrittenReviews(authorMemberId: UUID, roomId: UUID): List<WrittenReview> {
+        log.debug { "written-review.finder.getWrittenReviews authorMemberId=$authorMemberId roomId=$roomId" }
         return reviewRepository
             .findAllWithTagsByRoomIdAndAuthorMemberIdAndDeletedAtIsNull(roomId, authorMemberId)
             .map { it.toWrittenReview() }

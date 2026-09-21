@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -10,12 +11,15 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomValidator(
     private val roomRepository: RoomRepository,
     private val clock: Clock,
 ) {
     fun validateAcceptingApplications(roomId: UUID) {
+        log.debug { "room.validator.validateAcceptingApplications roomId=$roomId" }
         val room = roomRepository.findByIdForUpdate(roomId)
         if (room == null || !room.isActive()) {
             throw CoreException(CoreErrorType.ROOM_NOT_FOUND)

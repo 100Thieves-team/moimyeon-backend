@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.member
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -8,12 +9,15 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class MemberRegistrationManager(
     private val nicknameGenerator: NicknameGenerator,
     private val memberRegistrar: MemberRegistrar,
 ) {
     fun register(provider: SocialLoginProvider, providerId: String, email: Email): UUID {
+        log.debug { "member-registration.manager.register provider=$provider" }
         val registeredAt = LocalDateTime.now()
 
         repeat(MAX_ATTEMPTS) { attempt ->

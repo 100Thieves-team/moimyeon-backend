@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.QuestionSource
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class QuestionRecorder(
@@ -24,6 +27,7 @@ class QuestionRecorder(
         content: String,
         source: QuestionSource,
     ): Long {
+        log.debug { "question.recorder.record roomId=$roomId targetMemberId=$targetMemberId authorMemberId=$authorMemberId parentQuestionId=$parentQuestionId source=$source" }
         if (parentQuestionId != null) {
             validateParent(roomId, targetMemberId, parentQuestionId)
         }
@@ -38,6 +42,7 @@ class QuestionRecorder(
         content: String,
         source: QuestionSource,
     ): Long {
+        log.debug { "question.recorder.recordFollowUp roomId=$roomId authorMemberId=$authorMemberId parentQuestionId=$parentQuestionId source=$source" }
         val parent = getOriginalQuestionForUpdate(roomId, parentQuestionId)
         requireBusiness(
             parent.targetMemberId != authorMemberId,
@@ -73,6 +78,7 @@ class QuestionRecorder(
         authorMemberId: UUID,
         deletedAt: LocalDateTime,
     ) {
+        log.debug { "question.recorder.removeOwnedBy roomId=$roomId questionId=$questionId authorMemberId=$authorMemberId" }
         val question = requireFound(
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, questionId),
             CoreErrorType.QUESTION_NOT_FOUND,

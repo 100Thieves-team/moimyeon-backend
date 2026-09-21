@@ -1,10 +1,13 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.QuestionCommentRepository
 import io.plady.moimyeon.storage.db.core.QuestionRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class QuestionMemoRecordReader(
@@ -17,6 +20,7 @@ class QuestionMemoRecordReader(
         intervieweeMemberId: UUID,
         authorMemberId: UUID,
     ): List<QuestionMemoRecord> {
+        log.debug { "question-memo-record.reader.getAskedRecordsByAuthor roomId=$roomId intervieweeMemberId=$intervieweeMemberId authorMemberId=$authorMemberId" }
         val questions = questionRepository
             .findByRoomIdAndTargetMemberIdAndAskedTrueAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
                 roomId,

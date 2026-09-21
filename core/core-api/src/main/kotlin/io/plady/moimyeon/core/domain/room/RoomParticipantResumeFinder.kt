@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.room
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.resume.ResumeFinder
 import io.plady.moimyeon.core.domain.resume.ResumeSummary
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -9,6 +10,8 @@ import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 // 룸 참여자가 그 룸에 낸 이력서. 제출 시점 사본을 가리키므로 회원이 나중에 원본을 바꾸거나 숨겨도
 // "무엇을 냈는가" 는 유지된다. 요약 본문만 resume 를 따라간다.
 @Component
@@ -17,6 +20,7 @@ class RoomParticipantResumeFinder(
     private val resumeFinder: ResumeFinder,
 ) {
     fun get(roomId: UUID, participantMemberId: UUID): RoomParticipantResume {
+        log.debug { "room-participant-resume.finder.get roomId=$roomId participantMemberId=$participantMemberId" }
         val submission = requireFound(
             resumeSubmissionRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, participantMemberId),
             CoreErrorType.RESUME_NOT_FOUND,
@@ -32,6 +36,7 @@ class RoomParticipantResumeFinder(
     // 참여 중인 사람의 최신 제출이 곧 그 사람이 낸 이력서이므로 제출 시각으로 정렬해 마지막을 남긴다.
     // 정렬 없이 덮어쓰면 어느 행이 남을지 조회 순서에 달려 철회한 신청의 이력서가 뜰 수 있다.
     fun getAllByRoom(roomId: UUID): Map<UUID, RoomParticipantResume> {
+        log.debug { "room-participant-resume.finder.getAllByRoom roomId=$roomId" }
         val submissions = resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(roomId)
         if (submissions.isEmpty()) return emptyMap()
 

@@ -1,11 +1,14 @@
 package io.plady.moimyeon.core.domain.question
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.QuestionCommentEntity
 import io.plady.moimyeon.storage.db.core.QuestionCommentRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class QuestionCommentReader(
@@ -19,6 +22,7 @@ class QuestionCommentReader(
         questionId: Long,
         cursor: QuestionCommentCursor?,
     ): QuestionCommentPage {
+        log.debug { "question-comment.reader.getPage roomId=$roomId targetMemberId=$targetMemberId questionId=$questionId" }
         targetValidator.validate(roomId, targetMemberId, questionId)
         val entities = questionCommentRepository.findPage(
             questionId = questionId,

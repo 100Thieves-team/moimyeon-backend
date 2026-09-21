@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.storage.db.core.AttendanceEntity
 import io.plady.moimyeon.storage.db.core.AttendanceRepository
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomReviewFinder(
     private val attendanceRepository: AttendanceRepository,
@@ -16,6 +19,7 @@ class RoomReviewFinder(
 ) {
     @Transactional(readOnly = true)
     fun getSummaries(memberId: UUID, roomIds: Collection<UUID>): Map<UUID, RoomReviewSummary> {
+        log.debug { "room-review.finder.getSummaries memberId=$memberId roomIdsCount=${roomIds.size}" }
         if (roomIds.isEmpty()) return emptyMap()
 
         val attendancesByRoom = attendanceRepository

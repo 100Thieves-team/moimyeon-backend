@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.catalog
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.JobGroupRepository
 import io.plady.moimyeon.storage.db.core.JobRoleRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class JobCatalogFinder(
@@ -12,6 +15,7 @@ class JobCatalogFinder(
 ) {
     @Transactional(readOnly = true)
     fun getJobCatalog(): List<JobGroup> {
+        log.debug { "job-catalog.finder.getJobCatalog" }
         val rolesByGroup = jobRoleRepository.findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc()
             .groupBy { it.jobGroupId }
         return jobGroupRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { group ->
@@ -26,6 +30,7 @@ class JobCatalogFinder(
 
     // 탐색 목록의 직무 표시명 배치 조회(MOI-383). 폐기된 직무는 돌려주지 않고, 그 룸은 직무 없이 내려간다.
     fun getJobRolesByIds(ids: Collection<Long>): List<JobRole> {
+        log.debug { "job-catalog.finder.getJobRolesByIds idsCount=${ids.size}" }
         if (ids.isEmpty()) return emptyList()
         return jobRoleRepository.findByIdInAndDeletedAtIsNull(ids).map { JobRole(it.id, it.code, it.displayName) }
     }
@@ -33,6 +38,7 @@ class JobCatalogFinder(
     // 직무명으로 유효 직무를 검색하고 상위 직군을 얹어 반환한다(룸 생성 직무 검색). 폐기된 직군의 직무는 제외한다.
     @Transactional(readOnly = true)
     fun searchJobRoles(query: String): List<JobRoleSearchResult> {
+        log.debug { "job-catalog.finder.searchJobRoles" }
         val roles = jobRoleRepository.findTop20ByDisplayNameContainingAndDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc(query)
         if (roles.isEmpty()) return emptyList()
 

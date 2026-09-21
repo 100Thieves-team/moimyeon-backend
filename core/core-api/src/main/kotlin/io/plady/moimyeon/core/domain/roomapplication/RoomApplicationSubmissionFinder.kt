@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomapplication
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.domain.resume.ResumeFinder
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
@@ -10,6 +11,8 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomApplicationSubmissionFinder(
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -17,6 +20,7 @@ class RoomApplicationSubmissionFinder(
     private val resumeFinder: ResumeFinder,
 ) {
     fun getPendingByApplicant(applicantMemberId: UUID): List<PendingRoomApplication> {
+        log.debug { "room-application-submission.finder.getPendingByApplicant applicantMemberId=$applicantMemberId" }
         val applications = roomApplicationRepository
             .findByApplicantMemberIdAndStatusAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
                 applicantMemberId,
@@ -49,6 +53,7 @@ class RoomApplicationSubmissionFinder(
         applicantMemberId: UUID,
         roomIds: Collection<UUID>,
     ): Map<UUID, RoomApplicationStatus> {
+        log.debug { "room-application-submission.finder.getLatestStatusByRooms applicantMemberId=$applicantMemberId roomIdsCount=${roomIds.size}" }
         if (roomIds.isEmpty()) return emptyMap()
 
         return roomApplicationRepository
@@ -63,6 +68,7 @@ class RoomApplicationSubmissionFinder(
     // 막지 않고 숫자를 묻는다(MOI-500) — 판정은 화면과 신청 경로가 각자 한다. 막는 쪽은
     // RoomApplicationSubmissionManager 가 자기 커밋 경계 안에서 같은 집계로 갖는다.
     fun getPendingApplicationQuota(applicantMemberId: UUID): PendingApplicationQuota {
+        log.debug { "room-application-submission.finder.getPendingApplicationQuota applicantMemberId=$applicantMemberId" }
         return PendingApplicationQuota.of(
             roomApplicationRepository.countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
                 applicantMemberId,
@@ -72,6 +78,7 @@ class RoomApplicationSubmissionFinder(
     }
 
     fun getLatestByApplicant(applicantMemberId: UUID, roomId: UUID): RoomApplication {
+        log.debug { "room-application-submission.finder.getLatestByApplicant applicantMemberId=$applicantMemberId roomId=$roomId" }
         val application = requireFound(
             roomApplicationRepository
                 .findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(

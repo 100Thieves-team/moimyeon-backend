@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.resume
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ResumeManager(
     private val memberRepository: MemberRepository,
@@ -18,6 +21,7 @@ class ResumeManager(
 ) {
     @Transactional
     fun makeDefault(memberId: UUID, resumeId: UUID) {
+        log.debug { "resume.manager.makeDefault memberId=$memberId resumeId=$resumeId" }
         lockMember(memberId)
         val selected = getSelectableResume(memberId, resumeId)
         if (selected.summaryStatus != ResumeSummaryStatus.DONE) {
@@ -42,6 +46,7 @@ class ResumeManager(
         attemptStartedAt: LocalDateTime,
         completedAt: LocalDateTime,
     ) {
+        log.debug { "resume.manager.completeSummary memberId=$memberId resumeId=$resumeId" }
         lockMember(memberId)
         val resume = getSelectableResume(memberId, resumeId)
         if (resume.summaryStatus != ResumeSummaryStatus.PROCESSING || resume.summaryStartedAt != attemptStartedAt) return
@@ -59,6 +64,7 @@ class ResumeManager(
 
     @Transactional
     fun failSummary(memberId: UUID, resumeId: UUID, attemptStartedAt: LocalDateTime) {
+        log.debug { "resume.manager.failSummary memberId=$memberId resumeId=$resumeId" }
         lockMember(memberId)
         val resume = getSelectableResume(memberId, resumeId)
         if (resume.summaryStatus != ResumeSummaryStatus.PROCESSING || resume.summaryStartedAt != attemptStartedAt) return
@@ -67,6 +73,7 @@ class ResumeManager(
 
     @Transactional
     fun startSummaryRetry(memberId: UUID, resumeId: UUID, startedAt: LocalDateTime) {
+        log.debug { "resume.manager.startSummaryRetry memberId=$memberId resumeId=$resumeId" }
         lockMember(memberId)
         val resume = getSelectableResume(memberId, resumeId)
         if (resume.summaryStatus != ResumeSummaryStatus.FAILED) {
@@ -77,6 +84,7 @@ class ResumeManager(
 
     @Transactional
     fun failExpiredSummaries(memberId: UUID, now: LocalDateTime): Int {
+        log.debug { "resume.manager.failExpiredSummaries memberId=$memberId" }
         val expiredSummaries = resumeRepository
             .findByMemberIdAndSummaryStatusAndSummaryStartedAtLessThanEqualAndDeletedAtIsNull(
                 memberId = memberId,
@@ -89,12 +97,14 @@ class ResumeManager(
 
     @Transactional
     fun rename(memberId: UUID, resumeId: UUID, name: String) {
+        log.debug { "resume.manager.rename memberId=$memberId resumeId=$resumeId" }
         val resume = getSelectableResume(memberId, resumeId)
         resume.rename(name)
     }
 
     @Transactional
     fun delete(memberId: UUID, resumeId: UUID, deletedAt: LocalDateTime) {
+        log.debug { "resume.manager.delete memberId=$memberId resumeId=$resumeId" }
         lockMember(memberId)
         val resume = requireFound(
             resumeRepository.findByIdAndMemberId(resumeId, memberId),

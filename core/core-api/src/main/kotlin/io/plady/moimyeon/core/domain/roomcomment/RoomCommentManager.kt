@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roomcomment
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class RoomCommentManager(
     private val roomGuestbookRepository: RoomGuestbookRepository,
@@ -25,6 +28,7 @@ class RoomCommentManager(
     //    지우면 더블클릭 두 요청이 각자 "직전 글 없음"을 보고 같은 글을 두 번 만든다.
     @Transactional
     fun post(roomId: UUID, authorMemberId: UUID, content: String, now: LocalDateTime): Long {
+        log.debug { "room-comment.manager.post roomId=$roomId authorMemberId=$authorMemberId" }
         requireBusiness(windowReader.getWindow(roomId, now).writable, CoreErrorType.ROOM_COMMENT_READ_ONLY)
 
         val guestbook = getOrCreateGuestbook(roomId)
@@ -47,6 +51,7 @@ class RoomCommentManager(
 
     @Transactional
     fun remove(roomId: UUID, authorMemberId: UUID, commentId: Long, now: LocalDateTime) {
+        log.debug { "room-comment.manager.remove roomId=$roomId authorMemberId=$authorMemberId commentId=$commentId" }
         // 전환 후 목록은 기록이다 - 읽기 전용이면 삭제도 막는다(D11).
         requireBusiness(windowReader.getWindow(roomId, now).writable, CoreErrorType.ROOM_COMMENT_READ_ONLY)
 

@@ -1,8 +1,11 @@
 package io.plady.moimyeon.core.domain.resume
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class StoredResumeReader(
@@ -11,6 +14,7 @@ class StoredResumeReader(
 ) {
     @Transactional(readOnly = true)
     fun getAll(memberId: UUID): List<StoredResume> {
+        log.debug { "stored-resume.reader.getAll memberId=$memberId" }
         val resumes = resumeFinder.getAll(memberId)
         if (resumes.isEmpty()) return emptyList()
 

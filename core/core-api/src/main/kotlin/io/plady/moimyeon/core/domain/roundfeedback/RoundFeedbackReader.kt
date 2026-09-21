@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberAttribution
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.question.QuestionMemoRecordReader
@@ -9,6 +10,8 @@ import io.plady.moimyeon.storage.db.core.RoundFeedbackRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class RoundFeedbackReader(
@@ -22,6 +25,7 @@ class RoundFeedbackReader(
         intervieweeMemberId: UUID,
         authorMemberId: UUID,
     ): List<RoundQuestionRecord> {
+        log.debug { "round-feedback.reader.getMyQuestionRecords roomId=$roomId intervieweeMemberId=$intervieweeMemberId authorMemberId=$authorMemberId" }
         return questionMemoRecordReader.getAskedRecordsByAuthor(
             roomId,
             intervieweeMemberId,
@@ -47,6 +51,7 @@ class RoundFeedbackReader(
         roomId: UUID,
         intervieweeMemberId: UUID,
     ): IntervieweeRoundFeedback {
+        log.debug { "round-feedback.reader.getIntervieweeFeedback roomId=$roomId intervieweeMemberId=$intervieweeMemberId" }
         val feedbacks = feedbackRepository
             .findAllByRoomIdAndIntervieweeMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
                 roomId,

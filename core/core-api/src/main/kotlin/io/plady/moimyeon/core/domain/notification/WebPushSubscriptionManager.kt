@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.notification
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.WebPushRegistrationHash
 import io.plady.moimyeon.storage.db.core.WebPushSubscriptionRepository
 import org.springframework.stereotype.Component
@@ -7,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class WebPushSubscriptionManager(
@@ -18,6 +21,7 @@ class WebPushSubscriptionManager(
         memberId: UUID,
         registration: WebPushRegistration,
     ) {
+        log.debug { "web-push-subscription.manager.register memberId=$memberId" }
         val registrationHash = WebPushRegistrationHash.of(registration.value)
         val registeredAt = LocalDateTime.now(clock)
         repository.upsertRegistration(
@@ -36,6 +40,7 @@ class WebPushSubscriptionManager(
         memberId: UUID,
         registration: WebPushRegistration,
     ) {
+        log.debug { "web-push-subscription.manager.unregister memberId=$memberId" }
         val existing = repository.findByRegistrationHash(WebPushRegistrationHash.of(registration.value)) ?: return
         check(existing.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
         if (existing.memberId == memberId) {

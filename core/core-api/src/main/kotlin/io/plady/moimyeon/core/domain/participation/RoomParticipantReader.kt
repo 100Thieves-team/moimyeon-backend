@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.participation
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.domain.room.RoomParticipantResume
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 // 참여자 명부(「룸 참여」 §4.5). 조회는 전부 일괄이라 참여자 수에 비례해 쿼리가 늘지 않는다.
 @Component
 class RoomParticipantReader(
@@ -23,6 +26,7 @@ class RoomParticipantReader(
 ) {
     @Transactional(readOnly = true)
     fun getAllByRoom(roomId: UUID, viewerMemberId: UUID): List<RoomParticipant> {
+        log.debug { "room-participant.reader.getAllByRoom roomId=$roomId viewerMemberId=$viewerMemberId" }
         val participations = participationRepository
             .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
         if (participations.isEmpty()) return emptyList()

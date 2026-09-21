@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.jobposting
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.JobPostingEntity
 import io.plady.moimyeon.storage.db.core.JobPostingRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 // 회사명 매치 분기(rank 0)와 공고명 매치 분기(rank 1)를 각각 조회해 병합·dedup·랭킹까지 한다.
 // 단건 조회의 JobPostingFinder 와 책임이 달라 분리한다.
@@ -12,6 +15,7 @@ class JobPostingSearchReader(
     private val jobPostingRepository: JobPostingRepository,
 ) {
     fun search(condition: JobPostingSearchCondition): List<JobPostingSearchItem> {
+        log.debug { "job-posting-search.reader.search" }
         val limit = PageRequest.of(0, SEARCH_LIMIT)
 
         val byCompanyName = if (condition.matchedCompanyIds.isEmpty()) {

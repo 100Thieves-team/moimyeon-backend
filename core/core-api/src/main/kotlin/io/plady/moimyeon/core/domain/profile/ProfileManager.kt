@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.profile
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberProfileEntity
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class ProfileManager(
@@ -19,11 +22,13 @@ class ProfileManager(
     // 도메인 에러로 번역하지 않고 전파한다.
     @Transactional
     fun createEmpty(memberId: UUID): UUID {
+        log.debug { "profile.manager.createEmpty memberId=$memberId" }
         return memberProfileRepository.save(MemberProfileEntity(id = UUID.randomUUID(), memberId = memberId)).id
     }
 
     @Transactional
     fun update(memberId: UUID, content: ProfileContent): UUID {
+        log.debug { "profile.manager.update memberId=$memberId" }
         val entity = requireFound(
             memberProfileRepository.findForUpdateByMemberId(memberId)?.takeIf { it.isActive() },
             CoreErrorType.PROFILE_NOT_FOUND,

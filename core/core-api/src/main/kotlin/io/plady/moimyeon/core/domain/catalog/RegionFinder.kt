@@ -1,9 +1,12 @@
 package io.plady.moimyeon.core.domain.catalog
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.storage.db.core.SidoRepository
 import io.plady.moimyeon.storage.db.core.SigunguRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class RegionFinder(
@@ -14,6 +17,7 @@ class RegionFinder(
     // 시군구나 그 시도가 폐기됐으면 그 항목을 아예 돌려주지 않는다 — 표시명이 결측인 룸은 지역 없이 내려간다.
     @Transactional(readOnly = true)
     fun getRegionLabels(sigunguIds: Collection<Long>): List<RegionLabel> {
+        log.debug { "region.finder.getRegionLabels sigunguIdsCount=${sigunguIds.size}" }
         if (sigunguIds.isEmpty()) return emptyList()
 
         val sigungus = sigunguRepository.findByIdInAndDeletedAtIsNull(sigunguIds)
@@ -30,6 +34,7 @@ class RegionFinder(
 
     @Transactional(readOnly = true)
     fun getRegions(): List<Sido> {
+        log.debug { "region.finder.getRegions" }
         val sigungusBySido = sigunguRepository.findByDeletedAtIsNullOrderBySidoIdAscSortOrderAsc()
             .groupBy { it.sidoId }
         return sidoRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { sido ->

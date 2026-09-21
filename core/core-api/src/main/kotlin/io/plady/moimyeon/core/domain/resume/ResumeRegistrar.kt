@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.resume
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -13,6 +14,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class ResumeRegistrar(
     private val memberRepository: MemberRepository,
@@ -20,6 +23,7 @@ class ResumeRegistrar(
     private val clock: Clock,
 ) {
     fun validateCapacity(memberId: UUID) {
+        log.debug { "resume.registrar.validateCapacity memberId=$memberId" }
         val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)
         requireBusiness(
             resumeCount < MAX_RESUME_COUNT,
@@ -38,6 +42,7 @@ class ResumeRegistrar(
         resume: NewResume,
         summaryStartedAt: LocalDateTime,
     ): UUID {
+        log.debug { "resume.registrar.register memberId=$memberId" }
         lockMember(memberId)
 
         val resumeCount = resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId)

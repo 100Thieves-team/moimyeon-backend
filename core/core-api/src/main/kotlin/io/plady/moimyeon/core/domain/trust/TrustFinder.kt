@@ -1,5 +1,6 @@
 package io.plady.moimyeon.core.domain.trust
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.storage.db.core.AnswerSummaryRepository
 import io.plady.moimyeon.storage.db.core.AttendanceRepository
@@ -14,6 +15,8 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val log = KotlinLogging.logger {}
+
 @Component
 class TrustFinder(
     private val attendanceRepository: AttendanceRepository,
@@ -27,6 +30,7 @@ class TrustFinder(
 
     @Transactional(readOnly = true)
     fun getPublicTrust(memberId: UUID): PublicTrust {
+        log.debug { "trust.finder.getPublicTrust memberId=$memberId" }
         val metrics = activityMetrics()
         val recentAttendances = attendanceRepository
             .findRecentCompletedByMember(memberId, PageRequest.of(0, RECENT_ATTENDANCE_LIMIT))
