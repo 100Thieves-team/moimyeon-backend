@@ -56,9 +56,22 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 
 ## 로깅
 
-- 새 로깅 호출은 kotlin-logging의 `private val log = KotlinLogging.logger {}`를 사용한다.
-  실행 모듈은 `support:logging`에서 facade를 제공받고, facade만 필요한 모듈은 직접 의존한다.
-  기존 SLF4J 호출도 같은 Logback 출력 정책을 거친다. 메시지·인자에 DTO·Entity·토큰·개인정보 원문을 넣지 않는다.
+- 새 로깅 호출은 kotlin-logging의 `private val log = KotlinLogging.logger {}`를 파일 최상단에 두고
+  `log.debug { "..." }` 람다 형태로 쓴다. 실행 모듈은 `support:logging`에서 facade를 제공받고, facade만 필요한
+  모듈은 직접 의존한다. 기존 SLF4J 호출도 같은 Logback 출력 정책을 거친다.
+- 메시지는 **고정 접두어 + key=value**로 쓴다. 예: `log.debug { "room.create memberId=$memberId roomId=$roomId" }`.
+  접두어는 `도메인.동작[.결과]` 소문자이며 grep 기준이 된다. 식별자(UUID·숫자 ID)·enum·개수는 넣어도 된다.
+- 메시지·인자·MDC에 DTO·Entity·토큰·이메일·요청 본문·자유 입력 원문을 넣지 않는다. formatter는 메시지를 그대로 출력하며
+  `Bearer`·JWT 형태만 방어적으로 가린다. 이 규칙은 리뷰에서 확인한다.
+- 수준: HTTP 요청 단위 완료 로그는 공통 필터가 남기므로 Controller에 시작·종료 로그를 넣지 않는다. 상태 변경 Service의
+  진입, Implement(Finder·Manager·Validator 등) 공개 메서드의 진입, HTTP 밖 경계(outbox·scheduler·worker)는 DEBUG,
+  배치 결과 요약은 INFO, 예외는 ErrorType의 `logLevel`을 따른다. DEBUG는 local·dev에서 켜지고 staging·live는 INFO다.
+- 접두어 규칙: Service는 `도메인.동작` (`room.create`), Implement는 `개념.역할.메서드`
+  (`room.manager.create`, `participation.validator.validateHost`). 역할은 클래스명 마지막 단어의 소문자다.
+- 외부 계정 식별자(`providerId`)·이메일·닉네임·자유 입력·자격 증명은 식별자여도 넣지 않는다.
+- 프레임워크·드라이버 예외의 `e.message`를 메시지에 넣지 않는다. 거부된 입력값이나 DB 값이 섞인다. 예외 객체를
+  `log.warn(e) { ... }`로 넘기면 formatter가 타입·스택을 남기고 앱 예외(`io.plady.*`)의 메시지만 보존한다.
+- 주기 실행(scheduler·worker)의 매 tick 로그는 남기지 않는다. 처리할 대상이 있을 때 건수나 건별로 남긴다.
 - 예외 로깅 레벨은 ErrorType 의 `logLevel` 이 결정한다(어드바이스에서 분기). 개별 코드에서
   같은 예외를 중복 로깅하지 않는다.
 

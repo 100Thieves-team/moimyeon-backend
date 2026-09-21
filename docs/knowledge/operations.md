@@ -4,6 +4,7 @@
 
 ## 우리가 겪은 것
 
+- 2026-09-21: 로그 출력을 allowlist(등록된 사건명 외 메시지·MDC 전부 폐기)로 만들었더니 흐름 추적 로그가 전부 `application.log` 한 줄로 뭉개져 쓸모가 없었다(MOI-525). 개인정보 방어는 호출 지점 규칙·리뷰·토큰 패턴 마스킹으로 충분하며, formatter가 메시지를 숨기는 방식은 디버깅 비용만 키운다. 앱 formatter와 수집기(`sanitize.lua`) 두 겹이 같은 계약을 가져야 한다는 점도 기억할 것.
 - 2026-09-20: 로그 수집기 smoke가 Linux CI에서 검증 PASS 뒤 임시 버퍼 정리에 실패했다.
   원인: Docker root 프로세스가 bind mount에 만든 하위 디렉터리의 소유권이 호스트 runner와 달랐다.
   테스트 컨테이너를 제거한 뒤 그 테스트의 버퍼만 runner 소유권으로 돌려주고 TemporaryDirectory가 정리하도록 했다.
