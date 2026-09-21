@@ -14,7 +14,7 @@ import org.springframework.mock.env.MockEnvironment
 
 class SafeLogFormatterTest {
     @Test
-    fun `예외 체인은 설정된 깊이와 프레임 수로 제한하고 앱 예외의 타입과 메시지는 남긴다`() {
+    fun `예외 체인은 설정된 깊이와 프레임 수로 제한하고 SafeLogMessage 예외의 타입과 메시지는 남긴다`() {
         val sanitizer = LogSanitizer(LoggingProperties(maxStackFrames = 1, maxExceptionDepth = 1), "core-api", "dev", "test-release")
         val event = event().apply {
             setThrowableProxy(ThrowableProxy(ProbeException("outer failed", IllegalArgumentException("inner failed"))))
@@ -91,7 +91,7 @@ class SafeLogFormatterTest {
     }
 
     @Test
-    fun `앱 밖 예외의 메시지는 사용자 데이터를 되풀이할 수 있어 타입만 남긴다`() {
+    fun `SafeLogMessage가 아닌 예외의 메시지는 사용자 데이터를 되풀이할 수 있어 타입만 남긴다`() {
         val event = event(level = Level.ERROR).apply {
             setThrowableProxy(ThrowableProxy(ProbeException("resume.register failed", IllegalStateException("Duplicate entry 'private-nickname'"))))
         }
@@ -104,6 +104,24 @@ class SafeLogFormatterTest {
         assertThat(inner["type"]).isEqualTo("java.lang.IllegalStateException")
         assertThat(inner.keys).doesNotContain("message")
         assertThat(output).doesNotContain("private-nickname")
+    }
+
+    @Test
+    fun `개행과 제어 문자는 이스케이프해 텍스트 로그 한 줄이 이벤트 하나를 유지한다`() {
+        val forged = "room.create\n2026-01-01T00:00:00Z ERROR [core-api/dev] forged - exception.core code=E9999\r\u0007tail"
+        val event = event(message = forged, mdc = mapOf("memberId" to "9c1e\nforged=true")).apply {
+            setThrowableProxy(ThrowableProxy(ProbeException("line1\nline2")))
+        }
+
+        val text = formatter.formatText(event)
+        val output = formatter.format(event)
+        val fields = json(output)
+
+        assertThat(text.lines().filter { it.isNotEmpty() }.count { !it.startsWith("  ") && !it.startsWith("    at") }).isEqualTo(1)
+        assertThat(text).doesNotContain("\r").doesNotContain("\u0007").contains("\\n2026-01-01T00:00:00Z ERROR")
+        assertThat(fields).containsEntry("memberId", "9c1e\\nforged=true")
+        // 테스트용 기본 JSON 파서는 중첩 배열 안의 이스케이프를 한 번 더 풀어 값이 달라지므로 직렬화 원문으로 확인한다.
+        assertThat(output).contains("\"message\":\"line1\\\\nline2\"").doesNotContain("line1\nline2")
     }
 
     @Test

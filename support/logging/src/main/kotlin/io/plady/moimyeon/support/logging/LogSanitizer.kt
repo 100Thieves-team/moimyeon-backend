@@ -3,12 +3,13 @@ package io.plady.moimyeon.support.logging
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
+import ch.qos.logback.classic.spi.ThrowableProxy
 import java.time.Instant
 
 // Logback 이벤트를 출력용 필드로 바꾼다. 메시지·key-value·MDC·예외 메시지를 보존하고,
 // 자격 증명 형태만 LogMasker로 가리며 길이와 예외 깊이에 상한을 둔다.
-// 라우터가 읽는 필드는 예약해 MDC·key-value로 주입할 수 없고, 앱 밖 예외의 메시지는
-// 요청값·DB 값이 섞일 수 있어 타입만 남긴다.
+// 라우터가 읽는 필드는 예약해 MDC·key-value로 주입할 수 없고, 예외 메시지는 정적 문구를
+// 선언한 SafeLogMessage 타입에서만 남긴다. 개행·제어 문자는 이스케이프해 텍스트 로그 위조를 막는다.
 class LogSanitizer(
     private val properties: LoggingProperties,
     service: String?,
@@ -91,9 +92,9 @@ class LogSanitizer(
             }
             val type = text(current.className, MAX_IDENTIFIER_LENGTH, "unknown")
             val item = linkedMapOf<String, Any>("type" to type)
-            // 앱 예외의 메시지는 ErrorType의 정적 문구다. 프레임워크·드라이버 예외의 메시지는
-            // 거부된 입력값이나 "Duplicate entry '<값>'"처럼 사용자 데이터를 되풀이하므로 남기지 않는다.
-            if (type.startsWith(APPLICATION_PACKAGE)) item["message"] = text(current.message, MAX_MESSAGE_LENGTH, "")
+            // 메시지는 SafeLogMessage를 구현한 예외에서만 남긴다. 프레임워크·드라이버 예외의 메시지는
+            // 거부된 입력값이나 "Duplicate entry '<값>'"처럼 사용자 데이터를 되풀이한다.
+            if ((current as? ThrowableProxy)?.throwable is SafeLogMessage) item["message"] = text(current.message, MAX_MESSAGE_LENGTH, "")
             item["frames"] = frames
             result.add(item)
             remainingFrames -= frames.size
@@ -102,9 +103,21 @@ class LogSanitizer(
         return result
     }
 
+    // 개행·캐리지리턴·탭은 이스케이프하고 나머지 제어 문자는 제거한다. 텍스트 로그 한 줄 = 이벤트 하나를 보장한다.
     private fun text(value: String?, limit: Int, fallback: String): String {
         val masked = LogMasker.mask(value ?: return fallback)
-        return if (masked.length <= limit) masked else masked.take(limit) + "…"
+        val escaped = buildString(masked.length) {
+            for (character in masked) {
+                when {
+                    character == '\n' -> append("\\n")
+                    character == '\r' -> append("\\r")
+                    character == '\t' -> append("\\t")
+                    character.isISOControl() -> Unit
+                    else -> append(character)
+                }
+            }
+        }
+        return if (escaped.length <= limit) escaped else escaped.take(limit) + "…"
     }
 
     private fun identifier(value: String?): String? = value?.takeIf { it.length <= MAX_IDENTIFIER_LENGTH && IDENTIFIER.matches(it) }
@@ -113,8 +126,8 @@ class LogSanitizer(
         private const val MAX_IDENTIFIER_LENGTH = 256
         private const val MAX_VALUE_LENGTH = 1024
         private const val MAX_MESSAGE_LENGTH = 4096
-        private const val APPLICATION_PACKAGE = "io.plady."
         private val IDENTIFIER = Regex("[A-Za-z0-9_.$<>:/-]+")
+
         private val TRACE_ID = Regex("[0-9a-f]{32}")
         private val SPAN_ID = Regex("[0-9a-f]{16}")
 

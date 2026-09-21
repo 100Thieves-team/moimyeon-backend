@@ -1,11 +1,11 @@
 package io.plady.moimyeon.core.api.controller
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.api.logging.at
 import io.plady.moimyeon.core.support.error.CoreApiErrorType
 import io.plady.moimyeon.core.support.error.CoreApiException
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.response.ApiResponse
-import org.springframework.boot.logging.LogLevel
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MissingServletRequestParameterException
@@ -22,21 +22,13 @@ private val log = KotlinLogging.logger {}
 class ApiControllerAdvice {
     @ExceptionHandler(CoreException::class)
     fun handleCoreException(e: CoreException): ResponseEntity<ApiResponse<Any>> {
-        when (e.errorType.logLevel) {
-            LogLevel.ERROR -> log.error(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
-            LogLevel.WARN -> log.warn(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
-            else -> log.info(e) { "exception.core code=${e.errorType.code} message=${e.message}" }
-        }
+        log.at(e.errorType.logLevel, e) { "exception.core code=${e.errorType.code} message=${e.message}" }
         return ResponseEntity(ApiResponse.error(e.errorType, e.data), e.errorType.status)
     }
 
     @ExceptionHandler(CoreApiException::class)
     fun handleCoreApiException(e: CoreApiException): ResponseEntity<ApiResponse<Any>> {
-        when (e.errorType.logLevel) {
-            LogLevel.ERROR -> log.error(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
-            LogLevel.WARN -> log.warn(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
-            else -> log.info(e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
-        }
+        log.at(e.errorType.logLevel, e) { "exception.core-api code=${e.errorType.code} message=${e.message}" }
         return ResponseEntity(ApiResponse.error(e.errorType, e.data), e.errorType.status)
     }
 

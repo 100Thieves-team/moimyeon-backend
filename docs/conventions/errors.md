@@ -13,9 +13,10 @@
 
 - 두 ErrorType 모두 `(status, code, message, logLevel)` 을 갖는다. 메시지는 사용자에게 그대로
   표시 가능한 한국어로 쓴다.
-- **앱 예외(`io.plady.*`)의 메시지는 정적 문구만 쓴다.** 로그 formatter 는 앱 예외의 메시지를 그대로
-  남기고 프레임워크·드라이버 예외는 타입만 남긴다([support/logging](../../support/logging/README.md)).
-  새 도메인 예외를 만들 때 사용자 입력·DB 값·외부 응답 원문을 메시지에 보간하지 않는다. 문맥이 필요하면
+- **예외 메시지를 로그에 남기려면 `SafeLogMessage` 마커를 구현하고, 그 메시지는 정적 문구만 쓴다.** 로그
+  formatter 는 마커를 구현한 예외의 메시지만 남기고 나머지는 타입·코드 위치만 남긴다
+  ([support/logging](../../support/logging/README.md)). `CoreException`·`CoreApiException` 이 구현한다.
+  마커를 붙이는 예외에는 사용자 입력·DB 값·외부 응답 원문을 메시지에 보간하지 않는다. 문맥이 필요하면
   예외 필드(`data`)나 로그의 key=value 로 전달한다.
 - **`ErrorCode` 네임스페이스는 공유한다** — 와이어에 나가는 식별자는 하나의 체계다.
   두 enum 의 합집합이 중복·미사용 없이 유지되는지 `ErrorTypeConsistencyTest` 가 강제한다.

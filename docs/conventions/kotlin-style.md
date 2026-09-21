@@ -72,7 +72,7 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
   `exception.async.unhandled type=...`)이며 예외 객체를 항상 함께 넘긴다.
 - 외부 계정 식별자(`providerId`)·이메일·닉네임·자유 입력·자격 증명은 식별자여도 넣지 않는다.
 - 프레임워크·드라이버 예외의 `e.message`를 메시지에 넣지 않는다. 거부된 입력값이나 DB 값이 섞인다. 예외 객체를
-  `log.warn(e) { ... }`로 넘기면 formatter가 타입·스택을 남기고 앱 예외(`io.plady.*`)의 메시지만 보존한다.
+  `log.warn(e) { ... }`로 넘기면 formatter가 타입·스택을 남기고 `SafeLogMessage`를 구현한 예외의 메시지만 보존한다.
 - 주기 실행(scheduler·worker)의 매 tick 로그는 남기지 않는다. 처리할 대상이 있을 때 건수나 건별로 남긴다.
 - 예외 로깅 레벨은 ErrorType 의 `logLevel` 이 결정한다(어드바이스에서 분기). 개별 코드에서
   같은 예외를 중복 로깅하지 않는다.

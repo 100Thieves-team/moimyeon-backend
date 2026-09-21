@@ -37,9 +37,14 @@
 `LogMasker`는 실수 방어로 `Bearer ...` 헤더값과 JWT 형태만 `[MASKED]`·`[MASKED_JWT]`로 가린다. 다른 값은 가리지 않는다.
 Hibernate SQL·bind·HTTP wire logger 차단은 유지한다.
 
-예외는 타입·코드 위치를 체인 전체에 남기되, **메시지는 `io.plady.*` 타입에서만** 남긴다. 앱 예외의 메시지는 ErrorType의 정적 문구지만,
-프레임워크·드라이버 예외의 메시지는 거부된 입력값이나 `Duplicate entry '<값>'`처럼 사용자 데이터를 되풀이하기 때문이다. 같은 이유로
-`ApiControllerAdvice`·`AsyncExceptionHandler`는 프레임워크 예외의 `e.message`를 메시지에 넣지 않고 파라미터 이름·타입만 남긴다.
+예외는 타입·코드 위치를 체인 전체에 남기되, **메시지는 `SafeLogMessage` 마커를 구현한 예외에서만** 남긴다. `CoreException`·
+`CoreApiException`처럼 메시지가 ErrorType의 정적 문구인 타입이 이를 구현한다. 프레임워크·드라이버 예외와 마커 없는 예외의 메시지는
+거부된 입력값이나 `Duplicate entry '<값>'`처럼 사용자 데이터를 되풀이할 수 있어 남기지 않는다. 마커를 구현하는 타입은 메시지에
+사용자 입력·DB 값·외부 응답 원문을 보간하지 않아야 한다. 같은 이유로 `ApiControllerAdvice`·`AsyncExceptionHandler`는 프레임워크
+예외의 `e.message`를 메시지에 넣지 않고 파라미터 이름·타입만 남긴다.
+
+모든 문자열 값(메시지·key-value·MDC·예외 메시지·logger·thread)의 개행·캐리지리턴·탭은 `\n`·`\r`·`\t`로 이스케이프하고 그 외 제어
+문자는 제거한다. 텍스트 로그에서 한 줄이 이벤트 하나임을 보장해 로그 위조를 막는다.
 
 출력 스키마 필드와 Fluent Bit 라우터가 읽는 필드(`method`·`route`·`status`·`durationMs`·`errorCode`·`requestId`·`traceId`·`spanId`·
 `category`·`impact`)는 예약되어 MDC·key-value로 주입할 수 없다. `requestId`는 서버 발급 UUID 형식, `traceId`·`spanId`는 16진수

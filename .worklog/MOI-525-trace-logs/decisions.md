@@ -48,3 +48,14 @@ Linear가 제안한 한글 브랜치명을 `feat/MOI-525-trace-logs`로 바꿨�
   DEBUG로 내리고 SSRF 차단만 host로 INFO를 남긴다. 오버로드 접두어는 `validate.byRoom`/`validate.byStatus`로 구분했고,
   `ResumeRegistrar.register`는 2-인자 버전이 3-인자 버전에 위임하므로 위임 쪽 로그를 없애 중복을 제거했다.
 
+## D-06. 리뷰봇 2차 반영: 예외 메시지 보존은 타입 마커로, 제어 문자는 이스케이프
+
+2026-09-21 PR #131 멀티에이전트 리뷰 2차(필수 1·제안 1·후속 1)를 모두 반영했다.
+
+- 필수: 텍스트 formatter가 개행·제어 문자를 그대로 이어붙여 로그 위조가 가능했다. 모든 문자열 값의 `\n`·`\r`·`\t`는 이스케이프하고 나머지
+  제어 문자는 제거한다. JSON 경로도 같은 값을 쓰므로 원문에 개행이 있던 값은 두 형식 모두 `\n` 두 글자로 남는다.
+- 후속으로 분류된 항목이지만 지금 반영: 예외 메시지 보존 판정을 `io.plady.` 패키지 접두어에서 `SafeLogMessage` 마커 인터페이스로 바꿨다.
+  `CoreException`·`CoreApiException`·`ResumeSummaryGenerationException`·`ResumeFileStorageException`이 구현한다. worker의
+  `NotificationProcessingException` 계열은 메시지에 식별자를 보간하므로 마커를 붙이지 않았고, 로그에는 타입·스택만 남는다.
+- 제안: 어드바이스·비동기 핸들러의 LogLevel 3분기 중복을 `KLogger.at(level, cause, message)` 확장 하나로 모았다.
+
