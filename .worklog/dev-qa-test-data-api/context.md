@@ -27,7 +27,16 @@ API
 3. `DELETE /v1/dev/qa-data?prefix=[QA]&hostMemberId=` → 2번을 목록 전체에 적용, 건수 합계
 4. `POST /v1/dev/members/{memberId}/reset` → 방장인 `[QA]` 룸 삭제, 본인 참가 신청·참여 행 삭제,
    `[QA]` 룸의 받은/쓴 후기 삭제. 방장인 룸 중 비QA가 있으면 409 전체 거절. 없는 회원 404(E1006).
-5. (선택, 별도 PR) `POST /v1/dev/rooms/{roomId}/status` — 이번 범위 밖.
+5. (선택) `POST /v1/dev/rooms/{roomId}/status` — 상태 강제 대신 시작 시각 변경으로 대체(DR-11).
+
+추가 지시(2026-09-23, 위키·코드 검토 후): QA 가 진행 이후 화면에 닿도록 같은 브랜치에서 API 세 개를 더 만든다.
+6. `POST /v1/dev/rooms/{roomId}/schedule` — `[QA]` 룸의 startAt 을 임의로 변경(상태는 유지)
+7. `POST /v1/dev/members` — Google OAuth 없이 테스트 회원 생성 + dev 토큰 발급
+8. `POST /v1/dev/resumes/{resumeId}/summary` — 이력서 AI 요약을 DONE 으로 강제(Bedrock 우회)
+
+근거(위키): `policy/상태-흐름`(룸 전이·게이트), `sources/prd-룸-진행-요약`(진행 시작은 CONFIRMED + 시각 도달, 출석 기록 원자 저장),
+`sources/prd-회원-및-프로필-요약`(가입은 Google OAuth 만, 이력서 요약은 등록 시 1회), `topics/t-moimyeon-qa-자동화`(정책 문서 기반
+테스트 케이스를 JSON 호출로 실행하는 QA 자동화 방향). 위키 SSOT 에는 IN_PROGRESS 가 없지만 코드에는 있어 코드를 기준으로 했다.
 
 추가 지시: QA 전용 컨트롤러는 서비스 컨트롤러 사이에 섞이지 않게 별도 모듈 또는 별도 빈 묶음으로 둔다.
 
@@ -70,4 +79,4 @@ API
 
 - 회원 삭제 API, 토큰·비밀번호 관련 변경, 공개 API 동작 변경, SecurityConfig 변경.
 - `[QA]` 접두 검사 없는 삭제 경로, 프로파일 게이트 없는 경로, 소프트 삭제.
-- 5번(룸 상태 강제)은 별도 PR.
+- 룸 상태 덮어쓰기(5번)는 만들지 않는다 — 시작 시각 변경으로 대체.

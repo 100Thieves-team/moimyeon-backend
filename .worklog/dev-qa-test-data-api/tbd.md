@@ -13,7 +13,8 @@
 - **모델 애트리뷰트 바인딩 실패 → 500**: `RoomSearchRequest` 처럼 생성자 바인딩 DTO 의 타입 변환 실패는
   `ApiControllerAdvice` 에 핸들러가 없어 E500 으로 샐 가능성이 있다(code-reviewer). index.adoc 의 "타입 불일치 → E400"
   규약과 어긋나므로 별도 이슈로 어드바이스 핸들러 추가 검토.
-- **룸 상태 강제(`POST /v1/dev/rooms/{roomId}/status`)**: 우선순위 낮음, 별도 PR. 상태 전이표
-  (위키 상태-SSOT T.room.*)와 파생 값(room_status_log 의 확정·완료 시각) 채움 규칙 확인 필요.
+- **룸 상태 강제**: 시작 시각 변경으로 대체(DR-11). 그래도 상태 덮어쓰기가 필요하면 위키 SSOT 에 IN_PROGRESS 를
+  먼저 반영해야 한다(`topics/t-moimyeon-ssot-code-sync-audit`).
+- **테스트 회원 누적**: 생성 API 는 있고 삭제는 없다. dev 의 회원 수가 늘어나면 정리 정책(이메일 도메인 기준 일괄 비활성) 결정 필요.
 - **엔티티 없는 테이블**: interview_plan·interview_round·round_assignment 는 코드에 쓰는 곳이 없어
   dev 에서 항상 0 건일 가능성이 높다. 삭제 경로는 완결성을 위해 두었다(native SQL).

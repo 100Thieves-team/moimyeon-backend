@@ -158,6 +158,10 @@ RestDocs 테스트로 문서화되어야 한다.
   Implement(`QaRoomEraser`) 안에서만 판정하고, 위반은 `E2201 QA_DATA_ONLY`(409)다. 회원 행은
   절대 지우지 않는다(테스트 계정 UUID 는 SSM 에 고정). 소프트 삭제가 아니라 행을 없앤다.
 - **삭제 순서**: 스키마에 FK 제약이 없으므로 순서를 코드가 지킨다(자식 → 부모). 룸 한 개의 그래프가
-  한 트랜잭션이며, 호출마다 무엇을 몇 건 지웠는지 INFO 로그 한 줄(`qa-test-data.deleteRoom`·
-  `qa-test-data.deleteRooms`·`qa-test-data.resetMember`)을 남긴다. 접두 원문은 자유 입력이라 로그에 넣지 않는다.
-- **범위 밖**: 회원 삭제, 토큰·비밀번호 관련 변경, 공개 API 동작 변경. 룸 상태 강제 전이는 별도 작업.
+  한 트랜잭션이며, 모든 호출은 결과 한 줄을 INFO 로 남긴다(`qa-test-data.<메서드>` 접두, 삭제는 테이블별 건수).
+  접두 원문은 자유 입력이라 로그에 넣지 않는다.
+- **시나리오 준비용 API 세 개**: 룸 시작 시각 변경(`POST /v1/dev/rooms/{roomId}/schedule`, `[QA]` 룸만),
+  테스트 회원 생성(`POST /v1/dev/members`, 실제 가입 경로 재사용 + dev 토큰 발급), 이력서 요약 완료 강제
+  (`POST /v1/dev/resumes/{resumeId}/summary`, 이름이 `[QA]` 인 이력서만, Bedrock 우회). 상태를 직접 덮어쓰는 API 는 두지 않는다 —
+  시작 시각만 옮기면 진행 시작·종료·후기가 공개 API 의 실제 경로로 도달하므로 room_status_log·출석이 일관된다.
+- **범위 밖**: 회원 삭제, 토큰·비밀번호 관련 변경, 공개 API 동작 변경.

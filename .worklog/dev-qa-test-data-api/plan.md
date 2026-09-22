@@ -35,7 +35,8 @@
   마커 대소문자 무시(db·qa), hostMemberId String 파싱 E400(code), 로그 접두 원문 제거(code),
   MySQL Testcontainers 저장소 테스트(qa). qa-reviewer 판정 CONDITIONAL — 인가 수용 여부는 tbd.md.
 - [ ] 7. 검증 `./gradlew test ktlintCheck` + `restDocsTest` + `openapi3` — 실행 완료(통과)
-- [ ] 8. 커밋·PR 초안 — 체크포인트: PR 초안 승인 후 push
+- [ ] 8. (추가 지시) 시나리오 준비 API 3개: 룸 시작 시각 변경·테스트 회원 생성·이력서 요약 완료 강제 — 구현·테스트·문서 완료
+- [ ] 9. 커밋·PR 초안 — 체크포인트: PR 초안 승인 후 push
 
 ## 만들 테스트
 

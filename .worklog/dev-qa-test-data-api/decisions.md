@@ -83,6 +83,37 @@
   `@Profile` 을 평가하면 "dev 를 제외하는 엉뚱한 게이트"를 단 빈이 후보에서 빠져 가드가 놓친다(qa-reviewer 권고).
 - `QaDeletedRowsTest` 는 필드를 리플렉션으로 훑어 `plus`·`total`·`toLogValues` 에서 항이 빠지면 잡는다.
 
+## DR-11 상태 강제 대신 시작 시각 변경
+
+- 요구사항 5번(상태 강제)은 만들지 않았다. 상태만 덮어쓰면 room_status_log(확정·시작 시각)와 출석 행이 비어
+  확정 참여자 판정·진행 레일·후기 조건이 어긋난다. 위키 SSOT 는 IN_PROGRESS 를 모르고 코드는 IN_PROGRESS 를
+  거치므로 전이표를 dev API 가 따로 들고 있으면 두 곳이 갈린다.
+- 대신 `[QA]` 룸의 startAt 만 값 규칙 없이 바꾼다. 확정 뒤 과거로 옮기면 공개 API 의 진행 시작(출석·상태 로그 원자 저장)
+  → 클로징 전원 제출 → COMPLETED → 후기까지 실제 경로로 간다. QA 충실도가 높고 dev 코드가 전이 규칙을 복제하지 않는다.
+- JPQL 벌크 update 로 바꾼다(`RoomEntity.update` 는 스케줄 규칙을 다시 검증하므로 우회).
+
+## DR-12 테스트 회원은 실제 가입 경로로 만든다
+
+- `MemberRegistrationManager.register(GOOGLE, "qa-{uuid}", "qa-{uuid}@qa.moimyeon.test")` 를 그대로 호출한다. 닉네임
+  자동 부여·필수 약관 동의·빈 프로필·닉네임 충돌 재시도가 실제와 같다. 회원 행을 직접 INSERT 하지 않는다.
+- 응답에 dev 액세스 토큰(`DevAccessTokenIssuer`)을 같이 실어 QA 플랫폼이 생성 직후 바로 호출할 수 있게 한다.
+  토큰 발급은 응답 조립이라 Service 가 아니라 컨트롤러가 `DevAuthController` 와 같은 방식으로 호출한다(code-reviewer 권장).
+- `QaMemberCreator.create` 에는 `@Transactional` 을 붙이지 않는다. `MemberRegistrationManager.register` 가 트랜잭션 없는
+  닉네임 충돌 재시도 루프이고 시도별 경계는 `MemberRegistrar` 가 갖는다. 바깥 트랜잭션을 두면 재시도가 깨진다.
+- 삭제 API 는 만들지 않는다(원칙 3). 정리는 테스트 계정 초기화로 한다. 테스트 회원 식별은 이메일 도메인·providerId 접두다.
+
+## DR-13 이력서 요약은 엔티티 전이 메서드로만 완료한다
+
+- `ResumeEntity.completeSummary` 는 PROCESSING 에서만 허용되므로 FAILED 는 `retrySummary(now)` 로 PROCESSING 을 거쳐
+  완료한다. DONE 은 그대로 둔다(덮어쓰지 않음).
+- 기본 이력서 자동 지정 규칙(회원에게 기본이 없으면 지정)은 `ResumeManager.completeSummary` 와 같게 유지한다.
+  `ResumeManager` 를 재사용하지 않은 이유: 시도 시각 일치 검사와 45초 타임아웃 판정이 QA 강제와 맞지 않는다.
+  기본 이력서 지정 전 회원 행 락(`findForUpdateByIdAndDeletedAtIsNull`)은 실제 경로와 같게 둔다(qa-reviewer 권고).
+- 다른 개념(resume)의 Repository 를 직접 쓴다 — 남의 엔티티를 내 커밋 안에서 바꾸는 경우(layers.md).
+- 대상은 **이름이 `[QA]` 로 시작하는 이력서만**(E2201). 처음엔 제한하지 않으려 했으나 qa-reviewer 지적대로 요약문 조작과
+  기본 이력서 지정이 목데이터 회원의 다음 신청에 영향을 준다. 룸과 같은 마커 규칙이며, 고정 테스트 계정의 이력서는
+  공개 API(이름 변경)로 마커를 붙일 수 있다.
+
 ## DR-9 MySQL 계약은 Testcontainers 레인에서 고정한다
 
 - H2 는 문자열 비교가 대소문자 구분이라 collation 규칙·native UUID 바인딩·LIKE 이스케이프를 재현하지 못한다.
