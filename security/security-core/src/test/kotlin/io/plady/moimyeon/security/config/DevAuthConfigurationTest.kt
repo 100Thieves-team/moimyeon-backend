@@ -38,6 +38,7 @@ class DevAuthConfigurationTest {
             assertThat(properties.cookie.sameSite).isEqualTo("None")
             assertThat(properties.cors.allowedOrigins).containsExactly(
                 "https://dev.moimyeon.plady.io",
+                "https://qa.agent.plady.io",
                 "http://localhost:3000",
             )
         }
