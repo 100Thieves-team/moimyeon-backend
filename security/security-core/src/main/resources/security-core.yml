@@ -50,6 +50,7 @@ security:
     cors:
       allowed-origins:
         - https://dev.moimyeon.plady.io
+        - https://qa.agent.plady.io
         - http://localhost:3000
 
 ---
