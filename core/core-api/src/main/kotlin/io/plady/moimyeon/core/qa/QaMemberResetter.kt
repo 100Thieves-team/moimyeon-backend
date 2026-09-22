@@ -24,7 +24,12 @@ class QaMemberResetter(
     fun reset(memberId: UUID): QaDeletedRows {
         log.debug { "qa-member.resetter.reset memberId=$memberId" }
         memberFinder.getById(memberId)
+        return resetRows(memberId)
+    }
 
+    // 존재 확인을 호출자가 이미 했을 때(탈퇴한 QA 회원 삭제 포함) 행 정리만 한다.
+    @Transactional
+    fun resetRows(memberId: UUID): QaDeletedRows {
         val hostedRooms = qaTestDataRepository.findHostedRoomIds(memberId)
             .mapNotNull { qaTestDataRepository.findRoom(it) }
         requireBusiness(hostedRooms.all { QaDataCondition.isQaData(it.title) }, CoreErrorType.QA_DATA_ONLY)

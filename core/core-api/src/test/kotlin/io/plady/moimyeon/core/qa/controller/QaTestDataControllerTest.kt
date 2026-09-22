@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.api.auth.DevAccessTokenIssuer
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.qa.QaData
 import io.plady.moimyeon.core.qa.QaDataCondition
 import io.plady.moimyeon.core.qa.QaDeletedRows
 import io.plady.moimyeon.core.qa.QaMember
@@ -44,6 +45,7 @@ class QaTestDataControllerTest : RestDocsTest() {
     private val canceledRoomId = UUID.fromString("00000000-0000-0000-0000-000000000102")
     private val hostMemberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val resumeId = UUID.fromString("00000000-0000-0000-0000-000000000201")
+    private val qaMemberId = UUID.fromString("00000000-0000-0000-0000-000000000002")
     private val defaultCondition = QaDataCondition(prefix = "[QA]", hostMemberId = null)
 
     private val devOnlyNote =
@@ -84,6 +86,13 @@ class QaTestDataControllerTest : RestDocsTest() {
         "회원에게 기본 이력서가 없으면 이 이력서를 기본으로 지정한다(실제 요약 완료와 같은 규칙). " +
         "이름이 [QA] 로 시작하지 않으면 409(E2201), 이력서가 없거나 삭제됐으면 404(E1010), 요약문이 공백이거나 1000자를 넘으면 400(E400)."
 
+    private val deleteMemberSummary = "[dev] QA 테스트 회원 삭제"
+    private val deleteMemberDescription = devOnlyNote +
+        "테스트 회원 생성 API 로 만든 회원(이메일 @qa.moimyeon.test, 소셜 식별자 qa-)만 하드 삭제한다. " +
+        "먼저 테스트 계정 초기화 규칙(방장인 [QA] 룸·참여·신청·[QA] 룸 후기 삭제)을 적용한 뒤, 이 회원이 남긴 행(질문·코멘트·요약·클로징·" +
+        "라운드 피드백·방명록·출석·후기)과 회원 소유 행(이력서·프로필·약관 동의·토큰·소셜 계정)을 지우고 회원 행을 지운다. " +
+        "QA 생성 회원이 아니거나 방장인 룸 중 [QA] 가 아닌 룸이 있으면 409(E2201), 회원이 없으면 404(E1006), memberId 가 UUID 가 아니면 400(E400)."
+
     private val resetSummary = "[dev] 테스트 계정 초기화"
     private val resetDescription = devOnlyNote +
         "회원을 룸 하나도 없는 처음 상태로 되돌린다. 방장인 [QA] 룸 전부 삭제, 이 회원의 참가 신청·참여 행 삭제(다른 회원의 룸 포함), " +
@@ -98,25 +107,28 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `QA 룸 목록을 응답한다`() {
-        every { service.getRooms(defaultCondition) } returns listOf(
-            QaRoom(
-                id = roomId,
-                title = "[QA] 스모크 테스트 룸",
-                status = RoomStatus.RECRUITING,
-                hostMemberId = hostMemberId,
-                createdAt = LocalDateTime.of(2026, 9, 22, 10, 0),
-                applicationCount = 3,
-                participantCount = 2,
+        every { service.getQaData(defaultCondition) } returns QaData(
+            rooms = listOf(
+                QaRoom(
+                    id = roomId,
+                    title = "[QA] 스모크 테스트 룸",
+                    status = RoomStatus.RECRUITING,
+                    hostMemberId = hostMemberId,
+                    createdAt = LocalDateTime.of(2026, 9, 22, 10, 0),
+                    applicationCount = 3,
+                    participantCount = 2,
+                ),
+                QaRoom(
+                    id = canceledRoomId,
+                    title = "[QA] 방장이 나간 룸",
+                    status = RoomStatus.CANCELED,
+                    hostMemberId = null,
+                    createdAt = LocalDateTime.of(2026, 9, 21, 9, 30),
+                    applicationCount = 1,
+                    participantCount = 1,
+                ),
             ),
-            QaRoom(
-                id = canceledRoomId,
-                title = "[QA] 방장이 나간 룸",
-                status = RoomStatus.CANCELED,
-                hostMemberId = null,
-                createdAt = LocalDateTime.of(2026, 9, 21, 9, 30),
-                applicationCount = 1,
-                participantCount = 1,
-            ),
+            members = listOf(QaMember(id = qaMemberId, nickname = "테스트닉네임", email = "qa-abc@qa.moimyeon.test")),
         )
 
         mockMvc.perform(get(QA_DATA_PATH).queryParam("prefix", "[QA]"))
@@ -141,6 +153,11 @@ class QaTestDataControllerTest : RestDocsTest() {
                             .description("참가 신청 행 수 (상태·soft delete 무관, 삭제 시 지워지는 행 수)"),
                         fieldWithPath("data.rooms[].counts.participants").type(JsonFieldType.NUMBER)
                             .description("참여 행 수 (방장 포함, 상태·soft delete 무관)"),
+                        fieldWithPath("data.members").type(JsonFieldType.ARRAY)
+                            .description("테스트 회원 생성 API 로 만든 QA 회원 목록 (생성순). prefix 필터와 무관하다"),
+                        fieldWithPath("data.members[].memberId").type(JsonFieldType.STRING).description("회원 id (UUID)"),
+                        fieldWithPath("data.members[].nickname").type(JsonFieldType.STRING).description("닉네임"),
+                        fieldWithPath("data.members[].email").type(JsonFieldType.STRING).description("테스트 이메일 (qa-{uuid}@qa.moimyeon.test)"),
                     ),
                 ),
             )
@@ -153,7 +170,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("listQaData-e400", listSummary, listDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.getRooms(any()) }
+        verify(exactly = 0) { service.getQaData(any()) }
     }
 
     @Test
@@ -163,18 +180,19 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("listQaData-e400-hostMemberId", listSummary, listDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.getRooms(any()) }
+        verify(exactly = 0) { service.getQaData(any()) }
     }
 
     @Test
     fun `QA 데이터를 일괄 삭제하고 건수 합계를 응답한다`() {
-        val condition = QaDataCondition(prefix = "[QA] smoke-", hostMemberId = hostMemberId)
-        every { service.deleteRooms(condition) } returns sampleDeleted(rooms = 2)
+        val condition = QaDataCondition(prefix = "[QA] smoke-", hostMemberId = hostMemberId, includeMembers = true)
+        every { service.deleteQaData(condition) } returns sampleDeleted(rooms = 2).copy(members = 2, profiles = 2, socialAccounts = 2)
 
         mockMvc.perform(
             delete(QA_DATA_PATH)
                 .queryParam("prefix", "[QA] smoke-")
-                .queryParam("hostMemberId", hostMemberId.toString()),
+                .queryParam("hostMemberId", hostMemberId.toString())
+                .queryParam("includeMembers", "true"),
         )
             .andExpect(status().isOk)
             .andExpect { assertThat(it.response.contentAsString).contains("\"rooms\":2") }
@@ -196,7 +214,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("deleteQaData-e400", deleteAllSummary, deleteAllDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteRooms(any()) }
+        verify(exactly = 0) { service.deleteQaData(any()) }
     }
 
     @Test
@@ -206,7 +224,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("deleteQaData-e400-hostMemberId", deleteAllSummary, deleteAllDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteRooms(any()) }
+        verify(exactly = 0) { service.deleteQaData(any()) }
     }
 
     @Test
@@ -255,6 +273,59 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andDo(documentApi("deleteQaRoom-e400", deleteRoomSummary, deleteRoomDescription, errorResponseFields()))
 
         verify(exactly = 0) { service.deleteRoom(any()) }
+    }
+
+    @Test
+    fun `QA 생성 회원을 딸린 행까지 삭제하고 건수를 응답한다`() {
+        every { service.deleteMember(qaMemberId) } returns sampleDeleted(rooms = 1).copy(
+            resumes = 1,
+            profiles = 1,
+            termsAgreements = 2,
+            refreshTokens = 1,
+            webPushSubscriptions = 0,
+            socialAccounts = 1,
+            members = 1,
+        )
+
+        mockMvc.perform(delete(MEMBER_PATH, qaMemberId))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"members\":1") }
+            .andDo(
+                documentApi(
+                    "deleteQaMember",
+                    deleteMemberSummary,
+                    deleteMemberDescription,
+                    pathParameters(parameterWithName("memberId").description("삭제할 QA 생성 회원 id (UUID)")),
+                    successResponseFields(*deletedFields()),
+                ),
+            )
+    }
+
+    @Test
+    fun `없는 회원을 삭제하면 E1006 을 응답한다`() {
+        every { service.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        mockMvc.perform(delete(MEMBER_PATH, qaMemberId))
+            .andExpect(status().isNotFound)
+            .andDo(documentApi("deleteQaMember-e1006", deleteMemberSummary, deleteMemberDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `QA 생성 회원이 아니면 삭제를 E2201 로 거절한다`() {
+        every { service.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        mockMvc.perform(delete(MEMBER_PATH, qaMemberId))
+            .andExpect(status().isConflict)
+            .andDo(documentApi("deleteQaMember-e2201", deleteMemberSummary, deleteMemberDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `UUID 형식이 아닌 회원 id 로 삭제를 요청하면 E400 을 응답한다`() {
+        mockMvc.perform(delete(MEMBER_PATH, "not-a-uuid"))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("deleteQaMember-e400", deleteMemberSummary, deleteMemberDescription, errorResponseFields()))
+
+        verify(exactly = 0) { service.deleteMember(any()) }
     }
 
     @Test
@@ -493,6 +564,11 @@ class QaTestDataControllerTest : RestDocsTest() {
             .description("룸 제목 접두 (기본 [QA]). [QA] 로 시작해야 하며 더 좁힐 수만 있다 (예: \"[QA] smoke-\")"),
         parameterWithName("hostMemberId").optional()
             .description("이 회원이 현재 방장인 룸만 (UUID, 선택). 목록 조회에서도 같은 필터로 동작한다"),
+        parameterWithName("includeMembers").optional()
+            .description(
+                "일괄 삭제에서 테스트 회원 생성 API 로 만든 QA 회원까지 지울지 (기본 false). prefix·hostMemberId 와 무관하게 " +
+                    "QA 회원 전원과 그들이 방장인 [QA] 룸을 지운다. 회원 단계가 실패해도 룸 삭제는 이미 반영돼 있다. 목록 조회는 무시한다",
+            ),
     )
 
     private fun sampleDeleted(rooms: Int) = QaDeletedRows(
@@ -540,6 +616,13 @@ class QaTestDataControllerTest : RestDocsTest() {
         fieldWithPath("data.deleted.reviewSkips").type(JsonFieldType.NUMBER).description("review_skip (후기 건너뜀)"),
         fieldWithPath("data.deleted.guestbooks").type(JsonFieldType.NUMBER).description("room_guestbook (방명록)"),
         fieldWithPath("data.deleted.guestbookPosts").type(JsonFieldType.NUMBER).description("guestbook_post (방명록 댓글)"),
+        fieldWithPath("data.deleted.resumes").type(JsonFieldType.NUMBER).description("resume (QA 회원 삭제 시에만 0 이 아니다)"),
+        fieldWithPath("data.deleted.profiles").type(JsonFieldType.NUMBER).description("member_profile + 관심 직무·회사 (QA 회원 삭제 시)"),
+        fieldWithPath("data.deleted.termsAgreements").type(JsonFieldType.NUMBER).description("terms_agreement (QA 회원 삭제 시)"),
+        fieldWithPath("data.deleted.refreshTokens").type(JsonFieldType.NUMBER).description("refresh_token (QA 회원 삭제 시)"),
+        fieldWithPath("data.deleted.webPushSubscriptions").type(JsonFieldType.NUMBER).description("web_push_subscription (QA 회원 삭제 시)"),
+        fieldWithPath("data.deleted.socialAccounts").type(JsonFieldType.NUMBER).description("social_account (QA 회원 삭제 시)"),
+        fieldWithPath("data.deleted.members").type(JsonFieldType.NUMBER).description("member (QA 회원 삭제 시). 그 밖의 API 는 항상 0"),
         fieldWithPath("data.deleted.total").type(JsonFieldType.NUMBER).description("위 건수의 합"),
     )
 }
@@ -549,4 +632,5 @@ private const val ROOM_PATH = "/v1/dev/rooms/{roomId}"
 private const val RESET_PATH = "/v1/dev/members/{memberId}/reset"
 private const val SCHEDULE_PATH = "/v1/dev/rooms/{roomId}/schedule"
 private const val MEMBERS_PATH = "/v1/dev/members"
+private const val MEMBER_PATH = "/v1/dev/members/{memberId}"
 private const val RESUME_SUMMARY_PATH = "/v1/dev/resumes/{resumeId}/summary"

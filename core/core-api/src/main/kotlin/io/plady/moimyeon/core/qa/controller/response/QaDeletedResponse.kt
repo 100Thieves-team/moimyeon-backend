@@ -31,6 +31,13 @@ data class QaDeletedRowsResponse(
     val reviewSkips: Int,
     val guestbooks: Int,
     val guestbookPosts: Int,
+    val resumes: Int,
+    val profiles: Int,
+    val termsAgreements: Int,
+    val refreshTokens: Int,
+    val webPushSubscriptions: Int,
+    val socialAccounts: Int,
+    val members: Int,
     val total: Int,
 ) {
     companion object {
@@ -55,6 +62,13 @@ data class QaDeletedRowsResponse(
             reviewSkips = rows.reviewSkips,
             guestbooks = rows.guestbooks,
             guestbookPosts = rows.guestbookPosts,
+            resumes = rows.resumes,
+            profiles = rows.profiles,
+            termsAgreements = rows.termsAgreements,
+            refreshTokens = rows.refreshTokens,
+            webPushSubscriptions = rows.webPushSubscriptions,
+            socialAccounts = rows.socialAccounts,
+            members = rows.members,
             total = rows.total(),
         )
     }

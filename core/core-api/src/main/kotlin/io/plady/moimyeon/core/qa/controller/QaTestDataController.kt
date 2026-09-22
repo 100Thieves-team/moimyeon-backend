@@ -29,12 +29,12 @@ class QaTestDataController(
 ) {
     @GetMapping("/v1/dev/qa-data")
     fun list(request: QaDataRequest): ApiResponse<QaDataResponse> {
-        return ApiResponse.success(QaDataResponse.from(qaTestDataService.getRooms(request.toCondition())))
+        return ApiResponse.success(QaDataResponse.from(qaTestDataService.getQaData(request.toCondition())))
     }
 
     @DeleteMapping("/v1/dev/qa-data")
     fun deleteAll(request: QaDataRequest): ApiResponse<QaDeletedResponse> {
-        return ApiResponse.success(QaDeletedResponse.from(qaTestDataService.deleteRooms(request.toCondition())))
+        return ApiResponse.success(QaDeletedResponse.from(qaTestDataService.deleteQaData(request.toCondition())))
     }
 
     @DeleteMapping("/v1/dev/rooms/{roomId}")
@@ -56,6 +56,13 @@ class QaTestDataController(
     fun createMember(): ApiResponse<QaMemberResponse> {
         val member = qaTestDataService.createMember()
         return ApiResponse.success(QaMemberResponse.from(member, devAccessTokenIssuer.issue(member.id)))
+    }
+
+    @DeleteMapping("/v1/dev/members/{memberId}")
+    fun deleteMember(
+        @PathVariable memberId: UUID,
+    ): ApiResponse<QaDeletedResponse> {
+        return ApiResponse.success(QaDeletedResponse.from(qaTestDataService.deleteMember(memberId)))
     }
 
     @PostMapping("/v1/dev/members/{memberId}/reset")

@@ -13,13 +13,15 @@ private val log = KotlinLogging.logger {}
 @Profile(DEV_AUTH_PROFILE_EXPRESSION)
 class QaTestDataService(
     private val qaRoomFinder: QaRoomFinder,
+    private val qaMemberFinder: QaMemberFinder,
     private val qaRoomEraser: QaRoomEraser,
+    private val qaMemberEraser: QaMemberEraser,
     private val qaMemberResetter: QaMemberResetter,
     private val qaRoomScheduler: QaRoomScheduler,
     private val qaMemberCreator: QaMemberCreator,
     private val qaResumeSummaryCompleter: QaResumeSummaryCompleter,
 ) {
-    fun getRooms(condition: QaDataCondition): List<QaRoom> = qaRoomFinder.getRooms(condition)
+    fun getQaData(condition: QaDataCondition): QaData = QaData(rooms = qaRoomFinder.getRooms(condition), members = qaMemberFinder.getQaMembers())
 
     fun deleteRoom(roomId: UUID): QaDeletedRows {
         val deleted = qaRoomEraser.erase(roomId)
@@ -27,9 +29,27 @@ class QaTestDataService(
         return deleted
     }
 
-    fun deleteRooms(condition: QaDataCondition): QaDeletedRows {
-        val deleted = qaRoomEraser.eraseAll(condition)
-        log.info { "qa-test-data.deleteRooms narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId} ${deleted.toLogValues()}" }
+    fun deleteQaData(condition: QaDataCondition): QaDeletedRows {
+        val rooms = qaRoomEraser.eraseAll(condition)
+        val members = if (condition.includeMembers) eraseQaMembers() else QaDeletedRows.NONE
+        val deleted = rooms + members
+        log.info {
+            "qa-test-data.deleteQaData narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId} " +
+                "includeMembers=${condition.includeMembers} ${deleted.toLogValues()}"
+        }
+        return deleted
+    }
+
+    // 회원 한 명이 한 트랜잭션. 한 명이 실패하면 앞선 회원은 이미 지워진 상태이며 실패 회원을 로그로 남긴다.
+    private fun eraseQaMembers(): QaDeletedRows = qaMemberFinder.getQaMembers().fold(QaDeletedRows.NONE) { acc, member ->
+        acc + runCatching { qaMemberEraser.erase(member.id) }
+            .onFailure { log.warn(it) { "qa-test-data.deleteQaData.memberFailed memberId=${member.id} ${acc.toLogValues()}" } }
+            .getOrThrow()
+    }
+
+    fun deleteMember(memberId: UUID): QaDeletedRows {
+        val deleted = qaMemberEraser.erase(memberId)
+        log.info { "qa-test-data.deleteMember memberId=$memberId ${deleted.toLogValues()}" }
         return deleted
     }
 

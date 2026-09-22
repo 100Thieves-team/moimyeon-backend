@@ -22,6 +22,8 @@ class QaTestApiProfileContextTest {
         QaRoomFinder::class.java,
         QaRoomEraser::class.java,
         QaMemberResetter::class.java,
+        QaMemberFinder::class.java,
+        QaMemberEraser::class.java,
         QaRoomScheduler::class.java,
         QaMemberCreator::class.java,
         QaResumeSummaryCompleter::class.java,

@@ -15,14 +15,18 @@ import java.util.UUID
 
 class QaTestDataServiceTest {
     private val qaRoomFinder = mockk<QaRoomFinder>()
+    private val qaMemberFinder = mockk<QaMemberFinder>()
     private val qaRoomEraser = mockk<QaRoomEraser>()
+    private val qaMemberEraser = mockk<QaMemberEraser>()
     private val qaMemberResetter = mockk<QaMemberResetter>()
     private val qaRoomScheduler = mockk<QaRoomScheduler>()
     private val qaMemberCreator = mockk<QaMemberCreator>()
     private val qaResumeSummaryCompleter = mockk<QaResumeSummaryCompleter>()
     private val service = QaTestDataService(
         qaRoomFinder,
+        qaMemberFinder,
         qaRoomEraser,
+        qaMemberEraser,
         qaMemberResetter,
         qaRoomScheduler,
         qaMemberCreator,
@@ -33,8 +37,10 @@ class QaTestDataServiceTest {
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val condition = QaDataCondition(prefix = "[QA]", hostMemberId = null)
 
+    private val qaMember = QaMember(id = memberId, nickname = "qa닉네임", email = "qa-x@qa.moimyeon.test")
+
     @Test
-    fun `QA 룸 목록은 Finder 에 위임한다`() {
+    fun `QA 데이터 목록은 룸과 QA 생성 회원을 함께 돌려준다`() {
         val room = QaRoom(
             id = roomId,
             title = "[QA] 목록",
@@ -45,8 +51,9 @@ class QaTestDataServiceTest {
             participantCount = 1,
         )
         every { qaRoomFinder.getRooms(condition) } returns listOf(room)
+        every { qaMemberFinder.getQaMembers() } returns listOf(qaMember)
 
-        assertThat(service.getRooms(condition)).containsExactly(room)
+        assertThat(service.getQaData(condition)).isEqualTo(QaData(rooms = listOf(room), members = listOf(qaMember)))
     }
 
     @Test
@@ -59,11 +66,32 @@ class QaTestDataServiceTest {
     }
 
     @Test
-    fun `일괄 삭제는 조건을 Eraser 에 넘기고 합계를 돌려준다`() {
+    fun `일괄 삭제는 룸만 지우고 회원은 건드리지 않는다`() {
         val deleted = QaDeletedRows(rooms = 2, participants = 4)
         every { qaRoomEraser.eraseAll(condition) } returns deleted
 
-        assertThat(service.deleteRooms(condition)).isEqualTo(deleted)
+        assertThat(service.deleteQaData(condition)).isEqualTo(deleted)
+        verify(exactly = 0) { qaMemberEraser.erase(any()) }
+    }
+
+    @Test
+    fun `includeMembers 면 룸 삭제 뒤 QA 생성 회원까지 지우고 합산한다`() {
+        val withMembers = condition.copy(includeMembers = true)
+        val other = UUID.fromString("00000000-0000-0000-0000-000000000003")
+        every { qaRoomEraser.eraseAll(withMembers) } returns QaDeletedRows(rooms = 2)
+        every { qaMemberFinder.getQaMembers() } returns listOf(qaMember, qaMember.copy(id = other))
+        every { qaMemberEraser.erase(memberId) } returns QaDeletedRows(members = 1, profiles = 1)
+        every { qaMemberEraser.erase(other) } returns QaDeletedRows(members = 1, profiles = 1)
+
+        assertThat(service.deleteQaData(withMembers)).isEqualTo(QaDeletedRows(rooms = 2, members = 2, profiles = 2))
+    }
+
+    @Test
+    fun `QA 생성 회원 삭제는 Eraser 에 위임한다`() {
+        val deleted = QaDeletedRows(members = 1, profiles = 1, socialAccounts = 1)
+        every { qaMemberEraser.erase(memberId) } returns deleted
+
+        assertThat(service.deleteMember(memberId)).isEqualTo(deleted)
     }
 
     @Test
@@ -105,10 +133,9 @@ class QaTestDataServiceTest {
 
     @Test
     fun `테스트 회원 생성은 Creator 에 위임한다`() {
-        val member = QaMember(id = memberId, nickname = "qa닉네임", email = "qa-x@qa.moimyeon.test")
-        every { qaMemberCreator.create() } returns member
+        every { qaMemberCreator.create() } returns qaMember
 
-        assertThat(service.createMember()).isEqualTo(member)
+        assertThat(service.createMember()).isEqualTo(qaMember)
     }
 
     @Test

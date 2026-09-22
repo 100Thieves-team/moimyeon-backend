@@ -21,6 +21,13 @@ data class QaDeletedRows(
     val applications: Int = 0,
     val roomStatusLogs: Int = 0,
     val rooms: Int = 0,
+    val resumes: Int = 0,
+    val profiles: Int = 0,
+    val termsAgreements: Int = 0,
+    val refreshTokens: Int = 0,
+    val webPushSubscriptions: Int = 0,
+    val socialAccounts: Int = 0,
+    val members: Int = 0,
 ) {
     operator fun plus(other: QaDeletedRows): QaDeletedRows = QaDeletedRows(
         guestbookPosts = guestbookPosts + other.guestbookPosts,
@@ -43,12 +50,20 @@ data class QaDeletedRows(
         applications = applications + other.applications,
         roomStatusLogs = roomStatusLogs + other.roomStatusLogs,
         rooms = rooms + other.rooms,
+        resumes = resumes + other.resumes,
+        profiles = profiles + other.profiles,
+        termsAgreements = termsAgreements + other.termsAgreements,
+        refreshTokens = refreshTokens + other.refreshTokens,
+        webPushSubscriptions = webPushSubscriptions + other.webPushSubscriptions,
+        socialAccounts = socialAccounts + other.socialAccounts,
+        members = members + other.members,
     )
 
     fun total(): Int = guestbookPosts + guestbooks + reviewTags + reviews + reviewSkips + attendances +
         questionVotes + closingResponses + questionComments + answerSummaries + questions + roundFeedbacks +
         roundAssignments + interviewRounds + interviewPlans + resumeSubmissions + participants + applications +
-        roomStatusLogs + rooms
+        roomStatusLogs + rooms + resumes + profiles + termsAgreements + refreshTokens + webPushSubscriptions +
+        socialAccounts + members
 
     fun toLogValues(): String = listOf(
         "rooms" to rooms,
@@ -71,6 +86,13 @@ data class QaDeletedRows(
         "reviewSkips" to reviewSkips,
         "guestbooks" to guestbooks,
         "guestbookPosts" to guestbookPosts,
+        "resumes" to resumes,
+        "profiles" to profiles,
+        "termsAgreements" to termsAgreements,
+        "refreshTokens" to refreshTokens,
+        "webPushSubscriptions" to webPushSubscriptions,
+        "socialAccounts" to socialAccounts,
+        "members" to members,
     ).filter { it.second > 0 }.joinToString(" ") { "${it.first}=${it.second}" }.ifEmpty { "total=0" }
 
     companion object {
