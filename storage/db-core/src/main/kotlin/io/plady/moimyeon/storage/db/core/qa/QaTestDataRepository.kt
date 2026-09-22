@@ -6,6 +6,7 @@ import io.plady.moimyeon.storage.db.core.RoomEntity
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Repository
@@ -44,6 +45,14 @@ class QaTestDataRepository(
     fun countApplications(roomId: UUID): Long = countByRoom("RoomApplicationEntity", roomId)
 
     fun countParticipations(roomId: UUID): Long = countByRoom("ParticipationEntity", roomId)
+
+    // ---- 룸 일정 ----
+
+    fun updateRoomStartAt(roomId: UUID, startAt: LocalDateTime): Int = entityManager
+        .createQuery("update RoomEntity r set r.startAt = :startAt where r.id = :roomId")
+        .setParameter("startAt", startAt)
+        .setParameter("roomId", roomId)
+        .executeUpdate()
 
     // ---- 룸 그래프 삭제 (자식 → 부모 순으로 호출한다) ----
 
