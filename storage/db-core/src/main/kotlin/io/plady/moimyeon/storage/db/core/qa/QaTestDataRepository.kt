@@ -2,6 +2,7 @@ package io.plady.moimyeon.storage.db.core.qa
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
@@ -121,6 +122,102 @@ class QaTestDataRepository(
 
     fun deleteRoom(roomId: UUID): Int = deleteByRoom("delete from RoomEntity r where r.id = :roomId", roomId)
 
+    // ---- QA 생성 회원 ----
+
+    fun findMember(memberId: UUID): MemberEntity? = entityManager.find(MemberEntity::class.java, memberId)
+
+    fun findQaMembers(providerIdPrefix: String, emailDomain: String): List<MemberEntity> = entityManager.createQuery(
+        "select distinct m from MemberEntity m join m.socialAccounts s where $QA_MEMBER_PREDICATE order by m.createdAt asc, m.id asc",
+        MemberEntity::class.java,
+    ).withQaMemberPatterns(providerIdPrefix, emailDomain).resultList
+
+    fun isQaMember(memberId: UUID, providerIdPrefix: String, emailDomain: String): Boolean = entityManager.createQuery(
+        "select count(m) from MemberEntity m join m.socialAccounts s where m.id = :memberId and $QA_MEMBER_PREDICATE",
+        Long::class.javaObjectType,
+    ).setParameter("memberId", memberId).withQaMemberPatterns(providerIdPrefix, emailDomain).singleResult > 0
+
+    fun findMemberQuestionIds(memberId: UUID): List<Long> = entityManager.createQuery(
+        "select q.id from QuestionEntity q where q.authorMemberId = :memberId or q.targetMemberId = :memberId",
+        Long::class.javaObjectType,
+    ).setParameter("memberId", memberId).resultList.map { it.toLong() }
+
+    fun findFollowUpQuestionIds(parentIds: Collection<Long>): List<Long> {
+        if (parentIds.isEmpty()) return emptyList()
+        return entityManager.createQuery(
+            "select q.id from QuestionEntity q where q.parentQuestionId in (:ids)",
+            Long::class.javaObjectType,
+        ).setParameter("ids", parentIds).resultList.map { it.toLong() }
+    }
+
+    fun deleteMemberClosingResponseVotes(memberId: UUID): Int = deleteNativeByMember(
+        "delete from question_vote where closing_response_id in (select id from closing_response where member_id = :memberId)",
+        memberId,
+    )
+
+    fun deleteQuestionVotesByQuestionIds(questionIds: Collection<Long>): Int = deleteByIds("delete from QuestionVoteEntity v where v.questionId in (:ids)", questionIds)
+
+    fun deleteMemberClosingResponses(memberId: UUID): Int = deleteByMember("delete from ClosingResponseEntity c where c.memberId = :memberId", memberId)
+
+    fun deleteQuestionCommentsByQuestionIds(questionIds: Collection<Long>): Int = deleteByIds("delete from QuestionCommentEntity c where c.questionId in (:ids)", questionIds)
+
+    fun deleteMemberAuthoredQuestionComments(memberId: UUID): Int = deleteByMember("delete from QuestionCommentEntity c where c.authorMemberId = :memberId", memberId)
+
+    fun deleteAnswerSummariesByQuestionIds(questionIds: Collection<Long>): Int = deleteByIds("delete from AnswerSummaryEntity s where s.questionId in (:ids)", questionIds)
+
+    fun deleteMemberAuthoredAnswerSummaries(memberId: UUID): Int = deleteByMember("delete from AnswerSummaryEntity s where s.authorMemberId = :memberId", memberId)
+
+    fun deleteQuestionsByIds(questionIds: Collection<Long>): Int = deleteByIds("delete from QuestionEntity q where q.id in (:ids)", questionIds)
+
+    fun deleteMemberRoundAssignments(memberId: UUID): Int = deleteNativeByMember("delete from round_assignment where member_id = :memberId", memberId)
+
+    fun clearMemberInterviewRounds(memberId: UUID): Int = entityManager
+        .createNativeQuery("update interview_round set interviewee_member_id = null where interviewee_member_id = :memberId")
+        .setParameter("memberId", memberId)
+        .executeUpdate()
+
+    fun deleteMemberRoundFeedbacks(memberId: UUID): Int = deleteByMember(
+        "delete from RoundFeedbackEntity f where f.authorMemberId = :memberId or f.intervieweeMemberId = :memberId",
+        memberId,
+    )
+
+    fun deleteMemberGuestbookPosts(memberId: UUID): Int = deleteByMember("delete from GuestbookPostEntity g where g.authorMemberId = :memberId", memberId)
+
+    fun deleteMemberAttendances(memberId: UUID): Int = deleteByMember("delete from AttendanceEntity a where a.memberId = :memberId", memberId)
+
+    fun deleteMemberReviewTagsInAllRooms(memberId: UUID): Int = deleteReviewTagsOf(
+        entityManager.createQuery(
+            "select r.id from ReviewEntity r where r.authorMemberId = :memberId or r.targetMemberId = :memberId",
+            Long::class.javaObjectType,
+        ).setParameter("memberId", memberId).resultList.map { it.toLong() },
+    )
+
+    fun deleteMemberReviewsInAllRooms(memberId: UUID): Int = deleteByMember("delete from ReviewEntity r where r.authorMemberId = :memberId or r.targetMemberId = :memberId", memberId)
+
+    fun deleteMemberReviewSkipsInAllRooms(memberId: UUID): Int = deleteByMember("delete from ReviewSkipEntity s where s.authorMemberId = :memberId or s.targetMemberId = :memberId", memberId)
+
+    fun deleteMemberResumes(memberId: UUID): Int = deleteByMember("delete from ResumeEntity r where r.memberId = :memberId", memberId)
+
+    fun deleteMemberProfileInterests(memberId: UUID): Int = deleteNativeByMember(
+        "delete from member_profile_interest_company where profile_id in (select id from member_profile where member_id = :memberId)",
+        memberId,
+    ) +
+        deleteNativeByMember(
+            "delete from member_profile_interest_job_role where profile_id in (select id from member_profile where member_id = :memberId)",
+            memberId,
+        )
+
+    fun deleteMemberProfile(memberId: UUID): Int = deleteByMember("delete from MemberProfileEntity p where p.memberId = :memberId", memberId)
+
+    fun deleteMemberTermsAgreements(memberId: UUID): Int = deleteByMember("delete from TermsAgreementEntity t where t.memberId = :memberId", memberId)
+
+    fun deleteMemberRefreshTokens(memberId: UUID): Int = deleteByMember("delete from RefreshTokenEntity t where t.memberId = :memberId", memberId)
+
+    fun deleteMemberWebPushSubscriptions(memberId: UUID): Int = deleteByMember("delete from WebPushSubscriptionEntity w where w.memberId = :memberId", memberId)
+
+    fun deleteMemberSocialAccounts(memberId: UUID): Int = deleteNativeByMember("delete from social_account where member_id = :memberId", memberId)
+
+    fun deleteMember(memberId: UUID): Int = deleteByMember("delete from MemberEntity m where m.id = :memberId", memberId)
+
     // ---- 회원 단위 삭제 (테스트 계정 초기화) ----
 
     fun deleteMemberResumeSubmissions(memberId: UUID): Int = deleteByMember("delete from ResumeSubmissionEntity s where s.memberId = :memberId", memberId)
@@ -158,19 +255,28 @@ class QaTestDataRepository(
 
     private fun deleteByRoom(jpql: String, roomId: UUID): Int = entityManager.createQuery(jpql).setParameter("roomId", roomId).executeUpdate()
 
+    private fun deleteByIds(jpql: String, ids: Collection<Long>): Int {
+        if (ids.isEmpty()) return 0
+        return entityManager.createQuery(jpql).setParameter("ids", ids).executeUpdate()
+    }
+
     private fun deleteByMember(jpql: String, memberId: UUID): Int = entityManager.createQuery(jpql).setParameter("memberId", memberId).executeUpdate()
 
     private fun deleteNativeByRoom(sql: String, roomId: UUID): Int = entityManager.createNativeQuery(sql).setParameter("roomId", roomId).executeUpdate()
 
+    private fun deleteNativeByMember(sql: String, memberId: UUID): Int = entityManager.createNativeQuery(sql).setParameter("memberId", memberId).executeUpdate()
+
+    private fun <T> TypedQuery<T>.withQaMemberPatterns(providerIdPrefix: String, emailDomain: String): TypedQuery<T> = setParameter("providerPattern", likePrefixPattern(providerIdPrefix))
+        .setParameter("emailPattern", "%@${escapeLike(emailDomain)}")
+
     private fun <T> TypedQuery<T>.withHostRole(): TypedQuery<T> = setParameter("role", ParticipationRole.HOST).setParameter("status", ParticipationStatus.JOINED)
 
-    private fun likePrefixPattern(prefix: String): String {
-        val escaped = prefix
-            .replace(LIKE_ESCAPE, "$LIKE_ESCAPE$LIKE_ESCAPE")
-            .replace("%", "$LIKE_ESCAPE%")
-            .replace("_", "${LIKE_ESCAPE}_")
-        return "$escaped%"
-    }
+    private fun likePrefixPattern(prefix: String): String = "${escapeLike(prefix)}%"
+
+    private fun escapeLike(text: String): String = text
+        .replace(LIKE_ESCAPE, "$LIKE_ESCAPE$LIKE_ESCAPE")
+        .replace("%", "$LIKE_ESCAPE%")
+        .replace("_", "${LIKE_ESCAPE}_")
 
     companion object {
         private const val LIKE_ESCAPE = "!"
@@ -184,5 +290,8 @@ class QaTestDataRepository(
         """
 
         private const val ROOM_IDS_BY_PREFIX = "select rm.id from RoomEntity rm where rm.title like :pattern escape '$LIKE_ESCAPE'"
+
+        private const val QA_MEMBER_PREDICATE =
+            "s.providerId like :providerPattern escape '$LIKE_ESCAPE' and m.email like :emailPattern escape '$LIKE_ESCAPE'"
     }
 }

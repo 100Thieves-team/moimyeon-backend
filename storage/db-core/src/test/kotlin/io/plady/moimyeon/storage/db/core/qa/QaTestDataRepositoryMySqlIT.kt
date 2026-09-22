@@ -3,15 +3,20 @@ package io.plady.moimyeon.storage.db.core.qa
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.storage.db.CoreDbTestApplication
+import io.plady.moimyeon.storage.db.core.MemberEntity
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ReviewEntity
 import io.plady.moimyeon.storage.db.core.ReviewRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -46,6 +51,7 @@ class QaTestDataRepositoryMySqlIT(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val reviewRepository: ReviewRepository,
+    private val memberRepository: MemberRepository,
     private val entityManager: EntityManager,
 ) {
     private val at = LocalDateTime.of(2026, 9, 22, 10, 0)
@@ -72,6 +78,54 @@ class QaTestDataRepositoryMySqlIT(
 
         assertThat(qaTestDataRepository.findRoomsByTitlePrefix("[QA] 100%", null).map { it.id }).containsExactly(percent)
         assertThat(qaTestDataRepository.findRoomsByTitlePrefix("[QA] a_b", null).map { it.id }).containsExactly(underscore)
+    }
+
+    @Test
+    @Transactional
+    fun `QA 회원 판정은 이메일 도메인과 소셜 식별자 접두를 둘 다 만족할 때만 참이다`() {
+        val qa = seedMember("qa-1@qa.moimyeon.test", "qa-1")
+        val emailOnly = seedMember("qa-2@qa.moimyeon.test", "1234567890")
+        val providerOnly = seedMember("qa-3@example.com", "qa-3")
+        val upper = seedMember("QA-4@QA.MOIMYEON.TEST", "QA-4")
+
+        val found = qaTestDataRepository.findQaMembers("qa-", "qa.moimyeon.test").map { it.id }
+
+        assertThat(found).contains(qa, upper).doesNotContain(emailOnly, providerOnly)
+        assertThat(qaTestDataRepository.isQaMember(qa, "qa-", "qa.moimyeon.test")).isTrue()
+        assertThat(qaTestDataRepository.isQaMember(emailOnly, "qa-", "qa.moimyeon.test")).isFalse()
+        assertThat(qaTestDataRepository.isQaMember(providerOnly, "qa-", "qa.moimyeon.test")).isFalse()
+    }
+
+    @Test
+    @Transactional
+    fun `회원 기준 native 삭제는 UUID 바인딩으로 소셜 계정·관심 정보·클로징 평가를 지운다`() {
+        val memberId = seedMember("qa-native@qa.moimyeon.test", "qa-native")
+        val profileId = UUID.randomUUID()
+        entityManager.createNativeQuery(
+            "insert into member_profile (id, member_id, bio, created_at, updated_at) values (:id, :memberId, '', :at, :at)",
+        ).setParameter("id", profileId).setParameter("memberId", memberId).setParameter("at", at).executeUpdate()
+        entityManager.createNativeQuery(
+            "insert into member_profile_interest_company (profile_id, company_id, created_at, updated_at) values (:profileId, 1, :at, :at)",
+        ).setParameter("profileId", profileId).setParameter("at", at).executeUpdate()
+        val roomId = seedRoom("[QA] 클로징 룸", hostMemberId = memberId)
+        entityManager.createNativeQuery(
+            "insert into question (room_id, target_member_id, author_member_id, content, source, asked, created_at, updated_at) values (:roomId, :memberId, :memberId, 'q', 'PREPARATION', false, :at, :at)",
+        ).setParameter("roomId", roomId).setParameter("memberId", memberId).setParameter("at", at).executeUpdate()
+        val questionId = (entityManager.createNativeQuery("select id from question where room_id = :roomId").setParameter("roomId", roomId).singleResult as Number).toLong()
+        entityManager.createNativeQuery(
+            "insert into closing_response (room_id, member_id, created_at, updated_at) values (:roomId, :memberId, :at, :at)",
+        ).setParameter("roomId", roomId).setParameter("memberId", memberId).setParameter("at", at).executeUpdate()
+        val closingId = (entityManager.createNativeQuery("select id from closing_response where room_id = :roomId").setParameter("roomId", roomId).singleResult as Number).toLong()
+        entityManager.createNativeQuery(
+            "insert into question_vote (closing_response_id, question_id, vote, created_at, updated_at) values (:closingId, :questionId, 'MEMORABLE', :at, :at)",
+        ).setParameter("closingId", closingId).setParameter("questionId", questionId).setParameter("at", at).executeUpdate()
+
+        assertThat(qaTestDataRepository.deleteMemberClosingResponseVotes(memberId)).isEqualTo(1)
+        assertThat(qaTestDataRepository.deleteMemberClosingResponses(memberId)).isEqualTo(1)
+        assertThat(qaTestDataRepository.deleteMemberProfileInterests(memberId)).isEqualTo(1)
+        assertThat(qaTestDataRepository.deleteMemberProfile(memberId)).isEqualTo(1)
+        assertThat(qaTestDataRepository.deleteMemberSocialAccounts(memberId)).isEqualTo(1)
+        assertThat(qaTestDataRepository.deleteMember(memberId)).isEqualTo(1)
     }
 
     @Test
@@ -132,6 +186,21 @@ class QaTestDataRepositoryMySqlIT(
 
         assertThat(qaTestDataRepository.deleteReviewTags(roomId)).isEqualTo(2)
         assertThat(qaTestDataRepository.deleteReviews(roomId)).isEqualTo(1)
+    }
+
+    private fun seedMember(email: String, providerId: String): UUID {
+        val id = UUID.randomUUID()
+        memberRepository.saveAndFlush(
+            MemberEntity(
+                id = id,
+                email = email,
+                nickname = "m${id.toString().take(8)}",
+                status = MemberStatus.ACTIVE,
+                lastLoginAt = at,
+                socialAccounts = listOf(SocialAccountEntity(provider = SocialLoginProvider.GOOGLE, providerId = providerId, linkedEmail = email)),
+            ),
+        )
+        return id
     }
 
     private fun seedRoom(title: String, hostMemberId: UUID = UUID.randomUUID()): UUID {
