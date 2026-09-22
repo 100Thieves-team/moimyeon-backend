@@ -2,11 +2,13 @@ package io.plady.moimyeon.core.domain.room
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
@@ -17,6 +19,8 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.AttendanceEntity
+import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
@@ -39,6 +43,7 @@ class RoomManagerTest {
 
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>()
+    private val attendanceRepository = mockk<AttendanceRepository>(relaxed = true)
     private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
@@ -47,6 +52,7 @@ class RoomManagerTest {
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
+        attendanceRepository,
         roomApplicationRepository,
         resumeSubmissionRepository,
         roomStatusLogRepository,
@@ -278,26 +284,65 @@ class RoomManagerTest {
     }
 
     @Test
-    fun `인원과 일정이 조건을 충족하면 확정되어 CONFIRMED 가 된다`() {
+    fun `인원과 일정이 조건을 충족하면 확정되어 즉시 COMPLETED 가 된다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
         givenParticipants(4)
 
         manager.confirm(roomId, hostId)
 
-        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(room.status).isEqualTo(RoomStatus.COMPLETED)
     }
 
     // 경계를 `>` 로 쓰면 정원을 정확히 맞춘 방장이 확정하지 못하고 갇힌다.
     @Test
-    fun `현재 인원이 최소 진행 인원과 같으면 확정된다`() {
+    fun `현재 인원이 최소 진행 인원과 같으면 즉시 완료된다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
         givenParticipants(2)
 
         manager.confirm(roomId, hostId)
 
-        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(room.status).isEqualTo(RoomStatus.COMPLETED)
+    }
+
+    @Test
+    fun `확정하면 확정과 완료 이력을 남긴 뒤 대기 신청을 종료한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(2)
+        val attendanceEntities = slot<Iterable<AttendanceEntity>>()
+
+        manager.confirm(roomId, hostId)
+
+        verifyOrder {
+            roomStatusLogRepository.save(
+                match {
+                    it.roomId == roomId &&
+                        it.transitionType == RoomStatus.CONFIRMED &&
+                        it.handlerMemberId == hostId &&
+                        it.occurredAt == now
+                },
+            )
+            attendanceRepository.saveAllAndFlush(capture(attendanceEntities))
+            roomStatusLogRepository.save(
+                match {
+                    it.roomId == roomId &&
+                        it.transitionType == RoomStatus.COMPLETED &&
+                        it.handlerMemberId == hostId &&
+                        it.occurredAt == now
+                },
+            )
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
+        }
+        assertThat(attendanceEntities.captured.toList())
+            .hasSize(2)
+            .allSatisfy {
+                assertThat(it.roomId).isEqualTo(roomId)
+                assertThat(it.status).isEqualTo(AttendanceStatus.ATTENDED)
+                assertThat(it.recorderMemberId).isEqualTo(hostId)
+                assertThat(it.recordedAt).isEqualTo(now)
+            }
     }
 
     @Test
@@ -468,6 +513,12 @@ class RoomManagerTest {
         every {
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
         } returns joined.toLong()
+        every {
+            participationRepository.findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+                roomId,
+                ParticipationStatus.JOINED,
+            )
+        } returns List(joined) { mockk(relaxed = true) }
     }
 
     // --- 생성 경로(MOI-331) --------------------------------------------------

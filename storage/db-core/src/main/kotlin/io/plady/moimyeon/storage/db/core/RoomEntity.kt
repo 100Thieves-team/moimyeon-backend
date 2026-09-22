@@ -87,6 +87,13 @@ class RoomEntity(
         status = RoomStatus.CONFIRMED
     }
 
+    // 진행 확정과 동시에 끝난 것으로 처리하는 단축 전이(MOI-532).
+    // CONFIRMED 시점의 참여자 스냅샷은 RoomManager 가 상태 로그로 별도 보존한다.
+    fun confirmAndComplete() {
+        check(status == RoomStatus.RECRUITING)
+        status = RoomStatus.COMPLETED
+    }
+
     // 완료에도 canComplete() 짝을 두지 않는다(confirm 과 같은 이유). 전원 제출 판정은
     // 클로징 제출자·출석자 집합을 아는 호출자(ClosingSubmissionManager)의 몫이다.
     fun complete() {

@@ -20,6 +20,7 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
@@ -33,7 +34,6 @@ import java.util.UUID
 // 테스트에 @Transactional 을 두지 않는다: 바깥 트랜잭션이 있으면 커밋 시점이 가려진다(testing.md).
 class RoomLeaveIT(
     private val roomLeaveManager: RoomLeaveManager,
-    private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -153,12 +153,13 @@ class RoomLeaveIT(
     }
 
     // 이탈이 거부되면 아무것도 남지 않는다. 위임 실패로 이탈이 되돌아가는 경로는
-    // 룸을 CONFIRMED 로 만들 수 없어(최소 인원이 2 이상) 도달할 수 없다 — 거부 경로가 그 자리를 대신한다.
+    // 신규 확정 경로는 곧바로 COMPLETED 가 되므로, 기존 CONFIRMED 데이터의 이탈 규칙은
+    // 레거시 상태를 직접 구성해 회귀 검증한다.
     @Test
     fun `이탈이 거부되면 참여도 룸도 그대로다`() {
         seedRoom()
         seedParticipant(joinedAt = createdAt.plusHours(1))
-        roomManager.confirm(roomId, hostMemberId)
+        confirmLegacyRoom()
 
         assertThatThrownBy { roomLeaveManager.leave(roomId, hostMemberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
@@ -178,7 +179,7 @@ class RoomLeaveIT(
         seedRoom()
         val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
         seedParticipant(joinedAt = createdAt.plusHours(2))
-        roomManager.confirm(roomId, hostMemberId)
+        confirmLegacyRoom()
 
         roomLeaveManager.leave(roomId, participant)
 
@@ -192,7 +193,7 @@ class RoomLeaveIT(
         seedParticipant(joinedAt = createdAt.plusHours(1))
 
         roomLeaveManager.leave(roomId, leaver)
-        roomManager.confirm(roomId, hostMemberId)
+        confirmLegacyRoom()
 
         assertThat(participationRepository.countAtRoomConfirmation(roomId, leaver)).isZero()
     }
@@ -211,6 +212,21 @@ class RoomLeaveIT(
 
     private fun applicationOf(applicantMemberId: UUID) = roomApplicationRepository.findAll()
         .single { it.roomId == roomId && it.applicantMemberId == applicantMemberId }
+
+    private fun confirmLegacyRoom() {
+        val confirmedAt = LocalDateTime.now()
+        val room = roomRepository.findById(roomId).orElseThrow()
+        room.confirm()
+        roomRepository.saveAndFlush(room)
+        roomStatusLogRepository.saveAndFlush(
+            RoomStatusLogEntity.byMember(
+                roomId = roomId,
+                transitionType = RoomStatus.CONFIRMED,
+                handlerMemberId = hostMemberId,
+                occurredAt = confirmedAt,
+            ),
+        )
+    }
 
     private fun seedRoom() {
         roomRepository.saveAndFlush(

@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
@@ -36,6 +37,7 @@ import java.util.UUID
 class RoomCreateIdempotencyIT(
     private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val memberRepository: MemberRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -54,6 +56,7 @@ class RoomCreateIdempotencyIT(
     @AfterEach
     fun cleanUp() {
         createdRoomIds.forEach { roomId ->
+            attendanceRepository.deleteAll(attendanceRepository.findAll().filter { it.roomId == roomId })
             resumeSubmissionRepository.deleteAll(resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(roomId))
             roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
             participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
@@ -98,13 +101,24 @@ class RoomCreateIdempotencyIT(
     @Test
     fun `기존 룸이 확정된 상태여도 그 룸을 돌려준다`() {
         val first = createRoom()
-        joinParticipant(first.roomId)
-        roomManager.confirm(first.roomId, hostMemberId)
+        markAsLegacyConfirmed(first.roomId)
 
         val second = createRoom()
 
         assertThat(second.roomId).isEqualTo(first.roomId)
         assertThat(second.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
+    fun `진행 확정으로 즉시 완료된 룸과 같은 조건이면 새 룸을 만든다`() {
+        val first = createRoom()
+        joinParticipant(first.roomId)
+        roomManager.confirm(first.roomId, hostMemberId)
+
+        val second = createRoom()
+
+        assertThat(second.roomId).isNotEqualTo(first.roomId)
+        assertThat(second.status).isEqualTo(RoomStatus.RECRUITING)
     }
 
     // 취소한 룸을 같은 조건으로 다시 만드는 것은 허용해야 한다(이슈 코멘트).
@@ -187,6 +201,12 @@ class RoomCreateIdempotencyIT(
                 joinedAt = FIXED_NOW,
             ),
         )
+    }
+
+    private fun markAsLegacyConfirmed(roomId: UUID) {
+        val room = roomRepository.findById(roomId).orElseThrow()
+        room.confirm()
+        roomRepository.saveAndFlush(room)
     }
 
     private fun resumeFile() = ResumeFile(
