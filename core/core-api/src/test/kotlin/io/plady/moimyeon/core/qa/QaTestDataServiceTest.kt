@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.qa
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -16,7 +17,17 @@ class QaTestDataServiceTest {
     private val qaRoomFinder = mockk<QaRoomFinder>()
     private val qaRoomEraser = mockk<QaRoomEraser>()
     private val qaMemberResetter = mockk<QaMemberResetter>()
-    private val service = QaTestDataService(qaRoomFinder, qaRoomEraser, qaMemberResetter)
+    private val qaRoomScheduler = mockk<QaRoomScheduler>()
+    private val qaMemberCreator = mockk<QaMemberCreator>()
+    private val qaResumeSummaryCompleter = mockk<QaResumeSummaryCompleter>()
+    private val service = QaTestDataService(
+        qaRoomFinder,
+        qaRoomEraser,
+        qaMemberResetter,
+        qaRoomScheduler,
+        qaMemberCreator,
+        qaResumeSummaryCompleter,
+    )
 
     private val roomId = UUID.fromString("00000000-0000-0000-0000-000000000101")
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
@@ -81,5 +92,31 @@ class QaTestDataServiceTest {
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
+    }
+
+    @Test
+    fun `룸 일정 변경은 Scheduler 에 위임한다`() {
+        val startAt = LocalDateTime.of(2026, 9, 1, 9, 0)
+        val schedule = QaRoomSchedule(roomId = roomId, status = RoomStatus.CONFIRMED, startAt = startAt)
+        every { qaRoomScheduler.reschedule(roomId, startAt) } returns schedule
+
+        assertThat(service.rescheduleRoom(roomId, startAt)).isEqualTo(schedule)
+    }
+
+    @Test
+    fun `테스트 회원 생성은 Creator 에 위임한다`() {
+        val member = QaMember(id = memberId, nickname = "qa닉네임", email = "qa-x@qa.moimyeon.test")
+        every { qaMemberCreator.create() } returns member
+
+        assertThat(service.createMember()).isEqualTo(member)
+    }
+
+    @Test
+    fun `이력서 요약 완료는 Completer 에 위임한다`() {
+        val resumeId = UUID.fromString("00000000-0000-0000-0000-000000000201")
+        val result = QaResumeSummary(resumeId = resumeId, memberId = memberId, status = ResumeSummaryStatus.DONE, content = "요약", isDefault = true)
+        every { qaResumeSummaryCompleter.complete(resumeId, "요약") } returns result
+
+        assertThat(service.completeResumeSummary(resumeId, "요약")).isEqualTo(result)
     }
 }
