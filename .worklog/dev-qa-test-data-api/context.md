@@ -34,6 +34,9 @@ API
 7. `POST /v1/dev/members` — Google OAuth 없이 테스트 회원 생성 + dev 토큰 발급
 8. `POST /v1/dev/resumes/{resumeId}/summary` — 이력서 AI 요약을 DONE 으로 강제(Bedrock 우회)
 
+9. `DELETE /v1/dev/members/{memberId}` · `DELETE /v1/dev/qa-data?includeMembers=true` — 7번으로 만든 QA 회원 하드 삭제
+   (사용자 지시 2026-09-23: "이번 세션에서 추가한 것 중 삭제 필요한 거 있으면 진행"). 목록 응답에 `members[]` 추가.
+
 근거(위키): `policy/상태-흐름`(룸 전이·게이트), `sources/prd-룸-진행-요약`(진행 시작은 CONFIRMED + 시각 도달, 출석 기록 원자 저장),
 `sources/prd-회원-및-프로필-요약`(가입은 Google OAuth 만, 이력서 요약은 등록 시 1회), `topics/t-moimyeon-qa-자동화`(정책 문서 기반
 테스트 케이스를 JSON 호출로 실행하는 QA 자동화 방향). 위키 SSOT 에는 IN_PROGRESS 가 없지만 코드에는 있어 코드를 기준으로 했다.

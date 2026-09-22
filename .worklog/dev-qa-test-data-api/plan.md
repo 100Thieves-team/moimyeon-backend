@@ -36,7 +36,8 @@
   MySQL Testcontainers 저장소 테스트(qa). qa-reviewer 판정 CONDITIONAL — 인가 수용 여부는 tbd.md.
 - [ ] 7. 검증 `./gradlew test ktlintCheck` + `restDocsTest` + `openapi3` — 실행 완료(통과)
 - [ ] 8. (추가 지시) 시나리오 준비 API 3개: 룸 시작 시각 변경·테스트 회원 생성·이력서 요약 완료 강제 — 구현·테스트·문서 완료
-- [ ] 9. 커밋·PR 초안 — 체크포인트: PR 초안 승인 후 push
+- [ ] 9. (추가 지시) QA 생성 회원 하드 삭제: `DELETE /v1/dev/members/{memberId}`, 일괄 삭제 `includeMembers`, 목록 `members[]`
+- [ ] 10. 커밋·PR 초안 — 체크포인트: PR 초안 승인 후 push
 
 ## 만들 테스트
 

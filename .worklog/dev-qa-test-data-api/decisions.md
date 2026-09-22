@@ -114,6 +114,29 @@
   기본 이력서 지정이 목데이터 회원의 다음 신청에 영향을 준다. 룸과 같은 마커 규칙이며, 고정 테스트 계정의 이력서는
   공개 API(이름 변경)로 마커를 붙일 수 있다.
 
+## DR-14 QA 생성 회원만 하드 삭제한다 (원칙 3 의 유일한 예외)
+
+- "회원 행은 지우지 않는다"는 고정 테스트 계정·목데이터 회원 보호가 목적이다. 테스트 회원 생성 API 가 만든 회원은
+  이 세션이 새로 만든 QA 데이터이고 지울 수단이 없으면 dev 에 누적만 된다(qa-reviewer 지적). 사용자 지시로 삭제를 연다.
+- 식별은 이메일 도메인 `@qa.moimyeon.test` **와** 소셜 식별자 접두 `qa-` 둘 다 만족할 때. 아니면 E2201.
+- 순서: 테스트 계정 초기화(방장인 `[QA]` 룸·참여·신청·`[QA]` 룸 후기, 비QA 방장 룸이 있으면 409) → 이 회원이 남긴 행
+  (질문 작성/대상·코멘트·요약·클로징 응답(+평가)·라운드 피드백·방명록·출석·후기(전 룸)) → 회원 소유 행(이력서·프로필+관심·
+  약관 동의·리프레시 토큰·웹 푸시·소셜 계정) → 회원. 한 트랜잭션.
+- 남긴 행을 룸을 가리지 않고 지우는 이유: 회원 행이 사라진 뒤 남는 행은 작성자 표시(`getAttributionsIncludingWithdrawn`)
+  에서 회원을 못 찾는다. QA 회원이 남긴 행은 전부 QA 데이터다.
+- 질문은 id 를 먼저 뽑아(작성·대상 질문 + 그 꼬리질문) `in (:ids)` 로 지운다. 같은 테이블 서브쿼리 제약(MySQL ER 1093)을
+  review_tag 와 같은 방식으로 우회해 남이 단 꼬리질문 고아를 남기지 않는다(db-reviewer 권장).
+- round_assignment 는 회원 기준 삭제, interview_round.interviewee_member_id 는 null 로 비운다(엔티티 없음, native).
+  감사 컬럼(attendance.recorder, room_status_log.handler, room_application.handler, participation.left_by,
+  company/job_posting.created_by)은 남긴다 — 조회 경로가 회원을 역참조하지 않는다.
+- 일괄 회원 삭제는 회원 한 명이 한 트랜잭션이다(Service 가 순회). 인덱스 없는 컬럼 조건 DELETE 가 많아 전원을 한
+  트랜잭션에 묶으면 next-key 락이 길어진다(db-reviewer 권장). 실패한 회원 id 는 WARN 로그에 남는다.
+- 이력서의 S3 객체는 지우지 않는다(앱은 S3 SDK 를 직접 부르지 않는다는 제약, 미참조 객체 정리는 기존 TODO).
+- 일괄 삭제 `includeMembers` 는 룸 삭제와 별개 트랜잭션이다(각각 원자적). 기본값 false 라 기존 호출 의미는 그대로다.
+  prefix·hostMemberId 와 무관하게 QA 회원 전원이 대상이다(문서에 명시, qa-reviewer 권고).
+- 탈퇴(deleted_at)한 QA 회원도 지운다. 초기화의 존재 확인(`MemberFinder.getById`, 탈퇴 제외)을 `resetRows` 로 분리해
+  삭제기는 `EntityManager.find` 로 존재만 보고 행 정리를 태운다(qa-reviewer 권고).
+
 ## DR-9 MySQL 계약은 Testcontainers 레인에서 고정한다
 
 - H2 는 문자열 비교가 대소문자 구분이라 collation 규칙·native UUID 바인딩·LIKE 이스케이프를 재현하지 못한다.
