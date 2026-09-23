@@ -55,6 +55,13 @@
 - 2026-08-25: SSM SecureString을 Terraform이 생성하면 런타임 저장소가 SSM이어도 값은 state·plan에
   남는다. 재발 방지: 앱 시크릿은 pre-created SSM ARN만 참조하고, 신규 RDS master password는
   RDS-managed Secrets Manager를 사용하며 raw plan은 private KMS artifact로만 취급한다.
+- 2026-09-23: FireLens 적용 뒤 dev 배포 4건이 새 core-api 태스크 PENDING 타임아웃으로 연속 실패했다.
+  원인: 앱 컨테이너의 `awsfirelens` logConfiguration에 Docker 드라이버 옵션(`mode`·`max-buffer-size`)을 넣었는데,
+  awsfirelens는 `Name`·`log-driver-buffer-limit` 외 옵션을 Fluent Bit `[OUTPUT]`에 그대로 넘겨 사이드카가
+  "unknown configuration property"로 exit 255 했고, `dependsOn HEALTHY`에 묶인 앱은 이미지 풀도 못 했다.
+  진단 경로: 배포 로그의 "stopped 1 pending tasks" → `describe-tasks`의 컨테이너별 lastStatus/exitCode →
+  라우터 로그 그룹(`/ecs/{env}/core-api/router`). 재발 방지: awsfirelens 옵션은 Fluent Bit 출력 플러그인이
+  아는 키만 두고, non-blocking 버퍼는 `log-driver-buffer-limit`로만 지정한다.
 - 2026-08-25: GitHub concurrency의 기본 single pending은 늦게 도착한 과거 run도 최신 pending run을
   취소·대체한다. 재발 방지: 배포·Terraform mutation queue는 `queue: max`로 pending을 보존하고, 실제 실행
   직전에 latest CI-successful revision freshness를 검사한다. actionlint 1.7.12가 새 queue schema를 아직

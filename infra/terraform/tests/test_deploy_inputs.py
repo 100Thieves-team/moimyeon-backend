@@ -202,7 +202,7 @@ class EcsRegistrationTest(unittest.TestCase):
                 template = task_template(worker)
                 app = template["containerDefinitions"][0]
                 app["dependsOn"] = [{"containerName": "log-router", "condition": "HEALTHY"}]
-                app["logConfiguration"] = {"logDriver": "awsfirelens", "options": {"Name": "null", "mode": "non-blocking"}}
+                app["logConfiguration"] = {"logDriver": "awsfirelens", "options": {"Name": "null", "log-driver-buffer-limit": "256"}}
                 router = {
                     "name": "log-router", "image": "router@sha256:" + "a" * 64,
                     "essential": False, "memory": 128, "cpu": 64,

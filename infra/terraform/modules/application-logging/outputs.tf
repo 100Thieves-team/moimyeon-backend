@@ -2,13 +2,15 @@ output "router_cpu" { value = local.router_cpu }
 output "extra_memory" { value = local.router_memory + local.driver_memory }
 output "bucket_name" { value = local.provisioned ? aws_s3_bucket.this["logs"].bucket : null }
 
+# awsfirelens 는 Name 과 log-driver-buffer-limit 을 제외한 모든 옵션을 Fluent Bit [OUTPUT] 섹션에 그대로 넘긴다.
+# Docker 드라이버 옵션(mode·max-buffer-size)을 여기 두면 Fluent Bit 이 "unknown configuration property" 로
+# 초기화에 실패해 사이드카가 죽고, dependsOn HEALTHY 에 묶인 앱 컨테이너는 PENDING 에서 배포가 타임아웃된다.
+# non-blocking 버퍼는 awsfirelens 전용 옵션인 log-driver-buffer-limit 하나로 지정한다.
 output "app_log_configurations" {
   value = { for key, service in local.services : key => {
     logDriver = "awsfirelens"
     options = {
       Name                    = "null"
-      mode                    = "non-blocking"
-      max-buffer-size         = "4m"
       log-driver-buffer-limit = "256"
     }
   } }
