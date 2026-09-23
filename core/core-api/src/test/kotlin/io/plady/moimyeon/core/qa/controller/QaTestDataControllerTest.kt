@@ -77,7 +77,7 @@ class QaTestDataControllerTest : RestDocsTest() {
     private val createMemberDescription = devOnlyNote +
         "Google OAuth 없이 테스트 회원을 만든다. 닉네임 자동 부여·필수 약관 동의·빈 프로필 생성까지 실제 가입과 같은 경로를 탄다. " +
         "이메일은 qa-{uuid}@qa.moimyeon.test, 소셜 계정 식별자는 qa-{uuid} 다. 응답의 accessToken 으로 바로 API 를 호출할 수 있다. " +
-        "생성된 회원은 삭제 API 가 없으며 테스트 계정 초기화(reset)로 정리한다."
+        "생성된 회원은 DELETE /v1/dev/members/{memberId} 또는 일괄 삭제의 includeMembers=true 로 지운다."
 
     private val resumeSummarySummary = "[dev] 이력서 AI 요약 완료 강제"
     private val resumeSummaryDescription = devOnlyNote +

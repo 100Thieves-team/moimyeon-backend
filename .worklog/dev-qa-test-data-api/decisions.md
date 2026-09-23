@@ -27,6 +27,8 @@
 - 벌크 삭제는 cascade·orphanRemoval 을 타지 않으므로 `question_vote` 는 `closing_response` 보다 먼저
   명시적으로 지운다.
 - 삭제 순서(자식 → 부모)와 건수 조립은 core-api 의 `QaRoomEraser` 가 소유한다(한 커밋 단위 안의 순서는 Implement).
+  일괄 삭제는 룸 하나가 한 트랜잭션이며 Service 가 순회한다(PR 리뷰 F1). 목록 조회와 삭제 사이에 먼저 지워진
+  룸(E1405)·회원(E1006)은 이미 목표 상태라 건너뛴다(F3).
   꼬리질문은 parent_question_id 자기 참조라 같은 room_id 를 가지므로 question 한 문장으로 함께 지워진다.
 - resume_submission.room_id·question_vote.question_id·room.title 에는 인덱스가 없어 풀 스캔이다. 수십 건 규모의
   dev 전용이라 인덱스를 추가하지 않는다(storage.md: 실측 후 근거와 함께).

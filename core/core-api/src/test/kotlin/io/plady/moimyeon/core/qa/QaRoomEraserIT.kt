@@ -174,13 +174,13 @@ class QaRoomEraserIT(
         seedRoom(otherQaRoomId, "[QA] smoke-2", hostMemberId = guestId)
         seedRoom(liveRoomId, "마커 없는 실데이터 룸", hostMemberId = hostId)
 
-        val byHost = qaRoomEraser.eraseAll(QaDataCondition(prefix = "[QA] smoke-", hostMemberId = hostId))
+        val byHost = eraseAll(QaDataCondition(prefix = "[QA] smoke-", hostMemberId = hostId))
 
         assertThat(byHost.rooms).isEqualTo(1)
         assertThat(roomRepository.existsById(qaRoomId)).isFalse()
         assertThat(roomRepository.existsById(otherQaRoomId)).isTrue()
 
-        val remaining = qaRoomEraser.eraseAll(QaDataCondition(prefix = "[QA] smoke-", hostMemberId = null))
+        val remaining = eraseAll(QaDataCondition(prefix = "[QA] smoke-", hostMemberId = null))
 
         assertThat(remaining.rooms).isEqualTo(1)
         assertThat(roomRepository.existsById(otherQaRoomId)).isFalse()
@@ -216,6 +216,8 @@ class QaRoomEraserIT(
 
         assertThat(rooms.map { it.id }).containsExactly(qaRoomId)
     }
+
+    private fun eraseAll(condition: QaDataCondition): QaDeletedRows = qaRoomFinder.getRoomIds(condition).fold(QaDeletedRows.NONE) { acc, id -> acc + qaRoomEraser.erase(id) }
 
     private fun seedMembers() {
         listOf(hostId to "host", guestId to "guest").forEach { (id, label) ->

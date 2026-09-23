@@ -27,13 +27,6 @@ class QaRoomEraser(
         return eraseGraph(room)
     }
 
-    @Transactional
-    fun eraseAll(condition: QaDataCondition): QaDeletedRows {
-        log.debug { "qa-room.eraser.eraseAll narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId}" }
-        return qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId)
-            .fold(QaDeletedRows.NONE) { acc, room -> acc + eraseGraph(room) }
-    }
-
     // 자식 → 부모 순서. FK 제약이 없어 순서는 코드가 지킨다.
     private fun eraseGraph(room: RoomEntity): QaDeletedRows {
         check(QaDataCondition.isQaData(room.title)) { "QA 마커가 없는 룸은 지울 수 없다" }

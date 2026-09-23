@@ -37,9 +37,9 @@ class QaMemberResetter(
         val erasedRooms = hostedRooms.fold(QaDeletedRows.NONE) { acc, room -> acc + qaRoomEraser.erase(room.id) }
         val prefix = QaDataCondition.QA_MARKER
         val memberRows = QaDeletedRows(
-            reviewTags = qaTestDataRepository.deleteMemberReviewTags(memberId, prefix),
-            reviews = qaTestDataRepository.deleteMemberReviews(memberId, prefix),
-            reviewSkips = qaTestDataRepository.deleteMemberReviewSkips(memberId, prefix),
+            reviewTags = qaTestDataRepository.deleteMemberReviewTagsInQaRooms(memberId, prefix),
+            reviews = qaTestDataRepository.deleteMemberReviewsInQaRooms(memberId, prefix),
+            reviewSkips = qaTestDataRepository.deleteMemberReviewSkipsInQaRooms(memberId, prefix),
             resumeSubmissions = qaTestDataRepository.deleteMemberResumeSubmissions(memberId),
             participants = qaTestDataRepository.deleteMemberParticipations(memberId),
             applications = qaTestDataRepository.deleteMemberApplications(memberId),

@@ -65,25 +65,70 @@ class QaTestDataServiceTest {
         verify(exactly = 1) { qaRoomEraser.erase(roomId) }
     }
 
-    @Test
-    fun `일괄 삭제는 룸만 지우고 회원은 건드리지 않는다`() {
-        val deleted = QaDeletedRows(rooms = 2, participants = 4)
-        every { qaRoomEraser.eraseAll(condition) } returns deleted
+    private val otherRoomId = UUID.fromString("00000000-0000-0000-0000-000000000102")
 
-        assertThat(service.deleteQaData(condition)).isEqualTo(deleted)
+    @Test
+    fun `일괄 삭제는 룸을 하나씩 지워 합산하고 회원은 건드리지 않는다`() {
+        every { qaRoomFinder.getRoomIds(condition) } returns listOf(roomId, otherRoomId)
+        every { qaRoomEraser.erase(roomId) } returns QaDeletedRows(rooms = 1, participants = 2)
+        every { qaRoomEraser.erase(otherRoomId) } returns QaDeletedRows(rooms = 1, participants = 2)
+
+        assertThat(service.deleteQaData(condition)).isEqualTo(QaDeletedRows(rooms = 2, participants = 4))
         verify(exactly = 0) { qaMemberEraser.erase(any()) }
+    }
+
+    @Test
+    fun `일괄 삭제 중 먼저 지워진 룸(E1405)은 건너뛰고 계속 간다`() {
+        every { qaRoomFinder.getRoomIds(condition) } returns listOf(roomId, otherRoomId)
+        every { qaRoomEraser.erase(roomId) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
+        every { qaRoomEraser.erase(otherRoomId) } returns QaDeletedRows(rooms = 1)
+
+        assertThat(service.deleteQaData(condition)).isEqualTo(QaDeletedRows(rooms = 1))
+    }
+
+    @Test
+    fun `일괄 삭제 중 룸 하나가 다른 이유로 실패하면 예외를 그대로 전파한다`() {
+        every { qaRoomFinder.getRoomIds(condition) } returns listOf(roomId, otherRoomId)
+        every { qaRoomEraser.erase(roomId) } returns QaDeletedRows(rooms = 1)
+        every { qaRoomEraser.erase(otherRoomId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        assertThatThrownBy { service.deleteQaData(condition) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.QA_DATA_ONLY)
+            }
+        verify(exactly = 1) { qaRoomEraser.erase(roomId) }
     }
 
     @Test
     fun `includeMembers 면 룸 삭제 뒤 QA 생성 회원까지 지우고 합산한다`() {
         val withMembers = condition.copy(includeMembers = true)
         val other = UUID.fromString("00000000-0000-0000-0000-000000000003")
-        every { qaRoomEraser.eraseAll(withMembers) } returns QaDeletedRows(rooms = 2)
+        every { qaRoomFinder.getRoomIds(withMembers) } returns listOf(roomId)
+        every { qaRoomEraser.erase(roomId) } returns QaDeletedRows(rooms = 1)
         every { qaMemberFinder.getQaMembers() } returns listOf(qaMember, qaMember.copy(id = other))
         every { qaMemberEraser.erase(memberId) } returns QaDeletedRows(members = 1, profiles = 1)
         every { qaMemberEraser.erase(other) } returns QaDeletedRows(members = 1, profiles = 1)
 
-        assertThat(service.deleteQaData(withMembers)).isEqualTo(QaDeletedRows(rooms = 2, members = 2, profiles = 2))
+        assertThat(service.deleteQaData(withMembers)).isEqualTo(QaDeletedRows(rooms = 1, members = 2, profiles = 2))
+    }
+
+    @Test
+    fun `회원 일괄 삭제 중 먼저 지워진 회원(E1006)은 건너뛰고, 다른 실패는 앞선 회원을 지운 채 전파한다`() {
+        val withMembers = condition.copy(includeMembers = true)
+        val gone = UUID.fromString("00000000-0000-0000-0000-000000000003")
+        val failing = UUID.fromString("00000000-0000-0000-0000-000000000004")
+        every { qaRoomFinder.getRoomIds(withMembers) } returns emptyList()
+        every { qaMemberFinder.getQaMembers() } returns listOf(qaMember, qaMember.copy(id = gone), qaMember.copy(id = failing))
+        every { qaMemberEraser.erase(memberId) } returns QaDeletedRows(members = 1)
+        every { qaMemberEraser.erase(gone) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+        every { qaMemberEraser.erase(failing) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        assertThatThrownBy { service.deleteQaData(withMembers) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.QA_DATA_ONLY)
+            }
+        verify(exactly = 1) { qaMemberEraser.erase(memberId) }
+        verify(exactly = 1) { qaMemberEraser.erase(gone) }
     }
 
     @Test

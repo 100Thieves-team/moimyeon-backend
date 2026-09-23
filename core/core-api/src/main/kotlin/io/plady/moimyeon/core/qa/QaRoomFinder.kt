@@ -7,6 +7,7 @@ import io.plady.moimyeon.storage.db.core.qa.QaTestDataRepository
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -19,6 +20,12 @@ class QaRoomFinder(
     fun getRooms(condition: QaDataCondition): List<QaRoom> {
         log.debug { "qa-room.finder.getRooms narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId}" }
         return qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId).map(::toQaRoom)
+    }
+
+    @Transactional(readOnly = true)
+    fun getRoomIds(condition: QaDataCondition): List<UUID> {
+        log.debug { "qa-room.finder.getRoomIds narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId}" }
+        return qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId).map { it.id }
     }
 
     private fun toQaRoom(entity: RoomEntity): QaRoom = QaRoom(

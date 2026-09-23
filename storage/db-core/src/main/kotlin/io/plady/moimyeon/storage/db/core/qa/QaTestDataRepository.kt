@@ -226,18 +226,18 @@ class QaTestDataRepository(
 
     fun deleteMemberParticipations(memberId: UUID): Int = deleteByMember("delete from ParticipationEntity p where p.memberId = :memberId", memberId)
 
-    fun deleteMemberReviewTags(memberId: UUID, prefix: String): Int = deleteReviewTagsOf(
+    fun deleteMemberReviewTagsInQaRooms(memberId: UUID, prefix: String): Int = deleteReviewTagsOf(
         entityManager.createQuery(
             "select r.id from ReviewEntity r where (r.authorMemberId = :memberId or r.targetMemberId = :memberId) and r.roomId in ($ROOM_IDS_BY_PREFIX)",
             Long::class.javaObjectType,
         ).setParameter("memberId", memberId).setParameter("pattern", likePrefixPattern(prefix)).resultList.map { it.toLong() },
     )
 
-    fun deleteMemberReviews(memberId: UUID, prefix: String): Int = entityManager.createQuery(
+    fun deleteMemberReviewsInQaRooms(memberId: UUID, prefix: String): Int = entityManager.createQuery(
         "delete from ReviewEntity r where (r.authorMemberId = :memberId or r.targetMemberId = :memberId) and r.roomId in ($ROOM_IDS_BY_PREFIX)",
     ).setParameter("memberId", memberId).setParameter("pattern", likePrefixPattern(prefix)).executeUpdate()
 
-    fun deleteMemberReviewSkips(memberId: UUID, prefix: String): Int = entityManager.createQuery(
+    fun deleteMemberReviewSkipsInQaRooms(memberId: UUID, prefix: String): Int = entityManager.createQuery(
         "delete from ReviewSkipEntity s where (s.authorMemberId = :memberId or s.targetMemberId = :memberId) and s.roomId in ($ROOM_IDS_BY_PREFIX)",
     ).setParameter("memberId", memberId).setParameter("pattern", likePrefixPattern(prefix)).executeUpdate()
 
