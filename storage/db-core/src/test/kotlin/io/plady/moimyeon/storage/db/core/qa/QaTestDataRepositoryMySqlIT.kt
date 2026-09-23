@@ -138,7 +138,7 @@ class QaTestDataRepositoryMySqlIT(
 
         assertThat(qaTestDataRepository.findRoomsByTitlePrefix("[QA]", host).map { it.id }).containsExactly(hosted)
         assertThat(qaTestDataRepository.findHostedRoomIds(host)).containsExactly(hosted)
-        assertThat(qaTestDataRepository.findHostMemberId(hosted)).isEqualTo(host)
+        assertThat(qaTestDataRepository.findHostMemberIds(listOf(hosted))).containsEntry(hosted, host)
     }
 
     @Test

@@ -2,8 +2,6 @@ package io.plady.moimyeon.core.qa
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.api.auth.DEV_AUTH_PROFILE_EXPRESSION
-import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.CoreException
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -18,6 +16,7 @@ class QaTestDataService(
     private val qaMemberFinder: QaMemberFinder,
     private val qaRoomEraser: QaRoomEraser,
     private val qaMemberEraser: QaMemberEraser,
+    private val qaDataSweeper: QaDataSweeper,
     private val qaMemberResetter: QaMemberResetter,
     private val qaRoomScheduler: QaRoomScheduler,
     private val qaMemberCreator: QaMemberCreator,
@@ -32,8 +31,8 @@ class QaTestDataService(
     }
 
     fun deleteQaData(condition: QaDataCondition): QaDeletedRows {
-        val rooms = eraseQaRooms(condition)
-        val members = if (condition.includeMembers) eraseQaMembers() else QaDeletedRows.NONE
+        val rooms = qaDataSweeper.sweepRooms(condition)
+        val members = if (condition.includeMembers) qaDataSweeper.sweepMembers() else QaDeletedRows.NONE
         val deleted = rooms + members
         log.info {
             "qa-test-data.deleteQaData narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId} " +
@@ -41,25 +40,6 @@ class QaTestDataService(
         }
         return deleted
     }
-
-    // 룸 하나가 한 트랜잭션. 하나가 실패해도 앞선 룸은 지워진 채 남고 실패 룸을 로그로 남긴다.
-    // 목록 조회와 삭제 사이에 다른 요청이 먼저 지운 룸(E1405)은 이미 목표 상태이므로 건너뛴다.
-    private fun eraseQaRooms(condition: QaDataCondition): QaDeletedRows = qaRoomFinder.getRoomIds(condition).fold(QaDeletedRows.NONE) { acc, roomId ->
-        acc + runCatching { qaRoomEraser.erase(roomId) }
-            .recoverCatching { it.alreadyGoneOr(CoreErrorType.ROOM_NOT_FOUND) }
-            .onFailure { log.warn(it) { "qa-test-data.deleteQaData.roomFailed roomId=$roomId ${acc.toLogValues()}" } }
-            .getOrThrow()
-    }
-
-    // 회원 한 명이 한 트랜잭션. 위와 같은 규칙이며 먼저 지워진 회원(E1006)은 건너뛴다.
-    private fun eraseQaMembers(): QaDeletedRows = qaMemberFinder.getQaMembers().fold(QaDeletedRows.NONE) { acc, member ->
-        acc + runCatching { qaMemberEraser.erase(member.id) }
-            .recoverCatching { it.alreadyGoneOr(CoreErrorType.MEMBER_NOT_FOUND) }
-            .onFailure { log.warn(it) { "qa-test-data.deleteQaData.memberFailed memberId=${member.id} ${acc.toLogValues()}" } }
-            .getOrThrow()
-    }
-
-    private fun Throwable.alreadyGoneOr(notFound: CoreErrorType): QaDeletedRows = if (this is CoreException && errorType == notFound) QaDeletedRows.NONE else throw this
 
     fun deleteMember(memberId: UUID): QaDeletedRows {
         val deleted = qaMemberEraser.erase(memberId)

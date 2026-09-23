@@ -2,7 +2,6 @@ package io.plady.moimyeon.core.qa
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.api.auth.DEV_AUTH_PROFILE_EXPRESSION
-import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.qa.QaTestDataRepository
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -19,7 +18,22 @@ class QaRoomFinder(
     @Transactional(readOnly = true)
     fun getRooms(condition: QaDataCondition): List<QaRoom> {
         log.debug { "qa-room.finder.getRooms narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId}" }
-        return qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId).map(::toQaRoom)
+        val rooms = qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId)
+        val roomIds = rooms.map { it.id }
+        val hosts = qaTestDataRepository.findHostMemberIds(roomIds)
+        val applications = qaTestDataRepository.countApplicationsByRoomIds(roomIds).associate { it.roomId to it.count }
+        val participants = qaTestDataRepository.countParticipationsByRoomIds(roomIds).associate { it.roomId to it.count }
+        return rooms.map {
+            QaRoom(
+                id = it.id,
+                title = it.title,
+                status = it.status,
+                hostMemberId = hosts[it.id],
+                createdAt = it.createdAt,
+                applicationCount = applications[it.id] ?: 0,
+                participantCount = participants[it.id] ?: 0,
+            )
+        }
     }
 
     @Transactional(readOnly = true)
@@ -27,14 +41,4 @@ class QaRoomFinder(
         log.debug { "qa-room.finder.getRoomIds narrowed=${condition.isNarrowed()} hostMemberId=${condition.hostMemberId}" }
         return qaTestDataRepository.findRoomsByTitlePrefix(condition.prefix, condition.hostMemberId).map { it.id }
     }
-
-    private fun toQaRoom(entity: RoomEntity): QaRoom = QaRoom(
-        id = entity.id,
-        title = entity.title,
-        status = entity.status,
-        hostMemberId = qaTestDataRepository.findHostMemberId(entity.id),
-        createdAt = entity.createdAt,
-        applicationCount = qaTestDataRepository.countApplications(entity.id),
-        participantCount = qaTestDataRepository.countParticipations(entity.id),
-    )
 }

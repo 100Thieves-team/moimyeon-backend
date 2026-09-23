@@ -3,6 +3,7 @@ package io.plady.moimyeon.storage.db.core.qa
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.storage.db.core.MemberEntity
+import io.plady.moimyeon.storage.db.core.RoomCount
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
@@ -31,21 +32,26 @@ class QaTestDataRepository(
         UUID::class.java,
     ).setParameter("memberId", memberId).withHostRole().resultList
 
-    fun findHostMemberId(roomId: UUID): UUID? = entityManager.createQuery(
-        """
-        select p.memberId from ParticipationEntity p
-        where p.roomId = :roomId
-          and p.participationRole = :role
-          and p.status = :status
-          and p.deletedAt is null
-        order by p.joinedAt asc, p.id asc
-        """,
-        UUID::class.java,
-    ).setParameter("roomId", roomId).withHostRole().setMaxResults(1).resultList.firstOrNull()
+    fun findHostMemberIds(roomIds: Collection<UUID>): Map<UUID, UUID> {
+        if (roomIds.isEmpty()) return emptyMap()
+        return entityManager.createQuery(
+            """
+            select p.roomId, p.memberId from ParticipationEntity p
+            where p.roomId in (:roomIds)
+              and p.participationRole = :role
+              and p.status = :status
+              and p.deletedAt is null
+            order by p.joinedAt asc, p.id asc
+            """,
+            Array<Any>::class.java,
+        ).setParameter("roomIds", roomIds).withHostRole().resultList
+            .groupBy({ it[0] as UUID }, { it[1] as UUID })
+            .mapValues { it.value.first() }
+    }
 
-    fun countApplications(roomId: UUID): Long = countByRoom("RoomApplicationEntity", roomId)
+    fun countApplicationsByRoomIds(roomIds: Collection<UUID>): List<RoomCount> = countByRoomIds("RoomApplicationEntity", roomIds)
 
-    fun countParticipations(roomId: UUID): Long = countByRoom("ParticipationEntity", roomId)
+    fun countParticipationsByRoomIds(roomIds: Collection<UUID>): List<RoomCount> = countByRoomIds("ParticipationEntity", roomIds)
 
     // ---- 룸 일정 ----
 
@@ -248,10 +254,13 @@ class QaTestDataRepository(
             .executeUpdate()
     }
 
-    private fun countByRoom(entity: String, roomId: UUID): Long = entityManager.createQuery(
-        "select count(e) from $entity e where e.roomId = :roomId",
-        Long::class.javaObjectType,
-    ).setParameter("roomId", roomId).singleResult.toLong()
+    private fun countByRoomIds(entity: String, roomIds: Collection<UUID>): List<RoomCount> {
+        if (roomIds.isEmpty()) return emptyList()
+        return entityManager.createQuery(
+            "select new io.plady.moimyeon.storage.db.core.RoomCount(e.roomId, count(e)) from $entity e where e.roomId in (:roomIds) group by e.roomId",
+            RoomCount::class.java,
+        ).setParameter("roomIds", roomIds).resultList
+    }
 
     private fun deleteByRoom(jpql: String, roomId: UUID): Int = entityManager.createQuery(jpql).setParameter("roomId", roomId).executeUpdate()
 

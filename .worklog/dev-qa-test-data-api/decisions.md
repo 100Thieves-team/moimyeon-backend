@@ -27,8 +27,9 @@
 - 벌크 삭제는 cascade·orphanRemoval 을 타지 않으므로 `question_vote` 는 `closing_response` 보다 먼저
   명시적으로 지운다.
 - 삭제 순서(자식 → 부모)와 건수 조립은 core-api 의 `QaRoomEraser` 가 소유한다(한 커밋 단위 안의 순서는 Implement).
-  일괄 삭제는 룸 하나가 한 트랜잭션이며 Service 가 순회한다(PR 리뷰 F1). 목록 조회와 삭제 사이에 먼저 지워진
-  룸(E1405)·회원(E1006)은 이미 목표 상태라 건너뛴다(F3).
+  일괄 삭제는 룸 하나가 한 트랜잭션이며 조립 Implement `QaDataSweeper`(트랜잭션 없음)가 순회한다(PR 리뷰 F1·Architect).
+  목록 조회와 삭제 사이에 먼저 지워진 룸(E1405)·회원(E1006)은 이미 목표 상태라 건너뛴다(F3). 스킵 판정을 Service 에
+  두지 않는 이유: layers.md 의 "Service 는 판정하지 않는다"와 재시도·스킵 조립 사례(`MemberRegistrationManager`).
   꼬리질문은 parent_question_id 자기 참조라 같은 room_id 를 가지므로 question 한 문장으로 함께 지워진다.
 - resume_submission.room_id·question_vote.question_id·room.title 에는 인덱스가 없어 풀 스캔이다. 수십 건 규모의
   dev 전용이라 인덱스를 추가하지 않는다(storage.md: 실측 후 근거와 함께).
@@ -61,6 +62,7 @@
 - `hostMemberId` 필터와 회원 초기화의 "방장인 룸"은 `participation(role=HOST, status=JOINED, deleted_at null)` 행이다.
   전 방장(LEFT)은 방장이 아니다(MOI-397 의 HOST 행 보존 규칙과 일치).
 - 방장이 나가 활성 HOST 가 없는 취소 룸은 목록의 `hostMemberId` 가 null 이다(응답 스펙에 optional 로 문서화).
+- 목록의 방장·신청 수·참여 수는 roomId IN 절 일괄 조회 3개로 합성한다(PR 리뷰 N+1, `RoomCount` 재사용).
 
 ## DR-7 회원 초기화의 삭제 범위는 요구사항 그대로 한정한다
 
