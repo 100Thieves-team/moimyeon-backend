@@ -34,7 +34,7 @@ class QaResumeSummaryCompleter(
             CoreErrorType.RESUME_NOT_FOUND,
         )
         requireBusiness(QaDataCondition.hasQaMarker(resume.name), CoreErrorType.QA_DATA_ONLY)
-        memberRepository.findForUpdateByIdAndDeletedAtIsNull(resume.memberId)
+        requireFound(memberRepository.findForUpdateByIdAndDeletedAtIsNull(resume.memberId), CoreErrorType.MEMBER_NOT_FOUND)
         when (resume.summaryStatus) {
             ResumeSummaryStatus.FAILED -> {
                 resume.retrySummary(LocalDateTime.now(clock))

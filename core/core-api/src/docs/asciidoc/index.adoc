@@ -1684,5 +1684,6 @@ include::{snippets}/completeQaResumeSummary/response-fields.adoc[]
 
 | 400 | E400 | 요약문이 공백이거나 1000자 초과, resumeId 가 UUID 가 아님
 | 404 | E1010 | 이력서가 없거나 삭제됨
+| 404 | E1006 | 이력서 소유 회원이 탈퇴함
 | 409 | E2201 | 이름이 `[QA]` 로 시작하지 않는 이력서
 |===

@@ -84,7 +84,7 @@ class QaTestDataControllerTest : RestDocsTest() {
         "이름이 [QA] 로 시작하는 이력서의 AI 요약을 Bedrock 호출 없이 완료(DONE) 상태로 만든다(이름은 이력서 이름 변경 API 로 바꿀 수 있다). " +
         "실패(FAILED)·생성 중(PROCESSING)이면 주어진 요약문으로 완료하고, 이미 완료면 그대로 둔다. " +
         "회원에게 기본 이력서가 없으면 이 이력서를 기본으로 지정한다(실제 요약 완료와 같은 규칙). " +
-        "이름이 [QA] 로 시작하지 않으면 409(E2201), 이력서가 없거나 삭제됐으면 404(E1010), 요약문이 공백이거나 1000자를 넘으면 400(E400)."
+        "이름이 [QA] 로 시작하지 않으면 409(E2201), 이력서가 없거나 삭제됐으면 404(E1010), 소유 회원이 탈퇴했으면 404(E1006), 요약문이 공백이거나 1000자를 넘으면 400(E400)."
 
     private val deleteMemberSummary = "[dev] QA 테스트 회원 삭제"
     private val deleteMemberDescription = devOnlyNote +
@@ -528,6 +528,15 @@ class QaTestDataControllerTest : RestDocsTest() {
         mockMvc.perform(post(RESUME_SUMMARY_PATH, resumeId))
             .andExpect(status().isNotFound)
             .andDo(documentApi("completeQaResumeSummary-e1010", resumeSummarySummary, resumeSummaryDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `탈퇴한 회원의 이력서 요약을 완료하면 E1006 을 응답한다`() {
+        every { service.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        mockMvc.perform(post(RESUME_SUMMARY_PATH, resumeId))
+            .andExpect(status().isNotFound)
+            .andDo(documentApi("completeQaResumeSummary-e1006", resumeSummarySummary, resumeSummaryDescription, errorResponseFields()))
     }
 
     @Test

@@ -1,14 +1,20 @@
 package io.plady.moimyeon.core.qa
 
 import io.plady.moimyeon.ContextTest
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.MemberEntity
+import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
 import io.plady.moimyeon.storage.db.core.ResumeRepository
+import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,14 +22,49 @@ import java.util.UUID
 class QaResumeSummaryCompleterIT(
     private val qaResumeSummaryCompleter: QaResumeSummaryCompleter,
     private val resumeRepository: ResumeRepository,
+    private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private val memberId = UUID.randomUUID()
     private val at = LocalDateTime.of(2026, 9, 22, 10, 0)
     private val seededIds = mutableListOf<UUID>()
 
+    @BeforeEach
+    fun seedOwner() {
+        val suffix = memberId.toString().take(8)
+        memberRepository.saveAndFlush(
+            MemberEntity(
+                id = memberId,
+                email = "qa-resume-$suffix@example.com",
+                nickname = "qr$suffix",
+                status = MemberStatus.ACTIVE,
+                lastLoginAt = at,
+                socialAccounts = listOf(
+                    SocialAccountEntity(provider = SocialLoginProvider.GOOGLE, providerId = "qa-resume-$suffix", linkedEmail = "qa-resume-$suffix@example.com"),
+                ),
+            ),
+        )
+    }
+
     @AfterEach
     fun cleanUp() {
         resumeRepository.deleteAllById(seededIds)
+        memberRepository.deleteById(memberId)
+    }
+
+    @Test
+    fun `탈퇴한 회원의 이력서는 E1006 을 던지고 바꾸지 않는다`() {
+        val resumeId = seedResume(ResumeSummaryStatus.FAILED, isDefault = false)
+        memberRepository.findById(memberId).orElseThrow().let {
+            it.delete(at)
+            memberRepository.saveAndFlush(it)
+        }
+
+        assertThatThrownBy { qaResumeSummaryCompleter.complete(resumeId, "요약") }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+
+        assertThat(resumeRepository.findById(resumeId).orElseThrow().summaryStatus).isEqualTo(ResumeSummaryStatus.FAILED)
     }
 
     @Test
