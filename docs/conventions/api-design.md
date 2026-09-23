@@ -136,3 +136,34 @@ class ApiResponse<T> private constructor(
 - 실구현 전환 시 URI·응답 계약은 유지하고 모킹 스텁만 제거한다. RestDocs 문서/테스트는
   실구현 기준으로 교체한다.
 - 일부만 실구현 가능한 API는 컨트롤러는 유지하되 목업 값 고정 반환 범위를 문서에 명시한다.
+
+## dev 전용 Test API (QA 플랫폼용)
+
+QA 플랫폼(qa.agent.plady.io)이 dev 서버의 테스트 데이터를 버튼 하나로 지우고 초기화할 수 있도록
+`/v1/dev/...` 아래에 **dev 전용 Test API** 를 둔다. 공개 API 에는 룸 하드 삭제·회원 초기화가 없고
+(룸 취소는 상태 전이, 신청은 철회뿐), 테스트 계정에 참여 중 룸이 쌓이면 참여 한도(E1425)에 걸려
+QA 가 막히기 때문이다. 플랫폼은 openapi3.yaml 을 읽어 폼과 버튼을 만들므로 성공·에러 예시가 전부
+RestDocs 테스트로 문서화되어야 한다.
+
+- **코드 위치**: `core.qa` 패키지 한 곳(컨트롤러·Service·Implement). 서비스 컨트롤러
+  (`core.api.controller.v1`) 사이에 QA 전용 메서드를 두지 않는다. 삭제·조회 쿼리는 db-core 의
+  `QaTestDataRepository` 한 클래스에 두고 운영 Repository 에 QA 전용 메서드를 섞지 않는다.
+- **게이트**: `POST /v1/auth/dev-sessions` 와 같은 `DEV_AUTH_PROFILE_EXPRESSION`(`local`·`local-dev`·`dev`,
+  staging·live 가 섞이면 제외)을 `core.qa` 의 모든 빈에 붙인다. 아키텍처 가드 테스트
+  (`QaPackageProfileGateTest`)가 패키지 안 스테레오타입 빈 전부의 게이트를 강제하고,
+  `QaTestApiProfileContextTest` 가 프로파일별 등록 여부를 고정한다. live 에서는 경로 자체가 없다(404).
+- **경로**: 전부 `/v1/dev/` 아래. QA 플랫폼이 이 접두로 "검증 대상 API 가 아님"을 가른다.
+  인증은 다른 API 와 같다(SecurityConfig 를 바꾸지 않는다).
+- **지울 수 있는 것**: 제목이 `[QA]` 로 시작하는 룸과 그 룸에 매인 행뿐이다. 접두 검사는 쓰기
+  Implement(`QaRoomEraser`) 안에서만 판정하고, 위반은 `E2201 QA_DATA_ONLY`(409)다. 회원 행은
+  지우지 않는다(테스트 계정 UUID 는 SSM 에 고정). 유일한 예외는 테스트 회원 생성 API 로 만든 QA 회원
+  (이메일 `@qa.moimyeon.test` + 소셜 식별자 `qa-`)이며, `DELETE /v1/dev/members/{memberId}` 와 일괄 삭제의
+  `includeMembers` 로만 지운다. 소프트 삭제가 아니라 행을 없앤다.
+- **삭제 순서**: 스키마에 FK 제약이 없으므로 순서를 코드가 지킨다(자식 → 부모). 룸 한 개의 그래프가
+  한 트랜잭션이며, 모든 호출은 결과 한 줄을 INFO 로 남긴다(`qa-test-data.<메서드>` 접두, 삭제는 테이블별 건수).
+  접두 원문은 자유 입력이라 로그에 넣지 않는다.
+- **시나리오 준비용 API 세 개**: 룸 시작 시각 변경(`POST /v1/dev/rooms/{roomId}/schedule`, `[QA]` 룸만),
+  테스트 회원 생성(`POST /v1/dev/members`, 실제 가입 경로 재사용 + dev 토큰 발급), 이력서 요약 완료 강제
+  (`POST /v1/dev/resumes/{resumeId}/summary`, 이름이 `[QA]` 인 이력서만, Bedrock 우회). 상태를 직접 덮어쓰는 API 는 두지 않는다 —
+  시작 시각만 옮기면 진행 시작·종료·후기가 공개 API 의 실제 경로로 도달하므로 room_status_log·출석이 일관된다.
+- **범위 밖**: QA 생성 회원이 아닌 회원의 삭제, 토큰·비밀번호 관련 변경, 공개 API 동작 변경.
