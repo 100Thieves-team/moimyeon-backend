@@ -85,24 +85,8 @@ class NotificationMessageHandler(
     }
 
     private fun roomApplicationAccepted(message: NotificationStreamMessage): Notification {
-        val payload = try {
-            jsonMapper.readValue(
-                message.payload,
-                RoomApplicationAcceptedPayload::class.java,
-            )
-        } catch (exception: JacksonException) {
-            throw InvalidNotificationMessageException("알림 payload를 해석할 수 없습니다.", exception)
-        }
-        if (payload.eventId != message.eventId) {
-            throw InvalidNotificationMessageException(
-                "Stream과 payload의 eventId가 일치하지 않습니다. stream=${message.eventId}, payload=${payload.eventId}",
-            )
-        }
-        if (payload.eventType != message.eventType) {
-            throw InvalidNotificationMessageException(
-                "Stream과 payload의 eventType이 일치하지 않습니다. stream=${message.eventType}, payload=${payload.eventType}",
-            )
-        }
+        val payload = decode(message, RoomApplicationAcceptedPayload::class.java)
+        validateEnvelope(message, payload.eventId, payload.eventType)
         return Notification(
             eventId = message.eventId,
             eventType = message.eventType,
