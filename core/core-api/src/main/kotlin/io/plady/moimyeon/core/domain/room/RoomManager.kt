@@ -199,10 +199,7 @@ class RoomManager(
             minCapacity = entity.minCapacity.toInt(),
             currentParticipants = currentParticipants,
             now = now,
-            previouslyConfirmed = roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(
-                roomId,
-                RoomStatus.CONFIRMED,
-            ),
+            previouslyConfirmed = roomStatusLogRepository.wasPreviouslyConfirmed(roomId),
         ).blockReason?.let { throw CoreException(it.toErrorType()) }
 
         entity.confirm()

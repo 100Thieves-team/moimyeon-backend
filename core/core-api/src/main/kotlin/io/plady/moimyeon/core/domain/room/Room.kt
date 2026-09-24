@@ -45,8 +45,7 @@ class Room(
     }
 
     // 진행 기능은 MVP 공개 API에서 제외됐지만 기존 내부 컴포넌트의 상태 판정은 CONFIRMED 하나로 수렴시킨다.
-    internal fun isProgressAvailable(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED &&
-        RoomSchedule.isPassed(schedule.startAt, at)
+    internal fun isProgressAvailable(at: LocalDateTime): Boolean = RoomProgressAvailability.isAvailable(status, schedule.startAt, at)
 
     companion object {
         private val RESUME_ORIGINAL_OPEN_STATUSES = setOf(RoomStatus.CONFIRMED)
@@ -118,4 +117,9 @@ class Room(
             status = status,
         )
     }
+}
+
+internal object RoomProgressAvailability {
+    fun isAvailable(status: RoomStatus, startAt: LocalDateTime, at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED &&
+        RoomSchedule.isPassed(startAt, at)
 }

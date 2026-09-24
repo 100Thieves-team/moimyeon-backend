@@ -90,8 +90,6 @@ class RoomEntity(
     fun isAutoCompletable(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED &&
         !at.isBefore(startAt.plusHours(AUTO_COMPLETION_HOURS))
 
-    fun isProgressAvailable(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED && !at.isBefore(startAt)
-
     fun reopenRecruiting() {
         check(status == RoomStatus.CONFIRMED)
         status = RoomStatus.RECRUITING

@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.roundfeedback
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.domain.room.RoomProgressAvailability
 import io.plady.moimyeon.core.enums.RoundFeedbackType
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -81,7 +82,7 @@ class RoundFeedbackManager(
             CoreErrorType.ROOM_NOT_FOUND,
         )
         requireBusiness(
-            room.isProgressAvailable(LocalDateTime.now(clock)),
+            RoomProgressAvailability.isAvailable(room.status, room.startAt, LocalDateTime.now(clock)),
             CoreErrorType.ROUND_FEEDBACK_NOT_EDITABLE,
         )
     }

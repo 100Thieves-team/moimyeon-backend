@@ -32,7 +32,7 @@ class RoundFeedbackManagerTest {
     private val room = mockk<RoomEntity> {
         every { isActive() } returns true
         every { status } returns RoomStatus.CONFIRMED
-        every { isProgressAvailable(any()) } returns true
+        every { startAt } returns LocalDateTime.of(2026, 8, 14, 11, 0)
     }
     private val now = LocalDateTime.of(2026, 8, 14, 12, 0)
     private val manager = RoundFeedbackManager(
@@ -122,7 +122,6 @@ class RoundFeedbackManagerTest {
     @Test
     fun `룸 종료와 피드백 저장이 경합하면 잠금 뒤 상태를 다시 확인해 저장하지 않는다`() {
         every { room.status } returns RoomStatus.COMPLETED
-        every { room.isProgressAvailable(any()) } returns false
 
         assertThatThrownBy {
             manager.upsertSelfFeedback(

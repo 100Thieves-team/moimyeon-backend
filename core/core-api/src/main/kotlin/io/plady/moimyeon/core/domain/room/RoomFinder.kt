@@ -116,10 +116,7 @@ class RoomFinder(
             hostMemberId = host.memberId,
             currentParticipants = currentParticipants,
             pendingApplicationCount = pendingApplicationCount,
-            previouslyConfirmed = roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(
-                roomId,
-                RoomStatus.CONFIRMED,
-            ),
+            previouslyConfirmed = roomStatusLogRepository.wasPreviouslyConfirmed(roomId),
         )
     }
 

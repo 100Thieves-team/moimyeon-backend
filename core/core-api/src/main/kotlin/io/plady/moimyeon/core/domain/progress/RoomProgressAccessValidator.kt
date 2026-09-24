@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.domain.progress
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
+import io.plady.moimyeon.core.domain.room.RoomProgressAvailability
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -51,8 +52,9 @@ class RoomProgressAccessValidator(
     }
 
     fun validateInProgressParticipant(roomId: UUID, memberId: UUID) {
+        val room = findActiveRoom(roomId)
         requireBusiness(
-            findActiveRoom(roomId).isProgressAvailable(LocalDateTime.now(clock)),
+            RoomProgressAvailability.isAvailable(room.status, room.startAt, LocalDateTime.now(clock)),
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
         )
         validateConfirmedParticipant(roomId, memberId, CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
