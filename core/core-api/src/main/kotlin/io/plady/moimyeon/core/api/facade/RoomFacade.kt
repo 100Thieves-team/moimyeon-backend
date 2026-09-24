@@ -34,10 +34,6 @@ class RoomFacade(
         roomService.updateRoom(hostMemberId, roomId, command)
     }
 
-    fun cancel(hostMemberId: UUID, roomId: UUID) {
-        roomService.cancelRoom(hostMemberId, roomId)
-    }
-
     fun confirm(hostMemberId: UUID, roomId: UUID) {
         roomService.confirmRoom(hostMemberId, roomId)
     }

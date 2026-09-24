@@ -129,8 +129,8 @@ class ResumeOriginalViewFinderIT(
     }
 
     @Test
-    fun `진행 중에도 현재 제출 원본을 열 수 있다`() {
-        val roomId = persistRoom(resumePublic = true, status = RoomStatus.IN_PROGRESS)
+    fun `확정 후에도 현재 제출 원본을 열 수 있다`() {
+        val roomId = persistRoom(resumePublic = true, status = RoomStatus.CONFIRMED)
         persistParticipation(roomId, submitterMemberId)
         val submissionId = persistSubmission(roomId, submitterMemberId)
 

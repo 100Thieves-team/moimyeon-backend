@@ -22,8 +22,8 @@ class ClosingAccessValidatorTest {
     private val memberId = UUID.randomUUID()
 
     @Test
-    fun `진행 중 룸의 출석 참여자는 클로징에 접근한다`() {
-        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.IN_PROGRESS)
+    fun `완료된 룸의 출석 참여자는 클로징에 접근한다`() {
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
         every { roomProgressReader.isAttended(roomId, memberId) } returns true
 
         validator.validateParticipant(roomId, memberId)
@@ -32,8 +32,8 @@ class ClosingAccessValidatorTest {
     }
 
     @Test
-    fun `진행 중인 룸이 아니면 E1802 를 던지고 출석을 조회하지 않는다`() {
-        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
+    fun `완료된 룸이 아니면 E1802 를 던지고 출석을 조회하지 않는다`() {
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
 
         assertThatThrownBy { validator.validateParticipant(roomId, memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
@@ -44,7 +44,7 @@ class ClosingAccessValidatorTest {
 
     @Test
     fun `불참자는 E1801 을 던진다`() {
-        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.IN_PROGRESS)
+        every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
         every { roomProgressReader.isAttended(roomId, memberId) } returns false
 
         assertThatThrownBy { validator.validateParticipant(roomId, memberId) }

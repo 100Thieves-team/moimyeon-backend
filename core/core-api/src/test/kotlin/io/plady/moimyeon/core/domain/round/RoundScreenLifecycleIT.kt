@@ -102,7 +102,6 @@ class RoundScreenLifecycleIT(
             durationMinutes = 60,
         )
         room.confirm()
-        room.startProgress(startedAt)
         roomRepository.saveAndFlush(room)
 
         participationRepository.saveAllAndFlush(

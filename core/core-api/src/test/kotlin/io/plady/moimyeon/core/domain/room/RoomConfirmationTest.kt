@@ -53,6 +53,18 @@ class RoomConfirmationTest {
         assertThat(confirmation.blockReason).isEqualTo(RoomConfirmationBlockReason.SCHEDULE_PASSED)
     }
 
+    @Test
+    fun `방장 위임으로 모집 재개된 룸은 일정이 지났어도 재확정할 수 있다`() {
+        val confirmation = confirmationOf(
+            currentParticipants = 4,
+            min = 3,
+            startAt = past,
+            previouslyConfirmed = true,
+        )
+
+        assertThat(confirmation.ready).isTrue()
+    }
+
     // 인원과 일정이 함께 어긋나도 일정이 먼저다. 사유가 구현 순서에 따라 흔들리지 않게 고정한다.
     @Test
     fun `인원도 미달이고 일정도 지났으면 일정 경과가 사유다`() {
@@ -65,7 +77,6 @@ class RoomConfirmationTest {
     fun `모집 중이 아닌 룸은 인원과 일정을 따지지 않고 룸 상태가 사유다`() {
         val blockReasonByStatus = mapOf(
             RoomStatus.CONFIRMED to RoomConfirmationBlockReason.ROOM_CONFIRMED,
-            RoomStatus.IN_PROGRESS to RoomConfirmationBlockReason.ROOM_IN_PROGRESS,
             RoomStatus.COMPLETED to RoomConfirmationBlockReason.ROOM_COMPLETED,
             RoomStatus.CANCELED to RoomConfirmationBlockReason.ROOM_CANCELED,
         )
@@ -91,6 +102,7 @@ class RoomConfirmationTest {
         min: Int,
         startAt: LocalDateTime,
         status: RoomStatus = RoomStatus.RECRUITING,
+        previouslyConfirmed: Boolean = false,
     ): RoomConfirmation {
         return RoomConfirmation.of(
             status = status,
@@ -98,6 +110,7 @@ class RoomConfirmationTest {
             minCapacity = min,
             currentParticipants = currentParticipants,
             now = now,
+            previouslyConfirmed = previouslyConfirmed,
         )
     }
 

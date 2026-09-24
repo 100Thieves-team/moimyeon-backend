@@ -7,6 +7,8 @@ import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Component
+import java.time.Clock
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -15,12 +17,13 @@ private val log = KotlinLogging.logger {}
 class QuestionCommentAccessValidator(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
+    private val clock: Clock,
 ) {
     fun validateWriter(roomId: UUID, memberId: UUID, targetMemberId: UUID) {
         log.debug { "question-comment-access.validator.validateWriter roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
         val room = roomFinder.getRoom(roomId)
         requireBusiness(
-            room.status == RoomStatus.IN_PROGRESS,
+            room.isProgressAvailable(LocalDateTime.now(clock)),
             CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE,
         )
         validateConfirmedParticipant(roomId, memberId)
@@ -32,12 +35,12 @@ class QuestionCommentAccessValidator(
         log.debug { "question-comment-access.validator.validateViewer roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
         val room = roomFinder.getRoom(roomId)
         requireBusiness(
-            room.status == RoomStatus.IN_PROGRESS || room.status == RoomStatus.COMPLETED,
+            room.status == RoomStatus.COMPLETED || room.isProgressAvailable(LocalDateTime.now(clock)),
             CoreErrorType.QUESTION_COMMENT_NOT_VIEWABLE,
         )
         validateConfirmedParticipant(roomId, memberId)
         validateConfirmedParticipant(roomId, targetMemberId)
-        if (room.status == RoomStatus.IN_PROGRESS) {
+        if (room.status != RoomStatus.COMPLETED) {
             requireBusiness(memberId != targetMemberId, CoreErrorType.QUESTION_COMMENT_FORBIDDEN)
         }
     }

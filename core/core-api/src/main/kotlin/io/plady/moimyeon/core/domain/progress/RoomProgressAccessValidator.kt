@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.progress
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -9,6 +10,7 @@ import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.springframework.stereotype.Component
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -18,20 +20,9 @@ private val log = KotlinLogging.logger {}
 class RoomProgressAccessValidator(
     private val roomRepository: RoomRepository,
     private val participationFinder: ParticipationFinder,
+    private val participationValidator: ParticipationValidator,
+    private val clock: Clock,
 ) {
-    fun validateStarter(roomId: UUID, memberId: UUID, at: LocalDateTime) {
-        log.debug { "room-progress-access.validator.validateStarter roomId=$roomId memberId=$memberId" }
-        requireBusiness(
-            findActiveRoom(roomId).canStartProgress(at),
-            CoreErrorType.ROOM_PROGRESS_NOT_STARTABLE,
-        )
-        validateConfirmedParticipant(
-            roomId = roomId,
-            memberId = memberId,
-            errorType = CoreErrorType.ROOM_PROGRESS_START_FORBIDDEN,
-        )
-    }
-
     fun validateAttendanceViewer(roomId: UUID, memberId: UUID) {
         log.debug { "room-progress-access.validator.validateAttendanceViewer roomId=$roomId memberId=$memberId" }
         requireBusiness(
@@ -41,10 +32,27 @@ class RoomProgressAccessValidator(
         validateConfirmedParticipant(roomId, memberId, CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
     }
 
-    fun validateInProgressParticipant(roomId: UUID, memberId: UUID) {
-        log.debug { "room-progress-access.validator.validateInProgressParticipant roomId=$roomId memberId=$memberId" }
+    fun validateCompleter(roomId: UUID, memberId: UUID) {
+        log.debug { "room-progress-access.validator.validateCompleter roomId=$roomId memberId=$memberId" }
         requireBusiness(
-            findActiveRoom(roomId).status == RoomStatus.IN_PROGRESS,
+            findActiveRoom(roomId).canComplete(),
+            CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
+        )
+        participationValidator.validateHost(roomId, memberId)
+    }
+
+    fun validateAttendanceRecorder(roomId: UUID, memberId: UUID) {
+        log.debug { "room-progress-access.validator.validateAttendanceRecorder roomId=$roomId memberId=$memberId" }
+        requireBusiness(
+            findActiveRoom(roomId).status == RoomStatus.COMPLETED,
+            CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
+        )
+        participationValidator.validateHost(roomId, memberId)
+    }
+
+    fun validateInProgressParticipant(roomId: UUID, memberId: UUID) {
+        requireBusiness(
+            findActiveRoom(roomId).isProgressAvailable(LocalDateTime.now(clock)),
             CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
         )
         validateConfirmedParticipant(roomId, memberId, CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
@@ -71,6 +79,6 @@ class RoomProgressAccessValidator(
     }
 
     private companion object {
-        val ATTENDANCE_VIEWABLE_STATUSES = setOf(RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED)
+        val ATTENDANCE_VIEWABLE_STATUSES = setOf(RoomStatus.COMPLETED)
     }
 }

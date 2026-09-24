@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
@@ -23,6 +24,7 @@ import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -41,6 +43,7 @@ class RoomManager(
     private val participationValidator: ParticipationValidator,
     private val memberValidator: MemberValidator,
     private val clock: Clock,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
     // 신청 행이 없으면 제출도 없다 — 넷 중 하나라도 실패하면 방장 없는 룸이 남지 않아야 한다.
@@ -147,23 +150,15 @@ class RoomManager(
         )
     }
 
-    // 방장이 모집을 접는다. 참여자가 있으면 접을 수 없고 나가기(MOI-397)로 넘겨야 한다.
-    //
-    // 룸 행 잠금이 취소를 수락·신청 제출과 직렬화한다(셋 다 findByIdForUpdate 를 쓴다).
-    // ⚠️ 이 잠금이 빠져도 예외가 나지 않는다: 취소된 룸에 대기 신청이 조용히 남고 그 신청자는
-    //    대기 한도 한 칸을 영원히 물고 있게 된다. 테스트로 드러나지 않으므로 지우지 않는다.
+    // 공개 취소 API는 제거했지만 내부 취소 원자성은 나가기와 테스트 데이터 정리 경로가 공유한다.
     @Transactional
     fun cancel(roomId: UUID, hostMemberId: UUID) {
-        log.debug { "room.manager.cancel roomId=$roomId hostMemberId=$hostMemberId" }
         val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
         requireBusiness(room.canCancel(), CoreErrorType.ROOM_NOT_RECRUITING)
-        requireBusiness(!hasParticipant(roomId), CoreErrorType.ROOM_HAS_PARTICIPANTS)
-
         cancelWithoutGuard(room, hostMemberId, LocalDateTime.now(clock))
     }
 
-    // 취소의 부수효과만. 방장 판정·룸 잠금·취소 가능 여부는 호출부가 이미 봤다는 전제다.
-    // 나가기(MOI-397)가 위임 대상이 없을 때 이것을 공유한다 — 복제하면 셋 중 하나가 빠진다.
+    // 방장 나가기에서 위임 대상이 없을 때 호출한다. 명시적 룸 취소 HTTP API는 제공하지 않는다.
     //
     // 순서를 지킨다. 벌크의 flushAutomatically 가 앞의 두 쓰기를 먼저 내보내고,
     // 호출 트랜잭션이 RoomApplicationEntity 를 로드했다면 벌크 뒤 그 행을 다시 읽으면 안 된다.
@@ -179,6 +174,9 @@ class RoomManager(
             ),
         )
         roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
+        (joinedMemberIds(room.id) + handlerMemberId).distinct().forEach { memberId ->
+            publish(EventType.ROOM_CANCELED, room.id, memberId)
+        }
     }
 
     // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
@@ -201,6 +199,10 @@ class RoomManager(
             minCapacity = entity.minCapacity.toInt(),
             currentParticipants = currentParticipants,
             now = now,
+            previouslyConfirmed = roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(
+                roomId,
+                RoomStatus.CONFIRMED,
+            ),
         ).blockReason?.let { throw CoreException(it.toErrorType()) }
 
         entity.confirm()
@@ -213,13 +215,15 @@ class RoomManager(
             ),
         )
         roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
+        joinedMemberIds(roomId).forEach { memberId ->
+            publish(EventType.ROOM_CONFIRMED, roomId, memberId)
+        }
     }
 
     // 상태 계열 넷은 E1410 으로 뭉친다 — 화면이 새로고침하면 정확한 상태를 다시 받으므로
     // 코드를 넷으로 가를 실익이 없다. 안내가 달라지는 둘만 가른다.
     private fun RoomConfirmationBlockReason.toErrorType(): CoreErrorType = when (this) {
         RoomConfirmationBlockReason.ROOM_CONFIRMED,
-        RoomConfirmationBlockReason.ROOM_IN_PROGRESS,
         RoomConfirmationBlockReason.ROOM_COMPLETED,
         RoomConfirmationBlockReason.ROOM_CANCELED,
         -> CoreErrorType.ROOM_NOT_RECRUITING
@@ -245,12 +249,17 @@ class RoomManager(
         return roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES)
     }
 
-    // 방장 외 참여자가 남아 있는가. 방장도 참여 행을 갖기 때문에 역할로 좁혀야 한다.
-    private fun hasParticipant(roomId: UUID): Boolean {
-        return participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
-            roomId,
-            ParticipationRole.PARTICIPANT,
-            ParticipationStatus.JOINED,
+    private fun joinedMemberIds(roomId: UUID): List<UUID> = participationRepository
+        .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
+        .map(ParticipationEntity::memberId)
+
+    private fun publish(eventType: EventType, roomId: UUID, recipientMemberId: UUID) {
+        applicationEventPublisher.publishEvent(
+            RoomLifecycleNotificationEvent(
+                eventType = eventType,
+                roomId = roomId,
+                recipientMemberId = recipientMemberId,
+            ),
         )
     }
 

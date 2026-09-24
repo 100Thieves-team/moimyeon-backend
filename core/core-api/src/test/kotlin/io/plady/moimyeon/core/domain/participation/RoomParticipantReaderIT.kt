@@ -86,8 +86,8 @@ class RoomParticipantReaderIT(
     }
 
     @Test
-    fun `진행 중인 룸의 명부에서도 원본을 열 수 있다`() {
-        persistRoom(resumePublic = true, status = RoomStatus.IN_PROGRESS)
+    fun `확정 룸의 명부에서 원본을 열 수 있다`() {
+        persistRoom(resumePublic = true, status = RoomStatus.CONFIRMED)
         joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
         joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
         recordConfirmation()

@@ -12,12 +12,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class QuestionCommentAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val participationFinder = mockk<ParticipationFinder>()
-    private val validator = QuestionCommentAccessValidator(roomFinder, participationFinder)
+    private val clock = Clock.fixed(Instant.parse("2026-09-24T06:00:00Z"), ZoneOffset.UTC)
+    private val validator = QuestionCommentAccessValidator(roomFinder, participationFinder, clock)
 
     private val roomId = UUID.randomUUID()
     private val participantMemberId = UUID.randomUUID()
@@ -25,7 +30,7 @@ class QuestionCommentAccessValidatorTest {
 
     @Test
     fun `진행 중 면접자 외 확정 참여자는 출석 여부와 무관하게 댓글을 작성한다`() {
-        givenRoom(RoomStatus.IN_PROGRESS)
+        givenRoom(RoomStatus.CONFIRMED)
         givenConfirmed(participantMemberId, intervieweeMemberId)
 
         assertThatCode {
@@ -34,8 +39,27 @@ class QuestionCommentAccessValidatorTest {
     }
 
     @Test
+    fun `예정 시각 이후 확정 룸에서는 댓글을 작성할 수 있다`() {
+        givenRoom(RoomStatus.CONFIRMED)
+        givenConfirmed(participantMemberId, intervieweeMemberId)
+
+        assertThatCode {
+            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+        }.doesNotThrowAnyException()
+    }
+
+    @Test
+    fun `예정 시각 전 확정 룸에서는 댓글을 작성할 수 없다`() {
+        givenRoom(RoomStatus.CONFIRMED, progressAvailable = false)
+
+        assertFails(CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE) {
+            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+        }
+    }
+
+    @Test
     fun `진행 중 면접자는 자신의 라운드 댓글을 조회하지 못한다`() {
-        givenRoom(RoomStatus.IN_PROGRESS)
+        givenRoom(RoomStatus.CONFIRMED)
         givenConfirmed(intervieweeMemberId)
 
         assertFails(CoreErrorType.QUESTION_COMMENT_FORBIDDEN) {
@@ -74,9 +98,13 @@ class QuestionCommentAccessValidatorTest {
         }
     }
 
-    private fun givenRoom(status: RoomStatus) {
+    private fun givenRoom(
+        status: RoomStatus,
+        progressAvailable: Boolean = status == RoomStatus.CONFIRMED,
+    ) {
         every { roomFinder.getRoom(roomId) } returns mockk<Room> {
             every { this@mockk.status } returns status
+            every { isProgressAvailable(any<LocalDateTime>()) } returns progressAvailable
         }
     }
 

@@ -1,6 +1,7 @@
 package io.plady.moimyeon.storage.db
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -15,7 +16,7 @@ import java.sql.DriverManager
 @Testcontainers
 class RoomStatusLogMigrationIT {
     @Test
-    fun `V26 데이터를 보존하고 V27 이후에도 구버전 INSERT를 허용한다`() {
+    fun `기존 로그를 보존하고 같은 상태 전이를 반복 기록할 수 있다`() {
         val url = "jdbc:mysql://${mysql.host}:${mysql.getMappedPort(3306)}/core"
         Flyway.configure().dataSource(url, "root", "root").target("26").load().migrate()
         DriverManager.getConnection(url, "root", "root").use { connection ->
@@ -25,8 +26,7 @@ class RoomStatusLogMigrationIT {
         Flyway.configure().dataSource(url, "root", "root").load().migrate()
 
         DriverManager.getConnection(url, "root", "root").use { connection ->
-            // rolling deployment 중인 구버전 서버는 새 컬럼을 전혀 모른다.
-            insertLegacyLog(connection, "IN_PROGRESS")
+            insertLegacyLog(connection, "CONFIRMED")
             connection.createStatement().use { statement ->
                 statement.executeQuery("select handler_type, handler_member_id from room_status_log order by id").use { rows ->
                     var count = 0
@@ -50,6 +50,18 @@ class RoomStatusLogMigrationIT {
                     assertThat(rows.next()).isTrue()
                     assertThat(rows.getBytes("handler_member_id")).isNull()
                 }
+                assertThatThrownBy {
+                    statement.executeUpdate(
+                        """
+                        insert into room_status_log (
+                            room_id, transition_type, handler_type, handler_member_id, occurred_at, created_at, updated_at
+                        ) values (
+                            unhex('00000000000000000000000000000001'), 'CANCELED', 'SYSTEM', null,
+                            now(6), now(6), now(6)
+                        )
+                        """.trimIndent(),
+                    )
+                }.hasMessageContaining("uk_room_status_log_room_terminal_active")
             }
         }
     }

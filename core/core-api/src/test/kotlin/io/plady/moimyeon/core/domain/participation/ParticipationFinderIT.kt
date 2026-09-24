@@ -39,7 +39,6 @@ class ParticipationFinderIT(
         val occupies = mapOf(
             RoomStatus.RECRUITING to true,
             RoomStatus.CONFIRMED to true,
-            RoomStatus.IN_PROGRESS to true,
             RoomStatus.COMPLETED to false,
             RoomStatus.CANCELED to false,
         )

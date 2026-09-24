@@ -85,7 +85,7 @@ class TrustFinderIT(
         persistAttendance(competitorRoomId, competitorMemberId, AttendanceStatus.ATTENDED)
         repeat(2) { persistQuestion(competitorRoomId, competitorMemberId) }
 
-        listOf(RoomStatus.IN_PROGRESS, RoomStatus.CANCELED).forEach { status ->
+        listOf(RoomStatus.CONFIRMED, RoomStatus.CANCELED).forEach { status ->
             val roomId = persistRoom(status, TRUST_NOW.minusDays(2))
             persistAttendance(roomId, targetMemberId, AttendanceStatus.ATTENDED)
             repeat(3) { persistQuestion(roomId, targetMemberId) }

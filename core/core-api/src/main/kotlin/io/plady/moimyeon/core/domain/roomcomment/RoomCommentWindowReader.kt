@@ -24,7 +24,7 @@ class RoomCommentWindowReader(
         val terminalTransitionAt = when (room.status) {
             RoomStatus.CANCELED, RoomStatus.COMPLETED ->
                 roomStatusLogRepository
-                    .findByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, room.status)
+                    .findFirstByRoomIdAndTransitionTypeAndDeletedAtIsNullOrderByOccurredAtDescIdDesc(roomId, room.status)
                     ?.occurredAt
 
             else -> null

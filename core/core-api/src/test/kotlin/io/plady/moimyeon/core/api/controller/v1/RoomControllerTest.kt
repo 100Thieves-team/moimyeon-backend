@@ -156,13 +156,7 @@ class RoomControllerTest : RestDocsTest() {
             "남아 있던 대기 신청은 같은 트랜잭션에서 일괄 종료된다(반려가 아니므로 재신청 차단에 걸리지 않는다). " +
             "확정 이후에는 룸 정보 수정·신규 신청·수락이 모두 막힌다(§4.3). " +
             "확정 조건은 서버가 실행 시점에 룸 행을 잠근 뒤 검증한다 — 인원 미달은 E1421, 일정 경과는 E1422, " +
-            "이미 확정·취소·완료·진행 중인 룸은 E1410 이다. 같은 요청을 두 번 보내도 한 번만 처리된다."
-
-    private val cancelSummary = "룸 취소"
-    private val cancelDescription =
-        "방장이 모집을 접는다(「룸 참여」 §4.9). 룸 상태가 CANCELED 가 되고, 남아 있던 대기 신청은 같은 트랜잭션에서 " +
-            "일괄 종료된다. 반려가 아니므로 신청자는 재신청 차단에 걸리지 않는다. " +
-            "방장 외 참여자가 남아 있으면 취소할 수 없다(E1420) — 그때는 나가기로 방장을 넘겨야 한다."
+            "이미 확정·취소·완료된 룸은 E1410 이다. 같은 요청을 두 번 보내도 한 번만 처리된다."
 
     @BeforeEach
     fun setUp() {
@@ -374,50 +368,6 @@ class RoomControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `cancelRoom 참여자가 없는 모집 중 룸을 취소한다`() {
-        every { roomService.cancelRoom(hostMemberId, createdRoomId) } returns Unit
-
-        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
-            .andExpect(status().isOk)
-            .andDo(
-                documentApi(
-                    "cancelRoom",
-                    cancelSummary,
-                    cancelDescription,
-                    pathParameters(parameterWithName("roomId").description("취소할 룸 식별자")),
-                    responseFields(
-                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
-                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
-                    ),
-                ),
-            )
-    }
-
-    @Test
-    fun `cancelRoom 참여자가 남아 있으면 E1420`() {
-        every { roomService.cancelRoom(hostMemberId, createdRoomId) } throws
-            CoreException(CoreErrorType.ROOM_HAS_PARTICIPANTS)
-
-        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
-            .andExpect(status().isConflict)
-            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1420\"") }
-            .andDo(documentApi("cancelRoom-e1420", cancelSummary, cancelDescription, errorResponseFields()))
-    }
-
-    // 이미 취소된 룸에 다시 요청해도 같은 코드다. 취소는 멱등하게 성공하지 않는다.
-    @Test
-    fun `cancelRoom 모집 중이 아니면 E1410`() {
-        every { roomService.cancelRoom(hostMemberId, createdRoomId) } throws
-            CoreException(CoreErrorType.ROOM_NOT_RECRUITING)
-
-        mockMvc.perform(post("/v1/rooms/{roomId}/cancellation", createdRoomId).principal(principal))
-            .andExpect(status().isConflict)
-            .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E1410\"") }
-            .andDo(documentApi("cancelRoom-e1410", cancelSummary, cancelDescription, errorResponseFields()))
-    }
-
-    @Test
     fun `confirmRoom 조건을 충족한 룸을 확정한다`() {
         every { roomService.confirmRoom(hostMemberId, createdRoomId) } returns Unit
 
@@ -449,7 +399,7 @@ class RoomControllerTest : RestDocsTest() {
             .andDo(documentApi("confirmRoom-e1421", confirmSummary, confirmDescription, errorResponseFields()))
     }
 
-    // 이미 확정·취소·완료·진행 중인 룸이 전부 이 코드로 온다. 화면은 새로고침해 정확한 상태를 다시 받는다.
+    // 이미 확정·취소·완료된 룸이 전부 이 코드로 온다. 화면은 새로고침해 정확한 상태를 다시 받는다.
     @Test
     fun `confirmRoom 모집 중이 아니면 E1410`() {
         every { roomService.confirmRoom(hostMemberId, createdRoomId) } throws
@@ -787,7 +737,7 @@ class RoomControllerTest : RestDocsTest() {
                     responseFields(
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
-                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)"),
                         fieldWithPath("data.company").type(JsonFieldType.OBJECT).optional().description("회사 (공고에서 파생. 회사를 알 수 없으면 null)"),
                         fieldWithPath("data.company.companyId").type(JsonFieldType.NUMBER).optional().description("회사 id"),
                         fieldWithPath("data.company.name").type(JsonFieldType.STRING).optional().description("회사명"),
@@ -819,6 +769,8 @@ class RoomControllerTest : RestDocsTest() {
                         fieldWithPath("data.recruit.pendingApplicationCount").type(JsonFieldType.NUMBER)
                             .description("대기 중인 참가 신청 수. 수만 공개하고 대기자 목록은 방장 외 비공개다"),
                         fieldWithPath("data.resumePublic").type(JsonFieldType.BOOLEAN).description("이력서 원본 공개 여부 (룸 속성)"),
+                        fieldWithPath("data.previouslyConfirmed").type(JsonFieldType.BOOLEAN)
+                            .description("과거 확정 이력 여부. true이면 방장 위임 후 일정이 지났어도 재확정할 수 있다"),
                         fieldWithPath("data.hostMemberId").type(JsonFieldType.STRING).description("방장 회원 식별자 (UUID)"),
                         fieldWithPath("data.participants").type(JsonFieldType.ARRAY)
                             .description("참여자 공개 명단 (참여 시각 순, 비로그인에도 공개 — §6 공개 데이터). 방장 표시는 hostMemberId 와 매칭한다"),

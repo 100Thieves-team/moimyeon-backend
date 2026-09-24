@@ -17,7 +17,7 @@ class RoomAutoCompleteJobTest {
     private val job = RoomAutoCompleteJob(completer, clock)
 
     @Test
-    fun `한 룸의 실패가 다른 룸의 전이를 막지 않는다`() {
+    fun `한 룸의 실패가 다른 룸의 완료를 막지 않는다`() {
         val failing = UUID.randomUUID()
         val next = UUID.randomUUID()
         every { completer.findOverdueRoomIds(any()) } returns listOf(failing, next)

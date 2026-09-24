@@ -15,27 +15,25 @@ import java.util.UUID
 interface RoomRepository : JpaRepository<RoomEntity, UUID> {
     fun findByIdInAndDeletedAtIsNull(ids: Collection<UUID>): List<RoomEntity>
 
+    @Query(
+        """
+        SELECT r FROM RoomEntity r
+        WHERE r.status = io.plady.moimyeon.core.enums.RoomStatus.CONFIRMED
+          AND r.startAt <= :startedBefore
+          AND r.deletedAt IS NULL
+        ORDER BY r.startAt ASC, r.id ASC
+        """,
+    )
+    fun findConfirmedStartedBefore(
+        @Param("startedBefore") startedBefore: LocalDateTime,
+        pageable: Pageable,
+    ): List<RoomEntity>
+
     // 수락 시 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한다(「룸 참여」 §4.4 마지막 자리 1건만 성공).
     // 잠금을 잡은 뒤 현재 인원을 세고 정원을 확정하므로, 경쟁하는 수락 트랜잭션은 순서대로만 통과한다.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RoomEntity r where r.id = :id")
     fun findByIdForUpdate(@Param("id") id: UUID): RoomEntity?
-
-    // 8시간 자동 종료 배치(MOI-471)의 후보 조회. 시작 시각은 room 에 없다 —
-    // IN_PROGRESS 전이를 남긴 room_status_log 의 occurred_at 이 유일한 기록이라 조인한다.
-    // 잠금 없이 후보만 고르고, 전이는 룸별로 findByIdForUpdate 를 다시 잡은 뒤 상태를 재확인하고 한다.
-    @Query(
-        """
-        SELECT r FROM RoomEntity r, RoomStatusLogEntity l
-        WHERE l.roomId = r.id
-          AND l.transitionType = io.plady.moimyeon.core.enums.RoomStatus.IN_PROGRESS
-          AND l.deletedAt IS NULL
-          AND l.occurredAt <= :threshold
-          AND r.status = io.plady.moimyeon.core.enums.RoomStatus.IN_PROGRESS
-          AND r.deletedAt IS NULL
-        """,
-    )
-    fun findInProgressStartedBefore(@Param("threshold") threshold: LocalDateTime): List<RoomEntity>
 
     // 같은 (방장, 공고, 직무) 활성 룸 개수(MOI-330 §4.7). 방장은 room 이 아니라 participation 에 있어
     // (room 에 방장 컬럼이 없다) 조인이 된다. 구동은 ix_participation_member_id, room 은 PK 조인이다.

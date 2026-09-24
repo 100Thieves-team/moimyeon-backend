@@ -72,14 +72,7 @@ class RoomEntity(
     var status: RoomStatus = RoomStatus.RECRUITING
         protected set
 
-    fun canStartProgress(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED && !at.isBefore(startAt)
-
-    fun startProgress(at: LocalDateTime) {
-        check(canStartProgress(at))
-        status = RoomStatus.IN_PROGRESS
-    }
-
-    // 확정에는 canConfirm() 짝을 두지 않는다. 취소와 진행 시작은 룸이 가진 상태·일정으로 판정하지만,
+    // 확정에는 canConfirm() 짝을 두지 않는다. 취소와 완료는 룸이 가진 상태·일정으로 판정하지만,
     // 확정은 참여 인원까지 봐야 하고 그 판정자가 이미 밖에 있다(RoomConfirmation).
     // 여기에 상태 판정을 또 두면 F1 버튼 상태와 서버 결과가 갈릴 수 있다.
     fun confirm() {
@@ -87,18 +80,28 @@ class RoomEntity(
         status = RoomStatus.CONFIRMED
     }
 
-    // 완료에도 canComplete() 짝을 두지 않는다(confirm 과 같은 이유). 전원 제출 판정은
-    // 클로징 제출자·출석자 집합을 아는 호출자(ClosingSubmissionManager)의 몫이다.
+    fun canComplete(): Boolean = status == RoomStatus.CONFIRMED
+
     fun complete() {
-        check(status == RoomStatus.IN_PROGRESS)
+        check(canComplete())
         status = RoomStatus.COMPLETED
+    }
+
+    fun isAutoCompletable(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED &&
+        !at.isBefore(startAt.plusHours(AUTO_COMPLETION_HOURS))
+
+    fun isProgressAvailable(at: LocalDateTime): Boolean = status == RoomStatus.CONFIRMED && !at.isBefore(startAt)
+
+    fun reopenRecruiting() {
+        check(status == RoomStatus.CONFIRMED)
+        status = RoomStatus.RECRUITING
     }
 
     // 나갈 수 있는 상태를 화이트리스트로 둔다. 못 나가는 쪽을 열거하면 상태가 늘 때
     // 기본값이 "나갈 수 있음"이 되어 조용히 열린다.
     fun canLeave(): Boolean = status == RoomStatus.RECRUITING || status == RoomStatus.CONFIRMED
 
-    fun canCancel(): Boolean = status == RoomStatus.RECRUITING
+    fun canCancel(): Boolean = status == RoomStatus.RECRUITING || status == RoomStatus.CONFIRMED
 
     // 방장이 모집을 접는 것. 운영이 룸을 내리는 deleted_at 과 한 컬럼에 섞지 않는다(schema.sql:450).
     // 참여자 유무는 룸이 알지 못하므로 호출자(RoomManager)가 본다.
@@ -130,5 +133,9 @@ class RoomEntity(
         this.maxCapacity = maxCapacity
         this.startAt = startAt
         this.durationMinutes = durationMinutes
+    }
+
+    private companion object {
+        const val AUTO_COMPLETION_HOURS = 8L
     }
 }

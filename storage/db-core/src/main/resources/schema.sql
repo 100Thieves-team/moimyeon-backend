@@ -507,10 +507,9 @@ CREATE INDEX ix_room_status_created_at_id ON room (status, created_at, id);
 
 -- 룸의 상태를 바꾼 사람과 시각. 비즈니스 로직이 읽는 값이 아니라 분쟁 대응·지표용이다.
 -- 방장이 위임되면 확정자와 완료자가 달라질 수 있어 룸의 컬럼으로 두지 않았다.
--- (room_id, transition_type) 유니크가 확정·완료 처리의 멱등성을 DB 레벨에서 보장한다.
 -- append-only 로 다루되 베이스는 상속한다 — 쌓인 전이 기록은 고치지 않고,
 --   deleted_at 만 예외로 운영이 잘못 찍힌 전이를 걷어낼 때 쓴다. 룸이 소프트 삭제돼도 로그는 남는다.
---   유니크가 멱등성을 보장하므로 걷어낸 뒤 다시 전이할 수 있도록 _active_check 를 붙였다.
+-- 확정 후 방장 이탈로 모집 중으로 돌아갔다가 재확정할 수 있어 같은 전이 종류가 반복될 수 있다.
 -- handler_type: 전이 주체. MEMBER 면 handler_member_id NOT NULL, SYSTEM(배치)이면 NULL —
 --   이 불변식은 애플리케이션(엔티티 팩토리 byMember/bySystem)이 지킨다(MOI-471).
 CREATE TABLE room_status_log (
@@ -523,10 +522,17 @@ CREATE TABLE room_status_log (
     created_at        DATETIME(6) NOT NULL,
     updated_at        DATETIME(6) NOT NULL,
     deleted_at        DATETIME(6) NULL,
-    _active_check BOOLEAN GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN TRUE ELSE NULL END),
+    _terminal_check   BOOLEAN GENERATED ALWAYS AS (
+        CASE
+            WHEN deleted_at IS NULL AND transition_type IN ('COMPLETED', 'CANCELED') THEN TRUE
+            ELSE NULL
+        END
+    ),
     PRIMARY KEY (id),
-    CONSTRAINT uk_room_status_log_room_transition_active UNIQUE (room_id, transition_type, _active_check)
+    CONSTRAINT uk_room_status_log_room_terminal_active UNIQUE (room_id, _terminal_check)
 );
+CREATE INDEX ix_room_status_log_room_transition_occurred
+    ON room_status_log (room_id, transition_type, occurred_at, id);
 
 -- 참가 신청. 철회·자진 취소 후 재신청이 허용되므로 (room_id, applicant_member_id) 에는 유니크를 걸 수 없다.
 -- 대신 "대기 상태인 신청은 룸당 회원당 1건"을 pending_member_id 로 표현한다:
@@ -775,10 +781,9 @@ CREATE TABLE question_vote (
     CONSTRAINT uk_question_vote_closing_response_question UNIQUE (closing_response_id, question_id)
 );
 
--- 출석 기록. 진행 시작 시 확정 참여자별 출석·불참 선택을 한 번 저장하며 일반 사용자는 수정하지 않는다.
--- 라운드 배정과 무관하고, 시작 후 도착해도 최초에 기록된 불참 상태를 유지한다.
+-- 출석 기록. 룸 완료 이후 확정 참여자별 최종 출석·불참 선택을 한 번 저장하며 일반 사용자는 수정하지 않는다.
 -- 관리자 정정은 현재 제품 범위 밖이다. 향후 운영 정책이 생기면 change_reason 을 사용한다.
--- deleted_at 은 그 사람이 애초에 해당 룸의 출석 대상이 아니었던 운영 예외에만 사용한다.
+-- deleted_at 은 그 사람이 애초에 해당 룸의 출석 대상이 아니었던 운영 예외에 사용한다.
 -- 출석은 신뢰 통계의 분모이므로 일반 흐름에서 물리 삭제하지 않는다.
 CREATE TABLE attendance (
     id                 BIGINT       NOT NULL AUTO_INCREMENT,

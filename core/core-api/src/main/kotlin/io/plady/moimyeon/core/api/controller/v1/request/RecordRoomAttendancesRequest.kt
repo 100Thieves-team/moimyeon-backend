@@ -4,8 +4,7 @@ import io.plady.moimyeon.core.domain.progress.Attendance
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import java.util.UUID
 
-data class StartRoomProgressRequest(
-    val roomId: UUID,
+data class RecordRoomAttendancesRequest(
     val attendances: List<AttendanceRequest>,
 ) {
     fun toAttendances(): List<Attendance> = attendances.map(AttendanceRequest::toAttendance)

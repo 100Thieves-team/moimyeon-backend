@@ -7,16 +7,17 @@ import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
-import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
@@ -27,6 +28,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import java.time.Clock
 import java.time.LocalDateTime
@@ -44,6 +46,7 @@ class RoomManagerTest {
     private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
     private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
     private val memberValidator = mockk<MemberValidator>(relaxed = true)
+    private val applicationEventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
@@ -53,6 +56,7 @@ class RoomManagerTest {
         participationValidator,
         memberValidator,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+        applicationEventPublisher,
     )
 
     private val roomId = UUID.randomUUID()
@@ -63,6 +67,12 @@ class RoomManagerTest {
     @BeforeEach
     fun stubStatusLogSave() {
         every { roomStatusLogRepository.save(any()) } answers { firstArg() }
+        every {
+            participationRepository.findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+                any(),
+                ParticipationStatus.JOINED,
+            )
+        } returns emptyList()
     }
 
     // 수정 계약을 이 테스트가 들고 있다. 무엇이 바뀌고 무엇이 안 바뀌는지를 한자리에서 단언한다.
@@ -180,30 +190,28 @@ class RoomManagerTest {
     }
 
     @Test
-    fun `참여자가 없는 모집 중 룸은 취소되어 CANCELED 가 된다`() {
+    fun `모집 중 룸은 취소되어 CANCELED 가 된다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
-        givenParticipantExists(false)
 
         manager.cancel(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
     }
 
-    // 방장 혼자 남기고 참여자를 버릴 수는 없다. 나가기(MOI-397)로 넘겨야 한다.
     @Test
-    fun `참여자가 있는 룸을 취소하면 E1420 을 던진다`() {
+    fun `참여자가 있는 모집 중 룸도 폭파할 수 있다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
-        givenParticipantExists(true)
 
-        assertCancelFails(CoreErrorType.ROOM_HAS_PARTICIPANTS)
-        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+        manager.cancel(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
     }
 
     @Test
     fun `모집 중이 아닌 룸을 취소하면 E1410 을 던진다`() {
-        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED, RoomStatus.CANCELED)
+        listOf(RoomStatus.COMPLETED, RoomStatus.CANCELED)
             .forEach { status ->
                 givenRoomForUpdateWithStatus(status)
                 givenHost()
@@ -212,23 +220,14 @@ class RoomManagerTest {
             }
     }
 
-    // 나간 자리는 비워진 것으로 본다(수락·수정의 정원 판정과 같은 기준).
     @Test
-    fun `나가거나 내려간 참여는 취소를 막지 않는다`() {
-        val room = givenRecruitingRoomForUpdate()
+    fun `확정된 룸도 폭파할 수 있다`() {
+        val room = givenRoomForUpdateWithStatus(RoomStatus.CONFIRMED, canCancel = true)
         givenHost()
-        givenParticipantExists(false)
 
         manager.cancel(roomId, hostId)
 
-        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
-        verify {
-            participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
-                roomId,
-                ParticipationRole.PARTICIPANT,
-                ParticipationStatus.JOINED,
-            )
-        }
+        verify(exactly = 1) { room.cancel() }
     }
 
     @Test
@@ -251,7 +250,6 @@ class RoomManagerTest {
     fun `룸을 취소하면 이력을 남기고 대기 신청을 종료한다`() {
         givenRecruitingRoomForUpdate()
         givenHost()
-        givenParticipantExists(false)
 
         manager.cancel(roomId, hostId)
 
@@ -263,15 +261,42 @@ class RoomManagerTest {
         }
     }
 
+    @Test
+    fun `룸을 폭파하면 참여 중인 전원에게 취소 이벤트를 발행한다`() {
+        val participantId = UUID.randomUUID()
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenJoinedMembers(hostId, participantId)
+
+        manager.cancel(roomId, hostId)
+
+        val events = mutableListOf<RoomLifecycleNotificationEvent>()
+        verify(exactly = 2) { applicationEventPublisher.publishEvent(capture(events)) }
+        assertThat(events.map { it.eventType }).containsOnly(EventType.ROOM_CANCELED)
+        assertThat(events.map { it.recipientMemberId }).containsExactly(hostId, participantId)
+    }
+
+    @Test
+    fun `방장 이탈 뒤 참여자가 없어도 이탈한 방장에게 취소 이벤트를 발행한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        manager.cancel(roomId, hostId)
+
+        val events = mutableListOf<RoomLifecycleNotificationEvent>()
+        verify(exactly = 1) { applicationEventPublisher.publishEvent(capture(events)) }
+        assertThat(events.single().eventType).isEqualTo(EventType.ROOM_CANCELED)
+        assertThat(events.single().recipientMemberId).isEqualTo(hostId)
+    }
+
     // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
     // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
     @Test
     fun `이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
         givenRecruitingRoomForUpdate()
         givenHost()
-        givenParticipantExists(false)
         every { roomStatusLogRepository.save(any()) } throws
-            DataIntegrityViolationException("uk_room_status_log_room_transition_active")
+            DataIntegrityViolationException("uk_room_status_log_room_terminal_active")
 
         assertThatThrownBy { manager.cancel(roomId, hostId) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
@@ -301,6 +326,22 @@ class RoomManagerTest {
     }
 
     @Test
+    fun `룸을 확정하면 참여 중인 전원에게 확정 이벤트를 발행한다`() {
+        val participantId = UUID.randomUUID()
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(2)
+        givenJoinedMembers(hostId, participantId)
+
+        manager.confirm(roomId, hostId)
+
+        val events = mutableListOf<RoomLifecycleNotificationEvent>()
+        verify(exactly = 2) { applicationEventPublisher.publishEvent(capture(events)) }
+        assertThat(events.map { it.eventType }).containsOnly(EventType.ROOM_CONFIRMED)
+        assertThat(events.map { it.recipientMemberId }).containsExactly(hostId, participantId)
+    }
+
+    @Test
     fun `인원이 최소 진행 인원보다 적으면 E1421 을 던진다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
@@ -321,8 +362,22 @@ class RoomManagerTest {
     }
 
     @Test
+    fun `확정 후 방장 위임으로 모집 재개된 룸은 일정이 지났어도 재확정할 수 있다`() {
+        val room = givenRoomForUpdateStartingAt(now.minusHours(1))
+        givenHost()
+        givenParticipants(4)
+        every {
+            roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CONFIRMED)
+        } returns true
+
+        manager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
     fun `모집 중이 아닌 룸을 확정하면 E1410 을 던진다`() {
-        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED, RoomStatus.CANCELED)
+        listOf(RoomStatus.CONFIRMED, RoomStatus.COMPLETED, RoomStatus.CANCELED)
             .forEach { status ->
                 givenRoomForUpdateWithStatus(status)
                 givenHost()
@@ -349,7 +404,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(4)
         every { roomStatusLogRepository.save(any()) } throws
-            DataIntegrityViolationException("uk_room_status_log_room_transition_active")
+            DataIntegrityViolationException("room_status_log write failed")
 
         assertThatThrownBy { manager.confirm(roomId, hostId) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
@@ -436,21 +491,11 @@ class RoomManagerTest {
         return room
     }
 
-    private fun givenRoomForUpdateWithStatus(status: RoomStatus): RoomEntity {
+    private fun givenRoomForUpdateWithStatus(status: RoomStatus, canCancel: Boolean = false): RoomEntity {
         val room = givenRoomWithStatus(status)
-        every { room.canCancel() } returns false
+        every { room.canCancel() } returns canCancel
         every { roomRepository.findByIdForUpdate(roomId) } returns room
         return room
-    }
-
-    private fun givenParticipantExists(exists: Boolean) {
-        every {
-            participationRepository.existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
-                roomId,
-                ParticipationRole.PARTICIPANT,
-                ParticipationStatus.JOINED,
-            )
-        } returns exists
     }
 
     // 방장 판정은 ParticipationValidator 가 소유한다. 규칙 자체는 그쪽 테스트가 보고,
@@ -468,6 +513,19 @@ class RoomManagerTest {
         every {
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
         } returns joined.toLong()
+    }
+
+    private fun givenJoinedMembers(vararg memberIds: UUID) {
+        every {
+            participationRepository.findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+                roomId,
+                ParticipationStatus.JOINED,
+            )
+        } returns memberIds.map { memberId ->
+            mockk<ParticipationEntity> {
+                every { this@mockk.memberId } returns memberId
+            }
+        }
     }
 
     // --- 생성 경로(MOI-331) --------------------------------------------------

@@ -24,7 +24,7 @@ import java.util.UUID
 // 참조가 끊어져도(회사 미매칭 공고, 폐기된 공고·직무·시군구, 온라인 룸) 룸은 남기고 자리를 비운다.
 data class RoomReadResponse(
     val roomId: UUID,
-    val status: String, // RoomStatus (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)
+    val status: String, // RoomStatus (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
     val company: CompanyResponse?,
     val jobPosting: RoomJobPostingResponse?,
     val jobRole: JobRoleResponse?,
@@ -40,6 +40,8 @@ data class RoomReadResponse(
     val schedule: RoomReadScheduleResponse,
     val recruit: RoomReadRecruitResponse,
     val resumePublic: Boolean,
+    // 화면이 일정 경과 후 재확정 가능한 위임 룸을 일반 만료 룸과 구분하는 사실값.
+    val previouslyConfirmed: Boolean,
     val hostMemberId: UUID,
     // 참여자 공개 명단(MOI-504) — 참여 시각 순, 비로그인에도 공개(PRD §6 공개 데이터: 닉네임).
     // 방장 표시는 hostMemberId 와 매칭한다. 직무·활동·이력서 요약은 참여자 전용 명부 API 소관.
@@ -91,6 +93,7 @@ data class RoomReadResponse(
                     pendingApplicationCount = detail.pendingApplicationCount,
                 ),
                 resumePublic = room.resumeSharingPolicy == ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION,
+                previouslyConfirmed = detail.previouslyConfirmed,
                 hostMemberId = detail.hostMemberId,
                 participants = joinedParticipants.map {
                     RoomReadParticipantResponse(

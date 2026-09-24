@@ -14,7 +14,7 @@ import io.plady.moimyeon.core.enums.RoomStatus
 object ActiveRoomLimit {
     const val MAX = 3
 
-    val ACTIVE_STATUSES = setOf(RoomStatus.RECRUITING, RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS)
+    val ACTIVE_STATUSES = setOf(RoomStatus.RECRUITING, RoomStatus.CONFIRMED)
 
     fun isExceeded(activeRoomCount: Long): Boolean = activeRoomCount >= MAX
 

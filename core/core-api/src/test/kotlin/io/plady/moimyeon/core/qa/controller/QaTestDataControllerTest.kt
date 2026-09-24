@@ -69,8 +69,8 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     private val rescheduleSummary = "[dev] QA 룸 시작 시각 변경"
     private val rescheduleDescription = devOnlyNote +
-        "[QA] 룸의 진행 시작 시각(startAt)을 값 규칙 검증 없이 바꾼다. 상태는 바꾸지 않는다. " +
-        "용도: 진행 확정(CONFIRMED) 뒤 시작 시각을 과거로 옮기면 공개 API 로 진행 시작·클로징·종료·후기까지 실제 코드 경로로 갈 수 있다. " +
+        "[QA] 룸의 시작 시각(startAt)을 값 규칙 검증 없이 바꾼다. 상태는 바꾸지 않는다. " +
+        "용도: 진행 확정(CONFIRMED) 뒤 시작 시각을 과거로 옮겨 8시간 자동 완료와 완료 후 출석·후기를 실제 경로로 검증한다. " +
         "제목이 [QA] 로 시작하지 않으면 409(E2201), 룸이 없으면 404(E1405), startAt 이 없거나 형식이 틀리면 400(E400)."
 
     private val createMemberSummary = "[dev] QA 테스트 회원 생성"
@@ -145,7 +145,7 @@ class QaTestDataControllerTest : RestDocsTest() {
                         fieldWithPath("data.rooms[].roomId").type(JsonFieldType.STRING).description("룸 id (UUID)"),
                         fieldWithPath("data.rooms[].title").type(JsonFieldType.STRING).description("룸 제목 ([QA] 로 시작)"),
                         fieldWithPath("data.rooms[].status").type(JsonFieldType.STRING)
-                            .description("룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED)"),
+                            .description("룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)"),
                         fieldWithPath("data.rooms[].hostMemberId").type(JsonFieldType.STRING).optional()
                             .description("현재 방장 회원 id (UUID). 방장이 나간 취소 룸처럼 없으면 null"),
                         fieldWithPath("data.rooms[].createdAt").type(JsonFieldType.STRING).description("생성 일시 (ISO-8601)"),
@@ -396,13 +396,13 @@ class QaTestDataControllerTest : RestDocsTest() {
                     pathParameters(parameterWithName("roomId").description("시작 시각을 바꿀 [QA] 룸 id (UUID)")),
                     requestFields(
                         fieldWithPath("startAt").type(JsonFieldType.STRING)
-                            .description("새 진행 시작 시각 (ISO-8601, 서버 로컬). 과거·미래 모두 허용하며 값 규칙 검증을 우회한다"),
+                            .description("새 시작 시각 (ISO-8601, 서버 로컬). 과거·미래 모두 허용하며 값 규칙 검증을 우회한다"),
                     ),
                     successResponseFields(
                         fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id"),
                         fieldWithPath("data.status").type(JsonFieldType.STRING)
-                            .description("현재 룸 상태 (RECRUITING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELED). 이 API 는 상태를 바꾸지 않는다"),
-                        fieldWithPath("data.startAt").type(JsonFieldType.STRING).description("반영된 진행 시작 시각"),
+                            .description("현재 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED). 이 API 는 상태를 바꾸지 않는다"),
+                        fieldWithPath("data.startAt").type(JsonFieldType.STRING).description("반영된 시작 시각"),
                     ),
                 ),
             )

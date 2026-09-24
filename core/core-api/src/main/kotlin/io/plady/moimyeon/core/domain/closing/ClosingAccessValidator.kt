@@ -19,7 +19,7 @@ class ClosingAccessValidator(
     fun validateParticipant(roomId: UUID, memberId: UUID) {
         log.debug { "closing-access.validator.validateParticipant roomId=$roomId memberId=$memberId" }
         requireBusiness(
-            roomFinder.getRoom(roomId).status == RoomStatus.IN_PROGRESS,
+            roomFinder.getRoom(roomId).status == RoomStatus.COMPLETED,
             CoreErrorType.CLOSING_NOT_AVAILABLE,
         )
         requireBusiness(

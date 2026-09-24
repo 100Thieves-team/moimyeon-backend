@@ -60,12 +60,6 @@ class RoomService(
         roomManager.update(roomId, memberId, command)
     }
 
-    // 룸 취소. 조건 판정(모집 중인가, 참여자가 남았는가)은 전부 RoomManager 가 자기 트랜잭션 안에서 한다.
-    fun cancelRoom(memberId: UUID, roomId: UUID) {
-        log.debug { "room.cancel memberId=$memberId roomId=$roomId" }
-        roomManager.cancel(roomId, memberId)
-    }
-
     // 진행 확정. 조건 판정은 RoomConfirmation 이 소유하고 RoomManager 가 락 안에서 부른다.
     fun confirmRoom(memberId: UUID, roomId: UUID) {
         log.debug { "room.confirm memberId=$memberId roomId=$roomId" }

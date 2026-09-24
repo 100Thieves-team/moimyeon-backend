@@ -69,29 +69,34 @@ class RoomCancellationIT(
     }
 
     @Test
-    fun `취소가 거부되면 상태도 신청도 이력도 그대로다`() {
+    fun `참여자가 있는 모집 중 룸도 폭파하고 신청과 이력을 함께 종료한다`() {
         seedRecruitingRoom()
         seedPendingApplication()
         seedParticipant()
 
-        assertThatThrownBy { roomManager.cancel(roomId, hostMemberId) }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_HAS_PARTICIPANTS)
-            }
+        roomManager.cancel(roomId, hostMemberId)
 
-        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.RECRUITING)
-        assertThat(applications().map { it.status }).containsOnly(RoomApplicationStatus.PENDING)
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CANCELED)
+        assertThat(applications().map { it.status }).containsOnly(RoomApplicationStatus.ROOM_CANCELED)
         assertThat(roomStatusLogRepository.findByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CANCELED))
-            .isNull()
+            .isNotNull()
     }
 
-    // RoomEntity 로는 CONFIRMED·IN_PROGRESS·COMPLETED 를 만들 수 없어(전이 메서드가 없다)
-    // 실제 canCancel() 판정을 이 상태들에 대고 확인할 수 있는 자리는 여기뿐이다.
     @Test
-    fun `모집 중이 아닌 룸은 취소할 수 없다`() {
+    fun `확정된 룸도 폭파할 수 있다`() {
+        seedRecruitingRoom()
+        forceRoomStatus(RoomStatus.CONFIRMED)
+
+        roomManager.cancel(roomId, hostMemberId)
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CANCELED)
+    }
+
+    @Test
+    fun `완료된 룸은 취소할 수 없다`() {
         seedRecruitingRoom()
 
-        listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED).forEach { status ->
+        listOf(RoomStatus.COMPLETED).forEach { status ->
             forceRoomStatus(status)
 
             assertThatThrownBy { roomManager.cancel(roomId, hostMemberId) }

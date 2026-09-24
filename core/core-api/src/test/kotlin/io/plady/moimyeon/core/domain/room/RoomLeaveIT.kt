@@ -10,8 +10,6 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.core.support.error.CoreErrorType
-import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -20,10 +18,10 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -34,6 +32,7 @@ import java.util.UUID
 class RoomLeaveIT(
     private val roomLeaveManager: RoomLeaveManager,
     private val roomManager: RoomManager,
+    private val roomFinder: RoomFinder,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
@@ -152,22 +151,37 @@ class RoomLeaveIT(
         ).isNotNull()
     }
 
-    // 이탈이 거부되면 아무것도 남지 않는다. 위임 실패로 이탈이 되돌아가는 경로는
-    // 룸을 CONFIRMED 로 만들 수 없어(최소 인원이 2 이상) 도달할 수 없다 — 거부 경로가 그 자리를 대신한다.
     @Test
-    fun `이탈이 거부되면 참여도 룸도 그대로다`() {
+    fun `확정 룸에서 방장이 나가고 후임이 있으면 모집 중으로 돌아간다`() {
         seedRoom()
-        seedParticipant(joinedAt = createdAt.plusHours(1))
+        val successor = seedParticipant(joinedAt = createdAt.plusHours(1))
         roomManager.confirm(roomId, hostMemberId)
 
-        assertThatThrownBy { roomLeaveManager.leave(roomId, hostMemberId) }
-            .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_AT_MIN_CAPACITY)
-            }
+        roomLeaveManager.leave(roomId, hostMemberId)
 
-        assertThat(statusOf(hostMemberId)).isEqualTo(ParticipationStatus.JOINED)
-        assertThat(hostMemberIdOf(roomId)).isEqualTo(hostMemberId)
+        assertThat(statusOf(hostMemberId)).isEqualTo(ParticipationStatus.LEFT)
+        assertThat(hostMemberIdOf(roomId)).isEqualTo(successor)
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.RECRUITING)
+        assertThat(
+            roomStatusLogRepository.findByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.RECRUITING),
+        ).isNotNull()
+    }
+
+    @Test
+    fun `일정이 지난 확정 룸도 방장 위임 후 새 방장이 재확정할 수 있다`() {
+        val pastStartAt = LocalDateTime.now().minusHours(1)
+        seedRoom(roomStartAt = pastStartAt, confirmedAt = pastStartAt.minusHours(1))
+        val successor = seedParticipant(joinedAt = createdAt.plusHours(1))
+        seedParticipant(joinedAt = createdAt.plusHours(2))
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+        roomManager.confirm(roomId, successor)
+
         assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(
+            roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CONFIRMED),
+        ).isEqualTo(2)
+        assertThat(roomFinder.getDetail(roomId).previouslyConfirmed).isTrue()
     }
 
     // 확정 명단은 left_at 과 확정 시각의 대소로 갈린다. 나가기가 left_at 을 안 쓰면
@@ -212,25 +226,28 @@ class RoomLeaveIT(
     private fun applicationOf(applicantMemberId: UUID) = roomApplicationRepository.findAll()
         .single { it.roomId == roomId && it.applicantMemberId == applicantMemberId }
 
-    private fun seedRoom() {
-        roomRepository.saveAndFlush(
-            RoomEntity(
-                id = roomId,
-                jobPostingId = 1L,
-                jobRoleId = 1L,
-                resumePublic = false,
-                sigunguId = null,
-                title = "방장 자동 위임 테스트 룸",
-                description = null,
-                interviewStage = InterviewStage.FIRST,
-                interviewType = InterviewType.JOB,
-                meetingType = MeetingType.ONLINE,
-                minCapacity = 2,
-                maxCapacity = 6,
-                startAt = startAt,
-                durationMinutes = 60,
-            ),
+    private fun seedRoom(
+        roomStartAt: LocalDateTime = startAt,
+        confirmedAt: LocalDateTime? = null,
+    ) {
+        val room = RoomEntity(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 1L,
+            resumePublic = false,
+            sigunguId = null,
+            title = "방장 자동 위임 테스트 룸",
+            description = null,
+            interviewStage = InterviewStage.FIRST,
+            interviewType = InterviewType.JOB,
+            meetingType = MeetingType.ONLINE,
+            minCapacity = 2,
+            maxCapacity = 6,
+            startAt = roomStartAt,
+            durationMinutes = 60,
         )
+        if (confirmedAt != null) room.confirm()
+        roomRepository.saveAndFlush(room)
         seedMember(hostMemberId, MemberStatus.ACTIVE)
         participationRepository.saveAndFlush(
             ParticipationEntity(
@@ -241,6 +258,16 @@ class RoomLeaveIT(
                 joinedAt = createdAt,
             ),
         )
+        if (confirmedAt != null) {
+            roomStatusLogRepository.saveAndFlush(
+                RoomStatusLogEntity.byMember(
+                    roomId = roomId,
+                    transitionType = RoomStatus.CONFIRMED,
+                    handlerMemberId = hostMemberId,
+                    occurredAt = confirmedAt,
+                ),
+            )
+        }
     }
 
     private fun seedParticipant(joinedAt: LocalDateTime): UUID {
