@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.progress
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.room.publishRoomLifecycle
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.EventType
@@ -24,6 +25,7 @@ private val log = KotlinLogging.logger {}
 class RoomProgressManager(
     private val roomRepository: RoomRepository,
     private val participationFinder: ParticipationFinder,
+    private val participationValidator: ParticipationValidator,
     private val attendanceRepository: AttendanceRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val applicationEventPublisher: ApplicationEventPublisher,
@@ -35,6 +37,7 @@ class RoomProgressManager(
             roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
         )
+        participationValidator.validateHost(command.roomId, command.completedByMemberId)
         requireBusiness(room.canComplete(), CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE)
 
         val confirmedParticipantIds = participationFinder.getConfirmedParticipantIds(command.roomId)
@@ -61,6 +64,7 @@ class RoomProgressManager(
             roomRepository.findByIdForUpdate(command.roomId)?.takeIf { it.isActive() },
             CoreErrorType.ROOM_NOT_FOUND,
         )
+        participationValidator.validateHost(command.roomId, command.recorderMemberId)
         requireBusiness(room.status == RoomStatus.COMPLETED, CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE)
         requireBusiness(
             attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(command.roomId).isEmpty(),
@@ -87,7 +91,7 @@ class RoomProgressManager(
             },
         )
         val attended = command.attendances.filter { it.status == AttendanceStatus.ATTENDED }
-        if (attended.size >= 2) {
+        if (attended.size >= MIN_ATTENDEES_FOR_REVIEW_REQUEST) {
             attended.forEach { attendance ->
                 applicationEventPublisher.publishRoomLifecycle(
                     EventType.ROOM_REVIEW_REQUESTED,
@@ -100,5 +104,10 @@ class RoomProgressManager(
         return RoomAttendanceRecordResult(
             attendances = command.attendances.toList(),
         )
+    }
+
+    private companion object {
+        // 리뷰 상대가 없는 1인 참석에는 작성 요청을 보내지 않는다.
+        const val MIN_ATTENDEES_FOR_REVIEW_REQUEST = 2
     }
 }
