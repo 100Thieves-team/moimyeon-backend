@@ -122,6 +122,20 @@ class NotificationMessageHandlerTest {
     }
 
     @Test
+    fun `룸 생명주기 Stream과 payload의 이벤트 타입이 다르면 발송하지 않는다`() {
+        assertThatThrownBy {
+            handler.handle(
+                lifecycleMessage(
+                    eventType = EventType.ROOM_CONFIRMED,
+                    payloadEventType = EventType.ROOM_COMPLETED,
+                ),
+            )
+        }.isInstanceOf(InvalidNotificationMessageException::class.java)
+
+        verify(exactly = 0) { sender.send(any()) }
+    }
+
+    @Test
     fun `알림 발송이 실패하면 예외를 호출자에게 전파한다`() {
         every { sender.send(any()) } throws IllegalStateException("알림 발송 실패")
 
@@ -138,14 +152,17 @@ class NotificationMessageHandlerTest {
         payload = payload,
     )
 
-    private fun lifecycleMessage(eventType: EventType) = NotificationStreamMessage(
+    private fun lifecycleMessage(
+        eventType: EventType,
+        payloadEventType: EventType = eventType,
+    ) = NotificationStreamMessage(
         eventId = EVENT_ID,
         eventType = eventType,
         channel = NotificationChannel.WEB_PUSH,
         payload = """
             {
               "eventId": "$EVENT_ID",
-              "eventType": "$eventType",
+              "eventType": "$payloadEventType",
               "roomId": "$ROOM_ID",
               "recipientMemberId": "$APPLICANT_ID"
             }
