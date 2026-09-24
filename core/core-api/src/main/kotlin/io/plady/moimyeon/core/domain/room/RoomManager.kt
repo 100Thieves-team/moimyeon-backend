@@ -150,7 +150,8 @@ class RoomManager(
         )
     }
 
-    // 공개 취소 API는 제거했지만 내부 취소 원자성은 나가기와 테스트 데이터 정리 경로가 공유한다.
+    // 공개 취소 API 제거 후 프로덕션 호출부는 없다. 취소 원자성 검증과 테스트 데이터 정리에서만 사용하며,
+    // 방장 나가기는 이미 잠근 RoomEntity를 cancelWithoutGuard에 전달한다.
     @Transactional
     fun cancel(roomId: UUID, hostMemberId: UUID) {
         val room = loadRoomForUpdateAsHost(roomId, hostMemberId)
@@ -175,7 +176,7 @@ class RoomManager(
         )
         roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
         (joinedMemberIds(room.id) + handlerMemberId).distinct().forEach { memberId ->
-            publish(EventType.ROOM_CANCELED, room.id, memberId)
+            applicationEventPublisher.publishRoomLifecycle(EventType.ROOM_CANCELED, room.id, memberId)
         }
     }
 
@@ -213,7 +214,7 @@ class RoomManager(
         )
         roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
         joinedMemberIds(roomId).forEach { memberId ->
-            publish(EventType.ROOM_CONFIRMED, roomId, memberId)
+            applicationEventPublisher.publishRoomLifecycle(EventType.ROOM_CONFIRMED, roomId, memberId)
         }
     }
 
@@ -249,16 +250,6 @@ class RoomManager(
     private fun joinedMemberIds(roomId: UUID): List<UUID> = participationRepository
         .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
         .map(ParticipationEntity::memberId)
-
-    private fun publish(eventType: EventType, roomId: UUID, recipientMemberId: UUID) {
-        applicationEventPublisher.publishEvent(
-            RoomLifecycleNotificationEvent(
-                eventType = eventType,
-                roomId = roomId,
-                recipientMemberId = recipientMemberId,
-            ),
-        )
-    }
 
     private fun loadRoomForUpdateAsHost(roomId: UUID, memberId: UUID): RoomEntity {
         val room = requireFound(

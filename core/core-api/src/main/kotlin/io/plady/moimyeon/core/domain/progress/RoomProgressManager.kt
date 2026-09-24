@@ -2,7 +2,7 @@ package io.plady.moimyeon.core.domain.progress
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
-import io.plady.moimyeon.core.domain.room.RoomLifecycleNotificationEvent
+import io.plady.moimyeon.core.domain.room.publishRoomLifecycle
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomStatus
@@ -48,7 +48,7 @@ class RoomProgressManager(
             ),
         )
         confirmedParticipantIds.forEach { memberId ->
-            publish(EventType.ROOM_COMPLETED, command.roomId, memberId)
+            applicationEventPublisher.publishRoomLifecycle(EventType.ROOM_COMPLETED, command.roomId, memberId)
         }
 
         return RoomProgressCompletionResult(status = room.status)
@@ -89,22 +89,16 @@ class RoomProgressManager(
         val attended = command.attendances.filter { it.status == AttendanceStatus.ATTENDED }
         if (attended.size >= 2) {
             attended.forEach { attendance ->
-                publish(EventType.ROOM_REVIEW_REQUESTED, command.roomId, attendance.memberId)
+                applicationEventPublisher.publishRoomLifecycle(
+                    EventType.ROOM_REVIEW_REQUESTED,
+                    command.roomId,
+                    attendance.memberId,
+                )
             }
         }
 
         return RoomAttendanceRecordResult(
             attendances = command.attendances.toList(),
-        )
-    }
-
-    private fun publish(eventType: EventType, roomId: java.util.UUID, recipientMemberId: java.util.UUID) {
-        applicationEventPublisher.publishEvent(
-            RoomLifecycleNotificationEvent(
-                eventType = eventType,
-                roomId = roomId,
-                recipientMemberId = recipientMemberId,
-            ),
         )
     }
 }
