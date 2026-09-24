@@ -52,8 +52,8 @@ class RoomController(
     }
 
     // POST /v1/rooms/{roomId}/confirmation — 방장이 진행을 확정한다(「진행 확정」 §4.2).
-    // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 취소와 같은 이유로 POST 다 —
-    // 리소스 생성이 아니라 조건부 상태 전이이고, 두 번째 요청은 409 로 거부된다.
+    // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 리소스 생성이 아니라 조건부 상태 전이이므로
+    // POST를 사용하고, 두 번째 요청은 409로 거부한다.
     @PostMapping("/v1/rooms/{roomId}/confirmation")
     fun confirm(
         @LoginMember currentMember: CurrentMember,
