@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.progress
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDateTime
@@ -12,6 +13,7 @@ private val log = KotlinLogging.logger {}
 @Service
 class RoomProgressService(
     private val accessValidator: RoomProgressAccessValidator,
+    private val participationFinder: ParticipationFinder,
     private val progressManager: RoomProgressManager,
     private val progressReader: RoomProgressReader,
     private val clock: Clock,
@@ -52,6 +54,11 @@ class RoomProgressService(
     fun getMyAttendance(memberId: UUID, roomId: UUID): Attendance {
         accessValidator.validateAttendanceViewer(roomId, memberId)
         return progressReader.getAttendance(roomId, memberId)
+    }
+
+    fun getRail(memberId: UUID, roomId: UUID): ProgressRail {
+        accessValidator.validateInProgressParticipant(roomId, memberId)
+        return ProgressRail.from(participationFinder.getConfirmedParticipantIds(roomId))
     }
 
     private fun now(): LocalDateTime = LocalDateTime.now(clock).truncatedTo(ChronoUnit.MILLIS)
