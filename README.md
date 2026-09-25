@@ -3,6 +3,7 @@
 Spring Boot (Kotlin) 기반 멀티모듈 프로젝트.
 
 > 아키텍처·코드 컨벤션은 [docs/conventions](docs/conventions/README.md) 에서 관리한다.
+> 기능 변경 기록은 [MOI-541 MVP 룸 생명주기 변경 보고서](docs/changes/MOI-541-room-lifecycle.md)에서 확인한다.
 
 ## 기술 스택
 
