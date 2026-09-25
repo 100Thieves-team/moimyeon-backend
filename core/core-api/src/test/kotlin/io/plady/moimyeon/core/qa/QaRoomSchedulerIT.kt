@@ -29,13 +29,13 @@ class QaRoomSchedulerIT(
     }
 
     @Test
-    fun `확정된 QA 룸의 시작 시각을 과거로 옮기면 진행 시작 조건이 열린다`() {
+    fun `확정된 QA 룸의 시작 시각을 과거로 옮기면 자동 완료 조건이 열린다`() {
         seedRoom("[QA] 일정 룸")
         roomRepository.findById(roomId).orElseThrow().let {
             it.confirm()
             roomRepository.saveAndFlush(it)
         }
-        assertThat(roomRepository.findById(roomId).orElseThrow().canStartProgress(at)).isFalse()
+        assertThat(roomRepository.findById(roomId).orElseThrow().isAutoCompletable(at)).isFalse()
         val past = at.minusDays(1)
 
         val schedule = qaRoomScheduler.reschedule(roomId, past)
@@ -45,7 +45,7 @@ class QaRoomSchedulerIT(
         val room = roomRepository.findById(roomId).orElseThrow()
         assertThat(room.startAt).isEqualTo(past)
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
-        assertThat(room.canStartProgress(at)).isTrue()
+        assertThat(room.isAutoCompletable(at)).isTrue()
     }
 
     @Test

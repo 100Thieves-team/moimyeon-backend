@@ -2,7 +2,8 @@ package io.plady.moimyeon.core.api.facade
 
 import io.plady.moimyeon.core.api.controller.v1.response.AttendanceResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ProgressRailResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressStartResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomAttendancesResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressCompletionResponse
 import io.plady.moimyeon.core.domain.member.MemberService
 import io.plady.moimyeon.core.domain.progress.Attendance
 import io.plady.moimyeon.core.domain.progress.ProgressBlock
@@ -15,10 +16,13 @@ class RoomProgressFacade(
     private val progressService: RoomProgressService,
     private val memberService: MemberService,
 ) {
-    // 출석 명단에 닉네임을 붙인다(MOI-496). 탈퇴 회원은 조회에 안 나와 응답 조립에서 대체 표기로 채워진다.
-    fun start(memberId: UUID, roomId: UUID, attendances: List<Attendance>): RoomProgressStartResponse {
-        val result = progressService.start(memberId, roomId, attendances)
-        return RoomProgressStartResponse.from(result, nicknamesOf(result.attendances.map(Attendance::memberId)))
+    fun complete(memberId: UUID, roomId: UUID): RoomProgressCompletionResponse {
+        return RoomProgressCompletionResponse.from(progressService.complete(memberId, roomId))
+    }
+
+    fun recordAttendances(memberId: UUID, roomId: UUID, attendances: List<Attendance>): RoomAttendancesResponse {
+        val result = progressService.recordAttendances(memberId, roomId, attendances)
+        return RoomAttendancesResponse.from(result, nicknamesOf(result.attendances.map(Attendance::memberId)))
     }
 
     fun getMyAttendance(memberId: UUID, roomId: UUID): AttendanceResponse {

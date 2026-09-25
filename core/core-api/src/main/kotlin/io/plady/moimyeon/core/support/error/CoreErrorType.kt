@@ -63,15 +63,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
-    // 모집 중이 아니라 못 접는 것(E1410)과 사유가 다르다. 화면이 안내를 갈라야 해서 코드도 가른다.
-    ROOM_HAS_PARTICIPANTS(
-        HttpStatus.CONFLICT,
-        ErrorCode.E1420,
-        "참여자가 있는 룸은 취소할 수 없습니다.",
-        LogLevel.WARN,
-    ),
-
-    // 확정 거부 중 상태 계열(이미 확정·취소·완료·진행 중)은 E1410 을 그대로 쓴다. 화면이 새로고침하면
+    // 확정 거부 중 상태 계열(이미 확정·취소·완료)은 E1410 을 그대로 쓴다. 화면이 새로고침하면
     // 정확한 상태를 다시 받으므로 코드를 넷으로 가를 실익이 없다. 아래 둘만 안내가 달라 가른다.
     ROOM_BELOW_MIN_CAPACITY(
         HttpStatus.CONFLICT,
@@ -210,18 +202,6 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
 
-    ROOM_PROGRESS_NOT_STARTABLE(
-        HttpStatus.CONFLICT,
-        ErrorCode.E1701,
-        "진행을 시작할 수 없는 룸입니다.",
-        LogLevel.WARN,
-    ),
-    ROOM_PROGRESS_START_FORBIDDEN(
-        HttpStatus.FORBIDDEN,
-        ErrorCode.E1702,
-        "룸 진행을 시작할 권한이 없습니다.",
-        LogLevel.WARN,
-    ),
     ROOM_PROGRESS_FORBIDDEN(
         HttpStatus.FORBIDDEN,
         ErrorCode.E1703,
@@ -246,6 +226,18 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "출석 대상이 확정 참여자와 일치하지 않습니다.",
         LogLevel.WARN,
     ),
+    ROOM_PROGRESS_NOT_COMPLETABLE(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1707,
+        "진행을 완료할 수 없는 룸입니다.",
+        LogLevel.WARN,
+    ),
+    ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1708,
+        "출석이 이미 기록되었습니다.",
+        LogLevel.WARN,
+    ),
 
     CLOSING_SUBMISSION_FORBIDDEN(
         HttpStatus.FORBIDDEN,
@@ -256,7 +248,7 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     CLOSING_NOT_AVAILABLE(
         HttpStatus.CONFLICT,
         ErrorCode.E1802,
-        "진행 중인 룸에서만 클로징을 제출할 수 있습니다.",
+        "완료된 룸에서만 클로징을 제출할 수 있습니다.",
         LogLevel.WARN,
     ),
     CLOSING_QUESTION_MISMATCH(

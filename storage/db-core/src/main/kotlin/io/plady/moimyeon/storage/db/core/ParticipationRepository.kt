@@ -32,6 +32,8 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
     // 탐색 목록의 표시용 일괄 집계(MOI-383 §4.1). 한 페이지 분량의 roomId 에만 IN 으로 걸어
     // 룸 수에 비례해 쿼리가 늘지 않게 한다. 기준은 단건 조회·정원 확정과 같은 "활성 참여"다.
     // 참여가 없는 룸은 GROUP BY 결과에 아예 없으므로 0 으로 채우는 것은 호출자의 몫이다.
+    // 아래 두 쿼리의 최신 CONFIRMED 선택 조건(필터·정렬·동률 해소)은 반드시 함께 변경한다.
+    // count와 명부가 서로 다른 확정 시점을 바라보면 출석 입력의 대상 검증이 어긋난다.
     @Query(
         """
         select new io.plady.moimyeon.storage.db.core.RoomCount(p.roomId, count(p))
@@ -64,6 +66,7 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
     // 나감으로 바꾸지 않으므로(RoomManager.cancelWithoutGuard) 참여만 세면 취소한 룸이 슬롯을 영구 점유한다.
     // 어느 상태가 슬롯을 무는지는 도메인이 정해 넘긴다(ParticipationSlot) — 쿼리 문자열에 박으면 정의가 숨는다.
     // 룸당 회원당 JOINED 는 1건이므로(uk_participation_room_member_joined) 행 수가 곧 룸 수다.
+    // countAtRoomConfirmation과 최신 CONFIRMED 선택 조건을 동일하게 유지한다.
     @Query(
         """
         select count(p)
@@ -97,12 +100,18 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         value = """
             select count(*)
             from participation p
-            join room_status_log rsl on rsl.room_id = p.room_id
+            join room_status_log rsl on rsl.id = (
+                select latest.id
+                from room_status_log latest
+                where latest.room_id = p.room_id
+                  and latest.transition_type = 'CONFIRMED'
+                  and latest.deleted_at is null
+                order by latest.occurred_at desc, latest.id desc
+                limit 1
+            )
             where p.room_id = :roomId
               and p.member_id = :memberId
               and p.deleted_at is null
-              and rsl.transition_type = 'CONFIRMED'
-              and rsl.deleted_at is null
               and p.joined_at <= rsl.occurred_at
               and (p.left_at is null or p.left_at > rsl.occurred_at)
         """,
@@ -117,11 +126,17 @@ interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
         value = """
             select p.*
             from participation p
-            join room_status_log rsl on rsl.room_id = p.room_id
+            join room_status_log rsl on rsl.id = (
+                select latest.id
+                from room_status_log latest
+                where latest.room_id = p.room_id
+                  and latest.transition_type = 'CONFIRMED'
+                  and latest.deleted_at is null
+                order by latest.occurred_at desc, latest.id desc
+                limit 1
+            )
             where p.room_id = :roomId
               and p.deleted_at is null
-              and rsl.transition_type = 'CONFIRMED'
-              and rsl.deleted_at is null
               and p.joined_at <= rsl.occurred_at
               and (p.left_at is null or p.left_at > rsl.occurred_at)
             order by p.joined_at asc, p.id asc

@@ -15,6 +15,8 @@ import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -30,6 +32,7 @@ class RoomLeaveManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
+    private val roomStatusLogRepository: RoomStatusLogRepository,
     private val memberFinder: MemberFinder,
     private val participationFinder: ParticipationFinder,
     private val roomManager: RoomManager,
@@ -52,20 +55,41 @@ class RoomLeaveManager(
             ),
             CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN,
         )
-        requireAboveMinCapacity(room)
+        if (participation.participationRole != ParticipationRole.HOST) {
+            requireAboveMinCapacity(room)
+        }
 
         val now = LocalDateTime.now(clock)
+        val wasConfirmed = room.status == RoomStatus.CONFIRMED
         participation.leave(now, memberId)
         if (participation.participationRole == ParticipationRole.HOST) {
-            delegateOrCancel(room, memberId, now)
+            delegateOrCancel(room, memberId, now, wasConfirmed)
         }
     }
 
     // 방장이 나가면 룸을 남기는 쪽을 먼저 시도한다(PRD §3) — 참여자 → 대기 신청자 → 취소.
     // 이 메서드가 leave 와 한 트랜잭션이라는 것이 핵심이다: 방장 없는 룸이 한순간도 존재하지 않는다.
-    private fun delegateOrCancel(room: RoomEntity, leavingHostId: UUID, now: LocalDateTime) {
-        if (promoteEarliestParticipant(room.id)) return
-        if (promoteEarliestEligibleApplicant(room.id, leavingHostId, now)) return
+    private fun delegateOrCancel(
+        room: RoomEntity,
+        leavingHostId: UUID,
+        now: LocalDateTime,
+        wasConfirmed: Boolean,
+    ) {
+        val delegated = promoteEarliestParticipant(room.id) || promoteEarliestEligibleApplicant(room.id, leavingHostId, now)
+        if (delegated) {
+            if (wasConfirmed) {
+                room.reopenRecruiting()
+                roomStatusLogRepository.save(
+                    RoomStatusLogEntity.byMember(
+                        roomId = room.id,
+                        transitionType = RoomStatus.RECRUITING,
+                        handlerMemberId = leavingHostId,
+                        occurredAt = now,
+                    ),
+                )
+            }
+            return
+        }
         roomManager.cancelWithoutGuard(room, leavingHostId, now)
     }
 

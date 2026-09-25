@@ -41,7 +41,7 @@ class NotificationMessageHandler(
             )
             EventType.ROOM_COMPLETED -> NotificationContent(
                 title = "모임이 완료되었어요",
-                body = "참석 결과가 기록되었어요.",
+                body = "방장이 참석 여부를 기록하면 결과를 확인할 수 있어요.",
                 actionPath = "/rooms/${payload.roomId}",
             )
             EventType.ROOM_CANCELED -> NotificationContent(

@@ -1,14 +1,15 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import io.plady.moimyeon.core.api.controller.v1.request.StartRoomProgressRequest
+import io.plady.moimyeon.core.api.controller.v1.request.RecordRoomAttendancesRequest
 import io.plady.moimyeon.core.api.controller.v1.response.AttendanceResponse
-import io.plady.moimyeon.core.api.controller.v1.response.ProgressRailResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressStartResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomAttendancesResponse
+import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressCompletionResponse
 import io.plady.moimyeon.core.api.facade.RoomProgressFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
@@ -19,20 +20,21 @@ import java.util.UUID
 class RoomProgressController(
     private val progressFacade: RoomProgressFacade,
 ) {
-    @PostMapping("/v1/room-progresses")
-    fun start(
+    @PostMapping("/v1/rooms/{roomId}/complete")
+    fun complete(
         @LoginMember currentMember: CurrentMember,
-        @RequestBody request: StartRoomProgressRequest,
-    ): ApiResponse<RoomProgressStartResponse> {
-        return ApiResponse.success(progressFacade.start(currentMember.id, request.roomId, request.toAttendances()))
+        @PathVariable roomId: UUID,
+    ): ApiResponse<RoomProgressCompletionResponse> {
+        return ApiResponse.success(progressFacade.complete(currentMember.id, roomId))
     }
 
-    @GetMapping("/v1/progress-rails")
-    fun rail(
+    @PostMapping("/v1/rooms/{roomId}/attendances")
+    fun recordAttendances(
         @LoginMember currentMember: CurrentMember,
-        @RequestParam roomId: UUID,
-    ): ApiResponse<ProgressRailResponse> {
-        return ApiResponse.success(progressFacade.getRail(currentMember.id, roomId))
+        @PathVariable roomId: UUID,
+        @RequestBody request: RecordRoomAttendancesRequest,
+    ): ApiResponse<RoomAttendancesResponse> {
+        return ApiResponse.success(progressFacade.recordAttendances(currentMember.id, roomId, request.toAttendances()))
     }
 
     @GetMapping("/v1/attendances/me")

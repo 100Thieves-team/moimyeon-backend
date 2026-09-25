@@ -17,8 +17,8 @@ import java.util.UUID
     name = "room_status_log",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_room_status_log_room_transition_active",
-            columnNames = ["room_id", "transition_type", "_active_check"],
+            name = "uk_room_status_log_room_terminal_active",
+            columnNames = ["room_id", "_terminal_check"],
         ),
     ],
 )

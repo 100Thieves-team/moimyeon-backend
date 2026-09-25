@@ -161,6 +161,33 @@ class ParticipationRepositoryIT(
         assertThat(result.map { it.memberId }).containsExactly(first.memberId, second.memberId, third.memberId)
     }
 
+    @Test
+    fun `재확정되면 가장 최근 확정 시점의 참여자만 반환한다`() {
+        val roomId = UUID.randomUUID()
+        val firstConfirmedAt = now.minusHours(2)
+        val secondConfirmedAt = now
+        val former = join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.LEFT,
+            joinedAt = firstConfirmedAt.minusDays(1),
+            leftAt = firstConfirmedAt.plusHours(1),
+        )
+        val current = join(
+            roomId = roomId,
+            memberId = UUID.randomUUID(),
+            status = ParticipationStatus.JOINED,
+            joinedAt = firstConfirmedAt.plusHours(1),
+        )
+        recordConfirmation(roomId, firstConfirmedAt)
+        recordConfirmation(roomId, secondConfirmedAt)
+
+        val result = participationRepository.findAllAtRoomConfirmation(roomId)
+
+        assertThat(result.map { it.memberId }).containsExactly(current.memberId)
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, former.memberId)).isZero()
+    }
+
     // 자진 이탈 후 재신청은 정상 흐름이다(MOI-397). 유니크가 상태를 보지 않으면 신청은 받아 놓고
     // 방장이 수락하는 순간 무결성 위반으로 터진다 — 되돌릴 수 없는 자리에서 실패한다.
     @Test

@@ -24,8 +24,9 @@ data class RoomConfirmation(
             minCapacity: Int,
             currentParticipants: Int,
             now: LocalDateTime,
+            previouslyConfirmed: Boolean = false,
         ): RoomConfirmation {
-            val blockReason = blockReasonOf(status, startAt, minCapacity, currentParticipants, now)
+            val blockReason = blockReasonOf(status, startAt, minCapacity, currentParticipants, now, previouslyConfirmed)
             return RoomConfirmation(ready = blockReason == null, blockReason = blockReason)
         }
 
@@ -37,14 +38,15 @@ data class RoomConfirmation(
             minCapacity: Int,
             currentParticipants: Int,
             now: LocalDateTime,
+            previouslyConfirmed: Boolean,
         ): RoomConfirmationBlockReason? {
             return when (status) {
                 RoomStatus.CONFIRMED -> RoomConfirmationBlockReason.ROOM_CONFIRMED
-                RoomStatus.IN_PROGRESS -> RoomConfirmationBlockReason.ROOM_IN_PROGRESS
                 RoomStatus.COMPLETED -> RoomConfirmationBlockReason.ROOM_COMPLETED
                 RoomStatus.CANCELED -> RoomConfirmationBlockReason.ROOM_CANCELED
                 RoomStatus.RECRUITING -> when {
-                    RoomSchedule.isPassed(startAt, now) -> RoomConfirmationBlockReason.SCHEDULE_PASSED
+                    RoomSchedule.isPassed(startAt, now) && !previouslyConfirmed ->
+                        RoomConfirmationBlockReason.SCHEDULE_PASSED
                     currentParticipants < minCapacity -> RoomConfirmationBlockReason.BELOW_MIN_CAPACITY
                     else -> null
                 }
@@ -56,7 +58,6 @@ data class RoomConfirmation(
 // 선언 순서가 곧 판정 순서다. 이미 확정된 룸에 인원 미달을 묻지 않는다.
 enum class RoomConfirmationBlockReason {
     ROOM_CONFIRMED,
-    ROOM_IN_PROGRESS,
     ROOM_COMPLETED,
     ROOM_CANCELED,
     SCHEDULE_PASSED,

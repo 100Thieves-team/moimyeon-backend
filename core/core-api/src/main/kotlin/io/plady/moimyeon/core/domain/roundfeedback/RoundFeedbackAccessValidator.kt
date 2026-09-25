@@ -7,6 +7,8 @@ import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import org.springframework.stereotype.Component
+import java.time.Clock
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -15,6 +17,7 @@ private val log = KotlinLogging.logger {}
 class RoundFeedbackAccessValidator(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
+    private val clock: Clock,
 ) {
     fun validateOtherParticipantWriter(
         roomId: UUID,
@@ -44,8 +47,9 @@ class RoundFeedbackAccessValidator(
         intervieweeMemberId: UUID,
     ) {
         log.debug { "round-feedback-access.validator.validateIntervieweeViewer roomId=$roomId memberId=$memberId intervieweeMemberId=$intervieweeMemberId" }
+        val room = roomFinder.getRoom(roomId)
         requireBusiness(
-            roomFinder.getRoom(roomId).status in VIEWABLE_STATUSES,
+            room.status == RoomStatus.COMPLETED || room.isProgressAvailable(LocalDateTime.now(clock)),
             CoreErrorType.ROUND_FEEDBACK_NOT_VIEWABLE,
         )
         validateInterviewee(roomId, memberId, intervieweeMemberId)
@@ -53,7 +57,7 @@ class RoundFeedbackAccessValidator(
 
     private fun validateEditableRoom(roomId: UUID) {
         requireBusiness(
-            roomFinder.getRoom(roomId).status == RoomStatus.IN_PROGRESS,
+            roomFinder.getRoom(roomId).isProgressAvailable(LocalDateTime.now(clock)),
             CoreErrorType.ROUND_FEEDBACK_NOT_EDITABLE,
         )
     }
@@ -68,9 +72,5 @@ class RoundFeedbackAccessValidator(
             participationFinder.wasConfirmedParticipant(roomId, memberId),
             CoreErrorType.ROUND_FEEDBACK_FORBIDDEN,
         )
-    }
-
-    private companion object {
-        val VIEWABLE_STATUSES = setOf(RoomStatus.IN_PROGRESS, RoomStatus.COMPLETED)
     }
 }

@@ -11,8 +11,8 @@ import java.util.UUID
 
 class RoomTest {
     @Test
-    fun `원본 공개 룸은 확정부터 진행 중까지 원본이 열린다`() {
-        val openStatuses = listOf(RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS)
+    fun `원본 공개 룸은 확정 상태에서 원본이 열린다`() {
+        val openStatuses = listOf(RoomStatus.CONFIRMED)
 
         assertThat(openStatuses)
             .allMatch { room(ResumeSharingPolicy.ORIGINAL_AFTER_CONFIRMATION, it).opensResumeOriginal() }

@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -21,6 +22,7 @@ class RoomFinder(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
+    private val roomStatusLogRepository: RoomStatusLogRepository,
 ) {
     // 생성 전 경고(「룸 생성」 §4.7). 막는 쪽(RoomManager.create)과 같은 쿼리·같은 술어를 봐야
     // 화면이 "만들 수 있다"고 안내한 뒤 서버가 거부하는 일이 없다.
@@ -82,7 +84,6 @@ class RoomFinder(
         val ACTIVE_ROOM_STATUSES = setOf(
             RoomStatus.RECRUITING,
             RoomStatus.CONFIRMED,
-            RoomStatus.IN_PROGRESS,
         )
     }
 
@@ -115,6 +116,7 @@ class RoomFinder(
             hostMemberId = host.memberId,
             currentParticipants = currentParticipants,
             pendingApplicationCount = pendingApplicationCount,
+            previouslyConfirmed = roomStatusLogRepository.wasPreviouslyConfirmed(roomId),
         )
     }
 

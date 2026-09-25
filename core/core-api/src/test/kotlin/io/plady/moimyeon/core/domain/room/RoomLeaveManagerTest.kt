@@ -17,6 +17,7 @@ import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -32,6 +33,7 @@ class RoomLeaveManagerTest {
     private val roomRepository = mockk<RoomRepository>()
     private val participationRepository = mockk<ParticipationRepository>(relaxed = true)
     private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
+    private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
     private val memberFinder = mockk<MemberFinder>(relaxed = true)
     private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val roomManager = mockk<RoomManager>(relaxed = true)
@@ -39,6 +41,7 @@ class RoomLeaveManagerTest {
         roomRepository,
         participationRepository,
         roomApplicationRepository,
+        roomStatusLogRepository,
         memberFinder,
         participationFinder,
         roomManager,
@@ -86,8 +89,8 @@ class RoomLeaveManagerTest {
     // COMPLETED 는 메모리에서 만들 수 없다(전이가 없다). 판정을 "나갈 수 있는 상태" 화이트리스트로
     // 쓰면 여기 못 오는 상태도 함께 막힌다 — 그래서 열거가 아니라 화이트리스트여야 한다.
     @Test
-    fun `진행 중이거나 취소된 룸에서는 나갈 수 없다`() {
-        listOf(RoomStatus.IN_PROGRESS, RoomStatus.CANCELED).forEach { status ->
+    fun `완료되거나 취소된 룸에서는 나갈 수 없다`() {
+        listOf(RoomStatus.COMPLETED, RoomStatus.CANCELED).forEach { status ->
             givenRoom(status)
             givenParticipant()
 
@@ -137,9 +140,9 @@ class RoomLeaveManagerTest {
         when (status) {
             RoomStatus.RECRUITING -> Unit
             RoomStatus.CONFIRMED -> room.confirm()
-            RoomStatus.IN_PROGRESS -> {
+            RoomStatus.COMPLETED -> {
                 room.confirm()
-                room.startProgress(now.plusDays(7))
+                room.complete()
             }
             RoomStatus.CANCELED -> room.cancel()
             else -> error("메모리에서 만들 수 없는 상태다: $status")

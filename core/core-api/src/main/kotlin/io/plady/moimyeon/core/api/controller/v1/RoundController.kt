@@ -5,11 +5,13 @@ import io.plady.moimyeon.core.api.facade.RoundFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
 import io.plady.moimyeon.core.api.security.LoginMember
 import io.plady.moimyeon.core.support.response.ApiResponse
+import org.springframework.context.annotation.Profile
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
+@Profile("dev")
 @RestController
 class RoundController(
     private val roundFacade: RoundFacade,

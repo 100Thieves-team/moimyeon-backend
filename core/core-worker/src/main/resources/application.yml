@@ -13,7 +13,7 @@ spring:
       # db-core.yml의 환경별 기본값보다 Worker 런타임 계약이 우선해야 하므로 마지막에 둔다.
       - worker-runtime.yml
 
-# 알림 전송과 자동 종료가 서로의 스케줄을 막지 않게 한다.
+# 알림 전송과 자동 완료가 서로의 스케줄을 막지 않게 한다.
 spring.task.scheduling.pool.size: 2
 
 room.auto-complete:

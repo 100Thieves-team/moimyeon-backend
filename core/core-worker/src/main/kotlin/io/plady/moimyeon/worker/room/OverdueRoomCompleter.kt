@@ -1,33 +1,44 @@
 package io.plady.moimyeon.worker.room
 
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.storage.db.core.OutboxEntity
+import io.plady.moimyeon.storage.db.core.OutboxRepository
+import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
 
-// 진행 시작 +8시간이 지난 룸을 종료하는 안전장치(PRD 「룸 진행 마무리 및 출석」 §4.3, MOI-471).
-// 1차 종료(출석자 전원 클로징 제출, MOI-469)가 일어나지 않은 룸을 시스템이 닫는다.
+// 예정 시각 +8시간이 지난 CONFIRMED 룸을 완료한다. 출석은 완료 이후 별도 API로 기록한다.
 @Component
 class OverdueRoomCompleter(
     private val roomRepository: RoomRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
+    private val participationRepository: ParticipationRepository,
+    private val outboxRepository: OutboxRepository,
+    private val jsonMapper: JsonMapper,
 ) {
-    fun findOverdueRoomIds(now: LocalDateTime): List<UUID> {
-        return roomRepository.findInProgressStartedBefore(now - COMPLETION_TIMEOUT).map { it.id }
-    }
+    fun findOverdueRoomIds(now: LocalDateTime): List<UUID> = roomRepository
+        .findConfirmedStartedBefore(now - COMPLETION_TIMEOUT, PageRequest.of(0, COMPLETION_BATCH_SIZE))
+        .map { it.id }
 
-    // 후보 조회와 이 트랜잭션 사이에 마지막 클로징 제출이 끼어들 수 있다 —
-    // 제출 경로와 같은 룸 행 락을 잡고 상태를 재확인해야 전이가 정확히 한 번이 된다(PRD §4.5).
+    // 후보 조회 뒤 수동 완료나 방장 이탈이 끼어들 수 있으므로 룸 행을 잠그고 다시 판정한다.
     @Transactional
     fun complete(roomId: UUID, now: LocalDateTime): Boolean {
         val room = roomRepository.findByIdForUpdate(roomId)?.takeIf { it.isActive() } ?: return false
-        if (room.status != RoomStatus.IN_PROGRESS) return false
+        if (!room.isAutoCompletable(now)) return false
 
+        val recipientIds = participationRepository.findAllAtRoomConfirmation(roomId).map { it.memberId }
         room.complete()
         roomStatusLogRepository.save(
             RoomStatusLogEntity.bySystem(
@@ -36,10 +47,37 @@ class OverdueRoomCompleter(
                 occurredAt = now,
             ),
         )
+        recipientIds.forEach { recipientMemberId -> saveCompletionOutbox(roomId, recipientMemberId) }
         return true
     }
 
+    @OptIn(ExperimentalUuidApi::class)
+    private fun saveCompletionOutbox(roomId: UUID, recipientMemberId: UUID) {
+        val eventId = Uuid.generateV7().toJavaUuid()
+        val event = RoomCompletionNotificationEvent(
+            eventId = eventId,
+            eventType = EventType.ROOM_COMPLETED,
+            roomId = roomId,
+            recipientMemberId = recipientMemberId,
+        )
+        outboxRepository.save(
+            OutboxEntity(
+                id = eventId,
+                eventType = event.eventType,
+                payload = jsonMapper.writeValueAsString(event),
+            ),
+        )
+    }
+
     companion object {
+        const val COMPLETION_BATCH_SIZE: Int = 100
         val COMPLETION_TIMEOUT: Duration = Duration.ofHours(8)
     }
 }
+
+private data class RoomCompletionNotificationEvent(
+    val eventId: UUID,
+    val eventType: EventType,
+    val roomId: UUID,
+    val recipientMemberId: UUID,
+)

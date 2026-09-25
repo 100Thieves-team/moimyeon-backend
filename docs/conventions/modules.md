@@ -56,12 +56,12 @@ moimyeon/
 
 ## core-worker: 백그라운드 작업 조립
 
-- `worker.notification`은 알림을 처리하고 `worker.room`은 진행 시작 후 8시간이 지난 룸을 10분마다 자동 종료한다.
-- 자동 종료는 `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. local은 비활성이다.
-- 스케줄러 풀은 2개 스레드로 구성해 알림 전송과 자동 종료가 서로를 막지 않게 한다.
-- 자동 종료는 API와 같은 룸 행 잠금을 사용하며, 상태 변경과 SYSTEM 로그를 하나의 트랜잭션으로 저장한다. 작업의 중복 실행은 이미 완료된 룸을 건너뛴다.
+- `worker.notification`은 Outbox에서 Redis Stream으로 전달된 알림을 처리하고, `worker.room`은 예정 시각 8시간이 지난 `CONFIRMED` 룸을 자동 완료한다.
+- 자동 완료는 `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. local은 비활성이다.
+- 스케줄러 풀은 2개 스레드로 구성해 알림 전송과 자동 완료가 서로를 막지 않게 한다.
+- 자동 완료는 룸 행 잠금으로 수동 완료·방장 이탈과 직렬화하고, 상태 변경·SYSTEM 로그·완료 알림 Outbox를 한 트랜잭션으로 저장한다.
 - 현재 배포 경로의 API → worker 순서를 유지한다. V27은 구버전 INSERT 호환성을 위해 handler_type 기본값 MEMBER를 유지한다.
-- core-batch에는 자동 종료 작업을 등록하지 않는다. dev worker는 실행 중이며 live는 worker desired count가 0이므로 활성화 시 자동 종료도 시작된다.
+- core-batch에는 룸 자동 완료를 등록하지 않는다. dev worker는 실행 중이며 live는 worker desired count가 0이므로 활성화 시 자동 완료도 시작된다.
 - `NotificationMessageHandler` 한 클래스가 `EventType`에 따라 Stream payload와 채널을 검증하고 수신자·제목·본문·이동 경로를
   담은 채널별 `Notification`으로 변환한다. 이벤트별 Handler 인터페이스와 구현체는 두지 않는다.
 - 이벤트별 발송 경로는 `core-enum`의 `EventType.notificationChannels`가 소유한다. 새 이벤트를 추가할 때 이벤트 종류와

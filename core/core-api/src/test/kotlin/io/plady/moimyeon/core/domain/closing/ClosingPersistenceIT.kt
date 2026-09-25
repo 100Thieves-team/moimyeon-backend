@@ -48,7 +48,7 @@ class ClosingPersistenceIT(
 
     @Test
     fun `자신의 면접 라운드에서 실제로 받은 원 질문 평가만 한 번에 저장한다`() {
-        seedInProgressRoomAndAttendances()
+        seedCompletedRoomAndAttendances()
         val questions = seedQuestionsForEachInterviewee()
         val command = command(
             firstMemberId,
@@ -92,7 +92,7 @@ class ClosingPersistenceIT(
         )
     }
 
-    private fun seedInProgressRoomAndAttendances() {
+    private fun seedCompletedRoomAndAttendances() {
         roomRepository.saveAndFlush(
             RoomEntity(
                 id = roomId,
@@ -123,7 +123,7 @@ class ClosingPersistenceIT(
             },
         )
         transactionTemplate.executeWithoutResult {
-            entityManager.createNativeQuery("update room set status = 'IN_PROGRESS' where id = :roomId")
+            entityManager.createNativeQuery("update room set status = 'COMPLETED' where id = :roomId")
                 .setParameter("roomId", roomId)
                 .executeUpdate()
             entityManager.clear()

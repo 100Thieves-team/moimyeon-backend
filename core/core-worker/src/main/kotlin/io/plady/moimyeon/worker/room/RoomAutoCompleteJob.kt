@@ -15,9 +15,7 @@ class RoomAutoCompleteJob(
     private val overdueRoomCompleter: OverdueRoomCompleter,
     private val clock: Clock,
 ) {
-
-    // 8시간 지연은 후기·참여 슬롯 복구가 걸린 사용자 대기 시간이라 주기를 짧게 둔다.
-    // 룸마다 트랜잭션을 따로 열어 한 룸의 실패가 나머지 전이를 막지 않게 한다.
+    // 룸마다 트랜잭션을 따로 열어 한 룸의 실패가 나머지 완료를 막지 않게 한다.
     @Scheduled(cron = "\${room.auto-complete.cron:0 */10 * * * *}")
     fun run() {
         val now = LocalDateTime.now(clock)

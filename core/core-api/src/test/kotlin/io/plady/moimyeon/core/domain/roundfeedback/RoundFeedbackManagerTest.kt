@@ -31,7 +31,8 @@ class RoundFeedbackManagerTest {
     private val feedbackRepository = mockk<RoundFeedbackRepository>()
     private val room = mockk<RoomEntity> {
         every { isActive() } returns true
-        every { status } returns RoomStatus.IN_PROGRESS
+        every { status } returns RoomStatus.CONFIRMED
+        every { startAt } returns LocalDateTime.of(2026, 8, 14, 11, 0)
     }
     private val now = LocalDateTime.of(2026, 8, 14, 12, 0)
     private val manager = RoundFeedbackManager(

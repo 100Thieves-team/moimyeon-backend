@@ -12,7 +12,7 @@ class WorkerRuntimeConfigurationTest {
             .withPropertyValues("spring.profiles.active=dev")
 
     @Test
-    fun `배포 프로파일은 자동 종료와 알림을 두 스케줄러 스레드에서 실행한다`() {
+    fun `배포 프로파일은 자동 완료와 알림을 두 스케줄러 스레드에서 실행한다`() {
         listOf("local-dev", "dev", "staging", "live").forEach { profile ->
             contextRunner.withPropertyValues("spring.profiles.active=$profile").run { context ->
                 assertThat(context.environment.getProperty("room.auto-complete.enabled", Boolean::class.java)).isTrue()
@@ -22,7 +22,7 @@ class WorkerRuntimeConfigurationTest {
     }
 
     @Test
-    fun `local에서는 자동 종료가 비활성이다`() {
+    fun `local에서는 자동 완료가 비활성이다`() {
         contextRunner.withPropertyValues("spring.profiles.active=local").run { context ->
             assertThat(context.environment.getProperty("room.auto-complete.enabled", Boolean::class.java)).isFalse()
         }

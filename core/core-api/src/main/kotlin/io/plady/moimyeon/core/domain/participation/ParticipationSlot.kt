@@ -18,7 +18,6 @@ object ParticipationSlot {
     val OCCUPYING_ROOM_STATUSES: Set<RoomStatus> = setOf(
         RoomStatus.RECRUITING,
         RoomStatus.CONFIRMED,
-        RoomStatus.IN_PROGRESS,
     )
 
     fun isAvailable(occupiedCount: Long): Boolean = occupiedCount < MAX

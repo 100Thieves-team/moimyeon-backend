@@ -30,12 +30,11 @@ class ActiveRoomCountRepositoryIT(
     // --- 룸 상태 -------------------------------------------------------------
 
     @Test
-    fun `모집 중과 확정과 진행 중인 룸을 센다`() {
+    fun `모집 중과 확정 룸을 센다`() {
         hostRoom()
         hostRoom(status = RoomStatus.CONFIRMED)
-        hostRoom(status = RoomStatus.IN_PROGRESS)
 
-        assertThat(count()).isEqualTo(3)
+        assertThat(count()).isEqualTo(2)
     }
 
     @Test
@@ -201,6 +200,6 @@ class ActiveRoomCountRepositoryIT(
         private const val OTHER_JOB_POSTING_ID = 2L
         private const val JOB_ROLE_ID = 1L
         private const val OTHER_JOB_ROLE_ID = 2L
-        private val ACTIVE_STATUSES = setOf(RoomStatus.RECRUITING, RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS)
+        private val ACTIVE_STATUSES = setOf(RoomStatus.RECRUITING, RoomStatus.CONFIRMED)
     }
 }

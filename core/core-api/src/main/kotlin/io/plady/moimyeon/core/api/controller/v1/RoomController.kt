@@ -51,21 +51,9 @@ class RoomController(
         return ApiResponse.success()
     }
 
-    // POST /v1/rooms/{roomId}/cancellation — 방장이 모집을 접는다. 방장만 가능.
-    // DELETE 가 아닌 이유: 취소는 리소스 제거가 아니라 상태 전이이고, 참여자가 있으면 거부되는
-    // 조건부 연산이라 DELETE 의 멱등 기대와 맞지 않는다. 운영이 룸을 내리는 소프트 삭제는 별개다.
-    @PostMapping("/v1/rooms/{roomId}/cancellation")
-    fun cancel(
-        @LoginMember currentMember: CurrentMember,
-        @PathVariable roomId: UUID,
-    ): ApiResponse<Any> {
-        roomFacade.cancel(currentMember.id, roomId)
-        return ApiResponse.success()
-    }
-
     // POST /v1/rooms/{roomId}/confirmation — 방장이 진행을 확정한다(「진행 확정」 §4.2).
-    // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 취소와 같은 이유로 POST 다 —
-    // 리소스 생성이 아니라 조건부 상태 전이이고, 두 번째 요청은 409 로 거부된다.
+    // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 리소스 생성이 아니라 조건부 상태 전이이므로
+    // POST를 사용하고, 두 번째 요청은 409로 거부한다.
     @PostMapping("/v1/rooms/{roomId}/confirmation")
     fun confirm(
         @LoginMember currentMember: CurrentMember,

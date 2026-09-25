@@ -10,7 +10,7 @@ class ActiveRoomLimitTest {
     @Test
     fun `모집 중과 확정과 진행 중이 활성이다`() {
         assertThat(ActiveRoomLimit.ACTIVE_STATUSES)
-            .containsExactlyInAnyOrder(RoomStatus.RECRUITING, RoomStatus.CONFIRMED, RoomStatus.IN_PROGRESS)
+            .containsExactlyInAnyOrder(RoomStatus.RECRUITING, RoomStatus.CONFIRMED)
     }
 
     // 취소는 방장이 접은 것, 완료는 끝난 것 — 둘 다 자리를 돌려준다.
