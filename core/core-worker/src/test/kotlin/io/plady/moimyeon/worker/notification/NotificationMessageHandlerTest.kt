@@ -28,10 +28,12 @@ class NotificationMessageHandlerTest {
 
     @Test
     fun `참가 신청 수락 이벤트는 웹 푸시와 이메일로 알린다`() {
-        assertThat(EventType.ROOM_APPLICATION_ACCEPTED.notificationChannels).containsExactly(
-            NotificationChannel.WEB_PUSH,
-            NotificationChannel.EMAIL,
-        )
+        EventType.entries.forEach { eventType ->
+            assertThat(eventType.notificationChannels).containsExactlyInAnyOrder(
+                NotificationChannel.WEB_PUSH,
+                NotificationChannel.EMAIL,
+            )
+        }
     }
 
     @Test
@@ -66,11 +68,68 @@ class NotificationMessageHandlerTest {
     }
 
     @Test
+    fun `룸 생명주기 이벤트를 수신자별 알림으로 변환한다`() {
+        val expectedContents = mapOf(
+            EventType.ROOM_CONFIRMED to NotificationContent(
+                title = "모임 진행이 확정되었어요",
+                body = "확정된 일정과 참여자를 확인해 주세요.",
+                actionPath = "/rooms/$ROOM_ID",
+            ),
+            EventType.ROOM_COMPLETED to NotificationContent(
+                title = "모임이 완료되었어요",
+                body = "참석 결과가 기록되었어요.",
+                actionPath = "/rooms/$ROOM_ID",
+            ),
+            EventType.ROOM_CANCELED to NotificationContent(
+                title = "모임이 취소되었어요",
+                body = "참여 중이던 모임의 취소 내용을 확인해 주세요.",
+                actionPath = "/rooms/$ROOM_ID",
+            ),
+            EventType.ROOM_REVIEW_REQUESTED to NotificationContent(
+                title = "함께한 참여자의 후기를 남겨 주세요",
+                body = "완료된 모임의 리뷰를 작성할 수 있어요.",
+                actionPath = "/rooms/$ROOM_ID",
+            ),
+        )
+
+        expectedContents.forEach { (eventType, content) ->
+            val notification = slot<Notification>()
+            every { sender.send(capture(notification)) } just Runs
+
+            handler.handle(lifecycleMessage(eventType))
+
+            assertThat(notification.captured).isEqualTo(
+                Notification(
+                    eventId = EVENT_ID,
+                    eventType = eventType,
+                    channel = NotificationChannel.WEB_PUSH,
+                    recipientMemberId = APPLICANT_ID,
+                    content = content,
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `Stream과 payload의 이벤트 식별자가 다르면 발송하지 않는다`() {
         val otherEventId = UUID.fromString("0198b4f4-2f00-7000-8000-000000000099")
 
         assertThatThrownBy {
             handler.handle(message(payload = payload(eventId = otherEventId)))
+        }.isInstanceOf(InvalidNotificationMessageException::class.java)
+
+        verify(exactly = 0) { sender.send(any()) }
+    }
+
+    @Test
+    fun `룸 생명주기 Stream과 payload의 이벤트 타입이 다르면 발송하지 않는다`() {
+        assertThatThrownBy {
+            handler.handle(
+                lifecycleMessage(
+                    eventType = EventType.ROOM_CONFIRMED,
+                    payloadEventType = EventType.ROOM_COMPLETED,
+                ),
+            )
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
         verify(exactly = 0) { sender.send(any()) }
@@ -91,6 +150,23 @@ class NotificationMessageHandlerTest {
         eventType = EventType.ROOM_APPLICATION_ACCEPTED,
         channel = NotificationChannel.WEB_PUSH,
         payload = payload,
+    )
+
+    private fun lifecycleMessage(
+        eventType: EventType,
+        payloadEventType: EventType = eventType,
+    ) = NotificationStreamMessage(
+        eventId = EVENT_ID,
+        eventType = eventType,
+        channel = NotificationChannel.WEB_PUSH,
+        payload = """
+            {
+              "eventId": "$EVENT_ID",
+              "eventType": "$payloadEventType",
+              "roomId": "$ROOM_ID",
+              "recipientMemberId": "$APPLICANT_ID"
+            }
+        """.trimIndent(),
     )
 
     private fun payload(eventId: UUID = EVENT_ID) =
