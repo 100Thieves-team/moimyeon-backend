@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
@@ -13,6 +14,8 @@ import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
+import io.plady.moimyeon.storage.db.core.AttendanceEntity
+import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionEntity
@@ -35,6 +38,7 @@ private val log = KotlinLogging.logger {}
 class RoomManager(
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
@@ -181,8 +185,8 @@ class RoomManager(
         roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
     }
 
-    // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
-    // 수정·신청·수락 게이트가 발효한다.
+    // 방장이 진행을 확정하면 확정 참여자 전원을 출석 처리하고 즉시 완료한다(MOI-532).
+    // 참여자·정보 고정과 대기 신청 종료 등 기존 확정 부수효과는 유지한다.
     //
     // 조건 판정은 RoomConfirmation 이 소유한다. 화면은 사실(status·recruit·schedule.isPassed)로
     // 스스로 판정하고(MOI-500), 여기의 실행 검증이 최종 강제다. 그래서 여기서 status 를 다시 비교하지 않는다.
@@ -191,23 +195,42 @@ class RoomManager(
     fun confirm(roomId: UUID, hostMemberId: UUID) {
         log.debug { "room.manager.confirm roomId=$roomId hostMemberId=$hostMemberId" }
         val entity = loadRoomForUpdateAsHost(roomId, hostMemberId)
-        val currentParticipants =
-            participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
+        val confirmedParticipants = participationRepository
+            .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
 
         val now = LocalDateTime.now(clock)
         RoomConfirmation.of(
             status = entity.status,
             startAt = entity.startAt,
             minCapacity = entity.minCapacity.toInt(),
-            currentParticipants = currentParticipants,
+            currentParticipants = confirmedParticipants.size,
             now = now,
         ).blockReason?.let { throw CoreException(it.toErrorType()) }
 
-        entity.confirm()
+        entity.confirmAndComplete()
         roomStatusLogRepository.save(
             RoomStatusLogEntity.byMember(
                 roomId = roomId,
                 transitionType = RoomStatus.CONFIRMED,
+                handlerMemberId = hostMemberId,
+                occurredAt = now,
+            ),
+        )
+        attendanceRepository.saveAllAndFlush(
+            confirmedParticipants.map { participant ->
+                AttendanceEntity(
+                    roomId = roomId,
+                    memberId = participant.memberId,
+                    status = AttendanceStatus.ATTENDED,
+                    recorderMemberId = hostMemberId,
+                    recordedAt = now,
+                )
+            },
+        )
+        roomStatusLogRepository.save(
+            RoomStatusLogEntity.byMember(
+                roomId = roomId,
+                transitionType = RoomStatus.COMPLETED,
                 handlerMemberId = hostMemberId,
                 occurredAt = now,
             ),

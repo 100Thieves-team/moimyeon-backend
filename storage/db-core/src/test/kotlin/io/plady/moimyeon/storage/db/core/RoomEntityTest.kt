@@ -99,6 +99,24 @@ class RoomEntityTest {
     }
 
     @Test
+    fun `모집 중인 룸은 확정과 동시에 완료로 전이할 수 있다`() {
+        val room = recruitingRoom()
+
+        room.confirmAndComplete()
+
+        assertThat(room.status).isEqualTo(RoomStatus.COMPLETED)
+    }
+
+    @Test
+    fun `모집 중이 아닌 룸은 확정과 동시에 완료할 수 없다`() {
+        val room = recruitingRoom().apply { confirm() }
+
+        assertThatThrownBy { room.confirmAndComplete() }
+            .isInstanceOf(IllegalStateException::class.java)
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
     fun `진행 중인 룸은 완료로 전이한다`() {
         val room = inProgressRoom()
 

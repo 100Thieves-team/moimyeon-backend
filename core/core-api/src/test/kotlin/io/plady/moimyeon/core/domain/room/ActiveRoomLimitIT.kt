@@ -8,6 +8,7 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.AttendanceRepository
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
@@ -34,6 +35,7 @@ class ActiveRoomLimitIT(
     private val roomManager: RoomManager,
     private val roomFinder: RoomFinder,
     private val roomRepository: RoomRepository,
+    private val attendanceRepository: AttendanceRepository,
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
@@ -52,6 +54,7 @@ class ActiveRoomLimitIT(
     @AfterEach
     fun cleanUp() {
         createdRoomIds.forEach { roomId ->
+            attendanceRepository.deleteAll(attendanceRepository.findAll().filter { it.roomId == roomId })
             resumeSubmissionRepository.deleteAll(resumeSubmissionRepository.findByRoomIdAndDeletedAtIsNull(roomId))
             roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
             participationRepository.deleteAll(participationRepository.findAll().filter { it.roomId == roomId })
@@ -155,10 +158,19 @@ class ActiveRoomLimitIT(
     @Test
     fun `확정된 룸도 남은 개수를 차지한다`() {
         val roomId = createRoom()
-        joinParticipant(roomId)
-        roomManager.confirm(roomId, hostMemberId)
+        markAsLegacyConfirmed(roomId)
 
         assertThat(roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID).remaining).isEqualTo(2)
+    }
+
+    @Test
+    fun `진행 확정으로 즉시 완료된 룸은 남은 개수를 차지하지 않는다`() {
+        val roomId = createRoom()
+        joinParticipant(roomId)
+
+        roomManager.confirm(roomId, hostMemberId)
+
+        assertThat(roomFinder.getCreationLimit(hostMemberId, JOB_POSTING_ID, JOB_ROLE_ID).remaining).isEqualTo(3)
     }
 
     // 사전 조회는 참조 검증을 하지 않는다. 404 를 내면 화면이 경고 대신 에러를 띄운다.
@@ -188,6 +200,12 @@ class ActiveRoomLimitIT(
         if (memberRepository.existsById(memberId)) return
         memberRepository.save(activeMember(memberId, "host-moi330-${createdMemberIds.size}"))
         createdMemberIds += memberId
+    }
+
+    private fun markAsLegacyConfirmed(roomId: UUID) {
+        val room = roomRepository.findById(roomId).orElseThrow()
+        room.confirm()
+        roomRepository.saveAndFlush(room)
     }
 
     private fun newRoom(
