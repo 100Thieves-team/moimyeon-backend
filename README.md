@@ -207,7 +207,7 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 ```
 
 핵심 설계 원칙:
-- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트), `core-batch`(배치), `core-worker`(알림·룸 자동 완료)이다.
+- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트, 룸 자동 완료), `core-batch`(배치), `core-worker`(알림 전송)이다.
 - `admin ↔ core`는 컴파일 타임 완전 격리. 어드민은 도메인 객체·에러 체계·설정을 전부 자체 보유하고, 접점은 런타임 조립(컴포넌트 스캔 + split package 엔티티 스캔)뿐이다.
 - 배치는 시간 주도 워크로드라 조립하지 않고 독립 앱으로 둔다 (스케일 아웃 시 잡 중복 방지).
 - security 는 presentation 앞단 모듈로, 서비스 레이어에는 인증 컨텍스트가 아닌 평범한 값(`userId`)만 흘러 들어간다.

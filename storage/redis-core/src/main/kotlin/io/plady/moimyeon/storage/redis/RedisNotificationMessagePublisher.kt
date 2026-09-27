@@ -32,6 +32,8 @@ internal class RedisNotificationMessagePublisher(
     }
 
     private companion object {
+        // 스크립트는 중간 XADD 가 실패해도 앞선 쓰기를 되돌리지 않는다. 같은 Stream 에 대한 XADD 가 중간에만 실패하는 것은
+        // 메모리 한도에 걸리는 경우뿐이라, 그때 재시도로 생기는 중복 발송은 받아들인다.
         val PUBLISH_CHANNEL_MESSAGES_SCRIPT = DefaultRedisScript(
             """
             local published = 0
