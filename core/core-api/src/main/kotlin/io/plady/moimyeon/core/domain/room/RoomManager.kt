@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -178,7 +179,9 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
+        // 저장되는 처리 시각은 마이크로초까지라 같은 값으로 다시 찾도록 잘라 쓴다.
+        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
+        roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, handledAt)
         outboxEventPublisher.publish(
             EventType.ROOM_CANCELED,
             RoomCanceledEventPayload(
@@ -187,7 +190,7 @@ class RoomManager(
                 canceledByMemberId = handlerMemberId,
                 participantMemberIds = participationFinder.getJoinedParticipants(room.id).map { it.memberId },
                 closedApplicantMemberIds = roomApplicationRepository
-                    .findApplicantMemberIdsClosedAt(room.id, RoomApplicationStatus.ROOM_CANCELED, now),
+                    .findApplicantMemberIdsClosedAt(room.id, RoomApplicationStatus.ROOM_CANCELED, handledAt),
             ),
         )
     }
@@ -224,7 +227,8 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
+        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
+        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, handledAt)
         outboxEventPublisher.publish(
             EventType.ROOM_CONFIRMED,
             RoomConfirmedEventPayload(
@@ -233,7 +237,7 @@ class RoomManager(
                 hostMemberId = hostMemberId,
                 participantMemberIds = participationFinder.getJoinedParticipants(roomId).map { it.memberId },
                 closedApplicantMemberIds = roomApplicationRepository
-                    .findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now),
+                    .findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CONFIRMED, handledAt),
             ),
         )
     }

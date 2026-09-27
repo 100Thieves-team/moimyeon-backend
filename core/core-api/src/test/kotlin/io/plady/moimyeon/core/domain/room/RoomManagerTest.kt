@@ -253,6 +253,33 @@ class RoomManagerTest {
     }
 
     @Test
+    fun `시계가 나노초까지 내도 신청 종료와 종료된 신청 조회에 같은 마이크로초 시각을 쓴다`() {
+        val nanoNow = now.plusNanos(123_456_789)
+        val nanoManager = RoomManager(
+            roomRepository,
+            participationRepository,
+            roomApplicationRepository,
+            resumeSubmissionRepository,
+            roomStatusLogRepository,
+            participationValidator,
+            memberValidator,
+            participationFinder,
+            outboxEventPublisher,
+            Clock.fixed(nanoNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+        )
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        nanoManager.cancel(roomId, hostId)
+
+        val handledAt = now.plusNanos(123_456_000)
+        verifyOrder {
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+            roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+        }
+    }
+
+    @Test
     fun `룸을 취소하면 이력을 남기고 대기 신청을 종료한다`() {
         givenRecruitingRoomForUpdate()
         givenHost()
