@@ -4,14 +4,16 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
-import io.plady.moimyeon.core.domain.room.RoomLifecycleNotificationEvent
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.AttendanceEntity
@@ -22,7 +24,6 @@ import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.springframework.context.ApplicationEventPublisher
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -32,7 +33,7 @@ class RoomProgressManagerTest {
     private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
     private val attendanceRepository = mockk<AttendanceRepository>()
     private val logRepository = mockk<RoomStatusLogRepository>()
-    private val publisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val publisher = mockk<OutboxEventPublisher>(relaxed = true)
     private val manager = RoomProgressManager(
         roomRepository,
         participantFinder,
@@ -47,40 +48,55 @@ class RoomProgressManagerTest {
     private val now = LocalDateTime.of(2026, 9, 24, 15, 0)
 
     @Test
-    fun `완료 시 출석을 저장하지 않고 전원에게 완료 이벤트를 발행한다`() {
-        val room = mockk<RoomEntity> {
-            every { isActive() } returns true
-            every { canComplete() } returns true
-            every { complete() } just runs
-            every { status } returns RoomStatus.COMPLETED
-        }
+    fun `완료하면서 출석을 저장하고 출석자를 담아 완료 사실을 발행한다`() {
+        val room = completableRoom()
         every { roomRepository.findByIdForUpdate(roomId) } returns room
         every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
         every { logRepository.save(any()) } answers { firstArg() }
+        val saved = slot<List<AttendanceEntity>>()
+        every { attendanceRepository.saveAllAndFlush(capture(saved)) } answers { firstArg() }
+        val attendances = listOf(Attendance(hostId, AttendanceStatus.ATTENDED), Attendance(participantId, AttendanceStatus.ABSENT))
 
-        manager.complete(RoomProgressCompletionCommand(roomId, hostId, now))
+        val result = manager.complete(RoomProgressCompletionCommand(roomId, hostId, attendances, now))
 
+        assertThat(result.attendances).isEqualTo(attendances)
         verifyOrder {
             roomRepository.findByIdForUpdate(roomId)
             participationValidator.validateHost(roomId, hostId)
+            room.complete()
         }
-        verify(exactly = 0) { attendanceRepository.saveAllAndFlush<AttendanceEntity>(any()) }
-        val events = mutableListOf<RoomLifecycleNotificationEvent>()
-        verify(exactly = 2) { publisher.publishEvent(capture(events)) }
-        assertThat(events).allSatisfy { assertThat(it.eventType).isEqualTo(EventType.ROOM_COMPLETED) }
+        assertThat(saved.captured.map { it.recorderMemberId }).containsOnly(hostId)
+        verify(exactly = 1) {
+            publisher.publish(
+                EventType.ROOM_COMPLETED,
+                RoomCompletedEventPayload(roomId, TITLE, hostId, listOf(hostId, participantId), listOf(hostId)),
+            )
+        }
+    }
+
+    @Test
+    fun `출석 명단이 확정 참여자와 다르면 완료하지 않는다`() {
+        val room = completableRoom()
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
+
+        assertThatThrownBy {
+            manager.complete(RoomProgressCompletionCommand(roomId, hostId, listOf(Attendance(hostId, AttendanceStatus.ATTENDED)), now))
+        }.isInstanceOfSatisfying(CoreException::class.java) {
+            assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH)
+        }
+
+        verify(exactly = 0) { room.complete() }
+        verify(exactly = 0) { publisher.publish(any(), any()) }
     }
 
     @Test
     fun `룸 잠금 뒤 현재 방장이 아니면 완료하지 않는다`() {
-        val room = mockk<RoomEntity> {
-            every { isActive() } returns true
-            every { canComplete() } returns true
-            every { complete() } just runs
-        }
+        val room = completableRoom()
         every { roomRepository.findByIdForUpdate(roomId) } returns room
         every { participationValidator.validateHost(roomId, hostId) } throws CoreException(CoreErrorType.ROOM_FORBIDDEN)
 
-        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, now)) }
+        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, emptyList(), now)) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
             }
@@ -92,58 +108,16 @@ class RoomProgressManagerTest {
         verify(exactly = 0) { room.complete() }
     }
 
-    @Test
-    fun `출석 저장 뒤 참석자가 둘 이상이면 리뷰 요청을 발행한다`() {
-        val room = mockk<RoomEntity> {
-            every { isActive() } returns true
-            every { status } returns RoomStatus.COMPLETED
-        }
-        every { roomRepository.findByIdForUpdate(roomId) } returns room
-        every { attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId) } returns emptyList()
-        every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
-        every { attendanceRepository.saveAllAndFlush<AttendanceEntity>(any()) } answers { firstArg() }
-
-        manager.recordAttendances(
-            RoomAttendanceRecordCommand(
-                roomId,
-                hostId,
-                listOf(
-                    Attendance(hostId, AttendanceStatus.ATTENDED),
-                    Attendance(participantId, AttendanceStatus.ATTENDED),
-                ),
-                now,
-            ),
-        )
-
-        verifyOrder {
-            roomRepository.findByIdForUpdate(roomId)
-            participationValidator.validateHost(roomId, hostId)
-        }
-        val events = mutableListOf<RoomLifecycleNotificationEvent>()
-        verify(exactly = 2) { publisher.publishEvent(capture(events)) }
-        assertThat(events).allSatisfy { assertThat(it.eventType).isEqualTo(EventType.ROOM_REVIEW_REQUESTED) }
+    private fun completableRoom(): RoomEntity = mockk {
+        every { isActive() } returns true
+        every { id } returns roomId
+        every { title } returns TITLE
+        every { canComplete() } returns true
+        every { complete() } just runs
+        every { status } returnsMany listOf(RoomStatus.CONFIRMED, RoomStatus.COMPLETED)
     }
 
-    @Test
-    fun `참석자가 한 명이면 리뷰 상대가 없어 리뷰 요청을 발행하지 않는다`() {
-        val room = mockk<RoomEntity> {
-            every { isActive() } returns true
-            every { status } returns RoomStatus.COMPLETED
-        }
-        every { roomRepository.findByIdForUpdate(roomId) } returns room
-        every { attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId) } returns emptyList()
-        every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId)
-        every { attendanceRepository.saveAllAndFlush<AttendanceEntity>(any()) } answers { firstArg() }
-
-        manager.recordAttendances(
-            RoomAttendanceRecordCommand(
-                roomId,
-                hostId,
-                listOf(Attendance(hostId, AttendanceStatus.ATTENDED)),
-                now,
-            ),
-        )
-
-        verify(exactly = 0) { publisher.publishEvent(any()) }
+    private companion object {
+        const val TITLE = "토스 백엔드 모의면접"
     }
 }

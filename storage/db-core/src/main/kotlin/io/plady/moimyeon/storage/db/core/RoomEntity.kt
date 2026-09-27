@@ -133,7 +133,7 @@ class RoomEntity(
         this.durationMinutes = durationMinutes
     }
 
-    private companion object {
+    companion object {
         const val AUTO_COMPLETION_HOURS = 8L
     }
 }

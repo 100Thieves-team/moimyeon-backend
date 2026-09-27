@@ -10,6 +10,10 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.event.OutboxEvent
+import io.plady.moimyeon.core.event.payload.EventPayload
+import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
+import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
 import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -24,11 +28,15 @@ import io.plady.moimyeon.storage.db.core.SocialAccountEntity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.ApplicationEventsHolder
+import org.springframework.test.context.event.RecordApplicationEvents
 import java.time.LocalDateTime
 import java.util.UUID
 
 // 방장 이탈은 이탈·위임(또는 취소)이 한 커밋이어야 한다 — 방장 없는 룸이 한순간도 존재하면 안 된다.
 // 테스트에 @Transactional 을 두지 않는다: 바깥 트랜잭션이 있으면 커밋 시점이 가려진다(testing.md).
+@RecordApplicationEvents
 class RoomLeaveIT(
     private val roomLeaveManager: RoomLeaveManager,
     private val roomManager: RoomManager,
@@ -39,6 +47,10 @@ class RoomLeaveIT(
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val memberRepository: MemberRepository,
 ) : ContextTest() {
+    // ApplicationEvents 는 생성자로 주입되지 않는다.
+    private val applicationEvents: ApplicationEvents
+        get() = ApplicationEventsHolder.getRequiredApplicationEvents()
+
     private val roomId = UUID.randomUUID()
     private val hostMemberId = UUID.randomUUID()
     private val startAt: LocalDateTime = LocalDateTime.now().plusDays(7)
@@ -210,6 +222,59 @@ class RoomLeaveIT(
 
         assertThat(participationRepository.countAtRoomConfirmation(roomId, leaver)).isZero()
     }
+
+    @Test
+    fun `방장이 나가 참여자에게 방장이 넘어가면 나간 방장을 뺀 참여 명단을 담아 위임 사실을 발행한다`() {
+        seedRoom()
+        val earlier = seedParticipant(joinedAt = createdAt.plusHours(1))
+        val later = seedParticipant(joinedAt = createdAt.plusHours(2))
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        val delegated = published<RoomHostDelegatedEventPayload>().single()
+        assertThat(delegated.previousHostMemberId).isEqualTo(hostMemberId)
+        assertThat(delegated.newHostMemberId).isEqualTo(earlier)
+        assertThat(delegated.participantMemberIds).containsExactlyInAnyOrder(earlier, later)
+    }
+
+    @Test
+    fun `방장이 나가 대기 신청자에게 방장이 넘어가면 그 신청자를 새 방장으로 담는다`() {
+        seedRoom()
+        val applicant = seedPendingApplication(appliedAt = createdAt.plusHours(1))
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        val delegated = published<RoomHostDelegatedEventPayload>().single()
+        assertThat(delegated.newHostMemberId).isEqualTo(applicant)
+        assertThat(delegated.participantMemberIds).containsExactly(applicant)
+    }
+
+    @Test
+    fun `방장이 나갔는데 넘겨받을 사람이 없어 취소되면 대기 신청자를 담아 취소 사실을 발행한다`() {
+        seedRoom()
+        val restricted = seedPendingApplication(appliedAt = createdAt.plusHours(1), status = MemberStatus.RESTRICTED)
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        assertThat(published<RoomCanceledEventPayload>().single().closedApplicantMemberIds).containsExactly(restricted)
+        assertThat(published<RoomHostDelegatedEventPayload>()).isEmpty()
+    }
+
+    @Test
+    fun `방장이 아닌 참여자가 나가면 사실을 발행하지 않는다`() {
+        seedRoom()
+        val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
+
+        roomLeaveManager.leave(roomId, participant)
+
+        assertThat(applicationEvents.stream(OutboxEvent::class.java)).isEmpty()
+    }
+
+    private inline fun <reified T : EventPayload> published(): List<T> = applicationEvents
+        .stream(OutboxEvent::class.java)
+        .map { it.payload }
+        .toList()
+        .filterIsInstance<T>()
 
     private fun rows() = participationRepository.findAll().filter { it.roomId == roomId }
 

@@ -1,6 +1,6 @@
 package io.plady.moimyeon.storage.redis
 
-import io.plady.moimyeon.core.notification.outbox.OutboxRelayCoordinator
+import io.plady.moimyeon.core.event.outbox.OutboxRelayCoordinator
 import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.core.script.DefaultRedisScript

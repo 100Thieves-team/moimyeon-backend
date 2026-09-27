@@ -2,6 +2,7 @@ package io.plady.moimyeon.core.domain.room
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.EventType
@@ -10,6 +11,9 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
+import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -24,11 +28,11 @@ import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
 import io.plady.moimyeon.storage.db.core.RoomStatusLogEntity
 import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -42,8 +46,9 @@ class RoomManager(
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val participationValidator: ParticipationValidator,
     private val memberValidator: MemberValidator,
+    private val participationFinder: ParticipationFinder,
+    private val outboxEventPublisher: OutboxEventPublisher,
     private val clock: Clock,
-    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
     // 신청 행이 없으면 제출도 없다 — 넷 중 하나라도 실패하면 방장 없는 룸이 남지 않아야 한다.
@@ -174,10 +179,17 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
-        (joinedMemberIds(room.id) + handlerMemberId).distinct().forEach { memberId ->
-            applicationEventPublisher.publishRoomLifecycle(EventType.ROOM_CANCELED, room.id, memberId)
-        }
+        val closedApplicantMemberIds = closePendingApplications(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
+        outboxEventPublisher.publish(
+            EventType.ROOM_CANCELED,
+            RoomCanceledEventPayload(
+                roomId = room.id,
+                roomTitle = room.title,
+                canceledByMemberId = handlerMemberId,
+                participantMemberIds = participationFinder.getJoinedParticipants(room.id).map { it.memberId },
+                closedApplicantMemberIds = closedApplicantMemberIds,
+            ),
+        )
     }
 
     // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
@@ -212,10 +224,24 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
-        joinedMemberIds(roomId).forEach { memberId ->
-            applicationEventPublisher.publishRoomLifecycle(EventType.ROOM_CONFIRMED, roomId, memberId)
-        }
+        val closedApplicantMemberIds = closePendingApplications(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
+        outboxEventPublisher.publish(
+            EventType.ROOM_CONFIRMED,
+            RoomConfirmedEventPayload(
+                roomId = roomId,
+                roomTitle = entity.title,
+                hostMemberId = hostMemberId,
+                participantMemberIds = participationFinder.getJoinedParticipants(roomId).map { it.memberId },
+                closedApplicantMemberIds = closedApplicantMemberIds,
+            ),
+        )
+    }
+
+    // 대기 신청을 닫고 닫힌 신청자를 돌려준다. 저장되는 처리 시각은 마이크로초까지라 같은 값으로 다시 찾도록 잘라 쓴다.
+    private fun closePendingApplications(roomId: UUID, status: RoomApplicationStatus, now: LocalDateTime): List<UUID> {
+        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
+        roomApplicationRepository.closeAllPending(roomId, status, handledAt)
+        return roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, status, handledAt)
     }
 
     // 상태 계열 넷은 E1410 으로 뭉친다 — 화면이 새로고침하면 정확한 상태를 다시 받으므로
@@ -246,10 +272,6 @@ class RoomManager(
     private fun countActiveHostedRooms(hostMemberId: UUID, jobPostingId: Long, jobRoleId: Long): Long {
         return roomRepository.countActiveHostedRooms(hostMemberId, jobPostingId, jobRoleId, ActiveRoomLimit.ACTIVE_STATUSES)
     }
-
-    private fun joinedMemberIds(roomId: UUID): List<UUID> = participationRepository
-        .findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(roomId, ParticipationStatus.JOINED)
-        .map(ParticipationEntity::memberId)
 
     private fun loadRoomForUpdateAsHost(roomId: UUID, memberId: UUID): RoomEntity {
         val room = requireFound(

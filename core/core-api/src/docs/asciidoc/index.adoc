@@ -849,12 +849,16 @@ include::{snippets}/deletePreparationQuestion/response-fields.adoc[]
 == Room Completion & Attendance (룸 완료·출석) API
 
 === 룸 완료
-방장이 `CONFIRMED` 룸을 즉시 `COMPLETED`로 전환한다. 요청 본문과 출석 입력은 없다.
-예정 시각 8시간 뒤에도 확정 상태면 worker가 동일한 완료 전이를 수행한다.
+방장이 확정 참여자 전원의 참석·불참을 입력하며 `CONFIRMED` 룸을 `COMPLETED`로 전환한다.
+확정 참여자 전원에게 완료 알림이 한 번씩 가고, 참석자가 2명 이상이면 참석자의 알림에 후기 요청이 함께 담긴다.
+예정 시각 8시간 뒤에도 확정 상태면 시스템이 확정 참여자 전원을 참석으로 기록하며 완료한다.
+이미 완료된 룸에 기록된 출석과 같은 내용으로 다시 요청하면 새로 기록하지 않고 성공 응답을 돌려준다(응답 유실 뒤 재시도).
 ==== Curl Request
 include::{snippets}/completeRoomProgress/curl-request.adoc[]
 ==== Path Parameters
 include::{snippets}/completeRoomProgress/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/completeRoomProgress/request-fields.adoc[]
 ==== Http Response
 include::{snippets}/completeRoomProgress/http-response.adoc[]
 ==== Response Fields
@@ -862,35 +866,12 @@ include::{snippets}/completeRoomProgress/response-fields.adoc[]
 ==== Error Responses
 |===
 | HTTP | error.code | 케이스
-| 404 | E1405 | 룸을 찾을 수 없음
-| 403 | E1406 | 현재 방장이 아님
-| 409 | E1707 | 확정 상태가 아님
-|===
-
-'''
-
-=== 룸 출석 기록
-룸 완료 이후 방장이 최신 확정 참여자 전원의 참석·불참을 한 번 기록한다.
-완료 전이와 출석 기록은 분리되며, 리뷰 요청 알림은 출석 기록 이후 참석자에게 전달된다.
-==== Curl Request
-include::{snippets}/recordRoomAttendances/curl-request.adoc[]
-==== Path Parameters
-include::{snippets}/recordRoomAttendances/path-parameters.adoc[]
-==== Request Fields
-include::{snippets}/recordRoomAttendances/request-fields.adoc[]
-==== Http Response
-include::{snippets}/recordRoomAttendances/http-response.adoc[]
-==== Response Fields
-include::{snippets}/recordRoomAttendances/response-fields.adoc[]
-==== Error Responses
-|===
-| HTTP | error.code | 케이스
 | 400 | E400 | 참석 상태 등 요청 형식 오류
 | 400 | E1706 | 참석 명단 누락·중복·명단 밖 회원
 | 404 | E1405 | 룸을 찾을 수 없음
 | 403 | E1406 | 현재 방장이 아님
-| 409 | E1704 | 완료된 룸이 아님
-| 409 | E1708 | 출석이 이미 기록됨
+| 409 | E1707 | 확정 상태가 아님
+| 409 | E1708 | 이미 다른 출석으로 완료된 룸에 요청
 |===
 
 '''

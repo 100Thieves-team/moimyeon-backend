@@ -7,10 +7,17 @@ import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.member.MemberValidator
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.domain.room.Room
+import io.plady.moimyeon.core.domain.room.RoomFinder
+import io.plady.moimyeon.core.domain.room.RoomTitle
 import io.plady.moimyeon.core.domain.room.RoomValidator
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomApplicationSubmittedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionEntity
@@ -35,6 +42,9 @@ class RoomApplicationSubmissionManagerTest {
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
+    private val roomFinder = mockk<RoomFinder>()
+    private val participationFinder = mockk<ParticipationFinder>()
+    private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
     private val manager = RoomApplicationSubmissionManager(
         memberValidator,
@@ -42,11 +52,15 @@ class RoomApplicationSubmissionManagerTest {
         participationValidator,
         roomApplicationRepository,
         resumeSubmissionRepository,
+        roomFinder,
+        participationFinder,
+        outboxEventPublisher,
         clock,
     )
 
     private val now = LocalDateTime.of(2026, 8, 4, 12, 0)
     private val applicantMemberId = UUID.randomUUID()
+    private val hostMemberId = UUID.randomUUID()
     private val roomId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val applicationForm = RoomApplicationForm(resumeId, "실전처럼 연습하고 싶어요.")
@@ -313,7 +327,31 @@ class RoomApplicationSubmissionManagerTest {
         }
     }
 
+    @Test
+    fun `신청서를 제출하면 방장을 담아 신청 사실을 발행한다`() {
+        val savedApplication = mockk<RoomApplicationEntity> { every { id } returns 1L }
+        every { roomApplicationRepository.saveAndFlush(any()) } returns savedApplication
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+
+        manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+
+        verify {
+            outboxEventPublisher.publish(
+                EventType.ROOM_APPLICATION_SUBMITTED,
+                RoomApplicationSubmittedEventPayload(
+                    applicationId = 1L,
+                    roomId = roomId,
+                    roomTitle = "토스 백엔드 모의면접",
+                    hostMemberId = hostMemberId,
+                    applicantMemberId = applicantMemberId,
+                ),
+            )
+        }
+    }
+
     private fun givenEligibleApplication() {
+        every { roomFinder.getRoom(roomId) } returns mockk<Room> { every { title } returns RoomTitle("토스 백엔드 모의면접") }
+        every { participationFinder.getHostMemberId(roomId) } returns hostMemberId
         justRun { memberValidator.validateActive(applicantMemberId) }
         justRun { participationValidator.validateSlotAvailable(applicantMemberId) }
         every {

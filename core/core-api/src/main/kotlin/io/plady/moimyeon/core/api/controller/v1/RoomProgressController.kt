@@ -1,8 +1,7 @@
 package io.plady.moimyeon.core.api.controller.v1
 
-import io.plady.moimyeon.core.api.controller.v1.request.RecordRoomAttendancesRequest
+import io.plady.moimyeon.core.api.controller.v1.request.CompleteRoomRequest
 import io.plady.moimyeon.core.api.controller.v1.response.AttendanceResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomAttendancesResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressCompletionResponse
 import io.plady.moimyeon.core.api.facade.RoomProgressFacade
 import io.plady.moimyeon.core.api.security.CurrentMember
@@ -24,17 +23,9 @@ class RoomProgressController(
     fun complete(
         @LoginMember currentMember: CurrentMember,
         @PathVariable roomId: UUID,
+        @RequestBody request: CompleteRoomRequest,
     ): ApiResponse<RoomProgressCompletionResponse> {
-        return ApiResponse.success(progressFacade.complete(currentMember.id, roomId))
-    }
-
-    @PostMapping("/v1/rooms/{roomId}/attendances")
-    fun recordAttendances(
-        @LoginMember currentMember: CurrentMember,
-        @PathVariable roomId: UUID,
-        @RequestBody request: RecordRoomAttendancesRequest,
-    ): ApiResponse<RoomAttendancesResponse> {
-        return ApiResponse.success(progressFacade.recordAttendances(currentMember.id, roomId, request.toAttendances()))
+        return ApiResponse.success(progressFacade.complete(currentMember.id, roomId, request.toAttendances()))
     }
 
     @GetMapping("/v1/attendances/me")

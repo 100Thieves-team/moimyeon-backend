@@ -1,7 +1,7 @@
 package io.plady.moimyeon.client.email
 
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.core.enums.NotificationPolicy
 import io.plady.moimyeon.worker.notification.delivery.Notification
 import io.plady.moimyeon.worker.notification.delivery.NotificationContent
 import io.plady.moimyeon.worker.notification.delivery.NotificationRecipient
@@ -64,13 +64,14 @@ class FailoverEmailSenderTest {
 
     private fun notification() = Notification(
         eventId = EVENT_ID,
-        eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+        eventType = "ROOM_APPLICATION_ACCEPTED",
         channel = NotificationChannel.EMAIL,
+        policy = NotificationPolicy.PUSH_AND_EMAIL,
         recipientMemberId = MEMBER_ID,
         content = NotificationContent(
             title = "참가 신청이 수락되었어요",
             body = "모임에 참여할 수 있게 되었어요.",
-            actionPath = "/rooms/$ROOM_ID",
+            actionUrl = "https://front.test/rooms/$ROOM_ID",
         ),
     )
 
@@ -82,7 +83,7 @@ class FailoverEmailSenderTest {
     private fun expectedMessage() = EmailMessage(
         to = "member@example.com",
         subject = "참가 신청이 수락되었어요",
-        body = "모임에 참여할 수 있게 되었어요.\n\n/rooms/$ROOM_ID",
+        body = "모임에 참여할 수 있게 되었어요.\n\nhttps://front.test/rooms/$ROOM_ID",
     )
 }
 

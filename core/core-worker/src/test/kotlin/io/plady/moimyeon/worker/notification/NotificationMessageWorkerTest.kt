@@ -2,7 +2,6 @@ package io.plady.moimyeon.worker.notification
 
 import io.mockk.every
 import io.mockk.mockk
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.storage.redis.NotificationStreamConsumer
 import io.plady.moimyeon.storage.redis.NotificationStreamHandlingResult
@@ -62,7 +61,7 @@ class NotificationMessageWorkerTest {
 
     private fun message(eventId: UUID) = NotificationStreamMessage(
         eventId = eventId,
-        eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+        eventType = "ROOM_APPLICATION_ACCEPTED",
         channel = NotificationChannel.WEB_PUSH,
         payload = "{\"eventId\":\"$eventId\"}",
     )

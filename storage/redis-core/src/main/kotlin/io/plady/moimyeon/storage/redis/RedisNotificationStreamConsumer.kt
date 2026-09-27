@@ -1,6 +1,5 @@
 package io.plady.moimyeon.storage.redis
 
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -249,7 +248,7 @@ class RedisNotificationStreamConsumer(
     private fun MapRecord<String, String, String>.toMessage(): NotificationStreamMessage {
         val eventId = value[EVENT_ID]?.let(::parseEventId)
             ?: throw IllegalArgumentException("Redis Stream 메시지의 eventId가 올바르지 않습니다.")
-        val eventType = value[EVENT_TYPE]?.let(EventType::valueOf)
+        val eventType = value[EVENT_TYPE]?.takeIf { it.isNotBlank() }
             ?: throw IllegalArgumentException("Redis Stream 메시지의 eventType이 없습니다.")
         val channel = value[CHANNEL]?.let(NotificationChannel::valueOf)
             ?: throw IllegalArgumentException("Redis Stream 메시지의 channel이 없습니다.")

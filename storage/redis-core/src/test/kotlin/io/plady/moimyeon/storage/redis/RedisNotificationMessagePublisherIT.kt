@@ -2,7 +2,8 @@ package io.plady.moimyeon.storage.redis
 
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
-import io.plady.moimyeon.core.notification.outbox.RelayMessage
+import io.plady.moimyeon.core.enums.NotificationPolicy
+import io.plady.moimyeon.core.notification.OutgoingNotification
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
@@ -47,31 +48,29 @@ class RedisNotificationMessagePublisherIT {
     }
 
     @Test
-    fun `RelayMessage를 이벤트 정책의 채널별 메시지로 한 번에 저장한다`() {
+    fun `한 사실에서 나온 알림들을 각 정책의 채널별 메시지로 한 번에 저장한다`() {
         val publisher = RedisNotificationMessagePublisher(
             redisTemplate = redisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
         )
 
         publisher.publish(
-            RelayMessage(
-                eventId = EVENT_ID,
-                eventType = EventType.ROOM_APPLICATION_ACCEPTED,
-                payload = "{\"applicationId\":1}",
+            listOf(
+                notification(NotificationPolicy.PUSH_AND_EMAIL, payload = "{\"recipient\":1}"),
+                notification(NotificationPolicy.PUSH_ELSE_EMAIL, payload = "{\"recipient\":2}"),
             ),
         )
 
         val records = redisTemplate.opsForStream<String, String>().range(STREAM_KEY, Range.unbounded())
-        assertThat(records).hasSize(2)
-        assertThat(records.map { it.value["channel"] }).containsExactly(
-            NotificationChannel.WEB_PUSH.name,
-            NotificationChannel.EMAIL.name,
+        assertThat(records.map { it.value["channel"] to it.value["payload"] }).containsExactly(
+            NotificationChannel.WEB_PUSH.name to "{\"recipient\":1}",
+            NotificationChannel.EMAIL.name to "{\"recipient\":1}",
+            NotificationChannel.WEB_PUSH.name to "{\"recipient\":2}",
         )
         records.forEach { record ->
             assertThat(record.value)
                 .containsEntry("eventId", EVENT_ID.toString())
-                .containsEntry("eventType", "ROOM_APPLICATION_ACCEPTED")
-                .containsEntry("payload", "{\"applicationId\":1}")
+                .containsEntry("eventType", "ROOM_CONFIRMED")
         }
     }
 
@@ -86,13 +85,7 @@ class RedisNotificationMessagePublisherIT {
 
         try {
             assertThatThrownBy {
-                publisher.publish(
-                    RelayMessage(
-                        eventId = EVENT_ID,
-                        eventType = EventType.ROOM_APPLICATION_ACCEPTED,
-                        payload = "{\"applicationId\":2}",
-                    ),
-                )
+                publisher.publish(listOf(notification(NotificationPolicy.PUSH_ONLY, payload = "{}")))
             }.isInstanceOf(RedisConnectionFailureException::class.java)
         } finally {
             unavailableConnectionFactory.destroy()
@@ -166,6 +159,13 @@ class RedisNotificationMessagePublisherIT {
             unavailableConnectionFactory.destroy()
         }
     }
+
+    private fun notification(policy: NotificationPolicy, payload: String) = OutgoingNotification(
+        eventId = EVENT_ID,
+        eventType = EventType.ROOM_CONFIRMED,
+        policy = policy,
+        payload = payload,
+    )
 
     private fun connectionFactory(host: String, port: Int): LettuceConnectionFactory {
         val clientConfiguration = LettuceClientConfiguration.builder()

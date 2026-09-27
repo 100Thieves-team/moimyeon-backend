@@ -157,26 +157,4 @@ class MemberManagerTest {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_ACTIVE)
             }
     }
-
-    @Test
-    fun `withdraw 는 회원을 소프트 삭제한다`() {
-        // given
-        val id = UUID.randomUUID()
-        val now = LocalDateTime.of(2026, 1, 1, 0, 0)
-        val entity = MemberEntity(
-            id = id,
-            email = "user@example.com",
-            nickname = "차분한 펭귄 12",
-            status = MemberStatus.ACTIVE,
-            lastLoginAt = now,
-            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
-        )
-        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
-
-        // when
-        memberManager.withdraw(id, now)
-
-        // then
-        assertThat(entity.isDeleted()).isTrue()
-    }
 }

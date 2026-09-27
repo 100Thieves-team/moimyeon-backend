@@ -1,8 +1,8 @@
 package io.plady.moimyeon.worker.notification.room
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.core.enums.NotificationPolicy
 import io.plady.moimyeon.storage.redis.NotificationStreamMetrics
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamConsumer
 import io.plady.moimyeon.storage.redis.RedisNotificationStreamConsumerProperties
@@ -65,28 +65,41 @@ class RoomApplicationAcceptedNotificationFlowIT {
         assertThat(notificationSender.notifications).containsExactly(
             Notification(
                 eventId = EVENT_ID,
-                eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+                eventType = "ROOM_APPLICATION_ACCEPTED",
                 channel = NotificationChannel.WEB_PUSH,
+                policy = NotificationPolicy.PUSH_AND_EMAIL,
                 recipientMemberId = APPLICANT_ID,
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionPath = "/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
                 ),
             ),
             Notification(
                 eventId = EVENT_ID,
-                eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+                eventType = "ROOM_APPLICATION_ACCEPTED",
                 channel = NotificationChannel.EMAIL,
+                policy = NotificationPolicy.PUSH_AND_EMAIL,
                 recipientMemberId = APPLICANT_ID,
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionPath = "/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
                 ),
             ),
         )
         assertThat(pendingCount()).isZero()
+    }
+
+    @Test
+    fun `worker가 모르는 이벤트 종류의 메시지도 공통 형식이면 발송하고 ACK한다`() {
+        addMessage(NotificationChannel.WEB_PUSH, payload(), eventType = "SOME_FUTURE_EVENT")
+
+        worker().consumeMessages()
+
+        assertThat(notificationSender.notifications.single().eventType).isEqualTo("SOME_FUTURE_EVENT")
+        assertThat(pendingCount()).isZero()
+        assertThat(deadLetterCount()).isZero()
     }
 
     @Test
@@ -129,6 +142,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
         val handler = NotificationMessageHandler(
             jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
             notificationSender = notificationSender,
+            actionBaseUrl = FRONT_BASE_URL,
         )
         return NotificationMessageWorker(consumer, handler)
     }
@@ -136,12 +150,13 @@ class RoomApplicationAcceptedNotificationFlowIT {
     private fun addMessage(
         channel: NotificationChannel,
         payload: String,
+        eventType: String = "ROOM_APPLICATION_ACCEPTED",
     ) {
         redisTemplate.opsForStream<String, String>().add(
             StreamRecords.string(
                 mapOf(
                     "eventId" to EVENT_ID.toString(),
-                    "eventType" to EventType.ROOM_APPLICATION_ACCEPTED.name,
+                    "eventType" to eventType,
                     "channel" to channel.name,
                     "payload" to payload,
                 ),
@@ -161,9 +176,11 @@ class RoomApplicationAcceptedNotificationFlowIT {
         {
           "eventId": "$EVENT_ID",
           "eventType": "ROOM_APPLICATION_ACCEPTED",
-          "applicationId": 1,
-          "roomId": "$ROOM_ID",
-          "applicantMemberId": "$APPLICANT_ID"
+          "policy": "PUSH_AND_EMAIL",
+          "recipientMemberId": "$APPLICANT_ID",
+          "title": "참가 신청이 수락되었어요",
+          "body": "모임에 참여할 수 있게 되었어요.",
+          "actionPath": "/rooms/$ROOM_ID"
         }
         """.trimIndent()
 
@@ -179,6 +196,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
     }
 
     private companion object {
+        const val FRONT_BASE_URL = "https://front.test"
         const val REDIS_PORT = 6379
         const val STREAM_KEY = "room-application-accepted-flow-test"
         const val DEAD_LETTER_STREAM_KEY = "room-application-accepted-dead-letter-flow-test"

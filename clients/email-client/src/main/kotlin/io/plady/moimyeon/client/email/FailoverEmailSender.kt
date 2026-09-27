@@ -17,7 +17,7 @@ internal class FailoverEmailSender(
             subject = notification.content.title,
             body = listOfNotNull(
                 notification.content.body,
-                notification.content.actionPath,
+                notification.content.actionUrl,
             ).joinToString("\n\n"),
         )
 

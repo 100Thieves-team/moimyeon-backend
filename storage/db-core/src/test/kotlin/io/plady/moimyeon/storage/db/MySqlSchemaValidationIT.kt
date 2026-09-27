@@ -2,8 +2,11 @@ package io.plady.moimyeon.storage.db
 
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.flywaydb.core.Flyway
@@ -39,6 +42,7 @@ class MySqlSchemaValidationIT(
     private val dataSource: DataSource,
     private val flyway: Flyway,
     private val participationRepository: ParticipationRepository,
+    private val roomApplicationRepository: RoomApplicationRepository,
     private val entityManager: EntityManager,
 ) {
     @Test
@@ -79,6 +83,31 @@ class MySqlSchemaValidationIT(
             .executeUpdate()
 
         assertThat(participationRepository.countAtRoomConfirmation(roomId, memberId)).isEqualTo(1)
+    }
+
+    // DATETIME(6) 저장과 조회 조건의 소수점 처리가 같아야 한다. H2 는 이 차이를 재현하지 못한다.
+    @Test
+    @Transactional
+    fun `일괄 종료에 쓴 시각이 나노초여도 MySQL에서 닫힌 신청자를 그대로 되짚는다`() {
+        val roomId = UUID.randomUUID()
+        val applicantId = UUID.randomUUID()
+        val closedAt = LocalDateTime.of(2026, 9, 24, 12, 0, 0, 123_456_789)
+        roomApplicationRepository.saveAndFlush(
+            RoomApplicationEntity(
+                roomId = roomId,
+                applicantMemberId = applicantId,
+                note = "참여하고 싶습니다",
+                appliedAt = closedAt.minusDays(1),
+                status = RoomApplicationStatus.PENDING,
+                pendingMemberId = applicantId,
+            ),
+        )
+
+        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, closedAt)
+
+        assertThat(
+            roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CANCELED, closedAt),
+        ).containsExactly(applicantId)
     }
 
     @Test

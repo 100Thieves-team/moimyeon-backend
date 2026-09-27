@@ -7,6 +7,7 @@ import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.event.OutboxEvent
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
@@ -16,6 +17,7 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -38,6 +40,12 @@ class RoomApplicationNotificationRollbackIT(
     private val hostId = UUID.randomUUID()
     private val applicantId = UUID.randomUUID()
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+
+    // 다른 IT 가 남긴 outbox 행이 이 클래스의 outbox 단언에 섞이지 않게 한다.
+    @BeforeEach
+    fun clearOutbox() {
+        jdbcTemplate.update("DELETE FROM outbox")
+    }
 
     @AfterEach
     fun cleanUp() {
@@ -124,7 +132,7 @@ class FailingRoomApplicationNotificationConfiguration {
 
 class FailingRoomApplicationAcceptedListener {
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    fun fail(event: RoomApplicationAcceptedEvent) {
+    fun fail(event: OutboxEvent) {
         throw IllegalStateException("알림 의도 기록 실패")
     }
 }

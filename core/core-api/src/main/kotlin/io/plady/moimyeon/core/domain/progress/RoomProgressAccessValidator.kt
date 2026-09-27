@@ -35,18 +35,11 @@ class RoomProgressAccessValidator(
 
     fun validateCompleter(roomId: UUID, memberId: UUID) {
         log.debug { "room-progress-access.validator.validateCompleter roomId=$roomId memberId=$memberId" }
+        val room = findActiveRoom(roomId)
+        // 완료된 룸은 응답을 못 받은 재요청일 수 있어 매니저가 기록된 출석과 비교해 판정한다.
         requireBusiness(
-            findActiveRoom(roomId).canComplete(),
+            room.canComplete() || room.status == RoomStatus.COMPLETED,
             CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
-        )
-        participationValidator.validateHost(roomId, memberId)
-    }
-
-    fun validateAttendanceRecorder(roomId: UUID, memberId: UUID) {
-        log.debug { "room-progress-access.validator.validateAttendanceRecorder roomId=$roomId memberId=$memberId" }
-        requireBusiness(
-            findActiveRoom(roomId).status == RoomStatus.COMPLETED,
-            CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
         )
         participationValidator.validateHost(roomId, memberId)
     }

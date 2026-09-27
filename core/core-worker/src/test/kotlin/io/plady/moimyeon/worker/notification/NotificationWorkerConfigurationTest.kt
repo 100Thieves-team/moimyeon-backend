@@ -6,6 +6,7 @@ import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import io.plady.moimyeon.worker.notification.delivery.EmailSender
 import io.plady.moimyeon.worker.notification.delivery.NotificationRecipient
 import io.plady.moimyeon.worker.notification.delivery.NotificationRecipientFinder
+import io.plady.moimyeon.worker.notification.delivery.WebPushDelivery
 import io.plady.moimyeon.worker.notification.delivery.WebPushSender
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -38,7 +39,7 @@ class NotificationWorkerConfigurationTest {
                     }
                 },
             )
-            .withBean(WebPushSender::class.java, { WebPushSender { _, _ -> } })
+            .withBean(WebPushSender::class.java, { WebPushSender { _, _ -> WebPushDelivery.DELIVERED } })
         if (includeEmailSender) {
             runner = runner.withBean(EmailSender::class.java, { EmailSender { _, _ -> } })
         }
@@ -48,7 +49,10 @@ class NotificationWorkerConfigurationTest {
     @Test
     fun `소비가 활성화되면 메시지 처리에 필요한 빈을 모두 조립한다`() {
         contextRunner
-            .withPropertyValues("notification.worker.consumer.enabled=true")
+            .withPropertyValues(
+                "notification.worker.consumer.enabled=true",
+                "notification.action-base-url=https://front.test",
+            )
             .run { context ->
                 assertThat(context).hasNotFailed()
                 assertThat(context).hasSingleBean(NotificationMessageWorker::class.java)

@@ -99,11 +99,13 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 ---
 
 ### `core:core-worker`
-알림 전송과 룸 자동 완료를 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
+알림 전송을 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
 
-- `worker.room`: 예정 시각 8시간이 지난 `CONFIRMED` 룸을 기본 10분마다 `COMPLETED`로 전환한다.
-- 배포 프로파일에서는 자동 완료가 활성화되고 local에서는 꺼진다. `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다.
-- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다. 자동 완료와 완료 알림 Outbox 저장은 한 트랜잭션이다.
+- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다.
+- 룸 자동 완료는 core-api가 실행한다(MOI-499). 수동 완료와 같은 완료 로직·완료 사실 발행을 쓰기 위해서다.
+  예정 시각 8시간이 지난 `CONFIRMED` 룸을 기본 10분마다 `COMPLETED`로 전환하고, 배포 프로파일에서 켜지며 local에서는 꺼진다.
+  `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. API 서버가 여러 대면 모두 실행하지만 룸 행을 잠그고
+  다시 판정하므로 한 룸은 한 번만 완료된다.
 
 ---
 
@@ -205,7 +207,7 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 ```
 
 핵심 설계 원칙:
-- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트), `core-batch`(배치), `core-worker`(알림·룸 자동 완료)이다.
+- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트, 룸 자동 완료), `core-batch`(배치), `core-worker`(알림 전송)이다.
 - `admin ↔ core`는 컴파일 타임 완전 격리. 어드민은 도메인 객체·에러 체계·설정을 전부 자체 보유하고, 접점은 런타임 조립(컴포넌트 스캔 + split package 엔티티 스캔)뿐이다.
 - 배치는 시간 주도 워크로드라 조립하지 않고 독립 앱으로 둔다 (스케일 아웃 시 잡 중복 방지).
 - security 는 presentation 앞단 모듈로, 서비스 레이어에는 인증 컨텍스트가 아닌 평범한 값(`userId`)만 흘러 들어간다.

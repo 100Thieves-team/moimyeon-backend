@@ -75,4 +75,23 @@ interface OutboxRepository : JpaRepository<OutboxEntity, UUID> {
         @Param("claimToken") claimToken: String,
         @Param("updatedAt") updatedAt: LocalDateTime,
     ): Int
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        value = """
+            UPDATE outbox
+            SET relay_status = 'UNREADABLE',
+                claim_token = NULL,
+                lease_until = NULL,
+                updated_at = :updatedAt
+            WHERE id = :eventId
+              AND claim_token = :claimToken
+        """,
+        nativeQuery = true,
+    )
+    fun markUnreadable(
+        @Param("eventId") eventId: UUID,
+        @Param("claimToken") claimToken: String,
+        @Param("updatedAt") updatedAt: LocalDateTime,
+    ): Int
 }

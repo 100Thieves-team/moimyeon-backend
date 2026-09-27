@@ -6,8 +6,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.core.enums.NotificationPolicy
 import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import io.plady.moimyeon.worker.notification.delivery.Notification
 import io.plady.moimyeon.worker.notification.delivery.NotificationContent
@@ -24,20 +24,11 @@ class NotificationMessageHandlerTest {
     private val handler = NotificationMessageHandler(
         jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
         notificationSender = sender,
+        actionBaseUrl = FRONT_BASE_URL,
     )
 
     @Test
-    fun `참가 신청 수락 이벤트는 웹 푸시와 이메일로 알린다`() {
-        EventType.entries.forEach { eventType ->
-            assertThat(eventType.notificationChannels).containsExactlyInAnyOrder(
-                NotificationChannel.WEB_PUSH,
-                NotificationChannel.EMAIL,
-            )
-        }
-    }
-
-    @Test
-    fun `참가 신청 수락 payload를 신청자 알림으로 전달한다`() {
+    fun `공통 형식 payload를 받는 사람과 문구 그대로 발송 요청으로 바꾼다`() {
         val notification = slot<Notification>()
         every { sender.send(capture(notification)) } just Runs
 
@@ -46,16 +37,79 @@ class NotificationMessageHandlerTest {
         assertThat(notification.captured).isEqualTo(
             Notification(
                 eventId = EVENT_ID,
-                eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+                eventType = "ROOM_APPLICATION_ACCEPTED",
                 channel = NotificationChannel.WEB_PUSH,
-                recipientMemberId = APPLICANT_ID,
+                policy = NotificationPolicy.PUSH_AND_EMAIL,
+                recipientMemberId = RECIPIENT_ID,
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionPath = "/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
                 ),
             ),
         )
+    }
+
+    @Test
+    fun `프론트 주소와 상대 경로 사이의 슬래시는 하나로 합친다`() {
+        val notification = slot<Notification>()
+        every { sender.send(capture(notification)) } just Runs
+        val handler = NotificationMessageHandler(
+            jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
+            notificationSender = sender,
+            actionBaseUrl = "$FRONT_BASE_URL/",
+        )
+
+        handler.handle(message(payload = payload(actionPath = "/rooms/$ROOM_ID")))
+
+        assertThat(notification.captured.content.actionUrl).isEqualTo("$FRONT_BASE_URL/rooms/$ROOM_ID")
+    }
+
+    @Test
+    fun `worker가 모르는 이벤트 종류도 공통 형식이면 발송한다`() {
+        val notification = slot<Notification>()
+        every { sender.send(capture(notification)) } just Runs
+
+        handler.handle(message(eventType = "SOME_FUTURE_EVENT"))
+
+        assertThat(notification.captured.eventType).isEqualTo("SOME_FUTURE_EVENT")
+    }
+
+    @Test
+    fun `이동 경로가 없으면 링크 없이 발송한다`() {
+        val notification = slot<Notification>()
+        every { sender.send(capture(notification)) } just Runs
+
+        handler.handle(message(payload = payload(actionPath = null)))
+
+        assertThat(notification.captured.content.actionUrl).isNull()
+    }
+
+    @Test
+    fun `정책에 없는 채널의 메시지는 발송하지 않고 영구 실패한다`() {
+        assertThatThrownBy {
+            handler.handle(message(payload = payload(policy = NotificationPolicy.EMAIL_ONLY)))
+        }.isInstanceOf(InvalidNotificationMessageException::class.java)
+
+        verify(exactly = 0) { sender.send(any()) }
+    }
+
+    @Test
+    fun `공통 형식의 필수 값이 없으면 발송하지 않고 영구 실패한다`() {
+        val withoutRecipient = """{"eventId":"$EVENT_ID","policy":"PUSH_ONLY","title":"제목","body":"본문"}"""
+
+        assertThatThrownBy {
+            handler.handle(message(payload = withoutRecipient))
+        }.isInstanceOf(InvalidNotificationMessageException::class.java)
+
+        verify(exactly = 0) { sender.send(any()) }
+    }
+
+    @Test
+    fun `제목이 비어 있으면 발송하지 않고 영구 실패한다`() {
+        assertThatThrownBy {
+            handler.handle(message(payload = payload(title = " ")))
+        }.isInstanceOf(InvalidNotificationMessageException::class.java)
     }
 
     @Test
@@ -68,68 +122,11 @@ class NotificationMessageHandlerTest {
     }
 
     @Test
-    fun `룸 생명주기 이벤트를 수신자별 알림으로 변환한다`() {
-        val expectedContents = mapOf(
-            EventType.ROOM_CONFIRMED to NotificationContent(
-                title = "모임 진행이 확정되었어요",
-                body = "확정된 일정과 참여자를 확인해 주세요.",
-                actionPath = "/rooms/$ROOM_ID",
-            ),
-            EventType.ROOM_COMPLETED to NotificationContent(
-                title = "모임이 완료되었어요",
-                body = "방장이 참석 여부를 기록하면 결과를 확인할 수 있어요.",
-                actionPath = "/rooms/$ROOM_ID",
-            ),
-            EventType.ROOM_CANCELED to NotificationContent(
-                title = "모임이 취소되었어요",
-                body = "참여 중이던 모임의 취소 내용을 확인해 주세요.",
-                actionPath = "/rooms/$ROOM_ID",
-            ),
-            EventType.ROOM_REVIEW_REQUESTED to NotificationContent(
-                title = "함께한 참여자의 후기를 남겨 주세요",
-                body = "완료된 모임의 리뷰를 작성할 수 있어요.",
-                actionPath = "/rooms/$ROOM_ID",
-            ),
-        )
-
-        expectedContents.forEach { (eventType, content) ->
-            val notification = slot<Notification>()
-            every { sender.send(capture(notification)) } just Runs
-
-            handler.handle(lifecycleMessage(eventType))
-
-            assertThat(notification.captured).isEqualTo(
-                Notification(
-                    eventId = EVENT_ID,
-                    eventType = eventType,
-                    channel = NotificationChannel.WEB_PUSH,
-                    recipientMemberId = APPLICANT_ID,
-                    content = content,
-                ),
-            )
-        }
-    }
-
-    @Test
     fun `Stream과 payload의 이벤트 식별자가 다르면 발송하지 않는다`() {
         val otherEventId = UUID.fromString("0198b4f4-2f00-7000-8000-000000000099")
 
         assertThatThrownBy {
             handler.handle(message(payload = payload(eventId = otherEventId)))
-        }.isInstanceOf(InvalidNotificationMessageException::class.java)
-
-        verify(exactly = 0) { sender.send(any()) }
-    }
-
-    @Test
-    fun `룸 생명주기 Stream과 payload의 이벤트 타입이 다르면 발송하지 않는다`() {
-        assertThatThrownBy {
-            handler.handle(
-                lifecycleMessage(
-                    eventType = EventType.ROOM_CONFIRMED,
-                    payloadEventType = EventType.ROOM_COMPLETED,
-                ),
-            )
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
         verify(exactly = 0) { sender.send(any()) }
@@ -145,44 +142,37 @@ class NotificationMessageHandlerTest {
             .hasMessage("알림 발송 실패")
     }
 
-    private fun message(payload: String = payload()) = NotificationStreamMessage(
-        eventId = EVENT_ID,
-        eventType = EventType.ROOM_APPLICATION_ACCEPTED,
-        channel = NotificationChannel.WEB_PUSH,
-        payload = payload,
-    )
-
-    private fun lifecycleMessage(
-        eventType: EventType,
-        payloadEventType: EventType = eventType,
+    private fun message(
+        eventType: String = "ROOM_APPLICATION_ACCEPTED",
+        payload: String = payload(),
     ) = NotificationStreamMessage(
         eventId = EVENT_ID,
         eventType = eventType,
         channel = NotificationChannel.WEB_PUSH,
-        payload = """
-            {
-              "eventId": "$EVENT_ID",
-              "eventType": "$payloadEventType",
-              "roomId": "$ROOM_ID",
-              "recipientMemberId": "$APPLICANT_ID"
-            }
-        """.trimIndent(),
+        payload = payload,
     )
 
-    private fun payload(eventId: UUID = EVENT_ID) =
-        """
+    private fun payload(
+        eventId: UUID = EVENT_ID,
+        policy: NotificationPolicy = NotificationPolicy.PUSH_AND_EMAIL,
+        title: String = "참가 신청이 수락되었어요",
+        actionPath: String? = "/rooms/$ROOM_ID",
+    ) = """
         {
           "eventId": "$eventId",
           "eventType": "ROOM_APPLICATION_ACCEPTED",
-          "applicationId": 1,
-          "roomId": "$ROOM_ID",
-          "applicantMemberId": "$APPLICANT_ID"
+          "policy": "$policy",
+          "recipientMemberId": "$RECIPIENT_ID",
+          "title": "$title",
+          "body": "모임에 참여할 수 있게 되었어요.",
+          "actionPath": ${actionPath?.let { "\"$it\"" } ?: "null"}
         }
-        """.trimIndent()
+    """.trimIndent()
 
     private companion object {
+        const val FRONT_BASE_URL = "https://front.test"
         val EVENT_ID: UUID = UUID.fromString("0198b4f4-2f00-7000-8000-000000000001")
         val ROOM_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
-        val APPLICANT_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val RECIPIENT_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
     }
 }

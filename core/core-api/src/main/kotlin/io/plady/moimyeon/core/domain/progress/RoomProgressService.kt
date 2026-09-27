@@ -21,32 +21,17 @@ class RoomProgressService(
     fun complete(
         completedByMemberId: UUID,
         roomId: UUID,
+        attendances: List<Attendance>,
     ): RoomProgressCompletionResult {
-        log.debug { "room.progress.complete memberId=$completedByMemberId roomId=$roomId" }
+        log.debug { "room.progress.complete memberId=$completedByMemberId roomId=$roomId attendances=${attendances.size}" }
         val completedAt = now()
         accessValidator.validateCompleter(roomId, completedByMemberId)
         return progressManager.complete(
             RoomProgressCompletionCommand(
                 roomId = roomId,
                 completedByMemberId = completedByMemberId,
-                completedAt = completedAt,
-            ),
-        )
-    }
-
-    fun recordAttendances(
-        recorderMemberId: UUID,
-        roomId: UUID,
-        attendances: List<Attendance>,
-    ): RoomAttendanceRecordResult {
-        log.debug { "room.attendance.record memberId=$recorderMemberId roomId=$roomId attendances=${attendances.size}" }
-        accessValidator.validateAttendanceRecorder(roomId, recorderMemberId)
-        return progressManager.recordAttendances(
-            RoomAttendanceRecordCommand(
-                roomId = roomId,
-                recorderMemberId = recorderMemberId,
                 attendances = attendances.toList(),
-                recordedAt = now(),
+                completedAt = completedAt,
             ),
         )
     }

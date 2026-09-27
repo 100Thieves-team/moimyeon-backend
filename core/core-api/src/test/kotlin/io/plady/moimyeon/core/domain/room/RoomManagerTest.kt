@@ -2,9 +2,12 @@ package io.plady.moimyeon.core.domain.room
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.domain.member.MemberValidator
+import io.plady.moimyeon.core.domain.participation.JoinedParticipant
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
 import io.plady.moimyeon.core.domain.resume.ResumeFile
 import io.plady.moimyeon.core.enums.EventType
@@ -15,9 +18,11 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
+import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
-import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
@@ -28,7 +33,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import java.time.Clock
 import java.time.LocalDateTime
@@ -46,7 +50,8 @@ class RoomManagerTest {
     private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
     private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
     private val memberValidator = mockk<MemberValidator>(relaxed = true)
-    private val applicationEventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
+    private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
+    private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
     private val manager = RoomManager(
         roomRepository,
         participationRepository,
@@ -55,8 +60,9 @@ class RoomManagerTest {
         roomStatusLogRepository,
         participationValidator,
         memberValidator,
+        participationFinder,
+        outboxEventPublisher,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
-        applicationEventPublisher,
     )
 
     private val roomId = UUID.randomUUID()
@@ -247,6 +253,33 @@ class RoomManagerTest {
     }
 
     @Test
+    fun `시계가 나노초까지 내도 신청 종료와 종료된 신청 조회에 같은 마이크로초 시각을 쓴다`() {
+        val nanoNow = now.plusNanos(123_456_789)
+        val nanoManager = RoomManager(
+            roomRepository,
+            participationRepository,
+            roomApplicationRepository,
+            resumeSubmissionRepository,
+            roomStatusLogRepository,
+            participationValidator,
+            memberValidator,
+            participationFinder,
+            outboxEventPublisher,
+            Clock.fixed(nanoNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+        )
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        nanoManager.cancel(roomId, hostId)
+
+        val handledAt = now.plusNanos(123_456_000)
+        verifyOrder {
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+            roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+        }
+    }
+
+    @Test
     fun `룸을 취소하면 이력을 남기고 대기 신청을 종료한다`() {
         givenRecruitingRoomForUpdate()
         givenHost()
@@ -262,7 +295,7 @@ class RoomManagerTest {
     }
 
     @Test
-    fun `룸을 폭파하면 참여 중인 전원에게 취소 이벤트를 발행한다`() {
+    fun `룸을 폭파하면 취소한 방장과 참여 중인 전원을 담아 취소 사실을 발행한다`() {
         val participantId = UUID.randomUUID()
         givenRecruitingRoomForUpdate()
         givenHost()
@@ -270,23 +303,10 @@ class RoomManagerTest {
 
         manager.cancel(roomId, hostId)
 
-        val events = mutableListOf<RoomLifecycleNotificationEvent>()
-        verify(exactly = 2) { applicationEventPublisher.publishEvent(capture(events)) }
-        assertThat(events.map { it.eventType }).containsOnly(EventType.ROOM_CANCELED)
-        assertThat(events.map { it.recipientMemberId }).containsExactly(hostId, participantId)
-    }
-
-    @Test
-    fun `방장 이탈 뒤 참여자가 없어도 이탈한 방장에게 취소 이벤트를 발행한다`() {
-        givenRecruitingRoomForUpdate()
-        givenHost()
-
-        manager.cancel(roomId, hostId)
-
-        val events = mutableListOf<RoomLifecycleNotificationEvent>()
-        verify(exactly = 1) { applicationEventPublisher.publishEvent(capture(events)) }
-        assertThat(events.single().eventType).isEqualTo(EventType.ROOM_CANCELED)
-        assertThat(events.single().recipientMemberId).isEqualTo(hostId)
+        val canceled = slot<RoomCanceledEventPayload>()
+        verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CANCELED, capture(canceled)) }
+        assertThat(canceled.captured.canceledByMemberId).isEqualTo(hostId)
+        assertThat(canceled.captured.participantMemberIds).containsExactly(hostId, participantId)
     }
 
     // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
@@ -326,7 +346,7 @@ class RoomManagerTest {
     }
 
     @Test
-    fun `룸을 확정하면 참여 중인 전원에게 확정 이벤트를 발행한다`() {
+    fun `룸을 확정하면 참여 중인 전원을 담아 확정 사실을 발행한다`() {
         val participantId = UUID.randomUUID()
         givenRecruitingRoomForUpdate()
         givenHost()
@@ -335,10 +355,9 @@ class RoomManagerTest {
 
         manager.confirm(roomId, hostId)
 
-        val events = mutableListOf<RoomLifecycleNotificationEvent>()
-        verify(exactly = 2) { applicationEventPublisher.publishEvent(capture(events)) }
-        assertThat(events.map { it.eventType }).containsOnly(EventType.ROOM_CONFIRMED)
-        assertThat(events.map { it.recipientMemberId }).containsExactly(hostId, participantId)
+        val confirmed = slot<RoomConfirmedEventPayload>()
+        verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CONFIRMED, capture(confirmed)) }
+        assertThat(confirmed.captured.participantMemberIds).containsExactly(hostId, participantId)
     }
 
     @Test
@@ -513,19 +532,12 @@ class RoomManagerTest {
         every {
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
         } returns joined.toLong()
+        every { participationFinder.getJoinedParticipants(roomId) } returns emptyList()
     }
 
     private fun givenJoinedMembers(vararg memberIds: UUID) {
-        every {
-            participationRepository.findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
-                roomId,
-                ParticipationStatus.JOINED,
-            )
-        } returns memberIds.map { memberId ->
-            mockk<ParticipationEntity> {
-                every { this@mockk.memberId } returns memberId
-            }
-        }
+        every { participationFinder.getJoinedParticipants(roomId) } returns
+            memberIds.map { JoinedParticipant(memberId = it, isHost = it == hostId) }
     }
 
     // --- 생성 경로(MOI-331) --------------------------------------------------

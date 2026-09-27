@@ -6,6 +6,7 @@ import io.plady.moimyeon.worker.notification.delivery.EmailSender
 import io.plady.moimyeon.worker.notification.delivery.NotificationRecipientFinder
 import io.plady.moimyeon.worker.notification.delivery.NotificationSender
 import io.plady.moimyeon.worker.notification.delivery.WebPushSender
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -33,9 +34,11 @@ class NotificationWorkerConfiguration {
     fun notificationMessageHandler(
         jsonMapper: JsonMapper,
         notificationSender: NotificationSender,
+        @Value("\${notification.action-base-url}") actionBaseUrl: String,
     ): NotificationMessageHandler = NotificationMessageHandler(
         jsonMapper = jsonMapper,
         notificationSender = notificationSender,
+        actionBaseUrl = actionBaseUrl,
     )
 
     @Bean

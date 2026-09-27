@@ -8,6 +8,9 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEvent
+import io.plady.moimyeon.core.event.payload.EventPayload
+import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -21,6 +24,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.ApplicationEventsHolder
+import org.springframework.test.context.event.RecordApplicationEvents
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
@@ -29,6 +35,7 @@ import java.util.UUID
 // 세 개의 쓰기(상태 전이·이력·대기 신청 벌크)가 한 커밋인지 본다.
 // 테스트에 @Transactional 을 두지 않는다 — 바깥 트랜잭션이 있으면 운영 코드의 프록시 경계와
 // 커밋 시점이 가려져 원자성을 확인할 수 없다(testing.md 트랜잭션 절).
+@RecordApplicationEvents
 class RoomConfirmationIT(
     private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,
@@ -39,6 +46,10 @@ class RoomConfirmationIT(
     private val roomApplicationManager: RoomApplicationManager,
     transactionManager: PlatformTransactionManager,
 ) : ContextTest() {
+    // ApplicationEvents 는 생성자로 주입되지 않는다.
+    private val applicationEvents: ApplicationEvents
+        get() = ApplicationEventsHolder.getRequiredApplicationEvents()
+
     private val transactionTemplate = TransactionTemplate(transactionManager)
     private val roomId = UUID.randomUUID()
     private val hostMemberId = UUID.randomUUID()
@@ -151,6 +162,40 @@ class RoomConfirmationIT(
             }
     }
 
+    @Test
+    fun `확정하면 참여자와 확정으로 신청이 닫힌 대기 신청자를 담아 확정 사실을 발행한다`() {
+        seedRoom()
+        val participant = seedParticipant()
+        repeat(2) { seedPendingApplication() }
+
+        roomManager.confirm(roomId, hostMemberId)
+
+        val confirmed = published<RoomConfirmedEventPayload>().single()
+        assertThat(confirmed.hostMemberId).isEqualTo(hostMemberId)
+        assertThat(confirmed.participantMemberIds).containsExactlyInAnyOrder(hostMemberId, participant)
+        assertThat(confirmed.closedApplicantMemberIds)
+            .containsExactlyInAnyOrderElementsOf(applications().map { it.applicantMemberId })
+    }
+
+    @Test
+    fun `확정 조건을 만족하지 못해 실패하면 확정 사실을 발행하지 않는다`() {
+        seedRoom()
+        seedPendingApplication()
+
+        assertThatThrownBy { roomManager.confirm(roomId, hostMemberId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_BELOW_MIN_CAPACITY)
+            }
+
+        assertThat(published<RoomConfirmedEventPayload>()).isEmpty()
+    }
+
+    private inline fun <reified T : EventPayload> published(): List<T> = applicationEvents
+        .stream(OutboxEvent::class.java)
+        .map { it.payload }
+        .toList()
+        .filterIsInstance<T>()
+
     private fun updateCommand() = RoomUpdateCommand(
         title = RoomTitle("확정 뒤에는 못 바꾸는 제목"),
         description = null,
@@ -193,16 +238,18 @@ class RoomConfirmationIT(
         )
     }
 
-    private fun seedParticipant() {
+    private fun seedParticipant(): UUID {
+        val memberId = UUID.randomUUID()
         participationRepository.saveAndFlush(
             ParticipationEntity(
                 roomId = roomId,
-                memberId = UUID.randomUUID(),
+                memberId = memberId,
                 participationRole = ParticipationRole.PARTICIPANT,
                 status = ParticipationStatus.JOINED,
                 joinedAt = startAt.minusDays(2),
             ),
         )
+        return memberId
     }
 
     private fun seedPendingApplication(): Long {

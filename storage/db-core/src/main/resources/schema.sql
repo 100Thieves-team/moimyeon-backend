@@ -828,6 +828,8 @@ CREATE TABLE review (
     visible_at       DATETIME(6) NOT NULL,
     hidden_at        DATETIME(6) NULL,
     reported_at      DATETIME(6) NULL,
+    -- 공개 뒤 알림 판정을 끝낸 시각. 알리지 않는 후기(자기 자신·가려짐)도 기록한다(MOI-499).
+    notified_at      DATETIME(6) NULL,
     created_at       DATETIME(6) NOT NULL,
     updated_at       DATETIME(6) NOT NULL,
     deleted_at       DATETIME(6) NULL,
@@ -836,6 +838,7 @@ CREATE TABLE review (
     CONSTRAINT uk_review_room_author_target_active UNIQUE (room_id, author_member_id, target_member_id, _active_check)
 );
 CREATE INDEX ix_review_target_member_id ON review (target_member_id);
+CREATE INDEX ix_review_notified_at_deleted_at_visible_at ON review (notified_at, deleted_at, visible_at);
 
 -- 평가 태그(다건). 태그는 열거값이며 마스터 테이블을 두지 않는다 —
 -- "자주 받은 태그" 집계는 GROUP BY 로 되고, 마스터가 있어도 집계에 도움이 되지 않는다.

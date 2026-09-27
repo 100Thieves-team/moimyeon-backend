@@ -5,7 +5,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
 import io.plady.moimyeon.core.api.controller.v1.response.AttendanceResponse
-import io.plady.moimyeon.core.api.controller.v1.response.RoomAttendancesResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomProgressCompletionResponse
 import io.plady.moimyeon.core.api.facade.RoomProgressFacade
 import io.plady.moimyeon.core.api.security.LoginMemberArgumentResolver
@@ -47,10 +46,16 @@ class RoomProgressControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `방장이 확정 룸을 즉시 완료한다`() {
-        every { progressFacade.complete(hostId, roomId) } returns RoomProgressCompletionResponse("COMPLETED")
+    fun `방장이 확정 참여자 전원의 출석을 입력하며 룸을 완료한다`() {
+        every { progressFacade.complete(hostId, roomId, attendances()) } returns RoomProgressCompletionResponse(
+            "COMPLETED",
+            listOf(
+                AttendanceResponse(hostId, "영리한 부엉이 86", "ATTENDED"),
+                AttendanceResponse(participantId, "성실한 사슴 03", "ABSENT"),
+            ),
+        )
 
-        mockMvc.perform(post("/v1/rooms/{roomId}/complete", roomId).principal(principal))
+        mockMvc.perform(completeRequest(completeBody()))
             .andExpect(status().isOk)
             .andExpect { assertThat(it.response.contentAsString).contains("\"status\":\"COMPLETED\"") }
             .andDo(
@@ -59,44 +64,13 @@ class RoomProgressControllerTest : RestDocsTest() {
                     COMPLETE_SUMMARY,
                     COMPLETE_DESCRIPTION,
                     pathParameters(parameterWithName("roomId").description("완료할 룸 식별자")),
-                    successResponseFields(fieldWithPath("data.status").description("완료 후 룸 상태 (COMPLETED)")),
-                ),
-            )
-    }
-
-    @Test
-    fun `완료 이후 방장이 확정 참여자 전원의 출석을 기록한다`() {
-        val attendances = listOf(
-            Attendance(hostId, AttendanceStatus.ATTENDED),
-            Attendance(participantId, AttendanceStatus.ABSENT),
-        )
-        every { progressFacade.recordAttendances(hostId, roomId, attendances) } returns RoomAttendancesResponse(
-            listOf(
-                AttendanceResponse(hostId, "영리한 부엉이 86", "ATTENDED"),
-                AttendanceResponse(participantId, "성실한 사슴 03", "ABSENT"),
-            ),
-        )
-
-        mockMvc.perform(
-            post("/v1/rooms/{roomId}/attendances", roomId)
-                .principal(principal)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(attendanceRequest()),
-        )
-            .andExpect(status().isOk)
-            .andExpect { assertThat(it.response.contentAsString).contains("\"status\":\"ABSENT\"") }
-            .andDo(
-                documentApi(
-                    "recordRoomAttendances",
-                    ATTENDANCE_SUMMARY,
-                    ATTENDANCE_DESCRIPTION,
-                    pathParameters(parameterWithName("roomId").description("출석을 기록할 룸 식별자")),
                     requestFields(
                         fieldWithPath("attendances").description("확정 참여자 전원의 출석 선택"),
                         fieldWithPath("attendances[].memberId").description("참여자 회원 식별자"),
                         fieldWithPath("attendances[].status").description("ATTENDED | ABSENT"),
                     ),
                     successResponseFields(
+                        fieldWithPath("data.status").description("완료 후 룸 상태 (COMPLETED)"),
                         fieldWithPath("data.attendances").description("저장된 출석 목록"),
                         fieldWithPath("data.attendances[].memberId").description("참여자 회원 식별자"),
                         fieldWithPath("data.attendances[].nickname").description("참여자 닉네임"),
@@ -129,73 +103,37 @@ class RoomProgressControllerTest : RestDocsTest() {
     }
 
     @Test
-    fun `룸 완료 오류를 문서화한다`() {
-        listOf(
-            CoreErrorType.ROOM_NOT_FOUND,
-            CoreErrorType.ROOM_FORBIDDEN,
-            CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
-        ).forEach { errorType ->
-            every { progressFacade.complete(hostId, roomId) } throws CoreException(errorType)
-
-            mockMvc.perform(post("/v1/rooms/{roomId}/complete", roomId).principal(principal))
-                .andExpect(status().`is`(errorType.status.value()))
-                .andDo(
-                    documentApi(
-                        "completeRoomProgress-${errorType.code.name.lowercase()}",
-                        COMPLETE_SUMMARY,
-                        COMPLETE_DESCRIPTION,
-                        errorResponseFields(),
-                    ),
-                )
-        }
-    }
-
-    @Test
-    fun `출석 기록 요청 형식 오류를 문서화한다`() {
-        mockMvc.perform(
-            post("/v1/rooms/{roomId}/attendances", roomId)
-                .principal(principal)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"attendances":[{"memberId":"$hostId","status":"UNKNOWN"}]}"""),
-        )
+    fun `룸 완료 요청 형식 오류를 문서화한다`() {
+        mockMvc.perform(completeRequest("""{"attendances":[{"memberId":"$hostId","status":"UNKNOWN"}]}"""))
             .andExpect(status().isBadRequest)
             .andDo(
                 documentApi(
-                    "recordRoomAttendances-e400",
-                    ATTENDANCE_SUMMARY,
-                    ATTENDANCE_DESCRIPTION,
+                    "completeRoomProgress-e400",
+                    COMPLETE_SUMMARY,
+                    COMPLETE_DESCRIPTION,
                     errorResponseFields(),
                 ),
             )
     }
 
     @Test
-    fun `출석 기록 도메인 오류를 문서화한다`() {
-        val attendances = listOf(
-            Attendance(hostId, AttendanceStatus.ATTENDED),
-            Attendance(participantId, AttendanceStatus.ABSENT),
-        )
+    fun `룸 완료 도메인 오류를 문서화한다`() {
         listOf(
             CoreErrorType.ROOM_NOT_FOUND,
             CoreErrorType.ROOM_FORBIDDEN,
-            CoreErrorType.ROOM_PROGRESS_NOT_AVAILABLE,
             CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH,
+            CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
             CoreErrorType.ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED,
         ).forEach { errorType ->
-            every { progressFacade.recordAttendances(hostId, roomId, attendances) } throws CoreException(errorType)
+            every { progressFacade.complete(hostId, roomId, attendances()) } throws CoreException(errorType)
 
-            mockMvc.perform(
-                post("/v1/rooms/{roomId}/attendances", roomId)
-                    .principal(principal)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(attendanceRequest()),
-            )
+            mockMvc.perform(completeRequest(completeBody()))
                 .andExpect(status().`is`(errorType.status.value()))
                 .andDo(
                     documentApi(
-                        "recordRoomAttendances-${errorType.code.name.lowercase()}",
-                        ATTENDANCE_SUMMARY,
-                        ATTENDANCE_DESCRIPTION,
+                        "completeRoomProgress-${errorType.code.name.lowercase()}",
+                        COMPLETE_SUMMARY,
+                        COMPLETE_DESCRIPTION,
                         errorResponseFields(),
                     ),
                 )
@@ -225,7 +163,17 @@ class RoomProgressControllerTest : RestDocsTest() {
         }
     }
 
-    private fun attendanceRequest(): String = jsonMapper().writeValueAsString(
+    private fun completeRequest(body: String) = post("/v1/rooms/{roomId}/complete", roomId)
+        .principal(principal)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(body)
+
+    private fun attendances() = listOf(
+        Attendance(hostId, AttendanceStatus.ATTENDED),
+        Attendance(participantId, AttendanceStatus.ABSENT),
+    )
+
+    private fun completeBody(): String = jsonMapper().writeValueAsString(
         mapOf(
             "attendances" to listOf(
                 mapOf("memberId" to hostId, "status" to "ATTENDED"),
@@ -237,12 +185,8 @@ class RoomProgressControllerTest : RestDocsTest() {
     private companion object {
         const val COMPLETE_SUMMARY = "룸 완료"
         const val COMPLETE_DESCRIPTION =
-            "방장이 CONFIRMED 룸을 즉시 COMPLETED로 전환한다. 출석은 별도 API로 기록한다. " +
-                "E1405, E1406, E1707을 응답할 수 있다."
-        const val ATTENDANCE_SUMMARY = "룸 출석 기록"
-        const val ATTENDANCE_DESCRIPTION =
-            "룸 완료 이후 방장이 최신 확정 참여자 전원의 참석 여부를 한 번 기록한다. " +
-                "E400, E1405, E1406, E1704, E1706, E1708을 응답할 수 있다."
+            "방장이 확정 참여자 전원의 참석 여부를 입력하며 CONFIRMED 룸을 COMPLETED로 전환한다. " +
+                "E400, E1405, E1406, E1706, E1707, E1708을 응답할 수 있다."
         const val MY_ATTENDANCE_SUMMARY = "내 출석 결과 조회"
         const val MY_ATTENDANCE_DESCRIPTION =
             "완료 후 기록된 자신의 참석 결과를 조회한다. E1405, E1703, E1704, E1705를 응답할 수 있다."

@@ -2,9 +2,14 @@ package io.plady.moimyeon.core.domain.roomapplication
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberValidator
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
+import io.plady.moimyeon.core.domain.room.RoomFinder
 import io.plady.moimyeon.core.domain.room.RoomValidator
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomApplicationSubmittedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -31,6 +36,9 @@ class RoomApplicationSubmissionManager(
     private val participationValidator: ParticipationValidator,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
+    private val roomFinder: RoomFinder,
+    private val participationFinder: ParticipationFinder,
+    private val outboxEventPublisher: OutboxEventPublisher,
     private val clock: Clock,
 ) {
     @Transactional
@@ -65,6 +73,7 @@ class RoomApplicationSubmissionManager(
                 submittedAt = now,
             ),
         )
+        publishSubmitted(application.id, roomId, applicantMemberId)
         return application.id
     }
 
@@ -82,6 +91,25 @@ class RoomApplicationSubmissionManager(
         requireBusiness(application.isPending(), CoreErrorType.APPLICATION_ALREADY_HANDLED)
 
         application.withdraw(LocalDateTime.now(clock))
+    }
+
+    private fun publishSubmitted(applicationId: Long, roomId: UUID, applicantMemberId: UUID) {
+        outboxEventPublisher.publish(
+            EventType.ROOM_APPLICATION_SUBMITTED,
+            RoomApplicationSubmittedEventPayload(
+                applicationId = applicationId,
+                roomId = roomId,
+                roomTitle = roomFinder.getRoom(roomId).title.value,
+                hostMemberId = participationFinder.getHostMemberId(roomId),
+                applicantMemberId = applicantMemberId,
+            ),
+        )
+    }
+
+    @Transactional
+    fun withdrawAllPending(applicantMemberId: UUID, now: LocalDateTime) {
+        log.debug { "room-application-submission.manager.withdrawAllPending applicantMemberId=$applicantMemberId" }
+        roomApplicationRepository.withdrawAllPending(applicantMemberId, now)
     }
 
     private fun validatePendingApplicationCount(applicantMemberId: UUID) {

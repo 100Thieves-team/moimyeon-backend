@@ -56,20 +56,25 @@ moimyeon/
 
 ## core-worker: 백그라운드 작업 조립
 
-- `worker.notification`은 Outbox에서 Redis Stream으로 전달된 알림을 처리하고, `worker.room`은 예정 시각 8시간이 지난 `CONFIRMED` 룸을 자동 완료한다.
-- 자동 완료는 `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. local은 비활성이다.
-- 스케줄러 풀은 2개 스레드로 구성해 알림 전송과 자동 완료가 서로를 막지 않게 한다.
-- 자동 완료는 룸 행 잠금으로 수동 완료·방장 이탈과 직렬화하고, 상태 변경·SYSTEM 로그·완료 알림 Outbox를 한 트랜잭션으로 저장한다.
+- `worker.notification`은 Outbox에서 Redis Stream으로 전달된 알림을 처리한다.
+- 룸 자동 완료는 worker가 아니라 core-api(`RoomAutoCompleteJob` → `RoomProgressManager.completeOverdue`)가 실행한다.
+  수동 완료와 같은 완료 로직으로 룸 행을 잠그고 다시 판정해, API 서버가 여러 대여도 한 번만 완료하고 완료 사실을 발행한다.
+  `ROOM_AUTO_COMPLETE_ENABLED`(배포 프로파일 기본 true)와 `ROOM_AUTO_COMPLETE_CRON`으로 제어하며 local은 비활성이다.
 - 현재 배포 경로의 API → worker 순서를 유지한다. V27은 구버전 INSERT 호환성을 위해 handler_type 기본값 MEMBER를 유지한다.
-- core-batch에는 룸 자동 완료를 등록하지 않는다. dev worker는 실행 중이며 live는 worker desired count가 0이므로 활성화 시 자동 완료도 시작된다.
-- `NotificationMessageHandler` 한 클래스가 `EventType`에 따라 Stream payload와 채널을 검증하고 수신자·제목·본문·이동 경로를
-  담은 채널별 `Notification`으로 변환한다. 이벤트별 Handler 인터페이스와 구현체는 두지 않는다.
-- 이벤트별 발송 경로는 `core-enum`의 `EventType.notificationChannels`가 소유한다. 새 이벤트를 추가할 때 이벤트 종류와
-  채널 정책, 단일 Handler의 payload 변환 분기만 추가하며 사건마다 웹 푸시·이메일 포트를 다시 만들지 않는다.
-- 웹 푸시와 이메일은 서로의 fallback이 아니다. EventType의 채널 집합은 이메일만, 웹 푸시만 또는 둘 다 발송하는 제품 정책이다.
-  `redis-core`가 이 정책을 채널별 Stream 메시지로 확장하므로 각 채널은 독립적으로 ACK·재처리된다.
-- `ChannelNotificationSender`는 한 `Notification`에 지정된 한 채널만 처리한다. 웹 푸시 실패는 웹 푸시 메시지만 Pending에
-  남기며, 별도 이메일 메시지의 처리 결과에는 영향을 주지 않는다.
+- worker는 이벤트 종류를 모른다(MOI-499). core-api의 `NotificationOutboxEventConsumer`가 도메인 사실을 받는 사람·전송 정책·
+  제목·본문·프론트 상대 경로를 담은 공통 형식으로 바꿔 보내고, `NotificationMessageHandler`는 이 형식만 해석한다.
+  `eventType`은 문자열로 받아 로그·메트릭·푸시 data에만 싣고 분기하지 않는다. 그래서 새 이벤트는 core-api 쪽만 고치면 되고,
+  API를 worker보다 먼저 배포해도 새 이벤트가 해석 실패로 버려지지 않는다. 모르는 payload 필드는 무시한다.
+- 이동 경로는 worker가 `notification.action-base-url`(프론트 주소)을 앞에 붙여 절대 URL로 만들고, 푸시와 메일이 같은 값을 쓴다.
+  프론트 주소는 worker `application.yml`에 프로필별로 둔다(local·local-dev `http://localhost:3000`, dev `https://dev.moimyeon.plady.io`,
+  live `https://moimyeon.plady.io`). 주소를 정하지 않은 프로필은 환경 변수 `NOTIFICATION_WEB_PUSH_ACTION_BASE_URL` 없이 시작하지 않는다.
+- 전송 정책(`NotificationPolicy`: `PUSH_ONLY`, `EMAIL_ONLY`, `PUSH_AND_EMAIL`, `PUSH_ELSE_EMAIL`)은 이벤트가 아니라 알림 한 건에
+  붙는다. 받는 사람·정책·문구는 core-api의 `NotificationComposer` 한 곳이 정한다(확정 한 건이 참여자와 닫힌 대기 신청자에게
+  서로 다른 정책의 알림을 만든다). `redis-core`가 정책의 채널 집합을 채널별 Stream 메시지로 확장하므로 `PUSH_AND_EMAIL`의
+  두 채널은 독립적으로 ACK·재처리된다.
+- `PUSH_ELSE_EMAIL`은 WEB_PUSH 메시지 하나만 만든다. `ChannelNotificationSender`가 푸시 결과가 "전달 안 됨"(등록 기기 없음,
+  또는 성공한 기기 없이 만료·거절뿐)이면 같은 처리 안에서 메일을 보낸다. 푸시가 재시도 오류면 메일을 보내지 않고 예외로
+  빠져나간다 — 메일을 먼저 보내면 재시도 때 푸시까지 가서 두 번 알리게 된다.
 - `MemberNotificationRecipientFinder`는 `MemberRepository.findByIdAndDeletedAtIsNull`로 살아있는 회원의 이메일을 읽어
   `NotificationRecipient`로 변환하고, `WebPushSubscriptionRepository`에서 같은 회원의 웹 푸시 등록을 함께 합성한다.
   `MemberEntity`와 `WebPushSubscriptionEntity`는 Finder 밖으로 노출하지 않는다.
@@ -139,11 +144,15 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 ## clients:web-push-client: FCM 웹 푸시 격벽
 
 - `core-worker`가 소유한 `WebPushSender`를 구현하고 Firebase Admin SDK 타입을 Worker 밖에 둔다.
-- 회원별 웹 푸시 등록을 최대 500개씩 나눠 Firebase Installation ID 멀티캐스트로 보낸다. 제목·본문, 클릭 이동 주소,
-  `eventId`와 `eventType`을 FCM 요청으로 변환한다.
+- 회원별 웹 푸시 등록을 최대 500개씩 나눠 Firebase Installation ID 멀티캐스트로 보낸다. 제목·본문, worker가 만든 클릭 이동
+  절대 URL, `eventId`와 `eventType`을 FCM 요청으로 변환한다.
 - 개별 응답의 `UNREGISTERED` 등록은 `InvalidWebPushRegistrationRemover`를 통해 물리 삭제한다. 클라이언트 모듈은 JPA Repository를
   직접 알지 않으며 DB 구현이 저장 해시와 원문을 함께 확인한다.
-- `INTERNAL`, `QUOTA_EXCEEDED`, `UNAVAILABLE`은 재시도 가능 오류로, 요청·인증 계열 오류는 영구 오류로 변환한다.
+- 기기별 결과로 전달 여부를 판정한다(MOI-499). 한 기기라도 성공하면 "전달됨"이고, 다른 기기의 일시 오류가 있어도 재시도하지 않는다
+  (재시도하면 받은 기기에 중복 발송된다). 성공이 없고 `INTERNAL`, `QUOTA_EXCEEDED`, `UNAVAILABLE`이 있으면 재시도 오류를 던진다.
+  성공이 없고 나머지가 `UNREGISTERED`·기기별 영구 오류뿐이면 "전달 안 됨"으로 끝낸다.
+- 요청 전체가 거절되는 요청·인증 계열 오류(`INVALID_ARGUMENT`, `SENDER_ID_MISMATCH`, `THIRD_PARTY_AUTH_ERROR`)는 설정·코드 문제를
+  드러내기 위해 여전히 영구 오류로 던져 DLQ에 격리한다. 이 경우 `PUSH_ELSE_EMAIL`이어도 메일로 넘어가지 않는다.
 - 기본값은 Application Default Credentials다. AWS ECS에서는 SSM SecureString의 서비스 계정 JSON을
   `FIREBASE_SERVICE_ACCOUNT_JSON`으로 주입할 수 있으며, 두 방식 모두 키를 소스나 yml에 저장하지 않는다.
 - `local-dev`, `dev`, `staging`, `live`에서만 실제 발송 Bean을 등록한다. `core-worker`는 이 모듈을 `runtimeOnly`로 조립한다.
@@ -156,6 +165,24 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - `object-storage`는 `ResumeFileStore` 계약 구현을 위해 core-api를 compile-time에 의존한다.
 - `core-api`에는 `runtimeOnly`로 조립한다.
 - AWS SDK 실패는 구현체에서 이력서 영역의 `ResumeFileStorageException`으로 바로 변환한다.
+
+## core-api: 도메인 이벤트 Outbox (MOI-499)
+
+- 도메인 코드는 `OutboxEventPublisher.publish(EventType, payload)` 하나로 사실을 발행한다. 쓰기 트랜잭션 밖에서 부르면 예외다.
+- outbox에는 `OutboxEvent(eventId, type, payload)`가 JSON으로 저장된다. `EventType`마다 payload 클래스가 정해지고(`EventType.payloadClass`),
+  payload는 sealed `EventPayload`라 새 종류를 추가하면 알림 변환이 컴파일 단계에서 빠진 분기를 알린다.
+  받는 사람 목록도 발행 순간의 사실로 payload에 담는다.
+- 커밋 뒤 `OutboxRelay`가 사실을 모든 `OutboxEventConsumer`에게 넘기고, 모두 성공해야 outbox 행을 지운다. 하나라도 실패하면
+  선점을 풀어 전체를 다시 시도하므로 소비자는 같은 사실을 여러 번 받을 수 있다.
+  소비 실패는 시간이 지나면 풀리는 실패(Redis 장애 등)로 보고 시도 횟수 상한 없이 재시도한다. 같은 이유로 계속 실패하는
+  소비자는 없다고 가정한다.
+- 읽지 못한 행은 지우지 않는다. 이벤트 종류를 모르면(배포 중 이전 버전 서버가 새 종류를 집은 경우) 선점을 풀어 새 버전 서버가
+  가져가게 하고, 형식이 깨졌으면 `relay_status = UNREADABLE`로 남겨 다시 선점하지 않는다. 원문은 사람이 확인한다.
+  그래서 `OutboxEntity.eventType` 은 enum 이 아니라 문자열로 읽는다. enum 이면 행을 가져오는 단계에서 실패해 같은 배치의 다른 행까지 막힌다.
+- payload 는 배포 사이에 이전·새 버전 서버가 함께 읽는다. 필드는 nullable 이나 기본값으로만 더하고, 빼거나 이름을 바꾸는 것은
+  그 필드를 가진 행이 모두 처리된 뒤에 한다. 모르는 필드는 무시한다.
+- 재전달 설정 키는 이전 패키지 이름을 따른 `notification.outbox.relay.*` 그대로다(배포 설정과 얽혀 있어 바꾸지 않았다).
+- 지금 소비자는 알림(`NotificationOutboxEventConsumer`) 하나다. 통계·알림함 같은 소비자는 같은 사실에 소비자를 더해 붙인다.
 
 ## storage:db-core: Outbox 전달 생명주기
 
@@ -189,11 +216,11 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - `local`, `local-dev`, `dev`, `staging`, `live`에서는 Redis 구현체가 조정 계약을 담당하고,
   `test`에서만 core-api의 `DirectOutboxRelayCoordinator`가 재전달을 바로 실행한다. `test` 프로파일이 `local`을 상속하므로
   Redis 구현체는 `local & !test` 조건으로 테스트에서 제외한다. 스케줄러는 환경과 무관하게 계약을 필수로 주입받는다.
-- `RelayMessage`의 `EventType.notificationChannels`를 채널별 메시지로 확장해 `eventId`, `eventType`, `channel`, `payload`
+- 한 사실에서 나온 알림(`OutgoingNotification`)들을 각 정책의 채널별 메시지로 확장해 `eventId`, `eventType`, `channel`, `payload`
   필드로 `notification-events` Stream에 추가한다. 여러 채널의 `XADD`는 한 Lua 스크립트에서 실행해 일부 채널만
   저장되는 상태를 만들지 않는다.
 - Redis 명령과 직렬화 형식은 이 모듈 밖으로 노출하지 않는다.
-- Redis 저장 실패는 삼키지 않고 호출자에게 전달한다. 생산자 `NotificationRelay`가 이 실패를 기준으로 Outbox를 보존한다.
+- Redis 저장 실패는 삼키지 않고 호출자에게 전달한다. 생산자 `OutboxRelay`가 이 실패를 기준으로 Outbox를 보존한다.
 - 모든 채널 메시지 저장 후 Outbox 완료 기록 전에 프로세스가 종료되면 같은 채널 메시지들이 다시 발행될 수 있다.
   유실 방지를 우선해 이 잔여 중복 가능성과 타협한다.
 - 재전달 실행 권한은 TTL이 있는 소유자 토큰으로 획득하고, 해제할 때 현재 토큰이 일치하는 락만 삭제한다.

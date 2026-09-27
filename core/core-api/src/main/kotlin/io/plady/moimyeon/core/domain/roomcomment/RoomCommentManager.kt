@@ -1,6 +1,11 @@
 package io.plady.moimyeon.core.domain.roomcomment
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.room.RoomFinder
+import io.plady.moimyeon.core.enums.EventType
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -21,6 +26,9 @@ class RoomCommentManager(
     private val roomGuestbookRepository: RoomGuestbookRepository,
     private val guestbookPostRepository: GuestbookPostRepository,
     private val windowReader: RoomCommentWindowReader,
+    private val roomFinder: RoomFinder,
+    private val participationFinder: ParticipationFinder,
+    private val outboxEventPublisher: OutboxEventPublisher,
 ) {
     // 읽기 전용 판정이 쓰기와 같은 커밋 경계 안에 있어야 "전환 순간의 등록"(§4.6)이 확정적으로
     // 거부된다. 방명록 행 잠금이 같은 룸의 작성을 직렬화해 lazy 생성과 멱등 판정(D10)을 함께 덮는다.
@@ -40,13 +48,15 @@ class RoomCommentManager(
         if (last != null && RoomCommentDuplicate.isDuplicate(last.content, last.createdAt, content, now)) {
             return last.id
         }
-        return guestbookPostRepository.save(
+        val postId = guestbookPostRepository.save(
             GuestbookPostEntity(
                 roomGuestbookId = guestbook.id,
                 authorMemberId = authorMemberId,
                 content = content,
             ),
         ).id
+        publishPosted(postId, roomId, authorMemberId)
+        return postId
     }
 
     @Transactional
@@ -63,6 +73,19 @@ class RoomCommentManager(
         requireBusiness(post.authorMemberId == authorMemberId, CoreErrorType.ROOM_COMMENT_NOT_MINE)
         // 이미 삭제된 글이면 delete 가 시각을 덮지 않는다(AbstractEntity) - 재삭제는 그대로 성공이다.
         post.delete(now)
+    }
+
+    private fun publishPosted(commentId: Long, roomId: UUID, authorMemberId: UUID) {
+        outboxEventPublisher.publish(
+            EventType.ROOM_COMMENT_POSTED,
+            RoomCommentPostedEventPayload(
+                commentId = commentId,
+                roomId = roomId,
+                roomTitle = roomFinder.getRoom(roomId).title.value,
+                authorMemberId = authorMemberId,
+                participantMemberIds = participationFinder.getJoinedParticipants(roomId).map { it.memberId },
+            ),
+        )
     }
 
     private fun getOrCreateGuestbook(roomId: UUID): RoomGuestbookEntity {
