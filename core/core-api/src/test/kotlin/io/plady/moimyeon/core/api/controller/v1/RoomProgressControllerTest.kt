@@ -123,6 +123,7 @@ class RoomProgressControllerTest : RestDocsTest() {
             CoreErrorType.ROOM_FORBIDDEN,
             CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH,
             CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
+            CoreErrorType.ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED,
         ).forEach { errorType ->
             every { progressFacade.complete(hostId, roomId, attendances()) } throws CoreException(errorType)
 
@@ -185,7 +186,7 @@ class RoomProgressControllerTest : RestDocsTest() {
         const val COMPLETE_SUMMARY = "룸 완료"
         const val COMPLETE_DESCRIPTION =
             "방장이 확정 참여자 전원의 참석 여부를 입력하며 CONFIRMED 룸을 COMPLETED로 전환한다. " +
-                "E400, E1405, E1406, E1706, E1707을 응답할 수 있다."
+                "E400, E1405, E1406, E1706, E1707, E1708을 응답할 수 있다."
         const val MY_ATTENDANCE_SUMMARY = "내 출석 결과 조회"
         const val MY_ATTENDANCE_DESCRIPTION =
             "완료 후 기록된 자신의 참석 결과를 조회한다. E1405, E1703, E1704, E1705를 응답할 수 있다."

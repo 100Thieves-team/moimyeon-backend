@@ -96,7 +96,7 @@ class RoomProgressPersistenceIT(
 
         assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, changed, now.plusMinutes(1))) }
             .isInstanceOfSatisfying(CoreException::class.java) {
-                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE)
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED)
             }
         assertThat(reader.getAttendance(roomId, participantId)).isEqualTo(Attendance(participantId, AttendanceStatus.ABSENT))
     }

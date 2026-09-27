@@ -93,13 +93,13 @@ class RoomProgressManager(
         return true
     }
 
-    // 응답을 못 받고 같은 출석으로 다시 보낸 요청이면 이전 성공 결과를 돌려준다. 내용이 다르면 이미 완료된 룸이다.
+    // 응답을 못 받고 같은 출석으로 다시 보낸 요청이면 이전 성공 결과를 돌려준다. 내용이 다르면 이미 다른 출석으로 완료된 룸이다.
     private fun replayCompletion(room: RoomEntity, command: RoomProgressCompletionCommand): RoomProgressCompletionResult {
         val recorded = attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(room.id)
             .map { Attendance(it.memberId, it.status) }
         requireBusiness(
             recorded.size == command.attendances.size && recorded.toSet() == command.attendances.toSet(),
-            CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE,
+            CoreErrorType.ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED,
         )
         return RoomProgressCompletionResult(status = room.status, attendances = command.attendances)
     }

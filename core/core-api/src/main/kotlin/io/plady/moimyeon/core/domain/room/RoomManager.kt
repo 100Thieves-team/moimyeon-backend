@@ -179,9 +179,7 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        // 저장되는 처리 시각은 마이크로초까지라 같은 값으로 다시 찾도록 잘라 쓴다.
-        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
-        roomApplicationRepository.closeAllPending(room.id, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+        val closedApplicantMemberIds = closePendingApplications(room.id, RoomApplicationStatus.ROOM_CANCELED, now)
         outboxEventPublisher.publish(
             EventType.ROOM_CANCELED,
             RoomCanceledEventPayload(
@@ -189,8 +187,7 @@ class RoomManager(
                 roomTitle = room.title,
                 canceledByMemberId = handlerMemberId,
                 participantMemberIds = participationFinder.getJoinedParticipants(room.id).map { it.memberId },
-                closedApplicantMemberIds = roomApplicationRepository
-                    .findApplicantMemberIdsClosedAt(room.id, RoomApplicationStatus.ROOM_CANCELED, handledAt),
+                closedApplicantMemberIds = closedApplicantMemberIds,
             ),
         )
     }
@@ -227,8 +224,7 @@ class RoomManager(
                 occurredAt = now,
             ),
         )
-        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
-        roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CONFIRMED, handledAt)
+        val closedApplicantMemberIds = closePendingApplications(roomId, RoomApplicationStatus.ROOM_CONFIRMED, now)
         outboxEventPublisher.publish(
             EventType.ROOM_CONFIRMED,
             RoomConfirmedEventPayload(
@@ -236,10 +232,16 @@ class RoomManager(
                 roomTitle = entity.title,
                 hostMemberId = hostMemberId,
                 participantMemberIds = participationFinder.getJoinedParticipants(roomId).map { it.memberId },
-                closedApplicantMemberIds = roomApplicationRepository
-                    .findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CONFIRMED, handledAt),
+                closedApplicantMemberIds = closedApplicantMemberIds,
             ),
         )
+    }
+
+    // 대기 신청을 닫고 닫힌 신청자를 돌려준다. 저장되는 처리 시각은 마이크로초까지라 같은 값으로 다시 찾도록 잘라 쓴다.
+    private fun closePendingApplications(roomId: UUID, status: RoomApplicationStatus, now: LocalDateTime): List<UUID> {
+        val handledAt = now.truncatedTo(ChronoUnit.MICROS)
+        roomApplicationRepository.closeAllPending(roomId, status, handledAt)
+        return roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, status, handledAt)
     }
 
     // 상태 계열 넷은 E1410 으로 뭉친다 — 화면이 새로고침하면 정확한 상태를 다시 받으므로
