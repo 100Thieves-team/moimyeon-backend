@@ -28,34 +28,22 @@ class RoomProgressServiceTest {
     private val now = LocalDateTime.of(2026, 8, 10, 3, 0)
 
     @Test
-    fun `완료는 출석 없이 별도 명령으로 전달한다`() {
-        val command = RoomProgressCompletionCommand(roomId, hostId, now)
-        justRun { accessValidator.validateCompleter(roomId, hostId) }
-        every { manager.complete(command) } returns RoomProgressCompletionResult(RoomStatus.COMPLETED)
-
-        assertThat(service.complete(hostId, roomId).status).isEqualTo(RoomStatus.COMPLETED)
-
-        verifyOrder {
-            accessValidator.validateCompleter(roomId, hostId)
-            manager.complete(command)
-        }
-    }
-
-    @Test
-    fun `출석은 완료 이후 별도 명령으로 전달한다`() {
+    fun `완료는 출석과 함께 한 명령으로 전달한다`() {
         val attendances = listOf(
             Attendance(hostId, AttendanceStatus.ATTENDED),
             Attendance(participantId, AttendanceStatus.ABSENT),
         )
-        val command = RoomAttendanceRecordCommand(roomId, hostId, attendances, now)
-        justRun { accessValidator.validateAttendanceRecorder(roomId, hostId) }
-        every { manager.recordAttendances(command) } returns RoomAttendanceRecordResult(attendances)
+        val command = RoomProgressCompletionCommand(roomId, hostId, attendances, now)
+        justRun { accessValidator.validateCompleter(roomId, hostId) }
+        every { manager.complete(command) } returns RoomProgressCompletionResult(RoomStatus.COMPLETED, attendances)
 
-        assertThat(service.recordAttendances(hostId, roomId, attendances).attendances).containsExactlyElementsOf(attendances)
+        val result = service.complete(hostId, roomId, attendances)
 
+        assertThat(result.status).isEqualTo(RoomStatus.COMPLETED)
+        assertThat(result.attendances).containsExactlyElementsOf(attendances)
         verifyOrder {
-            accessValidator.validateAttendanceRecorder(roomId, hostId)
-            manager.recordAttendances(command)
+            accessValidator.validateCompleter(roomId, hostId)
+            manager.complete(command)
         }
     }
 

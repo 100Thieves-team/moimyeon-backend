@@ -11,7 +11,13 @@ fun interface WebPushSender {
     fun send(
         notification: Notification,
         recipient: NotificationRecipient,
-    )
+    ): WebPushDelivery
+}
+
+// 한 기기라도 받았으면 DELIVERED 다.
+enum class WebPushDelivery {
+    DELIVERED,
+    UNDELIVERED,
 }
 
 fun interface InvalidWebPushRegistrationRemover {

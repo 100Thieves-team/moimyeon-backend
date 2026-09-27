@@ -3,10 +3,13 @@ package io.plady.moimyeon.core.domain.room
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.member.MemberFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -36,6 +39,7 @@ class RoomLeaveManager(
     private val memberFinder: MemberFinder,
     private val participationFinder: ParticipationFinder,
     private val roomManager: RoomManager,
+    private val outboxEventPublisher: OutboxEventPublisher,
     private val clock: Clock,
 ) {
     // 룸 행 잠금이 나가기끼리를 직렬화한다.
@@ -75,46 +79,58 @@ class RoomLeaveManager(
         now: LocalDateTime,
         wasConfirmed: Boolean,
     ) {
-        val delegated = promoteEarliestParticipant(room.id) || promoteEarliestEligibleApplicant(room.id, leavingHostId, now)
-        if (delegated) {
-            if (wasConfirmed) {
-                room.reopenRecruiting()
-                roomStatusLogRepository.save(
-                    RoomStatusLogEntity.byMember(
-                        roomId = room.id,
-                        transitionType = RoomStatus.RECRUITING,
-                        handlerMemberId = leavingHostId,
-                        occurredAt = now,
-                    ),
-                )
-            }
+        val newHostId = promoteEarliestParticipant(room.id)
+            ?: promoteEarliestEligibleApplicant(room.id, leavingHostId, now)
+        if (newHostId == null) {
+            roomManager.cancelWithoutGuard(room, leavingHostId, now)
             return
         }
-        roomManager.cancelWithoutGuard(room, leavingHostId, now)
+        if (wasConfirmed) {
+            room.reopenRecruiting()
+            roomStatusLogRepository.save(
+                RoomStatusLogEntity.byMember(
+                    roomId = room.id,
+                    transitionType = RoomStatus.RECRUITING,
+                    handlerMemberId = leavingHostId,
+                    occurredAt = now,
+                ),
+            )
+        }
+        outboxEventPublisher.publish(
+            EventType.ROOM_HOST_DELEGATED,
+            RoomHostDelegatedEventPayload(
+                roomId = room.id,
+                roomTitle = room.title,
+                previousHostMemberId = leavingHostId,
+                newHostMemberId = newHostId,
+                // 나간 방장은 이미 LEFT 라 여기서 빠진다.
+                participantMemberIds = participationFinder.getJoinedParticipants(room.id).map { it.memberId },
+            ),
+        )
     }
 
-    private fun promoteEarliestParticipant(roomId: UUID): Boolean {
+    private fun promoteEarliestParticipant(roomId: UUID): UUID? {
         val next = participationRepository
             .findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
                 roomId,
                 ParticipationRole.PARTICIPANT,
                 ParticipationStatus.JOINED,
-            ) ?: return false
+            ) ?: return null
         next.promoteToHost()
-        return true
+        return next.memberId
     }
 
     // 자격은 제재와 참여 슬롯을 본다(PRD 「룸 참여」 §3). 둘 다 "막지 않고 묻는" 판정이라 예외 없이 건너뛴다.
     // 슬롯이 찬 사람을 승격시키면 그 사람의 참여 중인 룸이 넷이 된다(MOI-427).
     // 건너뛴 신청은 대기로 남긴다 — 방장의 판단이 아니고, 위임에 실패해도 그 룸은 계속 살아 있다.
-    private fun promoteEarliestEligibleApplicant(roomId: UUID, leavingHostId: UUID, now: LocalDateTime): Boolean {
+    private fun promoteEarliestEligibleApplicant(roomId: UUID, leavingHostId: UUID, now: LocalDateTime): UUID? {
         val application = roomApplicationRepository
             .findByRoomIdAndStatusAndDeletedAtIsNullOrderByAppliedAtAscIdAsc(roomId, RoomApplicationStatus.PENDING)
             .firstOrNull {
                 memberFinder.isActive(it.applicantMemberId) &&
                     participationFinder.hasAvailableSlot(it.applicantMemberId)
             }
-            ?: return false
+            ?: return null
 
         // 수락 처리자는 나가는 방장이다 — 실제로 그가 넘긴 자리다.
         application.accept(leavingHostId, now)
@@ -127,7 +143,7 @@ class RoomLeaveManager(
                 joinedAt = now,
             ),
         )
-        return true
+        return application.applicantMemberId
     }
 
     // 확정은 "이 인원으로 진행한다"는 약속이다. 모집 중에는 아직 약속이 없어 보지 않는다.

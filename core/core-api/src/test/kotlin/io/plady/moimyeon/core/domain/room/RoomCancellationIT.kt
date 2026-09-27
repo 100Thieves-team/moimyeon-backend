@@ -8,6 +8,9 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEvent
+import io.plady.moimyeon.core.event.payload.EventPayload
+import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -22,6 +25,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.ApplicationEventsHolder
+import org.springframework.test.context.event.RecordApplicationEvents
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
@@ -30,6 +36,7 @@ import java.util.UUID
 // 세 개의 쓰기(상태 전이·이력·대기 신청 벌크)가 한 커밋인지 본다.
 // 테스트에 @Transactional 을 두지 않는다 — 바깥 트랜잭션이 있으면 운영 코드의 프록시 경계와
 // 커밋 시점이 가려져 원자성을 확인할 수 없다(testing.md 트랜잭션 절).
+@RecordApplicationEvents
 class RoomCancellationIT(
     private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,
@@ -39,6 +46,10 @@ class RoomCancellationIT(
     private val entityManager: EntityManager,
     transactionManager: PlatformTransactionManager,
 ) : ContextTest() {
+    // ApplicationEvents 는 생성자로 주입되지 않는다.
+    private val applicationEvents: ApplicationEvents
+        get() = ApplicationEventsHolder.getRequiredApplicationEvents()
+
     private val transactionTemplate = TransactionTemplate(transactionManager)
     private val roomId = UUID.randomUUID()
     private val hostMemberId = UUID.randomUUID()
@@ -124,6 +135,23 @@ class RoomCancellationIT(
         ).isEqualTo(1)
         assertThat(applications().map { it.status }).containsOnly(RoomApplicationStatus.ROOM_CANCELED)
     }
+
+    @Test
+    fun `방장이 직접 취소하면 함께 닫힌 대기 신청자를 담아 취소 사실을 발행한다`() {
+        seedRecruitingRoom()
+        repeat(2) { seedPendingApplication() }
+
+        roomManager.cancel(roomId, hostMemberId)
+
+        assertThat(published<RoomCanceledEventPayload>().single().closedApplicantMemberIds)
+            .containsExactlyInAnyOrderElementsOf(applications().map { it.applicantMemberId })
+    }
+
+    private inline fun <reified T : EventPayload> published(): List<T> = applicationEvents
+        .stream(OutboxEvent::class.java)
+        .map { it.payload }
+        .toList()
+        .filterIsInstance<T>()
 
     private fun applications() = roomApplicationRepository.findAll().filter { it.roomId == roomId }
 

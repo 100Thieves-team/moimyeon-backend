@@ -1,0 +1,33 @@
+package io.plady.moimyeon.core.domain.progress
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import java.time.Clock
+import java.time.LocalDateTime
+
+private val log = KotlinLogging.logger {}
+
+@ConditionalOnProperty(prefix = "room.auto-complete", name = ["enabled"], havingValue = "true")
+@Component
+class RoomAutoCompleteJob(
+    private val roomProgressManager: RoomProgressManager,
+    private val clock: Clock,
+) {
+    // 룸마다 트랜잭션을 나눠 한 룸의 실패가 나머지를 막지 않게 한다.
+    @Scheduled(cron = "\${room.auto-complete.cron:0 */10 * * * *}")
+    fun run() {
+        val now = LocalDateTime.now(clock)
+        val overdueRoomIds = roomProgressManager.findOverdueRoomIds(now)
+        if (overdueRoomIds.isEmpty()) return
+
+        var completed = 0
+        overdueRoomIds.forEach { roomId ->
+            runCatching { roomProgressManager.completeOverdue(roomId, now) }
+                .onSuccess { if (it) completed++ }
+                .onFailure { exception -> log.error(exception) { "room.auto-complete.failed roomId=$roomId" } }
+        }
+        log.info { "room.auto-complete.completed completed=$completed total=${overdueRoomIds.size}" }
+    }
+}

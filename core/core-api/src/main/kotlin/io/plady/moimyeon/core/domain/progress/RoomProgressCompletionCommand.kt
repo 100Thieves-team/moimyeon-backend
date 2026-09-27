@@ -6,5 +6,6 @@ import java.util.UUID
 data class RoomProgressCompletionCommand(
     val roomId: UUID,
     val completedByMemberId: UUID,
+    val attendances: List<Attendance>,
     val completedAt: LocalDateTime,
 )

@@ -20,6 +20,7 @@ import io.plady.moimyeon.storage.db.core.RoomRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
@@ -45,6 +46,12 @@ class RoomApplicationManagerIT(
     private val applicantId: UUID = UUID.randomUUID()
     private val now: LocalDateTime = LocalDateTime.of(2026, 1, 1, 0, 0)
     private val occupiedRoomIds: MutableList<UUID> = mutableListOf()
+
+    // 다른 IT 가 남긴 outbox 행이 이 클래스의 outbox 단언에 섞이지 않게 한다.
+    @BeforeEach
+    fun clearOutbox() {
+        jdbcTemplate.update("DELETE FROM outbox")
+    }
 
     // 트랜잭션 롤백이 없으므로 이 테스트가 만든 행을 직접 지운다.
     @AfterEach
@@ -82,7 +89,7 @@ class RoomApplicationManagerIT(
     }
 
     @Test
-    fun `수락 이벤트는 커밋 전에 Outbox로 저장되어 수락과 함께 커밋된다`() {
+    fun `수락 사실은 커밋 전에 Outbox로 저장되어 수락과 함께 커밋된다`() {
         seedRoom(maxCapacity = 6)
         seedHost()
         val applicationId = seedPendingApplication()
@@ -103,9 +110,9 @@ class RoomApplicationManagerIT(
         assertThat(recorded.eventType).isEqualTo("ROOM_APPLICATION_ACCEPTED")
         assertThat(outbox.id.version()).isEqualTo(7)
         assertThat(payload["eventId"].asString()).isEqualTo(outbox.id.toString())
-        assertThat(payload["applicationId"].asLong()).isEqualTo(applicationId)
-        assertThat(payload["roomId"].asString()).isEqualTo(roomId.toString())
-        assertThat(payload["applicantMemberId"].asString()).isEqualTo(applicantId.toString())
+        assertThat(payload["type"].asString()).isEqualTo("ROOM_APPLICATION_ACCEPTED")
+        assertThat(payload["payload"]["applicationId"].asLong()).isEqualTo(applicationId)
+        assertThat(payload["payload"]["applicantMemberId"].asString()).isEqualTo(applicantId.toString())
     }
 
     @Test
@@ -204,7 +211,7 @@ class RoomApplicationManagerIT(
 
     // 수락 알림은 참여자가 됐다는 안내다. 슬롯 초과로 끝난 신청에 보내면 반대 사실을 알린다.
     @Test
-    fun `슬롯 초과로 끝난 신청에는 수락 알림을 남기지 않는다`() {
+    fun `슬롯 초과로 끝난 신청은 수락 사실을 남기지 않는다`() {
         seedRoom(maxCapacity = 6)
         seedHost()
         occupyApplicantSlots(3)
@@ -259,6 +266,31 @@ class RoomApplicationManagerIT(
         val application = roomApplicationRepository.findById(applicationId).orElseThrow()
         assertThat(application.status).isEqualTo(RoomApplicationStatus.REJECTED)
         assertThat(application.rejectReason).isNull()
+    }
+
+    @Test
+    fun `반려하면 신청자를 담아 반려 사실을 남긴다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.reject(roomId, applicationId, hostId, RejectReason.ROLE_MISMATCH)
+
+        val payload = jsonMapper.readTree(outboxRepository.findAll().single().payload)
+        assertThat(payload["type"].asString()).isEqualTo("ROOM_APPLICATION_REJECTED")
+        assertThat(payload["payload"]["applicantMemberId"].asString()).isEqualTo(applicantId.toString())
+    }
+
+    @Test
+    fun `반려 사실에는 반려 사유를 넣지 않는다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.reject(roomId, applicationId, hostId, RejectReason.ROLE_MISMATCH)
+
+        val payload = outboxRepository.findAll().single().payload
+        assertThat(payload).doesNotContain("ROLE_MISMATCH").doesNotContain("직무")
     }
 
     private fun seedRoom(maxCapacity: Int) {

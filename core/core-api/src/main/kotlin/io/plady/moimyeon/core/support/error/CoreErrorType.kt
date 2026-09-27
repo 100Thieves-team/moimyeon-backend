@@ -232,12 +232,6 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         "진행을 완료할 수 없는 룸입니다.",
         LogLevel.WARN,
     ),
-    ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED(
-        HttpStatus.CONFLICT,
-        ErrorCode.E1708,
-        "출석이 이미 기록되었습니다.",
-        LogLevel.WARN,
-    ),
 
     CLOSING_SUBMISSION_FORBIDDEN(
         HttpStatus.FORBIDDEN,

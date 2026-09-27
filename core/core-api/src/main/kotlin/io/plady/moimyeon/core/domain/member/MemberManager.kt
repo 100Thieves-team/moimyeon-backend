@@ -58,11 +58,4 @@ class MemberManager(
         requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
         entity.restrict()
     }
-
-    @Transactional
-    fun withdraw(memberId: UUID, now: LocalDateTime) {
-        log.debug { "member.manager.withdraw memberId=$memberId" }
-        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
-        entity.delete(now)
-    }
 }

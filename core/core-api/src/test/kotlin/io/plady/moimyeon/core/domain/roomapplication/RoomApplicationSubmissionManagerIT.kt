@@ -19,11 +19,14 @@ class RoomApplicationSubmissionManagerIT(
 ) : ContextTest() {
     private val applicantMemberId = UUID.randomUUID()
     private val roomId = UUID.randomUUID()
+    private val otherRoomId = UUID.randomUUID()
+    private val otherMemberId = UUID.randomUUID()
 
     @AfterEach
     fun cleanUp() {
-        resumeSubmissionRepository.deleteAll(resumeSubmissionRepository.findAll().filter { it.roomId == roomId })
-        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId == roomId })
+        val roomIds = setOf(roomId, otherRoomId)
+        resumeSubmissionRepository.deleteAll(resumeSubmissionRepository.findAll().filter { it.roomId in roomIds })
+        roomApplicationRepository.deleteAll(roomApplicationRepository.findAll().filter { it.roomId in roomIds })
     }
 
     @Test
@@ -80,16 +83,38 @@ class RoomApplicationSubmissionManagerIT(
         assertThat(blocked).isFalse()
     }
 
-    private fun persistApplication(status: RoomApplicationStatus) {
-        roomApplicationRepository.save(
-            RoomApplicationEntity(
-                roomId = roomId,
-                applicantMemberId = applicantMemberId,
-                note = "",
-                appliedAt = LocalDateTime.of(2026, 8, 5, 12, 0),
-                status = status,
-                pendingMemberId = null,
-            ),
-        )
+    @Test
+    fun `탈퇴한 회원의 대기 신청은 모든 룸에서 철회되고 끝난 신청과 다른 회원의 신청은 그대로다`() {
+        val pending = persistApplication(RoomApplicationStatus.PENDING)
+        val otherRoomPending = persistApplication(RoomApplicationStatus.PENDING, roomId = otherRoomId)
+        val rejected = persistApplication(RoomApplicationStatus.REJECTED, roomId = otherRoomId)
+        val otherMemberPending = persistApplication(RoomApplicationStatus.PENDING, applicant = otherMemberId)
+        val now = LocalDateTime.of(2026, 9, 24, 12, 0)
+
+        roomApplicationSubmissionManager.withdrawAllPending(applicantMemberId, now)
+
+        listOf(pending, otherRoomPending).map { roomApplicationRepository.findById(it).orElseThrow() }.forEach {
+            assertThat(it.status).isEqualTo(RoomApplicationStatus.WITHDRAWN)
+            assertThat(it.pendingMemberId).isNull()
+            assertThat(it.handledAt).isEqualTo(now)
+        }
+        assertThat(roomApplicationRepository.findById(rejected).orElseThrow().status).isEqualTo(RoomApplicationStatus.REJECTED)
+        assertThat(roomApplicationRepository.findById(otherMemberPending).orElseThrow().status)
+            .isEqualTo(RoomApplicationStatus.PENDING)
     }
+
+    private fun persistApplication(
+        status: RoomApplicationStatus,
+        roomId: UUID = this.roomId,
+        applicant: UUID = applicantMemberId,
+    ): Long = roomApplicationRepository.save(
+        RoomApplicationEntity(
+            roomId = roomId,
+            applicantMemberId = applicant,
+            note = "",
+            appliedAt = LocalDateTime.of(2026, 8, 5, 12, 0),
+            status = status,
+            pendingMemberId = if (status == RoomApplicationStatus.PENDING) applicant else null,
+        ),
+    ).id
 }

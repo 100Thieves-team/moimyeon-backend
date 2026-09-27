@@ -103,6 +103,42 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         @Param("now") now: LocalDateTime,
     ): Int
 
+    // closeAllPending 뒤에 부른다. 먼저 조회하면 그 사이 철회한 사람(철회는 룸 행을 잠그지 않는다)이 섞인다.
+    @Query(
+        """
+        select a.applicantMemberId
+          from RoomApplicationEntity a
+         where a.roomId = :roomId
+           and a.status = :status
+           and a.handledAt = :handledAt
+           and a.deletedAt is null
+        """,
+    )
+    fun findApplicantMemberIdsClosedAt(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+        @Param("handledAt") handledAt: LocalDateTime,
+    ): List<UUID>
+
+    // set 절은 RoomApplicationEntity.withdraw 와 같게 유지한다.
+    @Modifying(flushAutomatically = true)
+    @Query(
+        """
+        update RoomApplicationEntity a
+           set a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.WITHDRAWN,
+               a.pendingMemberId = null,
+               a.handledAt = :now,
+               a.updatedAt = :now
+         where a.applicantMemberId = :applicantMemberId
+           and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+           and a.deletedAt is null
+        """,
+    )
+    fun withdrawAllPending(
+        @Param("applicantMemberId") applicantMemberId: UUID,
+        @Param("now") now: LocalDateTime,
+    ): Int
+
     // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1, 2026-08-04 PRD 갱신). 정렬에 쓰이지 않는 표시용이라
     // 한 페이지 분량의 roomId 에만 IN 으로 건다. 대기 신청이 없는 룸은 결과에 없으므로 0 은 호출자가 채운다.
     @Query(

@@ -1,6 +1,7 @@
 package io.plady.moimyeon.worker.notification
 
-import io.plady.moimyeon.core.enums.EventType
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import io.plady.moimyeon.core.enums.NotificationPolicy
 import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import io.plady.moimyeon.worker.notification.delivery.Notification
 import io.plady.moimyeon.worker.notification.delivery.NotificationContent
@@ -12,106 +13,58 @@ import java.util.UUID
 class NotificationMessageHandler(
     private val jsonMapper: JsonMapper,
     private val notificationSender: NotificationSender,
+    actionBaseUrl: String,
 ) {
+    private val actionBaseUrl = actionBaseUrl.removeSuffix("/")
+
     fun handle(message: NotificationStreamMessage) {
-        if (message.channel !in message.eventType.notificationChannels) {
+        val payload = parse(message)
+        if (message.channel !in payload.policy.channels) {
             throw InvalidNotificationMessageException(
-                "이벤트 정책에 없는 알림 채널입니다. eventType=${message.eventType}, channel=${message.channel}",
+                "알림 정책에 없는 채널입니다. eventType=${message.eventType}, policy=${payload.policy}, channel=${message.channel}",
             )
         }
-        val notification = when (message.eventType) {
-            EventType.ROOM_APPLICATION_ACCEPTED -> roomApplicationAccepted(message)
-            EventType.ROOM_CONFIRMED,
-            EventType.ROOM_COMPLETED,
-            EventType.ROOM_CANCELED,
-            EventType.ROOM_REVIEW_REQUESTED,
-            -> roomLifecycle(message)
-        }
-        notificationSender.send(notification)
-    }
-
-    private fun roomLifecycle(message: NotificationStreamMessage): Notification {
-        val payload = decode(message, RoomLifecyclePayload::class.java)
-        validateEnvelope(message, payload.eventId, payload.eventType)
-        val content = when (message.eventType) {
-            EventType.ROOM_CONFIRMED -> NotificationContent(
-                title = "모임 진행이 확정되었어요",
-                body = "확정된 일정과 참여자를 확인해 주세요.",
-                actionPath = "/rooms/${payload.roomId}",
-            )
-            EventType.ROOM_COMPLETED -> NotificationContent(
-                title = "모임이 완료되었어요",
-                body = "방장이 참석 여부를 기록하면 결과를 확인할 수 있어요.",
-                actionPath = "/rooms/${payload.roomId}",
-            )
-            EventType.ROOM_CANCELED -> NotificationContent(
-                title = "모임이 취소되었어요",
-                body = "참여 중이던 모임의 취소 내용을 확인해 주세요.",
-                actionPath = "/rooms/${payload.roomId}",
-            )
-            EventType.ROOM_REVIEW_REQUESTED -> NotificationContent(
-                title = "함께한 참여자의 후기를 남겨 주세요",
-                body = "완료된 모임의 리뷰를 작성할 수 있어요.",
-                actionPath = "/rooms/${payload.roomId}",
-            )
-            EventType.ROOM_APPLICATION_ACCEPTED -> error("지원 수락 이벤트는 별도 처리합니다.")
-        }
-        return Notification(
-            eventId = message.eventId,
-            eventType = message.eventType,
-            channel = message.channel,
-            recipientMemberId = payload.recipientMemberId,
-            content = content,
-        )
-    }
-
-    private fun <T> decode(message: NotificationStreamMessage, payloadType: Class<T>): T = try {
-        jsonMapper.readValue(message.payload, payloadType)
-    } catch (exception: JacksonException) {
-        throw InvalidNotificationMessageException("알림 payload를 해석할 수 없습니다.", exception)
-    }
-
-    private fun validateEnvelope(message: NotificationStreamMessage, eventId: UUID, eventType: EventType) {
-        if (eventId != message.eventId) {
-            throw InvalidNotificationMessageException(
-                "Stream과 payload의 eventId가 일치하지 않습니다. stream=${message.eventId}, payload=$eventId",
-            )
-        }
-        if (eventType != message.eventType) {
-            throw InvalidNotificationMessageException(
-                "Stream과 payload의 eventType이 일치하지 않습니다. stream=${message.eventType}, payload=$eventType",
-            )
-        }
-    }
-
-    private fun roomApplicationAccepted(message: NotificationStreamMessage): Notification {
-        val payload = decode(message, RoomApplicationAcceptedPayload::class.java)
-        validateEnvelope(message, payload.eventId, payload.eventType)
-        return Notification(
-            eventId = message.eventId,
-            eventType = message.eventType,
-            channel = message.channel,
-            recipientMemberId = payload.applicantMemberId,
-            content = NotificationContent(
-                title = "참가 신청이 수락되었어요",
-                body = "모임에 참여할 수 있게 되었어요.",
-                actionPath = "/rooms/${payload.roomId}",
+        notificationSender.send(
+            Notification(
+                eventId = message.eventId,
+                eventType = message.eventType,
+                channel = message.channel,
+                policy = payload.policy,
+                recipientMemberId = payload.recipientMemberId,
+                content = NotificationContent(
+                    title = payload.title,
+                    body = payload.body,
+                    actionUrl = payload.actionPath?.let { "$actionBaseUrl/${it.removePrefix("/")}" },
+                ),
             ),
         )
     }
+
+    private fun parse(message: NotificationStreamMessage): NotificationPayload {
+        val payload = try {
+            jsonMapper.readValue(message.payload, NotificationPayload::class.java)
+        } catch (exception: JacksonException) {
+            throw InvalidNotificationMessageException("알림 payload를 해석할 수 없습니다.", exception)
+        }
+        if (payload.eventId != message.eventId) {
+            throw InvalidNotificationMessageException(
+                "Stream과 payload의 eventId가 일치하지 않습니다. stream=${message.eventId}, payload=${payload.eventId}",
+            )
+        }
+        if (payload.title.isBlank()) {
+            throw InvalidNotificationMessageException("알림 제목이 비어 있습니다. eventId=${message.eventId}")
+        }
+        return payload
+    }
 }
 
-private data class RoomApplicationAcceptedPayload(
+// API 가 필드를 더해도 worker 를 다시 배포하지 않아도 되게 한다.
+@JsonIgnoreProperties(ignoreUnknown = true)
+private data class NotificationPayload(
     val eventId: UUID,
-    val eventType: EventType,
-    val applicationId: Long,
-    val roomId: UUID,
-    val applicantMemberId: UUID,
-)
-
-private data class RoomLifecyclePayload(
-    val eventId: UUID,
-    val eventType: EventType,
-    val roomId: UUID,
+    val policy: NotificationPolicy,
     val recipientMemberId: UUID,
+    val title: String,
+    val body: String,
+    val actionPath: String?,
 )

@@ -75,11 +75,37 @@ class OutboxRepositoryIT(
         }
     }
 
+    @Test
+    fun `읽을 수 없다고 표시한 Outbox는 원문을 남긴 채 다시 선점되지 않는다`() {
+        saveOutbox(1)
+        val claimed = transactionTemplate.execute {
+            outboxRepository.findClaimableBatchForUpdate(createdBefore = TEST_TIME, now = TEST_TIME, batchSize = 1)
+                .single()
+                .also { it.claim("claim-token", TEST_TIME.plusMinutes(5)) }
+        }!!
+
+        val marked = transactionTemplate.execute {
+            outboxRepository.markUnreadable(claimed.id, "claim-token", TEST_TIME)
+        }
+
+        assertThat(marked).isEqualTo(1)
+        val parked = outboxRepository.findById(claimed.id).orElseThrow()
+        assertThat(parked.relayStatus).isEqualTo(OutboxRelayStatus.UNREADABLE)
+        assertThat(parked.payload).isEqualTo("{\"applicationId\":1}")
+        assertThat(
+            outboxRepository.findClaimableBatchForUpdate(
+                createdBefore = TEST_TIME.plusDays(1),
+                now = TEST_TIME.plusDays(1),
+                batchSize = 10,
+            ),
+        ).isEmpty()
+    }
+
     private fun saveOutbox(applicationId: Long) {
         outboxRepository.saveAndFlush(
             OutboxEntity(
                 id = eventId(applicationId),
-                eventType = EventType.ROOM_APPLICATION_ACCEPTED,
+                eventType = EventType.ROOM_APPLICATION_ACCEPTED.name,
                 payload = "{\"applicationId\":$applicationId}",
             ),
         )

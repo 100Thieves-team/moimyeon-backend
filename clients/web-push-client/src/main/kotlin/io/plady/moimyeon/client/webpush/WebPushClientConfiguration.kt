@@ -34,18 +34,15 @@ internal class WebPushClientConfiguration {
     fun webPushSender(
         gateway: FcmGateway,
         invalidWebPushRegistrationRemover: InvalidWebPushRegistrationRemover,
-        properties: FcmWebPushProperties,
     ): WebPushSender = FcmWebPushSender(
         gateway = gateway,
         invalidRegistrationRemover = invalidWebPushRegistrationRemover,
-        actionBaseUrl = properties.actionBaseUrl,
     )
 }
 
 @ConfigurationProperties("notification.web-push.fcm")
 internal data class FcmWebPushProperties(
     val projectId: String,
-    val actionBaseUrl: String,
     val serviceAccountJson: String? = null,
 )
 

@@ -44,6 +44,11 @@ class ReviewEntity(
     @Column(name = "tag")
     private val tags: MutableSet<String> = tags.toMutableSet()
 
+    // ReviewRepository.markNotified 로만 쓴다. 엔티티 저장이 NULL 로 되돌리지 않게 JPA 쓰기에서 뺀다.
+    @Column(insertable = false, updatable = false)
+    final var notifiedAt: LocalDateTime? = null
+        private set
+
     fun tags(): Set<String> = tags.toSet()
 
     fun update(tags: Collection<String>, content: String?) {

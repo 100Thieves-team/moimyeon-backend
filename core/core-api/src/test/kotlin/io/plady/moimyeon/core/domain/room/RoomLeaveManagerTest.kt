@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.enums.MeetingType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -45,6 +46,7 @@ class RoomLeaveManagerTest {
         memberFinder,
         participationFinder,
         roomManager,
+        mockk<OutboxEventPublisher>(relaxed = true),
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 

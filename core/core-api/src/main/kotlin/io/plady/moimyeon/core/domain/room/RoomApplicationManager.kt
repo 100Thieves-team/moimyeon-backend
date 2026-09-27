@@ -3,9 +3,13 @@ package io.plady.moimyeon.core.domain.room
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.participation.ParticipationValidator
+import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomApplicationAcceptedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomApplicationRejectedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -15,7 +19,6 @@ import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
 import io.plady.moimyeon.storage.db.core.RoomEntity
 import io.plady.moimyeon.storage.db.core.RoomRepository
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -31,7 +34,7 @@ class RoomApplicationManager(
     private val participationRepository: ParticipationRepository,
     private val participationValidator: ParticipationValidator,
     private val participationFinder: ParticipationFinder,
-    private val applicationEventPublisher: ApplicationEventPublisher,
+    private val outboxEventPublisher: OutboxEventPublisher,
     private val clock: Clock,
 ) {
     // 수락. 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한 뒤(마지막 자리 1건만 성공, §4.4),
@@ -77,10 +80,12 @@ class RoomApplicationManager(
             ),
         )
         application.accept(hostMemberId, now)
-        applicationEventPublisher.publishEvent(
-            RoomApplicationAcceptedEvent(
+        outboxEventPublisher.publish(
+            EventType.ROOM_APPLICATION_ACCEPTED,
+            RoomApplicationAcceptedEventPayload(
                 applicationId = application.id,
                 roomId = roomId,
+                roomTitle = room.title,
                 applicantMemberId = application.applicantMemberId,
             ),
         )
@@ -102,6 +107,15 @@ class RoomApplicationManager(
         val application = loadPendingApplication(roomId, applicationId)
 
         application.reject(hostMemberId, reason?.name, LocalDateTime.now(clock))
+        outboxEventPublisher.publish(
+            EventType.ROOM_APPLICATION_REJECTED,
+            RoomApplicationRejectedEventPayload(
+                applicationId = application.id,
+                roomId = roomId,
+                roomTitle = room.title,
+                applicantMemberId = application.applicantMemberId,
+            ),
+        )
 
         val current = participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
         return ApplicationDecision(

@@ -1,13 +1,14 @@
 package io.plady.moimyeon.worker.notification.delivery
 
-import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.core.enums.NotificationPolicy
 import java.util.UUID
 
 data class Notification(
     val eventId: UUID,
-    val eventType: EventType,
+    val eventType: String,
     val channel: NotificationChannel,
+    val policy: NotificationPolicy,
     val recipientMemberId: UUID,
     val content: NotificationContent,
 )
@@ -15,5 +16,5 @@ data class Notification(
 data class NotificationContent(
     val title: String,
     val body: String,
-    val actionPath: String?,
+    val actionUrl: String?,
 )

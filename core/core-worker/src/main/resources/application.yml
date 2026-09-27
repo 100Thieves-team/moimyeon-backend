@@ -13,12 +13,9 @@ spring:
       # db-core.yml의 환경별 기본값보다 Worker 런타임 계약이 우선해야 하므로 마지막에 둔다.
       - worker-runtime.yml
 
-# 알림 전송과 자동 완료가 서로의 스케줄을 막지 않게 한다.
-spring.task.scheduling.pool.size: 2
-
-room.auto-complete:
-  enabled: false
-  cron: ${ROOM_AUTO_COMPLETE_CRON:0 */10 * * * *}
+# 알림 링크의 프론트 주소. 기본값이 없는 프로필(staging)은 환경 변수 없이 시작하지 않는다.
+# 환경 변수 이름의 WEB_PUSH 는 푸시 전용이던 시절의 흔적이다.
+notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL}
 
 notification.worker.consumer:
   enabled: false
@@ -28,30 +25,30 @@ notification.worker.consumer:
 ---
 spring.config.activate.on-profile: local
 
+notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL:http://localhost:3000}
 
 ---
 spring.config.activate.on-profile: local-dev
 
+notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL:http://localhost:3000}
 notification.worker.consumer.enabled: true
-room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: dev
 
+notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL:https://dev.moimyeon.plady.io}
 notification.worker.consumer.enabled: true
-room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: staging
 
 notification.worker.consumer.enabled: true
-room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: live
 
+notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL:https://moimyeon.plady.io}
 notification.worker.consumer.enabled: true
-room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}

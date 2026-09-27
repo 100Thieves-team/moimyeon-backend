@@ -1,6 +1,5 @@
 package io.plady.moimyeon.storage.db.core
 
-import io.plady.moimyeon.core.enums.EventType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -22,8 +21,9 @@ class OutboxEntity(
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
     val id: UUID,
-    @Enumerated(EnumType.STRING)
-    val eventType: EventType,
+    // enum 으로 읽으면 이전 버전 서버가 새 종류의 행을 가져오는 단계에서 실패한다. 해석은 OutboxEventSerializer 가 한다.
+    @Column(length = 100)
+    val eventType: String,
     @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     val payload: String,
 ) {

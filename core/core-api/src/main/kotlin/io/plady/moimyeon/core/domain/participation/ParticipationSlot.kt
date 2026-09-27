@@ -12,9 +12,7 @@ object ParticipationSlot {
     // PRD 는 둘 다 회원별 개인화를 예고하지만 아직 둘 다 상수다.
     const val MAX: Long = 3
 
-    // 슬롯을 문 룸 상태. 취소·완료된 룸은 놓아준다.
-    // PRD 가 말하는 복구 시점은 참여자별 클로징 제출이지만(「진행 마무리」 §4.3) 그 기능이 아직 없다.
-    // 룸 종료로 대신하면 MOI-431 이 COMPLETED 전이를 켜는 날 이 집합만으로 복구가 시작된다.
+    // 슬롯을 문 룸 상태. 완료·취소된 룸은 놓아준다(「룸 참여」 R45, 「진행 마무리」 R74).
     val OCCUPYING_ROOM_STATUSES: Set<RoomStatus> = setOf(
         RoomStatus.RECRUITING,
         RoomStatus.CONFIRMED,

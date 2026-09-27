@@ -4,6 +4,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.plady.moimyeon.core.domain.participation.JoinedParticipant
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.room.Room
+import io.plady.moimyeon.core.domain.room.RoomFinder
+import io.plady.moimyeon.core.domain.room.RoomTitle
+import io.plady.moimyeon.core.enums.EventType
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.GuestbookPostEntity
@@ -22,10 +30,15 @@ class RoomCommentManagerTest {
     private lateinit var roomGuestbookRepository: RoomGuestbookRepository
     private lateinit var guestbookPostRepository: GuestbookPostRepository
     private lateinit var windowReader: RoomCommentWindowReader
+    private lateinit var roomFinder: RoomFinder
+    private lateinit var participationFinder: ParticipationFinder
+    private lateinit var outboxEventPublisher: OutboxEventPublisher
     private lateinit var manager: RoomCommentManager
 
     private val roomId = UUID.randomUUID()
     private val authorId = UUID.randomUUID()
+    private val hostId = UUID.randomUUID()
+    private val otherParticipantId = UUID.randomUUID()
     private val now = LocalDateTime.of(2026, 8, 14, 10, 0, 0)
     private val openWindow = RoomCommentWindow(writable = true, readOnlyAt = null)
     private val closedWindow = RoomCommentWindow(writable = false, readOnlyAt = now.minusHours(1))
@@ -35,7 +48,23 @@ class RoomCommentManagerTest {
         roomGuestbookRepository = mockk()
         guestbookPostRepository = mockk()
         windowReader = mockk()
-        manager = RoomCommentManager(roomGuestbookRepository, guestbookPostRepository, windowReader)
+        roomFinder = mockk()
+        participationFinder = mockk()
+        outboxEventPublisher = mockk(relaxed = true)
+        every { roomFinder.getRoom(roomId) } returns mockk<Room> { every { title } returns RoomTitle("토스 백엔드 모의면접") }
+        every { participationFinder.getJoinedParticipants(roomId) } returns listOf(
+            JoinedParticipant(memberId = hostId, isHost = true),
+            JoinedParticipant(memberId = authorId, isHost = false),
+            JoinedParticipant(memberId = otherParticipantId, isHost = false),
+        )
+        manager = RoomCommentManager(
+            roomGuestbookRepository,
+            guestbookPostRepository,
+            windowReader,
+            roomFinder,
+            participationFinder,
+            outboxEventPublisher,
+        )
     }
 
     @Test
@@ -129,6 +158,55 @@ class RoomCommentManagerTest {
         every { guestbookPostRepository.save(any()) } answers { mockk { every { id } returns 42L } }
 
         assertThat(manager.post(roomId, authorId, "일정 공유드려요", now)).isEqualTo(42L)
+    }
+
+    @Test
+    fun `댓글을 남기면 작성자와 참여 명단을 담아 댓글 사실을 발행한다`() {
+        givenNewPost()
+
+        manager.post(roomId, authorId, "일정 공유드려요", now)
+
+        verify {
+            outboxEventPublisher.publish(
+                EventType.ROOM_COMMENT_POSTED,
+                RoomCommentPostedEventPayload(
+                    commentId = 42L,
+                    roomId = roomId,
+                    roomTitle = "토스 백엔드 모의면접",
+                    authorMemberId = authorId,
+                    participantMemberIds = listOf(hostId, authorId, otherParticipantId),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `같은 글을 다시 보내 기존 글을 돌려주면 댓글 사실을 다시 발행하지 않는다`() {
+        every { windowReader.getWindow(roomId, now) } returns openWindow
+        val guestbook = mockk<RoomGuestbookEntity> { every { id } returns 5L }
+        every { roomGuestbookRepository.findForUpdateByRoomIdAndDeletedAtIsNull(roomId) } returns guestbook
+        val last = mockk<GuestbookPostEntity> {
+            every { id } returns 41L
+            every { content } returns "다들 반가워요!"
+            every { createdAt } returns now.minusSeconds(3)
+        }
+        every {
+            guestbookPostRepository.findFirstByRoomGuestbookIdAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(5L, authorId)
+        } returns last
+
+        manager.post(roomId, authorId, "다들 반가워요!", now)
+
+        verify(exactly = 0) { outboxEventPublisher.publish(any(), any()) }
+    }
+
+    private fun givenNewPost() {
+        every { windowReader.getWindow(roomId, now) } returns openWindow
+        val guestbook = mockk<RoomGuestbookEntity> { every { id } returns 5L }
+        every { roomGuestbookRepository.findForUpdateByRoomIdAndDeletedAtIsNull(roomId) } returns guestbook
+        every {
+            guestbookPostRepository.findFirstByRoomGuestbookIdAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(5L, authorId)
+        } returns null
+        every { guestbookPostRepository.save(any()) } answers { mockk { every { id } returns 42L } }
     }
 
     @Test
