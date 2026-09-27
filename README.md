@@ -99,11 +99,13 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 ---
 
 ### `core:core-worker`
-알림 전송과 룸 자동 완료를 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
+알림 전송을 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
 
-- `worker.room`: 예정 시각 8시간이 지난 `CONFIRMED` 룸을 기본 10분마다 `COMPLETED`로 전환한다.
-- 배포 프로파일에서는 자동 완료가 활성화되고 local에서는 꺼진다. `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다.
-- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다. 자동 완료와 완료 알림 Outbox 저장은 한 트랜잭션이다.
+- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다.
+- 룸 자동 완료는 core-api가 실행한다(MOI-499). 수동 완료와 같은 완료 로직·완료 사실 발행을 쓰기 위해서다.
+  예정 시각 8시간이 지난 `CONFIRMED` 룸을 기본 10분마다 `COMPLETED`로 전환하고, 배포 프로파일에서 켜지며 local에서는 꺼진다.
+  `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. API 서버가 여러 대면 모두 실행하지만 룸 행을 잠그고
+  다시 판정하므로 한 룸은 한 번만 완료된다.
 
 ---
 
