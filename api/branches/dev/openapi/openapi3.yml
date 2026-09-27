@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-09-25",
-                        "datetime" : "2026-09-25T09:31:49.822376303",
+                        "date" : "2026-09-27",
+                        "datetime" : "2026-09-27T15:21:11.441462888",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-09-25",
-                        "datetime" : "2026-09-25T09:31:49.871552816",
+                        "date" : "2026-09-27",
+                        "datetime" : "2026-09-27T15:21:11.493393792",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -857,7 +857,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "000646c0-719b-4dba-986a-63b9e1e7efd8",
+                          "termsId" : "acc3e39d-6f18-4e20-b826-f5821deab630",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -865,7 +865,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "cfed04e0-3821-4c25-b051-d596178c1e0f",
+                          "termsId" : "0c550287-6808-4051-9d26-87dd4cba2a18",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1750,12 +1750,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b09b1037-544c-4bf3-86f1-0afbe596a25f",
+                        "memberId" : "91b109b9-aad1-4f73-9212-30cb0e7d42fa",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "b09b1037-544c-4bf3-86f1-0afbe596a25f",
+                          "memberId" : "91b109b9-aad1-4f73-9212-30cb0e7d42fa",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -2436,7 +2436,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-09-26T09:31:56.786850132",
+                          "startAt" : "2026-09-28T15:21:18.666377315",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2449,9 +2449,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "bb363bc9-ac16-4f32-8abc-be9b2414c0e3",
+                        "hostMemberId" : "72d493e2-a2a6-4432-b484-296cd66644bf",
                         "participants" : [ {
-                          "memberId" : "bb363bc9-ac16-4f32-8abc-be9b2414c0e3",
+                          "memberId" : "72d493e2-a2a6-4432-b484-296cd66644bf",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3000,7 +3000,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "11bf05e2-db5d-48f2-ad47-06a64cfc8726",
+                        "memberId" : "7e364d2f-4d4c-4371-846e-4cb1cf707502",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -3753,19 +3753,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "88802825-d4d5-4a98-b675-7bc5b4f892eb",
+                    "resumeId" : "cf9ce121-c0c1-4edd-9fc1-b40cf9fc8e72",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "c465b719-ee37-4ab7-8dc4-696e0287582a",
+                    "resumeId" : "4b06c2d1-c23a-456b-b3ce-f0119dfd225b",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "dadfad37-f539-4631-b6e0-356e3a1aae79"
+                    "resumeId" : "820ba412-ebc2-4c22-abc8-5260272c05d1"
                   }
       responses:
         "400":
@@ -3821,220 +3821,6 @@ paths:
                         "message" : "이력서를 찾을 수 없습니다.",
                         "data" : null
                       }
-                    }
-  /v1/rooms/{roomId}/attendances:
-    post:
-      tags:
-      - v1
-      summary: 룸 출석 기록
-      description: "룸 완료 이후 방장이 최신 확정 참여자 전원의 참석 여부를 한 번 기록한다. E400, E1405, E1406,\
-        \ E1704, E1706, E1708을 응답할 수 있다."
-      operationId: recordRoomAttendances
-      parameters:
-      - name: roomId
-        in: path
-        description: ""
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/v1-rooms-roomId-attendances139202778"
-            examples:
-              recordRoomAttendances-e1704:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances-e1706:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances-e1405:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances-e1708:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances-e1406:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "ATTENDED"
-                    }, {
-                      "memberId" : "00000000-0000-0000-0000-000000000002",
-                      "status" : "ABSENT"
-                    } ]
-                  }
-              recordRoomAttendances-e400:
-                value: |-
-                  {
-                    "attendances" : [ {
-                      "memberId" : "00000000-0000-0000-0000-000000000001",
-                      "status" : "UNKNOWN"
-                    } ]
-                  }
-      responses:
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-closing-questions-me910352763"
-              examples:
-                recordRoomAttendances-e1704:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1704",
-                        "message" : "룸 진행 정보를 조회할 수 없는 상태입니다.",
-                        "data" : null
-                      }
-                    }
-                recordRoomAttendances-e1708:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1708",
-                        "message" : "출석이 이미 기록되었습니다.",
-                        "data" : null
-                      }
-                    }
-        "400":
-          description: "400"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-closing-questions-me910352763"
-              examples:
-                recordRoomAttendances-e1706:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1706",
-                        "message" : "출석 대상이 확정 참여자와 일치하지 않습니다.",
-                        "data" : null
-                      }
-                    }
-                recordRoomAttendances-e400:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E400",
-                        "message" : "요청 형식이 올바르지 않습니다.",
-                        "data" : null
-                      }
-                    }
-        "404":
-          description: "404"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-closing-questions-me910352763"
-              examples:
-                recordRoomAttendances-e1405:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1405",
-                        "message" : "방을 찾을 수 없습니다.",
-                        "data" : null
-                      }
-                    }
-        "403":
-          description: "403"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-closing-questions-me910352763"
-              examples:
-                recordRoomAttendances-e1406:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1406",
-                        "message" : "방장만 접근할 수 있습니다.",
-                        "data" : null
-                      }
-                    }
-        "200":
-          description: "200"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-attendances-1592503104"
-              examples:
-                recordRoomAttendances:
-                  value: |-
-                    {
-                      "result" : "SUCCESS",
-                      "data" : {
-                        "attendances" : [ {
-                          "memberId" : "00000000-0000-0000-0000-000000000001",
-                          "nickname" : "영리한 부엉이 86",
-                          "status" : "ATTENDED"
-                        }, {
-                          "memberId" : "00000000-0000-0000-0000-000000000002",
-                          "nickname" : "성실한 사슴 03",
-                          "status" : "ABSENT"
-                        } ]
-                      },
-                      "error" : null
                     }
   /v1/rooms/{roomId}/comments:
     get:
@@ -4283,8 +4069,8 @@ paths:
       tags:
       - v1
       summary: 룸 완료
-      description: "방장이 CONFIRMED 룸을 즉시 COMPLETED로 전환한다. 출석은 별도 API로 기록한다. E1405,\
-        \ E1406, E1707을 응답할 수 있다."
+      description: "방장이 확정 참여자 전원의 참석 여부를 입력하며 CONFIRMED 룸을 COMPLETED로 전환한다. E400,\
+        \ E1405, E1406, E1706, E1707, E1708을 응답할 수 있다."
       operationId: completeRoomProgress
       parameters:
       - name: roomId
@@ -4293,6 +4079,86 @@ paths:
         required: true
         schema:
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/v1-rooms-roomId-complete139202778"
+            examples:
+              completeRoomProgress-e1406:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              completeRoomProgress-e1707:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              completeRoomProgress-e1405:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              completeRoomProgress-e1708:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              completeRoomProgress:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
+              completeRoomProgress-e400:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "UNKNOWN"
+                    } ]
+                  }
+              completeRoomProgress-e1706:
+                value: |-
+                  {
+                    "attendances" : [ {
+                      "memberId" : "00000000-0000-0000-0000-000000000001",
+                      "status" : "ATTENDED"
+                    }, {
+                      "memberId" : "00000000-0000-0000-0000-000000000002",
+                      "status" : "ABSENT"
+                    } ]
+                  }
       responses:
         "403":
           description: "403"
@@ -4330,6 +4196,17 @@ paths:
                         "data" : null
                       }
                     }
+                completeRoomProgress-e1708:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1708",
+                        "message" : "출석이 이미 기록되었습니다.",
+                        "data" : null
+                      }
+                    }
         "404":
           description: "404"
           content:
@@ -4353,16 +4230,54 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-complete2057983059"
+                $ref: "#/components/schemas/v1-rooms-roomId-complete1395457871"
               examples:
                 completeRoomProgress:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "status" : "COMPLETED"
+                        "status" : "COMPLETED",
+                        "attendances" : [ {
+                          "memberId" : "00000000-0000-0000-0000-000000000001",
+                          "nickname" : "영리한 부엉이 86",
+                          "status" : "ATTENDED"
+                        }, {
+                          "memberId" : "00000000-0000-0000-0000-000000000002",
+                          "nickname" : "성실한 사슴 03",
+                          "status" : "ABSENT"
+                        } ]
                       },
                       "error" : null
+                    }
+        "400":
+          description: "400"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/v1-closing-questions-me910352763"
+              examples:
+                completeRoomProgress-e400:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E400",
+                        "message" : "요청 형식이 올바르지 않습니다.",
+                        "data" : null
+                      }
+                    }
+                completeRoomProgress-e1706:
+                  value: |-
+                    {
+                      "result" : "ERROR",
+                      "data" : null,
+                      "error" : {
+                        "code" : "E1706",
+                        "message" : "출석 대상이 확정 참여자와 일치하지 않습니다.",
+                        "data" : null
+                      }
                     }
   /v1/rooms/{roomId}/confirmation:
     post:
@@ -5783,7 +5698,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "5f59d7ee-ee99-42a9-8916-38920003a068",
+                          "resumeId" : "f641cc30-ba35-428c-9758-3e128dbf3a69",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -6820,6 +6735,18 @@ paths:
                   type: string
 components:
   schemas:
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -6839,18 +6766,6 @@ components:
             - type: boolean
             - type: string
             - type: number
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-dev-rooms-roomId-schedule-1288597070:
       required:
       - result
@@ -7628,14 +7543,6 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -7648,6 +7555,14 @@ components:
         content:
           type: string
           description: "질문 본문 (공백 불가, 최대 500자)"
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-reviews-overview-1524615499:
       required:
       - result
@@ -7723,7 +7638,7 @@ components:
                     type: string
                     description: 대상 회원 id
           nullable: true
-    v1-rooms-roomId-attendances139202778:
+    v1-rooms-roomId-complete139202778:
       required:
       - attendances
       type: object
@@ -9024,39 +8939,6 @@ components:
               type: string
               description: 에러 메시지
           nullable: true
-    v1-rooms-roomId-attendances-1592503104:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - attendances
-          type: object
-          properties:
-            attendances:
-              type: array
-              description: 저장된 출석 목록
-              items:
-                required:
-                - memberId
-                - nickname
-                - status
-                type: object
-                properties:
-                  nickname:
-                    type: string
-                    description: 참여자 닉네임
-                  status:
-                    type: string
-                    description: ATTENDED | ABSENT
-                  memberId:
-                    type: string
-                    description: 참여자 회원 식별자
-          nullable: true
     v1-rooms-583341076:
       required:
       - result
@@ -9473,6 +9355,43 @@ components:
               type: string
               description: 이력서 소유 회원 id
           nullable: true
+    v1-rooms-roomId-complete1395457871:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - attendances
+          - status
+          type: object
+          properties:
+            attendances:
+              type: array
+              description: 저장된 출석 목록
+              items:
+                required:
+                - memberId
+                - nickname
+                - status
+                type: object
+                properties:
+                  nickname:
+                    type: string
+                    description: 참여자 닉네임
+                  status:
+                    type: string
+                    description: ATTENDED | ABSENT
+                  memberId:
+                    type: string
+                    description: 참여자 회원 식별자
+            status:
+              type: string
+              description: 완료 후 룸 상태 (COMPLETED)
+          nullable: true
     v1-dev-rooms-roomId-schedule800956633:
       required:
       - startAt
@@ -9710,6 +9629,31 @@ components:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
           nullable: true
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
+          nullable: true
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -9797,31 +9741,6 @@ components:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
-          nullable: true
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
           nullable: true
     v1-rooms501055666:
       required:
@@ -10265,23 +10184,6 @@ components:
             myCardSetPreparerCount:
               type: number
               description: 내 카드셋에 활성 질문 또는 꼬리질문을 남긴 참여자 수
-          nullable: true
-    v1-rooms-roomId-complete2057983059:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - status
-          type: object
-          properties:
-            status:
-              type: string
-              description: 완료 후 룸 상태 (COMPLETED)
           nullable: true
     v1-reviews-reviewId-949065321:
       required:
