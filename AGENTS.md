@@ -31,10 +31,14 @@ Kotlin 2.3 / JVM 25 · Spring Boot 4.1 · Gradle 9.5 멀티모듈 · JPA + Flywa
 이 스택의 함정, 우리가 실제로 물린 것, 판단 기준. 규칙 문서에는 안 나오지만
 모르면 같은 실수를 반복하는 것들이 여기 있다.
 
-**LLM Wiki** — PRD·회의록·상세 명세·아키텍처 문서는 LLM Wiki MCP에서 조회할 수 있다.
-작업에 필요한 제품·도메인·결정 맥락이 저장소나 이슈에 충분히 없으면 먼저 이 MCP로
-관련 문서를 확인한다. 구현 중 PRD 또는 명세의 수정이 필요해지면 로컬 사본을 만들거나
-수정하지 말고, 변경 근거와 범위를 확인한 뒤 같은 MCP를 통해 원본 문서를 수정한다.
+**LLM Wiki** — 제품 요구사항·스펙을 다루거나 ADR 같은 결정 근거가 필요할 때만
+관련 문서를 MCP로 읽는다. 제품 명세의 원본은 Wiki이며 Notion은 과거 참고 자료다.
+하네스·컨벤션 등 저장소 안에서 충분히 관리되는 작업에는 Wiki 조회·문서 생성을 요구하지 않는다.
+관련 명세가 있는 작업은 [`wiki-sync`](.agents/skills/wiki-sync/SKILL.md)로 구현 전
+모호점과 필요한 원본 갱신을 해결하고, 구현 후 코드·테스트와 대조한다. API 스펙·서비스
+테스트 작성이나 중간 단계 재개도 같은 기준이다. **필요한 명세 갱신은 절대로 후속 TODO로
+넘기지 않는다.** 구현·리뷰 중 발견해도 같은 작업에서 끝내며, 갱신이 막히면 해당 단계는
+미완료다. 로컬 사본으로 대신하지 않고, 참조·수정한 Wiki가 있으면 PR에 링크한다.
 
 ## 작업 유형 → 스킬 라우팅
 
@@ -44,12 +48,13 @@ Kotlin 2.3 / JVM 25 · Spring Boot 4.1 · Gradle 9.5 멀티모듈 · JPA + Flywa
 | 작업 유형 | 스킬 | 판별 기준 |
 | --- | --- | --- |
 | 이슈 파악·컨텍스트 수집 | `issue-context` | "MOI-xxx 분석해줘". 구현은 하지 않는다 |
+| 제품 명세·관련 결정 동기화 | `wiki-sync` | 관련 Wiki의 모호점 해소·원본 갱신·구현 대조. 하네스 등 로컬 문서 작업은 제외 |
 | 요구사항 구현 (service TDD) | `requirement-implementation` | "MOI-xxx 구현해줘". **"서비스 테스트만 작성"도 이 워크플로우의 한 단계다** |
 | API 계약 정의 | `api-spec-definition` | Controller·DTO·RestDocs·모킹까지. Service는 만들지 않는다 |
 | 스펙과 Service 배선 | `api-connection` | 둘 다 이미 존재할 때. 없으면 선행 워크플로우로 |
 | 엔티티·테이블 설계 | `entity-design` | 1단 논리 모델링(DBML) / 2단 물리 모델링·마이그레이션 |
 | 프롬프트·모델 변경 | `prompt-change` | 오타 수정 포함. eval 비교 없는 변경은 금지 |
-| 인프라·워크플로 변경 | `infra-change` | terraform·Dockerfile·Actions. plan까지만, apply 금지 |
+| 인프라·워크플로 변경 | `infra-change` | terraform·Dockerfile·Actions 대상별 검증. Terraform은 plan까지, apply 금지 |
 | 장애 진단·완화 계획 | `incident-response` | 실행은 사람. 느린 쿼리 단건은 `db-reviewer` 위임으로 충분 |
 | 커밋·PR·리뷰봇 대응 | `ship-pr` | 워크플로우의 마지막 단계이자 단독 호출 가능 |
 

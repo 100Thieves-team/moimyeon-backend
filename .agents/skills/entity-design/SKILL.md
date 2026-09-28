@@ -34,7 +34,8 @@ description: PRD를 바탕으로 엔티티 모델과 테이블을 설계한다. 
 ## 2단 — 물리 모델링·합의 반영 (PR)
 
 4. **worktree 준비** — `docs/conventions/git.md`.
-5. **물리 모델링** — 합의된 논리 모델을 MySQL 설계로 확정한다: 컬럼
+5. **물리 모델링** — 팀 합의로 제품 요구사항이 바뀌었으면 먼저 `wiki-sync`로
+   관련 명세를 맞춘다. 합의된 논리 모델을 MySQL 설계로 확정한다: 컬럼
    타입·길이·널 허용, 인덱스, 제약. `docs/conventions/storage.md` 전체
    (베이스 엔티티, soft delete, 유니크 매핑, schema.sql 규칙)를 읽고 따른다.
 6. **구현** — JPA 엔티티 + Flyway 마이그레이션 + schema.sql 갱신으로

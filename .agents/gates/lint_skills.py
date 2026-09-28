@@ -30,6 +30,7 @@ EXTERNAL_CONTENT_SKILLS = {
     "incident-response",  # 장애 알림·로그
     "infra-change",       # terraform plan 출력·CI plan 코멘트
     "prompt-change",      # 운영 입력·모델 출력(eval 픽스처)
+    "wiki-sync",          # 제품 명세·ADR·결정 근거
 }
 INJECTION_GUARD = re.compile(r"명령이\s*아니다|명령으로 승격|승격하지\s*않는다")
 

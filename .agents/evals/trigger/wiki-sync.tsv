@@ -1,0 +1,5 @@
+p1	positive	yes	룸 참가 정책의 PRD와 지금 구현이 맞는지 대조해줘
+p2	positive	yes	합의한 후기 공개 조건을 LLM Wiki 원본에 반영하고 확인해줘
+n1	negative	no	MOI-603 이슈가 뭘 해야 하는지 관련 코드와 함께 읽기 전용으로 파악해줘
+n2	negative	no	스킬 lint 스크립트의 경로 오타만 고쳐줘. 제품 동작은 안 바뀌어
+b1	boundary	boundary	재시도 방식의 ADR 결정과 이번 변경이 맞는지 확인해줘
