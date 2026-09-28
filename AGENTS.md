@@ -56,6 +56,7 @@ Kotlin 2.3 / JVM 25 · Spring Boot 4.1 · Gradle 9.5 멀티모듈 · JPA + Flywa
 | 프롬프트·모델 변경 | `prompt-change` | 오타 수정 포함. eval 비교 없는 변경은 금지 |
 | 인프라·워크플로 변경 | `infra-change` | terraform·Dockerfile·Actions 대상별 검증. Terraform은 plan까지, apply 금지 |
 | 장애 진단·완화 계획 | `incident-response` | 실행은 사람. 느린 쿼리 단건은 `db-reviewer` 위임으로 충분 |
+| 변경 설명 자료 | `change-brief` | 배경·실제 시퀀스·전후 결과를 공유 문서로 작성. Claude Artifact 우선, 다른 공유 문서 허용 |
 | 커밋·PR·리뷰봇 대응 | `ship-pr` | 워크플로우의 마지막 단계이자 단독 호출 가능 |
 
 리뷰는 읽기 전용 에이전트에 위임한다 — `code-reviewer`(컨벤션·구조),
