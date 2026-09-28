@@ -4,7 +4,8 @@ on:
   push:
     branches: [ "main", "dev" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    # 앞 작업 브랜치를 base로 하는 스택 PR도 검증한다. edited는 base 변경을 포함한다.
+    types: [ opened, synchronize, reopened, edited, ready_for_review ]
 
 permissions:
   contents: read
@@ -24,6 +25,15 @@ jobs:
 
       - name: Skill lint
         run: python3 .agents/gates/lint_skills.py
+
+      - name: PR file scope
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git fetch --no-tags origin "${PR_BASE_SHA}" "${PR_HEAD_SHA}"
+          python3 .agents/gates/check_pr_scope.py --base "${PR_BASE_SHA}" --head "${PR_HEAD_SHA}"
 
       # 검사 범위를 한 번만 계산해 아래 게이트들이 공유한다 — 스텝마다
       # 따로 계산하면 하나가 조용히 어긋난다(페어링이 마지막 커밋만 보던 결함).

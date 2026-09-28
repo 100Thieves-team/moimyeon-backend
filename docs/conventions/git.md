@@ -80,6 +80,13 @@
   단순히 커밋 로그를 복사하지 않고, 중복되거나 PR 안에서 해결된 내용은 제거한다.
 - 변경이 크면 **스택 PR 로 쪼갠다**: 기능 브랜치를 체이닝하고(`#13 ← #14 ← #15`) base 를 앞 브랜치로
   지정한다. 앞 PR 이 머지되면 뒤 PR 을 리베이스한다. 머지 순서는 스택 순서대로.
+- 변경 파일은 **20개 이하 권장, 50개 상한**이다. 21~50개는 분할 검토와 유지 사유를
+  PR에 적고, 51개부터는 분할하기 전 PR을 생성·갱신하지 않는다. worklog·생성 파일도
+  포함하고 rename은 한 변경으로 센다. 비교 대상은 실제 PR base와 head의 merge-base다.
+  계획 때 예상 범위를 확인하고, 커밋 전에는 `python3 .agents/gates/check_pr_scope.py
+  --base origin/{실제-base} --worktree`, 깨끗한 최종 커밋에서는 `--worktree` 없이 확인한다.
+- 스택의 중간 PR도 CI·리뷰를 통과해야 한다. 상위 base가 바뀌면 다시 검증한다.
+  하나의 이슈를 여러 PR로 나눴으면 앞 PR은 `Refs MOI-{번호}`, 전체 완료 PR만 `Closes`를 쓴다.
 - 머지는 리뷰어(사람)가 한다. merge commit 방식 + 브랜치 삭제:
   ```bash
   gh pr merge {N} --repo 100Thieves-team/moimyeon-backend --merge --delete-branch
