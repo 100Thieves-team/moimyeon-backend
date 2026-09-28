@@ -34,7 +34,7 @@
    세션의 잔여 컨텍스트가 지침의 간극을 가린다.
 
    ```bash
-   .agents/evals/run.sh trigger claude 1 <워크트리> <스킬명>
+   .agents/evals/run.sh trigger claude 1 <워크트리> <스킬명> <출력경로> <모델>
    ```
 
 3. `python3 .agents/evals/score.py <raw_dir> <스킬명>`로 확정 집계한다

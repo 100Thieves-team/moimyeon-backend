@@ -17,6 +17,14 @@
 라우팅은 `AGENTS.md`의 작업 유형 → 스킬 표와 각 스킬 description이 담당한다.
 별도 오케스트레이터 스킬은 없다 (DR-008).
 
+제품 요구사항·스펙 또는 필요한 ADR이 관련될 때만 Wiki를 참조한다. 읽기 전용
+수집은 `issue-context`, 원본 갱신·구현 대조는 `wiki-sync`, 완료 확인은 `ship-pr`이
+맡는다. 하네스·컨벤션은 저장소에서 관리하며 Wiki 조회를 강제하지 않는다.
+공통 적용 조건은 AGENTS.md에 두고 각 변경 스킬에 같은 절차를 복제하지 않는다.
+
+`change-brief`는 실제 변경의 배경·흐름·결과를 공유 자료로 만들고 `ship-pr`에
+전달한다. 게시 수단은 reference로 분리하며, 하네스 설명은 저장소 문서로 공유할 수 있다.
+
 작업 산출물 계약은 [.worklog/README.md](../.worklog/README.md),
 구축 의사결정은 [.worklog/MOI-474/decisions.md](../.worklog/MOI-474/decisions.md) 참조.
 

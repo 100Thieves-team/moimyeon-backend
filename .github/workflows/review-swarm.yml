@@ -13,8 +13,9 @@ name: review-swarm
 
 on:
   pull_request:
-    branches: [dev, main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    # 스택 PR과 base 변경도 리뷰한다. 아래 same-repository 가드는 유지한다.
+    # edited는 title/body 편집도 포함하며 concurrency에 의해 기존 리뷰가 재시작될 수 있다.
+    types: [opened, synchronize, reopened, edited, ready_for_review]
 
 permissions:
   contents: read

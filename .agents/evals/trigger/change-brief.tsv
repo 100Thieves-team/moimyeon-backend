@@ -1,0 +1,5 @@
+p1	positive	yes	이 PR을 왜 했고 무엇이 달라졌는지 시퀀스와 함께 공유 설명 자료로 만들어줘
+p2	positive	yes	구현은 끝났어. 팀원이 읽을 변경 배경과 결과 문서만 만들어줘
+n1	negative	no	코드와 제품 PRD의 권한 규칙이 일치하는지 대조해줘
+n2	negative	no	변경분의 회귀 위험만 읽기 전용으로 리뷰해줘. 설명 자료 작성은 필요 없어
+b1	boundary	boundary	공유한 변경 설명에서 리뷰로 바뀐 실패 분기만 고쳐줘
