@@ -44,12 +44,13 @@ class PrScopeTest(unittest.TestCase):
         return result
 
     def test_thresholds_include_worklog_and_generated_files(self):
-        for count in (20, 21, 50, 51):
+        for count in (20, 21, 41, 50, 51):
             for index in range(count):
                 self.write(f".worklog/generated/{index}.md", f"change {index}\n")
             self.save()
             result = self.check(count, int(count > 50))
-            self.assertIn("[BLOCK]" if count > 50 else "[WARN]" if count > 20 else "[PASS]", result.stdout)
+            self.assertIn("[BLOCK]" if count > 50 else "[PASS]", result.stdout)
+            self.assertNotIn("[WARN]", result.stdout)
 
     def test_rename_delete_add_and_modify_with_special_paths(self):
         self.git("checkout", "dev")
@@ -95,6 +96,45 @@ class PrScopeTest(unittest.TestCase):
         self.write("committed")
         self.save()
         self.check(None, 2, extra=("--head", "dev", "--worktree"))
+
+    def test_staged_new_file_removed_from_worktree_still_counts(self):
+        self.write("staged-only", "staged content\n")
+        self.git("add", "staged-only")
+        (self.repo / "staged-only").unlink()
+        self.check(1, extra=("--worktree",))
+
+    def test_staged_change_reverted_on_disk_and_untracked_file_both_count(self):
+        self.write("seed", "staged change\n")
+        self.git("add", "seed")
+        self.write("seed", "base\n")
+        self.write("untracked", "another change\n")
+        self.check(2, extra=("--worktree",))
+
+    def test_staged_edit_and_unstaged_rename_share_one_change(self):
+        content = "unchanged line\n" * 20
+        self.git("checkout", "dev")
+        self.write("seed", content)
+        self.save()
+        self.git("checkout", "feature")
+        self.git("merge", "--ff-only", "dev")
+        self.write("seed", content + "review edit\n")
+        self.git("add", "seed")
+        (self.repo / "seed").rename(self.repo / "renamed")
+        self.check(1, extra=("--worktree",))
+
+    def test_low_similarity_move_is_deletion_and_addition(self):
+        self.git("mv", "seed", "moved")
+        self.write("moved", "entirely different contents\n")
+        self.save()
+        self.check(2)
+
+    def test_staged_rename_target_and_unstaged_source_deletion_at_limit(self):
+        self.write("renamed", "base\n")
+        self.git("add", "renamed")
+        (self.repo / "seed").unlink()
+        for index in range(49):
+            self.write(f"new/{index}", f"new content {index}\n")
+        self.check(50, extra=("--worktree",))
 
     def test_unstaged_rename_at_limit_preserves_index_and_objects(self):
         (self.repo / "seed").rename(self.repo / "renamed seed")

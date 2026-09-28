@@ -5,6 +5,7 @@ on:
     branches: [ "main", "dev" ]
   pull_request:
     # 앞 작업 브랜치를 base로 하는 스택 PR도 검증한다. edited는 base 변경을 포함한다.
+    # title/body 편집도 edited이므로 코드 변경 없이 CI가 재실행될 수 있다.
     types: [ opened, synchronize, reopened, edited, ready_for_review ]
 
 permissions:

@@ -60,6 +60,8 @@ check "secrets-실레포-오탐없음" 0 $?
 # 4. 페어링: 훅 모드 스모크 (경고는 exit 0)
 python3 "$G/check_pairings.py" --staged > /dev/null; check "pairings-smoke" 0 $?
 python3 "$G/tests/test_pr_scope.py"; check "pr-scope-회귀" 0 $?
+python3 "$G/tests/test_review_rewrite.py"; check "review-rewrite-회귀" 0 $?
+python3 .agents/evals/test_score.py; check "eval-score-회귀" 0 $?
 
 # 5. Gitleaks CI 계약: 변경 범위를 공유하고, 새 ref는 HEAD 이력을 전수 검사한다
 ci=".github/workflows/ci.yml"

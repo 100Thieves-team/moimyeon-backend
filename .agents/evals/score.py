@@ -56,8 +56,6 @@ def score_claude(path: Path) -> str:
     # result의 is_error는 max-turns 소진으로도 켜지므로 한도 신호로 쓰지 않는다.
     if invoked:
         return "INVOKED"
-    if LIMIT_TEXT.search(text):
-        return "LIMIT"
     for line in text.splitlines():
         try:
             event = json.loads(line)
@@ -65,7 +63,10 @@ def score_claude(path: Path) -> str:
             continue
         if event.get("type") == "result":
             if event.get("is_error"):
-                return "INCOMPLETE" if event.get("subtype") == "error_max_turns" else "ERROR"
+                if event.get("subtype") == "error_max_turns":
+                    return "INCOMPLETE"
+                error_text = json.dumps({key: event.get(key) for key in ("result", "errors")})
+                return "LIMIT" if LIMIT_TEXT.search(error_text) else "ERROR"
             return "no"
     return "ERROR"  # 인증 실패·중단·빈 출력은 미호출 성공으로 세지 않는다.
 
