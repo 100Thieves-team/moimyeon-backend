@@ -1,0 +1,7 @@
+aws_region                    = "ap-northeast-2"
+management_account_id         = "REPLACE_WITH_12_DIGIT_ACCOUNT_ID"
+enabled_policy_types          = ["SERVICE_CONTROL_POLICY"]
+aws_service_access_principals = []
+ou_names                      = ["dev", "live"]
+allowed_regions               = ["ap-northeast-2", "us-east-1"]
+attach_guardrails             = false

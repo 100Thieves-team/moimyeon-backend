@@ -3,6 +3,11 @@
 Terraform for the moimyeon backend on AWS, using the **ECS-on-EC2 (Pattern A)**
 deployment model. Structure mirrors `100Thieves-team/plady`'s `infra/terraform`.
 
+The independent [`personal-organization/`](personal-organization/README.md) root
+prepares AWS Organizations OUs and SCPs for a possible future personal-account
+migration. It has separate state and is excluded from the team account's
+Terraform plan/apply targets; repository-wide CI formatting still checks it.
+
 ## Architecture
 
 - `envs/shared`: account-level shared resources (GitHub Actions OIDC provider,
