@@ -35,4 +35,10 @@ class SessionManager(
         log.debug { "session.manager.close" }
         refreshTokenRepository.findByTokenHash(credential.hash())?.revoke(closedAt)
     }
+
+    @Transactional
+    fun closeAll(memberId: UUID, closedAt: LocalDateTime) {
+        log.debug { "session.manager.closeAll memberId=$memberId" }
+        refreshTokenRepository.revokeAllByMemberId(memberId, closedAt)
+    }
 }

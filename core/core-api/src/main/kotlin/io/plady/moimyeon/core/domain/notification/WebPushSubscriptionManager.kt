@@ -47,4 +47,10 @@ class WebPushSubscriptionManager(
             repository.delete(existing)
         }
     }
+
+    @Transactional
+    fun unregisterAll(memberId: UUID) {
+        log.debug { "web-push-subscription.manager.unregisterAll memberId=$memberId" }
+        repository.deleteAllByMemberId(memberId)
+    }
 }

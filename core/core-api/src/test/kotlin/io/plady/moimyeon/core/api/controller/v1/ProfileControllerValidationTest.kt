@@ -36,7 +36,7 @@ class ProfileControllerValidationTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
             ProfileController(ProfileFacade(profileService, companyService)),
-            MemberController(memberService, memberFacade),
+            MemberController(memberService, memberFacade, mockk()),
             PublicProfileController(publicProfileFacade),
         )
             .setCustomArgumentResolvers(LoginMemberArgumentResolver())
