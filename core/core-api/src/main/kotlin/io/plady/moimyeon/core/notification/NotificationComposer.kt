@@ -11,6 +11,7 @@ import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import org.springframework.stereotype.Component
 import java.util.UUID
 
@@ -117,6 +118,26 @@ class NotificationComposer {
                     payload.roomId,
                     "방장이 바뀌었어요",
                     "'${payload.roomTitle}' 모임의 방장이 바뀌었어요.",
+                )
+            }
+        }
+
+        is RoomRecruitingReopenedEventPayload -> payload.participantMemberIds.map {
+            if (it == payload.hostMemberId) {
+                roomMessage(
+                    it,
+                    NotificationPolicy.PUSH_ELSE_EMAIL,
+                    payload.roomId,
+                    "참여자가 나가 모집이 다시 열렸어요",
+                    "'${payload.roomTitle}' 모임 인원이 최소 진행 인원보다 적어져 모집 중으로 돌아갔어요. 다시 모집해 확정해 주세요.",
+                )
+            } else {
+                roomMessage(
+                    it,
+                    NotificationPolicy.PUSH_ELSE_EMAIL,
+                    payload.roomId,
+                    "모집이 다시 열렸어요",
+                    "'${payload.roomTitle}' 모임 인원이 줄어 모집 중으로 돌아갔어요. 다시 확정되면 알려 드릴게요.",
                 )
             }
         }
