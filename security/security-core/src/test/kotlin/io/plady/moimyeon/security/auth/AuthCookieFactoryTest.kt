@@ -23,6 +23,7 @@ class AuthCookieFactoryTest {
             oauth2 = AuthProperties.OAuth2(
                 successRedirectUri = URI.create("https://dev.moimyeon.plady.io/auth/callback"),
                 failureRedirectUri = URI.create("https://dev.moimyeon.plady.io/?authError=login_failed"),
+                restoreRedirectUri = URI.create("https://dev.moimyeon.plady.io/auth/restore"),
             ),
         ),
     )

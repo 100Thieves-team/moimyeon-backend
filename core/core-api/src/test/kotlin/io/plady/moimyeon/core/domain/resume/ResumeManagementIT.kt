@@ -212,7 +212,7 @@ class ResumeManagementIT(
             SocialLoginProvider.GOOGLE,
             providerId,
             Email("$providerId@example.com"),
-        )
+        ).memberId
     }
 
     private fun newResume(memberId: UUID, originalName: String): NewResume {

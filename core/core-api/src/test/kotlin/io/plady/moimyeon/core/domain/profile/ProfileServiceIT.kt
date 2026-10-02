@@ -34,7 +34,7 @@ class ProfileServiceIT(
     private val transactionTemplate = TransactionTemplate(transactionManager)
 
     private fun signUp(providerId: String): UUID {
-        return socialAuthService.authenticate(SocialLoginProvider.GOOGLE, providerId, Email("user@example.com"))
+        return socialAuthService.authenticate(SocialLoginProvider.GOOGLE, providerId, Email("user@example.com")).memberId
     }
 
     @Test

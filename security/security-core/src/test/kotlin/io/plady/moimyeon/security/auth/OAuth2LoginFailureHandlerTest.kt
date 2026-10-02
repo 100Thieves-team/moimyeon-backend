@@ -29,6 +29,7 @@ class OAuth2LoginFailureHandlerTest {
         oauth2 = AuthProperties.OAuth2(
             successRedirectUri = URI.create("https://moimyeon.plady.io/auth/callback"),
             failureRedirectUri = URI.create("https://moimyeon.plady.io/?authError=login_failed"),
+            restoreRedirectUri = URI.create("https://moimyeon.plady.io/auth/restore"),
         ),
     )
     private val handler = OAuth2LoginFailureHandler(authProperties)

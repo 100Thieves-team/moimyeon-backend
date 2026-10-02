@@ -18,6 +18,7 @@ data class AuthProperties(
         val sameSite: String,
         val accessMaxAgeSeconds: Long, // AT 쿠키
         val refreshMaxAgeSeconds: Long, // RT 쿠키
+        val restoreTokenName: String = "RESTORE_TOKEN", // 탈퇴 계정 복구 확인 쿠키
     )
 
     data class Cors(
@@ -27,10 +28,12 @@ data class AuthProperties(
     data class OAuth2(
         val successRedirectUri: URI,
         val failureRedirectUri: URI,
+        val restoreRedirectUri: URI, // 탈퇴 회원 로그인 시 복구 확인 화면
     ) {
         init {
             require(successRedirectUri.isHttpUri()) { "OAuth2 success redirect URI must be an absolute HTTP(S) URI" }
             require(failureRedirectUri.isHttpUri()) { "OAuth2 failure redirect URI must be an absolute HTTP(S) URI" }
+            require(restoreRedirectUri.isHttpUri()) { "OAuth2 restore redirect URI must be an absolute HTTP(S) URI" }
         }
 
         private fun URI.isHttpUri(): Boolean = isAbsolute && host != null && scheme.lowercase() in setOf("http", "https")

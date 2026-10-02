@@ -40,6 +40,7 @@ class SecurityConfig(
                 authorize("/login/**", permitAll)
                 authorize("/v1/auth/refresh", permitAll)
                 authorize("/v1/auth/logout", permitAll)
+                authorize(HttpMethod.POST, "/v1/auth/restoration", permitAll)
                 authorize(HttpMethod.POST, "/v1/auth/dev-sessions", permitAll)
                 authorize("/health", permitAll)
                 authorize("/actuator/health", permitAll)
@@ -68,12 +69,13 @@ class SecurityConfig(
             }
             oauth2ResourceServer {
                 // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용.
-                // refresh/logout/dev 세션 발급은 기존 AT 상태와 무관하므로 이 경로에선 AT 를 해석하지 않는다.
+                // refresh/logout/복구/dev 세션 발급은 기존 AT 상태와 무관하므로 이 경로에선 AT 를 해석하지 않는다.
                 bearerTokenResolver = HeaderOrCookieBearerTokenResolver(
                     cookieName = authCookieFactory.accessTokenName,
                     bearerFreePaths = setOf(
                         "/v1/auth/refresh",
                         "/v1/auth/logout",
+                        "/v1/auth/restoration",
                         "/v1/auth/dev-sessions",
                     ),
                 )

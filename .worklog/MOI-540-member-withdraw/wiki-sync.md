@@ -25,6 +25,9 @@ decisions.md 1~16 (2026-10-02 사람 결정). 상태 모델(탈퇴 = 탈퇴 시�
 - 구현 중 결정 반영(2026-10-03): DEC-016(탈퇴 처리 단위 — 신청 철회 → 룸마다 나가기 → 회원 정리),
   `X.withdraw.leave_active_rooms` note·대기 신청 철회 detail, `T.member.withdraw` note, `P.member.withdrawal` source
 
+- QA 반영(2026-10-03): DEC-017(복구 확인 정보는 발급 뒤 재탈퇴 시 무효), `G.member.restore#confirmed-in-window` ref·note.
+  파트 파일 재조회 일치, 렌더링된 결정 로그에 DEC-017 표시 확인(로컬 ssot_load check 는 같은 이유로 못 돌림).
+
 ## 재조회 결과
 
 - (2차, DEC-016 반영분) 세 파트 파일을 다시 읽어 쓴 내용과 일치 확인, 렌더링된 결정 로그에 DEC-016 표시 확인.
@@ -45,7 +48,7 @@ decisions.md 1~16 (2026-10-02 사람 결정). 상태 모델(탈퇴 = 탈퇴 시�
 | G.member.withdraw 멱등 | 탈퇴 회원이면 바로 반환 | `MemberWithdrawerTest` |
 | R128·R173 "탈퇴한 회원" 표시 | `RoomApplicationFacade`, `RoundFeedbackReader` 문구 | 해당 테스트 기대값 |
 | R168·R174 탈퇴 회원 로그인 → 복구 확인 | `SocialAuthService`, `OAuth2LoginSuccessHandler`, `RestoreTokenProvider` | `SocialAuthServiceTest`, `OAuth2LoginSuccessHandlerTest`, `MemberWithdrawIT` |
-| R175 확인 시 복구·로그인, DEC-015 10분 | `POST /v1/auth/restoration`, `MemberRestorer` | `AuthControllerTest`, `RestoreTokenProviderTest`(만료) |
+| R175 확인 시 복구·로그인, DEC-015 10분, DEC-017 재탈퇴 뒤 토큰 무효 | `POST /v1/auth/restoration`, `MemberRestorer` | `AuthControllerTest`, `RestoreTokenProviderTest`(만료), `MemberRestorerTest`(재탈퇴), `RestorationSecurityContextTest`(필터 체인) |
 | R176·R177 복구 범위 | `MemberRestorer`(탈퇴 시각만 해제) | `MemberWithdrawIT` 나간 룸 유지 |
 | R178 이용 제한 유지 | 상태값 분리(DEC-013) | `MemberRestorerTest` |
 

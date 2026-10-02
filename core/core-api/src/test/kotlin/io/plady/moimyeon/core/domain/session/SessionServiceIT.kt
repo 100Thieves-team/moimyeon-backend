@@ -21,7 +21,7 @@ class SessionServiceIT(
     @Test
     fun `유효한 세션 크리덴셜로 재발급하면 그 회원의 memberId 를 반환한다`() {
         // given
-        val memberId = socialAuthService.authenticate(provider, "google-sub-1", Email("user@example.com"))
+        val memberId = socialAuthService.authenticate(provider, "google-sub-1", Email("user@example.com")).memberId
         val session = sessionService.open(memberId)
 
         // when
@@ -34,7 +34,7 @@ class SessionServiceIT(
     @Test
     fun `로그아웃으로 종료된 세션 크리덴셜로는 재발급할 수 없다`() {
         // given
-        val memberId = socialAuthService.authenticate(provider, "google-sub-2", Email("user@example.com"))
+        val memberId = socialAuthService.authenticate(provider, "google-sub-2", Email("user@example.com")).memberId
         val session = sessionService.open(memberId)
 
         // when
