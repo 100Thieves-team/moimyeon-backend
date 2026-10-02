@@ -11,6 +11,7 @@ import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 
 // EventType 은 core-enum 에 있어 payload 클래스를 모르므로 짝을 여기서 짓는다.
 val EventType.payloadClass: Class<out EventPayload>
@@ -22,6 +23,7 @@ val EventType.payloadClass: Class<out EventPayload>
         EventType.ROOM_COMPLETED -> RoomCompletedEventPayload::class.java
         EventType.ROOM_CANCELED -> RoomCanceledEventPayload::class.java
         EventType.ROOM_HOST_DELEGATED -> RoomHostDelegatedEventPayload::class.java
+        EventType.ROOM_RECRUITING_REOPENED -> RoomRecruitingReopenedEventPayload::class.java
         EventType.REVIEW_PUBLISHED -> ReviewPublishedEventPayload::class.java
         EventType.ROOM_COMMENT_POSTED -> RoomCommentPostedEventPayload::class.java
     }
