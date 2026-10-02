@@ -15,7 +15,7 @@ class MemberServiceIT(
     private val memberRepository: MemberRepository,
 ) : ContextTest() {
     private fun signUp(providerId: String): UUID {
-        return socialAuthService.authenticate(SocialLoginProvider.GOOGLE, providerId, Email("user@example.com"))
+        return socialAuthService.authenticate(SocialLoginProvider.GOOGLE, providerId, Email("user@example.com")).memberId
     }
 
     @Test

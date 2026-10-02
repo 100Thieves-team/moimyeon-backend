@@ -23,6 +23,7 @@ class OAuth2LoginSuccessHandlerTest {
     private val sessionIssuer = mockk<SessionIssuer>()
     private val authCookieFactory = mockk<AuthCookieFactory>()
     private val failureHandler = mockk<OAuth2LoginFailureHandler>(relaxed = true)
+    private val restoreTokenProvider = mockk<RestoreTokenProvider>()
     private val authProperties = authProperties()
     private val handler = OAuth2LoginSuccessHandler(
         socialMemberResolver,
@@ -31,6 +32,7 @@ class OAuth2LoginSuccessHandlerTest {
         authCookieFactory,
         authProperties,
         failureHandler,
+        restoreTokenProvider,
     )
 
     @Test
@@ -55,7 +57,7 @@ class OAuth2LoginSuccessHandlerTest {
                 providerId = "google-sub",
                 email = "member@example.com",
             )
-        } returns AuthenticatedMember(memberId, MemberRole.USER)
+        } returns SocialLoginResult.Authenticated(AuthenticatedMember(memberId, MemberRole.USER))
         every { jwtTokenProvider.issue(memberId, MemberRole.USER) } returns "access-token"
         every { sessionIssuer.open(memberId) } returns issuedSession
         every { authCookieFactory.createAccess("access-token") } returns accessCookie
@@ -69,6 +71,29 @@ class OAuth2LoginSuccessHandlerTest {
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE))
             .containsExactly(accessCookie.toString(), refreshCookie.toString())
         verify(exactly = 0) { failureHandler.onLoginProcessingFailure(any(), any()) }
+    }
+
+    @Test
+    fun `탈퇴한 회원이면 세션 없이 복구 확인 쿠키만 심고 복구 확인 화면으로 이동한다`() {
+        val memberId = UUID.randomUUID()
+        val authentication = authentication(subject = "google-sub", email = "member@example.com")
+        val restoreCookie = ResponseCookie.from(AuthCookieFactory.RESTORE_TOKEN, "restore-token")
+            .httpOnly(true)
+            .path(AuthCookieFactory.REFRESH_PATH)
+            .build()
+        every {
+            socialMemberResolver.resolve(provider = any(), providerId = "google-sub", email = "member@example.com")
+        } returns SocialLoginResult.Withdrawn(memberId)
+        every { restoreTokenProvider.issue(memberId) } returns "restore-token"
+        every { authCookieFactory.createRestore("restore-token") } returns restoreCookie
+        val response = MockHttpServletResponse()
+
+        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+
+        assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).containsExactly(restoreCookie.toString())
+        assertThat(response.redirectedUrl).isEqualTo(authProperties.oauth2.restoreRedirectUri.toString())
+        verify(exactly = 0) { sessionIssuer.open(any()) }
+        verify(exactly = 0) { jwtTokenProvider.issue(any(), any()) }
     }
 
     @Test
@@ -90,7 +115,7 @@ class OAuth2LoginSuccessHandlerTest {
         val authentication = authentication(subject = "google-sub", email = "member@example.com")
         val failure = IllegalStateException("session issuance failed")
         every { socialMemberResolver.resolve(any(), any(), any()) } returns
-            AuthenticatedMember(memberId, MemberRole.USER)
+            SocialLoginResult.Authenticated(AuthenticatedMember(memberId, MemberRole.USER))
         every { jwtTokenProvider.issue(memberId, MemberRole.USER) } returns "access-token"
         every { sessionIssuer.open(memberId) } throws failure
         val response = MockHttpServletResponse()
@@ -111,7 +136,7 @@ class OAuth2LoginSuccessHandlerTest {
         )
         val failure = IllegalStateException("refresh cookie failed")
         every { socialMemberResolver.resolve(any(), any(), any()) } returns
-            AuthenticatedMember(memberId, MemberRole.USER)
+            SocialLoginResult.Authenticated(AuthenticatedMember(memberId, MemberRole.USER))
         every { jwtTokenProvider.issue(memberId, MemberRole.USER) } returns "access-token"
         every { sessionIssuer.open(memberId) } returns issuedSession
         every { authCookieFactory.createAccess("access-token") } returns
@@ -148,6 +173,7 @@ class OAuth2LoginSuccessHandlerTest {
         oauth2 = AuthProperties.OAuth2(
             successRedirectUri = URI.create("https://moimyeon.plady.io/auth/callback"),
             failureRedirectUri = URI.create("https://moimyeon.plady.io/?authError=login_failed"),
+            restoreRedirectUri = URI.create("https://moimyeon.plady.io/auth/restore"),
         ),
     )
 }

@@ -37,6 +37,8 @@ import java.util.UUID
 @Import(FixedClockTestConfiguration::class)
 class MemberWithdrawIT(
     private val memberService: MemberService,
+    private val memberRestorer: MemberRestorer,
+    private val socialAuthService: SocialAuthService,
     private val memberRepository: MemberRepository,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
@@ -160,6 +162,43 @@ class MemberWithdrawIT(
         assertThat(statusOf(roomId, withdrawingMemberId)).isEqualTo(ParticipationStatus.JOINED)
         assertThat(roomStatusOf(roomId)).isEqualTo(RoomStatus.COMPLETED)
     }
+
+    @Test
+    fun `탈퇴한 신원으로 다시 로그인하면 새로 가입하지 않고 복구 확인 대상이 된다`() {
+        seedMember(withdrawingMemberId)
+        memberService.withdraw(withdrawingMemberId)
+
+        val result = socialAuthService.authenticate(
+            SocialLoginProvider.GOOGLE,
+            providerIdOf(withdrawingMemberId),
+            Email("withdraw@example.com"),
+        )
+
+        assertThat(result).isEqualTo(SocialAuthentication.Withdrawn(withdrawingMemberId))
+        assertThat(memberRepository.findById(withdrawingMemberId).orElseThrow().isDeleted()).isTrue()
+    }
+
+    @Test
+    fun `복구하면 다시 로그인되고 나간 룸은 돌아오지 않는다`() {
+        seedMember(withdrawingMemberId)
+        val roomId = seedRoom(confirmed = false)
+        seedParticipation(roomId, seedMember(), ParticipationRole.HOST, joinedAt)
+        seedParticipation(roomId, withdrawingMemberId, ParticipationRole.PARTICIPANT, joinedAt.plusHours(1))
+        memberService.withdraw(withdrawingMemberId)
+
+        memberRestorer.restore(withdrawingMemberId, LocalDateTime.now(), LocalDateTime.now())
+
+        assertThat(memberRepository.findById(withdrawingMemberId).orElseThrow().isDeleted()).isFalse()
+        assertThat(statusOf(roomId, withdrawingMemberId)).isEqualTo(ParticipationStatus.LEFT)
+        val relogin = socialAuthService.authenticate(
+            SocialLoginProvider.GOOGLE,
+            providerIdOf(withdrawingMemberId),
+            Email("withdraw@example.com"),
+        )
+        assertThat(relogin).isEqualTo(SocialAuthentication.LoggedIn(withdrawingMemberId))
+    }
+
+    private fun providerIdOf(memberId: UUID) = "withdraw-${memberId.toString().take(8)}"
 
     private fun rows(roomId: UUID) = participationRepository.findAll().filter { it.roomId == roomId }
 

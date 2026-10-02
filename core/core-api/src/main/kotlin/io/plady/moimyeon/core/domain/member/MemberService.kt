@@ -8,6 +8,7 @@ import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import org.springframework.stereotype.Service
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -18,6 +19,7 @@ class MemberService(
     private val memberFinder: MemberFinder,
     private val nicknameGenerator: NicknameGenerator,
     private val memberWithdrawer: MemberWithdrawer,
+    private val memberRestorer: MemberRestorer,
     private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
     private val participationFinder: ParticipationFinder,
     private val roomLeaveManager: RoomLeaveManager,
@@ -47,6 +49,11 @@ class MemberService(
             if (memberWithdrawer.withdraw(memberId, now, roomIds.toSet())) return
         }
         throw CoreException(CoreErrorType.MEMBER_WITHDRAWAL_INTERRUPTED)
+    }
+
+    fun restore(memberId: UUID, confirmedAt: Instant) {
+        log.debug { "member.restore memberId=$memberId" }
+        memberRestorer.restore(memberId, LocalDateTime.ofInstant(confirmedAt, clock.zone), LocalDateTime.now(clock))
     }
 }
 

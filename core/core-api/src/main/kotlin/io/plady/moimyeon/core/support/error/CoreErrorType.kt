@@ -23,6 +23,12 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
         LogLevel.WARN,
     ),
     INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
+    RESTORATION_EXPIRED(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.E1105,
+        "계정 복구 확인 시간이 지났습니다. 다시 로그인해주세요.",
+        LogLevel.WARN,
+    ),
 
     TERMS_NOT_AGREED(HttpStatus.CONFLICT, ErrorCode.E1201, "필수 약관에 동의해야 이용할 수 있습니다.", LogLevel.WARN),
 

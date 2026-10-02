@@ -48,7 +48,7 @@ interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?
 
-    // 탈퇴는 멱등이라 이미 탈퇴한 회원도 잠가 확인해야 한다. 삭제 여부를 거르지 않는다.
+    // 탈퇴는 멱등이라 이미 탈퇴한 회원도 잠가 확인하고, 복구는 탈퇴한 회원을 잠가 되살린다. 삭제 여부를 거르지 않는다.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateById(memberId: UUID): MemberEntity?
 
@@ -67,7 +67,13 @@ interface MemberRepository : JpaRepository<MemberEntity, UUID> {
         providerId: String,
     ): Boolean
 
-    // 탈퇴자 재가입 차단용. 소프트 삭제된 회원의 소셜 계정은 남아 있으므로 그대로 조회된다.
+    // 탈퇴 회원 로그인 → 복구 확인(R174). 소프트 삭제된 회원의 소셜 계정은 남아 있으므로 그대로 조회된다.
+    fun findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
+        provider: SocialLoginProvider,
+        providerId: String,
+    ): MemberEntity?
+
+    // 탈퇴 회원 판별(복구 확인·가입 경합 방지). 소프트 삭제된 회원의 소셜 계정은 남아 있으므로 그대로 조회된다.
     fun existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
         provider: SocialLoginProvider,
         providerId: String,

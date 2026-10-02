@@ -59,6 +59,23 @@ class MemberFinder(
         )
     }
 
+    fun existsWithdrawnBySocialAccount(provider: SocialLoginProvider, providerId: String): Boolean {
+        log.debug { "member.finder.existsWithdrawnBySocialAccount provider=$provider" }
+        return memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
+            provider,
+            providerId,
+        )
+    }
+
+    fun getWithdrawnIdBySocialAccount(provider: SocialLoginProvider, providerId: String): UUID {
+        log.debug { "member.finder.getWithdrawnIdBySocialAccount provider=$provider" }
+        val entity = memberRepository.findBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
+            provider,
+            providerId,
+        )
+        return requireFound(entity, CoreErrorType.MEMBER_NOT_FOUND).id
+    }
+
     fun isNicknameAvailable(nickname: Nickname): Boolean {
         log.debug { "member.finder.isNicknameAvailable" }
         return !memberRepository.existsByNickname(nickname.value)
