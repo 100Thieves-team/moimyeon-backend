@@ -10,9 +10,12 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.hibernate.annotations.DynamicUpdate
 import java.time.LocalDateTime
 import java.util.UUID
 
+// 전체 컬럼 UPDATE 는 로그인 같은 다른 쓰기가 그사이 바뀐 수신 설정을 옛 값으로 덮는다.
+@DynamicUpdate
 @Entity
 @Table(
     name = "member",
@@ -41,6 +44,18 @@ class MemberEntity(
     var lastLoginAt: LocalDateTime = lastLoginAt
         protected set
 
+    var isWebPushAllowed: Boolean = true
+        protected set
+
+    var isActivityEmailEnabled: Boolean = true
+        protected set
+
+    var isMarketingEmailAgreed: Boolean = false
+        protected set
+
+    var marketingEmailAgreedAt: LocalDateTime? = null
+        protected set
+
     // 소셜 계정은 회원과 라이프사이클이 정확히 같아 예외적으로 연관관계를 걸었음.
     // cascade=ALL + orphanRemoval 이므로 컬렉션 조작이 곧 INSERT/DELETE 다 — 외부에 노출하지 않는다.
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
@@ -55,6 +70,28 @@ class MemberEntity(
 
     fun changeNickname(nickname: String) {
         this.nickname = nickname
+    }
+
+    fun allowWebPush() {
+        isWebPushAllowed = true
+    }
+
+    fun disallowWebPush() {
+        isWebPushAllowed = false
+    }
+
+    fun changeActivityEmail(enabled: Boolean) {
+        isActivityEmailEnabled = enabled
+    }
+
+    fun changeMarketingEmail(
+        agreed: Boolean,
+        time: LocalDateTime,
+    ) {
+        if (agreed && !isMarketingEmailAgreed) {
+            marketingEmailAgreedAt = time
+        }
+        isMarketingEmailAgreed = agreed
     }
 
     // 전이 판정(can*)은 엔티티가, 도메인 에러 매핑은 core-api(Manager)가 맡는다 —
