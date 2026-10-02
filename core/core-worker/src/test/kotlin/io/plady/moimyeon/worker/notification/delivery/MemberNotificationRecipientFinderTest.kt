@@ -18,10 +18,12 @@ class MemberNotificationRecipientFinderTest {
     private val finder = MemberNotificationRecipientFinder(memberRepository, webPushSubscriptionRepository)
 
     @Test
-    fun `살아있는 회원의 이메일과 웹 푸시 등록을 알림 수신 정보로 반환한다`() {
+    fun `살아있는 회원의 이메일·웹 푸시 등록·수신 설정을 알림 수신 정보로 반환한다`() {
         val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
         val member = mockk<MemberEntity> {
             every { email } returns "member@example.com"
+            every { isWebPushAllowed } returns false
+            every { isActivityEmailEnabled } returns false
         }
         every { webPushSubscriptionRepository.findAllByMemberId(memberId) } returns listOf(
             subscription("registration-a"),
@@ -33,6 +35,8 @@ class MemberNotificationRecipientFinderTest {
 
         assertThat(recipient.email).isEqualTo("member@example.com")
         assertThat(recipient.webPushRegistrations).containsExactly("registration-a", "registration-b")
+        assertThat(recipient.isWebPushAllowed).isFalse()
+        assertThat(recipient.isActivityEmailEnabled).isFalse()
         verify(exactly = 1) { memberRepository.findByIdAndDeletedAtIsNull(memberId) }
         verify(exactly = 1) { webPushSubscriptionRepository.findAllByMemberId(memberId) }
     }
