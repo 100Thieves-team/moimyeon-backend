@@ -179,6 +179,43 @@ class RoomLeaveManagerTest {
             }
     }
 
+    @Test
+    fun `탈퇴하면 모집 중이거나 확정된 룸에서 나간다`() {
+        listOf(RoomStatus.RECRUITING, RoomStatus.CONFIRMED).forEach { status ->
+            givenRoom(status, minCapacity = 2)
+            val participation = givenParticipant(currentParticipants = 4)
+
+            manager.leaveOnWithdrawal(roomId, memberId, now)
+
+            assertThat(participation.status).describedAs("%s", status).isEqualTo(ParticipationStatus.LEFT)
+        }
+    }
+
+    // 예정 시각과 같은 순간도 지난 것으로 본다(RoomSchedule.isPassed). 면접이 열렸을 수 있어 남긴다(R170).
+    @Test
+    fun `탈퇴해도 진행 예정 시각이 지난 확정 룸에서는 나가지 않는다`() {
+        val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3, startAt = now)
+        val participation = givenParticipant(currentParticipants = 3)
+
+        manager.leaveOnWithdrawal(roomId, memberId, now)
+
+        assertThat(participation.status).isEqualTo(ParticipationStatus.JOINED)
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+        assertNothingRecorded()
+    }
+
+    @Test
+    fun `탈퇴해도 완료되거나 취소된 룸에서는 나가지 않는다`() {
+        listOf(RoomStatus.COMPLETED, RoomStatus.CANCELED).forEach { status ->
+            givenRoom(status)
+            val participation = givenParticipant()
+
+            manager.leaveOnWithdrawal(roomId, memberId, now)
+
+            assertThat(participation.status).describedAs("%s", status).isEqualTo(ParticipationStatus.JOINED)
+        }
+    }
+
     private fun assertNothingRecorded() {
         verify(exactly = 0) { roomStatusLogRepository.save(any()) }
         verify(exactly = 0) { outboxEventPublisher.publish(any(), any()) }

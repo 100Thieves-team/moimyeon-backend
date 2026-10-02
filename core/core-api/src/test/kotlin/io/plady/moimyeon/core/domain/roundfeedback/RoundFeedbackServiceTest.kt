@@ -236,7 +236,7 @@ class RoundFeedbackServiceTest {
                     id = otherFeedbackId,
                     author = RoundFeedbackAuthor(
                         memberId = otherParticipantMemberId,
-                        displayName = "탈퇴 회원",
+                        displayName = "탈퇴한 회원",
                         role = RoundFeedbackAuthorRole.PARTICIPANT,
                     ),
                     content = null,
@@ -258,7 +258,7 @@ class RoundFeedbackServiceTest {
             assertThat(it.content).isNull()
         }
         assertThat(result.finalFeedbacks.map { it.author.displayName })
-            .containsExactly("튼튼한 곰", "탈퇴 회원")
+            .containsExactly("튼튼한 곰", "탈퇴한 회원")
         assertThat(result.finalFeedbacks.map { it.author.role })
             .containsOnly(RoundFeedbackAuthorRole.PARTICIPANT)
         verifyOrder {

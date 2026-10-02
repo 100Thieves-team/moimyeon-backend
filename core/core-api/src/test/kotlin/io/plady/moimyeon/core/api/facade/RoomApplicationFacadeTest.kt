@@ -72,7 +72,7 @@ class RoomApplicationFacadeTest {
 
         val applicant = facade.getApplications(hostMemberId, roomId).applications.single().applicant
 
-        assertThat(applicant.nickname).isEqualTo("탈퇴한 사용자")
+        assertThat(applicant.nickname).isEqualTo("탈퇴한 회원")
         assertThat(applicant.jobRoles).isEmpty()
         assertThat(applicant.activitySummary).isNull()
         verify(exactly = 0) { profileService.getProfiles(any()) }

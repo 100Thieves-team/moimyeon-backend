@@ -82,6 +82,6 @@ class RoundFeedbackReader(
     }
 
     private companion object {
-        const val WITHDRAWN_MEMBER_NAME = "탈퇴 회원"
+        const val WITHDRAWN_MEMBER_NAME = "탈퇴한 회원"
     }
 }

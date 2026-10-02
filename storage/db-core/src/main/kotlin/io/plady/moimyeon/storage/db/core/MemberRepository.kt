@@ -48,6 +48,10 @@ interface MemberRepository : JpaRepository<MemberEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findForUpdateByIdAndDeletedAtIsNull(memberId: UUID): MemberEntity?
 
+    // 탈퇴는 멱등이라 이미 탈퇴한 회원도 잠가 확인해야 한다. 삭제 여부를 거르지 않는다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findForUpdateById(memberId: UUID): MemberEntity?
+
     // 닉네임 유일성은 삭제 여부와 무관하게 전체 회원 대상이다(유니크 제약과 동일 기준)
     fun existsByNickname(nickname: String): Boolean
 
