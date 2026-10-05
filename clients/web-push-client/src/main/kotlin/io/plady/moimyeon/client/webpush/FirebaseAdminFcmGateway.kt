@@ -16,7 +16,7 @@ internal class FirebaseAdminFcmGateway(
 ) : FcmGateway {
     override fun send(request: FcmMulticastRequest): List<FcmSendResult> {
         val messageBuilder = MulticastMessage.builder()
-            .addAllFids(request.registrations)
+            .addAllTokens(request.registrations)
             .setNotification(
                 Notification.builder()
                     .setTitle(request.title)

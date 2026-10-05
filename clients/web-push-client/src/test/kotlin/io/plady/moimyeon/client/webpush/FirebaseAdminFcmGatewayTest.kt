@@ -4,9 +4,11 @@ import com.google.firebase.messaging.BatchResponse
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingException
 import com.google.firebase.messaging.MessagingErrorCode
+import com.google.firebase.messaging.MulticastMessage
 import com.google.firebase.messaging.SendResponse
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.plady.moimyeon.worker.notification.delivery.PermanentWebPushDeliveryException
 import io.plady.moimyeon.worker.notification.delivery.RetryableWebPushDeliveryException
 import org.assertj.core.api.Assertions.assertThat
@@ -37,6 +39,17 @@ class FirebaseAdminFcmGatewayTest {
     }
 
     @Test
+    fun `등록 식별자를 FID가 아닌 FCM 등록 토큰으로 전송한다`() {
+        val message = slot<MulticastMessage>()
+        every { firebaseMessaging.sendEachForMulticast(capture(message)) } returns batch(success(), success())
+
+        gateway.send(request("a", "b"))
+
+        assertThat(message.captured.recipients("tokens")).containsExactly("a", "b")
+        assertThat(message.captured.recipients("fids")).isEmpty()
+    }
+
+    @Test
     fun `FCM 전체 호출의 일시 오류를 재시도 오류로 변환한다`() {
         every { firebaseMessaging.sendEachForMulticast(any()) } throws
             messagingException(MessagingErrorCode.QUOTA_EXCEEDED)
@@ -61,6 +74,12 @@ class FirebaseAdminFcmGatewayTest {
         actionUrl = "https://front.test/rooms/room-1",
         data = mapOf("eventId" to "event-id"),
     )
+
+    // MulticastMessage는 수신 대상 접근자를 공개하지 않아 필드를 직접 읽는다.
+    @Suppress("UNCHECKED_CAST")
+    private fun MulticastMessage.recipients(fieldName: String): List<String> = MulticastMessage::class.java.getDeclaredField(fieldName)
+        .apply { isAccessible = true }
+        .get(this) as List<String>
 
     private fun batch(vararg responses: SendResponse) = mockk<BatchResponse> {
         every { getResponses() } returns responses.toList()
