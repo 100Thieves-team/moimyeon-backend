@@ -1,11 +1,15 @@
 package io.plady.moimyeon.security.config
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret
+import io.plady.moimyeon.security.auth.JwtTokenProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
+import org.springframework.security.oauth2.jwt.JwtClaimValidator
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtEncoder
+import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 import javax.crypto.SecretKey
@@ -23,5 +27,12 @@ class JwtConfig {
     fun jwtEncoder(key: SecretKey): JwtEncoder = NimbusJwtEncoder(ImmutableSecret(key))
 
     @Bean
-    fun jwtDecoder(key: SecretKey): JwtDecoder = NimbusJwtDecoder.withSecretKey(key).build()
+    fun jwtDecoder(key: SecretKey): JwtDecoder = NimbusJwtDecoder.withSecretKey(key).build().apply {
+        setJwtValidator(
+            DelegatingOAuth2TokenValidator(
+                JwtValidators.createDefault(),
+                JwtClaimValidator<Collection<*>>(JwtTokenProvider.ROLES_CLAIM) { roles: Collection<*>? -> !roles.isNullOrEmpty() },
+            ),
+        )
+    }
 }

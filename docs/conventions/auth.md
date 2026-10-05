@@ -33,6 +33,13 @@ state 검증 오류가 백엔드 `/login?error`에 남는다.
   허용한다.
 - 회원 확정·JWT·세션·쿠키 생성이 전부 성공한 뒤 환경별 액세스·리프레시 쿠키를 응답에 함께 기록한다.
   중간 실패에는 일부 쿠키를 발급하지 않는다.
+- 탈퇴한 회원(회원 행이 소프트 삭제 상태로 남은 경우)이 로그인하면 세션을 열지 않는다. `SocialMemberResolver`가
+  `SocialLoginResult.Withdrawn`을 돌려주면 성공 핸들러가 복구 확인 쿠키(`RESTORE_TOKEN`, dev는 `DEV_RESTORE_TOKEN`,
+  10분, `Path=/v1/auth`)만 심고 `security.auth.oauth2.restore-redirect-uri`로 보낸다. 복구는
+  `POST /v1/auth/restoration`이 이 쿠키로만 회원을 특정해 처리하고 일반 로그인과 같은 세션 쿠키를 발급한다.
+- 복구 확인 토큰은 액세스 토큰과 같은 키로 서명하므로 `purpose` claim으로 용도를 가른다. 액세스 토큰 검증
+  (`JwtConfig.jwtDecoder`)은 `roles` claim이 있어야 통과시켜 다른 용도의 토큰이 API 인증에 쓰이지 않게 한다.
+  같은 키로 새 용도의 토큰을 만들면 `roles`를 넣지 않는다.
 - Google 오류와 로그인 내부 처리 오류는 모두 고정된 프론트 실패 URI로 보낸다. 공급자 오류 설명과 내부
   예외 메시지는 리다이렉트 URL이나 응답에 싣지 않는다.
 
@@ -84,7 +91,7 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
 
 | 포트 (security-core) | 어댑터 (core-api) | 책임 |
 | --- | --- | --- |
-| `SocialMemberResolver` | `SocialMemberResolverAdapter` | 소셜 신원 → 회원 조회/가입 (`SocialAuthService` 위임) |
+| `SocialMemberResolver` | `SocialMemberResolverAdapter` | 소셜 신원 → 회원 조회/가입, 탈퇴 회원이면 복구 확인 대상 (`SocialAuthService` 위임) |
 | `SessionIssuer` | `SessionIssuerAdapter` | 로그인 성공 시 세션 발급 (`SessionService` 위임) |
 | `AuthErrorWriter` | `ApiResponseAuthErrorWriter` | 필터 레벨 401/403 을 공통 `ApiResponse` 포맷으로 응답 |
 
@@ -116,7 +123,7 @@ core-api 가 어댑터를 구현해 빈으로 제공한다 (`core.api.auth`).
   이미 발급된 JWT는 만료 전까지 역할이 남으므로 권한 변경은 최대 Access Token TTL(30분) 뒤에
   완전히 반영된다. 즉시 회수가 필요해지면 세션 폐기·토큰 차단 정책을 별도로 추가한다.
 - 관리자 승격·해제 API와 권한 감사 기록은 아직 제품 요구사항이 없어 범위에서 제외했다.
-- 필터 체인은 OAuth·refresh/logout·dev 세션 발급·health와 제품상 공개된 조회 API만 `permitAll`로 열고,
+- 필터 체인은 OAuth·refresh/logout·탈퇴 계정 복구(`POST /v1/auth/restoration`)·dev 세션 발급·health와 제품상 공개된 조회 API만 `permitAll`로 열고,
   `/admin/**`는 `ROLE_ADMIN`, 그 외 요청은 `authenticated()`를 요구한다. 관리 엔드포인트는
   health만 공개하며 `/actuator/**`는 명시적으로 거부한다. 새 공개 API는 HTTP 메서드와 경로를
   `SecurityConfig`에 함께 추가하고, 그 외 API는 기본 인증 정책을 그대로 따른다.

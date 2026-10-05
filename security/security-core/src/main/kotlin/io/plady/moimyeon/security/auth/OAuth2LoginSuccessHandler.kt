@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
+import java.net.URI
 
 @Component
 class OAuth2LoginSuccessHandler(
@@ -19,25 +20,25 @@ class OAuth2LoginSuccessHandler(
     private val authCookieFactory: AuthCookieFactory,
     private val authProperties: AuthProperties,
     private val oauth2LoginFailureHandler: OAuth2LoginFailureHandler,
+    private val restoreTokenProvider: RestoreTokenProvider,
 ) : AuthenticationSuccessHandler {
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         authentication: Authentication,
     ) {
-        val cookies = try {
-            issueSessionCookies(authentication)
+        val landing = try {
+            land(authentication)
         } catch (exception: Exception) {
             oauth2LoginFailureHandler.onLoginProcessingFailure(response, exception)
             return
         }
 
-        // 두 쿠키가 모두 준비된 뒤에만 헤더에 기록해 부분 로그인 상태를 만들지 않는다.
-        cookies.forEach { response.addHeader(HttpHeaders.SET_COOKIE, it.toString()) }
-        response.sendRedirect(authProperties.oauth2.successRedirectUri.toASCIIString())
+        landing.cookies.forEach { response.addHeader(HttpHeaders.SET_COOKIE, it.toString()) }
+        response.sendRedirect(landing.redirectUri.toASCIIString())
     }
 
-    private fun issueSessionCookies(authentication: Authentication): List<ResponseCookie> {
+    private fun land(authentication: Authentication): Landing {
         val oidcUser = authentication.principal as OidcUser
 
         // sub 는 OIDC 규격상 항상 존재한다. 없으면 구조 불변식 위반이며 실패 리다이렉트로 닫는다.
@@ -45,11 +46,24 @@ class OAuth2LoginSuccessHandler(
 
         // 가입 커밋(resolve)과 세션 저장(open)은 의도적으로 별도 트랜잭션이다. 세션 저장이 실패해도
         // 재로그인이 기존 회원 경로로 흘러 복구되므로 원자성을 요구하지 않는다.
-        val member = socialMemberResolver.resolve(
+        val result = socialMemberResolver.resolve(
             provider = SocialLoginProvider.GOOGLE,
             providerId = subject,
             email = oidcUser.email,
         )
+        return when (result) {
+            is SocialLoginResult.Authenticated -> Landing(
+                cookies = issueSessionCookies(result.member),
+                redirectUri = authProperties.oauth2.successRedirectUri,
+            )
+            is SocialLoginResult.Withdrawn -> Landing(
+                cookies = listOf(authCookieFactory.createRestore(restoreTokenProvider.issue(result.memberId))),
+                redirectUri = authProperties.oauth2.restoreRedirectUri,
+            )
+        }
+    }
+
+    private fun issueSessionCookies(member: AuthenticatedMember): List<ResponseCookie> {
         val accessToken = jwtTokenProvider.issue(member.id, member.role)
         val session = sessionIssuer.open(member.id)
         return listOf(
@@ -57,4 +71,9 @@ class OAuth2LoginSuccessHandler(
             authCookieFactory.createRefresh(session),
         )
     }
+
+    private data class Landing(
+        val cookies: List<ResponseCookie>,
+        val redirectUri: URI,
+    )
 }

@@ -28,6 +28,7 @@ class MemberServiceTest {
         memberFinder,
         nicknameGenerator,
         memberWithdrawer,
+        mockk(),
         roomApplicationSubmissionManager,
         participationFinder,
         roomLeaveManager,

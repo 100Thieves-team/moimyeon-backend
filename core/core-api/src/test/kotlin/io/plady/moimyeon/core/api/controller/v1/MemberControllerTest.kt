@@ -84,7 +84,7 @@ class MemberControllerTest : RestDocsTest() {
         "탈퇴한다(「회원 및 프로필」 §4.8). 요청 한 번으로 참가 신청 대기 건을 모두 철회하고, 참여 중인 모집 중·확정 룸에서 " +
             "나간다(방장이면 위임·모집 재개·취소, 참여자면 인원이 최소 밑으로 내려갈 때 모집 재개). 진행 예정 시각이 지난 확정 룸에는 " +
             "남는다. 모든 기기의 세션을 끝내고 웹 푸시 등록을 지운 뒤 ACCESS_TOKEN·REFRESH_TOKEN 쿠키를 만료(Set-Cookie)시킨다. " +
-            "이미 탈퇴했으면 아무것도 하지 않고 성공한다(멱등). " +
+            "같은 Google 계정으로 다시 로그인하면 확인을 거쳐 복구할 수 있다. 이미 탈퇴했으면 아무것도 하지 않고 성공한다(멱등). " +
             "없는 회원이면 404(E1006). 룸을 나가는 사이 새 참여가 생겨 세 번 시도해도 끝내지 못하면 409(E1014)."
     private val nicknameSuggestionSummary = "닉네임 자동 추천"
     private val nicknameSuggestionDescription =

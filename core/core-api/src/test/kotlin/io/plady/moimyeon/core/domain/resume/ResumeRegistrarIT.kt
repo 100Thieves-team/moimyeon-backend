@@ -21,7 +21,7 @@ class ResumeRegistrarIT(
             SocialLoginProvider.GOOGLE,
             "resume-registrar-1",
             Email("resume@example.com"),
-        )
+        ).memberId
 
         val firstResumeId = resumeRegistrar.register(memberId, newResume(memberId, "first.pdf"))
         val secondResumeId = resumeRegistrar.register(memberId, newResume(memberId, "second.pdf"))

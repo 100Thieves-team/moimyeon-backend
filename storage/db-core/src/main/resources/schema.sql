@@ -43,8 +43,8 @@
 --   분쟁이 나서 지워진 내용을 확인해야 하는 것. 지워진 행이 남아 있으면 전부 SQL 한 줄로 끝난다.
 -- - 별도 라이프사이클이 있는 엔티티는 상속하지 않는다. 업무 데이터가 아니거나 별도 무효화 수단이
 --   있어 deleted_at 보다 정확하기 때문이다. 대표 사례는 다음과 같다.
---     social_account — 재가입 차단이 (provider, provider_id) 유니크 점유에 의존한다.
---                      지운 표식을 남기면 그 점유가 풀려 차단이 뚫린다.
+--     social_account — 탈퇴 계정을 다시 찾아 복구하는 것이 (provider, provider_id) 유니크 점유에 의존한다.
+--                      지운 표식을 남기면 그 점유가 풀려 같은 신원으로 새 회원이 생긴다.
 --     refresh_token  — 삭제가 아니라 무효화이며 revoked_at 이 그 시각을 갖는다.
 --     outbox — 외부 전달 전까지의 내구성 작업 기록이며 전달 생명주기와 보존 정책을 따른다.
 --   각 테이블의 사유는 아래 테이블 주석에 적어 두었다. 엔티티를 만들 때 그 문장을 파일 상단으로 옮긴다 —
@@ -305,8 +305,8 @@ CREATE TABLE member (
     CONSTRAINT uk_member_nickname UNIQUE (nickname)
 );
 
--- 베이스 미상속: 재가입 차단이 (provider, provider_id) 유니크 점유에 의존한다.
---   지운 표식을 남기고 _active_check 를 붙이면 그 점유가 풀려 차단이 뚫린다.
+-- 베이스 미상속: 탈퇴 계정 복구가 (provider, provider_id) 유니크 점유에 의존한다(MOI-540).
+--   지운 표식을 남기고 _active_check 를 붙이면 그 점유가 풀려 같은 신원으로 새 회원이 생긴다.
 --   회원과 함께 생성·삭제되는 유일한 연관관계이기도 하다(cascade + orphanRemoval).
 CREATE TABLE social_account (
     id           BIGINT       NOT NULL AUTO_INCREMENT,

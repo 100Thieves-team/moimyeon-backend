@@ -30,4 +30,8 @@ abstract class AbstractEntity {
     fun isDeleted(): Boolean {
         return deletedAt != null
     }
+
+    fun isDeletedAfter(at: LocalDateTime): Boolean {
+        return deletedAt?.isAfter(at) ?: false
+    }
 }
