@@ -161,6 +161,17 @@ class MySqlSchemaValidationIT(
     }
 
     @Test
+    fun `기존 회원의 알림 수신 설정은 컬럼 기본값으로 채워진다`() {
+        assertThat(columnOf("member", "is_web_push_allowed", "IS_NULLABLE")).isEqualTo("NO")
+        assertThat(columnOf("member", "is_web_push_allowed", "COLUMN_DEFAULT")).isEqualTo("1")
+        assertThat(columnOf("member", "is_activity_email_enabled", "IS_NULLABLE")).isEqualTo("NO")
+        assertThat(columnOf("member", "is_activity_email_enabled", "COLUMN_DEFAULT")).isEqualTo("1")
+        assertThat(columnOf("member", "is_marketing_email_agreed", "IS_NULLABLE")).isEqualTo("NO")
+        assertThat(columnOf("member", "is_marketing_email_agreed", "COLUMN_DEFAULT")).isEqualTo("0")
+        assertThat(columnOf("member", "marketing_email_agreed_at", "IS_NULLABLE")).isEqualTo("YES")
+    }
+
+    @Test
     fun `후기 건너뛰기는 수정되지 않는 대상별 기록으로 저장한다`() {
         assertThat(columnNamesOf("review_skip")).containsExactly(
             "id",

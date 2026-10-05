@@ -35,15 +35,16 @@ class WebPushSubscriptionManager(
         check(registered.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
     }
 
+    // 같은 브라우저를 쓰던 앞사람의 알림이 이 브라우저로 계속 가지 않게 한다.
     @Transactional
-    fun unregister(
+    fun unregisterIfOwnedByOther(
         memberId: UUID,
         registration: WebPushRegistration,
     ) {
-        log.debug { "web-push-subscription.manager.unregister memberId=$memberId" }
+        log.debug { "web-push-subscription.manager.unregisterIfOwnedByOther memberId=$memberId" }
         val existing = repository.findByRegistrationHash(WebPushRegistrationHash.of(registration.value)) ?: return
         check(existing.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
-        if (existing.memberId == memberId) {
+        if (existing.memberId != memberId) {
             repository.delete(existing)
         }
     }

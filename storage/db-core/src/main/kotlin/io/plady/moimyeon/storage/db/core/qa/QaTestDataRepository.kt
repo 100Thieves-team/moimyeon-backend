@@ -132,15 +132,15 @@ class QaTestDataRepository(
 
     fun findMember(memberId: UUID): MemberEntity? = entityManager.find(MemberEntity::class.java, memberId)
 
-    fun findQaMembers(providerIdPrefix: String, emailDomain: String): List<MemberEntity> = entityManager.createQuery(
-        "select distinct m from MemberEntity m join m.socialAccounts s where $QA_MEMBER_PREDICATE order by m.createdAt asc, m.id asc",
+    fun findQaMembers(providerIdPrefix: String, emailPatterns: List<QaEmailPattern>): List<MemberEntity> = entityManager.createQuery(
+        "select distinct m from MemberEntity m join m.socialAccounts s where ${qaMemberPredicate(emailPatterns)} order by m.createdAt asc, m.id asc",
         MemberEntity::class.java,
-    ).withQaMemberPatterns(providerIdPrefix, emailDomain).resultList
+    ).withQaMemberPatterns(providerIdPrefix, emailPatterns).resultList
 
-    fun isQaMember(memberId: UUID, providerIdPrefix: String, emailDomain: String): Boolean = entityManager.createQuery(
-        "select count(m) from MemberEntity m join m.socialAccounts s where m.id = :memberId and $QA_MEMBER_PREDICATE",
+    fun isQaMember(memberId: UUID, providerIdPrefix: String, emailPatterns: List<QaEmailPattern>): Boolean = entityManager.createQuery(
+        "select count(m) from MemberEntity m join m.socialAccounts s where m.id = :memberId and ${qaMemberPredicate(emailPatterns)}",
         Long::class.javaObjectType,
-    ).setParameter("memberId", memberId).withQaMemberPatterns(providerIdPrefix, emailDomain).singleResult > 0
+    ).setParameter("memberId", memberId).withQaMemberPatterns(providerIdPrefix, emailPatterns).singleResult > 0
 
     fun findMemberQuestionIds(memberId: UUID): List<Long> = entityManager.createQuery(
         "select q.id from QuestionEntity q where q.authorMemberId = :memberId or q.targetMemberId = :memberId",
@@ -275,8 +275,23 @@ class QaTestDataRepository(
 
     private fun deleteNativeByMember(sql: String, memberId: UUID): Int = entityManager.createNativeQuery(sql).setParameter("memberId", memberId).executeUpdate()
 
-    private fun <T> TypedQuery<T>.withQaMemberPatterns(providerIdPrefix: String, emailDomain: String): TypedQuery<T> = setParameter("providerPattern", likePrefixPattern(providerIdPrefix))
-        .setParameter("emailPattern", "%@${escapeLike(emailDomain)}")
+    // 소셜 식별자 접두와 이메일 형식을 둘 다 만족해야 QA 회원이다. 이메일 형식은 여러 개 중 하나면 된다.
+    // 자리표시자 이름과 바인딩 값은 emailParams 한 곳에서 만들어 WHERE 절과 바인딩이 어긋나지 않게 한다.
+    private fun emailParams(emailPatterns: List<QaEmailPattern>): List<Pair<String, String>> {
+        require(emailPatterns.isNotEmpty()) { "QA 회원 이메일 형식이 하나 이상 필요하다" }
+        return emailPatterns.mapIndexed { i, p -> "emailPattern$i" to "${escapeLike(p.prefix)}%${escapeLike(p.suffix)}" }
+    }
+
+    private fun qaMemberPredicate(emailPatterns: List<QaEmailPattern>): String {
+        val email = emailParams(emailPatterns).joinToString(" or ") { (name, _) -> "m.email like :$name escape '$LIKE_ESCAPE'" }
+        return "s.providerId like :providerPattern escape '$LIKE_ESCAPE' and ($email)"
+    }
+
+    private fun <T> TypedQuery<T>.withQaMemberPatterns(providerIdPrefix: String, emailPatterns: List<QaEmailPattern>): TypedQuery<T> {
+        setParameter("providerPattern", likePrefixPattern(providerIdPrefix))
+        emailParams(emailPatterns).forEach { (name, value) -> setParameter(name, value) }
+        return this
+    }
 
     private fun <T> TypedQuery<T>.withHostRole(): TypedQuery<T> = setParameter("role", ParticipationRole.HOST).setParameter("status", ParticipationStatus.JOINED)
 
@@ -299,8 +314,5 @@ class QaTestDataRepository(
         """
 
         private const val ROOM_IDS_BY_PREFIX = "select rm.id from RoomEntity rm where rm.title like :pattern escape '$LIKE_ESCAPE'"
-
-        private const val QA_MEMBER_PREDICATE =
-            "s.providerId like :providerPattern escape '$LIKE_ESCAPE' and m.email like :emailPattern escape '$LIKE_ESCAPE'"
     }
 }

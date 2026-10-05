@@ -46,9 +46,10 @@ interface WebPushSubscriptionRepository : JpaRepository<WebPushSubscriptionEntit
 
     fun findAllByRegistrationHashIn(registrationHashes: Set<String>): List<WebPushSubscriptionEntity>
 
-    // 회원 탈퇴용. clearAutomatically 를 켜지 않는다 — 탈퇴 트랜잭션이 잡은 회원 엔티티를 준영속으로 만들지 않는다.
+    // 수신 거부와 회원 탈퇴가 쓴다. clearAutomatically 를 켜지 않는다 — 같은 트랜잭션이 잡은 회원 엔티티를
+    // 준영속으로 만들면 이후 변경(탈퇴의 member.delete)이 반영되지 않는다.
     @Modifying(flushAutomatically = true)
-    @Query("delete from WebPushSubscriptionEntity s where s.memberId = :memberId")
+    @Query("DELETE FROM WebPushSubscriptionEntity s WHERE s.memberId = :memberId")
     fun deleteAllByMemberId(
         @Param("memberId") memberId: UUID,
     ): Int

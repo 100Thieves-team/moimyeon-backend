@@ -1,6 +1,8 @@
 package io.plady.moimyeon.core.api
 
 import io.plady.moimyeon.ContextTest
+import io.plady.moimyeon.core.api.controller.v1.request.UpdateNotificationSettingRequest
+import io.plady.moimyeon.core.api.controller.v1.response.NotificationSettingResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomViewerResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerMemberResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ViewerQuotaResponse
@@ -39,5 +41,38 @@ class ResponseSerializationContractIT(
         assertThat(viewerJson)
             .contains("\"isHost\"", "\"isParticipating\"", "\"hasRemovalHistory\"", "\"isActive\"")
             .doesNotContain("\"host\"", "\"participating\"", "\"removalHistory\"", "\"active\"")
+    }
+
+    @Test
+    fun `알림 수신 설정 응답은 is 접두를 유지한 이름으로 직렬화된다`() {
+        val json = objectMapper.writeValueAsString(
+            NotificationSettingResponse(
+                isWebPushAllowed = true,
+                isActivityEmailEnabled = false,
+                isMarketingEmailAgreed = true,
+                marketingEmailAgreedAt = null,
+            ),
+        )
+
+        assertThat(json)
+            .contains("\"isWebPushAllowed\":true", "\"isActivityEmailEnabled\":false", "\"isMarketingEmailAgreed\":true")
+            .doesNotContain("\"webPushAllowed\"", "\"activityEmailEnabled\"", "\"marketingEmailAgreed\"")
+    }
+
+    @Test
+    fun `알림 수신 설정 변경 요청은 is 접두 이름으로 값을 읽는다`() {
+        val request = objectMapper.readValue(
+            """{"isWebPushAllowed":true,"webPushRegistration":"fcm","isActivityEmailEnabled":false,"isMarketingEmailAgreed":true}""",
+            UpdateNotificationSettingRequest::class.java,
+        )
+
+        assertThat(request).isEqualTo(
+            UpdateNotificationSettingRequest(
+                isWebPushAllowed = true,
+                webPushRegistration = "fcm",
+                isActivityEmailEnabled = false,
+                isMarketingEmailAgreed = true,
+            ),
+        )
     }
 }

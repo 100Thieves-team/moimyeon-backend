@@ -18,6 +18,7 @@ private val log = KotlinLogging.logger {}
 class QaMemberEraser(
     private val qaTestDataRepository: QaTestDataRepository,
     private val qaMemberResetter: QaMemberResetter,
+    private val properties: QaMemberProperties,
 ) {
     @Transactional
     fun erase(memberId: UUID): QaDeletedRows {
@@ -27,7 +28,7 @@ class QaMemberEraser(
         return qaMemberResetter.resetRows(memberId) + eraseOwnedRows(memberId)
     }
 
-    private fun isQaMember(memberId: UUID): Boolean = qaTestDataRepository.isQaMember(memberId, QaMemberCreator.PROVIDER_ID_PREFIX, QaMemberCreator.EMAIL_DOMAIN)
+    private fun isQaMember(memberId: UUID): Boolean = qaTestDataRepository.isQaMember(memberId, QaMemberCreator.PROVIDER_ID_PREFIX, properties.emailPatterns())
 
     // 자식 → 부모 순서. 회원이 남긴 행 → 회원 소유 행 → 회원. 남이 단 꼬리질문은 부모 질문과 함께 지운다.
     private fun eraseOwnedRows(memberId: UUID): QaDeletedRows {

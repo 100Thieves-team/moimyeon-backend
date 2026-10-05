@@ -11,6 +11,7 @@ import io.plady.moimyeon.storage.db.core.qa.QaTestDataRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import java.time.Clock
 
@@ -38,6 +39,7 @@ class QaTestApiProfileContextTest {
         .withBean(Clock::class.java, { Clock.systemUTC() })
         .withBean(DevAccessTokenIssuer::class.java, { mockk() })
         .withBean(QaTestDataRepository::class.java, { mockk() })
+        .withBean(QaMemberProperties::class.java, { QaMemberProperties() })
         .withUserConfiguration(*qaBeans.toTypedArray())
 
     @Test
@@ -66,4 +68,22 @@ class QaTestApiProfileContextTest {
             }
         }
     }
+
+    @Test
+    fun `QA 회원 설정은 개발용 프로파일에서만 만들어 잘못된 값이 있어도 staging과 live 기동을 막지 않는다`() {
+        val scan = ApplicationContextRunner().withUserConfiguration(QaPropertiesScan::class.java)
+        val invalid = scan.withPropertyValues("qa.member.email-template=invalid")
+
+        listOf("staging", "live", "dev,live").forEach { profiles ->
+            invalid.withPropertyValues("spring.profiles.active=$profiles").run { context ->
+                assertThat(context).hasNotFailed().doesNotHaveBean(QaMemberProperties::class.java)
+            }
+        }
+        invalid.withPropertyValues("spring.profiles.active=dev").run { context -> assertThat(context).hasFailed() }
+        scan.withPropertyValues("spring.profiles.active=dev").run { context -> assertThat(context).hasSingleBean(QaMemberProperties::class.java) }
+    }
+
+    // @Configuration 을 달지 않는다: QaPackageProfileGateTest 가 qa 패키지의 스테레오타입 빈으로 잡는다. @Import 만으로 설정 클래스가 된다
+    @ConfigurationPropertiesScan(basePackageClasses = [QaMemberProperties::class])
+    class QaPropertiesScan
 }
