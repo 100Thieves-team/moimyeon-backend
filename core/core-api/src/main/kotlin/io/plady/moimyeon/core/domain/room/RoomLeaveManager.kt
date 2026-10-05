@@ -10,6 +10,7 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -43,8 +44,8 @@ class RoomLeaveManager(
     private val clock: Clock,
 ) {
     // 룸 행 잠금이 나가기끼리를 직렬화한다.
-    // ⚠️ 이 잠금이 빠져도 예외가 나지 않는다: 둘이 동시에 "최소 인원 + 1" 을 보고 통과하면
-    //    확정된 룸이 최소 밑으로 내려간다. 결과 예외가 없어 테스트로도 드러나지 않는다.
+    // ⚠️ 이 잠금이 빠져도 예외가 나지 않는다: 둘이 동시에 같은 인원을 보고 나가면
+    //    모집 재개 판정이 둘 다 빗나가 확정된 룸이 최소 밑으로 남는다. 결과 예외가 없어 테스트로도 드러나지 않는다.
     @Transactional
     fun leave(roomId: UUID, memberId: UUID) {
         log.debug { "room-leave.manager.leave roomId=$roomId memberId=$memberId" }
@@ -59,15 +60,16 @@ class RoomLeaveManager(
             ),
             CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN,
         )
-        if (participation.participationRole != ParticipationRole.HOST) {
-            requireAboveMinCapacity(room)
-        }
+        val headcountBeforeLeave = participationRepository
+            .countByRoomIdAndStatusAndDeletedAtIsNull(room.id, ParticipationStatus.JOINED)
 
         val now = LocalDateTime.now(clock)
         val wasConfirmed = room.status == RoomStatus.CONFIRMED
         participation.leave(now, memberId)
         if (participation.participationRole == ParticipationRole.HOST) {
             delegateOrCancel(room, memberId, now, wasConfirmed)
+        } else {
+            reopenIfBelowMinCapacity(room, memberId, headcountBeforeLeave - 1, now)
         }
     }
 
@@ -86,15 +88,7 @@ class RoomLeaveManager(
             return
         }
         if (wasConfirmed) {
-            room.reopenRecruiting()
-            roomStatusLogRepository.save(
-                RoomStatusLogEntity.byMember(
-                    roomId = room.id,
-                    transitionType = RoomStatus.RECRUITING,
-                    handlerMemberId = leavingHostId,
-                    occurredAt = now,
-                ),
-            )
+            reopenRecruiting(room, leavingHostId, now)
         }
         outboxEventPublisher.publish(
             EventType.ROOM_HOST_DELEGATED,
@@ -146,12 +140,41 @@ class RoomLeaveManager(
         return application.applicantMemberId
     }
 
-    // 확정은 "이 인원으로 진행한다"는 약속이다. 모집 중에는 아직 약속이 없어 보지 않는다.
-    private fun requireAboveMinCapacity(room: RoomEntity) {
+    // 확정은 "이 인원으로 진행한다"는 약속이다. 참여자가 빠져 최소 밑이 되면 약속을 풀고 다시 모은다(「룸 참여」 R120).
+    // 예정 시각이 지난 뒤에는 되돌리지 않는다 — 신청도 재확정도 못 해 룸이 모집 중에 멈춘다(R183).
+    private fun reopenIfBelowMinCapacity(
+        room: RoomEntity,
+        leavingMemberId: UUID,
+        remainingHeadcount: Long,
+        now: LocalDateTime,
+    ) {
         if (room.status != RoomStatus.CONFIRMED) return
-        val current = participationRepository
-            .countByRoomIdAndStatusAndDeletedAtIsNull(room.id, ParticipationStatus.JOINED)
-        requireBusiness(current > room.minCapacity, CoreErrorType.ROOM_AT_MIN_CAPACITY)
+        if (RoomSchedule.isPassed(room.startAt, now)) return
+        if (remainingHeadcount >= room.minCapacity) return
+
+        reopenRecruiting(room, leavingMemberId, now)
+        val remaining = participationFinder.getJoinedParticipants(room.id)
+        outboxEventPublisher.publish(
+            EventType.ROOM_RECRUITING_REOPENED,
+            RoomRecruitingReopenedEventPayload(
+                roomId = room.id,
+                roomTitle = room.title,
+                hostMemberId = remaining.single { it.isHost }.memberId,
+                participantMemberIds = remaining.map { it.memberId },
+            ),
+        )
+    }
+
+    private fun reopenRecruiting(room: RoomEntity, handlerMemberId: UUID, now: LocalDateTime) {
+        room.reopenRecruiting()
+        roomStatusLogRepository.save(
+            RoomStatusLogEntity.byMember(
+                roomId = room.id,
+                transitionType = RoomStatus.RECRUITING,
+                handlerMemberId = handlerMemberId,
+                occurredAt = now,
+            ),
+        )
     }
 
     private fun loadRoomForUpdate(roomId: UUID): RoomEntity = requireFound(

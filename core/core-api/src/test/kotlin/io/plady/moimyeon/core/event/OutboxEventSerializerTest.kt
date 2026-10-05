@@ -11,6 +11,7 @@ import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -62,6 +63,7 @@ class OutboxEventSerializerTest {
             EventType.ROOM_COMPLETED to RoomCompletedEventPayload(roomId, "룸", null, listOf(memberA, memberB), listOf(memberA)),
             EventType.ROOM_CANCELED to RoomCanceledEventPayload(roomId, "룸", memberA, listOf(memberA), listOf(memberB)),
             EventType.ROOM_HOST_DELEGATED to RoomHostDelegatedEventPayload(roomId, "룸", memberA, memberB, listOf(memberB)),
+            EventType.ROOM_RECRUITING_REOPENED to RoomRecruitingReopenedEventPayload(roomId, "룸", memberA, listOf(memberA, memberB)),
             EventType.REVIEW_PUBLISHED to ReviewPublishedEventPayload(1L, roomId, "룸", memberA, memberB),
             EventType.ROOM_COMMENT_POSTED to RoomCommentPostedEventPayload(1L, roomId, "룸", memberA, listOf(memberA, memberB)),
         )

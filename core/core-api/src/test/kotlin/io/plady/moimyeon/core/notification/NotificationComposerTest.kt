@@ -13,6 +13,7 @@ import io.plady.moimyeon.core.event.payload.RoomCommentPostedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -114,6 +115,19 @@ class NotificationComposerTest {
         assertThat(messages.recipientsWith(NotificationPolicy.PUSH_ELSE_EMAIL)).containsExactly(PARTICIPANT_A, PARTICIPANT_B)
         assertThat(messages.single { it.recipientMemberId == PARTICIPANT_A }.title).isEqualTo("방장이 되었어요")
         assertThat(messages.single { it.recipientMemberId == PARTICIPANT_B }.title).isEqualTo("방장이 바뀌었어요")
+    }
+
+    @Test
+    fun `모집 재개는 방장과 남은 참여자에게 PUSH_ELSE_EMAIL 로 알리고 방장에게는 다른 문구를 보낸다`() {
+        val messages = compose(
+            EventType.ROOM_RECRUITING_REOPENED,
+            RoomRecruitingReopenedEventPayload(ROOM_ID, ROOM_TITLE, HOST, listOf(HOST, PARTICIPANT_A)),
+        )
+
+        assertThat(messages.recipientsWith(NotificationPolicy.PUSH_ELSE_EMAIL)).containsExactly(HOST, PARTICIPANT_A)
+        assertThat(messages.single { it.recipientMemberId == HOST }.title).isEqualTo("참여자가 나가 모집이 다시 열렸어요")
+        assertThat(messages.single { it.recipientMemberId == PARTICIPANT_A }.title).isEqualTo("모집이 다시 열렸어요")
+        assertThat(messages.map { it.body }).allMatch { it.contains(ROOM_TITLE) }
     }
 
     @Test

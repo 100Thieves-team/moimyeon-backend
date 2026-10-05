@@ -76,7 +76,7 @@ class QaTestDataControllerTest : RestDocsTest() {
     private val createMemberSummary = "[dev] QA 테스트 회원 생성"
     private val createMemberDescription = devOnlyNote +
         "Google OAuth 없이 테스트 회원을 만든다. 닉네임 자동 부여·필수 약관 동의·빈 프로필 생성까지 실제 가입과 같은 경로를 탄다. " +
-        "이메일은 qa-{uuid}@qa.moimyeon.test, 소셜 계정 식별자는 qa-{uuid} 다. 응답의 accessToken 으로 바로 API 를 호출할 수 있다. " +
+        "이메일은 설정 qa.member.email-template 의 {key} 에 uuid 를 넣은 주소다(dev 는 100dodukteam+qa-{uuid}@gmail.com, 그 밖의 기본값은 qa-{uuid}@qa.moimyeon.test). 소셜 계정 식별자는 qa-{uuid} 다. 응답의 accessToken 으로 바로 API 를 호출할 수 있다. " +
         "생성된 회원은 DELETE /v1/dev/members/{memberId} 또는 일괄 삭제의 includeMembers=true 로 지운다."
 
     private val resumeSummarySummary = "[dev] 이력서 AI 요약 완료 강제"
@@ -88,7 +88,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     private val deleteMemberSummary = "[dev] QA 테스트 회원 삭제"
     private val deleteMemberDescription = devOnlyNote +
-        "테스트 회원 생성 API 로 만든 회원(이메일 @qa.moimyeon.test, 소셜 식별자 qa-)만 하드 삭제한다. " +
+        "테스트 회원 생성 API 로 만든 회원(소셜 식별자 qa- 이고 이메일이 설정 템플릿 형식 또는 @qa.moimyeon.test)만 하드 삭제한다. " +
         "먼저 테스트 계정 초기화 규칙(방장인 [QA] 룸·참여·신청·[QA] 룸 후기 삭제)을 적용한 뒤, 이 회원이 남긴 행(질문·코멘트·요약·클로징·" +
         "라운드 피드백·방명록·출석·후기)과 회원 소유 행(이력서·프로필·약관 동의·토큰·소셜 계정)을 지우고 회원 행을 지운다. " +
         "QA 생성 회원이 아니거나 방장인 룸 중 [QA] 가 아닌 룸이 있으면 409(E2201), 회원이 없으면 404(E1006), memberId 가 UUID 가 아니면 400(E400)."
