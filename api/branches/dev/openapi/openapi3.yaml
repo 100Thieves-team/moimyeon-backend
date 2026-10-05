@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-10-05",
-                        "datetime" : "2026-10-05T04:53:17.949477465",
+                        "datetime" : "2026-10-05T05:01:24.186710302",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-10-05",
-                        "datetime" : "2026-10-05T04:53:17.988927743",
+                        "datetime" : "2026-10-05T05:01:24.23410048",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -857,7 +857,7 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "terms" : [ {
-                          "termsId" : "585e9ced-ccee-4975-8b89-31b9c496ec5c",
+                          "termsId" : "54d8ef81-8bbc-477a-8881-9fcfd55e4012",
                           "type" : "SERVICE",
                           "version" : "v1.0",
                           "title" : "모이면 이용약관",
@@ -865,7 +865,7 @@ paths:
                           "required" : true,
                           "effectiveFrom" : "2026-07-01T00:00:00"
                         }, {
-                          "termsId" : "84d33987-eb3e-48c1-b024-5023e165e110",
+                          "termsId" : "edad325e-4db7-44cc-aeca-9cd4c8402028",
                           "type" : "PRIVACY",
                           "version" : "v1.0",
                           "title" : "개인정보 처리방침",
@@ -1752,12 +1752,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "23d13434-e03b-4e6d-8690-53a2528a9e65",
+                        "memberId" : "581f50af-9a36-4394-88a5-7126b393800a",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "23d13434-e03b-4e6d-8690-53a2528a9e65",
+                          "memberId" : "581f50af-9a36-4394-88a5-7126b393800a",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -2438,7 +2438,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-10-06T04:53:23.90411683",
+                          "startAt" : "2026-10-06T05:01:30.623702091",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2451,9 +2451,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "25b9a7f6-b49f-492e-9a3d-8a36e800712f",
+                        "hostMemberId" : "a5ed4480-5bb4-41c2-99ee-8a25b4687dc4",
                         "participants" : [ {
-                          "memberId" : "25b9a7f6-b49f-492e-9a3d-8a36e800712f",
+                          "memberId" : "a5ed4480-5bb4-41c2-99ee-8a25b4687dc4",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3002,7 +3002,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "eb8a38d6-acb6-405d-8f43-30fb9e5be146",
+                        "memberId" : "7588edbd-184e-4604-a429-77b625a4e371",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -3755,19 +3755,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "94d8053f-8d32-45e6-b383-2bd7636a9352",
+                    "resumeId" : "e0b754c2-6b20-45d2-9d3c-ae3df35c3e0d",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "83f71da0-1d11-4d1f-9b55-ce5db410d134",
+                    "resumeId" : "bade299d-edd0-4a61-8d62-b72bdd7a75fe",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "ecc1fcda-3a71-477a-92b4-a774f9db8371"
+                    "resumeId" : "6c4b4e1e-b591-4fab-81e2-f7845fb7a425"
                   }
       responses:
         "400":
@@ -5700,7 +5700,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "deb0fb95-0c64-43b6-a723-230e5db9c0be",
+                          "resumeId" : "209b3ff7-46c1-401c-9b72-7390bf5e72e3",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -5853,10 +5853,11 @@ paths:
       tags:
       - v1
       summary: 룸 나가기
-      description: "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에는 자유롭게 나갈 수 있고, 진행이 확정된 뒤에\
-        도 현재 인원이 최소 진행 인원보다 많으면 나갈 수 있다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, 모집 중이면 같은\
-        \ 룸에 다시 신청할 수 있다. 방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도 없으면\
-        \ 룸이 취소된다."
+      description: "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에도 진행이 확정된 뒤에도 인원과 관계없이 나갈\
+        \ 수 있다. 확정된 룸에서 일반 참여자가 나가 인원이 최소 진행 인원보다 적어지면 룸은 모집 중으로 돌아가고 방장과 남은 참여자에게\
+        \ 알린다. 진행 예정 시각이 지난 뒤에는 확정 상태를 유지한다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, 모집 중이\
+        면 같은 룸에 다시 신청할 수 있다. 방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도\
+        \ 없으면 룸이 취소된다."
       operationId: roomLeave
       parameters:
       - name: roomId
@@ -5879,24 +5880,6 @@ paths:
                       "result" : "SUCCESS",
                       "data" : null,
                       "error" : null
-                    }
-        "409":
-          description: "409"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/v1-rooms-roomId-participants-me837364537"
-              examples:
-                roomLeaveAtMinCapacity:
-                  value: |-
-                    {
-                      "result" : "ERROR",
-                      "data" : null,
-                      "error" : {
-                        "code" : "E1423",
-                        "message" : "최소 진행 인원이라 나갈 수 없습니다.",
-                        "data" : null
-                      }
                     }
         "403":
           description: "403"
@@ -6737,18 +6720,6 @@ paths:
                   type: string
 components:
   schemas:
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -6768,6 +6739,18 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-dev-rooms-roomId-schedule-1288597070:
       required:
       - result
@@ -6956,43 +6939,6 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
-    post191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
-          nullable: true
     v1-rooms-roomId-comments1495367468:
       required:
       - result
@@ -7067,6 +7013,43 @@ components:
             writable:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
+          nullable: true
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
           nullable: true
     v1-auth-logout198252895:
       required:
@@ -8920,27 +8903,6 @@ components:
                   description: room_application (참가 신청)
               description: 테이블별 하드 삭제 건수. 키는 항상 전부 내려간다(0 포함)
           nullable: true
-    v1-rooms-roomId-participants-me837364537:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (ERROR)
-        error:
-          required:
-          - code
-          - message
-          type: object
-          properties:
-            code:
-              type: string
-              description: 에러 코드 (E1423)
-            message:
-              type: string
-              description: 에러 메시지
-          nullable: true
     v1-rooms-583341076:
       required:
       - result
@@ -8962,22 +8924,6 @@ components:
               type: string
               description: 룸 상태 (RECRUITING)
           nullable: true
-    v1-job-postings-1848070641:
-      required:
-      - companyId
-      - postingName
-      - url
-      type: object
-      properties:
-        companyId:
-          type: number
-          description: "회사 id (필수, /v1/companies 검색 결과)"
-        postingName:
-          type: string
-          description: "확정한 공고명 (필수, 최대 100자)"
-        url:
-          type: string
-          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-rooms-roomId1114993826:
       required:
       - result
@@ -9219,6 +9165,22 @@ components:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
           nullable: true
+    v1-job-postings-1848070641:
+      required:
+      - companyId
+      - postingName
+      - url
+      type: object
+      properties:
+        companyId:
+          type: number
+          description: "회사 id (필수, /v1/companies 검색 결과)"
+        postingName:
+          type: string
+          description: "확정한 공고명 (필수, 최대 100자)"
+        url:
+          type: string
+          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-dev-resumes-resumeId-summary1029161103:
       type: object
       properties:
@@ -9631,31 +9593,6 @@ components:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
           nullable: true
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
-          nullable: true
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -9743,6 +9680,31 @@ components:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
+          nullable: true
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
           nullable: true
     v1-rooms501055666:
       required:
