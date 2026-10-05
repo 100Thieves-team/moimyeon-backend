@@ -16,6 +16,12 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     RESUME_LIMIT_EXCEEDED(HttpStatus.CONFLICT, ErrorCode.E1011, "이력서는 최대 10개까지 등록할 수 있습니다.", LogLevel.WARN),
     RESUME_NOT_READY(HttpStatus.CONFLICT, ErrorCode.E1012, "AI 요약이 완료된 이력서만 사용할 수 있습니다.", LogLevel.WARN),
     RESUME_SUMMARY_NOT_RETRYABLE(HttpStatus.CONFLICT, ErrorCode.E1013, "실패한 AI 요약만 재시도할 수 있습니다.", LogLevel.WARN),
+    MEMBER_WITHDRAWAL_INTERRUPTED(
+        HttpStatus.CONFLICT,
+        ErrorCode.E1014,
+        "탈퇴를 처리하는 중 새 참여가 생겨 완료하지 못했습니다. 다시 시도해 주세요.",
+        LogLevel.WARN,
+    ),
     INVALID_SESSION(HttpStatus.UNAUTHORIZED, ErrorCode.E1104, "세션이 유효하지 않습니다. 다시 로그인해주세요.", LogLevel.WARN),
 
     TERMS_NOT_AGREED(HttpStatus.CONFLICT, ErrorCode.E1201, "필수 약관에 동의해야 이용할 수 있습니다.", LogLevel.WARN),

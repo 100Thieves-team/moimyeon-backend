@@ -211,6 +211,26 @@ include::{snippets}/memberMe/response-fields.adoc[]
 
 '''
 
+=== 회원 탈퇴
+==== Curl Request
+include::{snippets}/memberWithdraw/curl-request.adoc[]
+==== Http Response
+include::{snippets}/memberWithdraw/http-response.adoc[]
+==== Response Headers
+include::{snippets}/memberWithdraw/response-headers.adoc[]
+==== Response Fields
+include::{snippets}/memberWithdraw/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 401 | E1102 | 액세스 토큰 없음·만료·무효 (인증 필요 API 공통)
+| 404 | E1006 | 없는 회원 (이미 탈퇴한 회원의 재요청은 아무것도 하지 않고 성공)
+| 409 | E1014 | 룸을 나가는 사이 새 참여가 생겨 세 번 시도해도 끝내지 못함. 다시 시도하면 된다
+|===
+
+'''
+
 === 닉네임 자동 추천
 ==== Curl Request
 include::{snippets}/nicknameSuggestion/curl-request.adoc[]

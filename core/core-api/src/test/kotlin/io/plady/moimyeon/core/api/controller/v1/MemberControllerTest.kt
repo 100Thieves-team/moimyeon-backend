@@ -1,6 +1,8 @@
 package io.plady.moimyeon.core.api.controller.v1
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.auth.ApiResponseAuthErrorWriter
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
@@ -18,12 +20,17 @@ import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.security.auth.ApiResponseAuthenticationEntryPoint
+import io.plady.moimyeon.security.auth.AuthCookieFactory
 import io.plady.moimyeon.security.auth.HeaderOrCookieBearerTokenResolver
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseCookie
+import org.springframework.restdocs.headers.HeaderDocumentation.headerWithName
+import org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
@@ -45,6 +52,7 @@ class MemberControllerTest : RestDocsTest() {
     private lateinit var memberService: MemberService
     private lateinit var profileService: ProfileService
     private lateinit var companyService: CompanyService
+    private lateinit var authCookieFactory: AuthCookieFactory
 
     private val member: Member = Member.register(
         SocialLoginProvider.GOOGLE,
@@ -71,6 +79,13 @@ class MemberControllerTest : RestDocsTest() {
             "빈 문자열·빈 배열로 내려간다. " +
             "profile 은 프로필 수정 응답의 data 와 동일한 모양이다. " +
             "액세스 토큰이 없거나 유효하지 않으면 401(E1102), 토큰은 유효하지만 회원이 조회되지 않으면(탈퇴 등) 404(E1006)로 응답한다."
+    private val withdrawSummary = "회원 탈퇴"
+    private val withdrawDescription =
+        "탈퇴한다(「회원 및 프로필」 §4.8). 요청 한 번으로 참가 신청 대기 건을 모두 철회하고, 참여 중인 모집 중·확정 룸에서 " +
+            "나간다(방장이면 위임·모집 재개·취소, 참여자면 인원이 최소 밑으로 내려갈 때 모집 재개). 진행 예정 시각이 지난 확정 룸에는 " +
+            "남는다. 모든 기기의 세션을 끝내고 웹 푸시 등록을 지운 뒤 ACCESS_TOKEN·REFRESH_TOKEN 쿠키를 만료(Set-Cookie)시킨다. " +
+            "이미 탈퇴했으면 아무것도 하지 않고 성공한다(멱등). " +
+            "없는 회원이면 404(E1006). 룸을 나가는 사이 새 참여가 생겨 세 번 시도해도 끝내지 못하면 409(E1014)."
     private val nicknameSuggestionSummary = "닉네임 자동 추천"
     private val nicknameSuggestionDescription =
         "중복되지 않는 닉네임을 새로 생성해 반환한다. 닉네임 변경 폼의 ↻ 새로 만들기 재생성에서 사용한다."
@@ -84,8 +99,9 @@ class MemberControllerTest : RestDocsTest() {
         memberService = mockk()
         profileService = mockk()
         companyService = mockk()
+        authCookieFactory = mockk()
         mockMvc = mockController(
-            MemberController(memberService, MemberFacade(memberService, profileService, companyService)),
+            MemberController(memberService, MemberFacade(memberService, profileService, companyService), authCookieFactory),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -146,7 +162,7 @@ class MemberControllerTest : RestDocsTest() {
     @Test
     fun `memberMe 유효하지 않은 토큰 E1102`() {
         val securedMockMvc = mockController(
-            MemberController(memberService, MemberFacade(memberService, profileService, companyService)),
+            MemberController(memberService, MemberFacade(memberService, profileService, companyService), authCookieFactory),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
             filters = listOf(resourceServerFilter()),
@@ -230,5 +246,50 @@ class MemberControllerTest : RestDocsTest() {
         filter.setBearerTokenResolver(HeaderOrCookieBearerTokenResolver())
         filter.setAuthenticationEntryPoint(ApiResponseAuthenticationEntryPoint(ApiResponseAuthErrorWriter(JsonMapper.builder().build())))
         return filter
+    }
+
+    @Test
+    fun withdraw() {
+        every { memberService.withdraw(memberId) } just Runs
+        every { authCookieFactory.expireAccess() } returns
+            ResponseCookie.from(AuthCookieFactory.ACCESS_TOKEN, "").path("/").maxAge(0).build()
+        every { authCookieFactory.expireRefresh() } returns
+            ResponseCookie.from(AuthCookieFactory.REFRESH_TOKEN, "").path(AuthCookieFactory.REFRESH_PATH).maxAge(0).build()
+
+        mockMvc.perform(delete("/v1/members/me").principal(principal))
+            .andExpect(status().isOk)
+            .andDo(
+                documentApi(
+                    "memberWithdraw",
+                    withdrawSummary,
+                    withdrawDescription,
+                    responseHeaders(
+                        headerWithName(HttpHeaders.SET_COOKIE).description("만료 처리된 ACCESS_TOKEN·REFRESH_TOKEN 쿠키"),
+                    ),
+                    responseFields(
+                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
+                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
+                        fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `withdraw 없는 회원 E1006`() {
+        every { memberService.withdraw(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        mockMvc.perform(delete("/v1/members/me").principal(principal))
+            .andExpect(status().isNotFound)
+            .andDo(documentApi("memberWithdraw-e1006", withdrawSummary, withdrawDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `withdraw 처리 중 새 참여 E1014`() {
+        every { memberService.withdraw(memberId) } throws CoreException(CoreErrorType.MEMBER_WITHDRAWAL_INTERRUPTED)
+
+        mockMvc.perform(delete("/v1/members/me").principal(principal))
+            .andExpect(status().isConflict)
+            .andDo(documentApi("memberWithdraw-e1014", withdrawSummary, withdrawDescription, errorResponseFields()))
     }
 }

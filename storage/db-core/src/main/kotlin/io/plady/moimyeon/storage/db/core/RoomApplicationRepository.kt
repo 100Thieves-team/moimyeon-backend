@@ -61,12 +61,22 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findByIdAndRoomIdAndDeletedAtIsNull(id: Long, roomId: UUID): RoomApplicationEntity?
 
-    // 방장용 신청 목록(「룸 참여」 §4.3). 철회된 신청은 방장 처리 대상에서 제외한다(§4.4). 오래된 신청부터.
     // 방장 자동 위임 순회(MOI-397). 먼저 신청한 순서로 보고 자격을 잃은 사람은 건너뛴다.
-    fun findByRoomIdAndStatusAndDeletedAtIsNullOrderByAppliedAtAscIdAsc(
-        roomId: UUID,
-        status: RoomApplicationStatus,
-    ): List<RoomApplicationEntity>
+    // id 만 읽는다 — 후보마다 행을 잠근 뒤 새로 읽어야 동시에 진행 중인 탈퇴의 철회를 덮어쓰지 않는다(MOI-540).
+    @Query(
+        """
+        select a.id
+        from RoomApplicationEntity a
+        where a.roomId = :roomId
+          and a.status = :status
+          and a.deletedAt is null
+        order by a.appliedAt asc, a.id asc
+        """,
+    )
+    fun findIdsByRoomIdAndStatusOrderByAppliedAt(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+    ): List<Long>
 
     fun findByRoomIdAndStatusNotAndDeletedAtIsNullOrderByAppliedAtAsc(
         roomId: UUID,

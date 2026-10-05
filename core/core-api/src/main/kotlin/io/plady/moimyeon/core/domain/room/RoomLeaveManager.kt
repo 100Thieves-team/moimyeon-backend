@@ -60,10 +60,33 @@ class RoomLeaveManager(
             ),
             CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN,
         )
+        leaveLocked(room, participation, memberId, LocalDateTime.now(clock))
+    }
+
+    // 회원 탈퇴(「회원 및 프로필」 R169·R170). 룸 하나를 나가기와 같은 규칙으로 빠진다 — 탈퇴는 룸마다 이 메서드를
+    // 따로 커밋한다. 룸 잠금이 첫 쿼리여야 이후 조회가 잠금 이후 데이터를 본다(leave 와 같은 전제).
+    // 나갈 수 없는 룸(완료·취소)과 예정 시각이 지난 확정 룸은 건너뛴다. 면접이 열렸을 수 있어 확정 후 이탈로 남기면 사실과 다르다.
+    @Transactional
+    fun leaveOnWithdrawal(roomId: UUID, memberId: UUID, now: LocalDateTime) {
+        log.debug { "room-leave.manager.leaveOnWithdrawal roomId=$roomId memberId=$memberId" }
+        val room = roomRepository.findByIdForUpdate(roomId)?.takeIf { it.isActive() && it.canLeave() } ?: return
+        if (room.status == RoomStatus.CONFIRMED && RoomSchedule.isPassed(room.startAt, now)) return
+        val participation = participationRepository.findByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+            roomId,
+            memberId,
+            ParticipationStatus.JOINED,
+        ) ?: return
+        leaveLocked(room, participation, memberId, now)
+    }
+
+    private fun leaveLocked(
+        room: RoomEntity,
+        participation: ParticipationEntity,
+        memberId: UUID,
+        now: LocalDateTime,
+    ) {
         val headcountBeforeLeave = participationRepository
             .countByRoomIdAndStatusAndDeletedAtIsNull(room.id, ParticipationStatus.JOINED)
-
-        val now = LocalDateTime.now(clock)
         val wasConfirmed = room.status == RoomStatus.CONFIRMED
         participation.leave(now, memberId)
         if (participation.participationRole == ParticipationRole.HOST) {
@@ -119,9 +142,12 @@ class RoomLeaveManager(
     // 건너뛴 신청은 대기로 남긴다 — 방장의 판단이 아니고, 위임에 실패해도 그 룸은 계속 살아 있다.
     private fun promoteEarliestEligibleApplicant(roomId: UUID, leavingHostId: UUID, now: LocalDateTime): UUID? {
         val application = roomApplicationRepository
-            .findByRoomIdAndStatusAndDeletedAtIsNullOrderByAppliedAtAscIdAsc(roomId, RoomApplicationStatus.PENDING)
+            .findIdsByRoomIdAndStatusOrderByAppliedAt(roomId, RoomApplicationStatus.PENDING)
+            .asSequence()
+            .mapNotNull { roomApplicationRepository.findByIdAndRoomIdAndDeletedAtIsNull(it, roomId) }
             .firstOrNull {
-                memberFinder.isActive(it.applicantMemberId) &&
+                it.status == RoomApplicationStatus.PENDING &&
+                    memberFinder.isActive(it.applicantMemberId) &&
                     participationFinder.hasAvailableSlot(it.applicantMemberId)
             }
             ?: return null

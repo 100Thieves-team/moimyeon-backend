@@ -104,4 +104,4 @@ class RoomApplicationFacade(
     }
 }
 
-private const val WITHDRAWN_MEMBER_NICKNAME = "탈퇴한 사용자"
+private const val WITHDRAWN_MEMBER_NICKNAME = "탈퇴한 회원"

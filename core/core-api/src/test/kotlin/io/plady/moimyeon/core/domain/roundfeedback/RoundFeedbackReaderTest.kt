@@ -98,7 +98,7 @@ class RoundFeedbackReaderTest {
 
         assertThat(result.selfFeedback).isNull()
         val card = result.finalFeedbacks.single()
-        assertThat(card.author.displayName).isEqualTo("탈퇴 회원")
+        assertThat(card.author.displayName).isEqualTo("탈퇴한 회원")
         assertThat(card.author.role).isEqualTo(RoundFeedbackAuthorRole.PARTICIPANT)
         assertThat(card.revealed).isFalse()
         assertThat(card.content).isNull()
