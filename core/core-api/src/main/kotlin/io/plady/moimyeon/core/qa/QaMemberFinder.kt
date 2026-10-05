@@ -13,11 +13,12 @@ private val log = KotlinLogging.logger {}
 @Profile(DEV_AUTH_PROFILE_EXPRESSION)
 class QaMemberFinder(
     private val qaTestDataRepository: QaTestDataRepository,
+    private val properties: QaMemberProperties,
 ) {
     @Transactional(readOnly = true)
     fun getQaMembers(): List<QaMember> {
         log.debug { "qa-member.finder.getQaMembers" }
-        return qaTestDataRepository.findQaMembers(QaMemberCreator.PROVIDER_ID_PREFIX, QaMemberCreator.EMAIL_DOMAIN)
+        return qaTestDataRepository.findQaMembers(QaMemberCreator.PROVIDER_ID_PREFIX, properties.emailPatterns())
             .map { QaMember(id = it.id, nickname = it.nickname, email = it.email) }
     }
 }

@@ -88,12 +88,27 @@ class QaTestDataRepositoryMySqlIT(
         val providerOnly = seedMember("qa-3@example.com", "qa-3")
         val upper = seedMember("QA-4@QA.MOIMYEON.TEST", "QA-4")
 
-        val found = qaTestDataRepository.findQaMembers("qa-", "qa.moimyeon.test").map { it.id }
+        val found = qaTestDataRepository.findQaMembers("qa-", LEGACY).map { it.id }
 
         assertThat(found).contains(qa, upper).doesNotContain(emailOnly, providerOnly)
-        assertThat(qaTestDataRepository.isQaMember(qa, "qa-", "qa.moimyeon.test")).isTrue()
-        assertThat(qaTestDataRepository.isQaMember(emailOnly, "qa-", "qa.moimyeon.test")).isFalse()
-        assertThat(qaTestDataRepository.isQaMember(providerOnly, "qa-", "qa.moimyeon.test")).isFalse()
+        assertThat(qaTestDataRepository.isQaMember(qa, "qa-", LEGACY)).isTrue()
+        assertThat(qaTestDataRepository.isQaMember(emailOnly, "qa-", LEGACY)).isFalse()
+        assertThat(qaTestDataRepository.isQaMember(providerOnly, "qa-", LEGACY)).isFalse()
+    }
+
+    @Test
+    @Transactional
+    fun `QA 회원 이메일 형식이 여럿이면 그중 하나와 소셜 식별자 접두를 만족하면 된다`() {
+        val patterns = listOf(QaEmailPattern("moimyeon.qa+qa-", "@gmail.com")) + LEGACY
+        val plus = seedMember("moimyeon.qa+qa-1@gmail.com", "qa-p1")
+        val legacy = seedMember("qa-2@qa.moimyeon.test", "qa-p2")
+        val otherGmail = seedMember("someone@gmail.com", "qa-p3")
+        val plusNoPrefix = seedMember("moimyeon.qa+qa-4@gmail.com", "1234567891")
+
+        assertThat(qaTestDataRepository.findQaMembers("qa-", patterns).map { it.id })
+            .contains(plus, legacy).doesNotContain(otherGmail, plusNoPrefix)
+        assertThat(qaTestDataRepository.isQaMember(plus, "qa-", patterns)).isTrue()
+        assertThat(qaTestDataRepository.isQaMember(otherGmail, "qa-", patterns)).isFalse()
     }
 
     @Test
@@ -235,6 +250,8 @@ class QaTestDataRepositoryMySqlIT(
     }
 
     companion object {
+        private val LEGACY = listOf(QaEmailPattern("", "@qa.moimyeon.test"))
+
         private const val MYSQL_PORT = 3306
         private const val DATABASE_NAME = "core"
         private const val USERNAME = "moimyeon"
