@@ -36,22 +36,10 @@ class WebPushSubscriptionManagerTest {
     }
 
     @Test
-    fun `회원은 자신이 등록한 브라우저만 해지한다`() {
-        val own = subscription(MEMBER_A)
-        every { repository.findByRegistrationHash(any()) } returns own
-        every { repository.delete(own) } returns Unit
+    fun `자기 소유 기기 등록은 지우지 않는다`() {
+        every { repository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
 
-        manager.unregister(MEMBER_A, REGISTRATION)
-
-        verify(exactly = 1) { repository.delete(own) }
-    }
-
-    @Test
-    fun `다른 회원의 브라우저 등록은 해지하지 않는다`() {
-        val others = subscription(MEMBER_B)
-        every { repository.findByRegistrationHash(any()) } returns others
-
-        manager.unregister(MEMBER_A, REGISTRATION)
+        manager.unregisterIfOwnedByOther(MEMBER_A, REGISTRATION)
 
         verify(exactly = 0) { repository.delete(any()) }
     }

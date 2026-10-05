@@ -78,6 +78,8 @@ class FailoverEmailSenderTest {
     private fun recipient() = NotificationRecipient(
         email = "member@example.com",
         webPushRegistrations = emptySet(),
+        isWebPushAllowed = true,
+        isActivityEmailEnabled = true,
     )
 
     private fun expectedMessage() = EmailMessage(

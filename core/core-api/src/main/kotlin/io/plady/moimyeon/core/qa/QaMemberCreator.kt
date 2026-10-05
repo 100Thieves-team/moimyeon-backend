@@ -17,6 +17,7 @@ private val log = KotlinLogging.logger {}
 class QaMemberCreator(
     private val memberRegistrationManager: MemberRegistrationManager,
     private val memberFinder: MemberFinder,
+    private val properties: QaMemberProperties,
 ) {
     fun create(): QaMember {
         val key = UUID.randomUUID().toString()
@@ -24,7 +25,7 @@ class QaMemberCreator(
         val memberId = memberRegistrationManager.register(
             provider = SocialLoginProvider.GOOGLE,
             providerId = "$PROVIDER_ID_PREFIX$key",
-            email = Email("$EMAIL_LOCAL_PREFIX$key@$EMAIL_DOMAIN"),
+            email = Email(properties.emailOf(key)),
         )
         val member = memberFinder.getById(memberId)
         return QaMember(id = member.id, nickname = member.nickname.value, email = member.email.value)
