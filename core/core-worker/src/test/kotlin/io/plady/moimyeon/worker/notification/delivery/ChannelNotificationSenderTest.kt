@@ -1,10 +1,15 @@
 package io.plady.moimyeon.worker.notification.delivery
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.core.enums.NotificationPolicy
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class ChannelNotificationSenderTest {
@@ -50,6 +55,36 @@ class ChannelNotificationSenderTest {
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.attemptCount).isZero()
+    }
+
+    @Test
+    fun `푸시가 전달되지 않아 메일로 대체하면 그 경과를 이메일 주소 없이 로그로 남긴다`() {
+        val fixture = fixture()
+        fixture.webPushSender.delivery = WebPushDelivery.UNDELIVERED
+
+        val messages = captureLogs {
+            fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        }
+
+        assertThat(messages).singleElement().satisfies({
+            assertThat(it)
+                .startsWith("notification.send.completed eventId=$EVENT_ID")
+                .contains("channel=WEB_PUSH", "registrations=2", "webPush=UNDELIVERED", "email=SENT")
+                .doesNotContain("applicant@example.com", "push-registration")
+        })
+    }
+
+    @Test
+    fun `웹 푸시를 보내지 않은 이유를 로그로 남긴다`() {
+        val fixture = fixture(isWebPushAllowed = false)
+
+        val messages = captureLogs {
+            fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ONLY))
+        }
+
+        assertThat(messages).singleElement().satisfies({
+            assertThat(it).contains("webPush=SKIPPED_PUSH_DISABLED", "email=NOT_REQUIRED")
+        })
     }
 
     @Test
@@ -251,4 +286,19 @@ private class RecordingEmailSender : EmailSender {
         attemptCount++
         sentEmails += recipient.email
     }
+}
+
+private fun captureLogs(block: () -> Unit): List<String> {
+    val logger = LoggerFactory.getLogger(ChannelNotificationSender::class.java) as Logger
+    val previousLevel = logger.level
+    val appender = ListAppender<ILoggingEvent>().apply { start() }
+    logger.level = Level.DEBUG
+    logger.addAppender(appender)
+    try {
+        block()
+    } finally {
+        logger.detachAppender(appender)
+        logger.level = previousLevel
+    }
+    return appender.list.map { it.formattedMessage }
 }

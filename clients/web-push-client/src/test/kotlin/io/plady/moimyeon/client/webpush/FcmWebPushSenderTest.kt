@@ -1,5 +1,9 @@
 package io.plady.moimyeon.client.webpush
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import io.plady.moimyeon.core.enums.NotificationChannel
 import io.plady.moimyeon.core.enums.NotificationPolicy
 import io.plady.moimyeon.worker.notification.delivery.InvalidWebPushRegistrationRemover
@@ -11,6 +15,7 @@ import io.plady.moimyeon.worker.notification.delivery.WebPushDelivery
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class FcmWebPushSenderTest {
@@ -54,6 +59,34 @@ class FcmWebPushSenderTest {
         sender.send(notification(), recipient("registration-1", "expired-registration"))
 
         assertThat(invalidRegistrationRemover.removed).containsExactly("expired-registration")
+    }
+
+    @Test
+    fun `FCM이 기기별로 수락했는지와 거절 코드를 토큰 없이 로그로 남긴다`() {
+        gateway.results = listOf(
+            FcmSendResult.success("registration-1"),
+            FcmSendResult.unregistered("expired-registration", "UNREGISTERED"),
+            FcmSendResult.retryableFailure("retry-registration", "UNAVAILABLE"),
+        )
+
+        val messages = captureLogs {
+            sender.send(notification(), recipient("registration-1", "expired-registration", "retry-registration"))
+        }
+
+        assertThat(messages).anySatisfy {
+            assertThat(it)
+                .startsWith("web-push.fcm.result eventId=$EVENT_ID")
+                .contains(
+                    "registrations=3",
+                    "success=1",
+                    "unregistered=1",
+                    "retryableFailure=1",
+                    "permanentFailure=0",
+                    "UNREGISTERED:1",
+                    "UNAVAILABLE:1",
+                )
+        }
+        assertThat(messages).noneMatch { it.contains("registration-1") || it.contains("expired-registration") }
     }
 
     @Test
@@ -134,6 +167,21 @@ class FcmWebPushSenderTest {
 
         assertThat(delivery).isEqualTo(WebPushDelivery.UNDELIVERED)
     }
+}
+
+private fun captureLogs(block: () -> Unit): List<String> {
+    val logger = LoggerFactory.getLogger(FcmWebPushSender::class.java) as Logger
+    val previousLevel = logger.level
+    val appender = ListAppender<ILoggingEvent>().apply { start() }
+    logger.level = Level.DEBUG
+    logger.addAppender(appender)
+    try {
+        block()
+    } finally {
+        logger.detachAppender(appender)
+        logger.level = previousLevel
+    }
+    return appender.list.map { it.formattedMessage }
 }
 
 private class RecordingFcmGateway : FcmGateway {

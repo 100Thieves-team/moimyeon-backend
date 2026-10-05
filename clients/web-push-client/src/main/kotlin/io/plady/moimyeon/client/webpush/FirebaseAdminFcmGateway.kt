@@ -51,18 +51,19 @@ internal class FirebaseAdminFcmGateway(
     private fun SendResponse.toResult(registration: String): FcmSendResult {
         if (isSuccessful) return FcmSendResult.success(registration)
 
-        return when (exception?.messagingErrorCode) {
-            MessagingErrorCode.UNREGISTERED -> FcmSendResult.unregistered(registration)
+        val errorCode = exception?.messagingErrorCode
+        return when (errorCode) {
+            MessagingErrorCode.UNREGISTERED -> FcmSendResult.unregistered(registration, errorCode.name)
             MessagingErrorCode.INTERNAL,
             MessagingErrorCode.QUOTA_EXCEEDED,
             MessagingErrorCode.UNAVAILABLE,
             null,
-            -> FcmSendResult.retryableFailure(registration)
+            -> FcmSendResult.retryableFailure(registration, errorCode?.name)
 
             MessagingErrorCode.INVALID_ARGUMENT,
             MessagingErrorCode.SENDER_ID_MISMATCH,
             MessagingErrorCode.THIRD_PARTY_AUTH_ERROR,
-            -> FcmSendResult.permanentFailure(registration)
+            -> FcmSendResult.permanentFailure(registration, errorCode.name)
         }
     }
 

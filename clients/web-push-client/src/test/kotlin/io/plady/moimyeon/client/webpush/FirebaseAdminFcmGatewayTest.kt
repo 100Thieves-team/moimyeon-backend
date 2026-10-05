@@ -32,9 +32,9 @@ class FirebaseAdminFcmGatewayTest {
 
         assertThat(results).containsExactly(
             FcmSendResult.success("a"),
-            FcmSendResult.unregistered("b"),
-            FcmSendResult.retryableFailure("c"),
-            FcmSendResult.permanentFailure("d"),
+            FcmSendResult.unregistered("b", "UNREGISTERED"),
+            FcmSendResult.retryableFailure("c", "UNAVAILABLE"),
+            FcmSendResult.permanentFailure("d", "INVALID_ARGUMENT"),
         )
     }
 
