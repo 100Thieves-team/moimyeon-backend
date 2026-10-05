@@ -36,8 +36,10 @@ class RoomParticipantControllerTest : RestDocsTest() {
 
     private val leaveSummary = "룸 나가기"
     private val leaveDescription =
-        "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에는 자유롭게 나갈 수 있고, 진행이 확정된 뒤에도 " +
-            "현재 인원이 최소 진행 인원보다 많으면 나갈 수 있다. 나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, " +
+        "참여자가 스스로 룸에서 나간다(「룸 참여」 §4.6). 모집 중에도 진행이 확정된 뒤에도 인원과 관계없이 나갈 수 있다. " +
+            "확정된 룸에서 일반 참여자가 나가 인원이 최소 진행 인원보다 적어지면 룸은 모집 중으로 돌아가고 " +
+            "방장과 남은 참여자에게 알린다. 진행 예정 시각이 지난 뒤에는 확정 상태를 유지한다. " +
+            "나가면 자리가 비어 방장이 대기 신청을 수락할 수 있고, " +
             "모집 중이면 같은 룸에 다시 신청할 수 있다. " +
             "방장이 나가면 방장 자리가 자동으로 넘어간다(참여자 → 대기 신청자 순). 넘길 사람이 아무도 없으면 룸이 취소된다."
 
@@ -190,36 +192,6 @@ class RoomParticipantControllerTest : RestDocsTest() {
                         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (SUCCESS)"),
                         fieldWithPath("data").type(JsonFieldType.NULL).optional().ignored(),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
-                    ),
-                ),
-            )
-    }
-
-    @Test
-    fun leaveRoomAtMinCapacity() {
-        every { roomParticipantFacade.leave(any(), any()) } throws
-            CoreException(CoreErrorType.ROOM_AT_MIN_CAPACITY)
-
-        mockMvc.perform(
-            delete("/v1/rooms/{roomId}/participants/me", roomId)
-                .principal(principal),
-        )
-            .andExpect(status().isConflict)
-            .andDo(
-                documentApi(
-                    "roomLeaveAtMinCapacity",
-                    leaveSummary,
-                    "진행이 확정된 룸에서 현재 인원이 최소 진행 인원과 같으면 나갈 수 없다(E1423). " +
-                        "확정은 그 인원으로 진행한다는 약속이라, 여기서 더 빠지면 룸이 성립하지 않는다.",
-                    pathParameters(
-                        parameterWithName("roomId").description("나갈 룸 id (UUID)"),
-                    ),
-                    responseFields(
-                        fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (ERROR)"),
-                        fieldWithPath("data").type(JsonFieldType.NULL).ignored(),
-                        fieldWithPath("error.code").type(JsonFieldType.STRING).description("에러 코드 (E1423)"),
-                        fieldWithPath("error.message").type(JsonFieldType.STRING).description("에러 메시지"),
-                        fieldWithPath("error.data").type(JsonFieldType.NULL).optional().ignored(),
                     ),
                 ),
             )

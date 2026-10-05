@@ -14,6 +14,7 @@ import io.plady.moimyeon.core.event.OutboxEvent
 import io.plady.moimyeon.core.event.payload.EventPayload
 import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
+import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import io.plady.moimyeon.storage.db.core.MemberEntity
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
@@ -40,6 +41,7 @@ import java.util.UUID
 class RoomLeaveIT(
     private val roomLeaveManager: RoomLeaveManager,
     private val roomManager: RoomManager,
+    private val roomApplicationManager: RoomApplicationManager,
     private val roomFinder: RoomFinder,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
@@ -261,7 +263,57 @@ class RoomLeaveIT(
     }
 
     @Test
-    fun `방장이 아닌 참여자가 나가면 사실을 발행하지 않는다`() {
+    fun `참여자 이탈로 모집이 재개된 룸은 새 신청을 수락해 재확정할 수 있다`() {
+        seedRoom()
+        val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
+        roomManager.confirm(roomId, hostMemberId)
+        roomLeaveManager.leave(roomId, participant)
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.RECRUITING)
+        assertThat(
+            roomStatusLogRepository.findByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.RECRUITING),
+        ).isNotNull()
+        val applicant = seedPendingApplication(appliedAt = createdAt.plusDays(1))
+
+        roomApplicationManager.accept(roomId, applicationOf(applicant).id, hostMemberId)
+        roomManager.confirm(roomId, hostMemberId)
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(
+            roomStatusLogRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CONFIRMED),
+        ).isEqualTo(2)
+        // 출석·후기 대상은 가장 최근 확정 기준이다 — 재확정 전에 나간 사람은 빠진다.
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, participant)).isZero()
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, applicant)).isPositive()
+    }
+
+    @Test
+    fun `진행 예정 시각이 지난 확정 룸에서 나간 참여자는 확정 참여자로 남는다`() {
+        val pastStartAt = LocalDateTime.now().minusHours(1)
+        seedRoom(roomStartAt = pastStartAt, confirmedAt = pastStartAt.minusHours(1))
+        val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
+
+        roomLeaveManager.leave(roomId, participant)
+
+        assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
+        assertThat(participationRepository.countAtRoomConfirmation(roomId, participant)).isPositive()
+        assertThat(published<RoomRecruitingReopenedEventPayload>()).isEmpty()
+    }
+
+    @Test
+    fun `참여자 이탈로 모집이 재개되면 방장과 남은 참여자를 담아 모집 재개 사실을 발행한다`() {
+        seedRoom()
+        val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
+        roomManager.confirm(roomId, hostMemberId)
+
+        roomLeaveManager.leave(roomId, participant)
+
+        val reopened = published<RoomRecruitingReopenedEventPayload>().single()
+        assertThat(reopened.hostMemberId).isEqualTo(hostMemberId)
+        assertThat(reopened.participantMemberIds).containsExactly(hostMemberId)
+    }
+
+    @Test
+    fun `방장이 아닌 참여자가 나가도 모집이 재개되지 않으면 사실을 발행하지 않는다`() {
         seedRoom()
         val participant = seedParticipant(joinedAt = createdAt.plusHours(1))
 
