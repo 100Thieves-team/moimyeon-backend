@@ -71,7 +71,7 @@ class FailoverEmailSenderTest {
         content = NotificationContent(
             title = "참가 신청이 수락되었어요",
             body = "모임에 참여할 수 있게 되었어요.",
-            actionUrl = "https://front.test/rooms/$ROOM_ID",
+            actionUrl = "https://front.test/interviews/$ROOM_ID",
         ),
     )
 
@@ -85,7 +85,7 @@ class FailoverEmailSenderTest {
     private fun expectedMessage() = EmailMessage(
         to = "member@example.com",
         subject = "참가 신청이 수락되었어요",
-        body = "모임에 참여할 수 있게 되었어요.\n\nhttps://front.test/rooms/$ROOM_ID",
+        body = "모임에 참여할 수 있게 되었어요.\n\nhttps://front.test/interviews/$ROOM_ID",
     )
 }
 

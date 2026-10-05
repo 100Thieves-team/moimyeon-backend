@@ -44,7 +44,7 @@ class NotificationMessageHandlerTest {
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/interviews/$ROOM_ID",
                 ),
             ),
         )
@@ -60,9 +60,9 @@ class NotificationMessageHandlerTest {
             actionBaseUrl = "$FRONT_BASE_URL/",
         )
 
-        handler.handle(message(payload = payload(actionPath = "/rooms/$ROOM_ID")))
+        handler.handle(message(payload = payload(actionPath = "/interviews/$ROOM_ID")))
 
-        assertThat(notification.captured.content.actionUrl).isEqualTo("$FRONT_BASE_URL/rooms/$ROOM_ID")
+        assertThat(notification.captured.content.actionUrl).isEqualTo("$FRONT_BASE_URL/interviews/$ROOM_ID")
     }
 
     @Test
@@ -156,7 +156,7 @@ class NotificationMessageHandlerTest {
         eventId: UUID = EVENT_ID,
         policy: NotificationPolicy = NotificationPolicy.PUSH_AND_EMAIL,
         title: String = "참가 신청이 수락되었어요",
-        actionPath: String? = "/rooms/$ROOM_ID",
+        actionPath: String? = "/interviews/$ROOM_ID",
     ) = """
         {
           "eventId": "$eventId",

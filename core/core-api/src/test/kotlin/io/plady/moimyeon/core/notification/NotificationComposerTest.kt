@@ -30,7 +30,7 @@ class NotificationComposerTest {
 
         assertThat(messages.recipientsWith(NotificationPolicy.PUSH_ELSE_EMAIL)).containsExactly(HOST)
         assertThat(messages.single().body).contains(ROOM_TITLE)
-        assertThat(messages.single().actionPath).isEqualTo("/rooms/$ROOM_ID")
+        assertThat(messages.single().actionPath).isEqualTo("/interviews/$ROOM_ID")
     }
 
     @Test

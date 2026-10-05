@@ -7,10 +7,7 @@ data class NotificationRecipient(
     val webPushRegistrations: Set<String>,
     val isWebPushAllowed: Boolean,
     val isActivityEmailEnabled: Boolean,
-) {
-    val canReceiveWebPush: Boolean
-        get() = isWebPushAllowed && webPushRegistrations.isNotEmpty()
-}
+)
 
 fun interface NotificationRecipientFinder {
     fun find(memberId: UUID): NotificationRecipient

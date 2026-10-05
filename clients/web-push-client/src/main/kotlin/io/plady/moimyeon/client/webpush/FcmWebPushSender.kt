@@ -26,6 +26,8 @@ internal class FcmWebPushSender(
                 results += gateway.send(notification.toRequest(registrations))
             }
         } finally {
+            // 묶음 호출이 예외로 끝나도 그때까지 받은 기기별 결과를 남긴다.
+            log.debug { "web-push.fcm.result ${notification.logFields()} ${results.summary()}" }
             val invalidRegistrations = results.asSequence()
                 .filter { it.status == FcmSendStatus.UNREGISTERED }
                 .map { it.registration }
@@ -40,9 +42,27 @@ internal class FcmWebPushSender(
             throw RetryableWebPushDeliveryException("FCM 웹 푸시 전송을 재시도해야 합니다.")
         }
         if (results.any { it.status == FcmSendStatus.PERMANENT_FAILURE }) {
-            log.warn { "web-push.fcm.rejected eventId=${notification.eventId} eventType=${notification.eventType}" }
+            log.warn { "web-push.fcm.rejected ${notification.logFields()} ${results.summary()}" }
         }
         return WebPushDelivery.UNDELIVERED
+    }
+
+    private fun Notification.logFields() = "eventId=$eventId eventType=$eventType recipientMemberId=$recipientMemberId"
+
+    // 등록 토큰 자체는 자격 증명이라 남기지 않고 개수와 FCM 오류 코드만 남긴다.
+    private fun List<FcmSendResult>.summary(): String {
+        val counts = groupingBy { it.status }.eachCount()
+        val errorCodes = mapNotNull { it.errorCode }
+            .groupingBy { it }
+            .eachCount()
+            .entries
+            .joinToString(",") { (code, count) -> "$code:$count" }
+        return "registrations=$size" +
+            " success=${counts[FcmSendStatus.SUCCESS] ?: 0}" +
+            " unregistered=${counts[FcmSendStatus.UNREGISTERED] ?: 0}" +
+            " retryableFailure=${counts[FcmSendStatus.RETRYABLE_FAILURE] ?: 0}" +
+            " permanentFailure=${counts[FcmSendStatus.PERMANENT_FAILURE] ?: 0}" +
+            " errorCodes=${errorCodes.ifEmpty { "-" }}"
     }
 
     private fun Notification.toRequest(registrations: List<String>) = FcmMulticastRequest(

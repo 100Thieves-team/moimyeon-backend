@@ -144,7 +144,7 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 ## clients:web-push-client: FCM 웹 푸시 격벽
 
 - `core-worker`가 소유한 `WebPushSender`를 구현하고 Firebase Admin SDK 타입을 Worker 밖에 둔다.
-- 회원별 웹 푸시 등록을 최대 500개씩 나눠 Firebase Installation ID 멀티캐스트로 보낸다. 제목·본문, worker가 만든 클릭 이동
+- 회원별 웹 푸시 등록(FCM 등록 토큰)을 최대 500개씩 나눠 토큰 대상 멀티캐스트로 보낸다. 제목·본문, worker가 만든 클릭 이동
   절대 URL, `eventId`와 `eventType`을 FCM 요청으로 변환한다.
 - 개별 응답의 `UNREGISTERED` 등록은 `InvalidWebPushRegistrationRemover`를 통해 물리 삭제한다. 클라이언트 모듈은 JPA Repository를
   직접 알지 않으며 DB 구현이 저장 해시와 원문을 함께 확인한다.

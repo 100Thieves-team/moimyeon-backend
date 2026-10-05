@@ -179,7 +179,7 @@ class NotificationComposer {
         policy = policy,
         title = title,
         body = body,
-        actionPath = "/rooms/$roomId",
+        actionPath = "/interviews/$roomId",
     )
 
     private companion object {
