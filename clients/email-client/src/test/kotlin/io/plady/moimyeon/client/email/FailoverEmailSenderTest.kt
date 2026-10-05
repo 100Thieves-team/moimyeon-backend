@@ -12,15 +12,17 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class FailoverEmailSenderTest {
+    private val template = NotificationEmailTemplate()
+
     @Test
     fun `SES 전송에 성공하면 Gmail을 호출하지 않는다`() {
         val ses = RecordingEmailDeliveryProvider()
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(ses, gmail)
+        val sender = FailoverEmailSender(ses, gmail, template)
 
         sender.send(notification(), recipient())
 
-        assertThat(ses.messages).containsExactly(expectedMessage())
+        assertThat(ses.messages).containsExactly(renderedMessage())
         assertThat(gmail.messages).isEmpty()
     }
 
@@ -29,18 +31,18 @@ class FailoverEmailSenderTest {
         val sesFailure = EmailProviderUnavailableException("SES unavailable")
         val ses = RecordingEmailDeliveryProvider(sesFailure)
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(ses, gmail)
+        val sender = FailoverEmailSender(ses, gmail, template)
 
         sender.send(notification(), recipient())
 
-        assertThat(gmail.messages).containsExactly(expectedMessage())
+        assertThat(gmail.messages).containsExactly(renderedMessage())
     }
 
     @Test
     fun `SES의 영구 실패에는 Gmail로 전송하지 않는다`() {
         val sesFailure = PermanentEmailDeliveryException("invalid recipient")
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(RecordingEmailDeliveryProvider(sesFailure), gmail)
+        val sender = FailoverEmailSender(RecordingEmailDeliveryProvider(sesFailure), gmail, template)
 
         assertThatThrownBy { sender.send(notification(), recipient()) }
             .isSameAs(sesFailure)
@@ -54,6 +56,7 @@ class FailoverEmailSenderTest {
         val sender = FailoverEmailSender(
             RecordingEmailDeliveryProvider(sesFailure),
             RecordingEmailDeliveryProvider(gmailFailure),
+            template,
         )
 
         val failure = catchThrowable { sender.send(notification(), recipient()) }
@@ -82,11 +85,9 @@ class FailoverEmailSenderTest {
         isActivityEmailEnabled = true,
     )
 
-    private fun expectedMessage() = EmailMessage(
-        to = "member@example.com",
-        subject = "참가 신청이 수락되었어요",
-        body = "모임에 참여할 수 있게 되었어요.\n\nhttps://front.test/interviews/$ROOM_ID",
-    )
+    // 렌더링 결과 자체는 NotificationEmailTemplateTest 가 본다. 여기서는 그 메시지가
+    // 어느 공급자로 갔는지만 확인한다.
+    private fun renderedMessage() = template.render("member@example.com", notification().content)
 }
 
 private class RecordingEmailDeliveryProvider(

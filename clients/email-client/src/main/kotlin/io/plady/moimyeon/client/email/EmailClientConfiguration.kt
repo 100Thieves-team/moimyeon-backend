@@ -53,7 +53,7 @@ internal class EmailClientConfiguration {
     fun emailSender(
         @Qualifier("sesEmailDeliveryProvider") primary: EmailDeliveryProvider,
         @Qualifier("gmailEmailDeliveryProvider") fallback: EmailDeliveryProvider,
-    ): EmailSender = FailoverEmailSender(primary, fallback)
+    ): EmailSender = FailoverEmailSender(primary, fallback, NotificationEmailTemplate())
 }
 
 @ConfigurationProperties("notification.email.ses")

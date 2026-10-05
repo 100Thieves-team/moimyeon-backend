@@ -7,19 +7,13 @@ import io.plady.moimyeon.worker.notification.delivery.NotificationRecipient
 internal class FailoverEmailSender(
     private val primary: EmailDeliveryProvider,
     private val fallback: EmailDeliveryProvider,
+    private val template: NotificationEmailTemplate,
 ) : EmailSender {
     override fun send(
         notification: Notification,
         recipient: NotificationRecipient,
     ) {
-        val message = EmailMessage(
-            to = recipient.email,
-            subject = notification.content.title,
-            body = listOfNotNull(
-                notification.content.body,
-                notification.content.actionUrl,
-            ).joinToString("\n\n"),
-        )
+        val message = template.render(recipient.email, notification.content)
 
         try {
             primary.send(message)

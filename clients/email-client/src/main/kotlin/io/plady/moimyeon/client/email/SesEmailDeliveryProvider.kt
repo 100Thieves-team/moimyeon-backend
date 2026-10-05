@@ -29,7 +29,8 @@ internal class SesEmailDeliveryProvider(
                             .subject(utf8Content(message.subject))
                             .body(
                                 Body.builder()
-                                    .text(utf8Content(message.body))
+                                    .html(utf8Content(message.htmlBody))
+                                    .text(utf8Content(message.textBody))
                                     .build(),
                             )
                             .build(),
@@ -56,6 +57,5 @@ internal class SesEmailDeliveryProvider(
         .build()
 }
 
-private const val UTF_8 = "UTF-8"
 private const val TOO_MANY_REQUESTS = 429
 private const val SERVER_ERROR = 500

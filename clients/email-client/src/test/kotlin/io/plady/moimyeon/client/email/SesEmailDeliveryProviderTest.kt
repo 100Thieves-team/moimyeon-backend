@@ -20,7 +20,7 @@ class SesEmailDeliveryProviderTest {
     )
 
     @Test
-    fun `SES 요청에 발신자 수신자 제목 본문을 전달한다`() {
+    fun `SES 요청에 발신자 수신자 제목과 HTML 평문 본문을 전달한다`() {
         val request = slot<SendEmailRequest>()
         every { sesClient.sendEmail(capture(request)) } returns SendEmailResponse.builder()
             .messageId("message-id")
@@ -31,6 +31,7 @@ class SesEmailDeliveryProviderTest {
         assertThat(request.captured.fromEmailAddress()).isEqualTo("notification@moimyeon.com")
         assertThat(request.captured.destination().toAddresses()).containsExactly("member@example.com")
         assertThat(request.captured.content().simple().subject().data()).isEqualTo("제목")
+        assertThat(request.captured.content().simple().body().html().data()).isEqualTo("<p>본문</p>")
         assertThat(request.captured.content().simple().body().text().data()).isEqualTo("본문")
     }
 
@@ -70,6 +71,7 @@ class SesEmailDeliveryProviderTest {
     private fun message() = EmailMessage(
         to = "member@example.com",
         subject = "제목",
-        body = "본문",
+        htmlBody = "<p>본문</p>",
+        textBody = "본문",
     )
 }

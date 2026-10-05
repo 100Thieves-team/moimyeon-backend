@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  알림 메일 공통 레이아웃. 알림 종류와 무관하게 이 한 장을 쓴다 (MOI-569).
+  주석을 DOCTYPE 보다 앞에 두면 일부 클라이언트가 quirks mode 로 그린다.
+
+  자리표시자 — 이름을 이중 중괄호로 감싼 것. 주석에도 그 표기를 쓰면 치환 대상이 되므로
+  이름만 적는다. preheader·title·body 는 HTML 이스케이프해 채우고, action 만 날것으로 채운다.
+    preheader  받은 편지함 미리보기 한 줄
+    title      알림 제목
+    body       알림 본문 (줄바꿈은 br 로 바뀐다)
+    action     notification-email-action.html 조각, 이동 링크가 없으면 빈 문자열
+
+  메일 클라이언트는 브라우저가 아니다. 고치기 전에 아래를 지키는지 확인한다.
+    - table 레이아웃 — Outlook 은 div + flex/float 를 못 그린다
+    - 모든 스타일은 inline style 속성 — 일부 클라이언트가 style 태그를 지운다
+    - 버튼은 td 배경색 + a 패딩 — Outlook 은 a 의 padding 을 무시한다
+    - 외부 이미지 없음 — 이미지 차단·스팸 점수를 피한다
+
+  색 (메일은 CSS 변수를 못 쓴다. 바꿀 때는 이 파일 안에서 찾아 바꾼다)
+    브랜드   #2563EB      제목     #111827      본문     #374151
+    보조     #6B7280      푸터     #9CA3AF      테두리   #E5E7EB
+    바깥배경 #F3F4F6      카드     #FFFFFF      푸터배경 #FAFAFA
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>{{title}}</title>
+</head>
+<body style="margin:0;padding:0;width:100%;background-color:#F3F4F6;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">{{preheader}}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#F3F4F6;">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;background-color:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;">
+        <tr>
+          <td style="padding:22px 28px;border-bottom:1px solid #E5E7EB;">
+            <span style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:15px;font-weight:700;letter-spacing:-0.01em;color:#2563EB;">모이면</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 28px 32px;">
+            <h1 style="margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:22px;font-weight:700;line-height:1.4;letter-spacing:-0.01em;color:#111827;">{{title}}</h1>
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:15px;font-weight:400;line-height:1.7;color:#374151;">{{body}}</p>
+{{action}}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 28px;border-top:1px solid #E5E7EB;background-color:#FAFAFA;border-radius:0 0 12px 12px;">
+            <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:12px;font-weight:400;line-height:1.6;color:#9CA3AF;">이 메일은 모이면 알림 수신 설정에 따라 발송되었습니다.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
