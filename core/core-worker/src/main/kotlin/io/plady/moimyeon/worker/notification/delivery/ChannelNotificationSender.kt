@@ -14,18 +14,26 @@ class ChannelNotificationSender(
                 val delivery = sendWebPush(notification, recipient)
                 // 푸시 재시도 오류는 메일 없이 던진다. 메일을 먼저 보내면 재시도 때 중복된다.
                 if (delivery == WebPushDelivery.UNDELIVERED && notification.policy.emailsWhenPushUndelivered) {
-                    emailSender.send(notification, recipient)
+                    sendEmail(notification, recipient)
                 }
             }
-            NotificationChannel.EMAIL -> emailSender.send(notification, recipient)
+            NotificationChannel.EMAIL -> sendEmail(notification, recipient)
         }
+    }
+
+    private fun sendEmail(
+        notification: Notification,
+        recipient: NotificationRecipient,
+    ) {
+        if (!recipient.isActivityEmailEnabled) return
+        emailSender.send(notification, recipient)
     }
 
     private fun sendWebPush(
         notification: Notification,
         recipient: NotificationRecipient,
     ): WebPushDelivery {
-        if (recipient.webPushRegistrations.isEmpty()) return WebPushDelivery.UNDELIVERED
+        if (!recipient.canReceiveWebPush) return WebPushDelivery.UNDELIVERED
         return webPushSender.send(notification, recipient)
     }
 }

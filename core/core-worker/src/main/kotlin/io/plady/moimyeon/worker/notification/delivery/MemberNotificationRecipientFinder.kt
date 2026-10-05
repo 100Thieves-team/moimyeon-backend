@@ -18,6 +18,8 @@ class MemberNotificationRecipientFinder(
             email = member.email,
             webPushRegistrations = webPushSubscriptionRepository.findAllByMemberId(memberId)
                 .mapTo(linkedSetOf()) { it.registration },
+            isWebPushAllowed = member.isWebPushAllowed,
+            isActivityEmailEnabled = member.isActivityEmailEnabled,
         )
     }
 }

@@ -81,6 +81,8 @@ class FcmWebPushSenderTest {
     private fun recipient(vararg registrations: String) = NotificationRecipient(
         email = "member@moimyeon.com",
         webPushRegistrations = registrations.toSet(),
+        isWebPushAllowed = true,
+        isActivityEmailEnabled = true,
     )
 
     @Test

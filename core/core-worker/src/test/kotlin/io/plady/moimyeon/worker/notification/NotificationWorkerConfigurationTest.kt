@@ -35,6 +35,8 @@ class NotificationWorkerConfigurationTest {
                         NotificationRecipient(
                             email = "recipient@example.com",
                             webPushRegistrations = setOf("registration"),
+                            isWebPushAllowed = true,
+                            isActivityEmailEnabled = true,
                         )
                     }
                 },

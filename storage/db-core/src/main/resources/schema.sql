@@ -286,16 +286,21 @@ CREATE INDEX ix_job_posting_role_job_role_id ON job_posting_role (job_role_id);
 -- 탈퇴는 deleted_at 으로 표현한다. status 는 그와 직교하는 제재 상태(ACTIVE/RESTRICTED)만 담는다.
 -- 닉네임 유니크는 탈퇴자를 포함한 전체 회원 대상이라 _active_check 를 쓰지 않는다 —
 --   떠난 사람의 이름이 곧바로 다른 사람에게 넘어가면 지난 룸의 기록을 오해하게 된다.
+-- is_web_push_allowed 는 회원이 웹 푸시를 끄지 않았는지다. 실제 수신은 web_push_subscription 행도 있어야 한다.
 CREATE TABLE member (
-    id            BINARY(16)   NOT NULL,
-    email         VARCHAR(320) NOT NULL,
-    nickname      VARCHAR(30)  NOT NULL,
-    status        VARCHAR(20)  NOT NULL,
-    role          VARCHAR(20)  NOT NULL,
-    last_login_at DATETIME(6)  NOT NULL,
-    created_at    DATETIME(6)  NOT NULL,
-    updated_at    DATETIME(6)  NOT NULL,
-    deleted_at    DATETIME(6)  NULL,
+    id                        BINARY(16)   NOT NULL,
+    email                     VARCHAR(320) NOT NULL,
+    nickname                  VARCHAR(30)  NOT NULL,
+    status                    VARCHAR(20)  NOT NULL,
+    role                      VARCHAR(20)  NOT NULL,
+    last_login_at             DATETIME(6)  NOT NULL,
+    is_web_push_allowed       BOOLEAN      NOT NULL DEFAULT TRUE,
+    is_activity_email_enabled BOOLEAN      NOT NULL DEFAULT TRUE,
+    is_marketing_email_agreed BOOLEAN      NOT NULL DEFAULT FALSE,
+    marketing_email_agreed_at DATETIME(6)  NULL,
+    created_at                DATETIME(6)  NOT NULL,
+    updated_at                DATETIME(6)  NOT NULL,
+    deleted_at                DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_member_nickname UNIQUE (nickname)
 );

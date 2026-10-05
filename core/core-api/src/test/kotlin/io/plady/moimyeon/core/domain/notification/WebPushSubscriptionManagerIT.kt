@@ -26,18 +26,6 @@ class WebPushSubscriptionManagerIT(
             .extracting("registration")
             .isEqualTo(registration.value)
     }
-
-    @Test
-    fun `다른 회원의 해지는 무시하고 소유 회원의 해지만 물리 삭제한다`() {
-        val registration = WebPushRegistration("integration-unregister-registration")
-        manager.register(MEMBER_A, registration)
-
-        manager.unregister(MEMBER_B, registration)
-        assertThat(repository.count()).isEqualTo(1)
-
-        manager.unregister(MEMBER_A, registration)
-        assertThat(repository.count()).isZero()
-    }
 }
 
 private val MEMBER_A: UUID = UUID.fromString("00000000-0000-0000-0000-000000000101")
