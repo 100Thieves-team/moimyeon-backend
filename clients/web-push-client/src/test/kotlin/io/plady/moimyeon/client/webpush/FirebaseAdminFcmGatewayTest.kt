@@ -71,7 +71,7 @@ class FirebaseAdminFcmGatewayTest {
         registrations = registrations.toList(),
         title = "title",
         body = "body",
-        actionUrl = "https://front.test/rooms/room-1",
+        actionUrl = "https://front.test/interviews/room-1",
         data = mapOf("eventId" to "event-id"),
     )
 

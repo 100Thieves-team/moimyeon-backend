@@ -72,7 +72,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/interviews/$ROOM_ID",
                 ),
             ),
             Notification(
@@ -84,7 +84,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
                 content = NotificationContent(
                     title = "참가 신청이 수락되었어요",
                     body = "모임에 참여할 수 있게 되었어요.",
-                    actionUrl = "$FRONT_BASE_URL/rooms/$ROOM_ID",
+                    actionUrl = "$FRONT_BASE_URL/interviews/$ROOM_ID",
                 ),
             ),
         )
@@ -180,7 +180,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
           "recipientMemberId": "$APPLICANT_ID",
           "title": "참가 신청이 수락되었어요",
           "body": "모임에 참여할 수 있게 되었어요.",
-          "actionPath": "/rooms/$ROOM_ID"
+          "actionPath": "/interviews/$ROOM_ID"
         }
         """.trimIndent()
 

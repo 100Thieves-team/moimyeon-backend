@@ -101,7 +101,7 @@ class ChannelNotificationSenderTest {
         content = NotificationContent(
             title = "참가 신청이 수락되었어요",
             body = "모임에 참여할 수 있게 되었어요.",
-            actionUrl = "https://front.test/rooms/00000000-0000-0000-0000-000000000001",
+            actionUrl = "https://front.test/interviews/00000000-0000-0000-0000-000000000001",
         ),
     )
 

@@ -35,7 +35,7 @@ class FcmWebPushSenderTest {
                 registrations = listOf("registration-1", "registration-2"),
                 title = "참가 신청 수락",
                 body = "참가 신청이 수락되었습니다.",
-                actionUrl = "https://front.test/rooms/room-1",
+                actionUrl = "https://front.test/interviews/room-1",
                 data = mapOf(
                     "eventId" to EVENT_ID.toString(),
                     "eventType" to "ROOM_APPLICATION_ACCEPTED",
@@ -74,7 +74,7 @@ class FcmWebPushSenderTest {
         content = NotificationContent(
             title = "참가 신청 수락",
             body = "참가 신청이 수락되었습니다.",
-            actionUrl = "https://front.test/rooms/room-1",
+            actionUrl = "https://front.test/interviews/room-1",
         ),
     )
 

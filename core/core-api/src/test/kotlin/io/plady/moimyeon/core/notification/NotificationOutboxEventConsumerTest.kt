@@ -56,7 +56,7 @@ class NotificationOutboxEventConsumerTest {
             "actionPath",
         )
         assertThat(payload["recipientMemberId"].asString()).isEqualTo(HOST.toString())
-        assertThat(payload["actionPath"].asString()).isEqualTo("/rooms/$ROOM_ID")
+        assertThat(payload["actionPath"].asString()).isEqualTo("/interviews/$ROOM_ID")
     }
 
     @Test
