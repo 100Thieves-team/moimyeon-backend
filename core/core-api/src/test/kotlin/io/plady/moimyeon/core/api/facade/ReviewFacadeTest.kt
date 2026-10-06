@@ -26,7 +26,7 @@ import java.util.UUID
 class ReviewFacadeTest {
     private val reviewService = mockk<ReviewService>()
     private val memberService = mockk<MemberService>()
-    private val facade = ReviewFacade(reviewService, memberService)
+    private val reviewFacade = ReviewFacade(reviewService, memberService)
 
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -57,7 +57,7 @@ class ReviewFacadeTest {
             member(submittedTargetId, "꼼꼼한 여우 12"),
         )
 
-        val result = facade.getOverview(authorMemberId, roomId)
+        val result = reviewFacade.getOverview(authorMemberId, roomId)
 
         assertThat(result.submittedCount).isEqualTo(1)
         assertThat(result.totalCount).isEqualTo(2)
@@ -91,7 +91,7 @@ class ReviewFacadeTest {
             member(submittedTargetId, "꼼꼼한 여우 12"),
         )
 
-        val result = facade.getOverview(authorMemberId, roomId)
+        val result = reviewFacade.getOverview(authorMemberId, roomId)
 
         assertThat(result.submittedCount).isEqualTo(1)
         assertThat(result.totalCount).isEqualTo(1)
@@ -114,7 +114,7 @@ class ReviewFacadeTest {
             member(namedReviewAuthorId, "꼼꼼한 여우 12"),
         )
 
-        val result = facade.getReceivedReviews(authorMemberId, null, 20)
+        val result = reviewFacade.getReceivedReviews(authorMemberId, null, 20)
 
         assertThat(result.reviews.map { it.authorNickname }).containsExactly("익명의 참여자", "꼼꼼한 여우 12")
         verify(exactly = 1) { memberService.getMembers(listOf(namedReviewAuthorId)) }
@@ -130,7 +130,7 @@ class ReviewFacadeTest {
         )
         every { reviewService.getReceivedReviewPage(authorMemberId, null, 20) } returns page
 
-        val result = facade.getReceivedReviews(authorMemberId, null, 20)
+        val result = reviewFacade.getReceivedReviews(authorMemberId, null, 20)
 
         assertThat(result.reviews.single().authorNickname).isEqualTo("익명의 참여자")
         verify(exactly = 0) { memberService.getMembers(any()) }
@@ -146,7 +146,7 @@ class ReviewFacadeTest {
         every { reviewService.getReceivedReviewPage(authorMemberId, 32L, 20) } returns page
         every { memberService.getMembers(listOf(namedReviewAuthorId)) } returns emptyList()
 
-        val result = facade.getReceivedReviews(authorMemberId, 32L, 20)
+        val result = reviewFacade.getReceivedReviews(authorMemberId, 32L, 20)
 
         assertThat(result.reviews.single().authorNickname).isEqualTo("탈퇴한 회원")
     }

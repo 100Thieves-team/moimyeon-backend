@@ -19,15 +19,15 @@ class RestoreTokenProviderTest {
     private val jwtConfig = JwtConfig()
     private val key = SecretKeySpec("restore-token-test-secret-0123456789abcdef".toByteArray(), "HmacSHA256")
     private val encoder = jwtConfig.jwtEncoder(key)
-    private val provider = RestoreTokenProvider(encoder, key)
+    private val restoreTokenProvider = RestoreTokenProvider(encoder, key)
     private val memberId = UUID.randomUUID()
 
     @Test
     fun `복구 확인 토큰은 발급한 회원 id 와 발급 시각을 되돌려 준다`() {
         val before = Instant.now().minusSeconds(1)
-        val token = provider.issue(memberId)
+        val token = restoreTokenProvider.issue(memberId)
 
-        val claim = provider.resolve(token)
+        val claim = restoreTokenProvider.resolve(token)
 
         assertThat(claim?.memberId).isEqualTo(memberId)
         assertThat(claim?.issuedAt).isAfter(before)
@@ -46,22 +46,22 @@ class RestoreTokenProviderTest {
         val otherKey = SecretKeySpec("another-secret-another-secret-0123456789".toByteArray(), "HmacSHA256")
         val foreign = RestoreTokenProvider(jwtConfig.jwtEncoder(otherKey), otherKey).issue(memberId)
 
-        assertThat(provider.resolve(expired)).isNull()
-        assertThat(provider.resolve(foreign)).isNull()
-        assertThat(provider.resolve("not-a-jwt")).isNull()
+        assertThat(restoreTokenProvider.resolve(expired)).isNull()
+        assertThat(restoreTokenProvider.resolve(foreign)).isNull()
+        assertThat(restoreTokenProvider.resolve("not-a-jwt")).isNull()
     }
 
     @Test
     fun `액세스 토큰은 복구 확인 토큰으로 쓸 수 없다`() {
         val accessToken = JwtTokenProvider(encoder).issue(memberId, MemberRole.USER)
 
-        assertThat(provider.resolve(accessToken)).isNull()
+        assertThat(restoreTokenProvider.resolve(accessToken)).isNull()
     }
 
     @Test
     fun `복구 확인 토큰을 액세스 토큰으로 쓰면 인증되지 않는다`() {
         val accessDecoder = jwtConfig.jwtDecoder(key)
-        val restoreToken = provider.issue(memberId)
+        val restoreToken = restoreTokenProvider.issue(memberId)
 
         assertThatThrownBy { accessDecoder.decode(restoreToken) }.isInstanceOf(JwtException::class.java)
     }

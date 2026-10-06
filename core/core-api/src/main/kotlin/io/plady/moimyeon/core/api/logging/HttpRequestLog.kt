@@ -48,11 +48,11 @@ internal class HttpRequestLog(
         }
     }
 
-    fun complete(writer: RequestLogWriter, completedAt: Long) {
+    fun complete(requestLogWriter: RequestLogWriter, completedAt: Long) {
         if (!completed.compareAndSet(false, true)) return
         withContext {
             val status = response.status
-            writer.write(
+            requestLogWriter.write(
                 RequestLogEntry(
                     method = RequestLogEntry.methodOrUnknown(method),
                     routeTemplate = RequestLogEntry.routeOrUnmatched(route),

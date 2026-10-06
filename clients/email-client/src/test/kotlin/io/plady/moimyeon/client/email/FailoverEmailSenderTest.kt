@@ -18,9 +18,9 @@ class FailoverEmailSenderTest {
     fun `SES 전송에 성공하면 Gmail을 호출하지 않는다`() {
         val ses = RecordingEmailDeliveryProvider()
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(ses, gmail, template)
+        val failoverEmailSender = FailoverEmailSender(ses, gmail, template)
 
-        sender.send(notification(), recipient())
+        failoverEmailSender.send(notification(), recipient())
 
         assertThat(ses.messages).containsExactly(renderedMessage())
         assertThat(gmail.messages).isEmpty()
@@ -31,9 +31,9 @@ class FailoverEmailSenderTest {
         val sesFailure = EmailProviderUnavailableException("SES unavailable")
         val ses = RecordingEmailDeliveryProvider(sesFailure)
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(ses, gmail, template)
+        val failoverEmailSender = FailoverEmailSender(ses, gmail, template)
 
-        sender.send(notification(), recipient())
+        failoverEmailSender.send(notification(), recipient())
 
         assertThat(gmail.messages).containsExactly(renderedMessage())
     }
@@ -42,9 +42,9 @@ class FailoverEmailSenderTest {
     fun `SES의 영구 실패에는 Gmail로 전송하지 않는다`() {
         val sesFailure = PermanentEmailDeliveryException("invalid recipient")
         val gmail = RecordingEmailDeliveryProvider()
-        val sender = FailoverEmailSender(RecordingEmailDeliveryProvider(sesFailure), gmail, template)
+        val failoverEmailSender = FailoverEmailSender(RecordingEmailDeliveryProvider(sesFailure), gmail, template)
 
-        assertThatThrownBy { sender.send(notification(), recipient()) }
+        assertThatThrownBy { failoverEmailSender.send(notification(), recipient()) }
             .isSameAs(sesFailure)
         assertThat(gmail.messages).isEmpty()
     }
@@ -53,13 +53,13 @@ class FailoverEmailSenderTest {
     fun `SES의 일시적 실패 후 Gmail도 실패하면 두 실패 원인을 보존한다`() {
         val sesFailure = EmailProviderUnavailableException("SES unavailable")
         val gmailFailure = EmailDeliveryException("Gmail unavailable")
-        val sender = FailoverEmailSender(
+        val failoverEmailSender = FailoverEmailSender(
             RecordingEmailDeliveryProvider(sesFailure),
             RecordingEmailDeliveryProvider(gmailFailure),
             template,
         )
 
-        val failure = catchThrowable { sender.send(notification(), recipient()) }
+        val failure = catchThrowable { failoverEmailSender.send(notification(), recipient()) }
 
         assertThat(failure).isSameAs(gmailFailure)
         assertThat(failure.suppressed).containsExactly(sesFailure)

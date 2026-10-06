@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class NotificationComposerTest {
-    private val composer = NotificationComposer()
+    private val notificationComposer = NotificationComposer()
 
     @Test
     fun `참여 신청은 방장에게 PUSH_ELSE_EMAIL 로 알린다`() {
@@ -161,7 +161,7 @@ class NotificationComposerTest {
         assertThat(messages.recipientsWith(NotificationPolicy.PUSH_ONLY)).containsExactly(HOST, PARTICIPANT_B)
     }
 
-    private fun compose(type: EventType, payload: EventPayload) = composer.compose(OutboxEvent(UUID.randomUUID(), type, payload))
+    private fun compose(type: EventType, payload: EventPayload) = notificationComposer.compose(OutboxEvent(UUID.randomUUID(), type, payload))
 
     private fun List<ComposedNotification>.recipientsWith(policy: NotificationPolicy) = filter { it.policy == policy }.map { it.recipientMemberId }
 

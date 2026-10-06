@@ -21,14 +21,14 @@ class NotificationMessageWorkerTest {
             newMessages = listOf(message.copy(eventId = secondEventId)),
         )
         val handled = mutableListOf<UUID>()
-        val handler = mockk<NotificationMessageHandler>()
-        every { handler.handle(any()) } answers { handled += firstArg<NotificationStreamMessage>().eventId }
-        val worker = NotificationMessageWorker(
+        val notificationMessageHandler = mockk<NotificationMessageHandler>()
+        every { notificationMessageHandler.handle(any()) } answers { handled += firstArg<NotificationStreamMessage>().eventId }
+        val notificationMessageWorker = NotificationMessageWorker(
             messageConsumer = consumer,
-            messageHandler = handler,
+            messageHandler = notificationMessageHandler,
         )
 
-        worker.consumeMessages()
+        notificationMessageWorker.consumeMessages()
 
         assertThat(handled).containsExactly(firstEventId, secondEventId)
         assertThat(consumer.recoverPendingCalled).isTrue()
@@ -39,10 +39,10 @@ class NotificationMessageWorkerTest {
     fun `영구 처리 오류를 영구 실패 결과로 변환한다`() {
         val message = message(eventId(33))
         val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message))
-        val handler = mockk<NotificationMessageHandler>()
-        every { handler.handle(message) } throws PermanentNotificationProcessingException("잘못된 메시지")
+        val notificationMessageHandler = mockk<NotificationMessageHandler>()
+        every { notificationMessageHandler.handle(message) } throws PermanentNotificationProcessingException("잘못된 메시지")
 
-        NotificationMessageWorker(consumer, handler).consumeMessages()
+        NotificationMessageWorker(consumer, notificationMessageHandler).consumeMessages()
 
         assertThat(consumer.results.single().isPermanentFailure).isTrue()
     }
@@ -51,10 +51,10 @@ class NotificationMessageWorkerTest {
     fun `일시 처리 오류를 재시도 실패 결과로 변환한다`() {
         val message = message(eventId(34))
         val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message))
-        val handler = mockk<NotificationMessageHandler>()
-        every { handler.handle(message) } throws RetryableNotificationProcessingException("일시 장애")
+        val notificationMessageHandler = mockk<NotificationMessageHandler>()
+        every { notificationMessageHandler.handle(message) } throws RetryableNotificationProcessingException("일시 장애")
 
-        NotificationMessageWorker(consumer, handler).consumeMessages()
+        NotificationMessageWorker(consumer, notificationMessageHandler).consumeMessages()
 
         assertThat(consumer.results.single().isRetryableFailure).isTrue()
     }
@@ -81,15 +81,15 @@ private class RecordingNotificationStreamConsumer(
         private set
     val results = mutableListOf<NotificationStreamHandlingResult>()
 
-    override fun recoverPending(handler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
+    override fun recoverPending(notificationMessageHandler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
         recoverPendingCalled = true
-        pendingMessages.mapTo(results, handler)
+        pendingMessages.mapTo(results, notificationMessageHandler)
         return pendingMessages.size
     }
 
-    override fun consumeNew(handler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
+    override fun consumeNew(notificationMessageHandler: (NotificationStreamMessage) -> NotificationStreamHandlingResult): Int {
         consumeNewCalled = true
-        newMessages.mapTo(results, handler)
+        newMessages.mapTo(results, notificationMessageHandler)
         return newMessages.size
     }
 }

@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
 class DevAuthControllerTest : RestDocsTest() {
-    private val issuer = mockk<DevAccessTokenIssuer>()
+    private val devAccessTokenIssuer = mockk<DevAccessTokenIssuer>()
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val summary = "개발 환경 액세스 토큰 발급"
     private val description =
@@ -34,14 +34,14 @@ class DevAuthControllerTest : RestDocsTest() {
     @BeforeEach
     fun setUp() {
         mockMvc = mockController(
-            DevAuthController(issuer),
+            DevAuthController(devAccessTokenIssuer),
             controllerAdvice = ApiControllerAdvice(),
         )
     }
 
     @Test
     fun `dev 회원의 만료 없는 액세스 토큰을 응답하고 쿠키는 발급하지 않는다`() {
-        every { issuer.issue(memberId) } returns "access-token"
+        every { devAccessTokenIssuer.issue(memberId) } returns "access-token"
 
         mockMvc.perform(
             post(PATH)
@@ -67,12 +67,12 @@ class DevAuthControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 1) { issuer.issue(memberId) }
+        verify(exactly = 1) { devAccessTokenIssuer.issue(memberId) }
     }
 
     @Test
     fun `없는 회원으로 dev 세션을 요청하면 E1006 을 응답한다`() {
-        every { issuer.issue(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+        every { devAccessTokenIssuer.issue(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         mockMvc.perform(
             post(PATH)
@@ -93,7 +93,7 @@ class DevAuthControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andDo(documentApi("issueDevSession-e400", summary, description, errorResponseFields()))
 
-        verify(exactly = 0) { issuer.issue(any()) }
+        verify(exactly = 0) { devAccessTokenIssuer.issue(any()) }
     }
 }
 

@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test
 class JobPostingSearchFacadeTest {
     private val companyService: CompanyService = mockk()
     private val jobPostingService: JobPostingService = mockk()
-    private lateinit var facade: JobPostingSearchFacade
+    private lateinit var jobPostingSearchFacade: JobPostingSearchFacade
 
     @BeforeEach
     fun setUp() {
-        facade = JobPostingSearchFacade(companyService, jobPostingService)
+        jobPostingSearchFacade = JobPostingSearchFacade(companyService, jobPostingService)
     }
 
     @Test
@@ -29,7 +29,7 @@ class JobPostingSearchFacadeTest {
         every { companyService.getCompanies(emptySet()) } returns emptyList()
         every { jobPostingService.search(any()) } returns emptyList()
 
-        val response = facade.search("백엔드", companyId = 91221L)
+        val response = jobPostingSearchFacade.search("백엔드", companyId = 91221L)
 
         verify(exactly = 0) { companyService.searchByPrefixes(any()) }
         assertThat(response.companies.map { it.name }).containsExactly("쿠팡")
@@ -42,7 +42,7 @@ class JobPostingSearchFacadeTest {
         every { companyService.getCompanies(emptySet()) } returns emptyList()
         every { jobPostingService.search(capture(condition)) } returns emptyList()
 
-        facade.search("개발", companyId = 91221L)
+        jobPostingSearchFacade.search("개발", companyId = 91221L)
 
         assertThat(condition.captured.matchedCompanyIds).containsExactly(91221L)
         // 공고명 폴백은 회사를 보지 않는다. 켜두면 좁힌 회사 밖의 공고가 섞인다
@@ -52,7 +52,7 @@ class JobPostingSearchFacadeTest {
 
     @Test
     fun `검색어가 최소 길이 미만이면 조회를 시작하지 않는다`() {
-        val response = facade.search("네", companyId = null)
+        val response = jobPostingSearchFacade.search("네", companyId = null)
 
         verify(exactly = 0) { companyService.searchByPrefixes(any()) }
         verify(exactly = 0) { jobPostingService.search(any<JobPostingSearchCondition>()) }
@@ -69,7 +69,7 @@ class JobPostingSearchFacadeTest {
         every { jobPostingService.search(capture(condition)) } returns emptyList()
 
         // 회사 행을 눌러 좁힌 직후의 상태. 회사 자체가 조회 조건이라 검색어가 없어도 목록이 채워져야 한다
-        facade.search("", companyId = 91221L)
+        jobPostingSearchFacade.search("", companyId = 91221L)
 
         assertThat(condition.captured.matchedCompanyIds).containsExactly(91221L)
         assertThat(condition.captured.remainder).isEmpty()
@@ -84,7 +84,7 @@ class JobPostingSearchFacadeTest {
         every { jobPostingService.search(any<JobPostingSearchCondition>()) } returns listOf(kept, dropped)
         every { companyService.getCompanies(setOf(100L, 200L)) } returns listOf(Company(100L, "네이버"))
 
-        val response = facade.search("백엔드", companyId = null)
+        val response = jobPostingSearchFacade.search("백엔드", companyId = null)
 
         assertThat(response.jobPostings.map { it.jobPostingId }).containsExactly(1L)
     }

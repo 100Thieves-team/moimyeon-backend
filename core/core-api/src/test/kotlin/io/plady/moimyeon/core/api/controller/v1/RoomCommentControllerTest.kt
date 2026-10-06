@@ -36,8 +36,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class RoomCommentControllerTest : RestDocsTest() {
-    private lateinit var facade: RoomCommentFacade
-    private lateinit var service: RoomCommentService
+    private lateinit var roomCommentFacade: RoomCommentFacade
+    private lateinit var roomCommentService: RoomCommentService
 
     private val roomId = UUID.fromString("01920000-0000-7000-8000-000000000461")
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
@@ -48,10 +48,10 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @BeforeEach
     fun setUpController() {
-        facade = mockk()
-        service = mockk()
+        roomCommentFacade = mockk()
+        roomCommentService = mockk()
         mockMvc = mockController(
-            RoomCommentController(facade, service),
+            RoomCommentController(roomCommentFacade, roomCommentService),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -61,7 +61,7 @@ class RoomCommentControllerTest : RestDocsTest() {
     fun `방명록 글 목록을 최신순으로 조회한다`() {
         val cursor = RoomCommentCursor(LocalDateTime.of(2026, 7, 21, 14, 40), 45L)
         val nextCursor = RoomCommentCursorToken.encode(RoomCommentCursor(LocalDateTime.of(2026, 7, 21, 14, 14), 40L))
-        every { facade.getComments(memberId, roomId, cursor, 20) } returns RoomCommentsResponse(
+        every { roomCommentFacade.getComments(memberId, roomId, cursor, 20) } returns RoomCommentsResponse(
             comments = listOf(
                 RoomCommentResponse(
                     commentId = 44L,
@@ -152,7 +152,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `참여자가 아니면 목록 조회는 E1419 를 응답한다`() {
-        every { facade.getComments(memberId, roomId, null, 20) } throws
+        every { roomCommentFacade.getComments(memberId, roomId, null, 20) } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
         mockMvc.perform(get(basePath, roomId).principal(principal))
@@ -171,12 +171,12 @@ class RoomCommentControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andExpect { assertThat(it.response.contentAsString).contains("E400") }
             .andDo(documentApi("getRoomComments-e400", GET_SUMMARY, GET_DESCRIPTION, errorResponseFields()))
-        verify(exactly = 0) { facade.getComments(any(), any(), any(), any()) }
+        verify(exactly = 0) { roomCommentFacade.getComments(any(), any(), any(), any()) }
     }
 
     @Test
     fun `방명록 글을 작성한다`() {
-        every { facade.leaveComment(memberId, roomId, "좋아요. 자기소개는 각자 3분 정도 준비하면 될까요?") } returns
+        every { roomCommentFacade.leaveComment(memberId, roomId, "좋아요. 자기소개는 각자 3분 정도 준비하면 될까요?") } returns
             RoomCommentCreatedResponse(commentId = 42L, createdAt = LocalDateTime.of(2026, 7, 21, 14, 31, 2))
 
         mockMvc.perform(
@@ -213,12 +213,12 @@ class RoomCommentControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andExpect { assertThat(it.response.contentAsString).contains("E400") }
             .andDo(documentApi("createRoomComment-e400", CREATE_SUMMARY, CREATE_DESCRIPTION, errorResponseFields()))
-        verify(exactly = 0) { facade.leaveComment(any(), any(), any()) }
+        verify(exactly = 0) { roomCommentFacade.leaveComment(any(), any(), any()) }
     }
 
     @Test
     fun `참여자가 아니면 작성은 E1419 를 응답한다`() {
-        every { facade.leaveComment(memberId, roomId, "몰래 등록") } throws
+        every { roomCommentFacade.leaveComment(memberId, roomId, "몰래 등록") } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
         mockMvc.perform(
@@ -234,7 +234,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `읽기 전용으로 전환된 방명록에 작성하면 E2101 을 응답한다`() {
-        every { facade.leaveComment(memberId, roomId, "늦은 글") } throws
+        every { roomCommentFacade.leaveComment(memberId, roomId, "늦은 글") } throws
             CoreException(CoreErrorType.ROOM_COMMENT_READ_ONLY)
 
         mockMvc.perform(
@@ -250,7 +250,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `내 글을 삭제한다`() {
-        justRun { service.deleteComment(memberId, roomId, 42L) }
+        justRun { roomCommentService.deleteComment(memberId, roomId, 42L) }
 
         mockMvc.perform(delete("$basePath/{commentId}", roomId, 42L).principal(principal))
             .andExpect(status().isOk)
@@ -270,7 +270,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `참여자가 아니면 삭제는 E1419 를 응답한다`() {
-        every { service.deleteComment(memberId, roomId, 42L) } throws
+        every { roomCommentService.deleteComment(memberId, roomId, 42L) } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
         mockMvc.perform(delete("$basePath/{commentId}", roomId, 42L).principal(principal))
@@ -281,7 +281,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `남의 글을 삭제하면 E2102 를 응답한다`() {
-        every { service.deleteComment(memberId, roomId, 44L) } throws
+        every { roomCommentService.deleteComment(memberId, roomId, 44L) } throws
             CoreException(CoreErrorType.ROOM_COMMENT_NOT_MINE)
 
         mockMvc.perform(delete("$basePath/{commentId}", roomId, 44L).principal(principal))
@@ -292,7 +292,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `없는 글을 삭제하면 E2103 을 응답한다`() {
-        every { service.deleteComment(memberId, roomId, 999L) } throws
+        every { roomCommentService.deleteComment(memberId, roomId, 999L) } throws
             CoreException(CoreErrorType.ROOM_COMMENT_NOT_FOUND)
 
         mockMvc.perform(delete("$basePath/{commentId}", roomId, 999L).principal(principal))
@@ -303,7 +303,7 @@ class RoomCommentControllerTest : RestDocsTest() {
 
     @Test
     fun `읽기 전용으로 전환된 방명록에서 삭제하면 E2101 을 응답한다`() {
-        every { service.deleteComment(memberId, roomId, 42L) } throws
+        every { roomCommentService.deleteComment(memberId, roomId, 42L) } throws
             CoreException(CoreErrorType.ROOM_COMMENT_READ_ONLY)
 
         mockMvc.perform(delete("$basePath/{commentId}", roomId, 42L).principal(principal))

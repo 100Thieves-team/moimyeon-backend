@@ -20,7 +20,7 @@ class HttpRequestLoggingConfiguration {
     }
 
     @Bean
-    fun httpRequestLogCompletionListener(writer: RequestLogWriter): ServletListenerRegistrationBean<HttpRequestLogCompletionListener> = ServletListenerRegistrationBean(HttpRequestLogCompletionListener(writer))
+    fun httpRequestLogCompletionListener(requestLogWriter: RequestLogWriter): ServletListenerRegistrationBean<HttpRequestLogCompletionListener> = ServletListenerRegistrationBean(HttpRequestLogCompletionListener(requestLogWriter))
 
     @Bean
     fun requestLogRouteInterceptor(): MappedInterceptor = MappedInterceptor(null, RequestLogRouteInterceptor())

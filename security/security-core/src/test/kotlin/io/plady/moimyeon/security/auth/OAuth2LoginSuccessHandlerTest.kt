@@ -25,7 +25,7 @@ class OAuth2LoginSuccessHandlerTest {
     private val failureHandler = mockk<OAuth2LoginFailureHandler>(relaxed = true)
     private val restoreTokenProvider = mockk<RestoreTokenProvider>()
     private val authProperties = authProperties()
-    private val handler = OAuth2LoginSuccessHandler(
+    private val oAuth2LoginSuccessHandler = OAuth2LoginSuccessHandler(
         socialMemberResolver,
         jwtTokenProvider,
         sessionIssuer,
@@ -64,7 +64,7 @@ class OAuth2LoginSuccessHandlerTest {
         every { authCookieFactory.createRefresh(issuedSession) } returns refreshCookie
         val response = MockHttpServletResponse()
 
-        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+        oAuth2LoginSuccessHandler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
 
         assertThat(response.status).isEqualTo(302)
         assertThat(response.redirectedUrl).isEqualTo(authProperties.oauth2.successRedirectUri.toString())
@@ -88,7 +88,7 @@ class OAuth2LoginSuccessHandlerTest {
         every { authCookieFactory.createRestore("restore-token") } returns restoreCookie
         val response = MockHttpServletResponse()
 
-        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+        oAuth2LoginSuccessHandler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
 
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).containsExactly(restoreCookie.toString())
         assertThat(response.redirectedUrl).isEqualTo(authProperties.oauth2.restoreRedirectUri.toString())
@@ -103,7 +103,7 @@ class OAuth2LoginSuccessHandlerTest {
         every { socialMemberResolver.resolve(any(), any(), any()) } throws failure
         val response = MockHttpServletResponse()
 
-        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+        oAuth2LoginSuccessHandler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
 
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty()
         verify { failureHandler.onLoginProcessingFailure(response, failure) }
@@ -120,7 +120,7 @@ class OAuth2LoginSuccessHandlerTest {
         every { sessionIssuer.open(memberId) } throws failure
         val response = MockHttpServletResponse()
 
-        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+        oAuth2LoginSuccessHandler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
 
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty()
         verify { failureHandler.onLoginProcessingFailure(response, failure) }
@@ -144,7 +144,7 @@ class OAuth2LoginSuccessHandlerTest {
         every { authCookieFactory.createRefresh(issuedSession) } throws failure
         val response = MockHttpServletResponse()
 
-        handler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
+        oAuth2LoginSuccessHandler.onAuthenticationSuccess(MockHttpServletRequest(), response, authentication)
 
         assertThat(response.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty()
         verify { failureHandler.onLoginProcessingFailure(response, failure) }

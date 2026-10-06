@@ -17,7 +17,7 @@ class ChannelNotificationSenderTest {
     fun `웹 푸시 메시지는 웹 푸시만 발송한다`() {
         val fixture = fixture()
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH))
 
         assertThat(fixture.webPushSender.sentRegistrations)
             .containsExactly(setOf("push-registration-1", "push-registration-2"))
@@ -28,7 +28,7 @@ class ChannelNotificationSenderTest {
     fun `이메일 메시지는 이메일만 발송한다`() {
         val fixture = fixture()
 
-        fixture.sender.send(notification(NotificationChannel.EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.sentEmails).containsExactly("applicant@example.com")
@@ -39,7 +39,7 @@ class ChannelNotificationSenderTest {
         val fixture = fixture()
         fixture.webPushSender.failOnSend = true
 
-        assertThatThrownBy { fixture.sender.send(notification(NotificationChannel.WEB_PUSH)) }
+        assertThatThrownBy { fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH)) }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessage("웹 푸시 실패")
 
@@ -51,7 +51,7 @@ class ChannelNotificationSenderTest {
     fun `웹 푸시 구독이 없으면 외부 호출 없이 완료한다`() {
         val fixture = fixture(webPushRegistrations = emptySet())
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.attemptCount).isZero()
@@ -63,7 +63,7 @@ class ChannelNotificationSenderTest {
         fixture.webPushSender.delivery = WebPushDelivery.UNDELIVERED
 
         val messages = captureLogs {
-            fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+            fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
         }
 
         assertThat(messages).singleElement().satisfies({
@@ -79,7 +79,7 @@ class ChannelNotificationSenderTest {
         val fixture = fixture(isWebPushAllowed = false)
 
         val messages = captureLogs {
-            fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ONLY))
+            fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ONLY))
         }
 
         assertThat(messages).singleElement().satisfies({
@@ -92,8 +92,8 @@ class ChannelNotificationSenderTest {
         val fixture = fixture()
         val notification = notification(NotificationChannel.EMAIL)
 
-        fixture.sender.send(notification)
-        fixture.sender.send(notification)
+        fixture.channelNotificationSender.send(notification)
+        fixture.channelNotificationSender.send(notification)
 
         assertThat(fixture.emailSender.attemptCount).isEqualTo(2)
     }
@@ -114,7 +114,7 @@ class ChannelNotificationSenderTest {
         val webPushSender = RecordingWebPushSender()
         val emailSender = RecordingEmailSender()
         return DeliveryFixture(
-            sender = ChannelNotificationSender(
+            channelNotificationSender = ChannelNotificationSender(
                 recipientFinder = recipientFinder,
                 webPushSender = webPushSender,
                 emailSender = emailSender,
@@ -141,7 +141,7 @@ class ChannelNotificationSenderTest {
     )
 
     private data class DeliveryFixture(
-        val sender: ChannelNotificationSender,
+        val channelNotificationSender: ChannelNotificationSender,
         val webPushSender: RecordingWebPushSender,
         val emailSender: RecordingEmailSender,
     )
@@ -155,7 +155,7 @@ class ChannelNotificationSenderTest {
         val fixture = fixture()
         fixture.webPushSender.delivery = WebPushDelivery.UNDELIVERED
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isEqualTo(1)
         assertThat(fixture.emailSender.sentEmails).containsExactly("applicant@example.com")
@@ -165,7 +165,7 @@ class ChannelNotificationSenderTest {
     fun `PUSH_ELSE_EMAIL에서 푸시가 전달되면 메일을 보내지 않는다`() {
         val fixture = fixture()
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isEqualTo(1)
         assertThat(fixture.emailSender.attemptCount).isZero()
@@ -175,7 +175,7 @@ class ChannelNotificationSenderTest {
     fun `PUSH_ELSE_EMAIL에서 등록된 기기가 없으면 푸시 없이 메일을 보낸다`() {
         val fixture = fixture(webPushRegistrations = emptySet())
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.sentEmails).containsExactly("applicant@example.com")
@@ -186,7 +186,7 @@ class ChannelNotificationSenderTest {
         val fixture = fixture()
         fixture.webPushSender.delivery = WebPushDelivery.UNDELIVERED
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ONLY))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ONLY))
 
         assertThat(fixture.emailSender.attemptCount).isZero()
     }
@@ -197,7 +197,7 @@ class ChannelNotificationSenderTest {
         fixture.webPushSender.failOnSend = true
 
         assertThatThrownBy {
-            fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+            fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
         }.isInstanceOf(IllegalStateException::class.java)
 
         assertThat(fixture.emailSender.attemptCount).isZero()
@@ -207,7 +207,7 @@ class ChannelNotificationSenderTest {
     fun `웹 푸시를 끈 회원에게는 등록된 기기가 있어도 푸시를 보내지 않는다`() {
         val fixture = fixture(isWebPushAllowed = false)
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_AND_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_AND_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.attemptCount).isZero()
@@ -217,7 +217,7 @@ class ChannelNotificationSenderTest {
     fun `웹 푸시를 끈 회원에게 PUSH_ELSE_EMAIL 알림은 메일로 보낸다`() {
         val fixture = fixture(isWebPushAllowed = false)
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.sentEmails).containsExactly("applicant@example.com")
@@ -227,7 +227,7 @@ class ChannelNotificationSenderTest {
     fun `메일을 끈 회원에게는 메일 메시지를 보내지 않는다`() {
         val fixture = fixture(isActivityEmailEnabled = false)
 
-        fixture.sender.send(notification(NotificationChannel.EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.EMAIL))
 
         assertThat(fixture.emailSender.attemptCount).isZero()
     }
@@ -237,7 +237,7 @@ class ChannelNotificationSenderTest {
         val fixture = fixture(isActivityEmailEnabled = false)
         fixture.webPushSender.delivery = WebPushDelivery.UNDELIVERED
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isEqualTo(1)
         assertThat(fixture.emailSender.attemptCount).isZero()
@@ -247,8 +247,8 @@ class ChannelNotificationSenderTest {
     fun `웹 푸시와 메일을 모두 끈 회원에게는 아무것도 보내지 않는다`() {
         val fixture = fixture(isWebPushAllowed = false, isActivityEmailEnabled = false)
 
-        fixture.sender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
-        fixture.sender.send(notification(NotificationChannel.EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.WEB_PUSH, NotificationPolicy.PUSH_ELSE_EMAIL))
+        fixture.channelNotificationSender.send(notification(NotificationChannel.EMAIL))
 
         assertThat(fixture.webPushSender.attemptCount).isZero()
         assertThat(fixture.emailSender.attemptCount).isZero()

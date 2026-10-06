@@ -20,19 +20,19 @@ import tools.jackson.module.kotlin.kotlinModule
 import java.util.UUID
 
 class NotificationMessageHandlerTest {
-    private val sender = mockk<NotificationSender>()
-    private val handler = NotificationMessageHandler(
+    private val notificationSender = mockk<NotificationSender>()
+    private val notificationMessageHandler = NotificationMessageHandler(
         jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
-        notificationSender = sender,
+        notificationSender = notificationSender,
         actionBaseUrl = FRONT_BASE_URL,
     )
 
     @Test
     fun `공통 형식 payload를 받는 사람과 문구 그대로 발송 요청으로 바꾼다`() {
         val notification = slot<Notification>()
-        every { sender.send(capture(notification)) } just Runs
+        every { notificationSender.send(capture(notification)) } just Runs
 
-        handler.handle(message())
+        notificationMessageHandler.handle(message())
 
         assertThat(notification.captured).isEqualTo(
             Notification(
@@ -53,14 +53,14 @@ class NotificationMessageHandlerTest {
     @Test
     fun `프론트 주소와 상대 경로 사이의 슬래시는 하나로 합친다`() {
         val notification = slot<Notification>()
-        every { sender.send(capture(notification)) } just Runs
-        val handler = NotificationMessageHandler(
+        every { notificationSender.send(capture(notification)) } just Runs
+        val notificationMessageHandler = NotificationMessageHandler(
             jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
-            notificationSender = sender,
+            notificationSender = notificationSender,
             actionBaseUrl = "$FRONT_BASE_URL/",
         )
 
-        handler.handle(message(payload = payload(actionPath = "/interviews/$ROOM_ID")))
+        notificationMessageHandler.handle(message(payload = payload(actionPath = "/interviews/$ROOM_ID")))
 
         assertThat(notification.captured.content.actionUrl).isEqualTo("$FRONT_BASE_URL/interviews/$ROOM_ID")
     }
@@ -68,9 +68,9 @@ class NotificationMessageHandlerTest {
     @Test
     fun `worker가 모르는 이벤트 종류도 공통 형식이면 발송한다`() {
         val notification = slot<Notification>()
-        every { sender.send(capture(notification)) } just Runs
+        every { notificationSender.send(capture(notification)) } just Runs
 
-        handler.handle(message(eventType = "SOME_FUTURE_EVENT"))
+        notificationMessageHandler.handle(message(eventType = "SOME_FUTURE_EVENT"))
 
         assertThat(notification.captured.eventType).isEqualTo("SOME_FUTURE_EVENT")
     }
@@ -78,9 +78,9 @@ class NotificationMessageHandlerTest {
     @Test
     fun `이동 경로가 없으면 링크 없이 발송한다`() {
         val notification = slot<Notification>()
-        every { sender.send(capture(notification)) } just Runs
+        every { notificationSender.send(capture(notification)) } just Runs
 
-        handler.handle(message(payload = payload(actionPath = null)))
+        notificationMessageHandler.handle(message(payload = payload(actionPath = null)))
 
         assertThat(notification.captured.content.actionUrl).isNull()
     }
@@ -88,10 +88,10 @@ class NotificationMessageHandlerTest {
     @Test
     fun `정책에 없는 채널의 메시지는 발송하지 않고 영구 실패한다`() {
         assertThatThrownBy {
-            handler.handle(message(payload = payload(policy = NotificationPolicy.EMAIL_ONLY)))
+            notificationMessageHandler.handle(message(payload = payload(policy = NotificationPolicy.EMAIL_ONLY)))
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
-        verify(exactly = 0) { sender.send(any()) }
+        verify(exactly = 0) { notificationSender.send(any()) }
     }
 
     @Test
@@ -99,26 +99,26 @@ class NotificationMessageHandlerTest {
         val withoutRecipient = """{"eventId":"$EVENT_ID","policy":"PUSH_ONLY","title":"제목","body":"본문"}"""
 
         assertThatThrownBy {
-            handler.handle(message(payload = withoutRecipient))
+            notificationMessageHandler.handle(message(payload = withoutRecipient))
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
-        verify(exactly = 0) { sender.send(any()) }
+        verify(exactly = 0) { notificationSender.send(any()) }
     }
 
     @Test
     fun `제목이 비어 있으면 발송하지 않고 영구 실패한다`() {
         assertThatThrownBy {
-            handler.handle(message(payload = payload(title = " ")))
+            notificationMessageHandler.handle(message(payload = payload(title = " ")))
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
     }
 
     @Test
     fun `payload를 해석할 수 없으면 발송하지 않고 실패한다`() {
         assertThatThrownBy {
-            handler.handle(message(payload = "{invalid-json"))
+            notificationMessageHandler.handle(message(payload = "{invalid-json"))
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
-        verify(exactly = 0) { sender.send(any()) }
+        verify(exactly = 0) { notificationSender.send(any()) }
     }
 
     @Test
@@ -126,18 +126,18 @@ class NotificationMessageHandlerTest {
         val otherEventId = UUID.fromString("0198b4f4-2f00-7000-8000-000000000099")
 
         assertThatThrownBy {
-            handler.handle(message(payload = payload(eventId = otherEventId)))
+            notificationMessageHandler.handle(message(payload = payload(eventId = otherEventId)))
         }.isInstanceOf(InvalidNotificationMessageException::class.java)
 
-        verify(exactly = 0) { sender.send(any()) }
+        verify(exactly = 0) { notificationSender.send(any()) }
     }
 
     @Test
     fun `알림 발송이 실패하면 예외를 호출자에게 전파한다`() {
-        every { sender.send(any()) } throws IllegalStateException("알림 발송 실패")
+        every { notificationSender.send(any()) } throws IllegalStateException("알림 발송 실패")
 
         assertThatThrownBy {
-            handler.handle(message())
+            notificationMessageHandler.handle(message())
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessage("알림 발송 실패")
     }

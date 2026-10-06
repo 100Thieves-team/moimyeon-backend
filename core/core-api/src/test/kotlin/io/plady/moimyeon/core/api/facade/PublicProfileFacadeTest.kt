@@ -24,7 +24,7 @@ class PublicProfileFacadeTest {
     private val profileService = mockk<ProfileService>()
     private val catalogService = mockk<CatalogService>()
     private val trustService = mockk<TrustService>()
-    private val facade = PublicProfileFacade(memberService, profileService, catalogService, trustService)
+    private val publicProfileFacade = PublicProfileFacade(memberService, profileService, catalogService, trustService)
 
     @Test
     fun `회원 프로필 신뢰 정보를 공개 응답으로 조립한다`() {
@@ -49,7 +49,7 @@ class PublicProfileFacadeTest {
         )
         every { trustService.getPublicTrust(member.id) } returns PublicTrust.empty()
 
-        val response = facade.get(member.id)
+        val response = publicProfileFacade.get(member.id)
 
         assertThat(response.memberId).isEqualTo(member.id)
         assertThat(response.nickname).isEqualTo("차분한 펭귄 12")

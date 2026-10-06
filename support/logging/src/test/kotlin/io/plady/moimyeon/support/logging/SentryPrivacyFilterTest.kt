@@ -16,7 +16,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class SentryPrivacyFilterTest {
-    private val filter = SentryPrivacyFilter("core-api", "dev", "test-release")
+    private val sentryPrivacyFilter = SentryPrivacyFilter("core-api", "dev", "test-release")
 
     @Test
     fun `오류에서 요청 사용자 임의 메시지와 MDC를 제거하고 코드 위치만 남긴다`() {
@@ -53,7 +53,7 @@ class SentryPrivacyFilterTest {
             )
         }
 
-        val result = filter.event(source)
+        val result = sentryPrivacyFilter.event(source)
 
         assertThat(result.eventId).isEqualTo(source.eventId)
         assertThat(result.request).isNull()
@@ -80,23 +80,23 @@ class SentryPrivacyFilterTest {
             setData("email", "private@example.com")
         }
 
-        val result = filter.breadcrumb(source)!!
+        val result = sentryPrivacyFilter.breadcrumb(source)!!
 
         assertThat(result.category).isEqualTo(source.category)
         assertThat(result.message).doesNotContain("secret")
         assertThat(result.data).isEmpty()
-        assertThat(filter.breadcrumb(Breadcrumb.http("https://api.example?token=secret", "GET"))).isNull()
+        assertThat(sentryPrivacyFilter.breadcrumb(Breadcrumb.http("https://api.example?token=secret", "GET"))).isNull()
     }
 
     @Test
     fun `Logs는 허용된 이벤트 코드만 전송하고 속성을 새로 구성한다`() {
         val arbitrary = SentryLogEvent(SentryId(), 1.0, "email=private@example.com", SentryLogLevel.INFO)
-        assertThat(filter.log(arbitrary)).isNull()
+        assertThat(sentryPrivacyFilter.log(arbitrary)).isNull()
 
         val safe = SentryLogEvent(SentryId(), 1.0, SentryPrivacyFilter.SERVICE_READY, SentryLogLevel.INFO).apply {
             setAttribute("payload", SentryLogEventAttributeValue("string", "secret"))
         }
-        val result = filter.log(safe)!!
+        val result = sentryPrivacyFilter.log(safe)!!
 
         assertThat(result.body).isEqualTo("service.ready")
         assertThat(result.attributes).containsOnlyKeys(

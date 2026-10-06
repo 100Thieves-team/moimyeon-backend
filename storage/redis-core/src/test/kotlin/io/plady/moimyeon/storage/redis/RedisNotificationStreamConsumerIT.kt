@@ -24,7 +24,7 @@ import java.util.UUID
 class RedisNotificationStreamConsumerIT {
     private lateinit var connectionFactory: LettuceConnectionFactory
     private lateinit var redisTemplate: StringRedisTemplate
-    private lateinit var publisher: RedisNotificationMessagePublisher
+    private lateinit var redisNotificationMessagePublisher: RedisNotificationMessagePublisher
     private lateinit var meterRegistry: SimpleMeterRegistry
     private lateinit var metrics: NotificationStreamMetrics
 
@@ -45,7 +45,7 @@ class RedisNotificationStreamConsumerIT {
                 pendingMinIdle = Duration.ZERO,
             ),
         )
-        publisher = RedisNotificationMessagePublisher(
+        redisNotificationMessagePublisher = RedisNotificationMessagePublisher(
             redisTemplate = redisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
         )
@@ -63,7 +63,7 @@ class RedisNotificationStreamConsumerIT {
     @Test
     fun `새 메시지 처리가 성공한 뒤에만 ACK한다`() {
         val eventId = eventId(21)
-        publisher.publish(listOf(message(eventId)))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId)))
         val handled = mutableListOf<NotificationStreamMessage>()
 
         consumer("worker-a").consumeNew {
@@ -84,7 +84,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `메시지 처리에 실패하면 ACK하지 않고 Pending에 남긴다`() {
-        publisher.publish(listOf(message(eventId(22))))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId(22))))
 
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("ExternalFailure", "외부 전송 실패")
@@ -99,7 +99,7 @@ class RedisNotificationStreamConsumerIT {
     @Test
     fun `다른 워커의 Pending 메시지를 재선점해 처리하고 ACK한다`() {
         val eventId = eventId(23)
-        publisher.publish(listOf(message(eventId)))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId)))
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("WorkerStopped", "worker-a 종료")
         }
@@ -120,7 +120,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `backoff 시간이 지나지 않은 Pending 메시지는 다시 처리하지 않는다`() {
-        publisher.publish(listOf(message(eventId(24))))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId(24))))
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("FcmUnavailable", "FCM 일시 장애")
         }
@@ -140,7 +140,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `영구 실패 메시지를 DLQ에 기록하고 원본을 ACK한다`() {
-        publisher.publish(listOf(message(eventId(25))))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId(25))))
 
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.permanentFailure("InvalidPayload", "payload 불일치")
@@ -161,7 +161,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `재시도 상한에 도달한 메시지를 DLQ에 기록하고 원본을 ACK한다`() {
-        publisher.publish(listOf(message(eventId(26))))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId(26))))
         val consumer = consumer(
             name = "worker-a",
             maxAttempts = 2,
@@ -185,7 +185,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `DLQ 기록에 실패하면 원본 메시지를 ACK하지 않는다`() {
-        publisher.publish(listOf(message(eventId(27))))
+        redisNotificationMessagePublisher.publish(listOf(message(eventId(27))))
         redisTemplate.opsForValue().set(BROKEN_DEAD_LETTER_STREAM_KEY, "not-a-stream")
         val consumer = consumer(
             name = "worker-a",

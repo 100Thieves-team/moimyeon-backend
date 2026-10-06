@@ -12,7 +12,7 @@ import java.util.UUID
 
 @Transactional
 class RoundFeedbackRepositoryIT(
-    private val repository: RoundFeedbackRepository,
+    private val roundFeedbackRepository: RoundFeedbackRepository,
 ) : CoreDbContextTest() {
     private val roomId = UUID.randomUUID()
     private val intervieweeMemberId = UUID.randomUUID()
@@ -37,9 +37,9 @@ class RoundFeedbackRepositoryIT(
         saveFeedback(authorMemberId = UUID.randomUUID()).also {
             it.delete(LocalDateTime.of(2026, 8, 14, 11, 0))
         }
-        repository.flush()
+        roundFeedbackRepository.flush()
 
-        val result = repository
+        val result = roundFeedbackRepository
             .findAllByRoomIdAndIntervieweeMemberIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(
                 roomId,
                 intervieweeMemberId,
@@ -54,9 +54,9 @@ class RoundFeedbackRepositoryIT(
         val firstDisclosedAt = LocalDateTime.of(2026, 8, 14, 12, 0)
         feedback.disclose(firstDisclosedAt)
         feedback.disclose(firstDisclosedAt.plusMinutes(1))
-        repository.flush()
+        roundFeedbackRepository.flush()
 
-        val found = repository
+        val found = roundFeedbackRepository
             .findForUpdateByRoomIdAndIntervieweeMemberIdAndIdAndFeedbackTypeAndDeletedAtIsNull(
                 roomId,
                 intervieweeMemberId,
@@ -72,7 +72,7 @@ class RoundFeedbackRepositoryIT(
         intervieweeMemberId: UUID = this.intervieweeMemberId,
         authorMemberId: UUID = this.authorMemberId,
         type: RoundFeedbackType = RoundFeedbackType.FINAL,
-    ): RoundFeedbackEntity = repository.saveAndFlush(
+    ): RoundFeedbackEntity = roundFeedbackRepository.saveAndFlush(
         RoundFeedbackEntity(
             roomId = roomId,
             intervieweeMemberId = intervieweeMemberId,

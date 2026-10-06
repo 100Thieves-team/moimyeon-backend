@@ -18,7 +18,7 @@ import java.util.UUID
 class DevAccessTokenIssuerTest {
     private val memberFinder = mockk<MemberFinder>()
     private val jwtTokenProvider = mockk<JwtTokenProvider>()
-    private val issuer = DevAccessTokenIssuer(memberFinder, jwtTokenProvider)
+    private val devAccessTokenIssuer = DevAccessTokenIssuer(memberFinder, jwtTokenProvider)
 
     @Test
     fun `활성 회원의 현재 권한으로 만료 없는 액세스 토큰을 발급한다`() {
@@ -29,7 +29,7 @@ class DevAccessTokenIssuerTest {
         every { member.role } returns MemberRole.ADMIN
         every { jwtTokenProvider.issueWithoutExpiration(memberId, MemberRole.ADMIN) } returns "access-token"
 
-        val issuedToken = issuer.issue(memberId)
+        val issuedToken = devAccessTokenIssuer.issue(memberId)
 
         assertThat(issuedToken).isEqualTo("access-token")
         verifyOrder {
@@ -44,7 +44,7 @@ class DevAccessTokenIssuerTest {
         val failure = CoreException(CoreErrorType.MEMBER_NOT_FOUND)
         every { memberFinder.getById(memberId) } throws failure
 
-        assertThatThrownBy { issuer.issue(memberId) }
+        assertThatThrownBy { devAccessTokenIssuer.issue(memberId) }
             .isSameAs(failure)
 
         verify(exactly = 0) { jwtTokenProvider.issueWithoutExpiration(any(), any()) }

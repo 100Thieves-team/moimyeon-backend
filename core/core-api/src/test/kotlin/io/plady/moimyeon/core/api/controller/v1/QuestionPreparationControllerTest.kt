@@ -36,7 +36,7 @@ import java.security.Principal
 import java.util.UUID
 
 class QuestionPreparationControllerTest : RestDocsTest() {
-    private lateinit var facade: QuestionPreparationFacade
+    private lateinit var questionPreparationFacade: QuestionPreparationFacade
     private lateinit var questionPreparationService: QuestionPreparationService
 
     private val roomId = UUID.fromString("01920000-0000-7000-8000-000000000438")
@@ -55,10 +55,10 @@ class QuestionPreparationControllerTest : RestDocsTest() {
 
     @BeforeEach
     fun setUp() {
-        facade = mockk()
+        questionPreparationFacade = mockk()
         questionPreparationService = mockk()
         mockMvc = mockController(
-            QuestionPreparationController(facade, questionPreparationService),
+            QuestionPreparationController(questionPreparationFacade, questionPreparationService),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -66,7 +66,7 @@ class QuestionPreparationControllerTest : RestDocsTest() {
 
     @Test
     fun `질문 대상 목록과 본인 카드셋 준비 인원 수를 조회한다`() {
-        every { facade.getCardSets(viewerMemberId, roomId) } returns QuestionCardSetsResponse(
+        every { questionPreparationFacade.getCardSets(viewerMemberId, roomId) } returns QuestionCardSetsResponse(
             myCardSetPreparerCount = 2,
             cardSets = listOf(
                 QuestionCardSetSummaryResponse(
@@ -109,7 +109,7 @@ class QuestionPreparationControllerTest : RestDocsTest() {
 
     @Test
     fun `선택한 참여자의 질문과 AI 이력서 요약을 조회한다`() {
-        every { facade.getCardSet(viewerMemberId, roomId, targetMemberId) } returns cardSetDetail()
+        every { questionPreparationFacade.getCardSet(viewerMemberId, roomId, targetMemberId) } returns cardSetDetail()
 
         mockMvc.perform(
             get("/v1/rooms/{roomId}/question-sets/{targetMemberId}", roomId, targetMemberId)
@@ -332,7 +332,7 @@ class QuestionPreparationControllerTest : RestDocsTest() {
     @Test
     fun `현재 참여자가 아니면 카드셋 목록 조회는 E1502`() {
         every {
-            facade.getCardSets(viewerMemberId, roomId)
+            questionPreparationFacade.getCardSets(viewerMemberId, roomId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         mockMvc.perform(

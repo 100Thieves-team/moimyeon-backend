@@ -40,7 +40,7 @@ class InterviewOverviewFacadeTest {
     private val jobPostingService = mockk<JobPostingService>()
     private val companyService = mockk<CompanyService>()
     private val catalogService = mockk<CatalogService>()
-    private val facade = InterviewOverviewFacade(
+    private val interviewOverviewFacade = InterviewOverviewFacade(
         applicationService,
         participantService,
         roomService,
@@ -89,7 +89,7 @@ class InterviewOverviewFacadeTest {
             listOf(JobRole(id = 2L, code = "BACKEND", displayName = "서버·백엔드"))
         every { catalogService.getRegionLabels(emptySet()) } returns emptyList()
 
-        val result = facade.getOverview(memberId)
+        val result = interviewOverviewFacade.getOverview(memberId)
 
         assertThat(result.pendingApplications.single().applicationId).isEqualTo(1L)
         assertThat(result.pendingApplications.single().room.participantCount).isEqualTo(3)

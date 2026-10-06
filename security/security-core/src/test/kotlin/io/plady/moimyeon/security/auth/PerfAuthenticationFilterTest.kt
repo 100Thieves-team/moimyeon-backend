@@ -10,7 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import java.util.UUID
 
 class PerfAuthenticationFilterTest {
-    private val filter = PerfAuthenticationFilter()
+    private val perfAuthenticationFilter = PerfAuthenticationFilter()
 
     @AfterEach
     fun tearDown() {
@@ -24,7 +24,7 @@ class PerfAuthenticationFilterTest {
             addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, memberId.toString())
         }
 
-        filter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
+        perfAuthenticationFilter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
 
         val authentication = SecurityContextHolder.getContext().authentication
         assertThat(authentication?.name).isEqualTo(memberId.toString())
@@ -33,7 +33,7 @@ class PerfAuthenticationFilterTest {
 
     @Test
     fun `헤더가_없으면_인증을_세팅하지_않는다`() {
-        filter.doFilter(MockHttpServletRequest(), MockHttpServletResponse(), MockFilterChain())
+        perfAuthenticationFilter.doFilter(MockHttpServletRequest(), MockHttpServletResponse(), MockFilterChain())
 
         assertThat(SecurityContextHolder.getContext().authentication).isNull()
     }
@@ -44,7 +44,7 @@ class PerfAuthenticationFilterTest {
             addHeader(PerfAuthenticationFilter.TEST_USER_ID_HEADER, "not-a-uuid")
         }
 
-        filter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
+        perfAuthenticationFilter.doFilter(request, MockHttpServletResponse(), MockFilterChain())
 
         assertThat(SecurityContextHolder.getContext().authentication).isNull()
     }

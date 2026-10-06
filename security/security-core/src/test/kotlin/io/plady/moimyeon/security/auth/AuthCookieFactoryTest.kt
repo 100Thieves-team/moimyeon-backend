@@ -8,7 +8,7 @@ import org.springframework.mock.web.MockHttpServletRequest
 import java.net.URI
 
 class AuthCookieFactoryTest {
-    private val factory = AuthCookieFactory(
+    private val authCookieFactory = AuthCookieFactory(
         AuthProperties(
             cookie = AuthProperties.Cookie(
                 accessTokenName = "DEV_ACCESS_TOKEN",
@@ -30,9 +30,9 @@ class AuthCookieFactoryTest {
 
     @Test
     fun `설정된 환경별 이름으로 인증 쿠키를 생성하고 만료한다`() {
-        assertThat(factory.createAccess("access-token").name).isEqualTo("DEV_ACCESS_TOKEN")
-        assertThat(factory.expireAccess().name).isEqualTo("DEV_ACCESS_TOKEN")
-        assertThat(factory.expireRefresh().name).isEqualTo("DEV_REFRESH_TOKEN")
+        assertThat(authCookieFactory.createAccess("access-token").name).isEqualTo("DEV_ACCESS_TOKEN")
+        assertThat(authCookieFactory.expireAccess().name).isEqualTo("DEV_ACCESS_TOKEN")
+        assertThat(authCookieFactory.expireRefresh().name).isEqualTo("DEV_REFRESH_TOKEN")
     }
 
     @Test
@@ -44,6 +44,6 @@ class AuthCookieFactoryTest {
             )
         }
 
-        assertThat(factory.resolveRefresh(request)).isEqualTo("dev-credential")
+        assertThat(authCookieFactory.resolveRefresh(request)).isEqualTo("dev-credential")
     }
 }

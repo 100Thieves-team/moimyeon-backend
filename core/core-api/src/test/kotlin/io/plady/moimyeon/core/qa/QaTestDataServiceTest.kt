@@ -23,7 +23,7 @@ class QaTestDataServiceTest {
     private val qaRoomScheduler = mockk<QaRoomScheduler>()
     private val qaMemberCreator = mockk<QaMemberCreator>()
     private val qaResumeSummaryCompleter = mockk<QaResumeSummaryCompleter>()
-    private val service = QaTestDataService(
+    private val qaTestDataService = QaTestDataService(
         qaRoomFinder,
         qaMemberFinder,
         qaRoomEraser,
@@ -55,7 +55,7 @@ class QaTestDataServiceTest {
         every { qaRoomFinder.getRooms(condition) } returns listOf(room)
         every { qaMemberFinder.getQaMembers() } returns listOf(qaMember)
 
-        assertThat(service.getQaData(condition)).isEqualTo(QaData(rooms = listOf(room), members = listOf(qaMember)))
+        assertThat(qaTestDataService.getQaData(condition)).isEqualTo(QaData(rooms = listOf(room), members = listOf(qaMember)))
     }
 
     @Test
@@ -63,7 +63,7 @@ class QaTestDataServiceTest {
         val deleted = QaDeletedRows(rooms = 1, participants = 2, applications = 3)
         every { qaRoomEraser.erase(roomId) } returns deleted
 
-        assertThat(service.deleteRoom(roomId)).isEqualTo(deleted)
+        assertThat(qaTestDataService.deleteRoom(roomId)).isEqualTo(deleted)
         verify(exactly = 1) { qaRoomEraser.erase(roomId) }
     }
 
@@ -71,7 +71,7 @@ class QaTestDataServiceTest {
     fun `일괄 삭제는 룸만 쓸고 회원은 건드리지 않는다`() {
         every { qaDataSweeper.sweepRooms(condition) } returns QaDeletedRows(rooms = 2)
 
-        assertThat(service.deleteQaData(condition)).isEqualTo(QaDeletedRows(rooms = 2))
+        assertThat(qaTestDataService.deleteQaData(condition)).isEqualTo(QaDeletedRows(rooms = 2))
         verify(exactly = 0) { qaDataSweeper.sweepMembers() }
     }
 
@@ -81,7 +81,7 @@ class QaTestDataServiceTest {
         every { qaDataSweeper.sweepRooms(withMembers) } returns QaDeletedRows(rooms = 1)
         every { qaDataSweeper.sweepMembers() } returns QaDeletedRows(members = 2, profiles = 2)
 
-        assertThat(service.deleteQaData(withMembers)).isEqualTo(QaDeletedRows(rooms = 1, members = 2, profiles = 2))
+        assertThat(qaTestDataService.deleteQaData(withMembers)).isEqualTo(QaDeletedRows(rooms = 1, members = 2, profiles = 2))
     }
 
     @Test
@@ -89,7 +89,7 @@ class QaTestDataServiceTest {
         val deleted = QaDeletedRows(members = 1, profiles = 1, socialAccounts = 1)
         every { qaMemberEraser.erase(memberId) } returns deleted
 
-        assertThat(service.deleteMember(memberId)).isEqualTo(deleted)
+        assertThat(qaTestDataService.deleteMember(memberId)).isEqualTo(deleted)
     }
 
     @Test
@@ -97,14 +97,14 @@ class QaTestDataServiceTest {
         val deleted = QaDeletedRows(rooms = 1, participants = 3, reviews = 2)
         every { qaMemberResetter.reset(memberId) } returns deleted
 
-        assertThat(service.resetMember(memberId)).isEqualTo(deleted)
+        assertThat(qaTestDataService.resetMember(memberId)).isEqualTo(deleted)
     }
 
     @Test
     fun `QA 데이터가 아닌 룸 삭제 거절(E2201)은 그대로 전파한다`() {
         every { qaRoomEraser.erase(roomId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
-        assertThatThrownBy { service.deleteRoom(roomId) }
+        assertThatThrownBy { qaTestDataService.deleteRoom(roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.QA_DATA_ONLY)
             }
@@ -114,7 +114,7 @@ class QaTestDataServiceTest {
     fun `없는 회원 초기화 거절(E1006)은 그대로 전파한다`() {
         every { qaMemberResetter.reset(memberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
-        assertThatThrownBy { service.resetMember(memberId) }
+        assertThatThrownBy { qaTestDataService.resetMember(memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
@@ -126,14 +126,14 @@ class QaTestDataServiceTest {
         val schedule = QaRoomSchedule(roomId = roomId, status = RoomStatus.CONFIRMED, startAt = startAt)
         every { qaRoomScheduler.reschedule(roomId, startAt) } returns schedule
 
-        assertThat(service.rescheduleRoom(roomId, startAt)).isEqualTo(schedule)
+        assertThat(qaTestDataService.rescheduleRoom(roomId, startAt)).isEqualTo(schedule)
     }
 
     @Test
     fun `테스트 회원 생성은 Creator 에 위임한다`() {
         every { qaMemberCreator.create() } returns qaMember
 
-        assertThat(service.createMember()).isEqualTo(qaMember)
+        assertThat(qaTestDataService.createMember()).isEqualTo(qaMember)
     }
 
     @Test
@@ -142,6 +142,6 @@ class QaTestDataServiceTest {
         val result = QaResumeSummary(resumeId = resumeId, memberId = memberId, status = ResumeSummaryStatus.DONE, content = "요약", isDefault = true)
         every { qaResumeSummaryCompleter.complete(resumeId, "요약") } returns result
 
-        assertThat(service.completeResumeSummary(resumeId, "요약")).isEqualTo(result)
+        assertThat(qaTestDataService.completeResumeSummary(resumeId, "요약")).isEqualTo(result)
     }
 }
