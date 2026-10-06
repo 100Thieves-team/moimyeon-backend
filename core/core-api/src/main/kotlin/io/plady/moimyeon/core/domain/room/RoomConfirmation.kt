@@ -5,8 +5,8 @@ import java.time.LocalDateTime
 
 // "이 룸이 확정될 준비가 됐나"(「진행 확정」 §4.1). 확정 실행(RoomManager.confirm)이 락 안에서 쓰는 판정이다.
 //
-// MOI-500 이후 조회 응답(confirmation 블록)은 사라졌다 — 화면은 status·recruit·schedule.isPassed 사실로
-// 스스로 판정하고, 여기는 실행 시점의 강제만 남는다. 화면 판정과 어긋나면 E1410/E1421/E1422 가 답이다.
+// 조회 응답에는 이 판정을 내리지 않는다(MOI-500) — 화면은 status·recruit·schedule.isPassed 사실로
+// 스스로 판정하고, 여기는 실행 시점의 강제만 맡는다. 화면 판정과 어긋나면 E1410/E1421/E1422 가 답이다.
 data class RoomConfirmation(
     val ready: Boolean,
     val blockReason: RoomConfirmationBlockReason?,

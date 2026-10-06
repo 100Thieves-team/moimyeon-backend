@@ -25,7 +25,7 @@ class RefreshTokenEntity(
     val expiresAt: LocalDateTime,
     revokedAt: LocalDateTime? = null,
 ) {
-    // 최초 폐기 시각은 덮어쓰지 않는다(revoke 의 null 가드) — 대입 경로를 의도 메서드로 좁힌다.
+    // 최초 폐기 시각은 덮어쓰지 않는다(revoke 의 null 가드).
     var revokedAt: LocalDateTime? = revokedAt
         protected set
 

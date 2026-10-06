@@ -13,7 +13,7 @@ class RegionFinder(
     private val sidoRepository: SidoRepository,
     private val sigunguRepository: SigunguRepository,
 ) {
-    // 탐색 목록의 지역 표시명 배치 조회(MOI-383). 시군구명만으로는 화면에 쓸 수 없어 시도 약칭을 붙인다.
+    // 시군구명만으로는 화면에 쓸 수 없어 시도 약칭을 붙인다.
     // 시군구나 그 시도가 폐기됐으면 그 항목을 아예 돌려주지 않는다 — 표시명이 결측인 룸은 지역 없이 내려간다.
     @Transactional(readOnly = true)
     fun getRegionLabels(sigunguIds: Collection<Long>): List<RegionLabel> {

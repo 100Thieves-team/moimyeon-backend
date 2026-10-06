@@ -94,7 +94,6 @@ class ParticipationFinder(
         return participationRepository.findAllAtRoomConfirmation(roomId).map { it.memberId }
     }
 
-    // 엔티티는 Finder 밖으로 나가지 않으므로 술어도 여기 안에 둔다.
     private fun ParticipationEntity.isJoined(): Boolean = status == ParticipationStatus.JOINED && isActive()
 
     // existsRemovalHistory 와 같은 술어다 — LEFT 이고 처리자가 본인이 아니면 방장이 내보낸 것이다.

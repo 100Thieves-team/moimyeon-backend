@@ -3,7 +3,6 @@ package io.plady.moimyeon.storage.db.core
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
-// append-only
 interface TermsAgreementRepository : JpaRepository<TermsAgreementEntity, UUID> {
     fun existsByMemberIdAndTermsIdAndDeletedAtIsNull(memberId: UUID, termsId: UUID): Boolean
 

@@ -15,9 +15,6 @@ import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
-// 탐색 목록의 복합 조회 + 조립. 단건 조회의 RoomFinder 와 책임이 다르다.
-// 다른 개념(회사·공고·직무·지역)은 보지 않는다 — 회사 → 공고 id 변환은 호출자가 끝내서 넘기고,
-// 표시명 조립은 Facade 가 한다.
 @Component
 class RoomSearchReader(
     private val roomRepository: RoomRepository,

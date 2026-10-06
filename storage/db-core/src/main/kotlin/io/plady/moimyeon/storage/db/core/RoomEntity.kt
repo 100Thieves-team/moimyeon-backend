@@ -23,7 +23,6 @@ class RoomEntity(
     // 이력서 원본 공개 여부는 룸 속성이며, 생성 이후 변경은 별도 스코프다(PRD §4.5).
     val resumePublic: Boolean = false,
 
-    // 아래는 생성 이후 편집 가능한 필드.
     sigunguId: Long?,
     title: String,
     description: String?,
@@ -101,14 +100,13 @@ class RoomEntity(
 
     fun canCancel(): Boolean = status == RoomStatus.RECRUITING || status == RoomStatus.CONFIRMED
 
-    // 방장이 모집을 접는 것. 운영이 룸을 내리는 deleted_at 과 한 컬럼에 섞지 않는다(schema.sql:450).
+    // 방장이 모집을 접는 것.
     // 참여자 유무는 룸이 알지 못하므로 호출자(RoomManager)가 본다.
     fun cancel() {
         check(canCancel())
         status = RoomStatus.CANCELED
     }
 
-    // 편집 가능한 필드 전체 교체. 저장은 변경 감지에 맡긴다(save 호출 없음).
     fun update(
         title: String,
         description: String?,

@@ -11,7 +11,6 @@ import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.UUID
 
-// 참가 신청. 신청 제출은 별도 이슈이며, 이 스프린트(MOI-328)에서는 방장의 수락·반려만 다룬다.
 // pending_member_id: 상태가 대기(PENDING)면 신청자 id 를, 처리되면 NULL 을 애플리케이션이 채운다.
 //   uk (room_id, pending_member_id, _active_check) 가 "룸당 회원당 대기 신청 1건"을 보장한다(schema.sql 주석).
 //   처리(수락·반려·철회)되면 NULL 로 풀어 재신청 여지를 남긴다.
@@ -39,7 +38,6 @@ class RoomApplicationEntity(
     var status: RoomApplicationStatus = status
         protected set
 
-    // 대기 유니크 표현 컬럼. 대기면 신청자 id, 처리되면 NULL.
     @JdbcTypeCode(SqlTypes.BINARY)
     var pendingMemberId: UUID? = pendingMemberId
         protected set
@@ -77,7 +75,7 @@ class RoomApplicationEntity(
     }
 
     // 수락: 참여자 등록은 호출부(RoomApplicationManager)가 별도 participation 으로 처리하고,
-    // 여기서는 신청 자신의 상태 전이만 책임진다. 대기에서 빠지므로 pendingMemberId 를 비운다.
+    // 여기서는 신청 자신의 상태 전이만 책임진다.
     fun accept(handlerMemberId: UUID, now: LocalDateTime) {
         this.status = RoomApplicationStatus.ACCEPTED
         this.pendingMemberId = null
@@ -85,7 +83,6 @@ class RoomApplicationEntity(
         this.handledAt = now
     }
 
-    // 반려: 사유는 선택(§4.4). 정원·참여자에는 영향이 없다.
     fun reject(handlerMemberId: UUID, reason: String?, now: LocalDateTime) {
         this.status = RoomApplicationStatus.REJECTED
         this.pendingMemberId = null
@@ -102,7 +99,6 @@ class RoomApplicationEntity(
         this.handledAt = now
     }
 
-    // 철회는 신청의 결말이다. 제출 당시 기록은 보존하고 대기 유니크 자리만 해제한다.
     fun withdraw(now: LocalDateTime) {
         this.status = RoomApplicationStatus.WITHDRAWN
         this.pendingMemberId = null

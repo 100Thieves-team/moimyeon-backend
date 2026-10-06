@@ -15,7 +15,6 @@ import java.util.UUID
 private val log = KotlinLogging.logger {}
 
 // 원본 열람의 발급 시점 재검증(MOI-414). URL 을 따 둬도 매 발급마다 여기서 다시 판정된다.
-// 뷰어 게이트(E1419)는 ParticipationValidator 가 이보다 먼저 본다 - 제3자에게 룸 상태를 흘리지 않는다.
 @Component
 class ResumeOriginalViewFinder(
     private val roomFinder: RoomFinder,
