@@ -106,6 +106,14 @@ assert_contains "${DOCKERFILE}" '^FROM .* AS core-api$' "Core API runtime target
 assert_contains "${DOCKERFILE}" '^FROM .* AS core-worker$' "Worker runtime target이 필요하다."
 assert_contains "${DOCKERFILE}" ':core:core-api:bootJar' "공통 build가 Core API bootJar를 만들어야 한다."
 assert_contains "${DOCKERFILE}" ':core:core-worker:bootJar' "공통 build가 Worker bootJar를 만들어야 한다."
+# MOI-565: 학습 실행은 외부 연결 없는 local 프로필로만 하고, 운영 실행이 그 캐시를 읽어야 한다.
+aot_trainings="$(grep -c -- '-XX:AOTCacheOutput=app.aot' "${DOCKERFILE}")"
+aot_runtimes="$(grep -c -- '-XX:AOTCache=app.aot' "${DOCKERFILE}")"
+local_trainings="$(grep -c -- '-Dspring.profiles.active=local' "${DOCKERFILE}")"
+if [ "${aot_trainings}" -ne 2 ] || [ "${aot_runtimes}" -ne 2 ] || [ "${local_trainings}" -ne 2 ]; then
+  fail "API·Worker 이미지는 각각 local 프로필로 AOT 캐시를 만들고 실행 시 그 캐시를 읽어야 한다."
+fi
+assert_not_contains "${DOCKERFILE}" 'spring\.profiles\.active=(dev|live|staging)' "AOT 학습 실행은 실제 환경 프로필로 외부 자원에 연결하면 안 된다."
 
 assert_contains "${WORKFLOW}" 'target:[[:space:]]*core-api' "API 이미지는 core-api target을 빌드해야 한다."
 assert_contains "${WORKFLOW}" 'docker buildx build.*--target core-worker' "Worker 이미지는 core-worker target을 빌드해야 한다."
