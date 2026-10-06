@@ -20,6 +20,8 @@ module "dev" {
   github_repository_owner_id   = "278404932"
   github_deploy_workflows      = ["Deploy AWS", "Rollback AWS"]
   github_deploy_execution_refs = ["refs/heads/dev"]
+  # MOI-565: PR CI builds tree-tagged images once; merges deploy them directly.
+  enable_pr_image_candidates = true
 
   route53_zone_id   = var.route53_zone_id
   route53_zone_name = var.route53_zone_name
@@ -41,10 +43,17 @@ module "dev" {
   # ALB health-checks the green tasks. Live :80/:443 still route to the old TG.
   provisional_ecs_listener_port = 8080
 
-  # API, Worker, Redis의 정상 상태 3대에 API 롤링 교체용 임시 1대를 허용한다.
+  # dev는 교체 속도를 우선한다(MOI-565). 새 태스크는 10초 간격 2회 통과로 정상
+  # 판정하고, 기존 태스크의 진행 중 요청은 10초 안에 정리한다.
+  alb_health_check_interval_seconds = 10
+  alb_deregistration_delay_seconds  = 10
+
+  # API, Worker, Redis가 평소 3대를 쓴다. API 태스크가 t3.small 한 대를 통째로
+  # 쓰므로 롤링 교체 때 새 인스턴스 기동(약 4분)을 기다리지 않도록 빈 1대를 상시
+  # 둔다(MOI-565). 최대치는 그 위에 교체 중 임시 1대를 더 허용한다.
   ecs_instance_type = "t3.small"
-  ecs_min_size      = 1
-  ecs_max_size      = 4
+  ecs_min_size      = 4
+  ecs_max_size      = 5
   # Start with a single task for a safe first bring-up on one t3.small; scale later.
   ecs_service_desired_count = 1
   ecs_service_min_count     = 1

@@ -97,6 +97,7 @@ jobs:
       - name: Sync deployment variables from current state
         if: steps.freshness.outputs.current == 'true'
         env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
           VARIABLE_SYNC_TOKEN_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMETER }}
         run: |
           set -euo pipefail
@@ -119,8 +120,25 @@ jobs:
             exit 1
           fi
           echo "::add-mask::${variable_sync_token}"
+
+          # MOI-565: record the applied dev revision. Deploys wait on the SSM
+          # value; Terraform Apply skips on the GitHub variable, which the sync
+          # script writes last. A partial failure therefore leaves the variable
+          # behind SSM, which only makes the next commit run Terraform again.
+          if [ "${{ inputs.environment }}" = dev ]; then
+            parameter_name="$(bash infra/terraform/scripts/terraform-command.sh \
+              output-raw dev terraform_applied_sha_parameter_name)"
+            aws ssm put-parameter \
+              --name "${parameter_name}" \
+              --type String \
+              --value "${SOURCE_SHA}" \
+              --overwrite >/dev/null
+            echo "Recorded dev Terraform boundary ${SOURCE_SHA} in ${parameter_name}."
+          fi
+
           GH_TOKEN="${variable_sync_token}" \
-            bash infra/terraform/scripts/sync-github-variables.sh --env "${{ inputs.environment }}"
+            bash infra/terraform/scripts/sync-github-variables.sh --env "${{ inputs.environment }}" \
+            ${{ inputs.environment == 'dev' && format('--applied-sha {0}', inputs.source_sha) || '' }}
 
       - name: Export non-secret dev deployment config
         if: steps.freshness.outputs.current == 'true' && inputs.environment == 'dev'

@@ -33,6 +33,9 @@ locals {
   external_dns_enabled = local.app_domain_enabled && var.dns_management == "external"
   certificate_enabled  = local.route53_dns_enabled || local.external_dns_enabled
   https_enabled        = local.certificate_enabled && var.enable_https
+  app_url = local.app_domain_enabled ? (
+    local.https_enabled ? "https://${var.app_domain_name}" : "http://${var.app_domain_name}"
+  ) : "http://${aws_lb.app.dns_name}"
 
   upload_bucket_name = coalesce(
     var.upload_bucket_name,
