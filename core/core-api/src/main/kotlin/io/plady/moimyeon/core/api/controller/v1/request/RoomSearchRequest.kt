@@ -9,9 +9,6 @@ import io.plady.moimyeon.core.support.error.CoreApiErrorType
 import io.plady.moimyeon.core.support.error.CoreApiException
 import java.time.LocalDateTime
 
-// 룸 탐색 목록의 쿼리 파라미터(GET /v1/rooms).
-//
-// 값 규칙은 전부 여기서 확정한다(원칙 2: 검증은 진입점에서 끝낸다). 뒤 레이어에는 스펙 검증이 남지 않는다.
 // 태도가 두 갈래인 것은 의도된 정책이다:
 //   - 잘못된 필터·정렬 값은 그 값만 무시한다. 사용자가 보는 것은 "조금 넓은 목록"이다(§4.7).
 //   - 깨진 커서와 앞뒤가 뒤집힌 조회 범위는 400 이다. 전자는 무시하면 순회가 망가지고,

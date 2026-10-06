@@ -4,8 +4,6 @@ import io.plady.moimyeon.core.domain.room.RejectReason
 import io.plady.moimyeon.core.support.error.CoreApiErrorType
 import io.plady.moimyeon.core.support.error.CoreApiException
 
-// 참가 신청 반려(「룸 참여」 §4.4). 방장은 사유 없이 반려할 수 있고,
-// 사유를 담으면 GET /v1/rooms/reject-reasons 가 내려주는 코드 중 하나여야 한다.
 data class RejectApplicationRequest(
     val reason: String? = null,
 ) {

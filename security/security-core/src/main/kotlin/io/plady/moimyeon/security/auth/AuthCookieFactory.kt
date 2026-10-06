@@ -6,7 +6,6 @@ import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
 import java.time.Duration
 
-// 세션 크리덴셜을 담는 인증 쿠키. 속성은 프로파일별 설정(security.auth.cookie)에서 주입받는다.
 @Component
 class AuthCookieFactory(
     private val authProperties: AuthProperties,

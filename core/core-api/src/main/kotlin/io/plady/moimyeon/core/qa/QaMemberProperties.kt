@@ -7,8 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Profile
 
 /**
- * QA 회원 생성 설정.
- *
  * emailTemplate 의 `{key}` 자리에 회원마다 다른 키가 들어간다. 알림 메일을 실제로 받아 확인하려면
  * 받을 수 있는 메일함 주소로 둔다(예: `moimyeon.qa+qa-{key}@gmail.com`).
  * QA 회원은 소셜 식별자 접두와 이메일 형식을 둘 다 만족해야 한다. 이메일 형식은 이 템플릿과 예전 기본 도메인 둘 중 하나면 된다.

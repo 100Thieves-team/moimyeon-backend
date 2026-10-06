@@ -12,7 +12,6 @@ import io.plady.moimyeon.security.auth.SocialLoginResult
 import io.plady.moimyeon.security.auth.SocialMemberResolver
 import org.springframework.stereotype.Component
 
-// security의 SocialMemberResolver 구현체
 @Component
 class SocialMemberResolverAdapter(
     private val socialAuthService: SocialAuthService,

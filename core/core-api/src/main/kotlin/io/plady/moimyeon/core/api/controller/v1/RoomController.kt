@@ -28,10 +28,8 @@ import java.util.UUID
 class RoomController(
     private val roomFacade: RoomFacade,
     private val roomSearchFacade: RoomSearchFacade,
-    // 조합할 것이 없는 단일 Service 호출은 컨트롤러가 직접 한다(layers.md).
     private val roomService: RoomService,
 ) {
-    // POST /v1/rooms — 생성 전 확인의 '이대로 룸 만들기'. 생성 즉시 모집(RECRUITING) 상태로 등록(§4.8).
     @PostMapping("/v1/rooms")
     fun create(
         @LoginMember currentMember: CurrentMember,
@@ -40,7 +38,6 @@ class RoomController(
         return ApiResponse.success(roomFacade.create(currentMember.id, request.toCommand()))
     }
 
-    // PUT /v1/rooms/{roomId} — 방장이 생성 이후 편집 가능한 정보를 수정한다(모집중 상태 편집). 방장만 가능.
     @PutMapping("/v1/rooms/{roomId}")
     fun update(
         @LoginMember currentMember: CurrentMember,
@@ -51,7 +48,6 @@ class RoomController(
         return ApiResponse.success()
     }
 
-    // POST /v1/rooms/{roomId}/confirmation — 방장이 진행을 확정한다(「진행 확정」 §4.2).
     // 여기서부터 참여자·정보가 고정되고 대기 신청이 일괄 종료된다. 리소스 생성이 아니라 조건부 상태 전이이므로
     // POST를 사용하고, 두 번째 요청은 409로 거부한다.
     @PostMapping("/v1/rooms/{roomId}/confirmation")
@@ -63,15 +59,13 @@ class RoomController(
         return ApiResponse.success()
     }
 
-    // GET /v1/rooms/form-options — 폼 선택지(literal 경로가 {roomId} 보다 우선 매칭됨).
+    // literal 경로가 {roomId} 보다 우선 매칭된다.
     @GetMapping("/v1/rooms/form-options")
     fun formOptions(): ApiResponse<RoomFormOptionsResponse> {
         return ApiResponse.success(RoomFormOptionsResponse.of())
     }
 
-    // GET /v1/rooms/creation-limit — 같은 공고·직무로 내가 만든 활성 룸이 몇 개인지(「룸 생성」 §4.7).
     // 회원의 자원이 아니라 룸 생성의 사전 판정이라 /v1/members/me 가 아니라 여기에 둔다.
-    // 없는 공고·직무 id 도 0개로 답한다 — 참조 검증은 생성 시점의 일이다(RoomFinder 주석).
     @GetMapping("/v1/rooms/creation-limit")
     fun creationLimit(
         @LoginMember currentMember: CurrentMember,
@@ -83,9 +77,6 @@ class RoomController(
         )
     }
 
-    // GET /v1/rooms — 탐색 목록(「룸 탐색」 §4.1~§4.3). 비로그인도 조회 가능.
-    // 잘못된 필터·정렬 값은 그 값만 무시하고 나머지 조건으로 조회한다(§4.7). 반대로 깨진 커서와
-    // 앞뒤가 뒤집힌 조회 범위는 400 이다 — 무시하면 순회 자체가 망가지거나 무엇을 무시할지 정할 수 없다.
     @GetMapping("/v1/rooms")
     fun list(
         @OptionalLoginMember currentMember: CurrentMember?,
@@ -103,8 +94,6 @@ class RoomController(
         )
     }
 
-    // GET /v1/rooms/{roomId} — 룸 단건 조회. 룸의 실제 저장 데이터 + 현재 인원 + 방장 식별자 + 표시명을 반환한다.
-    // 방장 프로필/신뢰 지표 enrich 는 별도 이슈다.
     @GetMapping("/v1/rooms/{roomId}")
     fun detail(
         @OptionalLoginMember currentMember: CurrentMember?,

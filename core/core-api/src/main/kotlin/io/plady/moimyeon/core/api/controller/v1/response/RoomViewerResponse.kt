@@ -2,7 +2,7 @@ package io.plady.moimyeon.core.api.controller.v1.response
 
 import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
 
-// 조회자 "본인"에 대한 사실만 싣는다(MOI-500 — MOI-387 판정 계약의 재설계).
+// 조회자 "본인"에 대한 사실만 싣는다.
 // 목록과 상세가 같은 객체를 싣는다 — 클라이언트가 판정 함수를 하나만 만들면 된다.
 //
 // 판정 결과(relation·actions·blockReason)는 내리지 않는다. 버튼·배지 판정은 화면 소관이고,
@@ -11,12 +11,10 @@ import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
 //  E1416 대기 한도 | E1425 참여 슬롯). 비로그인이면 이 객체 자체가 null 이다.
 data class RoomViewerResponse(
     val isHost: Boolean,
-    // 방장도 참여자(JOINED)라 방장이면 둘 다 true 다 — 화면은 isHost 를 먼저 본다.
     val isParticipating: Boolean,
-    // 방장이 내보낸 이력. 자진 이탈은 포함하지 않는다 — 재신청을 막는 것은 강퇴뿐이다.
     // 강퇴자의 신청은 ACCEPTED 로 남으므로 latestApplicationStatus 보다 먼저 봐야 한다.
     val hasRemovalHistory: Boolean,
-    val latestApplicationStatus: String?, // RoomApplicationStatus, 신청 이력 없으면 null
+    val latestApplicationStatus: String?,
     val member: ViewerMemberResponse,
 ) {
     companion object {
@@ -40,7 +38,6 @@ data class RoomViewerResponse(
     }
 }
 
-// 룸과 무관한 회원 축 사실.
 data class ViewerMemberResponse(
     val isActive: Boolean,
     val participationSlots: ViewerQuotaResponse,

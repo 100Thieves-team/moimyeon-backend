@@ -8,12 +8,11 @@ import io.plady.moimyeon.core.domain.room.RoomUpdateCommand
 import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 
-// 룸 수정(PUT /v1/rooms/{roomId}) 입력. 생성 이후 편집 가능한 필드만 받는다.
 // 식별 참조(postingId/jobRoleId)와 이력서(resumeId/resumePublic)는 포함하지 않는다.
 data class UpdateRoomRequest(
-    val round: String, // FIRST | SECOND | THIRD | ETC
-    val type: String? = null, // JOB | CULTURE_FIT | EXECUTIVE | TECH_ASSIGNMENT
-    val method: String, // ONLINE | OFFLINE
+    val round: String,
+    val type: String? = null,
+    val method: String,
     val sigunguId: Long? = null,
     val minParticipants: Int,
     val maxParticipants: Int,

@@ -47,8 +47,7 @@ class InterviewOverviewFacade(
         )
     }
 
-    // 표시명 조회는 탐색 목록(RoomSearchFacade)과 같은 규칙이다: 회사는 룸이 직접 참조하지 않아
-    // room → job_posting → company 2단계로 읽고, 세 구분의 룸을 합쳐 구분당이 아니라 응답당 상수 개수로 조회한다.
+    // 세 구분의 룸을 합쳐 구분당이 아니라 응답당 상수 개수로 조회한다.
     private fun resolveRefs(rooms: List<Room>): InterviewRoomRefs {
         val jobPostings = jobPostingService.getRefs(rooms.map { it.jobPostingId }.toSet())
             .associateBy { it.id }

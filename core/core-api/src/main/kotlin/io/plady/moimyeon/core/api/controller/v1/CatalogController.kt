@@ -22,7 +22,6 @@ class CatalogController(
         return ApiResponse.success(JobCatalogResponse.from(catalogService.getJobCatalog()))
     }
 
-    // 룸 생성 시 직무명으로 직무를 검색한다(§4.1). 직무는 공고와 독립한 평면 카탈로그이므로 공고 선택과 무관하게 고른다.
     @GetMapping("/v1/job-roles/search")
     fun searchJobRoles(
         @RequestParam query: String,

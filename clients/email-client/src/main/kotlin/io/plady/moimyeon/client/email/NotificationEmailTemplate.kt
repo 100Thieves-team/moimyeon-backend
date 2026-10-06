@@ -28,7 +28,6 @@ internal class NotificationEmailTemplate {
 
     private fun renderAction(actionUrl: String?): String = actionUrl?.let { actionFragment.fill(inline = mapOf("actionUrl" to it)) } ?: ""
 
-    // 평문 수신자가 보는 메일은 HTML 템플릿 도입 전과 같다.
     private fun renderText(content: NotificationContent): String = listOfNotNull(content.body, content.actionUrl).joinToString("\n\n")
 
     // 계약: 템플릿을 한 번만 훑으므로 채워 넣은 값이 다시 자리표시자로 읽히지 않는다.

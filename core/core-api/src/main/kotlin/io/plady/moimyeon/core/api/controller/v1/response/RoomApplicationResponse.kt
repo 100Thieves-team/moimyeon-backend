@@ -6,8 +6,7 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
-// 방장용 참가 신청 목록(GET /v1/rooms/{roomId}/applications) — 「룸 참여」 §4.3.
-// 방장만 조회할 수 있고, 전달 사항·AI 요약은 방장 외 비공개다(§6). 이력서 원본으로 가는 경로는 목록에 없다(진행 확정 이후에만).
+// 이력서 원본으로 가는 경로는 목록에 없다(진행 확정 이후에만).
 data class RoomApplicationsResponse(
     val applications: List<RoomApplicationResponse>,
 )
@@ -15,10 +14,10 @@ data class RoomApplicationsResponse(
 data class RoomApplicationResponse(
     val applicationId: Long,
     val applicant: ApplicantResponse,
-    val note: String, // 전달 사항(미입력 시 빈 문자열). 방장 외 비공개
+    val note: String,
     val aiSummary: ApplicationAiSummaryResponse,
-    val status: String, // PENDING | ACCEPTED | REJECTED | WITHDRAWN | ROOM_CANCELED | ROOM_CONFIRMED | SLOT_EXCEEDED
-    val statusLabel: String, // 대기 | 수락 | 반려 | 철회 | 룸 취소 | 진행 확정 | 참여 슬롯 초과
+    val status: String,
+    val statusLabel: String,
     @get:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     val appliedAt: LocalDateTime,
 )
@@ -28,7 +27,7 @@ data class ApplicantResponse(
     val memberId: UUID,
     val nickname: String,
     val jobRoles: List<ApplicantJobRoleResponse>,
-    val activitySummary: String?, // 공개 가능한 활동 정보(완료 룸 수 등, trust 격벽 전까지 자리만)
+    val activitySummary: String?,
 )
 
 data class ApplicantJobRoleResponse(
@@ -36,22 +35,18 @@ data class ApplicantJobRoleResponse(
     val name: String,
 )
 
-// 이력서 AI 요약. 등록 시점 생성이 아직 안 끝났으면 status=PROCESSING("요약 준비 중")으로 표시한다.
 data class ApplicationAiSummaryResponse(
-    val status: String, // PROCESSING | DONE
+    val status: String,
     val text: String?,
 )
 
-// 수락/반려 결과(POST …/accept · …/reject) — 「룸 참여」 §4.4·§4.9.
-// 모집 현황은 결정 반영 후 상태다. 수락은 current 증가·정원 도달 시 CLOSED, 반려는 정원·참여자에 영향 없음.
-//
 // SLOT_EXCEEDED 는 수락 요청의 세 번째 결과다(MOI-427). 신청자의 참여 슬롯이 차 있어 참여자로 등록하지
 // 못하고 그 신청만 정리한 경우이며, current 는 늘지 않는다. 실패가 아니라 결정으로 내리는 이유는
 // 예외를 던지면 그 정리가 같은 트랜잭션에서 롤백되어 신청이 대기로 남기 때문이다.
 data class ApplicationDecisionResponse(
     val applicationId: Long,
-    val status: String, // ACCEPTED | REJECTED | SLOT_EXCEEDED
-    val statusLabel: String, // 수락 | 반려 | 참여 슬롯 초과
+    val status: String,
+    val statusLabel: String,
     val recruit: ApplicationRecruitResponse,
 ) {
     companion object {
@@ -78,11 +73,11 @@ data class ApplicationDecisionResponse(
 data class ApplicationRecruitResponse(
     val current: Int,
     val max: Int,
-    val recruitStatus: String, // RECRUITING | CLOSED (정원 충족 시 CLOSED)
-    val recruitStatusLabel: String, // 모집 중 | 모집 마감
+    val recruitStatus: String,
+    val recruitStatusLabel: String,
 )
 
-// 방장이 보는 라벨이다. 신청자에게 보일 문구("룸이 취소됐어요")는 신청자용 응답이 생길 때 정한다.
+// 방장이 보는 라벨이다.
 private fun RoomApplicationStatus.label(): String = when (this) {
     RoomApplicationStatus.PENDING -> "대기"
     RoomApplicationStatus.ACCEPTED -> "수락"

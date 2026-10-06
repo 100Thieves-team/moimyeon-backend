@@ -10,17 +10,14 @@ import io.plady.moimyeon.core.domain.roomviewer.ViewerFacts
 import io.plady.moimyeon.core.enums.MeetingType
 import java.util.UUID
 
-// 룸 탐색 목록(GET /v1/rooms) — 「룸 탐색」 §4.1·§4.3. 완료·취소·일정 경과 룸은 제외된다.
-// 서로 다른 필터는 AND 로 결합하고, 지원하지 않는 정렬 값은 기본 정렬로 처리한 뒤 그 결과를 sort 에 담는다.
 data class RoomsResponse(
     val rooms: List<RoomSummaryResponse>,
-    val sort: String, // SCHEDULE | RECENT (실제로 적용된 정렬)
+    val sort: String,
     val totalCount: Int,
-    // 커서 페이지네이션. null 이면 마지막 페이지다. 내용은 해석하지 말고 그대로 다시 보낸다.
     val nextCursor: String?,
 )
 
-// 목록 카드 한 건. 상세보다 가벼운 공개 정보만 담는다(오프라인 상세 주소·이력서 등 민감 정보 제외, §4.4).
+// 상세보다 가벼운 공개 정보만 담는다(오프라인 상세 주소·이력서 등 민감 정보 제외, §4.4).
 //
 // company·jobPosting·jobRole·region 이 모두 nullable 인 이유: 이 값들은 룸이 참조하는 다른 개념에서
 // 파생되는데, 그 참조가 끊어질 수 있다(회사 미매칭 공고, 폐기된 공고·직무·시군구, 온라인 룸).
@@ -40,7 +37,6 @@ data class RoomSummaryResponse(
     val region: RoomRegionResponse?,
     val schedule: RoomScheduleResponse,
     val recruit: RoomRecruitSummaryResponse,
-    // 조회자 본인의 사실(MOI-500). 비로그인이면 null 이다 — 판정은 화면이 한다.
     val viewer: RoomViewerResponse?,
 ) {
     companion object {
@@ -80,14 +76,13 @@ data class RoomSummaryResponse(
     }
 }
 
-// 목록·수락/반려 응답이 공유하는 경량 모집 현황. 모집 중/마감은 저장값이 아니라 정원 충족 여부로 계산된 값이다.
+// 모집 중/마감은 저장값이 아니라 정원 충족 여부로 계산된 값이다.
 data class RoomRecruitSummaryResponse(
     val current: Int,
     val max: Int,
-    // 대기 중인 참가 신청 수(2026-08-04 PRD 갱신). 비로그인에도 공개되는 값이다.
     val pending: Int,
-    val recruitStatus: String, // RECRUITING | CLOSED (정원 충족 시 CLOSED)
-    val recruitStatusLabel: String, // 모집 중 | 모집 마감
+    val recruitStatus: String,
+    val recruitStatusLabel: String,
 ) {
     companion object {
         fun from(card: RoomCard): RoomRecruitSummaryResponse = RoomRecruitSummaryResponse(

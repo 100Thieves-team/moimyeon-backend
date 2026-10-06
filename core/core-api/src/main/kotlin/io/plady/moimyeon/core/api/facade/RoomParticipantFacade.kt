@@ -15,7 +15,6 @@ import io.plady.moimyeon.core.domain.profile.ProfileService
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-// 명부의 판정(권한·원본 열람 가능 여부)은 도메인이 끝내고, 여기서는 표시에 필요한 직무 이름만 붙인다.
 @Component
 class RoomParticipantFacade(
     private val roomParticipantService: RoomParticipantService,
@@ -30,7 +29,6 @@ class RoomParticipantFacade(
             return RoomParticipantsResponse(participants = emptyList(), confirmedParticipants = confirmedParticipants)
         }
 
-        // 프로필·카탈로그도 일괄로 가져온다. 참여자 수에 비례해 쿼리가 늘면 안 된다.
         val jobRoleIdsByMemberId = profileService.getProfiles(participants.map { it.memberId })
             .associate { it.memberId to it.interestJobRoleIds.toSet() }
         val interestedJobRoleIds = jobRoleIdsByMemberId.values.flatten().toSet()

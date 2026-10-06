@@ -92,7 +92,7 @@ class RoomApplicationFacade(
         }
     }
 
-    // 방장이 보는 라벨이다. 신청자에게 보일 문구("룸이 취소됐어요")는 신청자용 응답이 생길 때 정한다.
+    // 방장이 보는 라벨이다.
     private fun RoomApplicationStatus.label(): String = when (this) {
         RoomApplicationStatus.PENDING -> "대기"
         RoomApplicationStatus.ACCEPTED -> "수락"
