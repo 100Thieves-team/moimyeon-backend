@@ -20,7 +20,7 @@ class RoundFeedbackReaderTest {
     private val questionMemoRecordReader = mockk<QuestionMemoRecordReader>()
     private val memberFinder = mockk<MemberFinder>()
     private val feedbackRepository = mockk<RoundFeedbackRepository>()
-    private val reader = RoundFeedbackReader(
+    private val roundFeedbackReader = RoundFeedbackReader(
         questionMemoRecordReader,
         memberFinder,
         feedbackRepository,
@@ -52,7 +52,7 @@ class RoundFeedbackReaderTest {
             ),
         )
 
-        val result = reader.getMyQuestionRecords(roomId, intervieweeMemberId, authorMemberId)
+        val result = roundFeedbackReader.getMyQuestionRecords(roomId, intervieweeMemberId, authorMemberId)
 
         assertThat(result).containsExactly(
             RoundQuestionRecord(
@@ -94,7 +94,7 @@ class RoundFeedbackReaderTest {
             ),
         )
 
-        val result = reader.getIntervieweeFeedback(roomId, intervieweeMemberId)
+        val result = roundFeedbackReader.getIntervieweeFeedback(roomId, intervieweeMemberId)
 
         assertThat(result.selfFeedback).isNull()
         val card = result.finalFeedbacks.single()

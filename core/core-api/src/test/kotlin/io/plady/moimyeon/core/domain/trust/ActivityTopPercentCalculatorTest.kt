@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class ActivityTopPercentCalculatorTest {
-    private val calculator = ActivityTopPercentCalculator()
+    private val activityTopPercentCalculator = ActivityTopPercentCalculator()
     private val targetMemberId = UUID.randomUUID()
 
     @Test
@@ -28,7 +28,7 @@ class ActivityTopPercentCalculatorTest {
             higherAverageMemberId to ActivityMetric(attendedCompletedRoomCount = 1, askedQuestionCount = 3),
         )
 
-        assertThat(calculator.calculate(targetMemberId, metrics)).isEqualTo(100)
+        assertThat(activityTopPercentCalculator.calculate(targetMemberId, metrics)).isEqualTo(100)
     }
 
     @Test
@@ -41,8 +41,8 @@ class ActivityTopPercentCalculatorTest {
             higherAverageMemberId to ActivityMetric(attendedCompletedRoomCount = 1, askedQuestionCount = 3),
         )
 
-        assertThat(calculator.calculate(targetMemberId, metrics)).isEqualTo(67)
-        assertThat(calculator.calculate(tiedMemberId, metrics)).isEqualTo(67)
+        assertThat(activityTopPercentCalculator.calculate(targetMemberId, metrics)).isEqualTo(67)
+        assertThat(activityTopPercentCalculator.calculate(tiedMemberId, metrics)).isEqualTo(67)
     }
 
     @Test
@@ -53,7 +53,7 @@ class ActivityTopPercentCalculatorTest {
             UUID.randomUUID() to ActivityMetric(attendedCompletedRoomCount = 1, askedQuestionCount = 1),
         )
 
-        assertThat(calculator.calculate(targetMemberId, metrics)).isEqualTo(67)
+        assertThat(activityTopPercentCalculator.calculate(targetMemberId, metrics)).isEqualTo(67)
     }
 
     @Test
@@ -62,6 +62,6 @@ class ActivityTopPercentCalculatorTest {
             UUID.randomUUID() to ActivityMetric(attendedCompletedRoomCount = 1, askedQuestionCount = 1),
         )
 
-        assertThat(calculator.calculate(targetMemberId, metrics)).isNull()
+        assertThat(activityTopPercentCalculator.calculate(targetMemberId, metrics)).isNull()
     }
 }

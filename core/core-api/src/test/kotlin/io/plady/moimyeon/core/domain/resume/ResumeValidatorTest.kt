@@ -13,7 +13,7 @@ import java.util.UUID
 
 class ResumeValidatorTest {
     private val resumeRepository = mockk<ResumeRepository>()
-    private val validator = ResumeValidator(resumeRepository)
+    private val resumeValidator = ResumeValidator(resumeRepository)
 
     private val memberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class ResumeValidatorTest {
             resumeRepository.findByIdAndMemberIdAndDeletedAtIsNull(resumeId, memberId)
         } returns entity
 
-        val file = validator.validateOwnedBy(memberId, resumeId)
+        val file = resumeValidator.validateOwnedBy(memberId, resumeId)
 
         assertThat(file).isEqualTo(
             ResumeFile(
@@ -49,7 +49,7 @@ class ResumeValidatorTest {
         } returns null
 
         assertThatThrownBy {
-            validator.validateOwnedBy(memberId, resumeId)
+            resumeValidator.validateOwnedBy(memberId, resumeId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_NOT_FOUND)
         }

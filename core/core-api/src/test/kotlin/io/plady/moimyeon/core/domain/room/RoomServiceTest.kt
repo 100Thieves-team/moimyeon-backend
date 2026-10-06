@@ -34,7 +34,7 @@ class RoomServiceTest {
     private val jobPostingFinder = mockk<JobPostingFinder>()
     private val clock = Clock.fixed(Instant.parse("2026-08-11T12:00:00Z"), ZoneOffset.UTC)
 
-    private val service = RoomService(
+    private val roomService = RoomService(
         catalogRefValidator,
         resumeValidator,
         roomManager,
@@ -52,7 +52,7 @@ class RoomServiceTest {
         every { resumeValidator.validateOwnedBy(hostMemberId, resumeId) } throws
             CoreException(CoreErrorType.RESUME_NOT_FOUND)
 
-        assertThatThrownBy { service.createRoom(hostMemberId, creationCommand()) }
+        assertThatThrownBy { roomService.createRoom(hostMemberId, creationCommand()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_NOT_FOUND)
             }
@@ -67,7 +67,7 @@ class RoomServiceTest {
         every { roomManager.create(any(), any(), any(), any()) } returns
             RoomCreationResult(UUID.randomUUID(), RoomStatus.RECRUITING)
 
-        service.createRoom(hostMemberId, creationCommand())
+        roomService.createRoom(hostMemberId, creationCommand())
 
         verifyOrder {
             resumeValidator.validateOwnedBy(hostMemberId, resumeId)
@@ -81,7 +81,7 @@ class RoomServiceTest {
         val summaries = roomIds.map { roomSummary(it) }
         every { roomFinder.getSummaries(roomIds) } returns summaries
 
-        val result = service.getRoomSummaries(roomIds)
+        val result = roomService.getRoomSummaries(roomIds)
 
         assertThat(result).containsExactlyElementsOf(summaries)
         verify(exactly = 1) { roomFinder.getSummaries(roomIds) }
@@ -93,7 +93,7 @@ class RoomServiceTest {
         val summaries = RoomSummariesByStatus(emptyList(), emptyList())
         every { roomFinder.getSummariesByStatus(roomIds) } returns summaries
 
-        val result = service.getRoomSummariesByStatus(roomIds)
+        val result = roomService.getRoomSummariesByStatus(roomIds)
 
         assertThat(result).isSameAs(summaries)
         verify(exactly = 1) { roomFinder.getSummariesByStatus(roomIds) }

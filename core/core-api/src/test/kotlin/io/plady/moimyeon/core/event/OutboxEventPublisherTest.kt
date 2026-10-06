@@ -15,7 +15,7 @@ import java.util.UUID
 
 class OutboxEventPublisherTest {
     private val applicationEventPublisher = mockk<ApplicationEventPublisher>(relaxed = true)
-    private val publisher = OutboxEventPublisher(applicationEventPublisher)
+    private val outboxEventPublisher = OutboxEventPublisher(applicationEventPublisher)
 
     @AfterEach
     fun tearDown() {
@@ -28,7 +28,7 @@ class OutboxEventPublisherTest {
         TransactionSynchronizationManager.setActualTransactionActive(true)
         val published = slot<OutboxEvent>()
 
-        publisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD)
+        outboxEventPublisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD)
 
         verify { applicationEventPublisher.publishEvent(capture(published)) }
         assertThat(published.captured.type).isEqualTo(EventType.ROOM_APPLICATION_ACCEPTED)
@@ -40,7 +40,7 @@ class OutboxEventPublisherTest {
     fun `이벤트 종류와 payload 가 맞지 않으면 발행하지 않는다`() {
         TransactionSynchronizationManager.setActualTransactionActive(true)
 
-        assertThatThrownBy { publisher.publish(EventType.ROOM_APPLICATION_REJECTED, PAYLOAD) }
+        assertThatThrownBy { outboxEventPublisher.publish(EventType.ROOM_APPLICATION_REJECTED, PAYLOAD) }
             .isInstanceOf(IllegalArgumentException::class.java)
     }
 
@@ -49,13 +49,13 @@ class OutboxEventPublisherTest {
         TransactionSynchronizationManager.setActualTransactionActive(true)
         TransactionSynchronizationManager.setCurrentTransactionReadOnly(true)
 
-        assertThatThrownBy { publisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD) }
+        assertThatThrownBy { outboxEventPublisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD) }
             .isInstanceOf(IllegalStateException::class.java)
     }
 
     @Test
     fun `트랜잭션 밖에서 발행하면 예외로 알린다`() {
-        assertThatThrownBy { publisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD) }
+        assertThatThrownBy { outboxEventPublisher.publish(EventType.ROOM_APPLICATION_ACCEPTED, PAYLOAD) }
             .isInstanceOf(IllegalStateException::class.java)
     }
 

@@ -25,7 +25,7 @@ class RoomApplicationSubmissionServiceTest {
     private val roomApplicationSubmissionFinder = mockk<RoomApplicationSubmissionFinder>()
     private val participationValidator = mockk<ParticipationValidator>()
     private val roomApplicationDetailsReader = mockk<RoomApplicationDetailsReader>()
-    private val service = RoomApplicationSubmissionService(
+    private val roomApplicationSubmissionService = RoomApplicationSubmissionService(
         roomApplicationSubmissionManager,
         resumeValidator,
         roomApplicationSubmissionFinder,
@@ -58,7 +58,7 @@ class RoomApplicationSubmissionServiceTest {
             )
         } returns 1L
 
-        val applicationId = service.submit(applicantMemberId, roomId, applicationForm)
+        val applicationId = roomApplicationSubmissionService.submit(applicantMemberId, roomId, applicationForm)
 
         assertThat(applicationId).isEqualTo(1L)
         verifyOrder {
@@ -110,7 +110,7 @@ class RoomApplicationSubmissionServiceTest {
         )
         every { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) } returns application
 
-        val result = service.getLatestApplication(applicantMemberId, roomId)
+        val result = roomApplicationSubmissionService.getLatestApplication(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(application)
         verify(exactly = 1) { roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId) }
@@ -128,7 +128,7 @@ class RoomApplicationSubmissionServiceTest {
         )
         every { roomApplicationSubmissionFinder.getPendingByApplicant(applicantMemberId) } returns applications
 
-        val result = service.getPendingApplications(applicantMemberId)
+        val result = roomApplicationSubmissionService.getPendingApplications(applicantMemberId)
 
         assertThat(result).containsExactlyElementsOf(applications)
         verify(exactly = 1) { roomApplicationSubmissionFinder.getPendingByApplicant(applicantMemberId) }
@@ -140,7 +140,7 @@ class RoomApplicationSubmissionServiceTest {
         justRun { participationValidator.validateHost(roomId, hostMemberId) }
         every { roomApplicationDetailsReader.getAllByRoom(roomId) } returns applications
 
-        val result = service.getApplications(hostMemberId, roomId)
+        val result = roomApplicationSubmissionService.getApplications(hostMemberId, roomId)
 
         assertThat(result).containsExactlyElementsOf(applications)
         verifyOrder {
@@ -155,7 +155,7 @@ class RoomApplicationSubmissionServiceTest {
             participationValidator.validateHost(roomId, hostMemberId)
         } throws CoreException(CoreErrorType.ROOM_FORBIDDEN)
 
-        assertThatThrownBy { service.getApplications(hostMemberId, roomId) }
+        assertThatThrownBy { roomApplicationSubmissionService.getApplications(hostMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
             }
@@ -167,7 +167,7 @@ class RoomApplicationSubmissionServiceTest {
     fun `신청자는 방장이 처리하기 전 자신의 참가 신청을 철회한다`() {
         justRun { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
 
-        service.withdraw(applicantMemberId, roomId)
+        roomApplicationSubmissionService.withdraw(applicantMemberId, roomId)
 
         verify(exactly = 1) { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
     }
@@ -210,7 +210,7 @@ class RoomApplicationSubmissionServiceTest {
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {
         assertThatThrownBy {
-            service.submit(applicantMemberId, roomId, applicationForm)
+            roomApplicationSubmissionService.submit(applicantMemberId, roomId, applicationForm)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(errorType)
         }
@@ -218,7 +218,7 @@ class RoomApplicationSubmissionServiceTest {
 
     private fun assertWithdrawalFails(errorType: CoreErrorType) {
         assertThatThrownBy {
-            service.withdraw(applicantMemberId, roomId)
+            roomApplicationSubmissionService.withdraw(applicantMemberId, roomId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(errorType)
         }

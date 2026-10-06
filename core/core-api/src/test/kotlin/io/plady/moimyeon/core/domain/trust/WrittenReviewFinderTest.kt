@@ -15,7 +15,7 @@ import java.util.UUID
 
 class WrittenReviewFinderTest {
     private val reviewRepository = mockk<ReviewRepository>()
-    private val finder = WrittenReviewFinder(reviewRepository)
+    private val writtenReviewFinder = WrittenReviewFinder(reviewRepository)
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -33,7 +33,7 @@ class WrittenReviewFinderTest {
     fun `작성자는 자신이 작성한 후기의 태그와 텍스트, 익명 여부를 조회한다`() {
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns review
 
-        val result = finder.getWrittenReview(authorMemberId, 1L)
+        val result = writtenReviewFinder.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result).isEqualTo(
             WrittenReview(
@@ -58,7 +58,7 @@ class WrittenReviewFinderTest {
         )
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns emptyReview
 
-        val result = finder.getWrittenReview(authorMemberId, 1L)
+        val result = writtenReviewFinder.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result.tags).isEmpty()
         assertThat(result.content).isEmpty()
@@ -87,7 +87,7 @@ class WrittenReviewFinderTest {
             )
         } returns listOf(firstReview, emptyReview)
 
-        val result = finder.getWrittenReviews(authorMemberId, roomId)
+        val result = writtenReviewFinder.getWrittenReviews(authorMemberId, roomId)
 
         assertThat(result).containsExactly(
             WrittenReview(
@@ -127,7 +127,7 @@ class WrittenReviewFinderTest {
         )
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns visibleReview
 
-        val result = finder.getWrittenReview(authorMemberId, 1L)
+        val result = writtenReviewFinder.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result.content).isEqualTo("공개된 후기")
     }
@@ -146,7 +146,7 @@ class WrittenReviewFinderTest {
         )
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns hiddenReview
 
-        val result = finder.getWrittenReview(authorMemberId, 1L)
+        val result = writtenReviewFinder.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result.content).isEqualTo("숨김 처리된 후기")
     }
@@ -155,7 +155,7 @@ class WrittenReviewFinderTest {
     fun `활성 후기가 없으면 E2006 을 던진다`() {
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns null
 
-        assertThatThrownBy { finder.getWrittenReview(authorMemberId, 1L) }
+        assertThatThrownBy { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_NOT_FOUND)
             }
@@ -165,7 +165,7 @@ class WrittenReviewFinderTest {
     fun `작성자가 아니면 E2007 을 던진다`() {
         every { reviewRepository.findByIdAndDeletedAtIsNull(1L) } returns review
 
-        assertThatThrownBy { finder.getWrittenReview(UUID.randomUUID(), 1L) }
+        assertThatThrownBy { writtenReviewFinder.getWrittenReview(UUID.randomUUID(), 1L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_FORBIDDEN)
             }

@@ -17,7 +17,7 @@ import java.util.UUID
 
 class ReviewSkipRecorderTest {
     private val skipRepository = mockk<ReviewSkipRepository>()
-    private val recorder = ReviewSkipRecorder(skipRepository)
+    private val reviewSkipRecorder = ReviewSkipRecorder(skipRepository)
     private val command = ReviewSkipCommand(
         roomId = UUID.randomUUID(),
         authorMemberId = UUID.randomUUID(),
@@ -40,7 +40,7 @@ class ReviewSkipRecorderTest {
         val skipSlot = slot<ReviewSkipEntity>()
         every { skipRepository.saveAndFlush(capture(skipSlot)) } answers { firstArg() }
 
-        recorder.record(command)
+        reviewSkipRecorder.record(command)
 
         assertThat(skipSlot.captured.roomId).isEqualTo(command.roomId)
         assertThat(skipSlot.captured.authorMemberId).isEqualTo(command.authorMemberId)
@@ -57,7 +57,7 @@ class ReviewSkipRecorderTest {
             )
         } returns true
 
-        recorder.record(command)
+        reviewSkipRecorder.record(command)
 
         verify(exactly = 0) { skipRepository.saveAndFlush(any()) }
     }
@@ -69,7 +69,7 @@ class ReviewSkipRecorderTest {
             SQLException("uk_review_skip_room_author_target"),
         )
 
-        assertThatCode { recorder.record(command) }.doesNotThrowAnyException()
+        assertThatCode { reviewSkipRecorder.record(command) }.doesNotThrowAnyException()
     }
 
     @Test
@@ -80,6 +80,6 @@ class ReviewSkipRecorderTest {
         )
         every { skipRepository.saveAndFlush(any()) } throws unexpected
 
-        assertThatThrownBy { recorder.record(command) }.isSameAs(unexpected)
+        assertThatThrownBy { reviewSkipRecorder.record(command) }.isSameAs(unexpected)
     }
 }

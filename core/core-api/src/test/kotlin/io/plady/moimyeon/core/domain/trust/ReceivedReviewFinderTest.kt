@@ -17,7 +17,7 @@ import java.util.UUID
 class ReceivedReviewFinderTest {
     private val reviewRepository = mockk<ReviewRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneOffset.UTC)
-    private val finder = ReceivedReviewFinder(reviewRepository, clock)
+    private val receivedReviewFinder = ReceivedReviewFinder(reviewRepository, clock)
     private val memberId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
 
@@ -39,7 +39,7 @@ class ReceivedReviewFinderTest {
             reviewRepository.countVisibleReceivedReviews(memberId, LocalDateTime.of(2026, 8, 14, 3, 0))
         } returns 3L
 
-        val page = finder.getPage(memberId, lastReviewId = null, size = 2)
+        val page = receivedReviewFinder.getPage(memberId, lastReviewId = null, size = 2)
 
         assertThat(page.reviews.map(ReceivedReview::id)).containsExactly(3L, 2L)
         assertThat(page.reviews).allSatisfy {
@@ -64,7 +64,7 @@ class ReceivedReviewFinderTest {
             reviewRepository.countVisibleReceivedReviews(memberId, LocalDateTime.of(2026, 8, 14, 3, 0))
         } returns 0L
 
-        val page = finder.getPage(memberId, lastReviewId = null, size = 20)
+        val page = receivedReviewFinder.getPage(memberId, lastReviewId = null, size = 20)
 
         assertThat(page.reviews).isEmpty()
         assertThat(page.totalCount).isZero()
@@ -88,7 +88,7 @@ class ReceivedReviewFinderTest {
             reviewRepository.countVisibleReceivedReviews(memberId, LocalDateTime.of(2026, 8, 14, 3, 0))
         } returns 1L
 
-        val page = finder.getPage(memberId, lastReviewId = null, size = 20)
+        val page = receivedReviewFinder.getPage(memberId, lastReviewId = null, size = 20)
 
         assertThat(page.reviews.single().content).isEmpty()
     }

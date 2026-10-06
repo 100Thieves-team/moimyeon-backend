@@ -16,7 +16,7 @@ class RoomViewerReaderTest {
     private val memberFinder: MemberFinder = mockk()
     private val roomApplicationSubmissionFinder: RoomApplicationSubmissionFinder = mockk()
 
-    private val reader = RoomViewerReader(
+    private val roomViewerReader = RoomViewerReader(
         participationFinder,
         memberFinder,
         roomApplicationSubmissionFinder,
@@ -28,7 +28,7 @@ class RoomViewerReaderTest {
     fun `비로그인 조회는 관계 질의를 하지 않고 null 로 채운다`() {
         val roomId = UUID.randomUUID()
 
-        val viewers = reader.readAll(null, setOf(roomId))
+        val viewers = roomViewerReader.readAll(null, setOf(roomId))
 
         assertThat(viewers).containsExactlyEntriesOf(mapOf(roomId to null))
         verify(exactly = 0) { participationFinder.getRoomParticipations(any(), any()) }
@@ -41,7 +41,7 @@ class RoomViewerReaderTest {
     // 빈 IN 절이 쿼리에 들어가지 않게 한다(RoomSearchReader 와 같은 이유).
     @Test
     fun `조회할 룸이 없으면 로그인 사용자여도 아무것도 묻지 않는다`() {
-        val viewers = reader.readAll(UUID.randomUUID(), emptySet())
+        val viewers = roomViewerReader.readAll(UUID.randomUUID(), emptySet())
 
         assertThat(viewers).isEmpty()
         verify(exactly = 0) { memberFinder.isActive(any()) }

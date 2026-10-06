@@ -20,7 +20,7 @@ class ReviewServiceTest {
     private val targetFinder = mockk<ReviewTargetFinder>()
     private val receivedReviewFinder = mockk<ReceivedReviewFinder>()
     private val writtenReviewFinder = mockk<WrittenReviewFinder>()
-    private val service = ReviewService(
+    private val reviewService = ReviewService(
         eligibilityValidator,
         submissionManager,
         reviewEditor,
@@ -51,7 +51,7 @@ class ReviewServiceTest {
         )
         every { submissionManager.submit(command) } returns 1L
 
-        val reviewId = service.submit(authorMemberId, roomId, content)
+        val reviewId = reviewService.submit(authorMemberId, roomId, content)
 
         assertThat(reviewId).isEqualTo(1L)
         verify(exactly = 1) { submissionManager.submit(command) }
@@ -149,7 +149,7 @@ class ReviewServiceTest {
     fun `제출 후 3시간 전에는 대상자의 받은 후기에 보이지 않는다`() {
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
+        val result = reviewService.getReceivedReviewPage(targetMemberId, null, 20)
 
         assertThat(result.reviews).isEmpty()
     }
@@ -159,7 +159,7 @@ class ReviewServiceTest {
         val reviews = listOf(receivedReview())
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(reviews)
 
-        val result = service.getReceivedReviewPage(targetMemberId, null, 20)
+        val result = reviewService.getReceivedReviewPage(targetMemberId, null, 20)
 
         assertThat(result.reviews).containsExactlyElementsOf(reviews)
     }
@@ -169,7 +169,7 @@ class ReviewServiceTest {
         val review = receivedReview()
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        val result = service.getReceivedReviewPage(targetMemberId, null, 20).reviews.single()
+        val result = reviewService.getReceivedReviewPage(targetMemberId, null, 20).reviews.single()
 
         assertThat(result).isEqualTo(
             ReceivedReview(
@@ -186,7 +186,7 @@ class ReviewServiceTest {
     fun `숨김되거나 삭제된 후기는 받은 후기 조회에서 제외한다`() {
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage()
 
-        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).isEmpty()
+        assertThat(reviewService.getReceivedReviewPage(targetMemberId, null, 20).reviews).isEmpty()
     }
 
     @Test
@@ -194,7 +194,7 @@ class ReviewServiceTest {
         val review = receivedReview()
         every { receivedReviewFinder.getPage(targetMemberId, null, 20) } returns receivedReviewPage(listOf(review))
 
-        assertThat(service.getReceivedReviewPage(targetMemberId, null, 20).reviews).containsExactly(review)
+        assertThat(reviewService.getReceivedReviewPage(targetMemberId, null, 20).reviews).containsExactly(review)
     }
 
     @Test
@@ -221,7 +221,7 @@ class ReviewServiceTest {
         )
         every { reviewEditor.update(command) } just Runs
 
-        service.update(authorMemberId, 1L, content)
+        reviewService.update(authorMemberId, 1L, content)
 
         verify(exactly = 1) { reviewEditor.update(command) }
     }
@@ -240,7 +240,7 @@ class ReviewServiceTest {
     fun `제출 후 3시간 동안 작성자가 후기를 삭제한다`() {
         every { reviewEditor.delete(authorMemberId, 1L) } just Runs
 
-        service.delete(authorMemberId, 1L)
+        reviewService.delete(authorMemberId, 1L)
 
         verify(exactly = 1) { reviewEditor.delete(authorMemberId, 1L) }
     }
@@ -261,7 +261,7 @@ class ReviewServiceTest {
         every { reviewEditor.delete(authorMemberId, 1L) } just Runs
         every { submissionManager.submit(submission) } returns 2L
 
-        service.delete(authorMemberId, 1L)
+        reviewService.delete(authorMemberId, 1L)
         val resubmittedReviewId = submit(submission)
 
         assertThat(resubmittedReviewId).isEqualTo(2L)
@@ -287,7 +287,7 @@ class ReviewServiceTest {
         givenEligible(command)
         every { skipRecorder.record(command) } just Runs
 
-        service.skip(authorMemberId, roomId, content)
+        reviewService.skip(authorMemberId, roomId, content)
 
         verify(exactly = 1) { skipRecorder.record(command) }
     }
@@ -336,7 +336,7 @@ class ReviewServiceTest {
         )
         every { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) } returns writtenReview
 
-        val result = service.getWrittenReview(authorMemberId, 1L)
+        val result = reviewService.getWrittenReview(authorMemberId, 1L)
 
         assertThat(result).isEqualTo(writtenReview)
         verify(exactly = 1) { writtenReviewFinder.getWrittenReview(authorMemberId, 1L) }
@@ -356,7 +356,7 @@ class ReviewServiceTest {
         )
         every { writtenReviewFinder.getWrittenReviews(authorMemberId, roomId) } returns reviews
 
-        val result = service.getWrittenReviews(authorMemberId, roomId)
+        val result = reviewService.getWrittenReviews(authorMemberId, roomId)
 
         assertThat(result).isSameAs(reviews)
         verify(exactly = 1) { writtenReviewFinder.getWrittenReviews(authorMemberId, roomId) }
@@ -370,7 +370,7 @@ class ReviewServiceTest {
         )
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
 
-        val result = service.getTargets(authorMemberId, roomId)
+        val result = reviewService.getTargets(authorMemberId, roomId)
 
         assertThat(result).isSameAs(targets)
         verify(exactly = 1) { targetFinder.getTargets(authorMemberId, roomId) }
@@ -385,7 +385,7 @@ class ReviewServiceTest {
         every { targetFinder.getTargets(authorMemberId, roomId) } returns targets
 
         skip(skip)
-        val result = service.getTargets(authorMemberId, roomId)
+        val result = reviewService.getTargets(authorMemberId, roomId)
 
         assertThat(result).containsExactlyElementsOf(targets)
     }
@@ -485,14 +485,14 @@ class ReviewServiceTest {
     private fun assertDeleteFails(errorType: CoreErrorType) {
         every { reviewEditor.delete(authorMemberId, 1L) } throws CoreException(errorType)
 
-        assertThatThrownBy { service.delete(authorMemberId, 1L) }
+        assertThatThrownBy { reviewService.delete(authorMemberId, 1L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
     }
 
     private fun submit(command: ReviewSubmissionCommand): Long {
-        return service.submit(
+        return reviewService.submit(
             command.authorMemberId,
             command.roomId,
             ReviewSubmissionContent(
@@ -505,7 +505,7 @@ class ReviewServiceTest {
     }
 
     private fun update(command: ReviewUpdateCommand) {
-        service.update(
+        reviewService.update(
             command.authorMemberId,
             command.reviewId,
             ReviewUpdateContent(command.tags, command.content),
@@ -513,7 +513,7 @@ class ReviewServiceTest {
     }
 
     private fun skip(command: ReviewSkipCommand) {
-        service.skip(
+        reviewService.skip(
             command.authorMemberId,
             command.roomId,
             ReviewSkipContent(command.targetMemberId),

@@ -20,7 +20,7 @@ class RoundServiceTest {
     private val progressAccessValidator = mockk<RoomProgressAccessValidator>()
     private val questionCardSetAccessValidator = mockk<QuestionCardSetAccessValidator>()
     private val questionCardSetReader = mockk<QuestionCardSetReader>()
-    private val service = RoundService(
+    private val roundService = RoundService(
         progressAccessValidator,
         questionCardSetAccessValidator,
         questionCardSetReader,
@@ -35,7 +35,7 @@ class RoundServiceTest {
     fun `면접자가 자신의 라운드를 조회하면 질문 카드셋을 읽지 않고 면접자 화면을 본다`() {
         justRun { progressAccessValidator.validateInProgressParticipant(roomId, intervieweeMemberId) }
 
-        val result = service.getScreen(intervieweeMemberId, roomId, intervieweeMemberId)
+        val result = roundService.getScreen(intervieweeMemberId, roomId, intervieweeMemberId)
 
         assertThat(result).isEqualTo(RoundScreen.Interviewee(intervieweeMemberId))
         verifyOrder {
@@ -65,7 +65,7 @@ class RoundServiceTest {
             questionCardSetReader.getByRoomAndTarget(roomId, intervieweeMemberId)
         } returns cardSet
 
-        val result = service.getScreen(participantMemberId, roomId, intervieweeMemberId)
+        val result = roundService.getScreen(participantMemberId, roomId, intervieweeMemberId)
 
         assertThat(result).isEqualTo(
             RoundScreen.Participant(
@@ -102,8 +102,8 @@ class RoundServiceTest {
             questionCardSetReader.getByRoomAndTarget(roomId, intervieweeMemberId)
         } returns cardSet
 
-        val myRound = service.getScreen(participantMemberId, roomId, participantMemberId)
-        val otherRound = service.getScreen(participantMemberId, roomId, intervieweeMemberId)
+        val myRound = roundService.getScreen(participantMemberId, roomId, participantMemberId)
+        val otherRound = roundService.getScreen(participantMemberId, roomId, intervieweeMemberId)
 
         assertThat(myRound).isEqualTo(RoundScreen.Interviewee(participantMemberId))
         assertThat(otherRound).isEqualTo(
@@ -127,7 +127,7 @@ class RoundServiceTest {
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
-            service.getScreen(outsiderMemberId, roomId, intervieweeMemberId)
+            roundService.getScreen(outsiderMemberId, roomId, intervieweeMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
         }
@@ -150,7 +150,7 @@ class RoundServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
 
         assertThatThrownBy {
-            service.getScreen(participantMemberId, roomId, intervieweeMemberId)
+            roundService.getScreen(participantMemberId, roomId, intervieweeMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
         }

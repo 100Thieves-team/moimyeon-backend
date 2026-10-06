@@ -16,7 +16,7 @@ import java.util.UUID
 class ResumeUseHistoryFinderTest {
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val roomFinder = mockk<RoomFinder>()
-    private val finder = ResumeUseHistoryFinder(resumeSubmissionRepository, roomFinder)
+    private val resumeUseHistoryFinder = ResumeUseHistoryFinder(resumeSubmissionRepository, roomFinder)
 
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val firstResumeId = UUID.fromString("00000000-0000-0000-0000-000000000011")
@@ -47,7 +47,7 @@ class ResumeUseHistoryFinderTest {
             room(secondRoomId, "두 번째 백엔드 면접 스터디"),
         )
 
-        val result = finder.getLatest(memberId, listOf(firstResumeId, secondResumeId))
+        val result = resumeUseHistoryFinder.getLatest(memberId, listOf(firstResumeId, secondResumeId))
 
         assertThat(result).containsExactlyEntriesOf(
             linkedMapOf(
@@ -67,7 +67,7 @@ class ResumeUseHistoryFinderTest {
 
     @Test
     fun `조회할 이력서가 없으면 제출 이력과 룸을 조회하지 않는다`() {
-        assertThat(finder.getLatest(memberId, emptyList())).isEmpty()
+        assertThat(resumeUseHistoryFinder.getLatest(memberId, emptyList())).isEmpty()
 
         verify(exactly = 0) { resumeSubmissionRepository.findByMemberIdAndSourceResumeIdInAndDeletedAtIsNullOrderBySubmittedAtDescIdDesc(any(), any()) }
         verify(exactly = 0) { roomFinder.getAllByIds(any()) }
@@ -86,7 +86,7 @@ class ResumeUseHistoryFinderTest {
         } returns listOf(submission)
         every { roomFinder.getAllByIds(listOf(latestRoomId)) } returns emptyList()
 
-        val result = finder.getLatest(memberId, listOf(firstResumeId))
+        val result = resumeUseHistoryFinder.getLatest(memberId, listOf(firstResumeId))
 
         assertThat(result).containsEntry(
             firstResumeId,

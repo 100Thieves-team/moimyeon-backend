@@ -20,7 +20,7 @@ import java.util.UUID
 class ReviewEligibilityValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val roomProgressReader = mockk<RoomProgressReader>()
-    private val validator = ReviewEligibilityValidator(roomFinder, roomProgressReader)
+    private val reviewEligibilityValidator = ReviewEligibilityValidator(roomFinder, roomProgressReader)
     private val room = mockk<Room>()
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -38,7 +38,7 @@ class ReviewEligibilityValidatorTest {
 
     @Test
     fun `완료 룸에서 작성자와 대상자가 모두 출석하면 후기 행위를 허용한다`() {
-        validator.validate(roomId, authorMemberId, targetMemberId)
+        reviewEligibilityValidator.validate(roomId, authorMemberId, targetMemberId)
 
         verify(exactly = 1) { roomProgressReader.findAttendance(roomId, authorMemberId) }
         verify(exactly = 1) { roomProgressReader.findAttendance(roomId, targetMemberId) }
@@ -72,7 +72,7 @@ class ReviewEligibilityValidatorTest {
 
     @Test
     fun `자기 자신이면 대상 출석을 다시 확인하지 않고 E2004 를 던진다`() {
-        assertThatThrownBy { validator.validate(roomId, authorMemberId, authorMemberId) }
+        assertThatThrownBy { reviewEligibilityValidator.validate(roomId, authorMemberId, authorMemberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_SELF_NOT_ALLOWED)
             }
@@ -88,7 +88,7 @@ class ReviewEligibilityValidatorTest {
     }
 
     private fun assertValidationFails(errorType: CoreErrorType) {
-        assertThatThrownBy { validator.validate(roomId, authorMemberId, targetMemberId) }
+        assertThatThrownBy { reviewEligibilityValidator.validate(roomId, authorMemberId, targetMemberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }

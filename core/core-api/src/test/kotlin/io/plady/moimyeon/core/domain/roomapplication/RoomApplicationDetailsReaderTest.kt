@@ -24,7 +24,7 @@ class RoomApplicationDetailsReaderTest {
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val memberFinder = mockk<MemberFinder>()
     private val resumeFinder = mockk<ResumeFinder>()
-    private val reader = RoomApplicationDetailsReader(
+    private val roomApplicationDetailsReader = RoomApplicationDetailsReader(
         roomApplicationRepository,
         resumeSubmissionRepository,
         memberFinder,
@@ -61,7 +61,7 @@ class RoomApplicationDetailsReaderTest {
             otherResumeId to ResumeSummary(ResumeSummaryStatus.DONE, "데이터 파이프라인 경험이 있는 개발자"),
         )
 
-        val result = reader.getAllByRoom(roomId)
+        val result = roomApplicationDetailsReader.getAllByRoom(roomId)
 
         assertThat(result).containsExactly(
             RoomApplicationDetails(
@@ -109,7 +109,7 @@ class RoomApplicationDetailsReaderTest {
                 resumeId to ResumeSummary(status, null),
             )
 
-            assertThat(reader.getAllByRoom(roomId).single().resumeSummary)
+            assertThat(roomApplicationDetailsReader.getAllByRoom(roomId).single().resumeSummary)
                 .isEqualTo(ApplicationResumeSummary.Preparing)
         }
     }
@@ -128,7 +128,7 @@ class RoomApplicationDetailsReaderTest {
             resumeId to ResumeSummary(ResumeSummaryStatus.DONE, "결제 도메인 경험이 있는 백엔드 개발자"),
         )
 
-        assertThat(reader.getAllByRoom(roomId).single().note).isEmpty()
+        assertThat(roomApplicationDetailsReader.getAllByRoom(roomId).single().note).isEmpty()
     }
 
     @Test
@@ -144,7 +144,7 @@ class RoomApplicationDetailsReaderTest {
             resumeId to ResumeSummary(ResumeSummaryStatus.DONE, "결제 도메인 경험이 있는 백엔드 개발자"),
         )
 
-        assertThat(reader.getAllByRoom(roomId).single().applicant)
+        assertThat(roomApplicationDetailsReader.getAllByRoom(roomId).single().applicant)
             .isEqualTo(ApplicationApplicant.Withdrawn(applicantMemberId))
     }
 
@@ -157,7 +157,7 @@ class RoomApplicationDetailsReaderTest {
             )
         } returns emptyList()
 
-        assertThat(reader.getAllByRoom(roomId)).isEmpty()
+        assertThat(roomApplicationDetailsReader.getAllByRoom(roomId)).isEmpty()
 
         verify(exactly = 0) { resumeSubmissionRepository.findByRoomApplicationIdInAndDeletedAtIsNull(any()) }
         verify(exactly = 0) { memberFinder.getAllByIds(any()) }

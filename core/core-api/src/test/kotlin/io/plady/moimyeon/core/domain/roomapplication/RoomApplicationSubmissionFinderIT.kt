@@ -20,7 +20,7 @@ import java.util.UUID
 
 @Transactional
 class RoomApplicationSubmissionFinderIT(
-    private val finder: RoomApplicationSubmissionFinder,
+    private val roomApplicationSubmissionFinder: RoomApplicationSubmissionFinder,
     private val roomRepository: RoomRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val resumeSubmissionRepository: ResumeSubmissionRepository,
@@ -51,7 +51,7 @@ class RoomApplicationSubmissionFinderIT(
             "rejected.pdf",
         )
 
-        val result = finder.getPendingByApplicant(memberId)
+        val result = roomApplicationSubmissionFinder.getPendingByApplicant(memberId)
 
         assertThat(result.map { it.roomId }).containsExactly(recentRoomId, olderRoomId)
         assertThat(result.first().id).isEqualTo(recentApplication.id)
@@ -60,7 +60,7 @@ class RoomApplicationSubmissionFinderIT(
 
     @Test
     fun `처리 대기 신청이 없으면 빈 목록을 반환한다`() {
-        assertThat(finder.getPendingByApplicant(memberId)).isEmpty()
+        assertThat(roomApplicationSubmissionFinder.getPendingByApplicant(memberId)).isEmpty()
     }
 
     @Test
@@ -77,7 +77,7 @@ class RoomApplicationSubmissionFinderIT(
             ),
         )
 
-        assertThatThrownBy { finder.getPendingByApplicant(memberId) }
+        assertThatThrownBy { roomApplicationSubmissionFinder.getPendingByApplicant(memberId) }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("제출 이력서")
     }

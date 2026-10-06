@@ -33,7 +33,7 @@ class ReviewSubmissionManagerTest {
     private val attendanceRepository = mockk<AttendanceRepository>()
     private val eligibilityValidator = mockk<ReviewEligibilityValidator>()
     private val clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneOffset.UTC)
-    private val manager = ReviewSubmissionManager(
+    private val reviewSubmissionManager = ReviewSubmissionManager(
         reviewRepository,
         roomRepository,
         attendanceRepository,
@@ -92,7 +92,7 @@ class ReviewSubmissionManagerTest {
         val savedReview = mockk<ReviewEntity> { every { id } returns 1L }
         every { reviewRepository.saveAndFlush(capture(reviewSlot)) } returns savedReview
 
-        val reviewId = manager.submit(command)
+        val reviewId = reviewSubmissionManager.submit(command)
 
         assertThat(reviewId).isEqualTo(1L)
         assertThat(reviewSlot.captured.roomId).isEqualTo(roomId)
@@ -148,7 +148,7 @@ class ReviewSubmissionManagerTest {
         val savedReview = mockk<ReviewEntity> { every { id } returns 1L }
         every { reviewRepository.saveAndFlush(capture(reviewSlot)) } returns savedReview
 
-        manager.submit(command.copy(tags = emptySet(), content = ""))
+        reviewSubmissionManager.submit(command.copy(tags = emptySet(), content = ""))
 
         assertThat(reviewSlot.captured.tags()).isEmpty()
         assertThat(reviewSlot.captured.content).isEmpty()
@@ -187,11 +187,11 @@ class ReviewSubmissionManagerTest {
         )
         every { reviewRepository.saveAndFlush(any()) } throws unexpected
 
-        assertThatThrownBy { manager.submit(command) }.isSameAs(unexpected)
+        assertThatThrownBy { reviewSubmissionManager.submit(command) }.isSameAs(unexpected)
     }
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.submit(command) }
+        assertThatThrownBy { reviewSubmissionManager.submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }

@@ -52,7 +52,7 @@ class RoomManagerTest {
     private val memberValidator = mockk<MemberValidator>(relaxed = true)
     private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
-    private val manager = RoomManager(
+    private val roomManager = RoomManager(
         roomRepository,
         participationRepository,
         roomApplicationRepository,
@@ -88,7 +88,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(3)
 
-        manager.update(roomId, hostId, updateCommand(title = "다시 정한 백엔드 모의면접 준비 룸", min = 3, max = 5))
+        roomManager.update(roomId, hostId, updateCommand(title = "다시 정한 백엔드 모의면접 준비 룸", min = 3, max = 5))
 
         assertThat(room.title).isEqualTo("다시 정한 백엔드 모의면접 준비 룸")
         assertThat(room.description).isNull()
@@ -125,7 +125,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(3)
 
-        manager.update(roomId, hostId, updateCommand(min = 2, max = 3))
+        roomManager.update(roomId, hostId, updateCommand(min = 2, max = 3))
 
         assertThat(room.maxCapacity).isEqualTo(3)
     }
@@ -136,7 +136,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(2)
 
-        manager.update(roomId, hostId, updateCommand(min = 5, max = 8))
+        roomManager.update(roomId, hostId, updateCommand(min = 5, max = 8))
 
         assertThat(room.minCapacity).isEqualTo(5)
     }
@@ -148,7 +148,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(1)
 
-        manager.update(roomId, hostId, updateCommand(min = 2, max = 2))
+        roomManager.update(roomId, hostId, updateCommand(min = 2, max = 2))
 
         verify {
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
@@ -200,7 +200,7 @@ class RoomManagerTest {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
 
-        manager.cancel(roomId, hostId)
+        roomManager.cancel(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
     }
@@ -210,7 +210,7 @@ class RoomManagerTest {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
 
-        manager.cancel(roomId, hostId)
+        roomManager.cancel(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
     }
@@ -231,7 +231,7 @@ class RoomManagerTest {
         val room = givenRoomForUpdateWithStatus(RoomStatus.CONFIRMED, canCancel = true)
         givenHost()
 
-        manager.cancel(roomId, hostId)
+        roomManager.cancel(roomId, hostId)
 
         verify(exactly = 1) { room.cancel() }
     }
@@ -284,7 +284,7 @@ class RoomManagerTest {
         givenRecruitingRoomForUpdate()
         givenHost()
 
-        manager.cancel(roomId, hostId)
+        roomManager.cancel(roomId, hostId)
 
         verifyOrder {
             roomStatusLogRepository.save(
@@ -301,7 +301,7 @@ class RoomManagerTest {
         givenHost()
         givenJoinedMembers(hostId, participantId)
 
-        manager.cancel(roomId, hostId)
+        roomManager.cancel(roomId, hostId)
 
         val canceled = slot<RoomCanceledEventPayload>()
         verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CANCELED, capture(canceled)) }
@@ -318,7 +318,7 @@ class RoomManagerTest {
         every { roomStatusLogRepository.save(any()) } throws
             DataIntegrityViolationException("uk_room_status_log_room_terminal_active")
 
-        assertThatThrownBy { manager.cancel(roomId, hostId) }
+        assertThatThrownBy { roomManager.cancel(roomId, hostId) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
@@ -328,7 +328,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(4)
 
-        manager.confirm(roomId, hostId)
+        roomManager.confirm(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
     }
@@ -340,7 +340,7 @@ class RoomManagerTest {
         givenHost()
         givenParticipants(2)
 
-        manager.confirm(roomId, hostId)
+        roomManager.confirm(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
     }
@@ -353,7 +353,7 @@ class RoomManagerTest {
         givenParticipants(2)
         givenJoinedMembers(hostId, participantId)
 
-        manager.confirm(roomId, hostId)
+        roomManager.confirm(roomId, hostId)
 
         val confirmed = slot<RoomConfirmedEventPayload>()
         verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CONFIRMED, capture(confirmed)) }
@@ -389,7 +389,7 @@ class RoomManagerTest {
             roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CONFIRMED)
         } returns true
 
-        manager.confirm(roomId, hostId)
+        roomManager.confirm(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
     }
@@ -425,26 +425,26 @@ class RoomManagerTest {
         every { roomStatusLogRepository.save(any()) } throws
             DataIntegrityViolationException("room_status_log write failed")
 
-        assertThatThrownBy { manager.confirm(roomId, hostId) }
+        assertThatThrownBy { roomManager.confirm(roomId, hostId) }
             .isInstanceOf(DataIntegrityViolationException::class.java)
     }
 
     private fun assertConfirmFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.confirm(roomId, hostId) }
+        assertThatThrownBy { roomManager.confirm(roomId, hostId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
     }
 
     private fun assertCancelFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.cancel(roomId, hostId) }
+        assertThatThrownBy { roomManager.cancel(roomId, hostId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
     }
 
     private fun assertFails(errorType: CoreErrorType, command: () -> RoomUpdateCommand) {
-        assertThatThrownBy { manager.update(roomId, hostId, command()) }
+        assertThatThrownBy { roomManager.update(roomId, hostId, command()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -552,7 +552,7 @@ class RoomManagerTest {
         givenActiveHostedRoomCount(0)
         givenCreateWritesSucceed()
 
-        manager.create(newRoom(), hostId, resumeId, resumeFile())
+        roomManager.create(newRoom(), hostId, resumeId, resumeFile())
 
         verifyOrder {
             memberValidator.validateActive(hostId)
@@ -566,7 +566,7 @@ class RoomManagerTest {
     fun `탈퇴한 회원은 룸을 만들 수 없다`() {
         every { memberValidator.validateActive(hostId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
-        assertThatThrownBy { manager.create(newRoom(), hostId, resumeId, resumeFile()) }
+        assertThatThrownBy { roomManager.create(newRoom(), hostId, resumeId, resumeFile()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
@@ -581,7 +581,7 @@ class RoomManagerTest {
         givenNoDuplicate()
         givenActiveHostedRoomCount(0)
 
-        assertThatThrownBy { manager.create(pastRoom(), hostId, resumeId, resumeFile()) }
+        assertThatThrownBy { roomManager.create(pastRoom(), hostId, resumeId, resumeFile()) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_START_AT_NOT_FUTURE)
             }

@@ -10,7 +10,7 @@ class PendingOutboxRelaySchedulerTest {
     private val outboxRelay = mockk<OutboxRelay>()
     private val relayCoordinator = mockk<OutboxRelayCoordinator>()
 
-    private val scheduler = PendingOutboxRelayScheduler(
+    private val pendingOutboxRelayScheduler = PendingOutboxRelayScheduler(
         outboxClaimManager = outboxClaimManager,
         outboxRelay = outboxRelay,
         relayCoordinator = relayCoordinator,
@@ -20,7 +20,7 @@ class PendingOutboxRelaySchedulerTest {
     fun `다른 인스턴스가 미처리 Outbox를 재전달 중이면 DB를 조회하지 않는다`() {
         every { relayCoordinator.relayPendingIfAvailable(any()) } returns false
 
-        scheduler.relayPendingOutboxes()
+        pendingOutboxRelayScheduler.relayPendingOutboxes()
 
         verify(exactly = 0) { outboxClaimManager.claimPendingBatch() }
     }
@@ -33,7 +33,7 @@ class PendingOutboxRelaySchedulerTest {
         }
         every { outboxClaimManager.claimPendingBatch() } returns emptyList()
 
-        scheduler.relayPendingOutboxes()
+        pendingOutboxRelayScheduler.relayPendingOutboxes()
 
         verify(exactly = 1) { outboxClaimManager.claimPendingBatch() }
     }

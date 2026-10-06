@@ -33,7 +33,7 @@ class RoomCommentManagerTest {
     private lateinit var roomFinder: RoomFinder
     private lateinit var participationFinder: ParticipationFinder
     private lateinit var outboxEventPublisher: OutboxEventPublisher
-    private lateinit var manager: RoomCommentManager
+    private lateinit var roomCommentManager: RoomCommentManager
 
     private val roomId = UUID.randomUUID()
     private val authorId = UUID.randomUUID()
@@ -57,7 +57,7 @@ class RoomCommentManagerTest {
             JoinedParticipant(memberId = authorId, isHost = false),
             JoinedParticipant(memberId = otherParticipantId, isHost = false),
         )
-        manager = RoomCommentManager(
+        roomCommentManager = RoomCommentManager(
             roomGuestbookRepository,
             guestbookPostRepository,
             windowReader,
@@ -71,7 +71,7 @@ class RoomCommentManagerTest {
     fun `읽기 전용이면 E2101 을 던지고 아무것도 저장하지 않는다`() {
         every { windowReader.getWindow(roomId, now) } returns closedWindow
 
-        assertThatThrownBy { manager.post(roomId, authorId, "늦은 글", now) }
+        assertThatThrownBy { roomCommentManager.post(roomId, authorId, "늦은 글", now) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_COMMENT_READ_ONLY)
             }
@@ -90,7 +90,7 @@ class RoomCommentManagerTest {
         val saved = slot<GuestbookPostEntity>()
         every { guestbookPostRepository.save(capture(saved)) } answers { mockk { every { id } returns 41L } }
 
-        val commentId = manager.post(roomId, authorId, "다들 반가워요!", now)
+        val commentId = roomCommentManager.post(roomId, authorId, "다들 반가워요!", now)
 
         assertThat(commentId).isEqualTo(41L)
         assertThat(saved.captured.roomGuestbookId).isEqualTo(5L)
@@ -109,7 +109,7 @@ class RoomCommentManagerTest {
         } returns null
         every { guestbookPostRepository.save(any()) } answers { mockk { every { id } returns 42L } }
 
-        assertThat(manager.post(roomId, authorId, "동시 첫 글", now)).isEqualTo(42L)
+        assertThat(roomCommentManager.post(roomId, authorId, "동시 첫 글", now)).isEqualTo(42L)
     }
 
     @Test
@@ -119,7 +119,7 @@ class RoomCommentManagerTest {
         val violation = DataIntegrityViolationException("author_member_id cannot be null")
         every { roomGuestbookRepository.saveAndFlush(any()) } throws violation
 
-        assertThatThrownBy { manager.post(roomId, authorId, "글", now) }.isSameAs(violation)
+        assertThatThrownBy { roomCommentManager.post(roomId, authorId, "글", now) }.isSameAs(violation)
     }
 
     @Test
@@ -136,7 +136,7 @@ class RoomCommentManagerTest {
             guestbookPostRepository.findFirstByRoomGuestbookIdAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(5L, authorId)
         } returns last
 
-        val commentId = manager.post(roomId, authorId, "다들 반가워요!", now)
+        val commentId = roomCommentManager.post(roomId, authorId, "다들 반가워요!", now)
 
         assertThat(commentId).isEqualTo(41L)
         verify(exactly = 0) { guestbookPostRepository.save(any()) }
@@ -157,14 +157,14 @@ class RoomCommentManagerTest {
         } returns last
         every { guestbookPostRepository.save(any()) } answers { mockk { every { id } returns 42L } }
 
-        assertThat(manager.post(roomId, authorId, "일정 공유드려요", now)).isEqualTo(42L)
+        assertThat(roomCommentManager.post(roomId, authorId, "일정 공유드려요", now)).isEqualTo(42L)
     }
 
     @Test
     fun `댓글을 남기면 작성자와 참여 명단을 담아 댓글 사실을 발행한다`() {
         givenNewPost()
 
-        manager.post(roomId, authorId, "일정 공유드려요", now)
+        roomCommentManager.post(roomId, authorId, "일정 공유드려요", now)
 
         verify {
             outboxEventPublisher.publish(
@@ -194,7 +194,7 @@ class RoomCommentManagerTest {
             guestbookPostRepository.findFirstByRoomGuestbookIdAndAuthorMemberIdAndDeletedAtIsNullOrderByCreatedAtDescIdDesc(5L, authorId)
         } returns last
 
-        manager.post(roomId, authorId, "다들 반가워요!", now)
+        roomCommentManager.post(roomId, authorId, "다들 반가워요!", now)
 
         verify(exactly = 0) { outboxEventPublisher.publish(any(), any()) }
     }
@@ -213,7 +213,7 @@ class RoomCommentManagerTest {
     fun `읽기 전용이면 삭제도 E2101 로 막는다`() {
         every { windowReader.getWindow(roomId, now) } returns closedWindow
 
-        assertThatThrownBy { manager.remove(roomId, authorId, 41L, now) }
+        assertThatThrownBy { roomCommentManager.remove(roomId, authorId, 41L, now) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_COMMENT_READ_ONLY)
             }
@@ -226,7 +226,7 @@ class RoomCommentManagerTest {
         every { roomGuestbookRepository.findByRoomIdAndDeletedAtIsNull(roomId) } returns guestbook
         every { guestbookPostRepository.findByIdAndRoomGuestbookId(99L, 5L) } returns null
 
-        assertThatThrownBy { manager.remove(roomId, authorId, 99L, now) }
+        assertThatThrownBy { roomCommentManager.remove(roomId, authorId, 99L, now) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_COMMENT_NOT_FOUND)
             }
@@ -237,7 +237,7 @@ class RoomCommentManagerTest {
         every { windowReader.getWindow(roomId, now) } returns openWindow
         every { roomGuestbookRepository.findByRoomIdAndDeletedAtIsNull(roomId) } returns null
 
-        assertThatThrownBy { manager.remove(roomId, authorId, 41L, now) }
+        assertThatThrownBy { roomCommentManager.remove(roomId, authorId, 41L, now) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_COMMENT_NOT_FOUND)
             }
@@ -251,7 +251,7 @@ class RoomCommentManagerTest {
         val othersPost = mockk<GuestbookPostEntity> { every { authorMemberId } returns UUID.randomUUID() }
         every { guestbookPostRepository.findByIdAndRoomGuestbookId(41L, 5L) } returns othersPost
 
-        assertThatThrownBy { manager.remove(roomId, authorId, 41L, now) }
+        assertThatThrownBy { roomCommentManager.remove(roomId, authorId, 41L, now) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_COMMENT_NOT_MINE)
             }
@@ -266,7 +266,7 @@ class RoomCommentManagerTest {
         deleted.delete(now.minusMinutes(5))
         every { guestbookPostRepository.findByIdAndRoomGuestbookId(41L, 5L) } returns deleted
 
-        manager.remove(roomId, authorId, 41L, now)
+        roomCommentManager.remove(roomId, authorId, 41L, now)
 
         assertThat(deleted.isDeleted()).isTrue()
     }
