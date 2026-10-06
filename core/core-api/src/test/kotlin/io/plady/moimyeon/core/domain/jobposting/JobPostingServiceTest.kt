@@ -18,7 +18,7 @@ class JobPostingServiceTest {
     private val openGraphClient = mockk<OpenGraphClient>()
     private val companyValidator = mockk<CompanyValidator>(relaxed = true)
     private val jobPostingSearchReader = mockk<JobPostingSearchReader>()
-    private val service = JobPostingService(
+    private val jobPostingService = JobPostingService(
         jobPostingFinder,
         jobPostingManager,
         openGraphClient,
@@ -46,7 +46,7 @@ class JobPostingServiceTest {
             verified = false,
         )
 
-        val result = service.create(memberId, command)
+        val result = jobPostingService.create(memberId, command)
 
         assertThat(result.id).isEqualTo(90101L)
         assertThat(result.verified).isFalse()
@@ -61,7 +61,7 @@ class JobPostingServiceTest {
     fun `존재하지 않는 회사면 생성으로 넘어가지 않고 E1303`() {
         every { companyValidator.validateSelectable(listOf(43429L)) } throws CoreException(CoreErrorType.COMPANY_NOT_FOUND)
 
-        assertThatThrownBy { service.create(memberId, command) }
+        assertThatThrownBy { jobPostingService.create(memberId, command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.COMPANY_NOT_FOUND)
             }
@@ -74,6 +74,6 @@ class JobPostingServiceTest {
         val metadata = LinkMetadata("공고명", "img", "desc", "https://company.example.com/careers/12345")
         every { openGraphClient.fetch("https://company.example.com/careers/12345") } returns metadata
 
-        assertThat(service.fetchLinkMetadata("https://company.example.com/careers/12345")).isEqualTo(metadata)
+        assertThat(jobPostingService.fetchLinkMetadata("https://company.example.com/careers/12345")).isEqualTo(metadata)
     }
 }

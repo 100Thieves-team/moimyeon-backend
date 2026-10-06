@@ -22,7 +22,7 @@ class QuestionCommentAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val participationFinder = mockk<ParticipationFinder>()
     private val clock = Clock.fixed(Instant.parse("2026-09-24T06:00:00Z"), ZoneOffset.UTC)
-    private val validator = QuestionCommentAccessValidator(roomFinder, participationFinder, clock)
+    private val questionCommentAccessValidator = QuestionCommentAccessValidator(roomFinder, participationFinder, clock)
 
     private val roomId = UUID.randomUUID()
     private val participantMemberId = UUID.randomUUID()
@@ -34,7 +34,7 @@ class QuestionCommentAccessValidatorTest {
         givenConfirmed(participantMemberId, intervieweeMemberId)
 
         assertThatCode {
-            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -44,7 +44,7 @@ class QuestionCommentAccessValidatorTest {
         givenConfirmed(participantMemberId, intervieweeMemberId)
 
         assertThatCode {
-            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -53,7 +53,7 @@ class QuestionCommentAccessValidatorTest {
         givenRoom(RoomStatus.CONFIRMED, progressAvailable = false)
 
         assertFails(CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE) {
-            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
         }
     }
 
@@ -63,7 +63,7 @@ class QuestionCommentAccessValidatorTest {
         givenConfirmed(intervieweeMemberId)
 
         assertFails(CoreErrorType.QUESTION_COMMENT_FORBIDDEN) {
-            validator.validateViewer(roomId, intervieweeMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateViewer(roomId, intervieweeMemberId, intervieweeMemberId)
         }
     }
 
@@ -73,7 +73,7 @@ class QuestionCommentAccessValidatorTest {
         givenConfirmed(intervieweeMemberId)
 
         assertThatCode {
-            validator.validateViewer(roomId, intervieweeMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateViewer(roomId, intervieweeMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -82,7 +82,7 @@ class QuestionCommentAccessValidatorTest {
         givenRoom(RoomStatus.COMPLETED)
 
         assertFails(CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE) {
-            validator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateWriter(roomId, participantMemberId, intervieweeMemberId)
         }
     }
 
@@ -94,7 +94,7 @@ class QuestionCommentAccessValidatorTest {
         } returns false
 
         assertFails(CoreErrorType.QUESTION_COMMENT_FORBIDDEN) {
-            validator.validateViewer(roomId, participantMemberId, intervieweeMemberId)
+            questionCommentAccessValidator.validateViewer(roomId, participantMemberId, intervieweeMemberId)
         }
     }
 

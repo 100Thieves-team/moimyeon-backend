@@ -17,7 +17,7 @@ import java.util.UUID
 
 class QuestionRecorderTest {
     private val questionRepository = mockk<QuestionRepository>()
-    private val recorder = QuestionRecorder(questionRepository)
+    private val questionRecorder = QuestionRecorder(questionRepository)
 
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class QuestionRecorderTest {
         val savedQuestion = mockk<QuestionEntity> { every { id } returns 1L }
         every { questionRepository.save(capture(questionSlot)) } returns savedQuestion
 
-        val questionId = recorder.record(
+        val questionId = questionRecorder.record(
             roomId,
             targetMemberId,
             authorMemberId,
@@ -57,7 +57,7 @@ class QuestionRecorderTest {
         } returns parentQuestion
         every { questionRepository.save(capture(followUpSlot)) } returns savedFollowUp
 
-        val followUpId = recorder.record(
+        val followUpId = questionRecorder.record(
             roomId,
             targetMemberId,
             authorMemberId,
@@ -78,7 +78,7 @@ class QuestionRecorderTest {
         } returns question(targetMemberId = UUID.randomUUID())
 
         assertRecordFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            recorder.record(
+            questionRecorder.record(
                 roomId,
                 targetMemberId,
                 authorMemberId,
@@ -98,7 +98,7 @@ class QuestionRecorderTest {
         } returns null
 
         assertRecordFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            recorder.record(
+            questionRecorder.record(
                 roomId,
                 targetMemberId,
                 authorMemberId,
@@ -118,7 +118,7 @@ class QuestionRecorderTest {
         } returns question(parentQuestionId = 1L)
 
         assertRecordFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            recorder.record(
+            questionRecorder.record(
                 roomId,
                 targetMemberId,
                 authorMemberId,
@@ -150,7 +150,7 @@ class QuestionRecorderTest {
             )
         } returns emptyList()
 
-        recorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
+        questionRecorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
 
         assertThat(question.isDeleted()).isTrue()
     }
@@ -163,7 +163,7 @@ class QuestionRecorderTest {
         } returns question
 
         assertRecordFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            recorder.removeOwnedBy(roomId, 1L, UUID.randomUUID(), now)
+            questionRecorder.removeOwnedBy(roomId, 1L, UUID.randomUUID(), now)
         }
 
         assertThat(question.isActive()).isTrue()
@@ -190,7 +190,7 @@ class QuestionRecorderTest {
             )
         } returns listOf(firstFollowUp, secondFollowUp)
 
-        recorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
+        questionRecorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
 
         assertThat(rootQuestion.isDeleted()).isTrue()
         assertThat(firstFollowUp.isDeleted()).isTrue()
@@ -204,7 +204,7 @@ class QuestionRecorderTest {
             questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, 2L)
         } returns followUp
 
-        recorder.removeOwnedBy(roomId, 2L, authorMemberId, now)
+        questionRecorder.removeOwnedBy(roomId, 2L, authorMemberId, now)
 
         assertThat(followUp.isDeleted()).isTrue()
         verify(exactly = 0) {
@@ -229,7 +229,7 @@ class QuestionRecorderTest {
         } returns true
 
         assertRecordFails(CoreErrorType.QUESTION_HAS_OTHER_FOLLOW_UP) {
-            recorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
+            questionRecorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
         }
 
         assertThat(question.isActive()).isTrue()
@@ -245,7 +245,7 @@ class QuestionRecorderTest {
         } returns null
 
         assertRecordFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            recorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
+            questionRecorder.removeOwnedBy(roomId, 1L, authorMemberId, now)
         }
     }
 

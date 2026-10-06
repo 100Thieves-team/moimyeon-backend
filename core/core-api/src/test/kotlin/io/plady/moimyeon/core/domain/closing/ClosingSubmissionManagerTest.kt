@@ -26,7 +26,7 @@ class ClosingSubmissionManagerTest {
     private val roomProgressReader = mockk<RoomProgressReader>()
     private val closingQuestionRepository = mockk<ClosingQuestionRepository>()
     private val closingResponseRepository = mockk<ClosingResponseRepository>()
-    private val manager = ClosingSubmissionManager(
+    private val closingSubmissionManager = ClosingSubmissionManager(
         roomRepository,
         roomProgressReader,
         closingQuestionRepository,
@@ -58,7 +58,7 @@ class ClosingSubmissionManagerTest {
         }
         every { closingResponseRepository.saveAndFlush(capture(response)) } returns savedResponse
 
-        val result = manager.submit(command)
+        val result = closingSubmissionManager.submit(command)
 
         assertThat(result).isEqualTo(ClosingSubmission(roomId, memberId, submittedAt))
         assertThat(response.captured.questionVotes()).satisfiesExactlyInAnyOrder(
@@ -90,7 +90,7 @@ class ClosingSubmissionManagerTest {
             every { createdAt } returns firstSubmittedAt
         }
 
-        val result = manager.submit(command)
+        val result = closingSubmissionManager.submit(command)
 
         assertThat(result).isEqualTo(ClosingSubmission(roomId, memberId, firstSubmittedAt))
         verify(exactly = 0) {
@@ -146,7 +146,7 @@ class ClosingSubmissionManagerTest {
         )
 
         invalidCommands.forEach { invalidCommand ->
-            assertThatThrownBy { manager.submit(invalidCommand) }
+            assertThatThrownBy { closingSubmissionManager.submit(invalidCommand) }
                 .isInstanceOfSatisfying(CoreException::class.java) {
                     assertThat(it.errorType).isEqualTo(CoreErrorType.CLOSING_QUESTION_MISMATCH)
                 }
@@ -162,7 +162,7 @@ class ClosingSubmissionManagerTest {
         givenNewSubmission()
         givenSavedResponse()
 
-        manager.submit(command)
+        closingSubmissionManager.submit(command)
 
         verify(exactly = 0) { roomRepository.save(any()) }
     }
@@ -202,7 +202,7 @@ class ClosingSubmissionManagerTest {
     }
 
     private fun assertClosingFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.submit(command) }
+        assertThatThrownBy { closingSubmissionManager.submit(command) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }

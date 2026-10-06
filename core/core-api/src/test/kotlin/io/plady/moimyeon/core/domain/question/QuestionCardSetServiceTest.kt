@@ -16,7 +16,7 @@ import java.util.UUID
 class QuestionCardSetServiceTest {
     private val accessValidator = mockk<QuestionCardSetAccessValidator>()
     private val cardSetReader = mockk<QuestionCardSetReader>()
-    private val service = QuestionCardSetService(accessValidator, cardSetReader)
+    private val questionCardSetService = QuestionCardSetService(accessValidator, cardSetReader)
 
     private val roomId = UUID.randomUUID()
     private val requesterMemberId = UUID.randomUUID()
@@ -37,7 +37,7 @@ class QuestionCardSetServiceTest {
         } returns cardSets
         every { cardSetReader.countPreparers(roomId, requesterMemberId) } returns 2
 
-        val result = service.getCardSetOverview(requesterMemberId, roomId)
+        val result = questionCardSetService.getCardSetOverview(requesterMemberId, roomId)
 
         assertThat(result.cardSets).containsExactlyElementsOf(cardSets)
         assertThat(result.cardSets.map { it.targetMemberId })
@@ -58,7 +58,7 @@ class QuestionCardSetServiceTest {
             accessValidator.validateViewer(roomId, requesterMemberId)
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
-        assertThatThrownBy { service.getCardSetOverview(requesterMemberId, roomId) }
+        assertThatThrownBy { questionCardSetService.getCardSetOverview(requesterMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
             }
@@ -76,7 +76,7 @@ class QuestionCardSetServiceTest {
         }
         every { cardSetReader.getByRoomAndTarget(roomId, targetMemberId) } returns cardSet
 
-        val result = service.getCardSet(requesterMemberId, roomId, targetMemberId)
+        val result = questionCardSetService.getCardSet(requesterMemberId, roomId, targetMemberId)
 
         assertThat(result).isEqualTo(cardSet)
         assertThat(result.questions.single().authorMemberId).isEqualTo(authorMemberId)
@@ -96,7 +96,7 @@ class QuestionCardSetServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.getCardSet(requesterMemberId, roomId, targetMemberId)
+            questionCardSetService.getCardSet(requesterMemberId, roomId, targetMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -113,7 +113,7 @@ class QuestionCardSetServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.getCardSet(requesterMemberId, roomId, requesterMemberId)
+            questionCardSetService.getCardSet(requesterMemberId, roomId, requesterMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -129,7 +129,7 @@ class QuestionCardSetServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
 
         assertThatThrownBy {
-            service.getCardSet(requesterMemberId, roomId, nonParticipantMemberId)
+            questionCardSetService.getCardSet(requesterMemberId, roomId, nonParticipantMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
         }

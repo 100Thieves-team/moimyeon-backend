@@ -8,18 +8,18 @@ private val log = KotlinLogging.logger {}
 
 @Service
 class NotificationSettingService(
-    private val finder: NotificationSettingFinder,
-    private val manager: NotificationSettingManager,
+    private val notificationSettingFinder: NotificationSettingFinder,
+    private val notificationSettingManager: NotificationSettingManager,
 ) {
-    fun get(memberId: UUID): NotificationSetting = finder.get(memberId)
+    fun get(memberId: UUID): NotificationSetting = notificationSettingFinder.get(memberId)
 
     fun change(
         memberId: UUID,
         change: NotificationSettingChange,
     ): NotificationSetting {
         log.debug { "notification-setting.change memberId=$memberId" }
-        manager.change(memberId, change)
-        return finder.get(memberId)
+        notificationSettingManager.change(memberId, change)
+        return notificationSettingFinder.get(memberId)
     }
 
     fun refreshWebPush(
@@ -27,6 +27,6 @@ class NotificationSettingService(
         registration: WebPushRegistration,
     ) {
         log.debug { "notification-setting.refreshWebPush memberId=$memberId" }
-        manager.refreshWebPush(memberId, registration)
+        notificationSettingManager.refreshWebPush(memberId, registration)
     }
 }

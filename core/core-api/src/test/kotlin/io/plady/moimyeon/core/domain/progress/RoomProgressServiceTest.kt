@@ -18,10 +18,10 @@ import java.util.UUID
 class RoomProgressServiceTest {
     private val accessValidator = mockk<RoomProgressAccessValidator>()
     private val participationFinder = mockk<ParticipationFinder>()
-    private val manager = mockk<RoomProgressManager>()
-    private val reader = mockk<RoomProgressReader>()
+    private val roomProgressManager = mockk<RoomProgressManager>()
+    private val roomProgressReader = mockk<RoomProgressReader>()
     private val clock = Clock.fixed(Instant.parse("2026-08-10T03:00:00Z"), ZoneOffset.UTC)
-    private val service = RoomProgressService(accessValidator, participationFinder, manager, reader, clock)
+    private val roomProgressService = RoomProgressService(accessValidator, participationFinder, roomProgressManager, roomProgressReader, clock)
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
     private val participantId = UUID.randomUUID()
@@ -35,15 +35,15 @@ class RoomProgressServiceTest {
         )
         val command = RoomProgressCompletionCommand(roomId, hostId, attendances, now)
         justRun { accessValidator.validateCompleter(roomId, hostId) }
-        every { manager.complete(command) } returns RoomProgressCompletionResult(RoomStatus.COMPLETED, attendances)
+        every { roomProgressManager.complete(command) } returns RoomProgressCompletionResult(RoomStatus.COMPLETED, attendances)
 
-        val result = service.complete(hostId, roomId, attendances)
+        val result = roomProgressService.complete(hostId, roomId, attendances)
 
         assertThat(result.status).isEqualTo(RoomStatus.COMPLETED)
         assertThat(result.attendances).containsExactlyElementsOf(attendances)
         verifyOrder {
             accessValidator.validateCompleter(roomId, hostId)
-            manager.complete(command)
+            roomProgressManager.complete(command)
         }
     }
 
@@ -53,7 +53,7 @@ class RoomProgressServiceTest {
         justRun { accessValidator.validateInProgressParticipant(roomId, hostId) }
         every { participationFinder.getConfirmedParticipantIds(roomId) } returns confirmedParticipantIds
 
-        val result = service.getRail(hostId, roomId)
+        val result = roomProgressService.getRail(hostId, roomId)
 
         assertThat(result.blocks.first()).isEqualTo(ProgressBlock.Opening)
         assertThat(result.blocks.last()).isEqualTo(ProgressBlock.Closing)

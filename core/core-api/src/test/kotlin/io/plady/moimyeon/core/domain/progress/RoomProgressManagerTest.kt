@@ -33,14 +33,14 @@ class RoomProgressManagerTest {
     private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
     private val attendanceRepository = mockk<AttendanceRepository>()
     private val logRepository = mockk<RoomStatusLogRepository>()
-    private val publisher = mockk<OutboxEventPublisher>(relaxed = true)
-    private val manager = RoomProgressManager(
+    private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
+    private val roomProgressManager = RoomProgressManager(
         roomRepository,
         participantFinder,
         participationValidator,
         attendanceRepository,
         logRepository,
-        publisher,
+        outboxEventPublisher,
     )
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
@@ -57,7 +57,7 @@ class RoomProgressManagerTest {
         every { attendanceRepository.saveAllAndFlush(capture(saved)) } answers { firstArg() }
         val attendances = listOf(Attendance(hostId, AttendanceStatus.ATTENDED), Attendance(participantId, AttendanceStatus.ABSENT))
 
-        val result = manager.complete(RoomProgressCompletionCommand(roomId, hostId, attendances, now))
+        val result = roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, attendances, now))
 
         assertThat(result.attendances).isEqualTo(attendances)
         verifyOrder {
@@ -67,7 +67,7 @@ class RoomProgressManagerTest {
         }
         assertThat(saved.captured.map { it.recorderMemberId }).containsOnly(hostId)
         verify(exactly = 1) {
-            publisher.publish(
+            outboxEventPublisher.publish(
                 EventType.ROOM_COMPLETED,
                 RoomCompletedEventPayload(roomId, TITLE, hostId, listOf(hostId, participantId), listOf(hostId)),
             )
@@ -81,13 +81,13 @@ class RoomProgressManagerTest {
         every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
 
         assertThatThrownBy {
-            manager.complete(RoomProgressCompletionCommand(roomId, hostId, listOf(Attendance(hostId, AttendanceStatus.ATTENDED)), now))
+            roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, listOf(Attendance(hostId, AttendanceStatus.ATTENDED)), now))
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH)
         }
 
         verify(exactly = 0) { room.complete() }
-        verify(exactly = 0) { publisher.publish(any(), any()) }
+        verify(exactly = 0) { outboxEventPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -96,7 +96,7 @@ class RoomProgressManagerTest {
         every { roomRepository.findByIdForUpdate(roomId) } returns room
         every { participationValidator.validateHost(roomId, hostId) } throws CoreException(CoreErrorType.ROOM_FORBIDDEN)
 
-        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, emptyList(), now)) }
+        assertThatThrownBy { roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, emptyList(), now)) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
             }

@@ -20,9 +20,9 @@ import java.util.UUID
 
 class RoomProgressAccessValidatorTest {
     private val roomRepository = mockk<RoomRepository>()
-    private val finder = mockk<ParticipationFinder>()
+    private val participationFinder = mockk<ParticipationFinder>()
     private val participationValidator = mockk<ParticipationValidator>()
-    private val validator = RoomProgressAccessValidator(roomRepository, finder, participationValidator, Clock.systemUTC())
+    private val roomProgressAccessValidator = RoomProgressAccessValidator(roomRepository, participationFinder, participationValidator, Clock.systemUTC())
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
 
@@ -35,7 +35,7 @@ class RoomProgressAccessValidatorTest {
         every { roomRepository.findById(roomId) } returns Optional.of(room)
         justRun { participationValidator.validateHost(roomId, hostId) }
 
-        validator.validateCompleter(roomId, hostId)
+        roomProgressAccessValidator.validateCompleter(roomId, hostId)
 
         verify(exactly = 1) { participationValidator.validateHost(roomId, hostId) }
     }
@@ -50,7 +50,7 @@ class RoomProgressAccessValidatorTest {
         every { roomRepository.findById(roomId) } returns Optional.of(room)
         justRun { participationValidator.validateHost(roomId, hostId) }
 
-        validator.validateCompleter(roomId, hostId)
+        roomProgressAccessValidator.validateCompleter(roomId, hostId)
 
         verify(exactly = 1) { participationValidator.validateHost(roomId, hostId) }
     }
@@ -65,7 +65,7 @@ class RoomProgressAccessValidatorTest {
             }
             every { roomRepository.findById(roomId) } returns Optional.of(room)
 
-            assertThatThrownBy { validator.validateCompleter(roomId, hostId) }
+            assertThatThrownBy { roomProgressAccessValidator.validateCompleter(roomId, hostId) }
                 .isInstanceOfSatisfying(CoreException::class.java) {
                     assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_NOT_COMPLETABLE)
                 }

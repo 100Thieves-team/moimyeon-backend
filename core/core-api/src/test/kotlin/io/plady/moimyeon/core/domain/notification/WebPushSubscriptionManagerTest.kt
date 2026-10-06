@@ -14,19 +14,19 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class WebPushSubscriptionManagerTest {
-    private val repository = mockk<WebPushSubscriptionRepository>()
+    private val webPushSubscriptionRepository = mockk<WebPushSubscriptionRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-10T10:00:00Z"), ZoneOffset.UTC)
-    private val manager = WebPushSubscriptionManager(repository, clock)
+    private val webPushSubscriptionManager = WebPushSubscriptionManager(webPushSubscriptionRepository, clock)
 
     @Test
     fun `처음 업로드된 브라우저 등록을 회원에게 연결한다`() {
-        every { repository.upsertRegistration(any(), any(), any(), any()) } returns 1
-        every { repository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
+        every { webPushSubscriptionRepository.upsertRegistration(any(), any(), any(), any()) } returns 1
+        every { webPushSubscriptionRepository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
 
-        manager.register(MEMBER_A, REGISTRATION)
+        webPushSubscriptionManager.register(MEMBER_A, REGISTRATION)
 
         verify(exactly = 1) {
-            repository.upsertRegistration(
+            webPushSubscriptionRepository.upsertRegistration(
                 memberId = MEMBER_A,
                 registration = REGISTRATION.value,
                 registrationHash = WebPushRegistrationHash.of(REGISTRATION.value),
@@ -37,11 +37,11 @@ class WebPushSubscriptionManagerTest {
 
     @Test
     fun `자기 소유 기기 등록은 지우지 않는다`() {
-        every { repository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
+        every { webPushSubscriptionRepository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
 
-        manager.unregisterIfOwnedByOther(MEMBER_A, REGISTRATION)
+        webPushSubscriptionManager.unregisterIfOwnedByOther(MEMBER_A, REGISTRATION)
 
-        verify(exactly = 0) { repository.delete(any()) }
+        verify(exactly = 0) { webPushSubscriptionRepository.delete(any()) }
     }
 
     private fun subscription(memberId: UUID) = WebPushSubscriptionEntity(

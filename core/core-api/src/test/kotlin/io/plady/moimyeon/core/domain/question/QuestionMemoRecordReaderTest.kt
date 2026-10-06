@@ -15,7 +15,7 @@ import java.util.UUID
 class QuestionMemoRecordReaderTest {
     private val questionRepository = mockk<QuestionRepository>()
     private val commentRepository = mockk<QuestionCommentRepository>()
-    private val reader = QuestionMemoRecordReader(questionRepository, commentRepository)
+    private val questionMemoRecordReader = QuestionMemoRecordReader(questionRepository, commentRepository)
     private val roomId = UUID.randomUUID()
     private val intervieweeMemberId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -47,7 +47,7 @@ class QuestionMemoRecordReaderTest {
         every { comment.content } returns "원인을 단계적으로 좁힌 점이 좋아요"
         every { comment.createdAt } returns LocalDateTime.of(2026, 8, 14, 10, 0)
 
-        val result = reader.getAskedRecordsByAuthor(roomId, intervieweeMemberId, authorMemberId)
+        val result = questionMemoRecordReader.getAskedRecordsByAuthor(roomId, intervieweeMemberId, authorMemberId)
 
         assertThat(result).containsExactly(
             QuestionMemoRecord(

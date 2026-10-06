@@ -28,8 +28,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class RoomProgressPersistenceIT(
-    private val manager: RoomProgressManager,
-    private val reader: RoomProgressReader,
+    private val roomProgressManager: RoomProgressManager,
+    private val roomProgressReader: RoomProgressReader,
     private val roomRepository: RoomRepository,
     private val participationRepository: ParticipationRepository,
     private val attendanceRepository: AttendanceRepository,
@@ -54,11 +54,11 @@ class RoomProgressPersistenceIT(
     fun `완료하면서 출석을 함께 저장한다`() {
         seedConfirmedRoom()
 
-        manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
 
         assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.COMPLETED)
-        assertThat(reader.getAttendance(roomId, hostId)).isEqualTo(Attendance(hostId, AttendanceStatus.ATTENDED))
-        assertThat(reader.getAttendance(roomId, participantId)).isEqualTo(Attendance(participantId, AttendanceStatus.ABSENT))
+        assertThat(roomProgressReader.getAttendance(roomId, hostId)).isEqualTo(Attendance(hostId, AttendanceStatus.ATTENDED))
+        assertThat(roomProgressReader.getAttendance(roomId, participantId)).isEqualTo(Attendance(participantId, AttendanceStatus.ABSENT))
     }
 
     @Test
@@ -66,7 +66,7 @@ class RoomProgressPersistenceIT(
         seedConfirmedRoom()
 
         assertThatThrownBy {
-            manager.complete(RoomProgressCompletionCommand(roomId, hostId, listOf(Attendance(hostId, AttendanceStatus.ATTENDED)), now))
+            roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, listOf(Attendance(hostId, AttendanceStatus.ATTENDED)), now))
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_PARTICIPANT_MISMATCH)
         }
@@ -78,9 +78,9 @@ class RoomProgressPersistenceIT(
     @Test
     fun `응답을 못 받고 같은 출석으로 다시 완료하면 이전 결과를 돌려주고 다시 기록하지 않는다`() {
         seedConfirmedRoom()
-        manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
 
-        val retried = manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances().reversed(), now.plusMinutes(1)))
+        val retried = roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances().reversed(), now.plusMinutes(1)))
 
         assertThat(retried.status).isEqualTo(RoomStatus.COMPLETED)
         assertThat(logRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.COMPLETED)).isEqualTo(1)
@@ -91,22 +91,22 @@ class RoomProgressPersistenceIT(
     @Test
     fun `이미 완료된 룸에 다른 출석으로 다시 완료하면 거절하고 기록을 바꾸지 않는다`() {
         seedConfirmedRoom()
-        manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
         val changed = listOf(Attendance(hostId, AttendanceStatus.ATTENDED), Attendance(participantId, AttendanceStatus.ATTENDED))
 
-        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, changed, now.plusMinutes(1))) }
+        assertThatThrownBy { roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, changed, now.plusMinutes(1))) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_ATTENDANCE_ALREADY_RECORDED)
             }
-        assertThat(reader.getAttendance(roomId, participantId)).isEqualTo(Attendance(participantId, AttendanceStatus.ABSENT))
+        assertThat(roomProgressReader.getAttendance(roomId, participantId)).isEqualTo(Attendance(participantId, AttendanceStatus.ABSENT))
     }
 
     @Test
     fun `이미 완료된 룸에 방장이 아닌 사람이 같은 출석으로 요청해도 거절한다`() {
         seedConfirmedRoom()
-        manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now))
 
-        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, participantId, finalAttendances(), now.plusMinutes(1))) }
+        assertThatThrownBy { roomProgressManager.complete(RoomProgressCompletionCommand(roomId, participantId, finalAttendances(), now.plusMinutes(1))) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_FORBIDDEN)
             }
@@ -120,7 +120,7 @@ class RoomProgressPersistenceIT(
             AttendanceEntity(roomId = roomId, memberId = participantId, status = AttendanceStatus.ATTENDED, recorderMemberId = hostId, recordedAt = now),
         )
 
-        assertThatThrownBy { manager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now)) }
+        assertThatThrownBy { roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, finalAttendances(), now)) }
 
         assertThat(roomRepository.findById(roomId).orElseThrow().status).isEqualTo(RoomStatus.CONFIRMED)
         assertThat(logRepository.countByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.COMPLETED)).isZero()

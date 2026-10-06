@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class RoomProgressReaderTest {
-    private val repository = mockk<AttendanceRepository>()
-    private val reader = RoomProgressReader(repository)
+    private val attendanceRepository = mockk<AttendanceRepository>()
+    private val roomProgressReader = RoomProgressReader(attendanceRepository)
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
 
@@ -20,15 +20,15 @@ class RoomProgressReaderTest {
         val attendance = mockk<AttendanceEntity> {
             every { status } returns AttendanceStatus.ATTENDED
         }
-        every { repository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId) } returns attendance
+        every { attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId) } returns attendance
 
-        assertThat(reader.isAttended(roomId, memberId)).isTrue()
+        assertThat(roomProgressReader.isAttended(roomId, memberId)).isTrue()
     }
 
     @Test
     fun `출석 기록이 없으면 출석 참여자가 아니다`() {
-        every { repository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId) } returns null
+        every { attendanceRepository.findByRoomIdAndMemberIdAndDeletedAtIsNull(roomId, memberId) } returns null
 
-        assertThat(reader.isAttended(roomId, memberId)).isFalse()
+        assertThat(roomProgressReader.isAttended(roomId, memberId)).isFalse()
     }
 }

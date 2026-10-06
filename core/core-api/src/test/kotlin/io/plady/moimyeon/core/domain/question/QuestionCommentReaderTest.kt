@@ -18,7 +18,7 @@ import java.util.UUID
 class QuestionCommentReaderTest {
     private val targetValidator = mockk<QuestionCommentTargetValidator>()
     private val commentRepository = mockk<QuestionCommentRepository>()
-    private val reader = QuestionCommentReader(targetValidator, commentRepository)
+    private val questionCommentReader = QuestionCommentReader(targetValidator, commentRepository)
 
     private val roomId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -31,7 +31,7 @@ class QuestionCommentReaderTest {
         givenValidTarget()
         every { commentRepository.findPage(1L, null, null, any()) } returns entities
 
-        val result = reader.getPage(roomId, targetMemberId, 1L, null)
+        val result = questionCommentReader.getPage(roomId, targetMemberId, 1L, null)
 
         assertThat(result.comments.map { it.id }).containsExactlyElementsOf(1L..20L)
         assertThat(result.nextCursor).isEqualTo(
@@ -47,7 +47,7 @@ class QuestionCommentReaderTest {
             commentRepository.findPage(1L, cursor.createdAt, cursor.id, any())
         } returns listOf(comment(21L, cursor.createdAt.plusSeconds(1)))
 
-        val result = reader.getPage(roomId, targetMemberId, 1L, cursor)
+        val result = questionCommentReader.getPage(roomId, targetMemberId, 1L, cursor)
 
         assertThat(result.comments.map { it.id }).containsExactly(21L)
         assertThat(result.nextCursor).isNull()
@@ -60,7 +60,7 @@ class QuestionCommentReaderTest {
         } throws CoreException(CoreErrorType.QUESTION_NOT_FOUND)
 
         assertThatThrownBy {
-            reader.getPage(roomId, targetMemberId, 1L, null)
+            questionCommentReader.getPage(roomId, targetMemberId, 1L, null)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_NOT_FOUND)
         }

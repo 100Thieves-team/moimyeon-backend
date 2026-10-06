@@ -21,7 +21,7 @@ class QuestionPreparationServiceTest {
     private val accessValidator = mockk<QuestionPreparationAccessValidator>()
     private val questionRecorder = mockk<QuestionRecorder>()
     private val clock = Clock.fixed(Instant.parse("2026-08-10T03:00:00Z"), ZoneOffset.UTC)
-    private val service = QuestionPreparationService(accessValidator, questionRecorder, clock)
+    private val questionPreparationService = QuestionPreparationService(accessValidator, questionRecorder, clock)
 
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -44,7 +44,7 @@ class QuestionPreparationServiceTest {
             )
         } returns 1L
 
-        val questionId = service.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
+        val questionId = questionPreparationService.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
 
         assertThat(questionId).isEqualTo(1L)
         verifyOrder {
@@ -75,7 +75,7 @@ class QuestionPreparationServiceTest {
             )
         } returns 2L
 
-        val followUpQuestionId = service.leaveFollowUp(
+        val followUpQuestionId = questionPreparationService.leaveFollowUp(
             authorMemberId,
             roomId,
             parentQuestionId,
@@ -102,7 +102,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN)
 
         assertPreparationFails(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN) {
-            service.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
+            questionPreparationService.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
         }
 
         verify(exactly = 0) { accessValidator.validateTarget(any(), any(), any()) }
@@ -116,7 +116,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN)
 
         assertPreparationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            service.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
+            questionPreparationService.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
         }
 
         verify(exactly = 0) { accessValidator.validateTarget(any(), any(), any()) }
@@ -131,7 +131,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_TARGET_NOT_FOUND)
 
         assertPreparationFails(CoreErrorType.QUESTION_TARGET_NOT_FOUND) {
-            service.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
+            questionPreparationService.leaveQuestion(authorMemberId, roomId, targetMemberId, questionContent)
         }
 
         verify(exactly = 0) { questionRecorder.record(any(), any(), any(), any(), any(), any()) }
@@ -152,7 +152,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_NOT_FOUND)
 
         assertPreparationFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            service.leaveFollowUp(
+            questionPreparationService.leaveFollowUp(
                 authorMemberId,
                 roomId,
                 parentQuestionId,
@@ -166,7 +166,7 @@ class QuestionPreparationServiceTest {
         justRun { accessValidator.validateAuthor(roomId, authorMemberId) }
         justRun { questionRecorder.removeOwnedBy(roomId, 1L, authorMemberId, now) }
 
-        service.deleteQuestion(authorMemberId, roomId, 1L)
+        questionPreparationService.deleteQuestion(authorMemberId, roomId, 1L)
 
         verifyOrder {
             accessValidator.validateAuthor(roomId, authorMemberId)
@@ -181,7 +181,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN)
 
         assertPreparationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            service.deleteQuestion(authorMemberId, roomId, 1L)
+            questionPreparationService.deleteQuestion(authorMemberId, roomId, 1L)
         }
 
         verify(exactly = 0) { questionRecorder.removeOwnedBy(any(), any(), any(), any()) }
@@ -195,7 +195,7 @@ class QuestionPreparationServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN)
 
         assertPreparationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            service.deleteQuestion(authorMemberId, roomId, 1L)
+            questionPreparationService.deleteQuestion(authorMemberId, roomId, 1L)
         }
     }
 
@@ -215,8 +215,8 @@ class QuestionPreparationServiceTest {
             )
         } returns 2L
 
-        service.deleteQuestion(authorMemberId, roomId, 1L)
-        val rewrittenQuestionId = service.leaveQuestion(
+        questionPreparationService.deleteQuestion(authorMemberId, roomId, 1L)
+        val rewrittenQuestionId = questionPreparationService.leaveQuestion(
             authorMemberId,
             roomId,
             targetMemberId,
