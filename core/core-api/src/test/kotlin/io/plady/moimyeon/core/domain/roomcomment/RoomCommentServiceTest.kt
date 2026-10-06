@@ -22,7 +22,7 @@ class RoomCommentServiceTest {
     private lateinit var windowReader: RoomCommentWindowReader
     private lateinit var commentReader: RoomCommentReader
     private lateinit var commentManager: RoomCommentManager
-    private lateinit var service: RoomCommentService
+    private lateinit var roomCommentService: RoomCommentService
 
     private val clock = Clock.fixed(Instant.parse("2026-08-14T10:00:00Z"), ZoneOffset.UTC)
     private val now = LocalDateTime.now(clock)
@@ -35,7 +35,7 @@ class RoomCommentServiceTest {
         windowReader = mockk()
         commentReader = mockk()
         commentManager = mockk()
-        service = RoomCommentService(participationValidator, windowReader, commentReader, commentManager, clock)
+        roomCommentService = RoomCommentService(participationValidator, windowReader, commentReader, commentManager, clock)
     }
 
     @Test
@@ -43,7 +43,7 @@ class RoomCommentServiceTest {
         every { participationValidator.validateParticipant(roomId, memberId) } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
-        assertThatThrownBy { service.getComments(memberId, roomId, cursor = null, size = 20) }
+        assertThatThrownBy { roomCommentService.getComments(memberId, roomId, cursor = null, size = 20) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
             }
@@ -58,7 +58,7 @@ class RoomCommentServiceTest {
         every { windowReader.getWindow(roomId, now) } returns window
         every { commentReader.getPage(roomId, null, 20) } returns page
 
-        val listing = service.getComments(memberId, roomId, cursor = null, size = 20)
+        val listing = roomCommentService.getComments(memberId, roomId, cursor = null, size = 20)
 
         assertThat(listing.window).isEqualTo(window)
         assertThat(listing.page).isEqualTo(page)
@@ -69,7 +69,7 @@ class RoomCommentServiceTest {
         justRun { participationValidator.validateParticipant(roomId, memberId) }
         every { commentManager.post(roomId, memberId, "반가워요", now) } returns 41L
 
-        assertThat(service.leaveComment(memberId, roomId, "반가워요")).isEqualTo(41L)
+        assertThat(roomCommentService.leaveComment(memberId, roomId, "반가워요")).isEqualTo(41L)
     }
 
     @Test
@@ -77,7 +77,7 @@ class RoomCommentServiceTest {
         every { participationValidator.validateParticipant(roomId, memberId) } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
-        assertThatThrownBy { service.leaveComment(memberId, roomId, "반가워요") }
+        assertThatThrownBy { roomCommentService.leaveComment(memberId, roomId, "반가워요") }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
             }
@@ -89,7 +89,7 @@ class RoomCommentServiceTest {
         justRun { participationValidator.validateParticipant(roomId, memberId) }
         justRun { commentManager.remove(roomId, memberId, 41L, now) }
 
-        service.deleteComment(memberId, roomId, 41L)
+        roomCommentService.deleteComment(memberId, roomId, 41L)
 
         verify { commentManager.remove(roomId, memberId, 41L, now) }
     }

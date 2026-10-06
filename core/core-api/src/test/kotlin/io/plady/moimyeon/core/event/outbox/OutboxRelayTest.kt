@@ -27,14 +27,14 @@ class OutboxRelayTest {
         consumed += event
     }
     private val serializer = OutboxEventSerializer(JsonMapper.builder().addModule(kotlinModule()).build())
-    private val relay = OutboxRelay(outboxRepository, serializer, outboxClaimManager, listOf(consumer))
+    private val outboxRelay = OutboxRelay(outboxRepository, serializer, outboxClaimManager, listOf(consumer))
 
     @Test
     fun `사실을 종류와 함께 outbox 에 저장한다`() {
         val saved = slot<OutboxEntity>()
         every { outboxRepository.save(capture(saved)) } answers { saved.captured }
 
-        relay.record(EVENT)
+        outboxRelay.record(EVENT)
 
         assertThat(saved.captured.id).isEqualTo(EVENT.eventId)
         assertThat(saved.captured.eventType).isEqualTo(EventType.ROOM_APPLICATION_ACCEPTED.name)
@@ -45,7 +45,7 @@ class OutboxRelayTest {
     fun `소비자가 모두 성공하면 outbox 를 지운다`() {
         val claim = claim(serializer.serialize(EVENT))
 
-        relay.relay(claim)
+        outboxRelay.relay(claim)
 
         assertThat(consumed).containsExactly(EVENT)
         verify(exactly = 1) { outboxClaimManager.complete(claim) }
@@ -57,7 +57,7 @@ class OutboxRelayTest {
         failConsumer = true
         val claim = claim(serializer.serialize(EVENT))
 
-        relay.relay(claim)
+        outboxRelay.relay(claim)
 
         verify(exactly = 1) { outboxClaimManager.release(claim) }
         verify(exactly = 0) { outboxClaimManager.complete(any()) }
@@ -67,7 +67,7 @@ class OutboxRelayTest {
     fun `형식이 깨진 행은 소비자에게 넘기지 않고 읽을 수 없는 행으로 남긴다`() {
         val claim = claim("{\"applicationId\":1}")
 
-        relay.relay(claim)
+        outboxRelay.relay(claim)
 
         assertThat(consumed).isEmpty()
         verify(exactly = 1) { outboxClaimManager.markUnreadable(claim) }
@@ -78,7 +78,7 @@ class OutboxRelayTest {
     fun `모르는 이벤트 종류는 새 버전 서버가 처리하도록 선점을 푼다`() {
         val claim = claim(serializer.serialize(EVENT).replace("ROOM_APPLICATION_ACCEPTED", "SOME_FUTURE_EVENT"))
 
-        relay.relay(claim)
+        outboxRelay.relay(claim)
 
         assertThat(consumed).isEmpty()
         verify(exactly = 1) { outboxClaimManager.release(claim) }
@@ -88,7 +88,7 @@ class OutboxRelayTest {
     @Test
     fun `소비자 하나가 실패하면 앞서 성공한 소비자까지 다음 시도에 같은 사실을 다시 받는다`() {
         val succeeded = mutableListOf<OutboxEvent>()
-        val relay = OutboxRelay(
+        val outboxRelay = OutboxRelay(
             outboxRepository,
             serializer,
             outboxClaimManager,
@@ -96,8 +96,8 @@ class OutboxRelayTest {
         )
         val claim = claim(serializer.serialize(EVENT))
 
-        relay.relay(claim)
-        relay.relay(claim)
+        outboxRelay.relay(claim)
+        outboxRelay.relay(claim)
 
         assertThat(succeeded).containsExactly(EVENT, EVENT)
         verify(exactly = 2) { outboxClaimManager.release(claim) }
@@ -108,7 +108,7 @@ class OutboxRelayTest {
         val claim = claim(serializer.serialize(EVENT))
         every { outboxClaimManager.complete(claim) } throws IllegalStateException("DB 완료 기록 실패")
 
-        relay.relay(claim)
+        outboxRelay.relay(claim)
 
         verify(exactly = 0) { outboxClaimManager.release(any()) }
     }

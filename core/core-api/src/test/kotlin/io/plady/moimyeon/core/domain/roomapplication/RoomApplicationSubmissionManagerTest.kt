@@ -46,7 +46,7 @@ class RoomApplicationSubmissionManagerTest {
     private val participationFinder = mockk<ParticipationFinder>()
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
-    private val manager = RoomApplicationSubmissionManager(
+    private val roomApplicationSubmissionManager = RoomApplicationSubmissionManager(
         memberValidator,
         roomValidator,
         participationValidator,
@@ -89,7 +89,7 @@ class RoomApplicationSubmissionManagerTest {
         every { roomApplicationRepository.saveAndFlush(capture(applicationSlot)) } returns savedApplication
         every { resumeSubmissionRepository.save(capture(submissionSlot)) } answers { firstArg() }
 
-        val applicationId = manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+        val applicationId = roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
 
         assertThat(applicationId).isEqualTo(1L)
         assertThat(applicationSlot.captured.roomId).isEqualTo(roomId)
@@ -140,7 +140,7 @@ class RoomApplicationSubmissionManagerTest {
         every { roomApplicationRepository.saveAndFlush(capture(applicationSlot)) } returns savedApplication
         every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
 
-        manager.submit(applicantMemberId, roomId, "", resumeSubmission)
+        roomApplicationSubmissionManager.submit(applicantMemberId, roomId, "", resumeSubmission)
 
         assertThat(applicationSlot.captured.note).isEmpty()
     }
@@ -188,7 +188,7 @@ class RoomApplicationSubmissionManagerTest {
         every { roomApplicationRepository.saveAndFlush(any()) } returns savedApplication
         every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
 
-        val applicationId = manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+        val applicationId = roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
 
         assertThat(applicationId).isEqualTo(1L)
     }
@@ -261,7 +261,7 @@ class RoomApplicationSubmissionManagerTest {
         every { roomApplicationRepository.saveAndFlush(any()) } throws unexpected
 
         assertThatThrownBy {
-            manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+            roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
         }.isSameAs(unexpected)
         verify(exactly = 0) { resumeSubmissionRepository.save(any()) }
     }
@@ -277,7 +277,7 @@ class RoomApplicationSubmissionManagerTest {
                 )
         } returns application
 
-        manager.withdraw(applicantMemberId, roomId)
+        roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
 
         assertThat(application.status).isEqualTo(RoomApplicationStatus.WITHDRAWN)
         assertThat(application.pendingMemberId).isNull()
@@ -333,7 +333,7 @@ class RoomApplicationSubmissionManagerTest {
         every { roomApplicationRepository.saveAndFlush(any()) } returns savedApplication
         every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
 
-        manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+        roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
 
         verify {
             outboxEventPublisher.publish(
@@ -388,7 +388,7 @@ class RoomApplicationSubmissionManagerTest {
     }
 
     private fun assertSubmissionFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission) }
+        assertThatThrownBy { roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }
@@ -396,7 +396,7 @@ class RoomApplicationSubmissionManagerTest {
     }
 
     private fun assertWithdrawalFails(errorType: CoreErrorType) {
-        assertThatThrownBy { manager.withdraw(applicantMemberId, roomId) }
+        assertThatThrownBy { roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }

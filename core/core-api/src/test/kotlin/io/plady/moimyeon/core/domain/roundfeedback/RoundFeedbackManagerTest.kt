@@ -35,7 +35,7 @@ class RoundFeedbackManagerTest {
         every { startAt } returns LocalDateTime.of(2026, 8, 14, 11, 0)
     }
     private val now = LocalDateTime.of(2026, 8, 14, 12, 0)
-    private val manager = RoundFeedbackManager(
+    private val roundFeedbackManager = RoundFeedbackManager(
         roomRepository,
         feedbackRepository,
         Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneId.of("Asia/Seoul")),
@@ -50,7 +50,7 @@ class RoundFeedbackManagerTest {
         val existing = feedbackEntity(type = RoundFeedbackType.FINAL)
         every { findByAuthor(authorMemberId) } returns existing
 
-        assertThatThrownBy { manager.registerFinalFeedback(command("새 피드백")) }
+        assertThatThrownBy { roundFeedbackManager.registerFinalFeedback(command("새 피드백")) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROUND_FEEDBACK_ALREADY_EXISTS)
             }
@@ -64,7 +64,7 @@ class RoundFeedbackManagerTest {
         every { feedbackRepository.saveAndFlush(any()) } throws
             DataIntegrityViolationException("uk_round_feedback_round_author_active")
 
-        assertThatThrownBy { manager.registerFinalFeedback(command("최종 피드백")) }
+        assertThatThrownBy { roundFeedbackManager.registerFinalFeedback(command("최종 피드백")) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROUND_FEEDBACK_ALREADY_EXISTS)
             }
@@ -76,7 +76,7 @@ class RoundFeedbackManagerTest {
         every { findByAuthor(authorMemberId) } returns null
         every { feedbackRepository.saveAndFlush(any()) } throws unexpected
 
-        assertThatThrownBy { manager.registerFinalFeedback(command("최종 피드백")) }
+        assertThatThrownBy { roundFeedbackManager.registerFinalFeedback(command("최종 피드백")) }
             .isSameAs(unexpected)
     }
 
@@ -85,7 +85,7 @@ class RoundFeedbackManagerTest {
         val existing = feedbackEntity(type = RoundFeedbackType.SELF)
         every { findByAuthor(intervieweeMemberId) } returns existing
 
-        val result = manager.upsertSelfFeedback(
+        val result = roundFeedbackManager.upsertSelfFeedback(
             command(
                 content = "수정한 자가 피드백",
                 authorMemberId = intervieweeMemberId,
@@ -104,7 +104,7 @@ class RoundFeedbackManagerTest {
         every { findByAuthor(intervieweeMemberId) } returns null
         every { feedbackRepository.saveAndFlush(capture(entitySlot)) } returns saved
 
-        manager.upsertSelfFeedback(
+        roundFeedbackManager.upsertSelfFeedback(
             command(
                 content = "최초 자가 피드백",
                 authorMemberId = intervieweeMemberId,
@@ -124,7 +124,7 @@ class RoundFeedbackManagerTest {
         every { room.status } returns RoomStatus.COMPLETED
 
         assertThatThrownBy {
-            manager.upsertSelfFeedback(
+            roundFeedbackManager.upsertSelfFeedback(
                 command(
                     content = "종료 뒤에는 저장되지 않을 피드백",
                     authorMemberId = intervieweeMemberId,
@@ -152,7 +152,7 @@ class RoundFeedbackManagerTest {
             )
         } returns feedback
 
-        manager.confirmDisclosure(roomId, intervieweeMemberId, feedback.id)
+        roundFeedbackManager.confirmDisclosure(roomId, intervieweeMemberId, feedback.id)
 
         assertThat(feedback.disclosedAt).isEqualTo(disclosedAt)
     }

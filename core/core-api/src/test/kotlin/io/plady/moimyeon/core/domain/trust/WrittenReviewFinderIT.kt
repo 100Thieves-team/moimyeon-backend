@@ -13,7 +13,7 @@ import java.util.UUID
 
 @Transactional
 class WrittenReviewFinderIT(
-    private val finder: WrittenReviewFinder,
+    private val writtenReviewFinder: WrittenReviewFinder,
     private val reviewRepository: ReviewRepository,
     private val entityManager: EntityManager,
 ) : ContextTest() {
@@ -43,7 +43,7 @@ class WrittenReviewFinderIT(
 
         lateinit var result: List<WrittenReview>
         val queryCount = countQueries {
-            result = finder.getWrittenReviews(authorMemberId, roomId)
+            result = writtenReviewFinder.getWrittenReviews(authorMemberId, roomId)
         }
 
         assertThat(queryCount).isEqualTo(1)

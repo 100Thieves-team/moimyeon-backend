@@ -21,7 +21,7 @@ import java.util.UUID
 class RoomValidatorTest {
     private val roomRepository = mockk<RoomRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
-    private val validator = RoomValidator(roomRepository, clock)
+    private val roomValidator = RoomValidator(roomRepository, clock)
 
     private val roomId = UUID.randomUUID()
     private val now = LocalDateTime.of(2026, 8, 4, 12, 0)
@@ -30,7 +30,7 @@ class RoomValidatorTest {
     fun `모집 중이고 일정이 남은 룸이면 참가 신청을 받을 수 있다`() {
         every { roomRepository.findByIdForUpdate(roomId) } returns room(RoomStatus.RECRUITING, now.plusDays(1))
 
-        assertThatCode { validator.validateAcceptingApplications(roomId) }.doesNotThrowAnyException()
+        assertThatCode { roomValidator.validateAcceptingApplications(roomId) }.doesNotThrowAnyException()
     }
 
     @Test
@@ -87,7 +87,7 @@ class RoomValidatorTest {
     }
 
     private fun assertValidationFails(errorType: CoreErrorType) {
-        assertThatThrownBy { validator.validateAcceptingApplications(roomId) }
+        assertThatThrownBy { roomValidator.validateAcceptingApplications(roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(errorType)
             }

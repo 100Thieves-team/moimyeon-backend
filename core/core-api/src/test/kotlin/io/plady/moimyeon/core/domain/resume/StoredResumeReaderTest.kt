@@ -13,7 +13,7 @@ import java.util.UUID
 class StoredResumeReaderTest {
     private val resumeFinder = mockk<ResumeFinder>()
     private val resumeUseHistoryFinder = mockk<ResumeUseHistoryFinder>()
-    private val reader = StoredResumeReader(resumeFinder, resumeUseHistoryFinder)
+    private val storedResumeReader = StoredResumeReader(resumeFinder, resumeUseHistoryFinder)
 
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val roomId = UUID.fromString("00000000-0000-0000-0000-000000000101")
@@ -40,7 +40,7 @@ class StoredResumeReaderTest {
             resumeUseHistoryFinder.getLatest(memberId, listOf(persistedDefault.id, latestUsed.id, olderUsed.id))
         } returns mapOf(olderUsed.id to olderUse, latestUsed.id to latestUse)
 
-        val result = reader.getAll(memberId)
+        val result = storedResumeReader.getAll(memberId)
 
         assertThat(result.map { it.resume.id }).containsExactly(latestUsed.id, olderUsed.id, persistedDefault.id)
         assertThat(result.map { it.isDefault }).containsExactly(false, false, true)
@@ -57,7 +57,7 @@ class StoredResumeReaderTest {
             resumeUseHistoryFinder.getLatest(memberId, listOf(older.id, persistedDefault.id, newest.id))
         } returns emptyMap()
 
-        val result = reader.getAll(memberId)
+        val result = storedResumeReader.getAll(memberId)
 
         assertThat(result.map { it.resume.id }).containsExactly(newest.id, older.id, persistedDefault.id)
         assertThat(result.map { it.isDefault }).containsExactly(false, false, true)
@@ -74,7 +74,7 @@ class StoredResumeReaderTest {
             resumeUseHistoryFinder.getLatest(memberId, listOf(lowerId.id, higherId.id))
         } returns mapOf(lowerId.id to sameUse, higherId.id to sameUse)
 
-        val result = reader.getAll(memberId)
+        val result = storedResumeReader.getAll(memberId)
 
         assertThat(result.map { it.resume.id }).containsExactly(higherId.id, lowerId.id)
         assertThat(result.map { it.isDefault }).containsExactly(true, false)
@@ -84,7 +84,7 @@ class StoredResumeReaderTest {
     fun `저장한 이력서가 없으면 사용 이력을 조회하지 않는다`() {
         every { resumeFinder.getAll(memberId) } returns emptyList()
 
-        assertThat(reader.getAll(memberId)).isEmpty()
+        assertThat(storedResumeReader.getAll(memberId)).isEmpty()
         verify(exactly = 0) { resumeUseHistoryFinder.getLatest(any(), any()) }
     }
 

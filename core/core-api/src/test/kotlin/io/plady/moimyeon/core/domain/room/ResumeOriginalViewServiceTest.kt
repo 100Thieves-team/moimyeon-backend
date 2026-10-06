@@ -29,7 +29,7 @@ class ResumeOriginalViewServiceTest {
     private val now = LocalDateTime.of(2026, 8, 13, 21, 0)
     private val clock = Clock.fixed(now.atZone(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault())
 
-    private val service = ResumeOriginalViewService(
+    private val resumeOriginalViewService = ResumeOriginalViewService(
         participationValidator,
         resumeOriginalViewFinder,
         resumeFileStore,
@@ -51,7 +51,7 @@ class ResumeOriginalViewServiceTest {
             signedExpiry.atZone(clock.zone).toInstant(),
         )
 
-        val view = service.issueViewUrl(viewerMemberId, roomId, 42L)
+        val view = resumeOriginalViewService.issueViewUrl(viewerMemberId, roomId, 42L)
 
         assertThat(view.url).isEqualTo("https://s3.example.com/presigned")
         assertThat(view.expiresAt).isEqualTo(signedExpiry)
@@ -63,7 +63,7 @@ class ResumeOriginalViewServiceTest {
             participationValidator.validateParticipant(roomId, viewerMemberId)
         } throws CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
-        assertThatThrownBy { service.issueViewUrl(viewerMemberId, roomId, 42L) }
+        assertThatThrownBy { resumeOriginalViewService.issueViewUrl(viewerMemberId, roomId, 42L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
             }
@@ -78,7 +78,7 @@ class ResumeOriginalViewServiceTest {
             resumeOriginalViewFinder.getViewableFile(roomId, 42L)
         } throws CoreException(CoreErrorType.RESUME_ORIGINAL_NOT_VIEWABLE)
 
-        assertThatThrownBy { service.issueViewUrl(viewerMemberId, roomId, 42L) }
+        assertThatThrownBy { resumeOriginalViewService.issueViewUrl(viewerMemberId, roomId, 42L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.RESUME_ORIGINAL_NOT_VIEWABLE)
             }

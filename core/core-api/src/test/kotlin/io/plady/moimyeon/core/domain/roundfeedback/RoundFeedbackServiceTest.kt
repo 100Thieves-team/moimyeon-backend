@@ -18,7 +18,7 @@ class RoundFeedbackServiceTest {
     private val accessValidator = mockk<RoundFeedbackAccessValidator>()
     private val feedbackReader = mockk<RoundFeedbackReader>()
     private val feedbackManager = mockk<RoundFeedbackManager>()
-    private val service = RoundFeedbackService(accessValidator, feedbackReader, feedbackManager)
+    private val roundFeedbackService = RoundFeedbackService(accessValidator, feedbackReader, feedbackManager)
 
     private val roomId = UUID.randomUUID()
     private val intervieweeMemberId = UUID.randomUUID()
@@ -62,7 +62,7 @@ class RoundFeedbackServiceTest {
             feedbackReader.getMyQuestionRecords(roomId, intervieweeMemberId, participantMemberId)
         } returns records
 
-        val result = service.getMyQuestionRecords(participantMemberId, roomId, intervieweeMemberId)
+        val result = roundFeedbackService.getMyQuestionRecords(participantMemberId, roomId, intervieweeMemberId)
 
         assertThat(result).containsExactlyElementsOf(records)
         verifyOrder {
@@ -81,7 +81,7 @@ class RoundFeedbackServiceTest {
             feedbackReader.getMyQuestionRecords(roomId, intervieweeMemberId, participantMemberId)
         } returns emptyList()
 
-        service.getMyQuestionRecords(participantMemberId, roomId, intervieweeMemberId)
+        roundFeedbackService.getMyQuestionRecords(participantMemberId, roomId, intervieweeMemberId)
 
         verify(exactly = 1) {
             feedbackReader.getMyQuestionRecords(roomId, intervieweeMemberId, participantMemberId)
@@ -104,7 +104,7 @@ class RoundFeedbackServiceTest {
         }
         every { feedbackManager.registerFinalFeedback(command) } returns feedbackId
 
-        val result = service.leaveFinalFeedback(
+        val result = roundFeedbackService.leaveFinalFeedback(
             participantMemberId,
             roomId,
             intervieweeMemberId,
@@ -134,7 +134,7 @@ class RoundFeedbackServiceTest {
         } throws CoreException(CoreErrorType.ROUND_FEEDBACK_ALREADY_EXISTS)
 
         assertThatThrownBy {
-            service.leaveFinalFeedback(
+            roundFeedbackService.leaveFinalFeedback(
                 participantMemberId,
                 roomId,
                 intervieweeMemberId,
@@ -158,7 +158,7 @@ class RoundFeedbackServiceTest {
         }
         every { feedbackManager.upsertSelfFeedback(command) } returns feedbackId
 
-        val result = service.leaveSelfFeedback(
+        val result = roundFeedbackService.leaveSelfFeedback(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
@@ -192,13 +192,13 @@ class RoundFeedbackServiceTest {
         every { feedbackManager.upsertSelfFeedback(initialCommand) } returns feedbackId
         every { feedbackManager.upsertSelfFeedback(revisedCommand) } returns feedbackId
 
-        service.leaveSelfFeedback(
+        roundFeedbackService.leaveSelfFeedback(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
             initialCommand.content,
         )
-        val result = service.leaveSelfFeedback(
+        val result = roundFeedbackService.leaveSelfFeedback(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
@@ -251,7 +251,7 @@ class RoundFeedbackServiceTest {
             feedbackReader.getIntervieweeFeedback(roomId, intervieweeMemberId)
         } returns view
 
-        val result = service.getIntervieweeFeedback(intervieweeMemberId, roomId, intervieweeMemberId)
+        val result = roundFeedbackService.getIntervieweeFeedback(intervieweeMemberId, roomId, intervieweeMemberId)
 
         assertThat(result.finalFeedbacks).allSatisfy {
             assertThat(it.revealed).isFalse()
@@ -276,7 +276,7 @@ class RoundFeedbackServiceTest {
             feedbackManager.confirmDisclosure(roomId, intervieweeMemberId, feedbackId)
         }
 
-        service.confirmFinalFeedbackDisclosure(
+        roundFeedbackService.confirmFinalFeedbackDisclosure(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
@@ -301,13 +301,13 @@ class RoundFeedbackServiceTest {
             feedbackManager.confirmDisclosure(roomId, intervieweeMemberId, feedbackId)
         }
 
-        service.confirmFinalFeedbackDisclosure(
+        roundFeedbackService.confirmFinalFeedbackDisclosure(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
             feedbackId,
         )
-        service.confirmFinalFeedbackDisclosure(
+        roundFeedbackService.confirmFinalFeedbackDisclosure(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
@@ -326,7 +326,7 @@ class RoundFeedbackServiceTest {
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
-            service.leaveFinalFeedback(
+            roundFeedbackService.leaveFinalFeedback(
                 participantMemberId,
                 roomId,
                 intervieweeMemberId,

@@ -22,7 +22,7 @@ class RoundFeedbackAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val participationFinder = mockk<ParticipationFinder>()
     private val clock = Clock.fixed(Instant.parse("2026-09-24T06:00:00Z"), ZoneOffset.UTC)
-    private val validator = RoundFeedbackAccessValidator(roomFinder, participationFinder, clock)
+    private val roundFeedbackAccessValidator = RoundFeedbackAccessValidator(roomFinder, participationFinder, clock)
     private val roomId = UUID.randomUUID()
     private val intervieweeMemberId = UUID.randomUUID()
     private val participantMemberId = UUID.randomUUID()
@@ -33,7 +33,7 @@ class RoundFeedbackAccessValidatorTest {
         confirmed(participantMemberId, intervieweeMemberId)
 
         assertThatCode {
-            validator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -43,7 +43,7 @@ class RoundFeedbackAccessValidatorTest {
         confirmed(participantMemberId, intervieweeMemberId)
 
         assertThatCode {
-            validator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -52,7 +52,7 @@ class RoundFeedbackAccessValidatorTest {
         roomStatus(RoomStatus.CONFIRMED, progressAvailable = false)
 
         assertThatThrownBy {
-            validator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateOtherParticipantWriter(roomId, participantMemberId, intervieweeMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROUND_FEEDBACK_NOT_EDITABLE)
         }
@@ -64,7 +64,7 @@ class RoundFeedbackAccessValidatorTest {
         confirmed(intervieweeMemberId)
 
         assertThatCode {
-            validator.validateIntervieweeViewer(roomId, intervieweeMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateIntervieweeViewer(roomId, intervieweeMemberId, intervieweeMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -73,7 +73,7 @@ class RoundFeedbackAccessValidatorTest {
         roomStatus(RoomStatus.COMPLETED)
 
         assertThatThrownBy {
-            validator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateIntervieweeWriter(roomId, intervieweeMemberId, intervieweeMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROUND_FEEDBACK_NOT_EDITABLE)
         }
@@ -85,7 +85,7 @@ class RoundFeedbackAccessValidatorTest {
         confirmed(participantMemberId, intervieweeMemberId)
 
         assertThatThrownBy {
-            validator.validateIntervieweeViewer(roomId, participantMemberId, intervieweeMemberId)
+            roundFeedbackAccessValidator.validateIntervieweeViewer(roomId, participantMemberId, intervieweeMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROUND_FEEDBACK_FORBIDDEN)
         }

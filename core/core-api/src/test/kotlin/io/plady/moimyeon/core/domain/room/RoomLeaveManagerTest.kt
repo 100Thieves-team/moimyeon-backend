@@ -46,7 +46,7 @@ class RoomLeaveManagerTest {
     private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val roomManager = mockk<RoomManager>(relaxed = true)
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
-    private val manager = RoomLeaveManager(
+    private val roomLeaveManager = RoomLeaveManager(
         roomRepository,
         participationRepository,
         roomApplicationRepository,
@@ -67,7 +67,7 @@ class RoomLeaveManagerTest {
         givenRoom(RoomStatus.RECRUITING)
         val participation = givenParticipant()
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(participation.status).isEqualTo(ParticipationStatus.LEFT)
         assertThat(participation.leftAt).isEqualTo(now)
@@ -79,7 +79,7 @@ class RoomLeaveManagerTest {
         givenRoom(RoomStatus.CONFIRMED, minCapacity = 3)
         val participation = givenParticipant(currentParticipants = 4)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(participation.status).isEqualTo(ParticipationStatus.LEFT)
     }
@@ -90,7 +90,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3)
         val participation = givenParticipant(currentParticipants = 3)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(participation.status).isEqualTo(ParticipationStatus.LEFT)
         assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
@@ -105,7 +105,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3)
         givenParticipant(currentParticipants = 4)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
         assertNothingRecorded()
@@ -117,7 +117,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3, startAt = now)
         val participation = givenParticipant(currentParticipants = 3)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(participation.status).isEqualTo(ParticipationStatus.LEFT)
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
@@ -129,7 +129,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3, startAt = now.plusMinutes(1))
         givenParticipant(currentParticipants = 3)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
     }
@@ -139,7 +139,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.RECRUITING, minCapacity = 3)
         givenParticipant(currentParticipants = 2)
 
-        manager.leave(roomId, memberId)
+        roomLeaveManager.leave(roomId, memberId)
 
         assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
         assertNothingRecorded()
@@ -153,7 +153,7 @@ class RoomLeaveManagerTest {
             givenRoom(status)
             givenParticipant()
 
-            assertThatThrownBy { manager.leave(roomId, memberId) }
+            assertThatThrownBy { roomLeaveManager.leave(roomId, memberId) }
                 .describedAs("%s", status)
                 .isInstanceOfSatisfying(CoreException::class.java) {
                     assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_ALREADY_CLOSED)
@@ -173,7 +173,7 @@ class RoomLeaveManagerTest {
             )
         } returns null
 
-        assertThatThrownBy { manager.leave(roomId, memberId) }
+        assertThatThrownBy { roomLeaveManager.leave(roomId, memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
             }
@@ -185,7 +185,7 @@ class RoomLeaveManagerTest {
             givenRoom(status, minCapacity = 2)
             val participation = givenParticipant(currentParticipants = 4)
 
-            manager.leaveOnWithdrawal(roomId, memberId, now)
+            roomLeaveManager.leaveOnWithdrawal(roomId, memberId, now)
 
             assertThat(participation.status).describedAs("%s", status).isEqualTo(ParticipationStatus.LEFT)
         }
@@ -197,7 +197,7 @@ class RoomLeaveManagerTest {
         val room = givenRoom(RoomStatus.CONFIRMED, minCapacity = 3, startAt = now)
         val participation = givenParticipant(currentParticipants = 3)
 
-        manager.leaveOnWithdrawal(roomId, memberId, now)
+        roomLeaveManager.leaveOnWithdrawal(roomId, memberId, now)
 
         assertThat(participation.status).isEqualTo(ParticipationStatus.JOINED)
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
@@ -210,7 +210,7 @@ class RoomLeaveManagerTest {
             givenRoom(status)
             val participation = givenParticipant()
 
-            manager.leaveOnWithdrawal(roomId, memberId, now)
+            roomLeaveManager.leaveOnWithdrawal(roomId, memberId, now)
 
             assertThat(participation.status).describedAs("%s", status).isEqualTo(ParticipationStatus.JOINED)
         }

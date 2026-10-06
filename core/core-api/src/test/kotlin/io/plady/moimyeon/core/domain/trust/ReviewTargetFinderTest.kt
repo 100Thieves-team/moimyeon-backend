@@ -19,7 +19,7 @@ class ReviewTargetFinderTest {
     private val roomFinder = mockk<RoomFinder>()
     private val roomProgressReader = mockk<RoomProgressReader>()
     private val eligibilityValidator = ReviewEligibilityValidator(roomFinder, roomProgressReader)
-    private val finder = ReviewTargetFinder(roomFinder, roomProgressReader, eligibilityValidator)
+    private val reviewTargetFinder = ReviewTargetFinder(roomFinder, roomProgressReader, eligibilityValidator)
     private val room = mockk<Room>()
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -38,7 +38,7 @@ class ReviewTargetFinderTest {
             Attendance(absentTargetId, AttendanceStatus.ABSENT),
         )
 
-        val targets = finder.getTargets(authorMemberId, roomId)
+        val targets = reviewTargetFinder.getTargets(authorMemberId, roomId)
 
         assertThat(targets).containsExactly(
             ReviewTarget(firstTargetId),
@@ -51,7 +51,7 @@ class ReviewTargetFinderTest {
         every { roomFinder.getRoom(roomId) } returns room
         every { room.status } returns RoomStatus.CANCELED
 
-        assertThatThrownBy { finder.getTargets(authorMemberId, roomId) }
+        assertThatThrownBy { reviewTargetFinder.getTargets(authorMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_NOT_AVAILABLE)
             }
@@ -65,7 +65,7 @@ class ReviewTargetFinderTest {
             Attendance(authorMemberId, AttendanceStatus.ABSENT),
         )
 
-        assertThatThrownBy { finder.getTargets(authorMemberId, roomId) }
+        assertThatThrownBy { reviewTargetFinder.getTargets(authorMemberId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REVIEW_AUTHOR_NOT_ATTENDED)
             }

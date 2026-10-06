@@ -25,7 +25,7 @@ class RoomApplicationSubmissionFinderTest {
     private val roomApplicationRepository = mockk<RoomApplicationRepository>()
     private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
     private val resumeFinder = mockk<ResumeFinder>()
-    private val finder = RoomApplicationSubmissionFinder(
+    private val roomApplicationSubmissionFinder = RoomApplicationSubmissionFinder(
         roomApplicationRepository,
         resumeSubmissionRepository,
         resumeFinder,
@@ -55,7 +55,7 @@ class RoomApplicationSubmissionFinderTest {
         } returns submission
         every { resumeFinder.getSummary(applicantMemberId, resumeId) } returns summary
 
-        val result = finder.getLatestByApplicant(applicantMemberId, roomId)
+        val result = roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId)
 
         assertThat(result).isEqualTo(
             RoomApplication(
@@ -106,7 +106,7 @@ class RoomApplicationSubmissionFinderTest {
             "백엔드 개발자",
         )
 
-        assertThat(finder.getLatestByApplicant(applicantMemberId, roomId).note).isEmpty()
+        assertThat(roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId).note).isEmpty()
     }
 
     @Test
@@ -120,7 +120,7 @@ class RoomApplicationSubmissionFinderTest {
         } returns null
 
         assertThatThrownBy {
-            finder.getLatestByApplicant(applicantMemberId, roomId)
+            roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.APPLICATION_NOT_FOUND)
         }
@@ -148,7 +148,7 @@ class RoomApplicationSubmissionFinderTest {
         } returns null
 
         assertThatThrownBy {
-            finder.getLatestByApplicant(applicantMemberId, roomId)
+            roomApplicationSubmissionFinder.getLatestByApplicant(applicantMemberId, roomId)
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("applicationId=$applicationId")
         verify(exactly = 0) { resumeFinder.getSummary(any(), any()) }
