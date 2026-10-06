@@ -149,4 +149,14 @@ assert_contains "${SYNC_WORKFLOW}" 'terraform-command\.sh init' "fresh runner는
 assert_not_contains "${SYNC_WORKFLOW}" 'secrets\.MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN' "보호 없는 GitHub Environment에 Variables-write token을 두면 안 된다."
 assert_contains "${ROOT_DIR}/infra/terraform/scripts/sync-github-variables.sh" 'terraform-command\.sh' "deployment output도 공식 backend/workspace wrapper로 읽어야 한다."
 
+# Terraform plan 역할은 GetParameter 허용 목록에 있는 SSM만 refresh할 수 있다.
+# 모듈이 관리하는 String 파라미터가 목록에서 빠지면 apply 다음 plan부터 AccessDenied로 멈춘다.
+PLAN_ROLE_POLICY="${ROOT_DIR}/infra/terraform/modules/shared-foundation/terraform_ci.tf"
+DEPLOY_CANDIDATES="${ROOT_DIR}/infra/terraform/modules/moimyeon-environment/deploy_candidates.tf"
+assert_contains "${DEPLOY_CANDIDATES}" 'deploy_config_parameter_name[[:space:]]+=[[:space:]]+"/\$\{var\.project\}/\$\{var\.environment\}/deploy/config"' "배포 설정 SSM 이름이 plan 역할 허용 목록과 맞아야 한다."
+for parameter_suffix in core-api/IMAGE_URI core-worker/IMAGE_URI deploy/config; do
+  assert_contains "${PLAN_ROLE_POLICY}" "parameter/\\\$\\{var\\.project\\}/\\*/${parameter_suffix}\"" \
+    "Terraform plan 역할이 관리 SSM 파라미터 ${parameter_suffix}를 읽을 수 있어야 한다."
+done
+
 echo "Terraform CI 계약을 만족한다."

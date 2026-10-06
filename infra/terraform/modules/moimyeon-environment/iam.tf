@@ -419,6 +419,32 @@ data "aws_iam_policy_document" "github_deploy" {
   }
 
   dynamic "statement" {
+    for_each = var.enable_pr_image_candidates ? [1] : []
+
+    content {
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:DescribeImages",
+        "ecr:GetDownloadUrlForLayer",
+      ]
+      resources = [for repository in aws_ecr_repository.pr_image_candidate : repository.arn]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.enable_pr_image_candidates ? [1] : []
+
+    content {
+      actions = ["ssm:GetParameter"]
+      resources = [
+        aws_ssm_parameter.deploy_config[0].arn,
+        "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.terraform_applied_sha_parameter_name}",
+      ]
+    }
+  }
+
+  dynamic "statement" {
     for_each = length(var.github_deploy_additional_ssm_read_parameter_arns) > 0 ? [1] : []
 
     content {

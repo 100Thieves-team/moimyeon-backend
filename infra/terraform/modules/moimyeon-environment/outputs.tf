@@ -70,9 +70,7 @@ output "waf_log_group_name" {
 
 output "app_url" {
   description = "Application URL. Custom domain when configured, otherwise ALB HTTP DNS."
-  value = local.app_domain_enabled ? (
-    local.https_enabled ? "https://${var.app_domain_name}" : "http://${var.app_domain_name}"
-  ) : "http://${aws_lb.app.dns_name}"
+  value       = local.app_url
 }
 
 output "rds_endpoint" {
@@ -172,4 +170,24 @@ output "ecs_task_definition_arn" {
 output "notification_worker_task_definition_arn" {
   description = "Terraform-managed Notification Worker task definition template ARN."
   value       = aws_ecs_task_definition.notification_worker.arn
+}
+
+output "github_pr_image_role_arn" {
+  description = "IAM role internal PR CI assumes to push tree-tagged candidate images. Null when disabled."
+  value       = one(aws_iam_role.github_pr_image[*].arn)
+}
+
+output "pr_image_candidate_repository_urls" {
+  description = "Candidate ECR repository URLs keyed by image family (core-api, core-worker)."
+  value       = { for family, repository in aws_ecr_repository.pr_image_candidate : family => repository.repository_url }
+}
+
+output "deploy_config_parameter_name" {
+  description = "SSM String parameter holding the non-secret deploy wiring. Null when disabled."
+  value       = one(aws_ssm_parameter.deploy_config[*].name)
+}
+
+output "terraform_applied_sha_parameter_name" {
+  description = "SSM parameter the Terraform Apply workflow writes with the last applied source SHA."
+  value       = local.terraform_applied_sha_parameter_name
 }

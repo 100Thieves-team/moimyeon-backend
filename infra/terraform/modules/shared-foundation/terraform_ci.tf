@@ -350,6 +350,8 @@ data "aws_iam_policy_document" "terraform_plan_refresh" {
       "arn:aws:ssm:${data.aws_region.current.region}::parameter/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-api/IMAGE_URI",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-worker/IMAGE_URI",
+      # MOI-565: Terraform-managed non-secret deploy wiring (String, no secrets).
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/deploy/config",
     ]
   }
 

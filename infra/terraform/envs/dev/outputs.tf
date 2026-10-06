@@ -167,3 +167,28 @@ output "monitoring_sentry_parameter_names" {
   description = "Pre-created API and Worker Sentry DSN SecureStrings."
   value       = module.dev.monitoring_sentry_parameter_names
 }
+
+output "github_pr_image_role_arn" {
+  description = "GitHub Actions role internal PR CI uses to push candidate images."
+  value       = module.dev.github_pr_image_role_arn
+}
+
+output "pr_image_candidate_repository_url" {
+  description = "Core API candidate ECR repository URL for PR-built images."
+  value       = module.dev.pr_image_candidate_repository_urls["core-api"]
+}
+
+output "pr_image_worker_candidate_repository_url" {
+  description = "Notification Worker candidate ECR repository URL for PR-built images."
+  value       = module.dev.pr_image_candidate_repository_urls["core-worker"]
+}
+
+output "deploy_config_parameter_name" {
+  description = "SSM parameter holding the non-secret dev deploy wiring."
+  value       = module.dev.deploy_config_parameter_name
+}
+
+output "terraform_applied_sha_parameter_name" {
+  description = "SSM parameter recording the last applied dev Terraform source SHA."
+  value       = module.dev.terraform_applied_sha_parameter_name
+}

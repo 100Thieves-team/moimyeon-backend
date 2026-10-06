@@ -26,12 +26,12 @@ resource "aws_lb_target_group" "app" {
   target_type = "ip"
   vpc_id      = aws_vpc.this.id
 
-  deregistration_delay = 30
+  deregistration_delay = var.alb_deregistration_delay_seconds
 
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    interval            = 30
+    interval            = var.alb_health_check_interval_seconds
     matcher             = "200"
     path                = var.health_check_path
     port                = "traffic-port"
@@ -54,12 +54,12 @@ resource "aws_lb_target_group" "app_alternate" {
   target_type = "ip"
   vpc_id      = aws_vpc.this.id
 
-  deregistration_delay = 30
+  deregistration_delay = var.alb_deregistration_delay_seconds
 
   health_check {
     enabled             = true
     healthy_threshold   = 2
-    interval            = 30
+    interval            = var.alb_health_check_interval_seconds
     matcher             = "200"
     path                = var.health_check_path
     port                = "traffic-port"

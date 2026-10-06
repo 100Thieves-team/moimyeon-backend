@@ -73,6 +73,12 @@ variable "github_deploy_additional_ssm_read_parameter_arns" {
   default     = []
 }
 
+variable "enable_pr_image_candidates" {
+  description = "Let internal PR CI push tree-tagged candidate images and publish the deploy config to SSM so merges deploy without rebuilding or waiting for Terraform."
+  type        = bool
+  default     = false
+}
+
 # ---------------------------------------------------------------------------
 # DNS / TLS
 # ---------------------------------------------------------------------------
@@ -280,6 +286,28 @@ variable "health_check_path" {
   description = "ALB (and optional container) readiness path. The core-api group includes its DB but excludes notification Redis."
   type        = string
   default     = "/actuator/health/readiness"
+}
+
+variable "alb_health_check_interval_seconds" {
+  description = "ALB target health check interval. Two consecutive passes mark a new task healthy."
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.alb_health_check_interval_seconds >= 6 && var.alb_health_check_interval_seconds <= 300
+    error_message = "alb_health_check_interval_seconds must be 6-300 so it stays above the 5s health check timeout."
+  }
+}
+
+variable "alb_deregistration_delay_seconds" {
+  description = "Seconds the ALB keeps draining an old task's in-flight requests during replacement."
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.alb_deregistration_delay_seconds >= 0 && var.alb_deregistration_delay_seconds <= 3600
+    error_message = "alb_deregistration_delay_seconds must be 0-3600."
+  }
 }
 
 variable "target_group_name" {
