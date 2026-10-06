@@ -29,6 +29,15 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
 - **생성자 주입만** 사용한다(필드 주입 금지). Kotlin 주 생성자 + `private val`.
 - `@Autowired` 를 쓰지 않는다.
 
+## 컴포넌트 이름
+
+- 이 레포가 정의한 컴포넌트(Service·Facade·Implement 도구·Repository·Client 등)를 담는 프로퍼티·변수는
+  역할 단어 하나(`service`, `manager`, `finder`, `validator`, `reader`, `facade`, `repository` …)로 짓지 않는다.
+  기본은 타입 이름의 camelCase(`roomService`, `notificationSettingManager`)이고, 같은 클래스 안에서 뜻이
+  분명하면 앞부분을 줄여도 된다(`RoomProgressAccessValidator` → `accessValidator`).
+- 테스트도 같다. 테스트 대상·mock·`@MockkBean` 필드를 `service`·`manager` 로 부르지 않는다.
+- 라이브러리 객체(`StringBuilder`, `ListAppender`, `ExecutorService` 등)와 값(enum 상수, 데이터 클래스 필드)은 대상이 아니다.
+
 ## 검증·예외 관용구
 
 - 정상 흐름에서 도달 가능한 규칙 위반: `requireBusiness(cond, errorType)` / `requireFound(value, errorType)`.
@@ -52,7 +61,15 @@ trailing comma 허용, star import 금지, function-expression-body 룰 비활�
    // 계약: userPrincipal.name = 회원 UUID 문자열 (security 모듈의 인증 필터가 보장)
    ```
 
-금지: 다음 줄이 뭘 하는지 반복하는 주석, 변경 이력 주석("리뷰 반영"), 자명한 KDoc.
+금지:
+
+- 다음 줄이 뭘 하는지 반복하는 주석, 변경 이력 주석("리뷰 반영"), 자명한 KDoc.
+- **컨벤션 문서로 알 수 있는 사실.** 레이어 역할("Service 는 판정하지 않는다", "응답 조립은 Facade 가 한다"),
+  null·예외 처리 위치, 베이스 엔티티의 소프트 삭제처럼 `docs/conventions/` 에 이미 적힌 규칙을 클래스마다 다시 쓰지 않는다.
+  예외는 컨벤션이 주석을 요구하는 경우뿐이다(Repository 로 직접 내려간 이유, 베이스를 상속하지 않는 엔티티의 이유 등).
+- 같은 이유를 여러 파일에 반복하는 주석. 그 규칙이 실제로 걸리는 한 곳에만 둔다.
+  같은 규칙을 따로 구현한 곳이 여럿이면(커서 토큰 두 개 등) 나머지에는 그 한 곳을 가리키는 짧은 참조만 남긴다.
+- RestDocs 필드 설명과 겹치는 DTO 주석.
 
 ## 로깅
 
