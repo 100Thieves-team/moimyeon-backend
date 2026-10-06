@@ -120,13 +120,16 @@ class DeploymentConfigTest(unittest.TestCase):
         reverse = {output: values[key] for key, output in config_module.OUTPUTS.items()}
 
         def fake_run(command, **kwargs):
-            self.assertEqual(command[:4], ["bash", str(SCRIPTS / "terraform-command.sh"), "output-raw", "dev"])
+            self.assertEqual(command[:4], ["bash", str(SCRIPTS / "terraform-command.sh"), "output-raw-many", "dev"])
+            self.assertEqual(command[4:], list(config_module.OUTPUTS.values()))
             self.assertTrue(kwargs["check"])
-            return subprocess.CompletedProcess(command, 0, reverse[command[4]] + "\n", "")
+            stdout = "".join(f"{output}={reverse[output]}\n" for output in command[4:])
+            return subprocess.CompletedProcess(command, 0, stdout, "")
 
         with patch.object(config_module.subprocess, "run", side_effect=fake_run) as mocked:
             self.assertEqual(config_module.export_config(SHA, "123", "2"), config_document())
-            self.assertEqual(mocked.call_count, len(config_module.OUTPUTS))
+            # A single wrapper call: one terraform init for every output.
+            self.assertEqual(mocked.call_count, 1)
 
     def test_cli_ignores_old_repository_variable_and_uses_artifact(self):
         with tempfile.TemporaryDirectory() as directory:

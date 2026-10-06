@@ -64,13 +64,13 @@ def validate(document, sha, run_id, attempt):
 def export_config(sha, run_id, attempt):
     wrapper = Path(__file__).with_name("terraform-command.sh")
     # Never use `terraform output -json`: state and other outputs may contain secrets.
-    config = {
-        key: subprocess.run(
-            ["bash", str(wrapper), "output-raw", "dev", output],
-            check=True, capture_output=True, text=True,
-        ).stdout.strip()
-        for key, output in OUTPUTS.items()
-    }
+    # One wrapper call initializes once and prints <output>=<value> per line.
+    stdout = subprocess.run(
+        ["bash", str(wrapper), "output-raw-many", "dev", *OUTPUTS.values()],
+        check=True, capture_output=True, text=True,
+    ).stdout
+    values = dict(line.split("=", 1) for line in stdout.splitlines() if "=" in line)
+    config = {key: values[output].strip() for key, output in OUTPUTS.items()}
     document = {
         "schema_version": 1, "environment": "dev", "source_sha": sha,
         "run_id": run_id, "run_attempt": attempt, "config": config,

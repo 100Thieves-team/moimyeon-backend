@@ -19,6 +19,7 @@ Usage:
   terraform-command.sh state-list <shared|dev|live>
   terraform-command.sh output-raw <shared|dev|live> <output-name>
   terraform-command.sh output-json <shared|dev|live> <output-name>
+  terraform-command.sh output-raw-many <shared|dev|live> <output-name>...
 
 Official commands always use the committed <environment>.tfvars file and never
 accept local overrides. Run ad-hoc Terraform directly for local experiments.
@@ -127,6 +128,36 @@ case "${command_name}" in
       exit 1
     }
     exec "${TERRAFORM_BIN}" -chdir="${environment_dir}" state list
+    ;;
+  output-raw-many)
+    # One init for many outputs: init per output made variable sync take minutes.
+    # Prints <output-name>=<raw value> per line; values must stay single-line.
+    [ "$#" -ge 3 ] || usage
+    shift 2
+    for output_name in "$@"; do
+      case "${output_name}" in
+        ''|*[!A-Za-z0-9_]*)
+          echo "Invalid Terraform output name: ${output_name}." >&2
+          exit 1
+          ;;
+      esac
+    done
+    "${TERRAFORM_BIN}" -chdir="${environment_dir}" init -input=false -no-color >/dev/null
+    "${TERRAFORM_BIN}" -chdir="${environment_dir}" workspace select default >/dev/null
+    [ "$("${TERRAFORM_BIN}" -chdir="${environment_dir}" workspace show)" = "default" ] || {
+      echo "Official Terraform commands require the default workspace." >&2
+      exit 1
+    }
+    for output_name in "$@"; do
+      output_value="$("${TERRAFORM_BIN}" -chdir="${environment_dir}" output -raw "${output_name}")"
+      case "${output_value}" in
+        *$'\n'*)
+          echo "Terraform output ${output_name} must be a single line." >&2
+          exit 1
+          ;;
+      esac
+      printf '%s=%s\n' "${output_name}" "${output_value}"
+    done
     ;;
   output-raw|output-json)
     [ "$#" -eq 3 ] || usage
