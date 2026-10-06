@@ -19,6 +19,7 @@ jobs:
     outputs:
       source_branch: ${{ github.event.workflow_run.head_branch }}
       source_sha: ${{ github.event.workflow_run.head_sha }}
+      terraform_required: ${{ steps.scope.outputs.terraform_required }}
 
     steps:
       - name: Pin CI-successful trigger revision
@@ -29,9 +30,41 @@ jobs:
           echo "Terraform boundary pinned to ${SOURCE_BRANCH}@${SOURCE_SHA}." \
             >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Check out CI-successful trigger revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # MOI-565: compare with the last applied dev revision, not the first
+      # parent, using the same paths as wait-for-terraform-boundary.sh. A
+      # Terraform commit whose own run went stale is still pending here, so the
+      # next app commit applies it. The variable snapshot can only lag, which
+      # runs Terraform rather than skipping it.
+      - name: Skip dev Terraform when infra is unchanged since the last apply
+        id: scope
+        env:
+          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          APPLIED_SHA: ${{ vars.MOIMYEON_TERRAFORM_APPLIED_SHA_DEV }}
+        run: |
+          set -euo pipefail
+          required=true
+          if [ "${SOURCE_BRANCH}" = dev ] \
+            && [[ "${APPLIED_SHA}" =~ ^[0-9a-f]{40}$ ]] \
+            && git merge-base --is-ancestor "${APPLIED_SHA}" "${SOURCE_SHA}" 2>/dev/null \
+            && git diff --quiet --no-renames "${APPLIED_SHA}" "${SOURCE_SHA}" -- \
+              infra/terraform ':(exclude)infra/terraform/tests' ':(exclude)infra/terraform/README.md'; then
+            required=false
+            echo "infra/terraform is unchanged since applied dev revision ${APPLIED_SHA}; skipping Terraform." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "terraform_required=${required}" >> "$GITHUB_OUTPUT"
+
   plan-shared:
     needs: select
-    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'dev' }}
+    if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'dev' && needs.select.outputs.terraform_required == 'true' }}
     permissions:
       actions: read
       contents: read

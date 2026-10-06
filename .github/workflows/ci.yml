@@ -161,6 +161,9 @@ jobs:
       - name: Check Terraform apply boundary waiter
         run: bash infra/terraform/tests/wait-for-terraform-apply-test.sh
 
+      - name: Check deploy source verification and Terraform boundary
+        run: bash infra/terraform/tests/deploy-source-verification-test.sh
+
       - name: Check source-bound deployment config and ECS requests
         run: python3 -m unittest discover -s infra/terraform/tests -p 'test_deploy_*.py' -v
 
@@ -188,6 +191,73 @@ jobs:
           JWT_SECRET: ci-dummy-jwt-secret-0123456789abcdef0123456789abcdef
           GOOGLE_OAUTH_CLIENT_ID: ci-dummy-client-id
           GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
+
+  # MOI-565: build the deploy images once, here, for the PR merge tree. With
+  # strict up-to-date merges the dev merge commit has the same tree, so Deploy
+  # AWS promotes these digests instead of rebuilding. Tags carry this run ID and
+  # attempt, and the deploy trusts one only when this job succeeded in the same
+  # run attempt as `build`: a tag pushed first elsewhere fails this immutable
+  # push. Fork PRs get no OIDC token and the deploy builds. Not a required check.
+  image:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Resolve candidate image tags
+        id: tags
+        env:
+          API_REPOSITORY: ${{ vars.MOIMYEON_PR_IMAGE_CANDIDATE_REPOSITORY_URL_DEV }}
+          WORKER_REPOSITORY: ${{ vars.MOIMYEON_PR_IMAGE_WORKER_CANDIDATE_REPOSITORY_URL_DEV }}
+        run: |
+          set -euo pipefail
+          tag="tree-$(git rev-parse 'HEAD^{tree}')-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "api=${API_REPOSITORY}:${tag}" >> "$GITHUB_OUTPUT"
+          echo "worker=${WORKER_REPOSITORY}:${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV }}
+          aws-region: ${{ vars.MOIMYEON_AWS_REGION_DEV }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build and push Core API candidate
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: Dockerfile
+          target: core-api
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.tags.outputs.api }}
+          cache-from: type=gha,scope=deployment-images
+          cache-to: type=gha,mode=max,scope=deployment-images
+
+      # Shares the builder stage with the API target through the local builder.
+      - name: Build and push Worker candidate
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: Dockerfile
+          target: core-worker
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.tags.outputs.worker }}
+          cache-from: type=gha,scope=deployment-images
 
   monitoring-smoke:
     runs-on: ubuntu-latest

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Exchange only allowlisted, non-secret Terraform outputs with the dev deploy run."""
+"""Validate the allowlisted, non-secret dev deploy wiring that Terraform publishes to SSM."""
 
 import argparse
 import json
 import os
 from pathlib import Path
 import re
-import subprocess
 import sys
 
 
@@ -27,79 +26,58 @@ OUTPUTS = {
     "worker_ecs_task_definition": "notification_worker_task_definition_arn",
     "worker_image_uri_parameter": "notification_worker_image_uri_parameter_name",
 }
+CANDIDATE_FAMILIES = ("core-api", "core-worker")
+SAFE_VALUE = r"[A-Za-z0-9_./:@-]+"
 
 
-def validate(document, sha, run_id, attempt):
+def validate(document, role_arn):
     if not isinstance(document, dict):
         raise ValueError("Deployment config must be an object")
-    if not re.fullmatch(r"[0-9a-f]{40}", sha):
-        raise ValueError("Invalid source SHA")
-    if not all(re.fullmatch(r"[1-9][0-9]*", x) for x in (run_id, attempt)):
-        raise ValueError("Invalid Terraform run identity")
-    expected = {
-        "schema_version": 1, "environment": "dev", "source_sha": sha,
-        "run_id": run_id, "run_attempt": attempt,
-    }
-    if set(document) != set(expected) | {"config"}:
+    if set(document) != {"schema_version", "environment", "config", "candidate_repository_urls"}:
         raise ValueError("Unexpected deployment config fields")
-    if any(document.get(key) != value for key, value in expected.items()):
-        raise ValueError("Deployment config does not match the successful Terraform run")
+    if document["schema_version"] != 2 or document["environment"] != "dev":
+        raise ValueError("Deployment config is not the dev schema")
     config = document["config"]
     if not isinstance(config, dict) or set(config) != set(OUTPUTS):
         raise ValueError("Deployment config must contain exactly the non-secret output allowlist")
     for key, value in config.items():
         # These identifiers/URLs never require shell metacharacters or multiline outputs.
-        if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_./:@-]+", value):
+        if not isinstance(value, str) or not re.fullmatch(SAFE_VALUE, value):
             raise ValueError(f"Missing or unsafe deployment config value: {key}")
     role = re.fullmatch(r"arn:aws:iam::([0-9]{12}):role/[A-Za-z0-9_./-]+", config["role_arn"])
-    if role is None:
-        raise ValueError("Invalid deployment role ARN")
+    if role is None or config["role_arn"] != role_arn:
+        # The workflow assumed role_arn to read this document; both must agree.
+        raise ValueError("Deployment role ARN does not match the assumed role")
     for prefix, family in (("", "core-api"), ("worker_", "core-worker")):
         arn_prefix = f"arn:aws:ecs:{config['aws_region']}:{role[1]}:task-definition/moimyeon-dev-{family}:"
         if not re.fullmatch(re.escape(arn_prefix) + r"[1-9][0-9]*", config[f"{prefix}ecs_task_definition"]):
             raise ValueError("Task template must be an exact dev revision in the deployment account/region")
-    return config
-
-
-def export_config(sha, run_id, attempt):
-    wrapper = Path(__file__).with_name("terraform-command.sh")
-    # Never use `terraform output -json`: state and other outputs may contain secrets.
-    # One wrapper call initializes once and prints <output>=<value> per line.
-    stdout = subprocess.run(
-        ["bash", str(wrapper), "output-raw-many", "dev", *OUTPUTS.values()],
-        check=True, capture_output=True, text=True,
-    ).stdout
-    values = dict(line.split("=", 1) for line in stdout.splitlines() if "=" in line)
-    config = {key: values[output].strip() for key, output in OUTPUTS.items()}
-    document = {
-        "schema_version": 1, "environment": "dev", "source_sha": sha,
-        "run_id": run_id, "run_attempt": attempt, "config": config,
-    }
-    validate(document, sha, run_id, attempt)
-    return document
+    candidates = document["candidate_repository_urls"]
+    if not isinstance(candidates, dict) or set(candidates) != set(CANDIDATE_FAMILIES):
+        raise ValueError("Deployment config must name both candidate repositories")
+    registry = config["ecr_repository_url"].split("/", 1)[0]
+    for family, url in candidates.items():
+        if not isinstance(url, str) or not re.fullmatch(re.escape(registry) + r"/[a-z0-9._/-]+-candidate", url):
+            raise ValueError(f"Candidate repository must be in the deploy registry: {family}")
+    return config, candidates
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("export", "read"))
-    parser.add_argument("--sha", required=True)
-    parser.add_argument("--run-id", required=True)
-    parser.add_argument("--attempt", required=True)
-    parser.add_argument("--file")
+    parser.add_argument("mode", choices=("read",))
+    parser.add_argument("--file", required=True)
+    parser.add_argument("--role-arn", required=True)
     args = parser.parse_args()
     try:
-        if args.mode == "export":
-            print(json.dumps(export_config(args.sha, args.run_id, args.attempt)))
-        else:
-            if not args.file:
-                raise ValueError("Deployment config file is required")
-            config = validate(json.loads(Path(args.file).read_text()), args.sha, args.run_id, args.attempt)
-            # Validate the entire document before emitting any Actions outputs.
-            with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-                output.write("name=dev\necs_health_check_grace_seconds=240\n")
-                output.writelines(f"{key}={value}\n" for key, value in config.items())
-    except (ValueError, KeyError, TypeError, OSError, subprocess.CalledProcessError):
-        # Do not echo Terraform stderr, file contents, or untrusted field values.
+        config, candidates = validate(json.loads(Path(args.file).read_text()), args.role_arn)
+        # Validate the entire document before emitting any Actions outputs.
+        with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+            output.write("name=dev\necs_health_check_grace_seconds=240\n")
+            output.writelines(f"{key}={value}\n" for key, value in config.items())
+            output.write(f"candidate_repository_url={candidates['core-api']}\n")
+            output.write(f"worker_candidate_repository_url={candidates['core-worker']}\n")
+    except (ValueError, KeyError, TypeError, OSError):
+        # Do not echo file contents or untrusted field values.
         print("Invalid or unavailable Terraform deployment config; refusing deployment.", file=sys.stderr)
         return 1
     return 0

@@ -15,8 +15,24 @@
 
 ## 배포 파이프라인 불변식 (팀 결정)
 
-- **CI 성공 없이 배포 없음** — deploy는 CI에 종속(workflow_run 또는
-  needs). push에 독립 발화하는 배포 워크플로를 만들지 않는다.
+- **CI가 검증한 트리만 배포** — dev 배포는 dev push로 시작하지만, AWS
+  자격증명 전에 머지 커밋과 같은 트리의 PR head가 required check `build`를
+  통과했음을 증명한다(`verify-pr-ci.sh`). dev ruleset의 PR 필수·strict(머지 전
+  branch update)가 이 전제를 만든다 — ruleset을 약화하면 이 규칙도 무너진다.
+  이 검증 없이 push에 반응하는 배포 경로를 만들지 않는다 (MOI-565, DR-001 대체).
+- **이미지는 PR CI에서 한 번 빌드** — 내부 PR CI가 `tree-<트리>-run-<실행>-<시도>`
+  태그로 candidate ECR에 올리고, 배포는 검증한 `build`와 같은 실행 시도의
+  `image` job이 성공했을 때만 그 digest를 복사한다. 트리만으로 후보를 고르면
+  다른 PR이 먼저 올린 이미지가 승격될 수 있다. PR 역할은 candidate 저장소 쓰기만
+  가진다. 믿을 후보가 없으면 배포가 빌드한다 (MOI-565).
+- **Terraform 경계 대기는 배포 lock 밖에서** — apply·sync가 같은
+  `deploy-aws-dev` lock을 쓰므로 lock을 잡고 기다리면 서로 막힌다. lock 안에서는
+  기다리지 않고 확인만 한다 (MOI-565).
+- **Terraform은 바뀐 커밋에서만, 배포는 적용 경계만 기다린다** — 마지막 적용
+  SHA 이후 `infra/terraform`이 그대로면 Terraform Apply를 생략하고, 배포는
+  적용되지 않은 Terraform 변경이 앞설 때만 기다린다
+  (`wait-for-terraform-boundary.sh`). 두 판정의 경로 범위는 같아야 한다
+  (MOI-565, DR-013 일부 대체).
 - **build once, promote** — live는 재빌드하지 않는다. dev에서 검증된
   이미지 digest를 ECR 태그 승격으로 배포한다. 이미지 빌드는 Dockerfile
   multi-target으로 API·Worker를 한 빌드에서 뽑는다.
@@ -63,6 +79,8 @@
   쓴다. GitHub secret에는 AWS 밖 시크릿(Slack webhook 등)만 남긴다.
 - apply 후 Variables sync가 별도 job으로 실행된다 — tf 출력과 GitHub
   variables의 드리프트를 만들지 않는다.
+- dev 배포 설정은 Terraform이 SSM `/moimyeon/dev/deploy/config`에 비민감
+  값만 게시하고, 배포는 그 값을 검증해 읽는다 (MOI-565).
 - 매일 드리프트 감지 plan이 돌고 변경이 있으면 실패한다 — 콘솔 수동
   변경은 드리프트로 잡힌다는 전제로, 지속 변경은 반드시 IaC로.
 - `infra/terraform/tests/*.sh` 계약 검사가 CI에서 위 불변식 일부를

@@ -29,17 +29,25 @@ API_ARN = "arn:aws:ecs:ap-northeast-2:123456789012:task-definition/moimyeon-dev-
 WORKER_ARN = "arn:aws:ecs:ap-northeast-2:123456789012:task-definition/moimyeon-dev-core-worker:50"
 
 
+ROLE_ARN = "arn:aws:iam::123456789012:role/deploy"
+REGISTRY = "123456789012.dkr.ecr.ap-northeast-2.amazonaws.com"
+
+
 def config_document():
     config = {key: "example" for key in config_module.OUTPUTS}
     config.update({
         "aws_region": "ap-northeast-2",
-        "role_arn": "arn:aws:iam::123456789012:role/deploy",
+        "role_arn": ROLE_ARN,
+        "ecr_repository_url": f"{REGISTRY}/moimyeon/backend",
         "ecs_task_definition": API_ARN,
         "worker_ecs_task_definition": WORKER_ARN,
     })
     return {
-        "schema_version": 1, "environment": "dev", "source_sha": SHA,
-        "run_id": "123", "run_attempt": "2", "config": config,
+        "schema_version": 2, "environment": "dev", "config": config,
+        "candidate_repository_urls": {
+            "core-api": f"{REGISTRY}/moimyeon/backend-candidate",
+            "core-worker": f"{REGISTRY}/moimyeon/worker-candidate",
+        },
     }
 
 
@@ -73,19 +81,30 @@ def task_template(worker=False):
 
 class DeploymentConfigTest(unittest.TestCase):
     def validate(self, document):
-        return config_module.validate(document, SHA, "123", "2")
+        return config_module.validate(document, ROLE_ARN)
 
-    def test_exact_source_run_attempt(self):
-        self.assertEqual(self.validate(config_document())["ecs_task_definition"], API_ARN)
+    def run_cli(self, document, directory):
+        path = Path(directory) / "config.json"
+        output = Path(directory) / "output"
+        path.write_text(json.dumps(document))
+        result = subprocess.run([
+            sys.executable, str(SCRIPTS / "deploy_config.py"), "read", "--file", str(path), "--role-arn", ROLE_ARN,
+        ], env=dict(os.environ, GITHUB_OUTPUT=str(output)), capture_output=True, text=True)
+        return result, output
 
-    def test_rejects_other_source_environment_run_or_attempt(self):
-        for key, value in [("source_sha", "a" * 40), ("environment", "live"), ("run_id", "124"),
-                           ("run_attempt", "1"), ("schema_version", 2)]:
-            with self.subTest(key=key):
-                document = config_document()
-                document[key] = value
-                with self.assertRaises(ValueError):
-                    self.validate(document)
+    def test_valid_dev_document(self):
+        config, candidates = self.validate(config_document())
+        self.assertEqual(config["ecs_task_definition"], API_ARN)
+        self.assertEqual(candidates["core-worker"], f"{REGISTRY}/moimyeon/worker-candidate")
+
+    def test_rejects_other_schema_environment_or_role(self):
+        for key, value in [("environment", "live"), ("schema_version", 1)]:
+            document = config_document()
+            document[key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                self.validate(document)
+        with self.assertRaises(ValueError):
+            config_module.validate(config_document(), "arn:aws:iam::123456789012:role/other")
 
     def test_rejects_missing_extra_or_secret_fields(self):
         for mode in ("missing", "extra", "secret"):
@@ -115,49 +134,35 @@ class DeploymentConfigTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 self.validate(document)
 
-    def test_export_reads_only_explicit_outputs_via_official_wrapper(self):
-        values = config_document()["config"]
-        reverse = {output: values[key] for key, output in config_module.OUTPUTS.items()}
+    def test_rejects_candidate_outside_registry_or_missing(self):
+        for mode in ("foreign", "deploy-repo", "missing"):
+            document = config_document()
+            if mode == "foreign":
+                document["candidate_repository_urls"]["core-api"] = "999999999999.dkr.ecr.us-east-1.amazonaws.com/x-candidate"
+            elif mode == "deploy-repo":
+                document["candidate_repository_urls"]["core-api"] = f"{REGISTRY}/moimyeon/backend"
+            else:
+                del document["candidate_repository_urls"]["core-worker"]
+            with self.subTest(mode=mode), self.assertRaises(ValueError):
+                self.validate(document)
 
-        def fake_run(command, **kwargs):
-            self.assertEqual(command[:4], ["bash", str(SCRIPTS / "terraform-command.sh"), "output-raw-many", "dev"])
-            self.assertEqual(command[4:], list(config_module.OUTPUTS.values()))
-            self.assertTrue(kwargs["check"])
-            stdout = "".join(f"{output}={reverse[output]}\n" for output in command[4:])
-            return subprocess.CompletedProcess(command, 0, stdout, "")
-
-        with patch.object(config_module.subprocess, "run", side_effect=fake_run) as mocked:
-            self.assertEqual(config_module.export_config(SHA, "123", "2"), config_document())
-            # A single wrapper call: one terraform init for every output.
-            self.assertEqual(mocked.call_count, 1)
-
-    def test_cli_ignores_old_repository_variable_and_uses_artifact(self):
+    def test_cli_emits_config_and_candidates(self):
         with tempfile.TemporaryDirectory() as directory:
-            document = Path(directory) / "config.json"
-            output = Path(directory) / "output"
-            document.write_text(json.dumps(config_document()))
-            env = dict(os.environ, GITHUB_OUTPUT=str(output), MOIMYEON_ECS_TASK_DEFINITION_DEV=API_ARN.replace(":95", ":43"))
-            result = subprocess.run([
-                sys.executable, str(SCRIPTS / "deploy_config.py"), "read", "--file", str(document),
-                "--sha", SHA, "--run-id", "123", "--attempt", "2",
-            ], env=env, capture_output=True, text=True)
+            result, output = self.run_cli(config_document(), directory)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn(f"ecs_task_definition={API_ARN}\n", output.read_text())
-            self.assertNotIn(":43", output.read_text())
+            text = output.read_text()
+            self.assertIn(f"ecs_task_definition={API_ARN}\n", text)
+            self.assertIn(f"candidate_repository_url={REGISTRY}/moimyeon/backend-candidate\n", text)
+            self.assertIn(f"worker_candidate_repository_url={REGISTRY}/moimyeon/worker-candidate\n", text)
 
     def test_invalid_document_emits_no_partial_outputs(self):
         with tempfile.TemporaryDirectory() as directory:
-            document = Path(directory) / "config.json"
-            output = Path(directory) / "output"
             invalid = config_document()
-            invalid["run_attempt"] = "1"
-            document.write_text(json.dumps(invalid))
-            result = subprocess.run([
-                sys.executable, str(SCRIPTS / "deploy_config.py"), "read", "--file", str(document),
-                "--sha", SHA, "--run-id", "123", "--attempt", "2",
-            ], env=dict(os.environ, GITHUB_OUTPUT=str(output)), capture_output=True, text=True)
+            invalid["config"]["SENTRY_DSN"] = "secret-looking"
+            result, output = self.run_cli(invalid, directory)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(output.exists())
+            self.assertNotIn("secret-looking", result.stderr)
 
 
 class EcsRegistrationTest(unittest.TestCase):
@@ -269,26 +274,29 @@ class EcsRegistrationTest(unittest.TestCase):
 
 
 class WorkflowWiringTest(unittest.TestCase):
-    def test_deploy_uses_exact_artifact_not_mutable_template_variables(self):
+    def test_deploy_reads_terraform_published_config_not_mutable_template_variables(self):
         workflow = (ROOT / ".github/workflows/deploy-aws.yml").read_text()
         self.assertNotIn("vars.MOIMYEON_ECS_TASK_DEFINITION_DEV", workflow)
         self.assertNotIn("vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_DEV", workflow)
-        self.assertIn('gh run download "${TERRAFORM_RUN_ID}"', workflow)
-        self.assertIn('dev-deploy-config-${DEPLOY_SHA}-${TERRAFORM_RUN_ATTEMPT}', workflow)
+        self.assertIn("vars.MOIMYEON_DEPLOY_CONFIG_PARAMETER_DEV", workflow)
+        self.assertIn("deploy_config.py read", workflow)
         self.assertEqual(workflow.count("prepare_ecs_task.py"), 4)
+        self.assertLess(workflow.index("Wait for the Terraform boundary"), workflow.index("Load Terraform deployment config"))
         self.assertLess(workflow.index("Validate both Terraform task templates"), workflow.index("Build and push image"))
-        self.assertLess(workflow.index("Load source-bound Terraform deployment config"), workflow.index("Configure AWS credentials"))
         for line in workflow.splitlines():
             if "task-definition" in line and ".json" in line:
                 self.assertIn("${RUNNER_TEMP}/", line, "Task metadata must never enter the Docker build context")
 
-    def test_sync_only_uploads_named_non_secret_config(self):
+    def test_sync_records_applied_dev_boundary(self):
         workflow = (ROOT / ".github/workflows/terraform-sync-variables.yml").read_text()
-        self.assertIn("path: dev-deploy-config.json", workflow)
-        self.assertIn("dev-deploy-config-${{ inputs.source_sha }}-${{ github.run_attempt }}", workflow)
-        self.assertIn("if-no-files-found: error", workflow)
-        self.assertIn("inputs.environment == 'dev'", workflow)
-        self.assertLess(workflow.index("Sync deployment variables from current state"), workflow.index("Publish source-bound"))
+        self.assertNotIn("dev-deploy-config", workflow)
+        self.assertIn("--applied-sha", workflow)
+        self.assertIn("terraform_applied_sha_parameter_name", workflow)
+        # SSM (deploy boundary) first; the GitHub variable (Terraform skip) is written last.
+        self.assertLess(workflow.index("aws ssm put-parameter"), workflow.index("sync-github-variables.sh --env"))
+        script = (SCRIPTS / "sync-github-variables.sh").read_text()
+        self.assertEqual(script.rindex('set_variable "'),
+                         script.index('set_variable "MOIMYEON_TERRAFORM_APPLIED_SHA_DEV"'))
 
 
 if __name__ == "__main__":
