@@ -37,8 +37,7 @@ class RoomApplicationManager(
     private val outboxEventPublisher: OutboxEventPublisher,
     private val clock: Clock,
 ) {
-    // 수락. 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한 뒤(마지막 자리 1건만 성공, §4.4),
-    // 방장 권한·신청 상태·모집 여부·신청자 참여 슬롯·정원을 확인하고 신청자를 참여자로 등록한다.
+    // 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한다(마지막 자리 1건만 성공, §4.4).
     //
     // ⚠️ 신청자 회원 행은 잠그지 않는다(MOI-427 D4). 두 룸의 방장이 같은 신청자를 동시에 수락하면
     //    둘 다 슬롯 여유를 보고 통과해 슬롯이 4개가 될 수 있다. 신청 제출 경로는 회원 행 락 안에서
@@ -98,7 +97,7 @@ class RoomApplicationManager(
         )
     }
 
-    // 반려. 정원·참여자에 영향이 없어 룸 잠금은 필요 없다. 방장 권한과 대기 상태만 확인한다.
+    // 정원·참여자에 영향이 없어 룸 잠금은 필요 없다.
     // 사유는 코드의 name 으로 저장한다 — 컬럼에 코드 도입 전 자유 텍스트가 남아 있어 엔티티는 String 이다(MOI-451 D2-4).
     @Transactional
     fun reject(roomId: UUID, applicationId: Long, hostMemberId: UUID, reason: RejectReason?): ApplicationDecision {
@@ -153,8 +152,6 @@ class RoomApplicationManager(
         return room
     }
 
-    // 방장 판정은 ParticipationValidator 한 곳이 소유한다 — 상태를 함께 봐야 하는데
-    // 네 곳에 흩어져 있던 것이 셋만 고쳐지고 하나가 남는 사고를 막는다(MOI-397).
     private fun requireHost(roomId: UUID, memberId: UUID) {
         participationValidator.validateHost(roomId, memberId)
     }

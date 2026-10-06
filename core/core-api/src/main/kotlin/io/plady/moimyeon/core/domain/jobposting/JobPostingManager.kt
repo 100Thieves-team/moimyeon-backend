@@ -16,8 +16,7 @@ private val log = KotlinLogging.logger {}
 class JobPostingManager(
     private val jobPostingRepository: JobPostingRepository,
 ) {
-    // 링크로 공고를 즉시 생성하고 그 id 를 반환한다(「룸 생성」 §4.1). 같은 URL 재요청은 새로 만들지 않고
-    // 기존 공고를 돌려준다 — source_uid 를 URL 에서 결정론적으로 발급(앱 전용 접두 lnk:)하고,
+    // 같은 URL 재요청은 새로 만들지 않고 기존 공고를 돌려준다 — source_uid 를 URL 에서 결정론적으로 발급(앱 전용 접두 lnk:)하고,
     // uk_job_posting_source_uid 유니크가 멱등성의 최종 보장이다(schema.sql 의 링크 생성 규칙).
     // verified=false·is_open=true 로 저장해 탐색 필터에선 숨되 그 공고로 룸 생성은 바로 가능하다.
     @Transactional

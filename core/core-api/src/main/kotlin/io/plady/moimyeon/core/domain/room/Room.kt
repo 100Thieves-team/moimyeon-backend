@@ -12,24 +12,19 @@ import java.util.UUID
 class Room(
     val id: UUID,
 
-    // 채용 공고와 직무
     val jobPostingId: Long,
     val jobRoleId: Long,
 
-    // 룸 소개
     val title: RoomTitle,
     val description: RoomDescription?,
 
-    // 면접 타입
     val interviewStage: InterviewStage,
     val interviewType: InterviewType?,
 
-    // 모임 방식, 모집 인원수, 진행 일정
     val meetingPlace: MeetingPlace,
     val capacity: RoomCapacity,
     val schedule: RoomSchedule,
 
-    // 이력서 공개 정책
     val resumeSharingPolicy: ResumeSharingPolicy,
 
     status: RoomStatus,
@@ -90,7 +85,6 @@ class Room(
         }
 
         /**
-         * 영속화된 기존 Room을 재구성한다.
          * 애플리케이션의 신규 생성 경로에서는 사용하지 않는다.
          */
         internal fun reconstitute(

@@ -52,7 +52,7 @@ class JsoupOpenGraphClient : OpenGraphClient {
                 .userAgent(USER_AGENT)
                 .timeout(TIMEOUT_MILLIS)
                 .maxBodySize(MAX_BODY_BYTES)
-                .followRedirects(false) // 리다이렉트는 매 홉 직접 검증한다
+                .followRedirects(false)
                 .ignoreHttpErrors(true)
                 .ignoreContentType(true) // 콘텐츠 타입 판정도 아래에서 직접(3xx 본문 타입에 execute 가 걸리지 않게)
                 .execute()
@@ -89,7 +89,6 @@ class JsoupOpenGraphClient : OpenGraphClient {
 
     private fun String.trimToNull(): String? = trim().ifBlank { null }
 
-    // fetch 가능한 대상인지 검사한다: http/https 만 허용하고, 호스트가 내부 대역으로 해석되면 막는다.
     private fun isFetchable(url: String): Boolean {
         val uri = try {
             URI(url)

@@ -149,8 +149,7 @@ interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long>
         @Param("now") now: LocalDateTime,
     ): Int
 
-    // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1, 2026-08-04 PRD 갱신). 정렬에 쓰이지 않는 표시용이라
-    // 한 페이지 분량의 roomId 에만 IN 으로 건다. 대기 신청이 없는 룸은 결과에 없으므로 0 은 호출자가 채운다.
+    // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1). 정렬에 쓰이지 않는 표시용이라 한 페이지 분량의 roomId 에만 IN 으로 건다.
     @Query(
         """
         select new io.plady.moimyeon.storage.db.core.RoomCount(a.roomId, count(a))

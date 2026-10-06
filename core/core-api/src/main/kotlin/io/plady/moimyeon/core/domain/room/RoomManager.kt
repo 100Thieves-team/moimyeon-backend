@@ -126,7 +126,7 @@ class RoomManager(
         return RoomCreationResult(room.id, room.status)
     }
 
-    // 편집 가능한 필드 수정. 방장만 가능. 오프라인 지역 참조 검증은 RoomService 가 트랜잭션 밖에서 한다.
+    // 오프라인 지역 참조 검증은 RoomService 가 트랜잭션 밖에서 한다.
     @Transactional
     fun update(roomId: UUID, hostMemberId: UUID, command: RoomUpdateCommand) {
         log.debug { "room.manager.update roomId=$roomId hostMemberId=$hostMemberId" }
@@ -192,11 +192,9 @@ class RoomManager(
         )
     }
 
-    // 방장이 진행을 확정한다. 여기서부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔
-    // 수정·신청·수락 게이트가 발효한다.
+    // 확정부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔 수정·신청·수락 게이트가 발효한다.
     //
-    // 조건 판정은 RoomConfirmation 이 소유한다. 화면은 사실(status·recruit·schedule.isPassed)로
-    // 스스로 판정하고(MOI-500), 여기의 실행 검증이 최종 강제다. 그래서 여기서 status 를 다시 비교하지 않는다.
+    // 조건 판정은 RoomConfirmation 이 소유하므로 여기서 status 를 다시 비교하지 않는다.
     // 락은 취소와 같은 이유로 잡는다(취소·수락·신청 제출이 모두 같은 룸 행을 잠근다).
     @Transactional
     fun confirm(roomId: UUID, hostMemberId: UUID) {
@@ -291,8 +289,6 @@ class RoomManager(
         return room
     }
 
-    // 방장 판정은 ParticipationValidator 한 곳이 소유한다 — 상태를 함께 봐야 하는데
-    // 네 곳에 흩어져 있던 것이 셋만 고쳐지고 하나가 남는 사고를 막는다(MOI-397).
     private fun requireHost(roomId: UUID, memberId: UUID) {
         participationValidator.validateHost(roomId, memberId)
     }

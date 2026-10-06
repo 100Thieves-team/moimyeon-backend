@@ -26,6 +26,8 @@ class ParticipationValidator(
         requireBusiness(ParticipationSlot.isAvailable(occupied), CoreErrorType.PARTICIPATION_SLOT_EXCEEDED)
     }
 
+    // 방장 판정은 여기 한 곳이 소유한다 — 상태를 함께 봐야 하는데
+    // 네 곳에 흩어져 있던 것이 셋만 고쳐지고 하나가 남는 사고를 막는다(MOI-397).
     fun validateHost(roomId: UUID, memberId: UUID) {
         log.debug { "participation.validator.validateHost roomId=$roomId memberId=$memberId" }
         requireBusiness(

@@ -5,7 +5,6 @@ import io.plady.moimyeon.core.domain.roomapplication.PendingApplicationQuota
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 
 // 로그인한 뷰어에 대해 조회된 사실 전부. 비로그인이면 이 객체 자체가 없다(응답 viewer = null).
-// 판정하지 않는다(MOI-500) — 버튼 판정은 화면이 갖고, 강제는 신청 경로의 Validator 가 갖는다.
 data class ViewerFacts(
     val room: ViewerRoomFacts,
     val member: ViewerMemberFacts,

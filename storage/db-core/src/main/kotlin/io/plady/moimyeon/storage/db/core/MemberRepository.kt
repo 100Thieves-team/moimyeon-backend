@@ -73,7 +73,7 @@ interface MemberRepository : JpaRepository<MemberEntity, UUID> {
         providerId: String,
     ): MemberEntity?
 
-    // 탈퇴 회원 판별(복구 확인·가입 경합 방지). 소프트 삭제된 회원의 소셜 계정은 남아 있으므로 그대로 조회된다.
+    // 탈퇴 회원 판별(복구 확인·가입 경합 방지).
     fun existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(
         provider: SocialLoginProvider,
         providerId: String,

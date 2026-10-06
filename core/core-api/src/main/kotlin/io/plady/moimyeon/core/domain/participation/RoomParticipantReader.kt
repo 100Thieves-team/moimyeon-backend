@@ -48,7 +48,7 @@ class RoomParticipantReader(
 
         return participations
             .map { it.toParticipant(nicknames[it.memberId], resumes[it.memberId], canViewOriginal) }
-            // 방장을 맨 앞으로. 정렬이 안정적이라 나머지는 쿼리의 참여 순서를 유지한다.
+            // 정렬이 안정적이라 나머지는 쿼리의 참여 순서를 유지한다.
             .sortedBy { !it.isHost }
     }
 
@@ -64,7 +64,6 @@ class RoomParticipantReader(
     }
 
     // 열람 창(Room.opensResumeOriginal)과 뷰어가 확정 참여자인지의 AND 다. 대상자별로 갈리지 않는다(§4.3·§4.5).
-    // 창 판정은 발급 게이트(MOI-414)와 공유한다 - 여기가 갈리면 버튼은 없는데 발급은 되는 화면이 나온다.
     private fun canViewOriginal(roomId: UUID, viewerMemberId: UUID): Boolean {
         val room = roomFinder.getRoom(roomId)
         return room.opensResumeOriginal() &&
