@@ -200,10 +200,137 @@ class RoomParticipantReaderIT(
         assertThat(eightParticipants).isEqualTo(twoParticipants)
     }
 
+    // --- 출석 입력용 확정 명단 (MOI-571) -------------------------------------------
+
+    @Test
+    fun `확정 룸의 확정 명단에는 확정 후 나간 참여자도 남는다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        persistMember(participantMemberId, "라이언")
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = afterConfirmation)
+        recordConfirmation()
+
+        val confirmed = roomParticipantReader.getConfirmedByRoom(roomId)
+
+        assertThat(confirmed).containsExactly(
+            ConfirmedParticipant(hostMemberId, "든든한곰"),
+            ConfirmedParticipant(participantMemberId, "라이언"),
+        )
+        assertThat(roomParticipantReader.getAllByRoom(roomId, hostMemberId).map { it.memberId })
+            .containsExactly(hostMemberId)
+    }
+
+    @Test
+    fun `확정 전에 나간 참여자는 확정 명단에 없다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        persistMember(participantMemberId, "라이언")
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = confirmedAt.minusHours(1))
+        recordConfirmation()
+
+        val confirmed = roomParticipantReader.getConfirmedByRoom(roomId)
+
+        assertThat(confirmed.map { it.memberId }).containsExactly(hostMemberId)
+    }
+
+    @Test
+    fun `모집 중인 룸의 확정 명단은 비어 있다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.RECRUITING)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+
+        assertThat(roomParticipantReader.getConfirmedByRoom(roomId)).isEmpty()
+    }
+
+    @Test
+    fun `취소된 룸의 확정 명단은 비어 있다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CANCELED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+        recordConfirmation()
+
+        assertThat(roomParticipantReader.getConfirmedByRoom(roomId)).isEmpty()
+    }
+
+    @Test
+    fun `완료된 룸은 확정 당시 명단을 돌려준다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.COMPLETED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        persistMember(participantMemberId, "라이언")
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = afterConfirmation)
+        recordConfirmation()
+
+        val confirmed = roomParticipantReader.getConfirmedByRoom(roomId)
+
+        assertThat(confirmed.map { it.memberId }).containsExactly(hostMemberId, participantMemberId)
+    }
+
+    @Test
+    fun `확정이 풀렸다가 다시 확정된 룸은 마지막 확정 시점의 명단을 돌려준다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        // 1차 확정 뒤 나가 모집이 다시 열린 참여자
+        persistMember(participantMemberId, "라이언")
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = afterConfirmation)
+        recordConfirmation()
+        val rejoinedMemberId = UUID.randomUUID()
+        joinWithResume(rejoinedMemberId, ParticipationRole.PARTICIPANT, "어피치", joinedAt = afterConfirmation.plusHours(1))
+        recordConfirmation(occurredAt = afterConfirmation.plusHours(2))
+
+        val confirmed = roomParticipantReader.getConfirmedByRoom(roomId)
+
+        assertThat(confirmed.map { it.memberId }).containsExactly(hostMemberId, rejoinedMemberId)
+    }
+
+    @Test
+    fun `탈퇴한 확정 참여자가 있어도 확정 명단 조회가 실패하지 않는다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        // 회원 행 없이 참여만 남은 상태 = 탈퇴로 사라진 회원.
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = afterConfirmation)
+        recordConfirmation()
+
+        val confirmed = roomParticipantReader.getConfirmedByRoom(roomId)
+
+        assertThat(confirmed.single { it.memberId == participantMemberId }.nickname).isNull()
+    }
+
+    @Test
+    fun `명부는 현재 명단과 확정 명단을 함께 돌려준다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        persistMember(participantMemberId, "라이언")
+        persistParticipation(participantMemberId, ParticipationRole.PARTICIPANT, leftAt = afterConfirmation)
+        recordConfirmation()
+
+        val roster = roomParticipantReader.getRoster(roomId, hostMemberId)
+
+        assertThat(roster.participants.map { it.memberId }).containsExactly(hostMemberId)
+        assertThat(roster.confirmedParticipants.map { it.memberId }).containsExactly(hostMemberId, participantMemberId)
+    }
+
+    @Test
+    fun `참여자가 늘어도 확정 명단 조회 쿼리 수는 그대로다`() {
+        persistRoom(resumePublic = false, status = RoomStatus.CONFIRMED)
+        joinWithResume(hostMemberId, ParticipationRole.HOST, "든든한곰")
+        joinWithResume(participantMemberId, ParticipationRole.PARTICIPANT, "라이언")
+        recordConfirmation()
+        val twoParticipants = countQueries { roomParticipantReader.getConfirmedByRoom(roomId) }
+
+        repeat(6) { index ->
+            joinWithResume(UUID.randomUUID(), ParticipationRole.PARTICIPANT, "참여자$index")
+        }
+        val eightParticipants = countQueries { roomParticipantReader.getConfirmedByRoom(roomId) }
+
+        assertThat(eightParticipants).isEqualTo(twoParticipants)
+    }
+
     // --- 픽스처 -------------------------------------------------------------------
 
     private fun countQueries(block: () -> Unit): Long {
         entityManager.flush()
+        // 앞선 측정이 영속성 컨텍스트에 올린 엔티티를 비워 두 측정이 같은 조건에서 시작하게 한다.
+        entityManager.clear()
         val statistics = entityManager.unwrap(Session::class.java).sessionFactory.statistics
         statistics.isStatisticsEnabled = true
         statistics.clear()
@@ -254,16 +381,18 @@ class RoomParticipantReaderIT(
         role: ParticipationRole,
         status: ParticipationStatus = ParticipationStatus.JOINED,
         joinedAt: LocalDateTime = beforeConfirmation,
+        leftAt: LocalDateTime? = null,
     ) {
+        val left = status == ParticipationStatus.LEFT || leftAt != null
         participationRepository.saveAndFlush(
             ParticipationEntity(
                 roomId = roomId,
                 memberId = memberId,
                 participationRole = role,
-                status = status,
+                status = if (left) ParticipationStatus.LEFT else status,
                 joinedAt = joinedAt,
-                leftAt = joinedAt.plusHours(1).takeIf { status == ParticipationStatus.LEFT },
-                leftByMemberId = memberId.takeIf { status == ParticipationStatus.LEFT },
+                leftAt = leftAt ?: joinedAt.plusHours(1).takeIf { left },
+                leftByMemberId = memberId.takeIf { left },
             ),
         )
     }
@@ -339,7 +468,7 @@ class RoomParticipantReaderIT(
     }
 
     // 확정 전이를 만드는 코드가 아직 없다(MOI-398). 로그를 직접 심는다.
-    private fun recordConfirmation() {
+    private fun recordConfirmation(occurredAt: LocalDateTime = confirmedAt) {
         entityManager.createNativeQuery(
             """
             insert into room_status_log (
@@ -353,7 +482,7 @@ class RoomParticipantReaderIT(
         )
             .setParameter("roomId", roomId)
             .setParameter("handlerMemberId", hostMemberId)
-            .setParameter("occurredAt", confirmedAt)
+            .setParameter("occurredAt", occurredAt)
             .executeUpdate()
         entityManager.clear()
     }

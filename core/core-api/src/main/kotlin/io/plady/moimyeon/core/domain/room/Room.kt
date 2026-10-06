@@ -44,11 +44,15 @@ class Room(
             status in RESUME_ORIGINAL_OPEN_STATUSES
     }
 
+    // 취소된 룸은 완료할 수 없어 출석 명단이 필요 없다.
+    fun hasConfirmedRoster(): Boolean = status in CONFIRMED_ROSTER_STATUSES
+
     // 진행 기능은 MVP 공개 API에서 제외됐지만 기존 내부 컴포넌트의 상태 판정은 CONFIRMED 하나로 수렴시킨다.
     internal fun isProgressAvailable(at: LocalDateTime): Boolean = RoomProgressAvailability.isAvailable(status, schedule.startAt, at)
 
     companion object {
         private val RESUME_ORIGINAL_OPEN_STATUSES = setOf(RoomStatus.CONFIRMED)
+        private val CONFIRMED_ROSTER_STATUSES = setOf(RoomStatus.CONFIRMED, RoomStatus.COMPLETED)
 
         fun create(
             id: UUID,
