@@ -14,13 +14,13 @@ import org.junit.jupiter.api.Test
 class CatalogRefValidatorTest {
     private val jobRoleRepository = mockk<JobRoleRepository>()
     private val sigunguRepository = mockk<SigunguRepository>()
-    private val validator = CatalogRefValidator(jobRoleRepository, sigunguRepository)
+    private val catalogRefValidator = CatalogRefValidator(jobRoleRepository, sigunguRepository)
 
     @Test
     fun `중복을 제외한 관심 직무가 모두 존재하면 선택할 수 있다`() {
         every { jobRoleRepository.countByIdInAndDeletedAtIsNull(setOf(1L, 2L)) } returns 2L
 
-        validator.validateJobRoles(listOf(1L, 1L, 2L))
+        catalogRefValidator.validateJobRoles(listOf(1L, 1L, 2L))
 
         verify(exactly = 1) { jobRoleRepository.countByIdInAndDeletedAtIsNull(setOf(1L, 2L)) }
     }
@@ -29,7 +29,7 @@ class CatalogRefValidatorTest {
     fun `존재하지 않는 관심 직무가 하나라도 있으면 E1301 을 던진다`() {
         every { jobRoleRepository.countByIdInAndDeletedAtIsNull(setOf(1L, 2L)) } returns 1L
 
-        assertThatThrownBy { validator.validateJobRoles(listOf(1L, 2L)) }
+        assertThatThrownBy { catalogRefValidator.validateJobRoles(listOf(1L, 2L)) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.JOB_ROLE_NOT_FOUND)
             }
@@ -39,7 +39,7 @@ class CatalogRefValidatorTest {
     fun `유효한 시군구 참조를 검증할 수 있다`() {
         every { sigunguRepository.existsByIdAndDeletedAtIsNull(1L) } returns true
 
-        validator.validateSigungu(1L)
+        catalogRefValidator.validateSigungu(1L)
 
         verify(exactly = 1) { sigunguRepository.existsByIdAndDeletedAtIsNull(1L) }
     }
@@ -48,7 +48,7 @@ class CatalogRefValidatorTest {
     fun `존재하지 않는 시군구를 선택하면 E1302 를 던진다`() {
         every { sigunguRepository.existsByIdAndDeletedAtIsNull(1L) } returns false
 
-        assertThatThrownBy { validator.validateSigungu(1L) }
+        assertThatThrownBy { catalogRefValidator.validateSigungu(1L) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.REGION_NOT_FOUND)
             }

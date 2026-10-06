@@ -16,7 +16,7 @@ import java.util.UUID
 
 class ParticipationValidatorTest {
     private val participationRepository = mockk<ParticipationRepository>()
-    private val validator = ParticipationValidator(participationRepository)
+    private val participationValidator = ParticipationValidator(participationRepository)
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
@@ -44,9 +44,9 @@ class ParticipationValidatorTest {
     @Test
     fun `방장도 참여자도 아니고 내보내진 이력도 없으면 신청자 조건을 충족한다`() {
         assertThatCode {
-            validator.validateNotHost(roomId, memberId)
-            validator.validateNotParticipating(roomId, memberId)
-            validator.validateNoRemovalHistory(roomId, memberId)
+            participationValidator.validateNotHost(roomId, memberId)
+            participationValidator.validateNotParticipating(roomId, memberId)
+            participationValidator.validateNoRemovalHistory(roomId, memberId)
         }.doesNotThrowAnyException()
     }
 
@@ -62,7 +62,7 @@ class ParticipationValidatorTest {
         } returns true
 
         assertValidationFails(CoreErrorType.ROOM_HOST_CANNOT_APPLY) {
-            validator.validateNotHost(roomId, memberId)
+            participationValidator.validateNotHost(roomId, memberId)
         }
     }
 
@@ -77,14 +77,14 @@ class ParticipationValidatorTest {
             )
         } returns true
 
-        assertThatCode { validator.validateHost(roomId, memberId) }
+        assertThatCode { participationValidator.validateHost(roomId, memberId) }
             .doesNotThrowAnyException()
     }
 
     @Test
     fun `현재 방장이 아니면 ROOM_FORBIDDEN 으로 거부한다`() {
         assertValidationFails(CoreErrorType.ROOM_FORBIDDEN) {
-            validator.validateHost(roomId, memberId)
+            participationValidator.validateHost(roomId, memberId)
         }
     }
 
@@ -99,7 +99,7 @@ class ParticipationValidatorTest {
         } returns true
 
         assertValidationFails(CoreErrorType.ROOM_APPLICATION_DUPLICATED) {
-            validator.validateNotParticipating(roomId, memberId)
+            participationValidator.validateNotParticipating(roomId, memberId)
         }
     }
 
@@ -108,7 +108,7 @@ class ParticipationValidatorTest {
         every { participationRepository.existsRemovalHistory(roomId, memberId) } returns true
 
         assertValidationFails(CoreErrorType.ROOM_REAPPLICATION_NOT_ALLOWED) {
-            validator.validateNoRemovalHistory(roomId, memberId)
+            participationValidator.validateNoRemovalHistory(roomId, memberId)
         }
     }
 
@@ -117,7 +117,7 @@ class ParticipationValidatorTest {
     fun `참여 중인 룸이 둘이면 신청 슬롯이 남은 것으로 본다`() {
         givenOccupiedSlots(2)
 
-        assertThatCode { validator.validateSlotAvailable(memberId) }.doesNotThrowAnyException()
+        assertThatCode { participationValidator.validateSlotAvailable(memberId) }.doesNotThrowAnyException()
     }
 
     @Test
@@ -125,7 +125,7 @@ class ParticipationValidatorTest {
         givenOccupiedSlots(3)
 
         assertValidationFails(CoreErrorType.PARTICIPATION_SLOT_EXCEEDED) {
-            validator.validateSlotAvailable(memberId)
+            participationValidator.validateSlotAvailable(memberId)
         }
     }
 

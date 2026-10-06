@@ -17,7 +17,7 @@ class RoomParticipantServiceTest {
     private val roomParticipantReader = mockk<RoomParticipantReader>()
     private val participationFinder = mockk<ParticipationFinder>()
     private val roomLeaveManager = mockk<RoomLeaveManager>()
-    private val service = RoomParticipantService(
+    private val roomParticipantService = RoomParticipantService(
         participationValidator,
         roomParticipantReader,
         participationFinder,
@@ -30,7 +30,7 @@ class RoomParticipantServiceTest {
         val roomIds = listOf(UUID.randomUUID(), UUID.randomUUID())
         every { participationFinder.getParticipatingRoomIds(memberId) } returns roomIds
 
-        val result = service.getParticipatingRoomIds(memberId)
+        val result = roomParticipantService.getParticipatingRoomIds(memberId)
 
         assertThat(result).containsExactlyElementsOf(roomIds)
         verify(exactly = 1) { participationFinder.getParticipatingRoomIds(memberId) }
@@ -57,7 +57,7 @@ class RoomParticipantServiceTest {
         val roster = RoomParticipants(participants = current, confirmedParticipants = confirmed)
         every { roomParticipantReader.getRoster(roomId, viewerId) } returns roster
 
-        val result = service.getParticipants(viewerId, roomId)
+        val result = roomParticipantService.getParticipants(viewerId, roomId)
 
         assertThat(result).isEqualTo(roster)
         verify(exactly = 1) { participationValidator.validateParticipant(roomId, viewerId) }
@@ -70,7 +70,7 @@ class RoomParticipantServiceTest {
         every { participationValidator.validateParticipant(roomId, viewerId) } throws
             CoreException(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
 
-        assertThatThrownBy { service.getParticipants(viewerId, roomId) }
+        assertThatThrownBy { roomParticipantService.getParticipants(viewerId, roomId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN)
             }

@@ -15,7 +15,7 @@ import java.util.UUID
 
 class QuestionCommentTargetValidatorTest {
     private val questionRepository = mockk<QuestionRepository>()
-    private val validator = QuestionCommentTargetValidator(questionRepository)
+    private val questionCommentTargetValidator = QuestionCommentTargetValidator(questionRepository)
 
     private val roomId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -25,7 +25,7 @@ class QuestionCommentTargetValidatorTest {
         every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns question()
 
         assertThatCode {
-            validator.validate(roomId, targetMemberId, 1L)
+            questionCommentTargetValidator.validate(roomId, targetMemberId, 1L)
         }.doesNotThrowAnyException()
     }
 
@@ -34,7 +34,7 @@ class QuestionCommentTargetValidatorTest {
         every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns null
 
         assertFails {
-            validator.validate(roomId, targetMemberId, 1L)
+            questionCommentTargetValidator.validate(roomId, targetMemberId, 1L)
         }
     }
 
@@ -48,7 +48,7 @@ class QuestionCommentTargetValidatorTest {
             every { questionRepository.findByIdAndDeletedAtIsNull(1L) } returns invalidQuestion
 
             assertFails {
-                validator.validate(roomId, targetMemberId, 1L)
+                questionCommentTargetValidator.validate(roomId, targetMemberId, 1L)
             }
         }
     }

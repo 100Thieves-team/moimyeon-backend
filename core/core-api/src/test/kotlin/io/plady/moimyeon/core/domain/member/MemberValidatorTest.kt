@@ -15,7 +15,7 @@ import java.util.UUID
 
 class MemberValidatorTest {
     private val memberRepository = mockk<MemberRepository>()
-    private val validator = MemberValidator(memberRepository)
+    private val memberValidator = MemberValidator(memberRepository)
 
     private val memberId = UUID.randomUUID()
 
@@ -23,7 +23,7 @@ class MemberValidatorTest {
     fun `활성 회원이면 이용 가능한 회원으로 판정한다`() {
         every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns member(MemberStatus.ACTIVE)
 
-        assertThatCode { validator.validateActive(memberId) }.doesNotThrowAnyException()
+        assertThatCode { memberValidator.validateActive(memberId) }.doesNotThrowAnyException()
     }
 
     @Test
@@ -32,7 +32,7 @@ class MemberValidatorTest {
             memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId)
         } returns member(MemberStatus.RESTRICTED)
 
-        assertThatThrownBy { validator.validateActive(memberId) }
+        assertThatThrownBy { memberValidator.validateActive(memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_ACTIVE)
             }
@@ -42,7 +42,7 @@ class MemberValidatorTest {
     fun `존재하지 않는 회원이면 MEMBER_NOT_FOUND 로 거부한다`() {
         every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns null
 
-        assertThatThrownBy { validator.validateActive(memberId) }
+        assertThatThrownBy { memberValidator.validateActive(memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }

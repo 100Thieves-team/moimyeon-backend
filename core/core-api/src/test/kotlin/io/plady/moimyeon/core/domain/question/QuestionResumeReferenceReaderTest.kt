@@ -14,7 +14,7 @@ import java.util.UUID
 
 class QuestionResumeReferenceReaderTest {
     private val roomParticipantResumeFinder = mockk<RoomParticipantResumeFinder>()
-    private val reader = QuestionResumeReferenceReader(roomParticipantResumeFinder)
+    private val questionResumeReferenceReader = QuestionResumeReferenceReader(roomParticipantResumeFinder)
 
     private val roomId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class QuestionResumeReferenceReaderTest {
             roomParticipantResumeFinder.get(roomId, targetMemberId)
         } returns submittedResume
 
-        val result = reader.getByRoomAndTarget(roomId, targetMemberId)
+        val result = questionResumeReferenceReader.getByRoomAndTarget(roomId, targetMemberId)
 
         assertThat(result).isEqualTo(
             QuestionResumeReference(
@@ -50,7 +50,7 @@ class QuestionResumeReferenceReaderTest {
             content = "제출 당시 선택한 이력서 요약",
         )
 
-        val result = reader.getByRoomAndTarget(roomId, targetMemberId)
+        val result = questionResumeReferenceReader.getByRoomAndTarget(roomId, targetMemberId)
 
         assertThat(result.summary).isEqualTo(
             QuestionResumeSummary.Done("제출 당시 선택한 이력서 요약"),
@@ -78,7 +78,7 @@ class QuestionResumeReferenceReaderTest {
         } returns roomParticipantResume(ResumeSummaryStatus.DONE, null)
 
         assertThatThrownBy {
-            reader.getByRoomAndTarget(roomId, targetMemberId)
+            questionResumeReferenceReader.getByRoomAndTarget(roomId, targetMemberId)
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("완료된 이력서 요약")
     }
@@ -90,7 +90,7 @@ class QuestionResumeReferenceReaderTest {
         } throws IllegalStateException("확정 참여자에게는 룸 제출 이력서 참조가 있어야 합니다")
 
         assertThatThrownBy {
-            reader.getByRoomAndTarget(roomId, targetMemberId)
+            questionResumeReferenceReader.getByRoomAndTarget(roomId, targetMemberId)
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("룸 제출 이력서 참조")
 
@@ -104,7 +104,7 @@ class QuestionResumeReferenceReaderTest {
         every {
             roomParticipantResumeFinder.get(roomId, targetMemberId)
         } returns roomParticipantResume(status, content)
-        return reader.getByRoomAndTarget(roomId, targetMemberId)
+        return questionResumeReferenceReader.getByRoomAndTarget(roomId, targetMemberId)
     }
 
     private fun roomParticipantResume(

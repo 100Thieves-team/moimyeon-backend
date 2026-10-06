@@ -18,7 +18,7 @@ import java.util.UUID
 class QuestionPreparationAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val participationFinder = mockk<ParticipationFinder>()
-    private val validator = QuestionPreparationAccessValidator(roomFinder, participationFinder)
+    private val questionPreparationAccessValidator = QuestionPreparationAccessValidator(roomFinder, participationFinder)
 
     private val roomId = UUID.randomUUID()
     private val authorMemberId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class QuestionPreparationAccessValidatorTest {
         every { participationFinder.isParticipating(roomId, authorMemberId) } returns true
 
         assertThatCode {
-            validator.validateAuthor(roomId, authorMemberId)
+            questionPreparationAccessValidator.validateAuthor(roomId, authorMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -39,7 +39,7 @@ class QuestionPreparationAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN) {
-            validator.validateAuthor(roomId, authorMemberId)
+            questionPreparationAccessValidator.validateAuthor(roomId, authorMemberId)
         }
 
         verify(exactly = 0) { participationFinder.isParticipating(any(), any()) }
@@ -50,7 +50,7 @@ class QuestionPreparationAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.RECRUITING)
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_NOT_OPEN) {
-            validator.validateAuthor(roomId, authorMemberId)
+            questionPreparationAccessValidator.validateAuthor(roomId, authorMemberId)
         }
 
         verify(exactly = 0) { participationFinder.isParticipating(any(), any()) }
@@ -62,14 +62,14 @@ class QuestionPreparationAccessValidatorTest {
         every { participationFinder.isParticipating(roomId, authorMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            validator.validateAuthor(roomId, authorMemberId)
+            questionPreparationAccessValidator.validateAuthor(roomId, authorMemberId)
         }
     }
 
     @Test
     fun `자신을 질문 대상으로 지정하면 E1505 를 던지고 확정 명단을 조회하지 않는다`() {
         assertValidationFails(CoreErrorType.QUESTION_PREPARATION_FORBIDDEN) {
-            validator.validateTarget(roomId, authorMemberId, authorMemberId)
+            questionPreparationAccessValidator.validateTarget(roomId, authorMemberId, authorMemberId)
         }
 
         verify(exactly = 0) { participationFinder.wasConfirmedParticipant(any(), any()) }
@@ -80,7 +80,7 @@ class QuestionPreparationAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, targetMemberId) } returns true
 
         assertThatCode {
-            validator.validateTarget(roomId, authorMemberId, targetMemberId)
+            questionPreparationAccessValidator.validateTarget(roomId, authorMemberId, targetMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -89,7 +89,7 @@ class QuestionPreparationAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, targetMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_TARGET_NOT_FOUND) {
-            validator.validateTarget(roomId, authorMemberId, targetMemberId)
+            questionPreparationAccessValidator.validateTarget(roomId, authorMemberId, targetMemberId)
         }
     }
 

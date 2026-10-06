@@ -148,16 +148,16 @@ class MemberWithdrawRollbackIT(
         @Bean
         @Primary
         fun failingWebPushSubscriptionManager(
-            repository: WebPushSubscriptionRepository,
+            webPushSubscriptionRepository: WebPushSubscriptionRepository,
             clock: Clock,
-        ): WebPushSubscriptionManager = FailingWebPushSubscriptionManager(repository, clock)
+        ): WebPushSubscriptionManager = FailingWebPushSubscriptionManager(webPushSubscriptionRepository, clock)
     }
 
     // 트랜잭션 프록시가 서브클래스를 만들 수 있게 이름 있는 open 클래스로 둔다(익명 객체는 final 이다).
     open class FailingWebPushSubscriptionManager(
-        repository: WebPushSubscriptionRepository,
+        webPushSubscriptionRepository: WebPushSubscriptionRepository,
         clock: Clock,
-    ) : WebPushSubscriptionManager(repository, clock) {
+    ) : WebPushSubscriptionManager(webPushSubscriptionRepository, clock) {
         override fun unregisterAll(memberId: UUID): Unit = throw IllegalStateException("주입한 실패")
     }
 }

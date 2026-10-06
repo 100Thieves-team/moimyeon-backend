@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
 
 @Component
 class WebPushSubscriptionManager(
-    private val repository: WebPushSubscriptionRepository,
+    private val webPushSubscriptionRepository: WebPushSubscriptionRepository,
     private val clock: Clock,
 ) {
     @Transactional
@@ -24,14 +24,14 @@ class WebPushSubscriptionManager(
         log.debug { "web-push-subscription.manager.register memberId=$memberId" }
         val registrationHash = WebPushRegistrationHash.of(registration.value)
         val registeredAt = LocalDateTime.now(clock)
-        repository.upsertRegistration(
+        webPushSubscriptionRepository.upsertRegistration(
             memberId = memberId,
             registration = registration.value,
             registrationHash = registrationHash,
             registeredAt = registeredAt,
         )
 
-        val registered = checkNotNull(repository.findByRegistrationHash(registrationHash))
+        val registered = checkNotNull(webPushSubscriptionRepository.findByRegistrationHash(registrationHash))
         check(registered.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
     }
 
@@ -42,16 +42,16 @@ class WebPushSubscriptionManager(
         registration: WebPushRegistration,
     ) {
         log.debug { "web-push-subscription.manager.unregisterIfOwnedByOther memberId=$memberId" }
-        val existing = repository.findByRegistrationHash(WebPushRegistrationHash.of(registration.value)) ?: return
+        val existing = webPushSubscriptionRepository.findByRegistrationHash(WebPushRegistrationHash.of(registration.value)) ?: return
         check(existing.registration == registration.value) { "웹 푸시 등록 식별자 해시 충돌" }
         if (existing.memberId != memberId) {
-            repository.delete(existing)
+            webPushSubscriptionRepository.delete(existing)
         }
     }
 
     @Transactional
     fun unregisterAll(memberId: UUID) {
         log.debug { "web-push-subscription.manager.unregisterAll memberId=$memberId" }
-        repository.deleteAllByMemberId(memberId)
+        webPushSubscriptionRepository.deleteAllByMemberId(memberId)
     }
 }

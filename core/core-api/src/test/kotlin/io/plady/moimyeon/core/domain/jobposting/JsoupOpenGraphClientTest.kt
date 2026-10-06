@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 // SSRF·스킴 차단은 fetch 전에 걸리므로 네트워크를 타지 않는다(리터럴 IP·loopback 은 DNS 조회 없이 해석된다).
 // 실제 외부 사이트 호출 결과는 네트워크 의존이라 여기서 검증하지 않는다(BE-03 라이브 점검 문서 참고).
 class JsoupOpenGraphClientTest {
-    private val client = JsoupOpenGraphClient()
+    private val jsoupOpenGraphClient = JsoupOpenGraphClient()
 
     @Test
     fun `내부·특수 대역 대상은 fetch 하지 않고 빈 메타를 돌려준다`() {
@@ -22,7 +22,7 @@ class JsoupOpenGraphClientTest {
         )
 
         internalUrls.forEach { url ->
-            val result = client.fetch(url)
+            val result = jsoupOpenGraphClient.fetch(url)
             assertThat(result.postingName).describedAs(url).isNull()
             assertThat(result.imageUrl).describedAs(url).isNull()
             assertThat(result.description).describedAs(url).isNull()
@@ -42,7 +42,7 @@ class JsoupOpenGraphClientTest {
         )
 
         invalidUrls.forEach { url ->
-            val result = client.fetch(url)
+            val result = jsoupOpenGraphClient.fetch(url)
             assertThat(result.postingName).describedAs(url).isNull()
             assertThat(result.sourceUrl).describedAs(url).isEqualTo(url)
         }

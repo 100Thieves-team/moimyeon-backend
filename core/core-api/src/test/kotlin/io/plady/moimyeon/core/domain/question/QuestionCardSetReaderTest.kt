@@ -14,7 +14,7 @@ import java.util.UUID
 class QuestionCardSetReaderTest {
     private val participationFinder = mockk<ParticipationFinder>()
     private val questionRepository = mockk<QuestionRepository>()
-    private val reader = QuestionCardSetReader(participationFinder, questionRepository)
+    private val questionCardSetReader = QuestionCardSetReader(participationFinder, questionRepository)
 
     private val roomId = UUID.randomUUID()
     private val requesterMemberId = UUID.randomUUID()
@@ -39,7 +39,7 @@ class QuestionCardSetReaderTest {
             question(id = 2L, targetMemberId = secondTargetMemberId, parentQuestionId = 1L),
         )
 
-        val result = reader.getAllByRoomExceptTarget(roomId, requesterMemberId)
+        val result = questionCardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
 
         assertThat(result.map { it.targetMemberId }).containsExactly(firstTargetMemberId, secondTargetMemberId)
         assertThat(result.first().questions).isEmpty()
@@ -57,7 +57,7 @@ class QuestionCardSetReaderTest {
     fun `확정 시점 참여자가 요청자뿐이면 질문을 조회하지 않고 빈 목록을 반환한다`() {
         every { participationFinder.getConfirmedParticipantIds(roomId) } returns listOf(requesterMemberId)
 
-        val result = reader.getAllByRoomExceptTarget(roomId, requesterMemberId)
+        val result = questionCardSetReader.getAllByRoomExceptTarget(roomId, requesterMemberId)
 
         assertThat(result).isEmpty()
         verify(exactly = 0) {
@@ -86,7 +86,7 @@ class QuestionCardSetReaderTest {
             ),
         )
 
-        val result = reader.getByRoomAndTarget(roomId, firstTargetMemberId)
+        val result = questionCardSetReader.getByRoomAndTarget(roomId, firstTargetMemberId)
 
         assertThat(result.targetMemberId).isEqualTo(firstTargetMemberId)
         val question = result.questions.single()
@@ -108,7 +108,7 @@ class QuestionCardSetReaderTest {
             )
         } returns emptyList()
 
-        val result = reader.getByRoomAndTarget(roomId, firstTargetMemberId)
+        val result = questionCardSetReader.getByRoomAndTarget(roomId, firstTargetMemberId)
 
         assertThat(result).isEqualTo(QuestionCardSet(firstTargetMemberId, emptyList()))
     }
@@ -124,7 +124,7 @@ class QuestionCardSetReaderTest {
             question(id = 2L, targetMemberId = firstTargetMemberId, parentQuestionId = 1L),
         )
 
-        val result = reader.getByRoomAndTarget(roomId, firstTargetMemberId)
+        val result = questionCardSetReader.getByRoomAndTarget(roomId, firstTargetMemberId)
 
         assertThat(result.questions).isEmpty()
     }
@@ -138,7 +138,7 @@ class QuestionCardSetReaderTest {
             )
         } returns 2L
 
-        val result = reader.countPreparers(roomId, requesterMemberId)
+        val result = questionCardSetReader.countPreparers(roomId, requesterMemberId)
 
         assertThat(result).isEqualTo(2)
     }

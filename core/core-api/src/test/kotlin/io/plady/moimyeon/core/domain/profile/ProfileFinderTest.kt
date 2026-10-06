@@ -20,7 +20,7 @@ class ProfileFinderTest {
     private val memberProfileRepository = mockk<MemberProfileRepository>()
     private val interestCompanyRepository = mockk<MemberProfileInterestCompanyRepository>()
     private val interestJobRoleRepository = mockk<MemberProfileInterestJobRoleRepository>()
-    private val finder = ProfileFinder(
+    private val profileFinder = ProfileFinder(
         memberProfileRepository,
         interestCompanyRepository,
         interestJobRoleRepository,
@@ -31,7 +31,7 @@ class ProfileFinderTest {
         val memberId = UUID.randomUUID()
         every { memberProfileRepository.findByMemberIdAndDeletedAtIsNull(memberId) } returns null
 
-        assertThatThrownBy { finder.getPublicProfile(memberId) }
+        assertThatThrownBy { profileFinder.getPublicProfile(memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
             }
@@ -54,7 +54,7 @@ class ProfileFinderTest {
             MemberProfileInterestCompanyEntity(firstProfile.id, 201L),
         )
 
-        val profiles = finder.getAllByMemberIds(memberIds)
+        val profiles = profileFinder.getAllByMemberIds(memberIds)
 
         assertThat(profiles).extracting("memberId").containsExactly(firstMemberId, secondMemberId)
         assertThat(profiles[0].interestJobRoleIds).containsExactly(101L)

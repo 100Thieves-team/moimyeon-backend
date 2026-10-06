@@ -19,7 +19,7 @@ import java.util.UUID
 class QuestionCommentManagerTest {
     private val targetValidator = mockk<QuestionCommentTargetValidator>()
     private val commentRepository = mockk<QuestionCommentRepository>()
-    private val manager = QuestionCommentManager(targetValidator, commentRepository)
+    private val questionCommentManager = QuestionCommentManager(targetValidator, commentRepository)
 
     private val roomId = UUID.randomUUID()
     private val targetMemberId = UUID.randomUUID()
@@ -33,7 +33,7 @@ class QuestionCommentManagerTest {
             every { id } returns 2L
         }
 
-        val result = manager.record(
+        val result = questionCommentManager.record(
             roomId,
             targetMemberId,
             1L,
@@ -54,7 +54,7 @@ class QuestionCommentManagerTest {
         } throws CoreException(CoreErrorType.QUESTION_NOT_FOUND)
 
         assertFails(CoreErrorType.QUESTION_NOT_FOUND) {
-            manager.record(
+            questionCommentManager.record(
                 roomId,
                 targetMemberId,
                 1L,
@@ -73,7 +73,7 @@ class QuestionCommentManagerTest {
         givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
-        manager.toggleType(
+        questionCommentManager.toggleType(
             roomId,
             targetMemberId,
             1L,
@@ -91,7 +91,7 @@ class QuestionCommentManagerTest {
         givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
-        manager.toggleType(
+        questionCommentManager.toggleType(
             roomId,
             targetMemberId,
             1L,
@@ -109,7 +109,7 @@ class QuestionCommentManagerTest {
         givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
-        manager.toggleType(
+        questionCommentManager.toggleType(
             roomId,
             targetMemberId,
             1L,
@@ -127,7 +127,7 @@ class QuestionCommentManagerTest {
         givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
-        manager.toggleType(
+        questionCommentManager.toggleType(
             roomId,
             targetMemberId,
             1L,
@@ -145,8 +145,8 @@ class QuestionCommentManagerTest {
         givenValidTarget()
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
-        manager.edit(roomId, targetMemberId, 1L, 2L, authorMemberId, "수정한 댓글")
-        manager.remove(
+        questionCommentManager.edit(roomId, targetMemberId, 1L, 2L, authorMemberId, "수정한 댓글")
+        questionCommentManager.remove(
             roomId,
             targetMemberId,
             1L,
@@ -166,7 +166,7 @@ class QuestionCommentManagerTest {
         every { commentRepository.findForUpdateByIdAndDeletedAtIsNull(2L) } returns comment
 
         assertFails(CoreErrorType.QUESTION_COMMENT_NOT_FOUND) {
-            manager.edit(roomId, targetMemberId, 1L, 2L, authorMemberId, "가로채기")
+            questionCommentManager.edit(roomId, targetMemberId, 1L, 2L, authorMemberId, "가로채기")
         }
 
         assertThat(comment.content).isEqualTo("원문")

@@ -18,7 +18,7 @@ import java.util.UUID
 class QuestionCardSetAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val participationFinder = mockk<ParticipationFinder>()
-    private val validator = QuestionCardSetAccessValidator(roomFinder, participationFinder)
+    private val questionCardSetAccessValidator = QuestionCardSetAccessValidator(roomFinder, participationFinder)
 
     private val roomId = UUID.randomUUID()
     private val requesterMemberId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns true
 
         assertThatCode {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -40,7 +40,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns true
 
         assertThatCode {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -49,7 +49,7 @@ class QuestionCardSetAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
 
         assertValidationFails(CoreErrorType.ROOM_NOT_FOUND) {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }
         verify(exactly = 0) { participationFinder.isParticipating(any(), any()) }
     }
@@ -59,7 +59,7 @@ class QuestionCardSetAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.RECRUITING)
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_NOT_OPEN) {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }
         verify(exactly = 0) { participationFinder.isParticipating(any(), any()) }
     }
@@ -69,7 +69,7 @@ class QuestionCardSetAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CANCELED)
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_NOT_OPEN) {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }
         verify(exactly = 0) { participationFinder.isParticipating(any(), any()) }
     }
@@ -80,7 +80,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.isParticipating(roomId, requesterMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN) {
-            validator.validateViewer(roomId, requesterMemberId)
+            questionCardSetAccessValidator.validateViewer(roomId, requesterMemberId)
         }
     }
 
@@ -89,7 +89,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, targetMemberId) } returns true
 
         assertThatCode {
-            validator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
+            questionCardSetAccessValidator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
         }.doesNotThrowAnyException()
     }
 
@@ -99,7 +99,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, targetMemberId) } returns true
 
         assertThatCode {
-            validator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
+            questionCardSetAccessValidator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
         }.doesNotThrowAnyException()
 
         verify(exactly = 0) { participationFinder.isParticipating(roomId, targetMemberId) }
@@ -108,7 +108,7 @@ class QuestionCardSetAccessValidatorTest {
     @Test
     fun `자기 카드셋을 조회하면 QUESTION_CARD_SET_FORBIDDEN 으로 거부하고 대상 참여 여부는 조회하지 않는다`() {
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN) {
-            validator.validateOtherCardSetTarget(roomId, requesterMemberId, requesterMemberId)
+            questionCardSetAccessValidator.validateOtherCardSetTarget(roomId, requesterMemberId, requesterMemberId)
         }
         verify(exactly = 0) { participationFinder.wasConfirmedParticipant(any(), any()) }
     }
@@ -118,7 +118,7 @@ class QuestionCardSetAccessValidatorTest {
         every { participationFinder.wasConfirmedParticipant(roomId, targetMemberId) } returns false
 
         assertValidationFails(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND) {
-            validator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
+            questionCardSetAccessValidator.validateOtherCardSetTarget(roomId, requesterMemberId, targetMemberId)
         }
     }
 

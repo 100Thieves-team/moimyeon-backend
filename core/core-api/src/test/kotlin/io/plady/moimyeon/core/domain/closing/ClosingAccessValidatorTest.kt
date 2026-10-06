@@ -17,7 +17,7 @@ import java.util.UUID
 class ClosingAccessValidatorTest {
     private val roomFinder = mockk<RoomFinder>()
     private val roomProgressReader = mockk<RoomProgressReader>()
-    private val validator = ClosingAccessValidator(roomFinder, roomProgressReader)
+    private val closingAccessValidator = ClosingAccessValidator(roomFinder, roomProgressReader)
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
 
@@ -26,7 +26,7 @@ class ClosingAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
         every { roomProgressReader.isAttended(roomId, memberId) } returns true
 
-        validator.validateParticipant(roomId, memberId)
+        closingAccessValidator.validateParticipant(roomId, memberId)
 
         verify(exactly = 1) { roomProgressReader.isAttended(roomId, memberId) }
     }
@@ -35,7 +35,7 @@ class ClosingAccessValidatorTest {
     fun `완료된 룸이 아니면 E1802 를 던지고 출석을 조회하지 않는다`() {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.CONFIRMED)
 
-        assertThatThrownBy { validator.validateParticipant(roomId, memberId) }
+        assertThatThrownBy { closingAccessValidator.validateParticipant(roomId, memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.CLOSING_NOT_AVAILABLE)
             }
@@ -47,7 +47,7 @@ class ClosingAccessValidatorTest {
         every { roomFinder.getRoom(roomId) } returns room(RoomStatus.COMPLETED)
         every { roomProgressReader.isAttended(roomId, memberId) } returns false
 
-        assertThatThrownBy { validator.validateParticipant(roomId, memberId) }
+        assertThatThrownBy { closingAccessValidator.validateParticipant(roomId, memberId) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN)
             }

@@ -11,7 +11,7 @@ import java.util.UUID
 
 class ClosingQuestionReaderTest {
     private val questionRepository = mockk<ClosingQuestionRepository>()
-    private val reader = ClosingQuestionReader(questionRepository)
+    private val closingQuestionReader = ClosingQuestionReader(questionRepository)
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
@@ -27,7 +27,7 @@ class ClosingQuestionReaderTest {
         every { questionRepository.findAllAskedTopLevelByRoomIdAndTargetMemberId(roomId, memberId) } returns
             listOf(question)
 
-        assertThat(reader.getQuestions(roomId, memberId)).containsExactly(
+        assertThat(closingQuestionReader.getQuestions(roomId, memberId)).containsExactly(
             ClosingQuestion(11L, memberId, "정합성을 어떻게 복구했나요?", QuestionSource.PREPARATION),
         )
     }

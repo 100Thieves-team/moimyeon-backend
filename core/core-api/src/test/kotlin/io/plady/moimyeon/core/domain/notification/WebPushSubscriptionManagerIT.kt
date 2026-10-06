@@ -9,19 +9,19 @@ import java.util.UUID
 
 @Transactional
 class WebPushSubscriptionManagerIT(
-    private val manager: WebPushSubscriptionManager,
-    private val repository: WebPushSubscriptionRepository,
+    private val webPushSubscriptionManager: WebPushSubscriptionManager,
+    private val webPushSubscriptionRepository: WebPushSubscriptionRepository,
 ) : ContextTest() {
     @Test
     fun `같은 브라우저 등록은 한 행을 유지하며 마지막으로 업로드한 회원에게 연결된다`() {
         val registration = WebPushRegistration("integration-registration")
 
-        manager.register(MEMBER_A, registration)
-        manager.register(MEMBER_B, registration)
+        webPushSubscriptionManager.register(MEMBER_A, registration)
+        webPushSubscriptionManager.register(MEMBER_B, registration)
 
-        assertThat(repository.count()).isEqualTo(1)
-        assertThat(repository.findAllByMemberId(MEMBER_A)).isEmpty()
-        assertThat(repository.findAllByMemberId(MEMBER_B))
+        assertThat(webPushSubscriptionRepository.count()).isEqualTo(1)
+        assertThat(webPushSubscriptionRepository.findAllByMemberId(MEMBER_A)).isEmpty()
+        assertThat(webPushSubscriptionRepository.findAllByMemberId(MEMBER_B))
             .singleElement()
             .extracting("registration")
             .isEqualTo(registration.value)

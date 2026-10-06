@@ -16,7 +16,7 @@ class ClosingServiceTest {
     private val submissionManager = mockk<ClosingSubmissionManager>()
     private val accessValidator = mockk<ClosingAccessValidator>()
     private val questionReader = mockk<ClosingQuestionReader>()
-    private val service = ClosingService(submissionManager, accessValidator, questionReader)
+    private val closingService = ClosingService(submissionManager, accessValidator, questionReader)
 
     private val roomId = UUID.randomUUID()
     private val memberId = UUID.randomUUID()
@@ -36,7 +36,7 @@ class ClosingServiceTest {
         val submission = ClosingSubmission(roomId, memberId, submittedAt)
         every { submissionManager.submit(command) } returns submission
 
-        val result = service.submit(memberId, roomId, evaluations)
+        val result = closingService.submit(memberId, roomId, evaluations)
         evaluations.clear()
 
         assertThat(result).isEqualTo(submission)
@@ -50,7 +50,7 @@ class ClosingServiceTest {
             submissionManager.submit(ClosingSubmissionCommand(roomId, memberId, evaluations))
         } throws CoreException(CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN)
 
-        assertThatThrownBy { service.submit(memberId, roomId, evaluations) }
+        assertThatThrownBy { closingService.submit(memberId, roomId, evaluations) }
             .isInstanceOfSatisfying(CoreException::class.java) {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN)
             }
@@ -65,7 +65,7 @@ class ClosingServiceTest {
         every { accessValidator.validateParticipant(roomId, memberId) } returns Unit
         every { questionReader.getQuestions(roomId, memberId) } returns questions
 
-        assertThat(service.getQuestions(memberId, roomId)).containsExactlyElementsOf(questions)
+        assertThat(closingService.getQuestions(memberId, roomId)).containsExactlyElementsOf(questions)
         verify(exactly = 1) { accessValidator.validateParticipant(roomId, memberId) }
         verify(exactly = 1) { questionReader.getQuestions(roomId, memberId) }
     }

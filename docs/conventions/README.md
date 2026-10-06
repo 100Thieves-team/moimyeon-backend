@@ -82,7 +82,8 @@
   openapi3.yaml 의 4xx 응답·코드별 예시로 병합된다.
   → [api-docs.md](api-docs.md)
 - **코틀린 스타일**: 도메인 객체는 파일당 1클래스(DTO 는 예외), data class·val·named parameter,
-  주석은 코드로 표현할 수 없는 배경 설명과 지켜야 할 규칙만.
+  컴포넌트 필드·변수는 `service`·`manager` 같은 역할 단어 하나로 짓지 않는다(테스트 포함).
+  주석은 코드로 표현할 수 없는 배경 설명과 지켜야 할 규칙만 — 컨벤션 문서로 알 수 있는 사실은 쓰지 않는다.
   → [kotlin-style.md](kotlin-style.md)
 - **Git**: Angular 커밋 컨벤션(제목 한글 허용, 선택적 맥락·TODO 본문, em-dash `—` 금지,
   co-author 트레일러 금지), 작업 단위로 응집된 커밋 + 커밋별 빌드 보장, ASCII 브랜치명,

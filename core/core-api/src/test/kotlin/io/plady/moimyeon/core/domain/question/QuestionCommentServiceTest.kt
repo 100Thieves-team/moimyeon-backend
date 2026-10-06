@@ -22,7 +22,7 @@ class QuestionCommentServiceTest {
     private val commentManager = mockk<QuestionCommentManager>()
     private val commentReader = mockk<QuestionCommentReader>()
     private val clock = Clock.fixed(Instant.parse("2026-08-13T13:00:00Z"), ZoneId.of("Asia/Seoul"))
-    private val service = QuestionCommentService(accessValidator, commentManager, commentReader, clock)
+    private val questionCommentService = QuestionCommentService(accessValidator, commentManager, commentReader, clock)
 
     private val roomId = UUID.randomUUID()
     private val intervieweeMemberId = UUID.randomUUID()
@@ -44,7 +44,7 @@ class QuestionCommentServiceTest {
             )
         } returns commentId
 
-        val result = service.leaveComment(
+        val result = questionCommentService.leaveComment(
             authorMemberId,
             roomId,
             intervieweeMemberId,
@@ -81,7 +81,7 @@ class QuestionCommentServiceTest {
             )
         }
 
-        service.toggleType(
+        questionCommentService.toggleType(
             authorMemberId,
             roomId,
             intervieweeMemberId,
@@ -117,7 +117,7 @@ class QuestionCommentServiceTest {
             )
         }
 
-        service.toggleType(
+        questionCommentService.toggleType(
             authorMemberId,
             roomId,
             intervieweeMemberId,
@@ -152,7 +152,7 @@ class QuestionCommentServiceTest {
             )
         }
 
-        service.editComment(
+        questionCommentService.editComment(
             authorMemberId,
             roomId,
             intervieweeMemberId,
@@ -188,7 +188,7 @@ class QuestionCommentServiceTest {
             )
         }
 
-        service.deleteComment(
+        questionCommentService.deleteComment(
             authorMemberId,
             roomId,
             intervieweeMemberId,
@@ -221,7 +221,7 @@ class QuestionCommentServiceTest {
             commentReader.getPage(roomId, intervieweeMemberId, questionId, cursor)
         } returns page
 
-        val result = service.getComments(
+        val result = questionCommentService.getComments(
             intervieweeMemberId,
             roomId,
             intervieweeMemberId,
@@ -243,7 +243,7 @@ class QuestionCommentServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE)
 
         assertThatThrownBy {
-            service.editComment(
+            questionCommentService.editComment(
                 authorMemberId,
                 roomId,
                 intervieweeMemberId,

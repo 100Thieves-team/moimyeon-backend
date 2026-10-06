@@ -19,7 +19,7 @@ class QuestionProgressServiceTest {
     private val cardSetAccessValidator = mockk<QuestionCardSetAccessValidator>()
     private val questionUsageMarker = mockk<QuestionUsageMarker>()
     private val questionRecorder = mockk<QuestionRecorder>()
-    private val service = QuestionProgressService(
+    private val questionProgressService = QuestionProgressService(
         progressAccessValidator,
         cardSetAccessValidator,
         questionUsageMarker,
@@ -45,7 +45,7 @@ class QuestionProgressServiceTest {
             )
         } returns 2L
 
-        val result = service.leaveQuestion(
+        val result = questionProgressService.leaveQuestion(
             actorMemberId,
             roomId,
             targetMemberId,
@@ -81,7 +81,7 @@ class QuestionProgressServiceTest {
             )
         } returns 2L
 
-        val result = service.leaveFollowUp(
+        val result = questionProgressService.leaveFollowUp(
             actorMemberId,
             roomId,
             targetMemberId,
@@ -112,7 +112,7 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.leaveQuestion(targetMemberId, roomId, targetMemberId, "셀프 질문")
+            questionProgressService.leaveQuestion(targetMemberId, roomId, targetMemberId, "셀프 질문")
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -125,7 +125,7 @@ class QuestionProgressServiceTest {
         givenParticipantCanUseTargetCardSet()
         justRun { questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, true) }
 
-        service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, true)
+        questionProgressService.changeAsked(actorMemberId, roomId, targetMemberId, questionId, true)
 
         verifyOrder {
             progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
@@ -139,7 +139,7 @@ class QuestionProgressServiceTest {
         givenParticipantCanUseTargetCardSet()
         justRun { questionUsageMarker.changeAsked(roomId, targetMemberId, questionId, false) }
 
-        service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
+        questionProgressService.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
 
         verifyOrder {
             progressAccessValidator.validateInProgressParticipant(roomId, actorMemberId)
@@ -156,7 +156,7 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.changeAsked(targetMemberId, roomId, targetMemberId, questionId, true)
+            questionProgressService.changeAsked(targetMemberId, roomId, targetMemberId, questionId, true)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -171,7 +171,7 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
 
         assertThatThrownBy {
-            service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
+            questionProgressService.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_PROGRESS_FORBIDDEN)
         }
@@ -190,7 +190,7 @@ class QuestionProgressServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
 
         assertThatThrownBy {
-            service.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
+            questionProgressService.changeAsked(actorMemberId, roomId, targetMemberId, questionId, false)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
         }

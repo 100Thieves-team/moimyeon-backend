@@ -16,7 +16,7 @@ import java.util.UUID
 class QuestionResumeReferenceServiceTest {
     private val accessValidator = mockk<QuestionCardSetAccessValidator>()
     private val referenceReader = mockk<QuestionResumeReferenceReader>()
-    private val service = QuestionResumeReferenceService(accessValidator, referenceReader)
+    private val questionResumeReferenceService = QuestionResumeReferenceService(accessValidator, referenceReader)
 
     private val roomId = UUID.randomUUID()
     private val requesterMemberId = UUID.randomUUID()
@@ -30,7 +30,7 @@ class QuestionResumeReferenceServiceTest {
         )
         givenViewerCanRead(reference)
 
-        val result = service.getResumeReference(requesterMemberId, roomId, targetMemberId)
+        val result = questionResumeReferenceService.getResumeReference(requesterMemberId, roomId, targetMemberId)
 
         assertThat(result).isEqualTo(reference)
         verifyOrder {
@@ -47,7 +47,7 @@ class QuestionResumeReferenceServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.getResumeReference(requesterMemberId, roomId, targetMemberId)
+            questionResumeReferenceService.getResumeReference(requesterMemberId, roomId, targetMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -64,7 +64,7 @@ class QuestionResumeReferenceServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
 
         assertThatThrownBy {
-            service.getResumeReference(requesterMemberId, roomId, requesterMemberId)
+            questionResumeReferenceService.getResumeReference(requesterMemberId, roomId, requesterMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_FORBIDDEN)
         }
@@ -80,7 +80,7 @@ class QuestionResumeReferenceServiceTest {
         } throws CoreException(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
 
         assertThatThrownBy {
-            service.getResumeReference(requesterMemberId, roomId, targetMemberId)
+            questionResumeReferenceService.getResumeReference(requesterMemberId, roomId, targetMemberId)
         }.isInstanceOfSatisfying(CoreException::class.java) {
             assertThat(it.errorType).isEqualTo(CoreErrorType.QUESTION_CARD_SET_NOT_FOUND)
         }
