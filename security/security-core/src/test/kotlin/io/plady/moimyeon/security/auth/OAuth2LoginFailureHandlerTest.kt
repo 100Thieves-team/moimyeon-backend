@@ -32,7 +32,7 @@ class OAuth2LoginFailureHandlerTest {
             restoreRedirectUri = URI.create("https://moimyeon.plady.io/auth/restore"),
         ),
     )
-    private val handler = OAuth2LoginFailureHandler(authProperties)
+    private val oAuth2LoginFailureHandler = OAuth2LoginFailureHandler(authProperties)
 
     @Test
     fun `Google 인증이 거절되면 원인을 노출하지 않고 프론트 실패 화면으로 이동한다`() {
@@ -45,7 +45,7 @@ class OAuth2LoginFailureHandlerTest {
         logger.addAppender(appender)
 
         try {
-            handler.onAuthenticationFailure(MockHttpServletRequest(), response, exception)
+            oAuth2LoginFailureHandler.onAuthenticationFailure(MockHttpServletRequest(), response, exception)
         } finally {
             logger.detachAppender(appender)
         }
@@ -63,7 +63,7 @@ class OAuth2LoginFailureHandlerTest {
     fun `회원과 세션 처리 중 실패해도 같은 프론트 실패 화면으로 이동한다`() {
         val response = MockHttpServletResponse()
 
-        handler.onLoginProcessingFailure(response, IllegalStateException("internal detail"))
+        oAuth2LoginFailureHandler.onLoginProcessingFailure(response, IllegalStateException("internal detail"))
 
         assertThat(response.status).isEqualTo(302)
         assertThat(response.redirectedUrl).isEqualTo(authProperties.oauth2.failureRedirectUri.toString())

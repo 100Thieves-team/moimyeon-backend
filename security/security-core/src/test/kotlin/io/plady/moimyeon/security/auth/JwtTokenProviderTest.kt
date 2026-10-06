@@ -19,10 +19,10 @@ class JwtTokenProviderTest {
         val encoder = mockk<JwtEncoder>()
         val parameters = slot<JwtEncoderParameters>()
         every { encoder.encode(capture(parameters)) } returns token()
-        val provider = JwtTokenProvider(encoder)
+        val jwtTokenProvider = JwtTokenProvider(encoder)
         val memberId = UUID.randomUUID()
 
-        provider.issue(memberId, MemberRole.ADMIN)
+        jwtTokenProvider.issue(memberId, MemberRole.ADMIN)
 
         assertThat(parameters.captured.claims.subject).isEqualTo(memberId.toString())
         assertThat(parameters.captured.claims.getClaim<List<String>>("roles"))
@@ -40,10 +40,10 @@ class JwtTokenProviderTest {
         val encoder = mockk<JwtEncoder>()
         val parameters = slot<JwtEncoderParameters>()
         every { encoder.encode(capture(parameters)) } returns token()
-        val provider = JwtTokenProvider(encoder)
+        val jwtTokenProvider = JwtTokenProvider(encoder)
         val memberId = UUID.randomUUID()
 
-        provider.issueWithoutExpiration(memberId, MemberRole.USER)
+        jwtTokenProvider.issueWithoutExpiration(memberId, MemberRole.USER)
 
         assertThat(parameters.captured.claims.subject).isEqualTo(memberId.toString())
         assertThat(parameters.captured.claims.getClaim<List<String>>("roles"))

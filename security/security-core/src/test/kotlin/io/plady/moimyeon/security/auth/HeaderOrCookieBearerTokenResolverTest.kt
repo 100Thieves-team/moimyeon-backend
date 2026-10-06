@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 
 class HeaderOrCookieBearerTokenResolverTest {
-    private val resolver = HeaderOrCookieBearerTokenResolver(
+    private val headerOrCookieBearerTokenResolver = HeaderOrCookieBearerTokenResolver(
         bearerFreePaths = setOf("/v1/auth/refresh", "/v1/auth/logout", "/v1/auth/dev-sessions"),
     )
 
@@ -18,7 +18,7 @@ class HeaderOrCookieBearerTokenResolverTest {
         }
 
         // when & then: 리졸버가 null 을 반환해 리소스서버 검증을 건너뛴다
-        assertThat(resolver.resolve(request)).isNull()
+        assertThat(headerOrCookieBearerTokenResolver.resolve(request)).isNull()
     }
 
     @Test
@@ -29,7 +29,7 @@ class HeaderOrCookieBearerTokenResolverTest {
         }
 
         // when & then
-        assertThat(resolver.resolve(request)).isEqualTo("valid-access-token")
+        assertThat(headerOrCookieBearerTokenResolver.resolve(request)).isEqualTo("valid-access-token")
     }
 
     @Test
@@ -38,7 +38,7 @@ class HeaderOrCookieBearerTokenResolverTest {
             setCookies(Cookie(AuthCookieFactory.ACCESS_TOKEN, "expired-access-token"))
         }
 
-        assertThat(resolver.resolve(request)).isNull()
+        assertThat(headerOrCookieBearerTokenResolver.resolve(request)).isNull()
     }
 
     @Test

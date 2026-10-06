@@ -21,7 +21,7 @@ import java.util.UUID
 class FcmWebPushSenderTest {
     private val gateway = RecordingFcmGateway()
     private val invalidRegistrationRemover = RecordingInvalidWebPushRegistrationRemover()
-    private val sender = FcmWebPushSender(
+    private val fcmWebPushSender = FcmWebPushSender(
         gateway = gateway,
         invalidRegistrationRemover = invalidRegistrationRemover,
     )
@@ -33,7 +33,7 @@ class FcmWebPushSenderTest {
             FcmSendResult.success("registration-2"),
         )
 
-        sender.send(notification(), recipient("registration-1", "registration-2"))
+        fcmWebPushSender.send(notification(), recipient("registration-1", "registration-2"))
 
         assertThat(gateway.requests).containsExactly(
             FcmMulticastRequest(
@@ -56,7 +56,7 @@ class FcmWebPushSenderTest {
             FcmSendResult.unregistered("expired-registration"),
         )
 
-        sender.send(notification(), recipient("registration-1", "expired-registration"))
+        fcmWebPushSender.send(notification(), recipient("registration-1", "expired-registration"))
 
         assertThat(invalidRegistrationRemover.removed).containsExactly("expired-registration")
     }
@@ -70,7 +70,7 @@ class FcmWebPushSenderTest {
         )
 
         val messages = captureLogs {
-            sender.send(notification(), recipient("registration-1", "expired-registration", "retry-registration"))
+            fcmWebPushSender.send(notification(), recipient("registration-1", "expired-registration", "retry-registration"))
         }
 
         assertThat(messages).anySatisfy {
@@ -93,7 +93,7 @@ class FcmWebPushSenderTest {
     fun `FCM 제한에 맞춰 등록 식별자를 최대 500개씩 나눈다`() {
         val registrations = (1..501).map { "registration-$it" }.toTypedArray()
 
-        sender.send(notification(), recipient(*registrations))
+        fcmWebPushSender.send(notification(), recipient(*registrations))
 
         assertThat(gateway.requests.map { it.registrations.size }).containsExactly(500, 1)
     }
@@ -125,7 +125,7 @@ class FcmWebPushSenderTest {
             FcmSendResult.retryableFailure("retry-registration"),
         )
 
-        val delivery = sender.send(notification(), recipient("registration-1", "retry-registration"))
+        val delivery = fcmWebPushSender.send(notification(), recipient("registration-1", "retry-registration"))
 
         assertThat(delivery).isEqualTo(WebPushDelivery.DELIVERED)
     }
@@ -138,7 +138,7 @@ class FcmWebPushSenderTest {
         )
 
         assertThatThrownBy {
-            sender.send(notification(), recipient("expired-registration", "retry-registration"))
+            fcmWebPushSender.send(notification(), recipient("expired-registration", "retry-registration"))
         }.isInstanceOf(RetryableWebPushDeliveryException::class.java)
         assertThat(invalidRegistrationRemover.removed).containsExactly("expired-registration")
     }
@@ -150,7 +150,7 @@ class FcmWebPushSenderTest {
             FcmSendResult.unregistered("expired-2"),
         )
 
-        val delivery = sender.send(notification(), recipient("expired-1", "expired-2"))
+        val delivery = fcmWebPushSender.send(notification(), recipient("expired-1", "expired-2"))
 
         assertThat(delivery).isEqualTo(WebPushDelivery.UNDELIVERED)
         assertThat(invalidRegistrationRemover.removed).containsExactlyInAnyOrder("expired-1", "expired-2")
@@ -163,7 +163,7 @@ class FcmWebPushSenderTest {
             FcmSendResult.unregistered("expired-registration"),
         )
 
-        val delivery = sender.send(notification(), recipient("invalid-registration", "expired-registration"))
+        val delivery = fcmWebPushSender.send(notification(), recipient("invalid-registration", "expired-registration"))
 
         assertThat(delivery).isEqualTo(WebPushDelivery.UNDELIVERED)
     }

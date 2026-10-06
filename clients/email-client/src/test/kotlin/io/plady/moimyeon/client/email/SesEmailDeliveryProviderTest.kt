@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.sesv2.model.SesV2Exception
 
 class SesEmailDeliveryProviderTest {
     private val sesClient = mockk<SesV2Client>()
-    private val provider = SesEmailDeliveryProvider(
+    private val sesEmailDeliveryProvider = SesEmailDeliveryProvider(
         sesClient = sesClient,
         fromAddress = "notification@moimyeon.com",
     )
@@ -26,7 +26,7 @@ class SesEmailDeliveryProviderTest {
             .messageId("message-id")
             .build()
 
-        provider.send(message())
+        sesEmailDeliveryProvider.send(message())
 
         assertThat(request.captured.fromEmailAddress()).isEqualTo("notification@moimyeon.com")
         assertThat(request.captured.destination().toAddresses()).containsExactly("member@example.com")
@@ -39,7 +39,7 @@ class SesEmailDeliveryProviderTest {
     fun `SES에 연결하지 못한 실패를 공급자 사용 불가로 변환한다`() {
         every { sesClient.sendEmail(any<SendEmailRequest>()) } throws SdkClientException.create("timeout")
 
-        assertThatThrownBy { provider.send(message()) }
+        assertThatThrownBy { sesEmailDeliveryProvider.send(message()) }
             .isInstanceOf(EmailProviderUnavailableException::class.java)
             .hasCauseInstanceOf(SdkClientException::class.java)
     }
@@ -52,7 +52,7 @@ class SesEmailDeliveryProviderTest {
                 .message("SES unavailable")
                 .build()
 
-            assertThatThrownBy { provider.send(message()) }
+            assertThatThrownBy { sesEmailDeliveryProvider.send(message()) }
                 .isInstanceOf(EmailProviderUnavailableException::class.java)
         }
     }
@@ -64,7 +64,7 @@ class SesEmailDeliveryProviderTest {
             .message("invalid content")
             .build()
 
-        assertThatThrownBy { provider.send(message()) }
+        assertThatThrownBy { sesEmailDeliveryProvider.send(message()) }
             .isInstanceOf(PermanentEmailDeliveryException::class.java)
     }
 

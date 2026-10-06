@@ -11,8 +11,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class DatabaseInvalidWebPushRegistrationRemoverTest {
-    private val repository = mockk<WebPushSubscriptionRepository>(relaxed = true)
-    private val remover = DatabaseInvalidWebPushRegistrationRemover(repository)
+    private val webPushSubscriptionRepository = mockk<WebPushSubscriptionRepository>(relaxed = true)
+    private val databaseInvalidWebPushRegistrationRemover = DatabaseInvalidWebPushRegistrationRemover(webPushSubscriptionRepository)
 
     @Test
     fun `FCM에서 만료된 등록 식별자와 정확히 일치하는 행만 삭제한다`() {
@@ -22,14 +22,14 @@ class DatabaseInvalidWebPushRegistrationRemoverTest {
             registrationHash = WebPushRegistrationHash.of("expired-registration"),
         )
         every {
-            repository.findAllByRegistrationHashIn(
+            webPushSubscriptionRepository.findAllByRegistrationHashIn(
                 setOf(WebPushRegistrationHash.of("expired-registration")),
             )
         } returns listOf(expired, collision)
 
-        remover.remove(setOf("expired-registration"))
+        databaseInvalidWebPushRegistrationRemover.remove(setOf("expired-registration"))
 
-        verify(exactly = 1) { repository.deleteAll(listOf(expired)) }
+        verify(exactly = 1) { webPushSubscriptionRepository.deleteAll(listOf(expired)) }
     }
 
     private fun subscription(

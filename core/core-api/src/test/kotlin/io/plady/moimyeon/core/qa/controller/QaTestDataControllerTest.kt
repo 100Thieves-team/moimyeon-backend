@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class QaTestDataControllerTest : RestDocsTest() {
-    private val service = mockk<QaTestDataService>()
+    private val qaTestDataService = mockk<QaTestDataService>()
     private val devAccessTokenIssuer = mockk<DevAccessTokenIssuer>()
 
     private val roomId = UUID.fromString("00000000-0000-0000-0000-000000000101")
@@ -102,12 +102,12 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @BeforeEach
     fun setUp() {
-        mockMvc = mockController(QaTestDataController(service, devAccessTokenIssuer), controllerAdvice = ApiControllerAdvice())
+        mockMvc = mockController(QaTestDataController(qaTestDataService, devAccessTokenIssuer), controllerAdvice = ApiControllerAdvice())
     }
 
     @Test
     fun `QA 룸 목록을 응답한다`() {
-        every { service.getQaData(defaultCondition) } returns QaData(
+        every { qaTestDataService.getQaData(defaultCondition) } returns QaData(
             rooms = listOf(
                 QaRoom(
                     id = roomId,
@@ -170,7 +170,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("listQaData-e400", listSummary, listDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.getQaData(any()) }
+        verify(exactly = 0) { qaTestDataService.getQaData(any()) }
     }
 
     @Test
@@ -180,13 +180,13 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("listQaData-e400-hostMemberId", listSummary, listDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.getQaData(any()) }
+        verify(exactly = 0) { qaTestDataService.getQaData(any()) }
     }
 
     @Test
     fun `QA 데이터를 일괄 삭제하고 건수 합계를 응답한다`() {
         val condition = QaDataCondition(prefix = "[QA] smoke-", hostMemberId = hostMemberId, includeMembers = true)
-        every { service.deleteQaData(condition) } returns sampleDeleted(rooms = 2).copy(members = 2, profiles = 2, socialAccounts = 2)
+        every { qaTestDataService.deleteQaData(condition) } returns sampleDeleted(rooms = 2).copy(members = 2, profiles = 2, socialAccounts = 2)
 
         mockMvc.perform(
             delete(QA_DATA_PATH)
@@ -214,7 +214,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("deleteQaData-e400", deleteAllSummary, deleteAllDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteQaData(any()) }
+        verify(exactly = 0) { qaTestDataService.deleteQaData(any()) }
     }
 
     @Test
@@ -224,12 +224,12 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("deleteQaData-e400-hostMemberId", deleteAllSummary, deleteAllDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteQaData(any()) }
+        verify(exactly = 0) { qaTestDataService.deleteQaData(any()) }
     }
 
     @Test
     fun `QA 룸을 딸린 행까지 삭제하고 테이블별 건수를 응답한다`() {
-        every { service.deleteRoom(roomId) } returns sampleDeleted(rooms = 1)
+        every { qaTestDataService.deleteRoom(roomId) } returns sampleDeleted(rooms = 1)
 
         mockMvc.perform(delete(ROOM_PATH, roomId))
             .andExpect(status().isOk)
@@ -247,7 +247,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `없는 룸을 삭제하면 E1405 를 응답한다`() {
-        every { service.deleteRoom(roomId) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
+        every { qaTestDataService.deleteRoom(roomId) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
 
         mockMvc.perform(delete(ROOM_PATH, roomId))
             .andExpect(status().isNotFound)
@@ -257,7 +257,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `제목이 QA 마커로 시작하지 않는 룸을 삭제하면 E2201 을 응답한다`() {
-        every { service.deleteRoom(roomId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+        every { qaTestDataService.deleteRoom(roomId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
         mockMvc.perform(delete(ROOM_PATH, roomId))
             .andExpect(status().isConflict)
@@ -272,12 +272,12 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("deleteQaRoom-e400", deleteRoomSummary, deleteRoomDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteRoom(any()) }
+        verify(exactly = 0) { qaTestDataService.deleteRoom(any()) }
     }
 
     @Test
     fun `QA 생성 회원을 딸린 행까지 삭제하고 건수를 응답한다`() {
-        every { service.deleteMember(qaMemberId) } returns sampleDeleted(rooms = 1).copy(
+        every { qaTestDataService.deleteMember(qaMemberId) } returns sampleDeleted(rooms = 1).copy(
             resumes = 1,
             profiles = 1,
             termsAgreements = 2,
@@ -303,7 +303,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `없는 회원을 삭제하면 E1006 을 응답한다`() {
-        every { service.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+        every { qaTestDataService.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         mockMvc.perform(delete(MEMBER_PATH, qaMemberId))
             .andExpect(status().isNotFound)
@@ -312,7 +312,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `QA 생성 회원이 아니면 삭제를 E2201 로 거절한다`() {
-        every { service.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+        every { qaTestDataService.deleteMember(qaMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
         mockMvc.perform(delete(MEMBER_PATH, qaMemberId))
             .andExpect(status().isConflict)
@@ -325,12 +325,12 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andDo(documentApi("deleteQaMember-e400", deleteMemberSummary, deleteMemberDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.deleteMember(any()) }
+        verify(exactly = 0) { qaTestDataService.deleteMember(any()) }
     }
 
     @Test
     fun `테스트 계정을 초기화하고 삭제 건수를 응답한다`() {
-        every { service.resetMember(hostMemberId) } returns sampleDeleted(rooms = 1)
+        every { qaTestDataService.resetMember(hostMemberId) } returns sampleDeleted(rooms = 1)
 
         mockMvc.perform(post(RESET_PATH, hostMemberId))
             .andExpect(status().isOk)
@@ -348,7 +348,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `없는 회원을 초기화하면 E1006 을 응답한다`() {
-        every { service.resetMember(hostMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+        every { qaTestDataService.resetMember(hostMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         mockMvc.perform(post(RESET_PATH, hostMemberId))
             .andExpect(status().isNotFound)
@@ -358,7 +358,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `방장인 룸 중 QA 마커가 없는 룸이 있으면 초기화를 E2201 로 거절한다`() {
-        every { service.resetMember(hostMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+        every { qaTestDataService.resetMember(hostMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
         mockMvc.perform(post(RESET_PATH, hostMemberId))
             .andExpect(status().isConflict)
@@ -373,13 +373,13 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("resetQaMember-e400", resetSummary, resetDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.resetMember(any()) }
+        verify(exactly = 0) { qaTestDataService.resetMember(any()) }
     }
 
     @Test
     fun `QA 룸의 시작 시각을 옮기고 현재 상태와 함께 응답한다`() {
         val startAt = LocalDateTime.of(2026, 9, 1, 9, 0)
-        every { service.rescheduleRoom(roomId, startAt) } returns QaRoomSchedule(roomId, RoomStatus.CONFIRMED, startAt)
+        every { qaTestDataService.rescheduleRoom(roomId, startAt) } returns QaRoomSchedule(roomId, RoomStatus.CONFIRMED, startAt)
 
         mockMvc.perform(
             post(SCHEDULE_PATH, roomId)
@@ -415,12 +415,12 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect { assertThat(it.response.contentAsString).contains("\"code\":\"E400\"") }
             .andDo(documentApi("rescheduleQaRoom-e400", rescheduleSummary, rescheduleDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.rescheduleRoom(any(), any()) }
+        verify(exactly = 0) { qaTestDataService.rescheduleRoom(any(), any()) }
     }
 
     @Test
     fun `없는 룸의 시작 시각을 바꾸면 E1405 를 응답한다`() {
-        every { service.rescheduleRoom(roomId, any()) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
+        every { qaTestDataService.rescheduleRoom(roomId, any()) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
 
         mockMvc.perform(
             post(SCHEDULE_PATH, roomId).contentType(MediaType.APPLICATION_JSON).content("""{"startAt":"2026-09-01T09:00:00"}"""),
@@ -431,7 +431,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `QA 마커가 없는 룸의 시작 시각을 바꾸면 E2201 을 응답한다`() {
-        every { service.rescheduleRoom(roomId, any()) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+        every { qaTestDataService.rescheduleRoom(roomId, any()) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
         mockMvc.perform(
             post(SCHEDULE_PATH, roomId).contentType(MediaType.APPLICATION_JSON).content("""{"startAt":"2026-09-01T09:00:00"}"""),
@@ -442,7 +442,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `테스트 회원을 만들고 dev 액세스 토큰을 응답한다`() {
-        every { service.createMember() } returns QaMember(id = hostMemberId, nickname = "테스트닉네임", email = "qa-abc@qa.moimyeon.test")
+        every { qaTestDataService.createMember() } returns QaMember(id = hostMemberId, nickname = "테스트닉네임", email = "qa-abc@qa.moimyeon.test")
         every { devAccessTokenIssuer.issue(hostMemberId) } returns "access-token"
 
         mockMvc.perform(post(MEMBERS_PATH))
@@ -467,7 +467,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `이력서 요약을 완료 상태로 만들고 결과를 응답한다`() {
-        every { service.completeResumeSummary(resumeId, "[QA] 요약") } returns QaResumeSummary(
+        every { qaTestDataService.completeResumeSummary(resumeId, "[QA] 요약") } returns QaResumeSummary(
             resumeId = resumeId,
             memberId = hostMemberId,
             status = ResumeSummaryStatus.DONE,
@@ -499,7 +499,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `본문 없이 요약 완료를 요청하면 고정 문구로 완료한다`() {
-        every { service.completeResumeSummary(resumeId, CompleteQaResumeSummaryRequest.DEFAULT_SUMMARY) } returns QaResumeSummary(
+        every { qaTestDataService.completeResumeSummary(resumeId, CompleteQaResumeSummaryRequest.DEFAULT_SUMMARY) } returns QaResumeSummary(
             resumeId = resumeId,
             memberId = hostMemberId,
             status = ResumeSummaryStatus.DONE,
@@ -518,12 +518,12 @@ class QaTestDataControllerTest : RestDocsTest() {
                 ),
             )
 
-        verify(exactly = 1) { service.completeResumeSummary(resumeId, CompleteQaResumeSummaryRequest.DEFAULT_SUMMARY) }
+        verify(exactly = 1) { qaTestDataService.completeResumeSummary(resumeId, CompleteQaResumeSummaryRequest.DEFAULT_SUMMARY) }
     }
 
     @Test
     fun `없는 이력서의 요약을 완료하면 E1010 을 응답한다`() {
-        every { service.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.RESUME_NOT_FOUND)
+        every { qaTestDataService.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.RESUME_NOT_FOUND)
 
         mockMvc.perform(post(RESUME_SUMMARY_PATH, resumeId))
             .andExpect(status().isNotFound)
@@ -532,7 +532,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `탈퇴한 회원의 이력서 요약을 완료하면 E1006 을 응답한다`() {
-        every { service.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+        every { qaTestDataService.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
 
         mockMvc.perform(post(RESUME_SUMMARY_PATH, resumeId))
             .andExpect(status().isNotFound)
@@ -541,7 +541,7 @@ class QaTestDataControllerTest : RestDocsTest() {
 
     @Test
     fun `이름이 QA 마커로 시작하지 않는 이력서의 요약을 완료하면 E2201 을 응답한다`() {
-        every { service.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+        every { qaTestDataService.completeResumeSummary(resumeId, any()) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
 
         mockMvc.perform(post(RESUME_SUMMARY_PATH, resumeId))
             .andExpect(status().isConflict)
@@ -556,7 +556,7 @@ class QaTestDataControllerTest : RestDocsTest() {
             .andExpect(status().isBadRequest)
             .andDo(documentApi("completeQaResumeSummary-e400", resumeSummarySummary, resumeSummaryDescription, errorResponseFields()))
 
-        verify(exactly = 0) { service.completeResumeSummary(any(), any()) }
+        verify(exactly = 0) { qaTestDataService.completeResumeSummary(any(), any()) }
     }
 
     private fun resumeSummaryFields(): Array<FieldDescriptor> = arrayOf(

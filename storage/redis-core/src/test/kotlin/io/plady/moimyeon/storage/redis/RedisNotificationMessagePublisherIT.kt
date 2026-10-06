@@ -49,12 +49,12 @@ class RedisNotificationMessagePublisherIT {
 
     @Test
     fun `한 사실에서 나온 알림들을 각 정책의 채널별 메시지로 한 번에 저장한다`() {
-        val publisher = RedisNotificationMessagePublisher(
+        val redisNotificationMessagePublisher = RedisNotificationMessagePublisher(
             redisTemplate = redisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
         )
 
-        publisher.publish(
+        redisNotificationMessagePublisher.publish(
             listOf(
                 notification(NotificationPolicy.PUSH_AND_EMAIL, payload = "{\"recipient\":1}"),
                 notification(NotificationPolicy.PUSH_ELSE_EMAIL, payload = "{\"recipient\":2}"),
@@ -78,14 +78,14 @@ class RedisNotificationMessagePublisherIT {
     fun `Redis가 메시지를 저장하지 못하면 실패를 호출자에게 전달한다`() {
         val unavailableConnectionFactory = connectionFactory("127.0.0.1", unusedPort())
         val unavailableRedisTemplate = StringRedisTemplate(unavailableConnectionFactory).apply { afterPropertiesSet() }
-        val publisher = RedisNotificationMessagePublisher(
+        val redisNotificationMessagePublisher = RedisNotificationMessagePublisher(
             redisTemplate = unavailableRedisTemplate,
             properties = RedisNotificationStreamProperties(STREAM_KEY),
         )
 
         try {
             assertThatThrownBy {
-                publisher.publish(listOf(notification(NotificationPolicy.PUSH_ONLY, payload = "{}")))
+                redisNotificationMessagePublisher.publish(listOf(notification(NotificationPolicy.PUSH_ONLY, payload = "{}")))
             }.isInstanceOf(RedisConnectionFailureException::class.java)
         } finally {
             unavailableConnectionFactory.destroy()

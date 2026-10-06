@@ -24,7 +24,7 @@ class RoomApplicationFacadeTest {
     private val roomApplicationSubmissionService = mockk<RoomApplicationSubmissionService>()
     private val profileService = mockk<ProfileService>()
     private val catalogService = mockk<CatalogService>()
-    private val facade = RoomApplicationFacade(
+    private val roomApplicationFacade = RoomApplicationFacade(
         roomApplicationSubmissionService = roomApplicationSubmissionService,
         profileService = profileService,
         catalogService = catalogService,
@@ -51,7 +51,7 @@ class RoomApplicationFacadeTest {
             ),
         )
 
-        val application = facade.getApplications(hostMemberId, roomId).applications.single()
+        val application = roomApplicationFacade.getApplications(hostMemberId, roomId).applications.single()
 
         assertThat(application.applicant.jobRoles).containsExactly(
             ApplicantJobRoleResponse(101L, "백엔드 개발"),
@@ -70,7 +70,7 @@ class RoomApplicationFacadeTest {
             roomApplicationSubmissionService.getApplications(hostMemberId, roomId)
         } returns listOf(details(ApplicationApplicant.Withdrawn(applicantMemberId)))
 
-        val applicant = facade.getApplications(hostMemberId, roomId).applications.single().applicant
+        val applicant = roomApplicationFacade.getApplications(hostMemberId, roomId).applications.single().applicant
 
         assertThat(applicant.nickname).isEqualTo("탈퇴한 회원")
         assertThat(applicant.jobRoles).isEmpty()

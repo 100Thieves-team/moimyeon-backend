@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class InterviewOverviewControllerTest : RestDocsTest() {
-    private lateinit var facade: InterviewOverviewFacade
+    private lateinit var interviewOverviewFacade: InterviewOverviewFacade
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000436")
     private val principal = Principal { memberId.toString() }
 
@@ -41,9 +41,9 @@ class InterviewOverviewControllerTest : RestDocsTest() {
 
     @BeforeEach
     fun setUp() {
-        facade = mockk()
+        interviewOverviewFacade = mockk()
         mockMvc = mockController(
-            InterviewOverviewController(facade),
+            InterviewOverviewController(interviewOverviewFacade),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -51,7 +51,7 @@ class InterviewOverviewControllerTest : RestDocsTest() {
 
     @Test
     fun `인증 회원의 신청과 참여 룸을 구분해 조회한다`() {
-        every { facade.getOverview(memberId) } returns sampleOverview()
+        every { interviewOverviewFacade.getOverview(memberId) } returns sampleOverview()
 
         mockMvc.perform(get("/v1/members/me/rooms").principal(principal))
             .andExpect(status().isOk)
@@ -93,7 +93,7 @@ class InterviewOverviewControllerTest : RestDocsTest() {
 
     @Test
     fun `신청과 참여 이력이 없으면 각 구분을 빈 배열로 반환한다`() {
-        every { facade.getOverview(memberId) } returns InterviewOverviewResponse(emptyList(), emptyList(), emptyList())
+        every { interviewOverviewFacade.getOverview(memberId) } returns InterviewOverviewResponse(emptyList(), emptyList(), emptyList())
 
         mockMvc.perform(get("/v1/members/me/rooms").principal(principal))
             .andExpect(status().isOk)

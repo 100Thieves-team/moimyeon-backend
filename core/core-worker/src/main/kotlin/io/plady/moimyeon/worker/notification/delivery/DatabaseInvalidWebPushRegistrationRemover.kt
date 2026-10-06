@@ -10,16 +10,16 @@ private val log = KotlinLogging.logger {}
 
 @Component
 class DatabaseInvalidWebPushRegistrationRemover(
-    private val repository: WebPushSubscriptionRepository,
+    private val webPushSubscriptionRepository: WebPushSubscriptionRepository,
 ) : InvalidWebPushRegistrationRemover {
     @Transactional
     override fun remove(registrations: Set<String>) {
         if (registrations.isEmpty()) return
 
         val registrationHashes = registrations.mapTo(mutableSetOf(), WebPushRegistrationHash::of)
-        val expiredSubscriptions = repository.findAllByRegistrationHashIn(registrationHashes)
+        val expiredSubscriptions = webPushSubscriptionRepository.findAllByRegistrationHashIn(registrationHashes)
             .filter { it.registration in registrations }
-        repository.deleteAll(expiredSubscriptions)
+        webPushSubscriptionRepository.deleteAll(expiredSubscriptions)
         log.debug {
             "web-push.registration.remove requested=${registrations.size}" +
                 " removed=${expiredSubscriptions.size}" +

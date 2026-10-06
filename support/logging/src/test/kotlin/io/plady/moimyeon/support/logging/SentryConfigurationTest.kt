@@ -65,8 +65,8 @@ class SentryConfigurationTest {
             "DEPLOYMENT_ENVIRONMENT=staging",
             "APP_RELEASE=exact-source-sha",
         ).run { context ->
-            val filter = context.getBean(SentryPrivacyFilter::class.java)
-            val event = filter.event(SentryEvent())
+            val sentryPrivacyFilter = context.getBean(SentryPrivacyFilter::class.java)
+            val event = sentryPrivacyFilter.event(SentryEvent())
             val options = context.getBean(SentryProperties::class.java)
 
             assertThat(event.getTag("service.name")).isEqualTo("core-api")

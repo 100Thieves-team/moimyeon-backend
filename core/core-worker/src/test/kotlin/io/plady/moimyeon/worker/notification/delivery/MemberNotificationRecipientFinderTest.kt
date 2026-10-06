@@ -15,7 +15,7 @@ import java.util.UUID
 class MemberNotificationRecipientFinderTest {
     private val memberRepository = mockk<MemberRepository>()
     private val webPushSubscriptionRepository = mockk<WebPushSubscriptionRepository>()
-    private val finder = MemberNotificationRecipientFinder(memberRepository, webPushSubscriptionRepository)
+    private val memberNotificationRecipientFinder = MemberNotificationRecipientFinder(memberRepository, webPushSubscriptionRepository)
 
     @Test
     fun `살아있는 회원의 이메일·웹 푸시 등록·수신 설정을 알림 수신 정보로 반환한다`() {
@@ -31,7 +31,7 @@ class MemberNotificationRecipientFinderTest {
         )
         every { memberRepository.findByIdAndDeletedAtIsNull(memberId) } returns member
 
-        val recipient = finder.find(memberId)
+        val recipient = memberNotificationRecipientFinder.find(memberId)
 
         assertThat(recipient.email).isEqualTo("member@example.com")
         assertThat(recipient.webPushRegistrations).containsExactly("registration-a", "registration-b")
@@ -46,7 +46,7 @@ class MemberNotificationRecipientFinderTest {
         val memberId = UUID.fromString("00000000-0000-0000-0000-000000000002")
         every { memberRepository.findByIdAndDeletedAtIsNull(memberId) } returns null
 
-        assertThatThrownBy { finder.find(memberId) }
+        assertThatThrownBy { memberNotificationRecipientFinder.find(memberId) }
             .isInstanceOf(NotificationRecipientNotFoundException::class.java)
             .hasMessageContaining(memberId.toString())
         verify(exactly = 0) { webPushSubscriptionRepository.findAllByMemberId(any()) }

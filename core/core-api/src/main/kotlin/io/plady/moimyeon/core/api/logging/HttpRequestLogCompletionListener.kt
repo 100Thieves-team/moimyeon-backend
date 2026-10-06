@@ -7,14 +7,14 @@ import jakarta.servlet.ServletRequestListener
 import jakarta.servlet.http.HttpServletRequest
 
 class HttpRequestLogCompletionListener(
-    private val writer: RequestLogWriter,
+    private val requestLogWriter: RequestLogWriter,
     private val nanoTime: () -> Long = System::nanoTime,
 ) : ServletRequestListener {
     override fun requestDestroyed(event: ServletRequestEvent) {
         val request = event.servletRequest as? HttpServletRequest ?: return
         val requestLog = HttpRequestLog.from(request) ?: return
         try {
-            requestLog.complete(writer, nanoTime())
+            requestLog.complete(requestLogWriter, nanoTime())
         } catch (_: Exception) {
             // Logging failures must not change a response that the application has already produced.
             try {

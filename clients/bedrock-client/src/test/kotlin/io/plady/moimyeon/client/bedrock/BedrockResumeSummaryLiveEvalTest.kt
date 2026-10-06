@@ -63,7 +63,7 @@ class BedrockResumeSummaryLiveEvalTest {
     private fun evaluate(variant: EvalVariant, fixtures: List<EvalFixture>): List<EvalResult> {
         val chatModel = UsageCapturingChatModel(createChatModel(variant))
         val timeSource = ResumeSummaryTimeSource(System::nanoTime)
-        val generator = if (variant.legacyPipeline) {
+        val bedrockResumeSummaryGenerator = if (variant.legacyPipeline) {
             LegacyBedrockResumeSummaryGenerator(ChatClient.builder(chatModel))
         } else {
             BedrockResumeSummaryGenerator(
@@ -77,7 +77,7 @@ class BedrockResumeSummaryLiveEvalTest {
         return fixtures.flatMap { fixture ->
             (1..RUNS_PER_FIXTURE).map { run ->
                 chatModel.clearUsage()
-                evaluateOne(variant, fixture, run, generator, chatModel)
+                evaluateOne(variant, fixture, run, bedrockResumeSummaryGenerator, chatModel)
             }
         }
     }
@@ -86,14 +86,14 @@ class BedrockResumeSummaryLiveEvalTest {
         variant: EvalVariant,
         fixture: EvalFixture,
         run: Int,
-        generator: ResumeSummaryGenerator,
+        bedrockResumeSummaryGenerator: ResumeSummaryGenerator,
         chatModel: UsageCapturingChatModel,
     ): EvalResult {
         var output: String? = null
         var error: String? = null
         val latencyMillis = measureTimeMillis {
             try {
-                output = generator.generate(fixture.pdf, ResumeSummaryDeadline.start(System.nanoTime()))
+                output = bedrockResumeSummaryGenerator.generate(fixture.pdf, ResumeSummaryDeadline.start(System.nanoTime()))
             } catch (exception: ResumeSummaryGenerationException) {
                 error = rootCause(exception).message ?: rootCause(exception).javaClass.simpleName
             }

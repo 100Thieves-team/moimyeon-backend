@@ -28,12 +28,12 @@ class AdminNotificationDashboardControllerTest {
             ),
         )
         var requestedLimit: Int? = null
-        val reader = AdminNotificationOperationsReader { limit ->
+        val adminNotificationOperationsReader = AdminNotificationOperationsReader { limit ->
             requestedLimit = limit
             dashboard
         }
         val mockMvc = MockMvcBuilders
-            .standaloneSetup(AdminNotificationDashboardController(reader))
+            .standaloneSetup(AdminNotificationDashboardController(adminNotificationOperationsReader))
             .build()
 
         val result = mockMvc.perform(get("/admin/notifications")).andReturn()

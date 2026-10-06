@@ -12,7 +12,7 @@ import java.security.Principal
 import java.util.UUID
 
 class AdminProviderArgumentResolverTest {
-    private val resolver = AdminProviderArgumentResolver()
+    private val adminProviderArgumentResolver = AdminProviderArgumentResolver()
     private val parameter = mockk<MethodParameter>()
 
     @Test
@@ -21,7 +21,7 @@ class AdminProviderArgumentResolverTest {
         val webRequest = mockk<NativeWebRequest>()
         every { webRequest.userPrincipal } returns Principal { memberId.toString() }
 
-        val adminProvider = resolver.resolveArgument(parameter, null, webRequest, null)
+        val adminProvider = adminProviderArgumentResolver.resolveArgument(parameter, null, webRequest, null)
 
         assertThat(adminProvider).isEqualTo(AdminProvider(memberId))
     }
@@ -31,7 +31,7 @@ class AdminProviderArgumentResolverTest {
         val webRequest = mockk<NativeWebRequest>()
         every { webRequest.userPrincipal } returns null
 
-        assertThatThrownBy { resolver.resolveArgument(parameter, null, webRequest, null) }
+        assertThatThrownBy { adminProviderArgumentResolver.resolveArgument(parameter, null, webRequest, null) }
             .isInstanceOf(IllegalStateException::class.java)
     }
 }

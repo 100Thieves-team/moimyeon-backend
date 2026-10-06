@@ -12,13 +12,13 @@ import java.security.Principal
 import java.util.UUID
 
 class LoginMemberArgumentResolverTest {
-    private val resolver = LoginMemberArgumentResolver()
+    private val loginMemberArgumentResolver = LoginMemberArgumentResolver()
 
     @Test
     fun `어노테이션과 CurrentMember 타입을 모두 갖춘 파라미터만 지원한다`() {
-        assertThat(resolver.supportsParameter(parameter("annotated", CurrentMember::class.java))).isTrue()
-        assertThat(resolver.supportsParameter(parameter("plainType", CurrentMember::class.java))).isFalse()
-        assertThat(resolver.supportsParameter(parameter("wrongType", UUID::class.java))).isFalse()
+        assertThat(loginMemberArgumentResolver.supportsParameter(parameter("annotated", CurrentMember::class.java))).isTrue()
+        assertThat(loginMemberArgumentResolver.supportsParameter(parameter("plainType", CurrentMember::class.java))).isFalse()
+        assertThat(loginMemberArgumentResolver.supportsParameter(parameter("wrongType", UUID::class.java))).isFalse()
     }
 
     @Test
@@ -27,7 +27,7 @@ class LoginMemberArgumentResolverTest {
             userPrincipal = Principal { MEMBER_ID.toString() }
         }
 
-        val currentMember = resolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(request), null)
+        val currentMember = loginMemberArgumentResolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(request), null)
 
         assertThat(currentMember.id).isEqualTo(MEMBER_ID)
     }
@@ -35,7 +35,7 @@ class LoginMemberArgumentResolverTest {
     @Test
     fun `principal 이 없으면 인증 오류를 던진다`() {
         assertThatThrownBy {
-            resolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(MockHttpServletRequest()), null)
+            loginMemberArgumentResolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(MockHttpServletRequest()), null)
         }
             .isInstanceOf(CoreApiException::class.java)
             .extracting("errorType")
@@ -49,7 +49,7 @@ class LoginMemberArgumentResolverTest {
         }
 
         assertThatThrownBy {
-            resolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(request), null)
+            loginMemberArgumentResolver.resolveArgument(parameter("annotated", CurrentMember::class.java), null, ServletWebRequest(request), null)
         }
             .isInstanceOf(CoreApiException::class.java)
             .extracting("errorType")

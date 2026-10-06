@@ -24,7 +24,7 @@ import java.util.Properties
 
 class GmailSmtpEmailDeliveryProviderTest {
     private val mailSender = mockk<JavaMailSender>()
-    private val provider = GmailSmtpEmailDeliveryProvider(
+    private val gmailSmtpEmailDeliveryProvider = GmailSmtpEmailDeliveryProvider(
         mailSender = mailSender,
         fromAddress = "fallback@gmail.com",
     )
@@ -37,7 +37,7 @@ class GmailSmtpEmailDeliveryProviderTest {
     fun `Gmail SMTP 요청에 발신자 수신자 제목을 전달한다`() {
         val request = captureSentMessage()
 
-        provider.send(message())
+        gmailSmtpEmailDeliveryProvider.send(message())
 
         assertThat(request.captured.from.map { it.toString() }).containsExactly("fallback@gmail.com")
         assertThat(request.captured.getRecipients(Message.RecipientType.TO).map { it.toString() })
@@ -49,7 +49,7 @@ class GmailSmtpEmailDeliveryProviderTest {
     fun `Gmail SMTP 요청에 평문과 HTML 본문을 함께 싣는다`() {
         val request = captureSentMessage()
 
-        provider.send(message())
+        gmailSmtpEmailDeliveryProvider.send(message())
 
         // 파트의 Content-Type 헤더는 saveChanges 때 기록된다. 실제 발송에서는
         // JavaMailSenderImpl 이 부르므로, 보내질 모습 그대로 읽는다.
@@ -68,7 +68,7 @@ class GmailSmtpEmailDeliveryProviderTest {
     fun `직렬화한 메일에서 한글 제목과 본문이 보존된다`() {
         val request = captureSentMessage()
 
-        provider.send(message())
+        gmailSmtpEmailDeliveryProvider.send(message())
 
         val wire = ByteArrayOutputStream()
         request.captured.apply { saveChanges() }.writeTo(wire)
@@ -85,7 +85,7 @@ class GmailSmtpEmailDeliveryProviderTest {
         val cause = MailSendException("Gmail unavailable")
         every { mailSender.send(any<MimeMessage>()) } throws cause
 
-        assertThatThrownBy { provider.send(message()) }
+        assertThatThrownBy { gmailSmtpEmailDeliveryProvider.send(message()) }
             .isInstanceOf(EmailDeliveryException::class.java)
             .hasCause(cause)
     }
@@ -94,7 +94,7 @@ class GmailSmtpEmailDeliveryProviderTest {
     fun `수신자 주소를 읽을 수 없으면 영구 실패로 변환한다`() {
         every { mailSender.send(any<MimeMessage>()) } just Runs
 
-        assertThatThrownBy { provider.send(message(to = "수신자 아님")) }
+        assertThatThrownBy { gmailSmtpEmailDeliveryProvider.send(message(to = "수신자 아님")) }
             .isInstanceOf(PermanentEmailDeliveryException::class.java)
             .hasCauseInstanceOf(MessagingException::class.java)
     }

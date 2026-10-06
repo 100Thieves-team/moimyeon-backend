@@ -30,16 +30,16 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ClosingControllerTest : RestDocsTest() {
-    private lateinit var service: ClosingService
+    private lateinit var closingService: ClosingService
     private val roomId = UUID.fromString("01920000-0000-7000-8000-000000000440")
     private val memberId = UUID.fromString("00000000-0000-0000-0000-000000000001")
     private val principal = Principal { memberId.toString() }
 
     @BeforeEach
     fun setUp() {
-        service = mockk()
+        closingService = mockk()
         mockMvc = mockController(
-            ClosingController(service),
+            ClosingController(closingService),
             LoginMemberArgumentResolver(),
             controllerAdvice = ApiControllerAdvice(),
         )
@@ -51,7 +51,7 @@ class ClosingControllerTest : RestDocsTest() {
             QuestionEvaluation(11L, QuestionVote.MEMORABLE),
             QuestionEvaluation(12L, QuestionVote.DISAPPOINTING),
         )
-        every { service.submit(memberId, roomId, evaluations) } returns ClosingSubmission(
+        every { closingService.submit(memberId, roomId, evaluations) } returns ClosingSubmission(
             roomId,
             memberId,
             LocalDateTime.of(2026, 8, 14, 12, 0),
@@ -97,7 +97,7 @@ class ClosingControllerTest : RestDocsTest() {
 
     @Test
     fun `클로징에서 평가할 실제 사용 원 질문을 조회한다`() {
-        every { service.getQuestions(memberId, roomId) } returns listOf(
+        every { closingService.getQuestions(memberId, roomId) } returns listOf(
             ClosingQuestion(11L, memberId, "정합성을 어떻게 복구했나요?", QuestionSource.PREPARATION),
         )
 
@@ -158,7 +158,7 @@ class ClosingControllerTest : RestDocsTest() {
             CoreErrorType.CLOSING_NOT_AVAILABLE,
             CoreErrorType.CLOSING_QUESTION_MISMATCH,
         ).forEach { errorType ->
-            every { service.submit(memberId, roomId, evaluations) } throws CoreException(errorType)
+            every { closingService.submit(memberId, roomId, evaluations) } throws CoreException(errorType)
 
             mockMvc.perform(
                 post("/v1/closing-responses")
@@ -192,7 +192,7 @@ class ClosingControllerTest : RestDocsTest() {
             CoreErrorType.CLOSING_SUBMISSION_FORBIDDEN,
             CoreErrorType.CLOSING_NOT_AVAILABLE,
         ).forEach { errorType ->
-            every { service.getQuestions(memberId, roomId) } throws CoreException(errorType)
+            every { closingService.getQuestions(memberId, roomId) } throws CoreException(errorType)
 
             mockMvc.perform(
                 get("/v1/closing-questions/me").queryParam("roomId", roomId.toString()).principal(principal),

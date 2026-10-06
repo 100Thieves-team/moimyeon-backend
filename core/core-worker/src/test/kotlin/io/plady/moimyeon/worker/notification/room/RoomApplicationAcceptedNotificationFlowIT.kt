@@ -139,12 +139,12 @@ class RoomApplicationAcceptedNotificationFlowIT {
             ),
             metrics = NotificationStreamMetrics(meterRegistry, properties),
         )
-        val handler = NotificationMessageHandler(
+        val notificationMessageHandler = NotificationMessageHandler(
             jsonMapper = JsonMapper.builder().addModule(kotlinModule()).build(),
             notificationSender = notificationSender,
             actionBaseUrl = FRONT_BASE_URL,
         )
-        return NotificationMessageWorker(consumer, handler)
+        return NotificationMessageWorker(consumer, notificationMessageHandler)
     }
 
     private fun addMessage(

@@ -11,19 +11,19 @@ import java.util.UUID
 // 공개 조회(탐색 목록·룸 상세)는 로그인 여부로 응답을 나눈다. 필수 해석(@LoginMember)은 그대로 두고
 // 이쪽만 "로그인했으면 회원, 아니면 없음"으로 답한다.
 class OptionalLoginMemberArgumentResolverTest {
-    private val resolver = OptionalLoginMemberArgumentResolver()
+    private val optionalLoginMemberArgumentResolver = OptionalLoginMemberArgumentResolver()
 
     @Test
     fun `어노테이션과 CurrentMember 타입을 모두 갖춘 파라미터만 지원한다`() {
-        assertThat(resolver.supportsParameter(parameter("annotated", CurrentMember::class.java))).isTrue()
-        assertThat(resolver.supportsParameter(parameter("plainType", CurrentMember::class.java))).isFalse()
-        assertThat(resolver.supportsParameter(parameter("wrongType", UUID::class.java))).isFalse()
+        assertThat(optionalLoginMemberArgumentResolver.supportsParameter(parameter("annotated", CurrentMember::class.java))).isTrue()
+        assertThat(optionalLoginMemberArgumentResolver.supportsParameter(parameter("plainType", CurrentMember::class.java))).isFalse()
+        assertThat(optionalLoginMemberArgumentResolver.supportsParameter(parameter("wrongType", UUID::class.java))).isFalse()
     }
 
     // 필수 해석과 한 파라미터를 두고 다투면 어느 쪽이 이기는지가 등록 순서에 달리게 된다.
     @Test
     fun `필수 해석용 파라미터는 지원하지 않는다`() {
-        assertThat(resolver.supportsParameter(parameter("required", CurrentMember::class.java))).isFalse()
+        assertThat(optionalLoginMemberArgumentResolver.supportsParameter(parameter("required", CurrentMember::class.java))).isFalse()
     }
 
     @Test
@@ -32,7 +32,7 @@ class OptionalLoginMemberArgumentResolverTest {
             userPrincipal = Principal { MEMBER_ID.toString() }
         }
 
-        val currentMember = resolver.resolveArgument(
+        val currentMember = optionalLoginMemberArgumentResolver.resolveArgument(
             parameter("annotated", CurrentMember::class.java),
             null,
             ServletWebRequest(request),
@@ -44,7 +44,7 @@ class OptionalLoginMemberArgumentResolverTest {
 
     @Test
     fun `principal 이 없으면 null 을 돌려준다`() {
-        val currentMember = resolver.resolveArgument(
+        val currentMember = optionalLoginMemberArgumentResolver.resolveArgument(
             parameter("annotated", CurrentMember::class.java),
             null,
             ServletWebRequest(MockHttpServletRequest()),
@@ -62,7 +62,7 @@ class OptionalLoginMemberArgumentResolverTest {
             userPrincipal = Principal { "google-sub-123" }
         }
 
-        val currentMember = resolver.resolveArgument(
+        val currentMember = optionalLoginMemberArgumentResolver.resolveArgument(
             parameter("annotated", CurrentMember::class.java),
             null,
             ServletWebRequest(request),

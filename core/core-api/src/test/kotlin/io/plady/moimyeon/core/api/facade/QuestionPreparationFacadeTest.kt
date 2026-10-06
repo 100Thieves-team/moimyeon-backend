@@ -29,7 +29,7 @@ class QuestionPreparationFacadeTest {
     private val cardSetService = mockk<QuestionCardSetService>()
     private val resumeReferenceService = mockk<QuestionResumeReferenceService>()
     private val memberService = mockk<MemberService>()
-    private val facade = QuestionPreparationFacade(cardSetService, resumeReferenceService, memberService)
+    private val questionPreparationFacade = QuestionPreparationFacade(cardSetService, resumeReferenceService, memberService)
 
     private val roomId = UUID.randomUUID()
     private val viewerMemberId = UUID.randomUUID()
@@ -44,7 +44,7 @@ class QuestionPreparationFacadeTest {
         } returns QuestionCardSetOverview(cardSets, 2)
         every { memberService.getMembers(listOf(targetMemberId)) } returns listOf(member(targetMemberId, "성실한 사슴 03"))
 
-        val result = facade.getCardSets(viewerMemberId, roomId)
+        val result = questionPreparationFacade.getCardSets(viewerMemberId, roomId)
 
         assertThat(result.myCardSetPreparerCount).isEqualTo(2)
         assertThat(result.cardSets.single().target.nickname).isEqualTo("성실한 사슴 03")
@@ -74,7 +74,7 @@ class QuestionPreparationFacadeTest {
             member(authorMemberId, "든든한 곰 21"),
         )
 
-        val result = facade.getCardSet(viewerMemberId, roomId, targetMemberId)
+        val result = questionPreparationFacade.getCardSet(viewerMemberId, roomId, targetMemberId)
 
         assertThat(result.target.nickname).isEqualTo("성실한 사슴 03")
         assertThat(result.resumeSummary.status).isEqualTo("DONE")
