@@ -8,6 +8,12 @@ import java.util.UUID
 // 이력서 원본 URL 도 없다 — 열람은 제출 식별자로 별도 발급한다.
 data class RoomParticipantsResponse(
     val participants: List<RoomParticipantResponse>,
+    val confirmedParticipants: List<ConfirmedParticipantResponse>,
+)
+
+data class ConfirmedParticipantResponse(
+    val memberId: UUID,
+    val nickname: String,
 )
 
 data class RoomParticipantResponse(

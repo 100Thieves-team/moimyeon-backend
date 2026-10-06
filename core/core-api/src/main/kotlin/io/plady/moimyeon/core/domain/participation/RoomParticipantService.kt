@@ -21,9 +21,9 @@ class RoomParticipantService(
 
     // 참여자 명부(「룸 참여」 §4.5). AI 이력서 요약과 제출 이력서 참조가 실리므로
     // 방장·참여자만 통과시킨다 - 신청자와 제3자는 §6 상 볼 수 없다.
-    fun getParticipants(viewerMemberId: UUID, roomId: UUID): List<RoomParticipant> {
+    fun getParticipants(viewerMemberId: UUID, roomId: UUID): RoomParticipants {
         participationValidator.validateParticipant(roomId, viewerMemberId)
-        return roomParticipantReader.getAllByRoom(roomId, viewerMemberId)
+        return roomParticipantReader.getRoster(roomId, viewerMemberId)
     }
 
     // 방명록 글의 방장·(퇴장) 뱃지 판정용(MOI-461). 참여자 게이트는 방명록 Service 가 이미

@@ -3,6 +3,7 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.mockk.every
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.api.controller.v1.response.ConfirmedParticipantResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ParticipantAiSummaryResponse
 import io.plady.moimyeon.core.api.controller.v1.response.ParticipantJobRoleResponse
 import io.plady.moimyeon.core.api.controller.v1.response.RoomParticipantResponse
@@ -49,7 +50,10 @@ class RoomParticipantControllerTest : RestDocsTest() {
             "나가거나 내보내진 참여자는 명부에 없다. AI 이력서 요약은 룸의 원본 공개 여부와 무관하게 같은 룸 참여자에게 공개된다. " +
             "이력서 원본 URL 은 응답에 없다 - 제출 식별자와 열람 가능 여부만 내려가고 발급은 별도 API 가 맡는다. " +
             "실명·연락처·전달 사항은 어떤 경우에도 내려가지 않는다(§6). " +
-            "방장과 참여자만 조회할 수 있고 신청자·제3자는 거부된다(E1419). 취소·종료된 룸에서도 이미 속한 사람은 계속 조회할 수 있다."
+            "방장과 참여자만 조회할 수 있고 신청자·제3자는 거부된다(E1419). 취소·종료된 룸에서도 이미 속한 사람은 계속 조회할 수 있다. " +
+            "면접 완료(POST /v1/rooms/{roomId}/complete)의 출석 입력 대상은 participants 가 아니라 confirmedParticipants 다. " +
+            "확정 후 나간 참여자가 있어도 룸이 확정 상태로 남으면 그 사람도 출석 대상이라 두 명단이 갈린다(「룸 진행 마무리 및 출석」 R76). " +
+            "confirmedParticipants 는 진행 확정·완료 상태에서만 채워지고, 다시 확정된 룸은 마지막 확정 시점 명단이다. 이력서 정보는 싣지 않는다."
 
     private val participationSlotsSummary = "참여 슬롯 여유분 조회"
     private val participationSlotsDescription =
@@ -122,6 +126,20 @@ class RoomParticipantControllerTest : RestDocsTest() {
                     canViewOriginal = false,
                 ),
             ),
+            confirmedParticipants = listOf(
+                ConfirmedParticipantResponse(
+                    memberId = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+                    nickname = "든든한 곰 07",
+                ),
+                ConfirmedParticipantResponse(
+                    memberId = UUID.fromString("00000000-0000-0000-0000-000000000002"),
+                    nickname = "성실한 다람쥐 12",
+                ),
+                ConfirmedParticipantResponse(
+                    memberId = UUID.fromString("00000000-0000-0000-0000-000000000003"),
+                    nickname = "탈퇴한 회원",
+                ),
+            ),
         )
 
         mockMvc.perform(
@@ -165,6 +183,15 @@ class RoomParticipantControllerTest : RestDocsTest() {
                             .description("제출 이력서 식별자. 원본 열람 요청의 입력이며 URL 은 내려가지 않는다"),
                         fieldWithPath("data.participants[].canViewOriginal").type(JsonFieldType.BOOLEAN)
                             .description("이력서 원본을 열 수 있는지. 원본 공개 룸이고 진행이 확정됐으며 조회자가 확정 참여자일 때만 true"),
+                        fieldWithPath("data.confirmedParticipants").type(JsonFieldType.ARRAY)
+                            .description(
+                                "출석 입력 대상인 확정 당시 참여자 (확정 당시 참여 순서). 확정 후 나간 참여자도 포함한다. " +
+                                    "진행 확정·완료 상태에서만 채워지고 그 밖의 상태에서는 빈 배열",
+                            ),
+                        fieldWithPath("data.confirmedParticipants[].memberId").type(JsonFieldType.STRING)
+                            .description("확정 참여자 회원 식별자 (UUID). 면접 완료 요청의 attendances[].memberId 로 그대로 보낸다"),
+                        fieldWithPath("data.confirmedParticipants[].nickname").type(JsonFieldType.STRING)
+                            .description("닉네임. 탈퇴한 회원이면 대체 문구가 내려간다"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),
