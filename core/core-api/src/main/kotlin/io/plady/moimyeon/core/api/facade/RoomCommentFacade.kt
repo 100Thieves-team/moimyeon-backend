@@ -31,7 +31,6 @@ class RoomCommentFacade(
 
     fun leaveComment(memberId: UUID, roomId: UUID, content: String): RoomCommentCreatedResponse {
         val commentId = roomCommentService.leaveComment(memberId, roomId, content)
-        // 쓰기는 id 만 반환한다 - 작성 시각은 재조회로 조립한다(layers.md).
         val comment = roomCommentService.getComment(commentId)
         return RoomCommentCreatedResponse(commentId = comment.id, createdAt = comment.createdAt)
     }

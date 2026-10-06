@@ -77,7 +77,6 @@ abstract class RestDocsTest {
         snippets = snippets,
     )
 
-    // 모든 에러 응답이 공유하는 봉투. 예외 케이스 문서화 테스트에서 사용한다.
     protected fun errorResponseFields(): ResponseFieldsSnippet = responseFields(
         fieldWithPath("result").type(JsonFieldType.STRING).description("처리 결과 (ERROR)"),
         fieldWithPath("data").type(JsonFieldType.NULL).ignored(),

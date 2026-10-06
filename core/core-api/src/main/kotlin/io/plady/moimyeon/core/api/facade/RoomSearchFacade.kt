@@ -16,8 +16,6 @@ import io.plady.moimyeon.core.domain.roomviewer.RoomViewerService
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-// 탐색 목록의 표시명 조립 지점. 룸 조회는 room 개념이 끝내고, 여기서는 다른 개념의 이름만 붙인다.
-//
 // 회사는 룸이 직접 참조하지 않는다(room → job_posting → company). 그래서 공고를 먼저 읽고
 // 거기서 얻은 회사 id 로 회사를 읽는 2단계다. 각 단계는 한 페이지 분량의 id 에만 IN 으로 걸어
 // 룸 수에 비례해 쿼리가 늘지 않게 한다.
@@ -46,7 +44,6 @@ class RoomSearchFacade(
             .associateBy { it.id }
         val regions = catalogService.getRegionLabels(page.cards.mapNotNull { it.offlineSigunguId() }.toSet())
             .associateBy { it.sigunguId }
-        // 뷰어 사실도 한 페이지 분량을 일괄로 읽는다. 룸마다 물으면 표시명 조립과 같은 문제가 난다.
         val viewers = roomViewerService.getViewers(viewerMemberId, page.cards.map { it.room.id })
 
         return RoomsResponse(

@@ -68,8 +68,8 @@ class SecurityConfig(
                 authenticationFailureHandler = oauth2LoginFailureHandler
             }
             oauth2ResourceServer {
-                // 웹은 쿠키, 앱은 Authorization 헤더로 토큰 전달 → 둘 다 수용.
                 // refresh/logout/복구/dev 세션 발급은 기존 AT 상태와 무관하므로 이 경로에선 AT 를 해석하지 않는다.
+                // (만료된 ACCESS_TOKEN 쿠키가 실려도 리소스서버가 검증→401 로 막지 않도록)
                 bearerTokenResolver = HeaderOrCookieBearerTokenResolver(
                     cookieName = authCookieFactory.accessTokenName,
                     bearerFreePaths = setOf(

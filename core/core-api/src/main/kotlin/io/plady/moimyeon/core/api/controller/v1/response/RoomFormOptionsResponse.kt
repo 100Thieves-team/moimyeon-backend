@@ -5,15 +5,14 @@ import io.plady.moimyeon.core.enums.InterviewStage
 import io.plady.moimyeon.core.enums.InterviewType
 import io.plady.moimyeon.core.enums.MeetingType
 
-// 룸 생성 폼(「룸 생성」 §4.1·§4.2)의 선택지를 한 번에 내려준다.
 // FE 상수로 둬도 되는 값이지만 라벨을 서버가 소유한다. 선택지는 enum·상수에서 파생한다 —
 // 하드코딩 목이 실 enum 과 어긋났던 사건(MOI-452, FINAL vs ETC)의 재발을 구조적으로 막는다.
 data class RoomFormOptionsResponse(
-    val rounds: List<CodeLabelResponse>, // 1차/2차/3차/기타
-    val types: List<CodeLabelResponse>, // 직무 면접/컬쳐핏 면접/임원 면접/기술 과제
-    val methods: List<MethodOptionResponse>, // 온라인/오프라인
-    val durations: List<DurationOptionResponse>, // 예상 시간
-    val participantConstraints: ParticipantConstraintsResponse, // 인원 제약
+    val rounds: List<CodeLabelResponse>,
+    val types: List<CodeLabelResponse>,
+    val methods: List<MethodOptionResponse>,
+    val durations: List<DurationOptionResponse>,
+    val participantConstraints: ParticipantConstraintsResponse,
 ) {
     companion object {
         private val DURATION_MINUTES = listOf(30, 60, 90, 120)

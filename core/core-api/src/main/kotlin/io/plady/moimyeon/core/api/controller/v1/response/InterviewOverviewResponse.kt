@@ -95,9 +95,6 @@ data class CompletedRoomResponse(
     }
 }
 
-// 표시명 참조 묶음. 조회는 Facade 가 세 구분의 룸을 합쳐 한 번에 끝내고, 여기서는 id 로 찾아 붙이기만 한다.
-// company·jobPosting·jobRole·region 이 nullable 인 이유는 탐색 목록(RoomSummaryResponse)과 같다 —
-// 참조가 끊어져도 룸은 남기고 자리를 비운다.
 data class InterviewRoomRefs(
     val jobPostings: Map<Long, JobPostingRef>,
     val companies: Map<Long, Company>,

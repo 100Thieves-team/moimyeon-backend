@@ -6,21 +6,20 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 
-// 룸 생성(POST /v1/rooms)의 응답. 생성 성공 시 상세로 이동하기 위한 최소 식별자.
 // 룸 id 는 외부 노출 식별자라 UUID(UUIDv7 계열, ERD Step 4)다.
 data class RoomCreatedResponse(
     val roomId: UUID,
-    val status: String, // RECRUITING
+    val status: String,
 )
 
 data class RoomJobPostingResponse(
     val jobPostingId: Long,
-    val postingName: String, // 프론트엔드 개발자 (결제플랫폼)
+    val postingName: String,
 )
 
 data class RoomRegionResponse(
     val sigunguId: Long,
-    val label: String, // 서울 강남구
+    val label: String,
 )
 
 // 목록 카드의 일정. 서버는 값만 내려주고 표시 문구는 화면이 만든다.

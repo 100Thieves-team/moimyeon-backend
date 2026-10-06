@@ -3,9 +3,6 @@ package io.plady.moimyeon.core.api.controller.v1.response
 import io.plady.moimyeon.core.domain.company.Company
 import io.plady.moimyeon.core.domain.jobposting.JobPostingSearchItem
 
-// 회사·공고 통합 검색 결과. 회사명이 맞아도 공고명이 맞아도 결과는 `회사 | 공고명` 형태의 공고 행으로 통일된다.
-// query 를 그대로 돌려주는 이유: 타이핑 중 호출이라 응답이 뒤섞여 도착할 수 있고,
-// 클라이언트가 자기가 보낸 값과 대조해 늦게 온 이전 응답을 버려야 한다.
 data class JobPostingSearchResponse(
     val query: String,
     val companies: List<CompanyResponse>,
