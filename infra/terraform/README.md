@@ -122,52 +122,66 @@ promotion/rollback consumers and operator reference:
 | `MOIMYEON_WORKER_ECS_TASK_DEFINITION_{ENV}` | `notification_worker_task_definition_arn` |
 | `MOIMYEON_WORKER_IMAGE_URI_PARAMETER_{ENV}` | `notification_worker_image_uri_parameter_name` |
 
-Push behavior (once the workflow exists): a successful CI run for `dev` deploys
-to dev. Documentation-only revisions do not enter the deployment queue. `main`
-does not deploy until `MOIMYEON_LIVE_DEPLOY_ENABLED=true`: the promotion workflow
-is fail-closed until native ECS blue/green and the promotion IAM role have been
-planned and applied by a person.
+Push behavior: a push to `dev` deploys to dev directly (MOI-565). The dev
+ruleset requires a PR, the `build` check and an up-to-date branch, so the merge
+commit has exactly the tree PR CI verified; the deploy proves that with
+`verify-pr-ci.sh` before using AWS credentials instead of waiting for a second
+CI run. Documentation-only revisions do not enter the deployment queue, and a
+queued revision skips itself when a newer runtime revision is already on dev.
+`main` does not deploy until `MOIMYEON_LIVE_DEPLOY_ENABLED=true`: the promotion
+workflow is fail-closed until native ECS blue/green and the promotion IAM role
+have been planned and applied by a person.
 
-Dev deployment now requires the complete Terraform output set for API and Worker.
-It builds the Worker image while the API stabilizes, then registers and deploys
-the Worker only after both sides succeed.
+Internal PRs into `dev` build both Docker targets once in CI and push them to the
+`*-candidate` ECR repositories, tagged `tree-<merge tree>-run-<run id>-<attempt>`.
+The deploy uses a candidate only when the `image` job succeeded in the same run
+attempt as the verified `build` check; tags are immutable, so a tag another
+workflow pushed first fails that job and the deploy builds instead. It copies
+the digests into the deploy repositories (`copy-image-by-digest.sh`), keeps an
+existing deploy tag on retries, and builds when no trusted candidate exists
+(fork or Dependabot PR, failed image job). The PR role can write only the
+candidate repositories; candidates expire after 14 days.
+
+The PR verification and the Terraform boundary wait run in a `prepare` job
+outside the `deploy-aws-dev` lock, because Terraform apply and variable sync
+need that lock to move the boundary. Under the lock the deploy only re-checks
+the boundary without waiting.
+The Worker is registered and deployed only after the API stabilizes.
 A Worker service with desired count `0` receives the new task definition without
 starting a task, so vendor credentials can be prepared before activation.
 
 ### Dev deployment configuration handoff
 
-Dev no longer reads task templates or deployment wiring from a workflow's
-repository-variable snapshot. The successful Terraform sync job, while holding
-the same `deploy-aws-dev` lock as apply/deploy, publishes
-`dev-deploy-config-<source-sha>-<run-attempt>` (30-day retention).
-`deploy_config.py` reads only 15 explicitly allowlisted, non-secret outputs through
-`terraform-command.sh output-raw`. The artifact contains identifiers, URLs and
-exact task-template ARNs; no raw plan, state, task definitions or secret values.
+Terraform publishes the non-secret deploy wiring to the SSM String parameter
+`/moimyeon/dev/deploy/config` in the same apply that changes it. It holds the 15
+allowlisted identifiers, URLs and exact task-template ARNs plus the candidate
+repository URLs; no state, task definitions or secret values.
 
-The deploy waiter returns the successful Terraform run ID and attempt. The app
-downloads only that run's named artifact and validates SHA, environment, run ID,
-attempt and exact API/Worker ARN account/region/family before AWS credentials.
-Both templates must be ACTIVE and contain the expected container before building
-images. `prepare_ecs_task.py` preserves Terraform wiring and changes only the
-target image and `APP_RELEASE`, then emits the
+After each successful dev apply or no-op sync, the Terraform Apply workflow
+records the source SHA in `/moimyeon/dev/deploy/terraform-applied-sha` and in
+`MOIMYEON_TERRAFORM_APPLIED_SHA_DEV`. Terraform Apply skips commits whose
+`infra/terraform` (excluding `tests/` and this README) is unchanged since that
+SHA. `wait-for-terraform-boundary.sh` lets a deploy proceed when its Terraform
+source matches the applied SHA or a newer descendant is applied, and otherwise
+waits for the apply, so app code never races an unapplied infrastructure change.
+
+`deploy_config.py` then validates the document (schema, environment, exact
+API/Worker ARN account/region/family, assumed role, candidate registry) before
+emitting outputs. Both templates must be ACTIVE and contain the expected
+container before images are used. `prepare_ecs_task.py` preserves Terraform
+wiring and changes only the target image and `APP_RELEASE`, then emits the
 [RegisterTaskDefinition request fields](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RegisterTaskDefinition.html).
 Response-only metadata such as `deregisteredAt` never enters registration.
 
 Failure/retry rules:
 
-- Missing/expired artifacts, stale SHA/attempt or inactive templates fail closed.
-  Do not fall back to an earlier artifact, family latest revision, currently
-  running task, or a hardcoded revision number.
-- A partial Terraform retry can increment the attempt without rerunning an
-  already successful sync job. If that attempt's artifact is absent, rerun the
-  Terraform workflow including sync for the same still-eligible source SHA, then
-  rerun the app candidate so it resolves that successful run/attempt again.
-- Deploy retries reuse the selected immutable artifact. If a newer
-  runtime-changing source has advanced, its own CI/Terraform boundary is required.
-- The first rollout of this fix must use a new merged SHA. Rerunning the old
-  failed workflow does not introduce the new workflow code or its artifact.
+- A missing, invalid or foreign-account config, inactive templates, a merge
+  without a successful PR `build` on the same tree, or a Terraform boundary that
+  never covers the revision fail closed. Do not fall back to a family latest
+  revision, currently running task, or a hardcoded revision number.
+- If the config parameter is wrong, rerun the Terraform Apply workflow for the
+  latest dev revision, then rerun the deploy.
 - Live promotion/rollback keep their existing exact deployment-bundle path.
-  This change creates no AWS resources and adds no AWS IAM permissions.
 
 ## Release promotion and rollback
 
@@ -546,13 +560,11 @@ deploy, promotion, and rollback. Shared uses `terraform-shared`. Terraform and
 application workflows therefore cannot mutate the same ECS/ECR/IAM boundary at
 the same time.
 
-Application deploy and live promotion also wait for the `Terraform Apply
-{branch}@{CI SHA}` workflow run to succeed before entering their AWS mutation
-jobs. The shared lock prevents overlap; this explicit workflow dependency ensures
-Terraform completes first when one commit changes both infrastructure and app.
-If only documentation commits become CI-successful after a Terraform-ready app
-candidate, the mutation job permits that runtime-equivalent candidate; any newer
-runtime or infrastructure change requires its own successful Terraform boundary.
+Live promotion waits for the `Terraform Apply {branch}@{CI SHA}` workflow run
+to succeed before entering its AWS mutation job. Dev application deploy instead
+waits on the applied-SHA boundary above (MOI-565). The shared lock prevents
+overlap; the explicit dependency ensures Terraform completes first when one
+change touches both infrastructure and app.
 
 Repository security must also enable GitHub secret scanning and push protection.
 CI runs the pinned Gitleaks image over the shared PR·push change range, or over

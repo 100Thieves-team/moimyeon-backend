@@ -7,6 +7,8 @@
 - 이유: `workflow_run` 자체의 `GITHUB_SHA`는 기본 브랜치 최신 커밋이므로 CI가 검증한 revision과
   다를 수 있다. branch filter뿐 아니라 원 이벤트가 내부 저장소의 `push`인지 검사해 권한 있는 배포 job이
   PR이나 fork의 head를 checkout하지 않게 한다.
+- 후속 대체: MOI-565 D-1이 dev push 시작 + PR CI 트리 검증으로 바꿨다
+  (`.worklog/MOI-565-deploy-speed/decisions.md`).
 
 ## DR-002: live 재빌드 경로를 먼저 닫음
 
@@ -110,6 +112,8 @@
   저장하고 SHA-256이 같은 artifact만 apply한다. PR에는 redaction한 위험 요약만 게시한다.
 - 후속: apply 성공 뒤 GitHub variables를 동기화한다. live/shared는 매일, dev는 주 1회 drift plan을 실행하되 자동 apply하지 않는다.
 - 안전 규칙: 최초 bootstrap 외 로컬·에이전트 apply는 계속 금지한다. 일반 apply 권한은 protected branch·CI·workflow/ref OIDC claim으로 통제한다.
+- 후속 대체: MOI-565 D-2가 "매 CI 성공마다 no-op plan"과 "같은 SHA Terraform Apply 확인"을 마지막 적용
+  SHA 기준 생략·경계 대기로 바꿨다 (`.worklog/MOI-565-deploy-speed/decisions.md`).
 
 ## DR-014: 애플리케이션 시크릿은 사전 생성 SSM을 참조
 

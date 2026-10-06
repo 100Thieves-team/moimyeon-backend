@@ -1,17 +1,18 @@
 name: Deploy AWS
 
-# Pattern A (ECS on EC2) continuous deploy. A successful dev CI run builds the
-# Core API and overlaps Notification Worker image assembly with API stabilization.
-# Each image gets its own ECR repository and ECS task-definition revision.
+# Pattern A (ECS on EC2) continuous deploy, started by the dev push itself
+# (MOI-565). The dev ruleset requires a PR, the `build` check, and an
+# up-to-date branch, so the merge commit's tree is exactly the tree PR CI
+# verified. The deploy proves that before using AWS credentials instead of
+# waiting for a second CI run, then promotes the image PR CI already built for
+# that tree (falling back to a build only when no candidate exists). It waits
+# for Terraform only when an unapplied infra/terraform change precedes it.
 #
-# Live is intentionally absent until the build-once promotion workflow and its
-# approval gate are implemented. Deployment wiring comes from the successful
-# Terraform run's SHA/attempt-bound, non-secret artifact, not a vars snapshot.
+# Each image gets its own ECR repository and ECS task-definition revision.
+# Live is intentionally absent: main merges promote dev-verified digests.
 
 on:
-  workflow_run:
-    workflows: [ CI ]
-    types: [ completed ]
+  push:
     branches: [ dev ]
 
 permissions:
@@ -19,26 +20,25 @@ permissions:
 
 jobs:
   changes:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: read
     outputs:
       deploy_required: ${{ steps.changes.outputs.deploy_required }}
 
     steps:
-      - name: Check out CI-verified revision
+      - name: Check out pushed revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 2
+          persist-credentials: false
 
       - name: Detect deployable changes
         id: changes
         shell: bash
         env:
-          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEPLOY_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
@@ -61,79 +61,137 @@ jobs:
           done < <(git diff --name-only --no-renames "${base_sha}" "${DEPLOY_SHA}")
 
           echo "deploy_required=${deploy_required}" >> "$GITHUB_OUTPUT"
-          if [ "${deploy_required}" = "false" ]; then
-            echo "Only documentation changed; skipping AWS deployment."
-          fi
 
-  candidate:
+  # Runs outside the deploy lock: Terraform Apply and its variable sync take the
+  # same deploy-aws-dev lock, so waiting for them while holding it would block
+  # the very apply this deploy needs.
+  prepare:
     needs: changes
     if: ${{ needs.changes.outputs.deploy_required == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      checks: read
       contents: read
+      id-token: write
+      pull-requests: read
+    env:
+      DEPLOY_SHA: ${{ github.sha }}
     outputs:
-      sha: ${{ steps.source.outputs.sha }}
-      terraform_run_id: ${{ steps.source.outputs.terraform_run_id }}
-      terraform_run_attempt: ${{ steps.source.outputs.terraform_run_attempt }}
+      tree: ${{ steps.source.outputs.tree }}
+      candidate_tag: ${{ steps.source.outputs.candidate_tag }}
+      candidate_not_before: ${{ steps.source.outputs.candidate_not_before }}
 
     steps:
-      - name: Check out CI-verified revision and history
+      - name: Check out pushed revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ env.DEPLOY_SHA }}
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Resolve Terraform-ready dev candidate
+      - name: Verify PR CI checked this exact tree
         id: source
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          git fetch --no-tags origin \
-            "+refs/heads/dev:refs/remotes/origin/dev"
-          resolved_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
-            refs/remotes/origin/dev dev "${{ github.event.workflow_run.head_sha }}")"
-          bash infra/terraform/scripts/wait-for-terraform-apply.sh \
-            dev "${resolved_sha}"
-          echo "sha=${resolved_sha}" >> "$GITHUB_OUTPUT"
+          result="$(bash infra/terraform/scripts/verify-pr-ci.sh "${DEPLOY_SHA}" dev)"
+          tree="$(sed -n 's/^tree=//p' <<< "${result}")"
+          candidate_tag="$(sed -n 's/^candidate_tag=//p' <<< "${result}")"
+          candidate_not_before="$(sed -n 's/^candidate_not_before=//p' <<< "${result}")"
+          [[ "${tree}" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          if [[ ! "${candidate_tag}" =~ ^tree-[0-9a-f]{40}-run-[0-9]+-[0-9]+$ ]] \
+            || [[ ! "${candidate_not_before}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z$ ]]; then
+            candidate_tag=""
+            candidate_not_before=""
+          fi
+          echo "tree=${tree}" >> "$GITHUB_OUTPUT"
+          echo "candidate_tag=${candidate_tag}" >> "$GITHUB_OUTPUT"
+          echo "candidate_not_before=${candidate_not_before}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_DEV }}
+          aws-region: ${{ vars.MOIMYEON_AWS_REGION_DEV }}
+
+      - name: Wait for the Terraform boundary
+        shell: bash
+        env:
+          APPLIED_SHA_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_APPLIED_SHA_PARAMETER_DEV }}
+        run: |
+          set -euo pipefail
+          bash infra/terraform/scripts/wait-for-terraform-boundary.sh \
+            "${DEPLOY_SHA}" "${APPLIED_SHA_PARAMETER}"
+
+  # The deploy job's own Slack step never runs when prepare fails (unverified
+  # revision, Terraform boundary timeout), so report that failure here.
+  prepare-failed:
+    needs: [ changes, prepare ]
+    if: ${{ always() && needs.changes.outputs.deploy_required == 'true' && needs.prepare.result == 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out notifier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Notify Slack
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_DEV }}
+          DEPLOY_ENVIRONMENT: dev
+          DEPLOY_KIND: deployment
+          DEPLOY_OUTCOME: failure
+          DEPLOY_SHA: ${{ github.sha }}
+          DEPLOY_ACTOR: ${{ github.actor }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_REASON: PR CI verification or Terraform boundary failed before deploy
+          API_RESULT: skipped
+          WORKER_RESULT: skipped
+        run: bash infra/terraform/scripts/notify-deployment.sh
 
   deploy:
-    needs: candidate
-    if: ${{ needs.candidate.result == 'success' }}
+    needs: [ changes, prepare ]
+    if: ${{ needs.changes.outputs.deploy_required == 'true' && needs.prepare.result == 'success' }}
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-aws-dev
       cancel-in-progress: false
       queue: max
     permissions:
-      actions: read
       contents: read
       id-token: write
     env:
-      DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch }}
-      DEPLOY_SHA: ${{ needs.candidate.outputs.sha }}
+      DEPLOY_SHA: ${{ github.sha }}
 
     steps:
-      - name: Check out CI-verified revision
+      - name: Check out pushed revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.DEPLOY_SHA }}
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Verify Terraform-ready dev candidate freshness
+      # Runs after the mutation lock: a queued older revision must not replace a
+      # newer one. Documentation-only successors do not supersede it.
+      - name: Skip when a newer runtime revision is on dev
+        id: freshness
         shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          git fetch --no-tags origin \
-            "+refs/heads/dev:refs/remotes/origin/dev"
-          resolved_sha="$(bash infra/terraform/scripts/resolve-deploy-candidate.sh \
-            refs/remotes/origin/dev dev "${DEPLOY_SHA}")"
-          if [ "${resolved_sha}" != "${DEPLOY_SHA}" ]; then
-            if ! git merge-base --is-ancestor "${DEPLOY_SHA}" "${resolved_sha}"; then
-              echo "::error::Resolved dev revision is not a descendant of the Terraform-ready candidate."
+          git fetch --no-tags origin "+refs/heads/dev:refs/remotes/origin/dev"
+          latest_sha="$(git rev-parse refs/remotes/origin/dev)"
+          current=true
+          if [ "${latest_sha}" != "${DEPLOY_SHA}" ]; then
+            if ! git merge-base --is-ancestor "${DEPLOY_SHA}" "${latest_sha}"; then
+              echo "::error::${DEPLOY_SHA} is not on the current dev history."
               exit 1
             fi
             while IFS= read -r changed_file; do
@@ -141,35 +199,58 @@ jobs:
                 docs/*|*.md|*.mdx)
                   ;;
                 *)
-                  echo "::error::A newer runtime-changing dev revision requires its own Terraform boundary: ${changed_file}."
-                  exit 1
+                  current=false
+                  break
                   ;;
               esac
-            done < <(git diff --name-only --no-renames "${DEPLOY_SHA}" "${resolved_sha}")
-            echo "Allowing Terraform-ready candidate across documentation-only successors."
+            done < <(git diff --name-only --no-renames "${DEPLOY_SHA}" "${latest_sha}")
           fi
-          echo "Deploying Terraform-ready dev revision ${DEPLOY_SHA}."
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+          if [ "${current}" = false ]; then
+            echo "Skipping ${DEPLOY_SHA}: newer runtime revision ${latest_sha} deploys instead." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: Load source-bound Terraform deployment config
-        id: env
+      - name: Configure AWS credentials
+        if: steps.freshness.outputs.current == 'true'
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_DEV }}
+          aws-region: ${{ vars.MOIMYEON_AWS_REGION_DEV }}
+
+      # The boundary only moves forward; confirm it once without waiting.
+      - name: Confirm the Terraform boundary under the deploy lock
+        if: steps.freshness.outputs.current == 'true'
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TERRAFORM_RUN_ID: ${{ needs.candidate.outputs.terraform_run_id }}
-          TERRAFORM_RUN_ATTEMPT: ${{ needs.candidate.outputs.terraform_run_attempt }}
+          APPLIED_SHA_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_APPLIED_SHA_PARAMETER_DEV }}
+          TERRAFORM_BOUNDARY_WAIT_SECONDS: "1"
+          TERRAFORM_BOUNDARY_POLL_SECONDS: "1"
         run: |
           set -euo pipefail
-          test "${DEPLOY_BRANCH}" = dev
-          config_dir="${RUNNER_TEMP}/dev-deploy-config"
-          gh run download "${TERRAFORM_RUN_ID}" --repo "${GITHUB_REPOSITORY}" \
-            --name "dev-deploy-config-${DEPLOY_SHA}-${TERRAFORM_RUN_ATTEMPT}" \
-            --dir "${config_dir}"
+          bash infra/terraform/scripts/wait-for-terraform-boundary.sh \
+            "${DEPLOY_SHA}" "${APPLIED_SHA_PARAMETER}"
+
+      # Read after the boundary so task templates match the applied Terraform.
+      - name: Load Terraform deployment config
+        id: env
+        if: steps.freshness.outputs.current == 'true'
+        shell: bash
+        env:
+          CONFIG_PARAMETER: ${{ vars.MOIMYEON_DEPLOY_CONFIG_PARAMETER_DEV }}
+          ROLE_ARN: ${{ vars.MOIMYEON_AWS_ROLE_TO_ASSUME_DEV }}
+        run: |
+          set -euo pipefail
+          aws ssm get-parameter \
+            --name "${CONFIG_PARAMETER}" \
+            --query 'Parameter.Value' \
+            --output text > "${RUNNER_TEMP}/dev-deploy-config.json"
           python3 infra/terraform/scripts/deploy_config.py read \
-            --file "${config_dir}/dev-deploy-config.json" --sha "${DEPLOY_SHA}" \
-            --run-id "${TERRAFORM_RUN_ID}" --attempt "${TERRAFORM_RUN_ATTEMPT}"
+            --file "${RUNNER_TEMP}/dev-deploy-config.json" --role-arn "${ROLE_ARN}"
 
       - name: Validate deployment variables
         id: deployment_config
+        if: steps.freshness.outputs.current == 'true'
         shell: bash
         env:
           DEPLOYMENT_LEDGER_ENABLED: ${{ vars.MOIMYEON_DEPLOYMENT_LEDGER_ENABLED }}
@@ -190,7 +271,7 @@ jobs:
           for value in "${required[@]}"; do
             if [ -z "$value" ]; then
               echo "::error::One or more Terraform deployment config fields are missing for ${{ steps.env.outputs.name }}."
-              echo "::error::Regenerate deployment config through the matching Terraform Apply workflow."
+              echo "::error::Re-run the Terraform Apply workflow to republish the deploy config."
               exit 1
             fi
           done
@@ -229,19 +310,14 @@ jobs:
             echo "Notification Worker deployment is not configured yet; deploying Core API only."
           elif [ "${configured_worker_values}" -ne "${#worker_values[@]}" ]; then
             echo "::error::Notification Worker Terraform deployment config is only partially configured."
-            echo "::error::Regenerate deployment config through the matching Terraform Apply workflow."
+            echo "::error::Re-run the Terraform Apply workflow to republish the deploy config."
             exit 1
           else
             echo "worker_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
-        with:
-          role-to-assume: ${{ steps.env.outputs.role_arn }}
-          aws-region: ${{ steps.env.outputs.aws_region }}
-
       - name: Validate both Terraform task templates before image build
+        if: steps.freshness.outputs.current == 'true'
         shell: bash
         env:
           API_TEMPLATE: ${{ steps.env.outputs.ecs_task_definition }}
@@ -265,9 +341,11 @@ jobs:
           fi
 
       - name: Login to Amazon ECR
+        if: steps.freshness.outputs.current == 'true'
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
       - name: Resolve image tags
+        if: steps.freshness.outputs.current == 'true'
         id: image
         shell: bash
         run: |
@@ -282,7 +360,7 @@ jobs:
           echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Notification Worker image tags
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         id: worker_image
         shell: bash
         run: |
@@ -297,9 +375,67 @@ jobs:
           echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
+        if: steps.freshness.outputs.current == 'true'
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
+      # The verified CI run pushed both targets for this tree. Copy the exact
+      # digests into the deploy repositories; the build steps below only run as
+      # a fallback (no trusted candidate: fork PR, failed or missing image job).
+      - name: Promote PR-built candidate images
+        id: candidate
+        if: steps.freshness.outputs.current == 'true'
+        shell: bash
+        env:
+          CANDIDATE_TAG: ${{ needs.prepare.outputs.candidate_tag }}
+          CANDIDATE_NOT_BEFORE: ${{ needs.prepare.outputs.candidate_not_before }}
+          API_CANDIDATE_REPOSITORY: ${{ steps.env.outputs.candidate_repository_url }}
+          WORKER_CANDIDATE_REPOSITORY: ${{ steps.env.outputs.worker_candidate_repository_url }}
+          API_IMAGE_URI: ${{ steps.image.outputs.image_uri }}
+          WORKER_IMAGE_URI: ${{ steps.worker_image.outputs.image_uri }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CANDIDATE_TAG}" ]; then
+            echo "No trusted PR-built candidate; the images will be built here."
+            exit 0
+          fi
+          [[ "${CANDIDATE_TAG}" =~ ^tree-[0-9a-f]{40}-run-[0-9]+-[0-9]+$ ]] || exit 1
+
+          promote() {
+            local candidate="$1"
+            local target="$2"
+            # A retry after an earlier build or promotion keeps that image.
+            if docker buildx imagetools inspect "${target}" >/dev/null 2>&1; then
+              echo "Deploy image ${target} already exists; keeping it."
+              return 0
+            fi
+            local repository_url="${candidate%:*}"
+            local pushed_at
+            pushed_at="$(aws ecr describe-images \
+              --repository-name "${repository_url#*/}" \
+              --image-ids imageTag="${CANDIDATE_TAG}" \
+              --query 'imageDetails[0].imagePushedAt' \
+              --output text 2>/dev/null || true)"
+            if [ -z "${pushed_at}" ] || [ "${pushed_at}" = "None" ]; then
+              echo "Candidate ${candidate} is missing; the image will be built here."
+              return 0
+            fi
+            # An expired tag can be pushed again later; trust only this run's push.
+            if [ "$(date -u -d "${pushed_at}" +%s)" -lt "$(date -u -d "${CANDIDATE_NOT_BEFORE}" +%s)" ]; then
+              echo "Candidate ${candidate} predates its CI run; the image will be built here."
+              return 0
+            fi
+            bash infra/terraform/scripts/copy-image-by-digest.sh "${candidate}" "${target}" >/dev/null
+            echo "Promoted PR-built candidate ${candidate} to ${target}."
+          }
+
+          promote "${API_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${API_IMAGE_URI}"
+          if [ "${WORKER_ENABLED}" = "true" ]; then
+            promote "${WORKER_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${WORKER_IMAGE_URI}"
+          fi
+
       - name: Check for existing Core API image
+        if: steps.freshness.outputs.current == 'true'
         id: api_image_cache
         shell: bash
         run: |
@@ -311,7 +447,7 @@ jobs:
           fi
 
       - name: Build and push image
-        if: steps.api_image_cache.outputs.exists != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.api_image_cache.outputs.exists != 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
@@ -324,6 +460,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=deployment-images
 
       - name: Register task definition revision
+        if: steps.freshness.outputs.current == 'true'
         id: task_def
         shell: bash
         run: |
@@ -346,6 +483,7 @@ jobs:
           echo "arn=${next_task_def_arn}" >> "$GITHUB_OUTPUT"
 
       - name: Deploy ECS service
+        if: steps.freshness.outputs.current == 'true'
         id: api_deploy
         timeout-minutes: 30
         shell: bash
@@ -543,7 +681,7 @@ jobs:
               exit 1
             fi
 
-            sleep 15
+            sleep 5
           done
 
           if ! bash infra/terraform/scripts/smoke-test.sh "${APP_URL}"; then
@@ -580,6 +718,7 @@ jobs:
           trap - EXIT
 
       - name: Mark Core API deployment bundle
+        if: steps.freshness.outputs.current == 'true'
         id: api_bundle
         shell: bash
         run: |
@@ -589,14 +728,14 @@ jobs:
           echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
 
       - name: Fail when Notification Worker image build failed
-        if: steps.deployment_config.outputs.worker_enabled == 'true' && steps.api_deploy.outputs.worker_build_succeeded != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true' && steps.api_deploy.outputs.worker_build_succeeded != 'true'
         shell: bash
         run: |
           echo "::error::Core API is stable, but the Notification Worker image build failed. Worker deployment was not started."
           exit 1
 
       - name: Register Notification Worker task definition revision
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         id: worker_task_def
         shell: bash
         run: |
@@ -620,7 +759,7 @@ jobs:
 
       - name: Deploy Notification Worker ECS service
         id: worker_deploy
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         timeout-minutes: 30
         shell: bash
         run: |
@@ -724,11 +863,11 @@ jobs:
               exit 1
             fi
 
-            sleep 15
+            sleep 5
           done
 
       - name: Store Notification Worker image URI in SSM
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -788,7 +927,7 @@ jobs:
 
       - name: Mark Notification Worker deployment bundle
         id: worker_bundle
-        if: steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         shell: bash
         run: |
           deployed_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
@@ -797,7 +936,7 @@ jobs:
           echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
 
       - name: Record immutable dev deployment bundle
-        if: steps.deployment_config.outputs.ledger_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.ledger_enabled == 'true'
         shell: bash
         run: |
           bash infra/terraform/scripts/record-deployment-bundle.sh \
@@ -895,7 +1034,7 @@ jobs:
           fi
 
       - name: Notify Slack
-        if: always()
+        if: always() && steps.freshness.outputs.current != 'false'
         continue-on-error: true
         shell: bash
         env:
