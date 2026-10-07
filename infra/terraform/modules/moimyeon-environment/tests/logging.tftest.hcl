@@ -104,7 +104,12 @@ run "enabled_task_budgets_and_wiring" {
     condition     = jsondecode(aws_ecs_task_definition.app.container_definitions)[0].logConfiguration.options.marker == "api" && jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].logConfiguration.options.marker == "worker"
     error_message = "API and worker must consume their own service's routing configuration."
   }
-
+  assert {
+    condition = alltrue([for task in [aws_ecs_task_definition.app, aws_ecs_task_definition.notification_worker] :
+      one(task.volume).configure_at_launch == false
+    ])
+    error_message = "The buffer volume must state the configure_at_launch default ECS stores (MOI-581)."
+  }
 }
 
 run "provision_uses_nonblocking_fallback_without_router" {
@@ -143,6 +148,25 @@ run "disabled_preserves_legacy_tasks" {
   assert {
     condition     = jsondecode(aws_ecs_task_definition.app.container_definitions)[0].logConfiguration.options.awslogs-group == aws_cloudwatch_log_group.app.name && jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].logConfiguration.options.awslogs-group == aws_cloudwatch_log_group.notification_worker.name
     error_message = "Each disabled service must retain its original log group."
+  }
+}
+
+# ECS stores these defaults on registration. Omitting them makes every plan
+# replace both task definitions, whatever the logging mode (MOI-581).
+run "app_containers_state_ecs_defaults" {
+  command = plan
+  variables { application_logging_mode = "enabled" }
+  assert {
+    condition = alltrue([for task in [aws_ecs_task_definition.app, aws_ecs_task_definition.notification_worker] :
+      jsondecode(task.container_definitions)[0].mountPoints == [] &&
+      jsondecode(task.container_definitions)[0].systemControls == [] &&
+      jsondecode(task.container_definitions)[0].volumesFrom == []
+    ])
+    error_message = "Both app containers must state the empty mountPoints, systemControls, and volumesFrom ECS stores."
+  }
+  assert {
+    condition     = jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].portMappings == []
+    error_message = "The worker, which publishes no port, must state the empty portMappings ECS stores."
   }
 }
 

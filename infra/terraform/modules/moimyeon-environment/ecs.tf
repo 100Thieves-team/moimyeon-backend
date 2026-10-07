@@ -77,6 +77,11 @@ locals {
 
       environment = local.container_environment
       secrets     = local.container_secrets
+
+      # Defaults ECS stores on registration; see the log router output (MOI-581).
+      mountPoints    = []
+      systemControls = []
+      volumesFrom    = []
     },
     local.container_health_check,
     local.logging_task_policy["api"].app_settings,
@@ -110,7 +115,10 @@ resource "aws_ecs_task_definition" "app" {
 
   dynamic "volume" {
     for_each = local.logging_task_policy["api"].volumes
-    content { name = volume.value.name }
+    content {
+      name                = volume.value.name
+      configure_at_launch = false
+    }
   }
 
   lifecycle {

@@ -16,16 +16,22 @@ output "app_log_configurations" {
   } }
 }
 
+# ECS fills these defaults on registration (FireLens also forces user "0" on the router). Stating them keeps the
+# task definition equal to what ECS stores, so Terraform does not replace it on every plan (MOI-581).
 output "routers" {
   value = { for key, service in local.services : key => {
-    name          = "log-router"
-    image         = local.router_image
-    essential     = false
-    cpu           = local.router_cpu
-    memory        = local.router_memory
-    stopTimeout   = 30
-    restartPolicy = { enabled = true, restartAttemptPeriod = 60 }
-    mountPoints   = [{ sourceVolume = "log-router-buffer", containerPath = "/buffers", readOnly = false }]
+    name           = "log-router"
+    image          = local.router_image
+    essential      = false
+    user           = "0"
+    portMappings   = []
+    systemControls = []
+    volumesFrom    = []
+    cpu            = local.router_cpu
+    memory         = local.router_memory
+    stopTimeout    = 30
+    restartPolicy  = { enabled = true, restartAttemptPeriod = 60 }
+    mountPoints    = [{ sourceVolume = "log-router-buffer", containerPath = "/buffers", readOnly = false }]
     environment = [
       { name = "LOG_SERVICE_NAME", value = service.service_name },
       { name = "LOG_ENVIRONMENT", value = var.environment },

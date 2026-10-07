@@ -60,12 +60,21 @@ resource "aws_ecs_task_definition" "notification_worker" {
       memory      = var.notification_worker_task_memory
       environment = local.notification_worker_environment
       secrets     = local.notification_worker_secrets
+
+      # Defaults ECS stores on registration; see the log router output (MOI-581).
+      portMappings   = []
+      mountPoints    = []
+      systemControls = []
+      volumesFrom    = []
     }, local.logging_task_policy["worker"].app_settings),
   ], local.logging_task_policy["worker"].containers))
 
   dynamic "volume" {
     for_each = local.logging_task_policy["worker"].volumes
-    content { name = volume.value.name }
+    content {
+      name                = volume.value.name
+      configure_at_launch = false
+    }
   }
 
   lifecycle {
