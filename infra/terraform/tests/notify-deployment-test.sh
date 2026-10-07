@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 NOTIFY_SCRIPT="${ROOT_DIR}/infra/terraform/scripts/notify-deployment.sh"
 DEV_NOTIFY_SCRIPT="${ROOT_DIR}/infra/terraform/scripts/notify-dev-deployment.sh"
+SUMMARIZE_SCRIPT="${ROOT_DIR}/infra/terraform/scripts/summarize-terraform-result.sh"
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TEMP_DIR}"' EXIT
 
@@ -167,5 +168,60 @@ jq -e '.text == "[dev] deployment skipped (0123456789ab)"' "${FAKE_PAYLOAD_FILE}
   || fail "밀린 배포를 skipped로 보내지 않았다."
 jq -e '.blocks[0].text.text | contains("superseded by fedcba987654")' "${FAKE_PAYLOAD_FILE}" >/dev/null \
   || fail "밀린 배포의 대체 커밋이 없다."
+
+# Terraform 결과 판정. 인자: 기대값 뒤에 job 결과 env.
+summarize() {
+  local expected="$1"
+  shift
+  local result_file="${TEMP_DIR}/terraform-result"
+  rm -f "${result_file}"
+  env GITHUB_OUTPUT="${result_file}" GITHUB_STEP_SUMMARY=/dev/null "$@" bash "${SUMMARIZE_SCRIPT}" \
+    || fail "Terraform 결과 판정이 실패했다: $*"
+  local actual
+  actual="$(paste -sd'|' "${result_file}")"
+  [ "${actual}" = "${expected}" ] || fail "Terraform 결과가 다르다 ($*): ${actual}"
+}
+shared_noop=(PLAN_SHARED_RESULT=success PLAN_SHARED_CURRENT=true SHARED_APPLY_REQUIRED=false APPLY_SHARED_RESULT=skipped)
+shared_applied=(PLAN_SHARED_RESULT=success PLAN_SHARED_CURRENT=true SHARED_APPLY_REQUIRED=true APPLY_SHARED_RESULT=success APPLY_SHARED_CURRENT=true)
+
+summarize "notify=true|outcome=success|stage=|shared=no changes|dev=applied|reason=Terraform changes applied" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=true \
+  APPLY_DEV_RESULT=success APPLY_DEV_CURRENT=true SYNC_DEV_RESULT=success
+summarize "notify=true|outcome=success|stage=|shared=no changes|dev=no changes|reason=No infrastructure changes to apply" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=false \
+  APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=success
+summarize "notify=true|outcome=failure|stage=Dev apply|shared=applied|dev=apply failure|reason=Dev apply failed; deploys behind this Terraform change wait and then time out" \
+  "${shared_applied[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=true \
+  APPLY_DEV_RESULT=failure APPLY_DEV_CURRENT=true SYNC_DEV_RESULT=skipped
+summarize "notify=true|outcome=failure|stage=Dev plan|shared=applied|dev=plan failure|reason=Dev plan failed; deploys behind this Terraform change wait and then time out" \
+  "${shared_applied[@]}" PLAN_DEV_RESULT=failure PLAN_DEV_CURRENT=true APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=skipped
+summarize "notify=true|outcome=cancelled|stage=Dev variable sync|shared=no changes|dev=no changes|reason=Dev variable sync was cancelled; deploys behind this change wait only if the applied revision was not recorded; check the run" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=false \
+  APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=cancelled
+# job 사이에서 취소되면 뒤 job이 skipped로 남는다. 변경 없음으로 알리면 안 된다.
+summarize "notify=true|outcome=cancelled|stage=Dev apply|shared=no changes|dev=apply skipped|reason=Dev apply was cancelled; deploys behind this Terraform change wait and then time out" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=true \
+  APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=skipped
+summarize "notify=true|outcome=cancelled|stage=Shared apply|shared=apply skipped|dev=plan skipped|reason=Shared apply was cancelled; deploys behind this Terraform change wait and then time out" \
+  PLAN_SHARED_RESULT=success PLAN_SHARED_CURRENT=true SHARED_APPLY_REQUIRED=true APPLY_SHARED_RESULT=skipped \
+  PLAN_DEV_RESULT=skipped APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=skipped
+# 밀린 실행은 공통 workflow가 job을 실패로 끝내도 실패로 알리지 않는다.
+summarize "notify=false" \
+  PLAN_SHARED_RESULT=failure PLAN_SHARED_CURRENT=false APPLY_SHARED_RESULT=skipped \
+  PLAN_DEV_RESULT=skipped APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=skipped
+summarize "notify=false" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=true \
+  APPLY_DEV_RESULT=failure APPLY_DEV_CURRENT=false SYNC_DEV_RESULT=skipped
+# 변수 동기화 단계에서 밀려도 실패로 알리지 않는다.
+summarize "notify=false" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=false \
+  APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=failure SYNC_DEV_CURRENT=false
+# dev를 적용한 뒤 변수 동기화가 밀리면 dev 적용을 알린다.
+summarize "notify=true|outcome=success|stage=|shared=no changes|dev=applied|reason=Dev changes applied; a newer dev revision finishes the rest" \
+  "${shared_noop[@]}" PLAN_DEV_RESULT=success PLAN_DEV_CURRENT=true DEV_APPLY_REQUIRED=true \
+  APPLY_DEV_RESULT=success APPLY_DEV_CURRENT=true SYNC_DEV_RESULT=failure SYNC_DEV_CURRENT=false
+# shared를 이미 바꾼 뒤 dev가 밀리면, 새 실행은 shared를 변경 없음으로 보므로 이 실행이 알린다.
+summarize "notify=true|outcome=success|stage=|shared=applied|dev=superseded|reason=Shared changes applied; a newer dev revision finishes the rest" \
+  "${shared_applied[@]}" PLAN_DEV_RESULT=failure PLAN_DEV_CURRENT=false APPLY_DEV_RESULT=skipped SYNC_DEV_RESULT=skipped
 
 echo "notify-deployment tests passed"

@@ -130,6 +130,61 @@ jobs:
       source_sha: ${{ needs.select.outputs.source_sha }}
       source_branch: ${{ needs.select.outputs.source_branch }}
 
+  # MOI-490: report the dev Terraform result. The deploy sees a failed apply
+  # only as a Terraform boundary timeout, so the apply itself must report.
+  # Routine non-results (infra unchanged, or a newer revision applies instead)
+  # stay in the step summary. Live notifications belong to MOI-512.
+  notify-dev:
+    needs: [ select, plan-shared, apply-shared, plan-dev, apply-dev, sync-dev-variables ]
+    if: ${{ always() && vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && needs.select.result == 'success' && needs.select.outputs.source_branch == 'dev' && needs.select.outputs.terraform_required == 'true' }}
+    # A failure anywhere in this job (checkout, summary) must not fail the run.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out notifier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.select.outputs.source_sha }}
+          persist-credentials: false
+
+      - name: Summarize the dev Terraform result
+        id: result
+        shell: bash
+        env:
+          PLAN_SHARED_RESULT: ${{ needs.plan-shared.result }}
+          PLAN_SHARED_CURRENT: ${{ needs.plan-shared.outputs.current }}
+          SHARED_APPLY_REQUIRED: ${{ needs.plan-shared.outputs.apply_required }}
+          APPLY_SHARED_RESULT: ${{ needs.apply-shared.result }}
+          APPLY_SHARED_CURRENT: ${{ needs.apply-shared.outputs.current }}
+          PLAN_DEV_RESULT: ${{ needs.plan-dev.result }}
+          PLAN_DEV_CURRENT: ${{ needs.plan-dev.outputs.current }}
+          DEV_APPLY_REQUIRED: ${{ needs.plan-dev.outputs.apply_required }}
+          APPLY_DEV_RESULT: ${{ needs.apply-dev.result }}
+          APPLY_DEV_CURRENT: ${{ needs.apply-dev.outputs.current }}
+          SYNC_DEV_RESULT: ${{ needs.sync-dev-variables.result }}
+          SYNC_DEV_CURRENT: ${{ needs.sync-dev-variables.outputs.current }}
+        run: bash infra/terraform/scripts/summarize-terraform-result.sh
+
+      - name: Notify Slack
+        if: steps.result.outputs.notify == 'true'
+        continue-on-error: true
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_DEV }}
+          DEPLOY_ENVIRONMENT: dev
+          DEPLOY_KIND: terraform
+          DEPLOY_OUTCOME: ${{ steps.result.outputs.outcome }}
+          DEPLOY_SHA: ${{ needs.select.outputs.source_sha }}
+          DEPLOY_ACTOR: ${{ github.event.workflow_run.actor.login }}
+          DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_STAGE: ${{ steps.result.outputs.stage }}
+          DEPLOY_REASON: ${{ steps.result.outputs.reason }}
+          SHARED_RESULT: ${{ steps.result.outputs.shared }}
+          DEV_RESULT: ${{ steps.result.outputs.dev }}
+        run: bash infra/terraform/scripts/notify-deployment.sh
+
   plan-live:
     needs: select
     if: ${{ vars.MOIMYEON_TERRAFORM_CI_ENABLED == 'true' && vars.MOIMYEON_TERRAFORM_LIVE_CI_ENABLED == 'true' && needs.select.outputs.source_branch == 'main' }}
