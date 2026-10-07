@@ -80,6 +80,8 @@ assert_contains "${VERIFY_PR_CI}" 'image_conclusion.*=.*"success"' "후보 이�
 assert_contains "${VERIFY_PR_CI}" 'candidate_tag="tree-\$\{deploy_tree\}-run-\$\{run_id\}-\$\{run_attempt\}"' "후보 태그는 검증한 트리와 CI 실행에 묶어야 한다."
 assert_contains "${CI_WORKFLOW}" 'run-\$\{GITHUB_RUN_ID\}-\$\{GITHUB_RUN_ATTEMPT\}' "PR CI는 실행별 후보 태그로 push해야 한다."
 assert_not_contains "${CI_WORKFLOW}" 'Check for existing candidates' "다른 실행이 먼저 올린 후보 태그를 재사용하면 안 된다."
+assert_not_contains "${CI_WORKFLOW}" 'provenance:[[:space:]]*false' "후보는 index 이미지여야 승격 복사에서 digest가 유지된다."
+assert_not_contains "${WORKFLOW}" 'imagePushedAt' "재현 가능한 빌드는 첫 push 시각을 유지하므로 push 시각으로 후보를 거르면 안 된다."
 verify_line="$(line_of "${WORKFLOW}" 'name: Verify PR CI checked this exact tree')"
 credentials_line="$(line_of "${WORKFLOW}" 'name: Configure AWS credentials')"
 boundary_line="$(line_of "${WORKFLOW}" 'name: Wait for the Terraform boundary')"
