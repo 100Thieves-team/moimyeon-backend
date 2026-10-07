@@ -1043,6 +1043,39 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_error_responses_51">Error Responses</a></li>
 </ul>
 </li>
+<li><a href="#_qa_회원_소셜_로그인">QA 회원 소셜 로그인</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_35">Path Parameters</a></li>
+<li><a href="#_http_response_66">Http Response</a></li>
+<li><a href="#_response_fields_65">Response Fields</a></li>
+<li><a href="#_탈퇴한_qa_회원">탈퇴한 QA 회원</a></li>
+<li><a href="#_error_responses_52">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_qa_회원_소셜_가입">QA 회원 소셜 가입</a>
+<ul class="sectlevel3">
+<li><a href="#_http_response_67">Http Response</a></li>
+<li><a href="#_response_fields_66">Response Fields</a></li>
+<li><a href="#_error_responses_53">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_qa_회원_상태_변경">QA 회원 상태 변경</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_36">Path Parameters</a></li>
+<li><a href="#_request_fields_21">Request Fields</a></li>
+<li><a href="#_http_response_68">Http Response</a></li>
+<li><a href="#_response_fields_67">Response Fields</a></li>
+<li><a href="#_error_responses_54">Error Responses</a></li>
+</ul>
+</li>
+<li><a href="#_qa_룸_자동_완료_지금_실행">QA 룸 자동 완료 지금 실행</a>
+<ul class="sectlevel3">
+<li><a href="#_path_parameters_37">Path Parameters</a></li>
+<li><a href="#_http_response_69">Http Response</a></li>
+<li><a href="#_response_fields_68">Response Fields</a></li>
+<li><a href="#_error_responses_55">Error Responses</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1236,8 +1269,8 @@ Content-Length: 236
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_GET",
-    "date" : "2026-10-06",
-    "datetime" : "2026-10-06T08:56:27.567727111",
+    "date" : "2026-10-07",
+    "datetime" : "2026-10-07T09:21:20.927363988",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1350,8 +1383,8 @@ Content-Length: 237
   "result" : "SUCCESS",
   "data" : {
     "result" : "BYE_POST",
-    "date" : "2026-10-06",
-    "datetime" : "2026-10-06T08:56:27.614181965",
+    "date" : "2026-10-07",
+    "datetime" : "2026-10-07T09:21:20.980374691",
     "items" : [ {
       "key" : "1"
     }, {
@@ -1685,7 +1718,7 @@ Content-Length: 97
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
-Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Tue, 6 Oct 2026 09:26:25 GMT; HttpOnly
+Set-Cookie: ACCESS_TOKEN=issued-access-token; Path=/; Max-Age=1800; Expires=Wed, 7 Oct 2026 09:51:18 GMT; HttpOnly
 Content-Type: application/json
 Content-Length: 61
 
@@ -2024,7 +2057,7 @@ Content-Length: 796
   "result" : "SUCCESS",
   "data" : {
     "terms" : [ {
-      "termsId" : "5d6d1941-79c3-4934-a23a-b29c480b1160",
+      "termsId" : "c11f6970-8677-466e-b8f0-4d67b90960db",
       "type" : "SERVICE",
       "version" : "v1.0",
       "title" : "모이면 이용약관",
@@ -2032,7 +2065,7 @@ Content-Length: 796
       "required" : true,
       "effectiveFrom" : "2026-07-01T00:00:00"
     }, {
-      "termsId" : "a65385ba-f259-4d91-b45d-7f474efb8399",
+      "termsId" : "a57fa924-9637-4216-9718-caac937fc2b9",
       "type" : "PRIVACY",
       "version" : "v1.0",
       "title" : "개인정보 처리방침",
@@ -2137,12 +2170,12 @@ Content-Length: 528
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "b4c1a872-c161-46d3-9973-37748c0ba87a",
+    "memberId" : "4a1bac0a-443f-41ef-8ebf-3239eaf30702",
     "email" : "user@example.com",
     "nickname" : "차분한 펭귄 12",
     "status" : "ACTIVE",
     "profile" : {
-      "memberId" : "b4c1a872-c161-46d3-9973-37748c0ba87a",
+      "memberId" : "4a1bac0a-443f-41ef-8ebf-3239eaf30702",
       "interestJobRoleIds" : [ 1, 2 ],
       "bio" : "",
       "interestCompanies" : [ {
@@ -2945,7 +2978,7 @@ Content-Length: 388
 {
   "result" : "SUCCESS",
   "data" : {
-    "memberId" : "c0144313-4cf1-473f-91be-e82a88f2d337",
+    "memberId" : "1347f447-e43a-4af3-84d8-5a65dec70144",
     "interestJobRoleIds" : [ 1, 2 ],
     "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
     "interestCompanies" : [ {
@@ -5345,7 +5378,7 @@ Content-Length: 145
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1878
+Content-Length: 1879
 
 {
   "result" : "SUCCESS",
@@ -5378,7 +5411,7 @@ Content-Length: 1878
       "label" : "서울 강남구"
     },
     "schedule" : {
-      "startAt" : "2026-10-07T08:56:34.60332402",
+      "startAt" : "2026-10-08T09:21:28.089438889",
       "durationMinutes" : 90
     },
     "recruit" : {
@@ -5391,9 +5424,9 @@ Content-Length: 1878
     },
     "resumePublic" : false,
     "previouslyConfirmed" : false,
-    "hostMemberId" : "9cc89d31-c22f-45eb-a2cd-679b37a1c101",
+    "hostMemberId" : "e2adc255-65a1-471a-b0c7-39f06336830c",
     "participants" : [ {
-      "memberId" : "9cc89d31-c22f-45eb-a2cd-679b37a1c101",
+      "memberId" : "e2adc255-65a1-471a-b0c7-39f06336830c",
       "nickname" : "영리한 부엉이 86"
     } ],
     "viewer" : {
@@ -6116,7 +6149,7 @@ Content-Length: 1688
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/rooms/01920000-0000-7000-8000-000000000001/applications' -i -X POST \
     -H 'Content-Type: application/json' \
     -d '{
-  "resumeId" : "31582cd8-f4f3-4fc1-86ab-1074b73232ea",
+  "resumeId" : "2dfca3da-3e1f-40f7-b913-16f15ed4c270",
   "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
 }'</code></pre>
 </div>
@@ -6350,7 +6383,7 @@ Content-Length: 703
     "roomId" : "01920000-0000-7000-8000-000000000001",
     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
     "resume" : {
-      "resumeId" : "0b9d1be5-89ed-4e4e-9421-5b12905b27c5",
+      "resumeId" : "3ea1e813-f87f-48bd-bea8-938e89952ad4",
       "file" : {
         "originalName" : "backend.pdf",
         "sizeBytes" : 2048,
@@ -12070,6 +12103,540 @@ Content-Length: 253
 </tr>
 </tbody>
 </table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_qa_회원_소셜_로그인"><a class="link" href="#_qa_회원_소셜_로그인">QA 회원 소셜 로그인</a></h3>
+<div class="paragraph">
+<p>Google 인증만 건너뛰고 OAuth2 로그인 성공 처리와 같은 코드로 QA 회원을 로그인시킨다. 응답의 <code>Set-Cookie</code> 도 실제 로그인과 같다.
+회원이면 로그인 기록을 남기고 액세스·리프레시 쿠키를 심는다. 탈퇴한 QA 회원이면 세션 없이 복구 확인 쿠키만 심는다. 그 쿠키로 <code>POST /v1/auth/restoration</code> 을 부르면 실제 복구 경로를 검증할 수 있다.
+리다이렉트하지 않고 실제 로그인이었다면 이동했을 화면을 <code>redirectUri</code> 로 돌려준다. 쿠키 값은 응답 본문에 싣지 않는다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/dev/members/00000000-0000-0000-0000-000000000002/social-login' -i -X POST</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_35"><a class="link" href="#_path_parameters_35">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 35. /v1/dev/members/{memberId}/social-login</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">로그인할 QA 회원 id (UUID). 탈퇴한 QA 회원도 된다</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_66"><a class="link" href="#_http_response_66">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Set-Cookie: ACCESS_TOKEN=value; Path=/; HttpOnly
+Set-Cookie: REFRESH_TOKEN=value; Path=/; HttpOnly
+Content-Type: application/json
+Content-Length: 267
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "memberId" : "00000000-0000-0000-0000-000000000002",
+    "outcome" : "LOGGED_IN",
+    "redirectUri" : "https://dev.moimyeon.plady.io/auth/callback",
+    "cookies" : [ "ACCESS_TOKEN", "REFRESH_TOKEN" ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_65"><a class="link" href="#_response_fields_65">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">로그인한 회원 id (가입이면 새로 생긴 회원)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.outcome</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LOGGED_IN(로그인 쿠키를 심음) | RESTORE_REQUIRED(탈퇴 회원, 복구 확인 쿠키만 심음)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.redirectUri</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제 로그인이었다면 이동했을 화면</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.cookies</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">심은 쿠키 이름. 값은 Set-Cookie 헤더에만 있다</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_탈퇴한_qa_회원"><a class="link" href="#_탈퇴한_qa_회원">탈퇴한 QA 회원</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Set-Cookie: RESTORE_TOKEN=value; Path=/; HttpOnly
+Content-Type: application/json
+Content-Length: 257
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "memberId" : "00000000-0000-0000-0000-000000000002",
+    "outcome" : "RESTORE_REQUIRED",
+    "redirectUri" : "https://dev.moimyeon.plady.io/auth/restore",
+    "cookies" : [ "RESTORE_TOKEN" ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_52"><a class="link" href="#_error_responses_52">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">memberId 가 UUID 가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회원이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2201</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">테스트 회원 생성 API 나 소셜 가입 API 로 만든 QA 회원이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_qa_회원_소셜_가입"><a class="link" href="#_qa_회원_소셜_가입">QA 회원 소셜 가입</a></h3>
+<div class="paragraph">
+<p>처음 보는 QA 소셜 계정(<code>qa-{uuid}</code>)으로 OAuth2 로그인 성공 처리를 탄다. 실제 첫 로그인처럼 회원이 새로 생기고 로그인 쿠키가 심긴다.
+이메일은 테스트 회원 생성과 같은 설정 템플릿으로 만든다. 호출할 때마다 회원이 하나 늘어나며 지우는 방법도 테스트 회원 생성과 같다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/dev/members/social-signup' -i -X POST</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_http_response_67"><a class="link" href="#_http_response_67">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Set-Cookie: ACCESS_TOKEN=value; Path=/; HttpOnly
+Set-Cookie: REFRESH_TOKEN=value; Path=/; HttpOnly
+Content-Type: application/json
+Content-Length: 267
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "memberId" : "00000000-0000-0000-0000-000000000002",
+    "outcome" : "LOGGED_IN",
+    "redirectUri" : "https://dev.moimyeon.plady.io/auth/callback",
+    "cookies" : [ "ACCESS_TOKEN", "REFRESH_TOKEN" ]
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_66"><a class="link" href="#_response_fields_66">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">로그인한 회원 id (가입이면 새로 생긴 회원)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.outcome</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">LOGGED_IN(로그인 쿠키를 심음) | RESTORE_REQUIRED(탈퇴 회원, 복구 확인 쿠키만 심음)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.redirectUri</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">실제 로그인이었다면 이동했을 화면</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.cookies</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Array</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">심은 쿠키 이름. 값은 Set-Cookie 헤더에만 있다</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_53"><a class="link" href="#_error_responses_53">Error Responses</a></h4>
+<div class="paragraph">
+<p>고유 에러 없음 (공통 규약의 401 E1102 만).</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_qa_회원_상태_변경"><a class="link" href="#_qa_회원_상태_변경">QA 회원 상태 변경</a></h3>
+<div class="paragraph">
+<p>QA 회원을 이용 제한(<code>RESTRICTED</code>) 또는 정상(<code>ACTIVE</code>)으로 바꾼다. 이용 제한 계정의 거절을 실제 경로로 검증하는 용도다.
+이미 그 상태면 그대로 두고 성공한다. 앞선 실행이 남긴 상태와 상관없이 같은 결과를 내기 위해서다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/dev/members/00000000-0000-0000-0000-000000000002/status' -i -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{
+  "status" : "RESTRICTED"
+}'</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_36"><a class="link" href="#_path_parameters_36">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 36. /v1/dev/members/{memberId}/status</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">상태를 바꿀 QA 회원 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_21"><a class="link" href="#_request_fields_21">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">바꿀 상태 (RESTRICTED | ACTIVE)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_68"><a class="link" href="#_http_response_68">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 172
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "memberId" : "00000000-0000-0000-0000-000000000002",
+    "before" : "ACTIVE",
+    "status" : "RESTRICTED"
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_67"><a class="link" href="#_response_fields_67">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.memberId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회원 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.before</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">바꾸기 전 상태</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">바꾼 뒤 상태</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_54"><a class="link" href="#_error_responses_54">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">status 누락·값 오류, memberId 가 UUID 가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">회원이 없거나 탈퇴함</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2201</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">QA 회원이 아님</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_qa_룸_자동_완료_지금_실행"><a class="link" href="#_qa_룸_자동_완료_지금_실행">QA 룸 자동 완료 지금 실행</a></h3>
+<div class="paragraph">
+<p>자동 완료 작업(10분 주기)이 룸 하나에 하는 일을 지금 한다. 확정 참여자 전원을 출석으로 기록하고 완료한다.
+자동 완료 조건(확정 상태, 시작 뒤 8시간 지남)은 그대로 판정한다. 조건이 안 되면 <code>completed=false</code> 로 돌려주고 아무것도 바꾸지 않는다.
+시작 시각은 <a href="#_qa_룸_시작_시각_변경">QA 룸 시작 시각 변경</a> 으로 먼저 옮긴다.
+==== Curl Request</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl 'http://localhost:8080/v1/dev/rooms/00000000-0000-0000-0000-000000000101/auto-complete' -i -X POST</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_parameters_37"><a class="link" href="#_path_parameters_37">Path Parameters</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 37. /v1/dev/rooms/{roomId}/auto-complete</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">자동 완료할 [QA] 룸 id (UUID)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_response_69"><a class="link" href="#_http_response_69">Http Response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code class="language-http hljs" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 168
+
+{
+  "result" : "SUCCESS",
+  "data" : {
+    "roomId" : "00000000-0000-0000-0000-000000000101",
+    "completed" : true,
+    "status" : "COMPLETED"
+  },
+  "error" : null
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_fields_68"><a class="link" href="#_response_fields_68">Response Fields</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>result</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">처리 결과 (SUCCESS)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.roomId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸 id</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.completed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">이번 호출로 완료했는가. 조건이 안 되면 false</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data.status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">호출 뒤 룸 상태</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_error_responses_55"><a class="link" href="#_error_responses_55">Error Responses</a></h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">error.code</th>
+<th class="tableblock halign-left valign-top">케이스</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E400</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">roomId 가 UUID 가 아님</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">404</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E1405</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">룸이 없음</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">409</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">E2201</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">제목이 <code>[QA]</code> 로 시작하지 않는 룸</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
@@ -12078,7 +12645,7 @@ Content-Length: 253
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1-SNAPSHOT<br>
-Last updated 2026-10-06 08:54:56 UTC
+Last updated 2026-10-07 09:19:34 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
