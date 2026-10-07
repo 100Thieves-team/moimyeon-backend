@@ -1,52 +1,31 @@
--- 공통 시드(참조 데이터): 현재 공개 약관과 예약 발행 약관을 포함한다.
--- - local(H2): spring.sql.init 이 schema.sql 다음에 자동 실행
--- - 로컬 MySQL: docker-compose initdb 로 자동 실행
--- - dev/live: 새 Flyway 마이그레이션으로만 반영하고 같은 데이터를 이 파일에도 맞춘다.
--- 예약 발행 시 새 문서 시행 전까지 이전 문서의 ACTIVE를 유지한다.
--- id 는 BINARY(16) 고정 UUID (H2/MySQL 공통 문법인 hex 리터럴 사용).
+-- V33을 수정하지 않고 미동의 v1.1 초안만 최종 문안으로 발행한다.
+-- 시행 전 v1.0을 유지하며, 한국 시행시각부터 조회·가입이 최신 ACTIVE를 선택한다.
+-- 이미 발행되었거나 동의된 문서는 새 버전이 필요하므로 자동으로 덮어쓰지 않는다.
+SET @terms_v1_1_eligible := (
+    SELECT COUNT(*)
+    FROM terms t
+    WHERE ((t.id = X'f614c0bb87b544e8baf12b8b2ad4c1b2' AND t.type = 'SERVICE')
+        OR (t.id = X'd91d5a8f228a4a56874a88dd532febe7' AND t.type = 'PRIVACY'))
+      AND t.version = 'v1.1'
+      AND t.status = 'DRAFT'
+      AND t.deleted_at IS NULL
+      AND t.required = TRUE
+      AND t.effective_from = '2026-10-08 00:00:00'
+      AND NOT EXISTS (SELECT 1 FROM terms_agreement a WHERE a.terms_id = t.id)
+);
+SET @terms_v1_1_guard := IF(
+    @terms_v1_1_eligible = 2,
+    'SELECT 1',
+    'SELECT 1 FROM ABORT_terms_v1_1_must_be_unagreed_drafts'
+);
+PREPARE terms_v1_1_guard_stmt FROM @terms_v1_1_guard;
+EXECUTE terms_v1_1_guard_stmt;
+DEALLOCATE PREPARE terms_v1_1_guard_stmt;
 
--- 참조 데이터 최소 시드: 크롤러가 붙기 전 FE 드롭다운·검색 개발용.
--- 업무키(code, sigungu_code, corp_code) 기준이라 크롤러 적재와 충돌하지 않는다.
-INSERT INTO sido (id, sido_code, name, short_name, is_metro, sort_order)
-VALUES (1, '11', '서울특별시', '서울', TRUE, 1),
-       (2, '41', '경기도', '경기', FALSE, 2);
-
-INSERT INTO sigungu (id, sido_id, sigungu_code, name, level, sort_order)
-VALUES (1, 1, '11680', '강남구', 'GU', 1),
-       (2, 1, '11440', '마포구', 'GU', 2),
-       (3, 1, '11110', '종로구', 'GU', 3),
-       (4, 2, '41135', '성남시분당구', 'GU', 1);
-
-INSERT INTO job_group (id, code, display_name, sort_order)
-VALUES (1, 'IT_개발', 'IT·개발', 1);
-
-INSERT INTO job_role (id, job_group_id, code, display_name, sort_order)
-VALUES (1, 1, '서버_백엔드', '서버·백엔드', 1),
-       (2, 1, '프론트엔드', '프론트엔드', 2),
-       (3, 1, 'iOS', 'iOS', 3),
-       (4, 1, '안드로이드', '안드로이드', 4),
-       (5, 1, '데이터_엔지니어', '데이터 엔지니어', 5),
-       (6, 1, 'PM_PO', 'PM·PO', 6);
-
-INSERT INTO company (id, name_kr, name_normalized, verified)
-VALUES (1, '달빛페이', '달빛페이', TRUE),
-       (2, '한빛커머스', '한빛커머스', TRUE),
-       (3, '구름클라우드', '구름클라우드', TRUE),
-       (4, '별빛헬스', '별빛헬스', TRUE);
-
-INSERT INTO terms (id, type, version, title, content, required, effective_from, status, created_at, updated_at)
-VALUES (X'019daf00000070008000000000000001', 'SERVICE', 'v1.0', '모이면 이용약관',
-        '제1조(목적) 이 약관은 모이면 서비스의 이용 조건과 절차를 규정합니다.',
-        TRUE, '2026-07-01 00:00:00', 'ACTIVE', '2026-07-01 00:00:00', '2026-07-01 00:00:00'),
-       (X'019daf00000070008000000000000002', 'PRIVACY', 'v1.0', '개인정보 처리방침',
-        '모이면은 회원 가입과 서비스 제공을 위해 최소한의 개인정보를 수집·이용합니다.',
-        TRUE, '2026-07-01 00:00:00', 'ACTIVE', '2026-07-01 00:00:00', '2026-07-01 00:00:00');
-
--- v1.1은 2026-10-08 00:00 Asia/Seoul부터 적용한다. 시행 전까지 v1.0을 유지한다.
--- 미확정 운영 사실은 본문에 표시하며 MOI-576의 후속 확인 범위로 유지한다.
-INSERT INTO terms (id, type, version, title, content, required, effective_from, status, created_at, updated_at)
-VALUES (X'f614c0bb87b544e8baf12b8b2ad4c1b2', 'SERVICE', 'v1.1', '모이면 이용약관',
-'# 모이면 이용약관
+-- 두 문서의 본문과 상태는 하나의 DML로 전환한다. 기존 약관·동의 이력은 변경하지 않는다.
+UPDATE terms
+SET content = CASE type
+    WHEN 'SERVICE' THEN '# 모이면 이용약관
 
 문서 버전: v1.1 · 시행일: 2026년 10월 8일
 
@@ -166,10 +145,8 @@ VALUES (X'f614c0bb87b544e8baf12b8b2ad4c1b2', 'SERVICE', 'v1.1', '모이면 이�
 
 ## 부칙
 
-이 약관은 2026년 10월 8일부터 시행합니다.',
-TRUE, '2026-10-08 00:00:00', 'ACTIVE', '2026-10-07 00:00:00', '2026-10-07 00:00:00'),
-(X'd91d5a8f228a4a56874a88dd532febe7', 'PRIVACY', 'v1.1', '모이면 개인정보 처리방침',
-'# 모이면 개인정보 처리방침
+이 약관은 2026년 10월 8일부터 시행합니다.'
+    WHEN 'PRIVACY' THEN '# 모이면 개인정보 처리방침
 
 문서 버전: v1.1 · 시행일: 2026년 10월 8일
 
@@ -344,5 +321,12 @@ AWS 해외 지원이나 재위탁 경로가 실제로 개인정보를 이전하�
 
 처리방침을 변경하면 변경 내용·사유·시행일을 서비스에서 안내하고 이전 버전을 확인할 수 있도록 합니다. 중요한 변경은 회원의 가입 이메일로 개별 안내합니다. 별도 동의가 필요한 새로운 수집·이용·제공은 이메일 통지나 방침 변경 공지만으로 동의를 대신하지 않습니다.
 
-이 방침은 2026년 10월 8일부터 시행합니다.',
-TRUE, '2026-10-08 00:00:00', 'ACTIVE', '2026-10-07 00:00:00', '2026-10-07 00:00:00');
+이 방침은 2026년 10월 8일부터 시행합니다.'
+    ELSE content
+END,
+    status = 'ACTIVE',
+    updated_at = CURRENT_TIMESTAMP(6)
+WHERE id IN (X'f614c0bb87b544e8baf12b8b2ad4c1b2', X'd91d5a8f228a4a56874a88dd532febe7')
+  AND version = 'v1.1'
+  AND status = 'DRAFT'
+  AND deleted_at IS NULL;

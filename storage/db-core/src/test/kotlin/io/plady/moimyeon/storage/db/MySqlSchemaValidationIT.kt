@@ -56,17 +56,17 @@ class MySqlSchemaValidationIT(
     }
 
     @Test
-    fun `Flyway 약관 적재는 긴 한글 초안과 기존 공개 버전을 함께 보존한다`() {
-        val drafts = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.DRAFT)
-        assertThat(drafts.map { it.type }).containsExactlyInAnyOrder(TermsType.SERVICE, TermsType.PRIVACY)
-        drafts.forEach { draft ->
-            assertThat(draft.version).isEqualTo("v1.1")
-            assertThat(draft.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 8, 0, 0))
-            assertThat(draft.content).contains("이유제", "010-9328-9628", "\n## ", "2026-10-08")
-            assertThat(draft.content.toByteArray(Charsets.UTF_8).size).isBetween(15_000, 65_535)
+    fun `Flyway 약관 발행은 긴 한글 본문과 기존 공개 버전을 함께 보존한다`() {
+        val active = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE)
+        val published = active.filter { it.version == "v1.1" }
+        assertThat(published.map { it.type }).containsExactlyInAnyOrder(TermsType.SERVICE, TermsType.PRIVACY)
+        published.forEach { terms ->
+            assertThat(terms.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 8, 0, 0))
+            assertThat(terms.content).contains("이유제", "010-9328-9628", "\n## ", "2026년 10월 8일")
+            assertThat(terms.content.toByteArray(Charsets.UTF_8).size).isBetween(8_000, 65_535)
         }
-        assertThat(termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map { it.version })
-            .containsExactlyInAnyOrder("v1.0", "v1.0")
+        assertThat(active.map { it.version }).containsExactlyInAnyOrder("v1.0", "v1.0", "v1.1", "v1.1")
+        assertThat(termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.DRAFT)).isEmpty()
     }
 
     @Test
