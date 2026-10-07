@@ -19,7 +19,8 @@ fail() {
 
 mkdir -p "${TEMP_DIR}/bin"
 # Fake gh returns raw API documents and applies --jq with real jq, so the
-# script's own selection filters are exercised.
+# script's own selection filters are exercised. Like API version 2026-03-10,
+# PRs carry merge_commit_sha: null.
 cat > "${TEMP_DIR}/bin/gh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -34,16 +35,21 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 case "${path}" in
-  */commits/*/pulls)
-    if [ -n "${FAKE_PR_DELAY_FILE:-}" ] && [ ! -e "${FAKE_PR_DELAY_FILE}" ]; then
+  */commits/*/pulls|*/pulls)
+    [ "${FAKE_PR_API:-ok}" = ok ] || { echo "HTTP 502: Bad Gateway" >&2; exit 1; }
+    if [ "${path}" != "${path%/commits/*}" ] && [ "${FAKE_PR_INDEX:-ready}" = lagging ]; then
+      document='[]'
+    elif [ "${path}" = "${path%/commits/*}" ] && [ "${FAKE_PR_INDEX:-ready}" != lagging ]; then
+      document='[]'
+    elif [ -n "${FAKE_PR_DELAY_FILE:-}" ] && [ ! -e "${FAKE_PR_DELAY_FILE}" ]; then
       : > "${FAKE_PR_DELAY_FILE}"
       document='[]'
     elif [ "${FAKE_PR_MODE}" = none ]; then
       document='[]'
     else
       document="$(jq -cn --arg merge "${FAKE_MERGE_SHA}" --arg head "${FAKE_HEAD_SHA}" --arg base "${FAKE_BASE:-dev}" \
-        '[{number:7,merge_commit_sha:"0000000000000000000000000000000000000000",merged_at:null,base:{ref:$base},head:{sha:$head}},
-          {number:8,merge_commit_sha:$merge,merged_at:"2026-10-06T00:00:00Z",base:{ref:$base},head:{sha:$head}}]')"
+        '[{number:7,merge_commit_sha:null,merged_at:null,base:{ref:$base},head:{sha:$head}},
+          {number:8,merge_commit_sha:null,merged_at:"2026-10-06T00:00:00Z",base:{ref:$base},head:{sha:$head}}]')"
     fi
     ;;
   */git/commits/*)
@@ -123,6 +129,10 @@ result="$(verify_ok FAKE_PR_MODE=one FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA=
   FAKE_ACTIONS_API=forbidden)" || fail "Actions API 실패는 배포를 막지 않고 빌드로 넘어가야 한다."
 grep -qx "candidate_tag=" <<< "${result}" || fail "Actions API 실패 시 후보를 쓰면 안 된다."
 
+result="$(verify_ok FAKE_PR_INDEX=lagging FAKE_PR_MODE=one FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${pr_head}" \
+  FAKE_CONCLUSION=success)" || fail "커밋-PR 연결이 늦으면 최근 머지된 PR 목록에서 찾아야 한다."
+grep -qx "tree=${tree}" <<< "${result}" || fail "PR 목록으로 찾은 경우에도 검증한 트리를 출력해야 한다."
+
 result="$(verify_ok VERIFY_PR_CI_RETRY_SECONDS=0 FAKE_PR_DELAY_FILE="${TEMP_DIR}/pr-delay" FAKE_PR_MODE=one \
   FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${pr_head}" FAKE_CONCLUSION=success)" \
   || fail "머지 PR 연결이 늦게 보여도 재시도로 찾아야 한다."
@@ -142,6 +152,12 @@ expect_verify_failure() {
     fail "${reason}"
   fi
 }
+if errors="$(env FAKE_PR_API=fail FAKE_PR_MODE=one FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${pr_head}" \
+  FAKE_CONCLUSION=success VERIFY_PR_CI_ATTEMPTS=2 bash "${VERIFY}" "${app_only}" dev 2>&1 >/dev/null)"; then
+  fail "PR 조회 API가 계속 실패하면 배포를 막아야 한다."
+fi
+grep -q 'GitHub API call failed' <<< "${errors}" || fail "API 실패는 'PR 없음'과 구분되게 기록해야 한다."
+
 expect_verify_failure "트리가 다른 PR head(branch update 누락)는 거부해야 한다." \
   FAKE_PR_MODE=one FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${stale_head}" FAKE_CONCLUSION=success
 expect_verify_failure "build 실패는 거부해야 한다." \
@@ -150,8 +166,6 @@ expect_verify_failure "build 결과가 없으면 거부해야 한다." \
   FAKE_PR_MODE=one FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${pr_head}" FAKE_CONCLUSION=
 expect_verify_failure "머지 PR이 없는 커밋은 거부해야 한다." \
   FAKE_PR_MODE=none FAKE_CONCLUSION=success
-expect_verify_failure "다른 커밋을 만든 PR은 거부해야 한다." \
-  FAKE_PR_MODE=one FAKE_MERGE_SHA="${applied}" FAKE_HEAD_SHA="${pr_head}" FAKE_CONCLUSION=success
 expect_verify_failure "dev가 아닌 브랜치로 머지된 PR은 거부해야 한다." \
   FAKE_PR_MODE=one FAKE_BASE=main FAKE_MERGE_SHA="${app_only}" FAKE_HEAD_SHA="${pr_head}" FAKE_CONCLUSION=success
 

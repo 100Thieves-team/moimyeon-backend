@@ -34,28 +34,61 @@ github_api() {
 
 deploy_tree="$(git rev-parse "${deploy_sha}^{tree}")"
 
-# GitHub can link a fresh merge commit to its PR a few seconds after the push.
-pull=""
-for attempt in 1 2 3 4; do
-  pull="$(github_api "/repos/${repository}/commits/${deploy_sha}/pulls" \
-    --jq "[.[] | select(.merge_commit_sha == \"${deploy_sha}\" and .base.ref == \"${branch}\" and .merged_at != null)] | first // empty | tojson")"
-  [ -n "${pull}" ] && break
-  [ "${attempt}" -lt 4 ] && sleep "${VERIFY_PR_CI_RETRY_SECONDS:-5}"
+# API version 2026-03-10 no longer returns merge_commit_sha (null), so the PR
+# is chosen by what actually matters: merged into the branch, and its head has
+# exactly the merged tree. Candidates come from the commit-to-PR association,
+# then from the most recently updated closed PRs while that index catches up.
+# Retry for about two minutes before refusing.
+merged_pulls_filter="[.[] | select(.base.ref == \"${branch}\" and .merged_at != null) | \"\\(.number) \\(.head.sha)\"] | .[]"
+pull_number=""
+head_sha=""
+# API failures are reported but retried: they must not read as "no PR".
+api_or_warn() {
+  local output error_file
+  error_file="$(mktemp)"
+  if output="$(github_api "$@" 2>"${error_file}")"; then
+    rm -f "${error_file}"
+    printf '%s' "${output}"
+    return 0
+  fi
+  echo "GitHub API call failed ($1): $(head -c 300 "${error_file}")" >&2
+  rm -f "${error_file}"
+  return 1
+}
+find_verified_pull() {
+  local candidates number sha tree
+  candidates="$(api_or_warn "/repos/${repository}/commits/${deploy_sha}/pulls" --jq "${merged_pulls_filter}" || true)"
+  if [ -z "${candidates}" ]; then
+    # Closed-but-unmerged PRs can fill a short page, so read a wider page and
+    # tree-check only the five most recently updated merged PRs.
+    candidates="$(api_or_warn "/repos/${repository}/pulls" \
+      -f state=closed -f base="${branch}" -f sort=updated -f direction=desc -f per_page=50 \
+      --jq "${merged_pulls_filter}" || true)"
+    candidates="$(head -n 5 <<< "${candidates}")"
+  fi
+  while read -r number sha; do
+    [[ "${number}" =~ ^[1-9][0-9]*$ ]] && [[ "${sha}" =~ ^[0-9a-f]{40}$ ]] || continue
+    # Squash merges leave the PR head off dev history; read its tree from the API.
+    tree="$(api_or_warn "/repos/${repository}/git/commits/${sha}" --jq '.tree.sha' || true)"
+    if [ "${tree}" = "${deploy_tree}" ]; then
+      pull_number="${number}"
+      head_sha="${sha}"
+      return 0
+    fi
+  done <<< "${candidates}"
+  return 1
+}
+attempts="${VERIFY_PR_CI_ATTEMPTS:-12}"
+[[ "${attempts}" =~ ^[1-9][0-9]*$ ]] || exit 1
+for ((attempt = 1; attempt <= attempts; attempt++)); do
+  find_verified_pull && break
+  if [ "${attempt}" -lt "${attempts}" ]; then
+    echo "No merged PR with tree ${deploy_tree} is visible yet (attempt ${attempt}/${attempts})." >&2
+    sleep "${VERIFY_PR_CI_RETRY_SECONDS:-10}"
+  fi
 done
-if [ -z "${pull}" ]; then
-  echo "No PR merged into ${branch} produced ${deploy_sha}; refusing an unverified revision." >&2
-  exit 1
-fi
-
-pull_number="$(jq -r '.number' <<< "${pull}")"
-head_sha="$(jq -r '.head.sha' <<< "${pull}")"
-[[ "${pull_number}" =~ ^[1-9][0-9]*$ ]] || exit 1
-[[ "${head_sha}" =~ ^[0-9a-f]{40}$ ]] || exit 1
-
-# Squash merges leave the PR head off dev history; read its tree from the API.
-head_tree="$(github_api "/repos/${repository}/git/commits/${head_sha}" --jq '.tree.sha')"
-if [ "${head_tree}" != "${deploy_tree}" ]; then
-  echo "PR #${pull_number} head ${head_sha} does not have the merged tree; CI did not verify ${deploy_sha}." >&2
+if [ -z "${head_sha}" ]; then
+  echo "No PR merged into ${branch} has the tree of ${deploy_sha}; CI did not verify this revision." >&2
   exit 1
 fi
 
