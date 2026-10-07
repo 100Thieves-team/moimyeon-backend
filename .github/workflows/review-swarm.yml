@@ -27,12 +27,15 @@ concurrency:
 
 jobs:
   review:
+    # dev→main 릴리스 PR은 이미 PR 단위로 리뷰된 변경의 묶음이라 건너뛴다(공용 러너 점유 방지).
+    # 트리거에 브랜치 필터를 두지 않는 것은 스택 PR 계약이므로 job 조건으로 거른다.
     # 리뷰를 돌릴 PR 작성자. 러너가 팀 공용 EC2(org 러너 agent-platform-ec2)로 옮겨져
     # 팀원 전원의 PR 을 대상으로 한다. 사람을 더할 때 이 배열에 로그인 아이디를 추가한다.
     if: >-
       contains(fromJSON('["bebeis", "dbwp031", "2wndrhs"]'), github.event.pull_request.user.login) &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.draft == false
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.base.ref != 'main'
     runs-on: [self-hosted, review-swarm]
     timeout-minutes: 45
 
