@@ -430,6 +430,7 @@ CREATE TABLE resume (
 );
 CREATE INDEX ix_resume_member_id ON resume (member_id);
 
+-- effective_from은 Asia/Seoul 시행시각이다. DRAFT는 공개·동의 대상이 아니다.
 -- status = DEPRECATED 는 "구버전이라 신규 동의 대상 아님"(기존 동의는 유효), deleted_at 은 행 자체의 폐기.
 -- (type, version) 유니크는 전체 대상이다 — 같은 버전을 다시 발행하지 않는다.
 CREATE TABLE terms (

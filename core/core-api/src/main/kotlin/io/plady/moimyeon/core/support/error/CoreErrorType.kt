@@ -31,6 +31,8 @@ enum class CoreErrorType(val status: HttpStatus, val code: ErrorCode, val messag
     ),
 
     TERMS_NOT_AGREED(HttpStatus.CONFLICT, ErrorCode.E1201, "필수 약관에 동의해야 이용할 수 있습니다.", LogLevel.WARN),
+    TERMS_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E1202, "조회할 수 없는 약관입니다.", LogLevel.WARN),
+    TERMS_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.E1203, "현재 약관을 제공할 수 없습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
 
     JOB_ROLE_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1301, "존재하지 않는 직무입니다.", LogLevel.WARN),
     REGION_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E1302, "존재하지 않는 지역입니다.", LogLevel.WARN),

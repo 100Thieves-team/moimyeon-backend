@@ -3,10 +3,13 @@ package io.plady.moimyeon.storage.db
 import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.enums.TermsStatus
+import io.plady.moimyeon.core.enums.TermsType
 import io.plady.moimyeon.storage.db.core.ParticipationEntity
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.RoomApplicationEntity
 import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
+import io.plady.moimyeon.storage.db.core.TermsRepository
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.flywaydb.core.Flyway
@@ -44,11 +47,26 @@ class MySqlSchemaValidationIT(
     private val participationRepository: ParticipationRepository,
     private val roomApplicationRepository: RoomApplicationRepository,
     private val entityManager: EntityManager,
+    private val termsRepository: TermsRepository,
 ) {
     @Test
     fun `빈 MySQL에 모든 Flyway migration을 적용한다`() {
         assertThat(flyway.info().applied()).isNotEmpty()
         assertThat(flyway.info().pending()).isEmpty()
+    }
+
+    @Test
+    fun `Flyway 약관 적재는 긴 한글 초안과 기존 공개 버전을 함께 보존한다`() {
+        val drafts = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.DRAFT)
+        assertThat(drafts.map { it.type }).containsExactlyInAnyOrder(TermsType.SERVICE, TermsType.PRIVACY)
+        drafts.forEach { draft ->
+            assertThat(draft.version).isEqualTo("v1.1")
+            assertThat(draft.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 8, 0, 0))
+            assertThat(draft.content).contains("이유제", "010-9328-9628", "\n## ", "2026-10-08")
+            assertThat(draft.content.toByteArray(Charsets.UTF_8).size).isBetween(15_000, 65_535)
+        }
+        assertThat(termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).map { it.version })
+            .containsExactlyInAnyOrder("v1.0", "v1.0")
     }
 
     @Test

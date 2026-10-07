@@ -221,6 +221,31 @@ include::{snippets}/termsList/http-response.adoc[]
 ==== Response Fields
 include::{snippets}/termsList/response-fields.adoc[]
 
+==== Error Responses
+[cols="1,1,3", options="header"]
+|===
+|HTTP |error.code |케이스
+|503 |E1203 |현재 문서 종류 누락 또는 최신 시행시각 중복
+|===
+
+=== 약관 버전 상세 조회
+==== Curl Request
+include::{snippets}/termsDetail/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/termsDetail/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/termsDetail/http-response.adoc[]
+==== Response Fields
+include::{snippets}/termsDetail/response-fields.adoc[]
+==== Error Responses
+[cols="1,1,3", options="header"]
+|===
+|HTTP |error.code |케이스
+|400 |E400 |UUID 형식 오류
+|404 |E1202 |DRAFT·미시행·삭제·존재하지 않는 문서
+|===
+
+
 == Member API
 
 === 내 상태 조회
