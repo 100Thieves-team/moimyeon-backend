@@ -61,6 +61,12 @@ run "enabled_retention_and_budgets" {
     error_message = "The router image must be immutable."
   }
   assert {
+    condition = alltrue([for router in values(output.routers) :
+      router.user == "0" && router.portMappings == [] && router.systemControls == [] && router.volumesFrom == []
+    ])
+    error_message = "The router must state the defaults ECS stores, or every plan replaces the task definition (MOI-581)."
+  }
+  assert {
     condition     = contains(keys(aws_s3_object.config), "api.v1") && contains(keys(aws_s3_object.config), "worker.v1")
     error_message = "Versioned configuration objects must be retained for each service."
   }
