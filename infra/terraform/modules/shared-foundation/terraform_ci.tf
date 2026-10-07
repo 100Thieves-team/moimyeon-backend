@@ -370,6 +370,14 @@ data "aws_iam_policy_document" "terraform_plan_refresh" {
     resources = ["arn:aws:s3:::${var.project}-dev-app-config-${data.aws_caller_identity.current.account_id}/revisions/*"]
   }
 
+  # MOI-581: live state now holds the same non-secret log router configs, so the
+  # plan roles must refresh them too or every live plan fails with HeadObject 403.
+  statement {
+    sid       = "RefreshLiveApplicationLogConfigObjects"
+    actions   = ["s3:GetObject", "s3:GetObjectTagging"]
+    resources = ["arn:aws:s3:::${var.project}-live-app-config-${data.aws_caller_identity.current.account_id}/revisions/*"]
+  }
+
 }
 
 resource "aws_iam_policy" "terraform_plan_refresh" {

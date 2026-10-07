@@ -108,5 +108,7 @@ assert_contains "${SYNC_SCRIPT}" 'MOIMYEON_TERRAFORM_VARIABLE_SYNC_TOKEN_PARAMET
 
 assert_contains "${BOOTSTRAP_TF}" 'RefreshDevApplicationLogConfigObjects' "로그 설정 객체도 다음 plan에서 refresh할 수 있어야 한다."
 assert_contains "${BOOTSTRAP_TF}" 'dev-app-config-.*account_id.*/revisions/\*' "로그 설정 읽기는 dev의 non-secret revision prefix로 제한해야 한다."
+assert_contains "${BOOTSTRAP_TF}" 'RefreshLiveApplicationLogConfigObjects' "live 로그 설정 객체도 다음 plan에서 refresh할 수 있어야 한다 (MOI-581)."
+assert_contains "${BOOTSTRAP_TF}" 'live-app-config-.*account_id.*/revisions/\*' "live 로그 설정 읽기도 non-secret revision prefix로 제한해야 한다."
 
 echo "Terraform bootstrap 계약을 만족한다."
