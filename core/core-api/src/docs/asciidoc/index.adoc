@@ -1487,3 +1487,89 @@ include::{snippets}/completeQaResumeSummary/response-fields.adoc[]
 | 404 | E1006 | 이력서 소유 회원이 탈퇴함
 | 409 | E2201 | 이름이 `[QA]` 로 시작하지 않는 이력서
 |===
+
+'''
+
+=== QA 회원 소셜 로그인
+Google 인증만 건너뛰고 OAuth2 로그인 성공 처리와 같은 코드로 QA 회원을 로그인시킨다. 응답의 `Set-Cookie` 도 실제 로그인과 같다.
+회원이면 로그인 기록을 남기고 액세스·리프레시 쿠키를 심는다. 탈퇴한 QA 회원이면 세션 없이 복구 확인 쿠키만 심는다. 그 쿠키로 `POST /v1/auth/restoration` 을 부르면 실제 복구 경로를 검증할 수 있다.
+리다이렉트하지 않고 실제 로그인이었다면 이동했을 화면을 `redirectUri` 로 돌려준다. 쿠키 값은 응답 본문에 싣지 않는다.
+==== Curl Request
+include::{snippets}/socialLoginQaMember/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/socialLoginQaMember/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/socialLoginQaMember/http-response.adoc[]
+==== Response Fields
+include::{snippets}/socialLoginQaMember/response-fields.adoc[]
+==== 탈퇴한 QA 회원
+include::{snippets}/socialLoginQaMember-restore/http-response.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | memberId 가 UUID 가 아님
+| 404 | E1006 | 회원이 없음
+| 409 | E2201 | 테스트 회원 생성 API 나 소셜 가입 API 로 만든 QA 회원이 아님
+|===
+
+'''
+
+=== QA 회원 소셜 가입
+처음 보는 QA 소셜 계정(`qa-{uuid}`)으로 OAuth2 로그인 성공 처리를 탄다. 실제 첫 로그인처럼 회원이 새로 생기고 로그인 쿠키가 심긴다.
+이메일은 테스트 회원 생성과 같은 설정 템플릿으로 만든다. 호출할 때마다 회원이 하나 늘어나며 지우는 방법도 테스트 회원 생성과 같다.
+==== Curl Request
+include::{snippets}/socialSignUpQaMember/curl-request.adoc[]
+==== Http Response
+include::{snippets}/socialSignUpQaMember/http-response.adoc[]
+==== Response Fields
+include::{snippets}/socialSignUpQaMember/response-fields.adoc[]
+==== Error Responses
+고유 에러 없음 (공통 규약의 401 E1102 만).
+
+'''
+
+=== QA 회원 상태 변경
+QA 회원을 이용 제한(`RESTRICTED`) 또는 정상(`ACTIVE`)으로 바꾼다. 이용 제한 계정의 거절을 실제 경로로 검증하는 용도다.
+이미 그 상태면 그대로 두고 성공한다. 앞선 실행이 남긴 상태와 상관없이 같은 결과를 내기 위해서다.
+==== Curl Request
+include::{snippets}/changeQaMemberStatus/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/changeQaMemberStatus/path-parameters.adoc[]
+==== Request Fields
+include::{snippets}/changeQaMemberStatus/request-fields.adoc[]
+==== Http Response
+include::{snippets}/changeQaMemberStatus/http-response.adoc[]
+==== Response Fields
+include::{snippets}/changeQaMemberStatus/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | status 누락·값 오류, memberId 가 UUID 가 아님
+| 404 | E1006 | 회원이 없거나 탈퇴함
+| 409 | E2201 | QA 회원이 아님
+|===
+
+'''
+
+=== QA 룸 자동 완료 지금 실행
+자동 완료 작업(10분 주기)이 룸 하나에 하는 일을 지금 한다. 확정 참여자 전원을 출석으로 기록하고 완료한다.
+자동 완료 조건(확정 상태, 시작 뒤 8시간 지남)은 그대로 판정한다. 조건이 안 되면 `completed=false` 로 돌려주고 아무것도 바꾸지 않는다.
+시작 시각은 <<_qa_룸_시작_시각_변경,QA 룸 시작 시각 변경>> 으로 먼저 옮긴다.
+==== Curl Request
+include::{snippets}/autoCompleteQaRoom/curl-request.adoc[]
+==== Path Parameters
+include::{snippets}/autoCompleteQaRoom/path-parameters.adoc[]
+==== Http Response
+include::{snippets}/autoCompleteQaRoom/http-response.adoc[]
+==== Response Fields
+include::{snippets}/autoCompleteQaRoom/response-fields.adoc[]
+==== Error Responses
+|===
+| HTTP | error.code | 케이스
+
+| 400 | E400 | roomId 가 UUID 가 아님
+| 404 | E1405 | 룸이 없음
+| 409 | E2201 | 제목이 `[QA]` 로 시작하지 않는 룸
+|===

@@ -23,6 +23,9 @@ class QaTestDataServiceTest {
     private val qaRoomScheduler = mockk<QaRoomScheduler>()
     private val qaMemberCreator = mockk<QaMemberCreator>()
     private val qaResumeSummaryCompleter = mockk<QaResumeSummaryCompleter>()
+    private val qaSocialLogin = mockk<QaSocialLogin>()
+    private val qaMemberStatusChanger = mockk<QaMemberStatusChanger>()
+    private val qaRoomAutoCompleter = mockk<QaRoomAutoCompleter>()
     private val qaTestDataService = QaTestDataService(
         qaRoomFinder,
         qaMemberFinder,
@@ -33,6 +36,9 @@ class QaTestDataServiceTest {
         qaRoomScheduler,
         qaMemberCreator,
         qaResumeSummaryCompleter,
+        qaSocialLogin,
+        qaMemberStatusChanger,
+        qaRoomAutoCompleter,
     )
 
     private val roomId = UUID.fromString("00000000-0000-0000-0000-000000000101")

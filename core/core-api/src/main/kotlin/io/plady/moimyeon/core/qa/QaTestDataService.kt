@@ -2,6 +2,8 @@ package io.plady.moimyeon.core.qa
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.api.auth.DEV_AUTH_PROFILE_EXPRESSION
+import io.plady.moimyeon.core.enums.MemberStatus
+import io.plady.moimyeon.security.auth.SocialLanding
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -21,6 +23,9 @@ class QaTestDataService(
     private val qaRoomScheduler: QaRoomScheduler,
     private val qaMemberCreator: QaMemberCreator,
     private val qaResumeSummaryCompleter: QaResumeSummaryCompleter,
+    private val qaSocialLogin: QaSocialLogin,
+    private val qaMemberStatusChanger: QaMemberStatusChanger,
+    private val qaRoomAutoCompleter: QaRoomAutoCompleter,
 ) {
     fun getQaData(condition: QaDataCondition): QaData = QaData(rooms = qaRoomFinder.getRooms(condition), members = qaMemberFinder.getQaMembers())
 
@@ -68,6 +73,30 @@ class QaTestDataService(
     fun completeResumeSummary(resumeId: UUID, summary: String): QaResumeSummary {
         val result = qaResumeSummaryCompleter.complete(resumeId, summary)
         log.info { "qa-test-data.completeResumeSummary resumeId=$resumeId status=${result.status} isDefault=${result.isDefault}" }
+        return result
+    }
+
+    fun socialLogin(memberId: UUID): SocialLanding {
+        val landing = qaSocialLogin.login(memberId)
+        log.info { "qa-test-data.socialLogin memberId=$memberId outcome=${landing.outcome}" }
+        return landing
+    }
+
+    fun socialSignUp(): SocialLanding {
+        val landing = qaSocialLogin.signUp()
+        log.info { "qa-test-data.socialSignUp memberId=${landing.memberId} outcome=${landing.outcome}" }
+        return landing
+    }
+
+    fun changeMemberStatus(memberId: UUID, status: MemberStatus): QaMemberStatus {
+        val result = qaMemberStatusChanger.change(memberId, status)
+        log.info { "qa-test-data.changeMemberStatus memberId=$memberId before=${result.before} status=${result.status}" }
+        return result
+    }
+
+    fun autoCompleteRoom(roomId: UUID): QaRoomAutoCompletion {
+        val result = qaRoomAutoCompleter.complete(roomId)
+        log.info { "qa-test-data.autoCompleteRoom roomId=$roomId completed=${result.completed} status=${result.status}" }
         return result
     }
 }

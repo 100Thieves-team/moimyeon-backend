@@ -26,13 +26,15 @@ class OAuth2LoginSuccessHandlerTest {
     private val restoreTokenProvider = mockk<RestoreTokenProvider>()
     private val authProperties = authProperties()
     private val oAuth2LoginSuccessHandler = OAuth2LoginSuccessHandler(
-        socialMemberResolver,
-        jwtTokenProvider,
-        sessionIssuer,
-        authCookieFactory,
-        authProperties,
+        SocialLoginLander(
+            socialMemberResolver,
+            jwtTokenProvider,
+            sessionIssuer,
+            authCookieFactory,
+            authProperties,
+            restoreTokenProvider,
+        ),
         failureHandler,
-        restoreTokenProvider,
     )
 
     @Test
