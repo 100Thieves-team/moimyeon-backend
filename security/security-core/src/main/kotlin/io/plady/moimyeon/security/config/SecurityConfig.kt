@@ -46,6 +46,7 @@ class SecurityConfig(
                 authorize("/actuator/health", permitAll)
                 authorize("/actuator/health/**", permitAll)
                 authorize(HttpMethod.GET, "/v1/terms", permitAll)
+                authorize(HttpMethod.GET, "/v1/terms/*", permitAll)
                 authorize(HttpMethod.GET, "/v1/rooms", permitAll)
                 authorize(HttpMethod.GET, "/v1/rooms/*", permitAll)
                 authorize(HttpMethod.GET, "/v1/job-postings/search", permitAll)
