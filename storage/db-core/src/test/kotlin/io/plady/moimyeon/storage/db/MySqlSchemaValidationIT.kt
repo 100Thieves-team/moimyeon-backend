@@ -61,8 +61,8 @@ class MySqlSchemaValidationIT(
         val published = active.filter { it.version == "v1.1" }
         assertThat(published.map { it.type }).containsExactlyInAnyOrder(TermsType.SERVICE, TermsType.PRIVACY)
         published.forEach { terms ->
-            assertThat(terms.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 8, 0, 0))
-            assertThat(terms.content).contains("이유제", "010-9328-9628", "\n## ", "2026년 10월 8일")
+            assertThat(terms.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 7, 0, 0))
+            assertThat(terms.content).contains("이유제", "010-9328-9628", "\n## ", "2026년 10월 7일")
             assertThat(terms.content.toByteArray(Charsets.UTF_8).size).isBetween(8_000, 65_535)
         }
         assertThat(active.map { it.version }).containsExactlyInAnyOrder("v1.0", "v1.0", "v1.1", "v1.1")

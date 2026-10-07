@@ -84,6 +84,6 @@ class SocialAuthServiceIT(
     class PublicationClockConfiguration {
         @Bean
         @Primary
-        fun signupTermsPublicationClock(): Clock = Clock.fixed(Instant.parse("2026-10-07T15:00:00Z"), ZoneOffset.UTC)
+        fun signupTermsPublicationClock(): Clock = Clock.fixed(Instant.parse("2026-10-06T15:00:00Z"), ZoneOffset.UTC)
     }
 }

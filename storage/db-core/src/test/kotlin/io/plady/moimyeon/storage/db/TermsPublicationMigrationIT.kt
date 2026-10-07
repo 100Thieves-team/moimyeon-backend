@@ -65,6 +65,53 @@ class TermsPublicationMigrationIT {
         assertPublicationRejected("missing")
     }
 
+    @Test
+    fun `시행일을 7일로 정정해도 문서 ID와 기존 약관 및 동의 기록은 유지한다`() {
+        val url = prepareDatabase("effective_date", "34")
+        DriverManager.getConnection(url, "root", "root").use { connection ->
+            insertAgreement(connection, "019daf00000070008000000000000001")
+            val previous = snapshot(connection, "select * from terms where version = 'v1.0' order by type")
+            val agreements = snapshot(connection, "select * from terms_agreement")
+            val sql = "select hex(id), type, version, title, content, required, effective_from, status, created_at, deleted_at " +
+                "from terms where version = 'v1.1' order by type"
+            val before = snapshot(connection, sql)
+
+            Flyway.configure().dataSource(url, "root", "root").target("35").load().migrate()
+
+            assertThat(before).hasSize(2)
+            assertThat(snapshot(connection, sql)).isEqualTo(
+                before.map { row ->
+                    row.mapIndexed { index, value ->
+                        when (index) {
+                            4 -> value?.replace("2026년 10월 8일", "2026년 10월 7일")
+                            6 -> value?.replace("2026-10-08", "2026-10-07")
+                            else -> value
+                        }
+                    }
+                },
+            )
+            assertThat(snapshot(connection, "select * from terms where version = 'v1.0' order by type")).isEqualTo(previous)
+            assertThat(snapshot(connection, "select * from terms_agreement")).isEqualTo(agreements)
+            assertThat(Flyway.configure().dataSource(url, "root", "root").target("35").load().migrate().migrationsExecuted).isZero()
+        }
+    }
+
+    @Test
+    fun `예약 문서에 동의 이력이 있으면 두 문서의 시행일과 본문 모두 정정하지 않는다`() {
+        val url = prepareDatabase("effective_date_agreed", "34")
+        DriverManager.getConnection(url, "root", "root").use { connection ->
+            insertAgreement(connection, "f614c0bb87b544e8baf12b8b2ad4c1b2")
+            val terms = snapshot(connection, "select * from terms order by type, version")
+            val agreements = snapshot(connection, "select * from terms_agreement")
+
+            assertThatThrownBy { Flyway.configure().dataSource(url, "root", "root").target("35").load().migrate() }
+                .hasMessageContaining("ABORT_terms_v1_1_effective_date_requires_unagreed_terms")
+
+            assertThat(snapshot(connection, "select * from terms order by type, version")).isEqualTo(terms)
+            assertThat(snapshot(connection, "select * from terms_agreement")).isEqualTo(agreements)
+        }
+    }
+
     private fun assertPublicationRejected(condition: String) {
         val url = prepareDatabase(condition)
         DriverManager.getConnection(url, "root", "root").use { connection ->
@@ -87,13 +134,13 @@ class TermsPublicationMigrationIT {
         }
     }
 
-    private fun prepareDatabase(name: String): String {
+    private fun prepareDatabase(name: String, target: String = "33"): String {
         val rootUrl = "jdbc:mysql://${mysql.host}:${mysql.getMappedPort(3306)}"
         DriverManager.getConnection(rootUrl, "root", "root").use { connection ->
             connection.createStatement().use { it.executeUpdate("create database terms_$name character set utf8mb4") }
         }
         val url = "$rootUrl/terms_$name"
-        Flyway.configure().dataSource(url, "root", "root").target("33").load().migrate()
+        Flyway.configure().dataSource(url, "root", "root").target(target).load().migrate()
         return url
     }
 

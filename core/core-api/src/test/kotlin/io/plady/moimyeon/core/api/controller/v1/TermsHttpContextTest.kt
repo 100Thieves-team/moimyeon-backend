@@ -74,8 +74,8 @@ class TermsHttpContextTest(
         val published = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).filter { it.version == "v1.1" }
         assertThat(published).hasSize(2)
         published.forEach { terms ->
-            assertThat(terms.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 8, 0, 0))
-            assertThat(terms.content).contains("이유제", "010-9328-9628", "\n## ", "2026년 10월 8일")
+            assertThat(terms.effectiveFrom).isEqualTo(LocalDateTime.of(2026, 10, 7, 0, 0))
+            assertThat(terms.content).contains("이유제", "010-9328-9628", "\n## ", "2026년 10월 7일")
             assertThat(terms.content).doesNotContain("미발행 검토안", "시행 예정일", "[내부 메모:")
             assertThat(terms.content.toByteArray(Charsets.UTF_8).size).isBetween(8_000, 65_535)
             mockMvc.perform(get("/v1/terms/${terms.id}"))
@@ -87,9 +87,9 @@ class TermsHttpContextTest(
     @Test
     fun `실제 시드의 목록과 가입 기록은 시행 직전 v1_0에서 정각 이후 v1_1로 전환한다`() {
         listOf(
-            "2026-10-07T14:59:59.999999Z" to "v1.0",
-            "2026-10-07T15:00:00Z" to "v1.1",
-            "2026-10-07T15:00:01Z" to "v1.1",
+            "2026-10-06T14:59:59.999999Z" to "v1.0",
+            "2026-10-06T15:00:00Z" to "v1.1",
+            "2026-10-06T15:00:01Z" to "v1.1",
         ).forEachIndexed { index, (instant, version) ->
             val clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC)
             val current = TermsService(TermsFinder(termsRepository, clock)).getActiveTerms()
@@ -124,6 +124,6 @@ class TermsHttpContextTest(
     class PublicationClockConfiguration {
         @Bean
         @Primary
-        fun termsPublicationClock(): Clock = Clock.fixed(Instant.parse("2026-10-07T15:00:00Z"), ZoneOffset.UTC)
+        fun termsPublicationClock(): Clock = Clock.fixed(Instant.parse("2026-10-06T15:00:00Z"), ZoneOffset.UTC)
     }
 }
