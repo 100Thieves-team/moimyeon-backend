@@ -55,6 +55,9 @@
 - **문서만 바뀐 커밋은 배포하지 않는다** — 첫 부모 diff로 판정 (DR-005).
 - **배포 성공/실패/롤백은 Slack 알림 스텝을 유지한다** — dev/live webhook
   분리, `always()` 실행이되 알림 실패가 배포 결과를 덮지 않는다 (DR-010).
+  webhook 미설정·전송 실패는 배포를 실패시키지 않고 실행 경고와 요약으로
+  드러낸다. dev는 Terraform Apply 결과도 알리며, 더 새 커밋에 밀린 실행은
+  공통 workflow가 job을 실패로 끝내므로 실패 판정보다 먼저 걸러야 한다 (MOI-490).
 - **blocking smoke를 유지한다** — `/actuator/health/readiness` +
   `/v1/terms`, 호출당 5초·최대 3회·전체 60초. live는 전환 전 실패 시 전환
   금지, 전환 후 실패는 자동 롤백 신호다 (DR-011).

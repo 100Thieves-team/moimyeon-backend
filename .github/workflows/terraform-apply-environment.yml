@@ -19,6 +19,10 @@ on:
         description: Immutable S3 prefix output by the successful exact-plan job
         required: true
         type: string
+    outputs:
+      current:
+        description: false when a newer revision superseded this apply after the mutation lock
+        value: ${{ jobs.apply.outputs.current }}
 
 permissions:
   contents: read
@@ -35,6 +39,8 @@ jobs:
       actions: read
       contents: read
       id-token: write
+    outputs:
+      current: ${{ steps.freshness.outputs.current }}
 
     steps:
       - name: Check out exact merged Terraform source

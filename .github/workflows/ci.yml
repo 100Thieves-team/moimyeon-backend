@@ -164,6 +164,9 @@ jobs:
       - name: Check deploy source verification and Terraform boundary
         run: bash infra/terraform/tests/deploy-source-verification-test.sh
 
+      - name: Check deployment and Terraform notifications
+        run: bash infra/terraform/tests/notify-deployment-test.sh
+
       - name: Check source-bound deployment config and ECS requests
         run: python3 -m unittest discover -s infra/terraform/tests -p 'test_deploy_*.py' -v
 

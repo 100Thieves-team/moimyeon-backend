@@ -15,6 +15,10 @@ on:
         description: Trusted merged branch containing source_sha
         required: true
         type: string
+    outputs:
+      current:
+        description: false when a newer revision superseded this sync after the sync lock
+        value: ${{ jobs.sync.outputs.current }}
 
 permissions:
   contents: read
@@ -31,6 +35,8 @@ jobs:
       actions: read
       contents: read
       id-token: write
+    outputs:
+      current: ${{ steps.freshness.outputs.current }}
 
     steps:
       - name: Check out exact merged Terraform source

@@ -80,7 +80,8 @@ assert_contains "${APPLY_WORKFLOW}" 'Application deployment remains frozen' "Ter
 assert_contains "${APPLY_WORKFLOW}" 'branches:[[:space:]]*\[[[:space:]]*dev,[[:space:]]*main[[:space:]]*\]' "apply는 dev/main merged SHA만 허용해야 한다."
 assert_not_contains "${APPLY_WORKFLOW}" 'MOIMYEON_TERRAFORM_REVIEW_PLAN_ROLE_TO_ASSUME' "PR plan role이 apply artifact prefix를 쓰면 안 된다."
 assert_contains "${APPLY_WORKFLOW}" '^  plan-dev:' "dev apply 전에 별도 dev plan을 다시 만들어야 한다."
-assert_contains "${APPLY_WORKFLOW}" 'needs:.*apply-shared' "shared 적용 성공 뒤 dev plan을 생성해야 한다."
+dev_plan_job="$(sed -n '/^  plan-dev:/,/^  apply-dev:/p' "${APPLY_WORKFLOW}")"
+grep -Eq 'needs:.*apply-shared' <<< "${dev_plan_job}" || fail "shared 적용 성공 뒤 dev plan을 생성해야 한다."
 
 # shared no-op은 정상이다. 그때 skipped가 의존 체인을 따라 dev apply까지 전파되지 않아야 한다.
 # 다른 job의 조건으로 우연히 통과하지 않도록 apply-dev 블록만 검사한다.
@@ -110,6 +111,28 @@ assert_contains "${APPLY_WORKFLOW}" 'sync-live-variables:' "live variable sync�
 assert_contains "${APPLY_WORKFLOW}" 'apply_required == '\''false'\''.*apply-dev\.result == '\''success'\''' "dev no-op rerun에서도 variable sync를 재시도해야 한다."
 assert_contains "${APPLY_WORKFLOW}" 'apply_required == '\''false'\''.*apply-live\.result == '\''success'\''' "live no-op rerun에서도 variable sync를 재시도해야 한다."
 assert_not_contains "${APPLY_WORKFLOW}" 'workflow_dispatch' "임의 ref에서 Terraform apply를 시작하면 안 된다."
+
+# MOI-490: dev Terraform 결과는 apply workflow가 직접 알린다. 배포 쪽에서는
+# 적용 실패가 boundary 대기 시간 초과로만 보이기 때문이다.
+notify_dev_job="$(sed -n '/^  notify-dev:/,/^  plan-live:/p' "${APPLY_WORKFLOW}")"
+[ -n "${notify_dev_job}" ] || fail "dev Terraform 결과 알림 job이 필요하다."
+grep -Eq 'always\(\)' <<< "${notify_dev_job}" || fail "dev Terraform 알림은 실패·취소 경로에서도 실행해야 한다."
+grep -Eq "source_branch == 'dev'" <<< "${notify_dev_job}" || fail "dev Terraform 알림은 dev 브랜치로 제한해야 한다(live는 MOI-512)."
+grep -Eq "terraform_required == 'true'" <<< "${notify_dev_job}" || fail "인프라 무변경 생략은 Slack으로 알리지 않아야 한다."
+grep -Eq 'SLACK_DEPLOY_WEBHOOK_URL_DEV' <<< "${notify_dev_job}" || fail "dev Terraform 알림은 dev webhook을 써야 한다."
+grep -Eq '^    continue-on-error: true' <<< "${notify_dev_job}" \
+  || fail "알림 job 어디가 실패해도 Terraform 결과를 덮으면 안 된다(job 수준 격리)."
+grep -Eq 'SYNC_DEV_CURRENT: .*needs\.sync-dev-variables\.outputs\.current' <<< "${notify_dev_job}" \
+  || fail "변수 동기화 단계에서 밀린 실행도 실패와 구별해야 한다."
+assert_contains "${SYNC_WORKFLOW}" 'current: \$\{\{ steps\.freshness\.outputs\.current \}\}' "variable sync workflow는 밀린 실행 여부를 출력해야 한다."
+grep -Eq 'notify-deployment\.sh' <<< "${notify_dev_job}" || fail "dev Terraform 알림은 공통 알림 스크립트를 써야 한다."
+grep -Eq 'summarize-terraform-result\.sh' <<< "${notify_dev_job}" || fail "dev Terraform 결과는 밀린 실행을 실패보다 먼저 거르는 정리 스크립트로 판정해야 한다."
+grep -Eq 'APPLY_DEV_CURRENT: .*needs\.apply-dev\.outputs\.current' <<< "${notify_dev_job}" \
+  || fail "apply 단계에서 밀린 실행도 실패와 구별해야 한다."
+assert_contains "${ENV_APPLY_WORKFLOW}" 'current: \$\{\{ steps\.freshness\.outputs\.current \}\}' "apply workflow는 밀린 실행 여부를 출력해야 한다."
+if grep -Eq 'id-token: write|SLACK_DEPLOY_WEBHOOK_URL_LIVE' <<< "${notify_dev_job}"; then
+  fail "dev Terraform 알림 job은 AWS 자격증명이나 live webhook을 가지면 안 된다."
+fi
 
 assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'environment:[[:space:]]*terraform-apply-plan' "merged plan writer는 review-plan과 다른 OIDC subject를 사용해야 한다."
 assert_contains "${TRUSTED_PLAN_WORKFLOW}" 'MOIMYEON_TERRAFORM_APPLY_PLAN_ROLE_TO_ASSUME' "merged apply-plan은 전용 trusted writer role을 사용해야 한다."

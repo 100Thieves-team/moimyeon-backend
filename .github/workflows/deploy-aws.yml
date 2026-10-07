@@ -81,6 +81,8 @@ jobs:
       tree: ${{ steps.source.outputs.tree }}
       candidate_tag: ${{ steps.source.outputs.candidate_tag }}
       candidate_not_before: ${{ steps.source.outputs.candidate_not_before }}
+      failure_stage: ${{ steps.failure.outputs.stage }}
+      failure_reason: ${{ steps.failure.outputs.reason }}
 
     steps:
       - name: Check out pushed revision
@@ -118,6 +120,7 @@ jobs:
           aws-region: ${{ vars.MOIMYEON_AWS_REGION_DEV }}
 
       - name: Wait for the Terraform boundary
+        id: boundary
         shell: bash
         env:
           APPLIED_SHA_PARAMETER: ${{ vars.MOIMYEON_TERRAFORM_APPLIED_SHA_PARAMETER_DEV }}
@@ -126,11 +129,33 @@ jobs:
           bash infra/terraform/scripts/wait-for-terraform-boundary.sh \
             "${DEPLOY_SHA}" "${APPLIED_SHA_PARAMETER}"
 
-  # The deploy job's own Slack step never runs when prepare fails (unverified
-  # revision, Terraform boundary timeout), so report that failure here.
+      # MOI-490: tell the two preparation failures apart in the notification.
+      - name: Record the preparation failure stage
+        id: failure
+        if: failure() || cancelled()
+        shell: bash
+        env:
+          SOURCE_OUTCOME: ${{ steps.source.outcome }}
+          BOUNDARY_OUTCOME: ${{ steps.boundary.outcome }}
+        run: |
+          if [ "${SOURCE_OUTCOME}" = failure ] || [ "${SOURCE_OUTCOME}" = cancelled ]; then
+            stage="PR CI verification"
+            reason="No verified PR CI run for this tree (no merged PR, failed build check, or GitHub API error); see the run log"
+          elif [ "${BOUNDARY_OUTCOME}" = failure ] || [ "${BOUNDARY_OUTCOME}" = cancelled ]; then
+            stage="Terraform boundary"
+            reason="An earlier infra/terraform change was not applied in time; check the Terraform Apply run"
+          else
+            stage="Preparation"
+            reason="Deploy preparation failed before the Terraform boundary"
+          fi
+          echo "stage=${stage}" >> "$GITHUB_OUTPUT"
+          echo "reason=${reason}" >> "$GITHUB_OUTPUT"
+
+  # The deploy job's own Slack step never runs when prepare fails or is
+  # cancelled (unverified revision, Terraform boundary timeout), so report it here.
   prepare-failed:
     needs: [ changes, prepare ]
-    if: ${{ always() && needs.changes.outputs.deploy_required == 'true' && needs.prepare.result == 'failure' }}
+    if: ${{ always() && needs.changes.outputs.deploy_required == 'true' && (needs.prepare.result == 'failure' || needs.prepare.result == 'cancelled') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -148,11 +173,12 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL_DEV }}
           DEPLOY_ENVIRONMENT: dev
           DEPLOY_KIND: deployment
-          DEPLOY_OUTCOME: failure
+          DEPLOY_OUTCOME: ${{ needs.prepare.result }}
           DEPLOY_SHA: ${{ github.sha }}
           DEPLOY_ACTOR: ${{ github.actor }}
           DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          DEPLOY_REASON: PR CI verification or Terraform boundary failed before deploy
+          DEPLOY_STAGE: ${{ needs.prepare.outputs.failure_stage || 'Preparation' }}
+          DEPLOY_REASON: ${{ needs.prepare.result == 'cancelled' && 'Deploy preparation was cancelled before deploy' || needs.prepare.outputs.failure_reason || 'Deploy preparation failed before deploy' }}
           API_RESULT: skipped
           WORKER_RESULT: skipped
         run: bash infra/terraform/scripts/notify-deployment.sh
@@ -206,6 +232,7 @@ jobs:
             done < <(git diff --name-only --no-renames "${DEPLOY_SHA}" "${latest_sha}")
           fi
           echo "current=${current}" >> "$GITHUB_OUTPUT"
+          echo "latest_sha=${latest_sha}" >> "$GITHUB_OUTPUT"
           if [ "${current}" = false ]; then
             echo "Skipping ${DEPLOY_SHA}: newer runtime revision ${latest_sha} deploys instead." \
               >> "$GITHUB_STEP_SUMMARY"
@@ -397,6 +424,8 @@ jobs:
           set -euo pipefail
           if [ -z "${CANDIDATE_TAG}" ]; then
             echo "No trusted PR-built candidate; the images will be built here."
+            echo "api=none" >> "$GITHUB_OUTPUT"
+            echo "worker=none" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           [[ "${CANDIDATE_TAG}" =~ ^tree-[0-9a-f]{40}-run-[0-9]+-[0-9]+$ ]] || exit 1
@@ -407,28 +436,34 @@ jobs:
           # time, because Spring Boot jars and the image layers are reproducible.)
           if [ $(( $(date -u +%s) - $(date -u -d "${CANDIDATE_NOT_BEFORE}" +%s) )) -gt $(( 13 * 24 * 3600 )) ]; then
             echo "Candidate CI run started over 13 days ago; the images will be built here."
+            echo "api=expired" >> "$GITHUB_OUTPUT"
+            echo "worker=expired" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           promote() {
             local candidate="$1"
             local target="$2"
+            local output="$3"
             # A retry after an earlier build or promotion keeps that image.
             if docker buildx imagetools inspect "${target}" >/dev/null 2>&1; then
               echo "Deploy image ${target} already exists; keeping it."
+              echo "${output}=existing" >> "$GITHUB_OUTPUT"
               return 0
             fi
             if ! docker buildx imagetools inspect "${candidate}" >/dev/null 2>&1; then
               echo "Candidate ${candidate} is missing; the image will be built here."
+              echo "${output}=missing" >> "$GITHUB_OUTPUT"
               return 0
             fi
             bash infra/terraform/scripts/copy-image-by-digest.sh "${candidate}" "${target}" >/dev/null
             echo "Promoted PR-built candidate ${candidate} to ${target}."
+            echo "${output}=promoted" >> "$GITHUB_OUTPUT"
           }
 
-          promote "${API_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${API_IMAGE_URI}"
+          promote "${API_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${API_IMAGE_URI}" api
           if [ "${WORKER_ENABLED}" = "true" ]; then
-            promote "${WORKER_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${WORKER_IMAGE_URI}"
+            promote "${WORKER_CANDIDATE_REPOSITORY}:${CANDIDATE_TAG}" "${WORKER_IMAGE_URI}" worker
           fi
 
       - name: Check for existing Core API image
@@ -444,6 +479,7 @@ jobs:
           fi
 
       - name: Build and push image
+        id: api_build
         if: steps.freshness.outputs.current == 'true' && steps.api_image_cache.outputs.exists != 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -606,6 +642,7 @@ jobs:
             if docker buildx imagetools inspect "${WORKER_IMAGE_TAG}" >/dev/null 2>&1; then
               echo "Reusing existing immutable Worker image."
               worker_build_status="true"
+              echo "worker_image=existing" >> "$GITHUB_OUTPUT"
             else
               timeout --signal=TERM 900 docker buildx build --target core-worker \
                 --platform linux/amd64 \
@@ -614,6 +651,7 @@ jobs:
                 --push \
                 . &
               worker_build_pid=$!
+              echo "worker_image=built" >> "$GITHUB_OUTPUT"
             fi
           fi
 
@@ -1030,8 +1068,10 @@ jobs:
               --output json
           fi
 
+      # MOI-490: a run superseded by a newer runtime revision reports a short
+      # `skipped` line, so the merger knows another run deploys their commit.
       - name: Notify Slack
-        if: always() && steps.freshness.outputs.current != 'false'
+        if: always()
         continue-on-error: true
         shell: bash
         env:
@@ -1042,6 +1082,17 @@ jobs:
           DEPLOY_SHA: ${{ env.DEPLOY_SHA }}
           DEPLOY_ACTOR: ${{ github.actor }}
           DEPLOY_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CURRENT: ${{ steps.freshness.outputs.current }}
+          LATEST_SHA: ${{ steps.freshness.outputs.latest_sha }}
           API_RESULT: ${{ steps.api_deploy.outcome }}
-          WORKER_RESULT: ${{ steps.worker_deploy.outcome }}
-        run: bash infra/terraform/scripts/notify-deployment.sh
+          API_BUILD_RESULT: ${{ steps.api_build.outcome }}
+          API_CANDIDATE: ${{ steps.candidate.outputs.api }}
+          API_IMAGE_EXISTS: ${{ steps.api_image_cache.outputs.exists }}
+          WORKER_STEP_RESULT: ${{ steps.worker_deploy.outcome }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_BUILD_SUCCEEDED: ${{ steps.api_deploy.outputs.worker_build_succeeded }}
+          WORKER_CANDIDATE: ${{ steps.candidate.outputs.worker }}
+          WORKER_IMAGE: ${{ steps.api_deploy.outputs.worker_image }}
+          CANDIDATE_TAG: ${{ needs.prepare.outputs.candidate_tag }}
+          REPOSITORY_URL: https://github.com/${{ github.repository }}
+        run: bash infra/terraform/scripts/notify-dev-deployment.sh
