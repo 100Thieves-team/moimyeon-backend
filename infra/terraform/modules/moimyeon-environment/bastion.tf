@@ -87,8 +87,10 @@ resource "aws_instance" "db_bastion" {
     http_tokens   = "required"
   }
 
+  # The ECS-optimized AL2023 AMI snapshot is 30 GiB; a smaller root volume fails
+  # RunInstances with InvalidBlockDeviceMapping (MOI-581, first live apply).
   root_block_device {
-    volume_size = 8
+    volume_size = 30
     volume_type = "gp3"
     encrypted   = true
   }
