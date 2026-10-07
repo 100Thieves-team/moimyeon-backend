@@ -1,7 +1,8 @@
 package io.plady.moimyeon.core.support.response
 
+import io.plady.moimyeon.core.support.error.CoreApiErrorType
+import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.ErrorMessage
-import io.plady.moimyeon.core.support.error.ErrorType
 
 class ApiResponse<T> private constructor(
     val result: ResultType,
@@ -17,7 +18,11 @@ class ApiResponse<T> private constructor(
             return ApiResponse(ResultType.SUCCESS, data, null)
         }
 
-        fun <S> error(error: ErrorType, errorData: Any? = null): ApiResponse<S> {
+        fun <S> error(error: CoreErrorType, errorData: Any? = null): ApiResponse<S> {
+            return ApiResponse(ResultType.ERROR, null, ErrorMessage(error, errorData))
+        }
+
+        fun <S> error(error: CoreApiErrorType, errorData: Any? = null): ApiResponse<S> {
             return ApiResponse(ResultType.ERROR, null, ErrorMessage(error, errorData))
         }
     }

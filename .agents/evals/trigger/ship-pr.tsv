@@ -1,0 +1,12 @@
+p1	positive	yes	MOI-731 작업 끝났어. 커밋하고 PR 올려줘
+p2	positive	yes	이 변경분 커밋 나눠서 PR 만들어줘
+p3	positive	yes	MOI-732 PR에 CodeRabbit 코멘트 달렸어. 대응해줘
+p4	positive	yes	검증 돌리고 PR까지 부탁해
+p5	positive	yes	MOI-733 리뷰봇 지적 반영하고 푸시해줘
+n1	negative	no	MOI-734 구현해줘
+n2	negative	no	커밋 메시지 컨벤션이 뭐야?
+n3	negative	no	이 변경 QA 관점으로 봐줘
+n4	negative	no	dev 브랜치 최신으로 당겨와줘
+n5	negative	no	room 도메인 최근 커밋 이력 요약해줘
+b1	boundary	boundary	MOI-735 마무리하자
+b2	boundary	boundary	테스트 통과했으면 바로 올려줘

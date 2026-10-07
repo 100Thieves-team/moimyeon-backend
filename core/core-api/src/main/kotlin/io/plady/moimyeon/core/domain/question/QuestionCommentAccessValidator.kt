@@ -1,0 +1,54 @@
+package io.plady.moimyeon.core.domain.question
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.room.RoomFinder
+import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.requireBusiness
+import org.springframework.stereotype.Component
+import java.time.Clock
+import java.time.LocalDateTime
+import java.util.UUID
+
+private val log = KotlinLogging.logger {}
+
+@Component
+class QuestionCommentAccessValidator(
+    private val roomFinder: RoomFinder,
+    private val participationFinder: ParticipationFinder,
+    private val clock: Clock,
+) {
+    fun validateWriter(roomId: UUID, memberId: UUID, targetMemberId: UUID) {
+        log.debug { "question-comment-access.validator.validateWriter roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
+        val room = roomFinder.getRoom(roomId)
+        requireBusiness(
+            room.isProgressAvailable(LocalDateTime.now(clock)),
+            CoreErrorType.QUESTION_COMMENT_NOT_EDITABLE,
+        )
+        validateConfirmedParticipant(roomId, memberId)
+        validateConfirmedParticipant(roomId, targetMemberId)
+        requireBusiness(memberId != targetMemberId, CoreErrorType.QUESTION_COMMENT_FORBIDDEN)
+    }
+
+    fun validateViewer(roomId: UUID, memberId: UUID, targetMemberId: UUID) {
+        log.debug { "question-comment-access.validator.validateViewer roomId=$roomId memberId=$memberId targetMemberId=$targetMemberId" }
+        val room = roomFinder.getRoom(roomId)
+        requireBusiness(
+            room.status == RoomStatus.COMPLETED || room.isProgressAvailable(LocalDateTime.now(clock)),
+            CoreErrorType.QUESTION_COMMENT_NOT_VIEWABLE,
+        )
+        validateConfirmedParticipant(roomId, memberId)
+        validateConfirmedParticipant(roomId, targetMemberId)
+        if (room.status != RoomStatus.COMPLETED) {
+            requireBusiness(memberId != targetMemberId, CoreErrorType.QUESTION_COMMENT_FORBIDDEN)
+        }
+    }
+
+    private fun validateConfirmedParticipant(roomId: UUID, memberId: UUID) {
+        requireBusiness(
+            participationFinder.wasConfirmedParticipant(roomId, memberId),
+            CoreErrorType.QUESTION_COMMENT_FORBIDDEN,
+        )
+    }
+}

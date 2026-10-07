@@ -1,0 +1,164 @@
+package io.plady.moimyeon.storage.db.core
+
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.time.LocalDateTime
+import java.util.UUID
+
+interface RoomApplicationRepository : JpaRepository<RoomApplicationEntity, Long> {
+    fun findByApplicantMemberIdAndStatusAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): List<RoomApplicationEntity>
+
+    fun findFirstByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        roomId: UUID,
+        applicantMemberId: UUID,
+    ): RoomApplicationEntity?
+
+    // 뷰어 관계 일괄 조회(MOI-387). 룸별 최신 1건은 호출자가 이 순서에서 먼저 만나는 행으로 고른다 —
+    // 위 단건 조회와 정렬이 같아야 목록과 상세가 다른 관계를 말하지 않는다.
+    // 철회 후 재신청이 가능해 한 룸에 이력이 여러 건 쌓이므로 "최신"의 정의가 두 곳에서 갈리면 안 된다.
+    fun findByApplicantMemberIdAndRoomIdInAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        applicantMemberId: UUID,
+        roomIds: Collection<UUID>,
+    ): List<RoomApplicationEntity>
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(
+        roomId: UUID,
+        applicantMemberId: UUID,
+    ): RoomApplicationEntity?
+
+    fun countByApplicantMemberIdAndStatusAndDeletedAtIsNull(
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): Long
+
+    // 룸 상세의 "신청 대기 수"(「룸 참여」 §4.1·§6). 수만 공개하고 대기자 목록은 방장 외 비공개다.
+    fun countByRoomIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        status: RoomApplicationStatus,
+    ): Long
+
+    fun existsByRoomIdAndPendingMemberIdAndDeletedAtIsNull(
+        roomId: UUID,
+        pendingMemberId: UUID,
+    ): Boolean
+
+    fun existsByRoomIdAndApplicantMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        applicantMemberId: UUID,
+        status: RoomApplicationStatus,
+    ): Boolean
+
+    // 수락·반려도 철회와 같은 신청 상태를 바꾸므로 신청 행 잠금 안에서 PENDING 여부를 판정한다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    fun findByIdAndRoomIdAndDeletedAtIsNull(id: Long, roomId: UUID): RoomApplicationEntity?
+
+    // 방장 자동 위임 순회(MOI-397). 먼저 신청한 순서로 보고 자격을 잃은 사람은 건너뛴다.
+    // id 만 읽는다 — 후보마다 행을 잠근 뒤 새로 읽어야 동시에 진행 중인 탈퇴의 철회를 덮어쓰지 않는다(MOI-540).
+    @Query(
+        """
+        select a.id
+        from RoomApplicationEntity a
+        where a.roomId = :roomId
+          and a.status = :status
+          and a.deletedAt is null
+        order by a.appliedAt asc, a.id asc
+        """,
+    )
+    fun findIdsByRoomIdAndStatusOrderByAppliedAt(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+    ): List<Long>
+
+    fun findByRoomIdAndStatusNotAndDeletedAtIsNullOrderByAppliedAtAsc(
+        roomId: UUID,
+        status: RoomApplicationStatus,
+    ): List<RoomApplicationEntity>
+
+    // 룸이 취소·확정될 때 남은 대기 신청을 한 번에 끝낸다(「룸 참여」 §4.9). status 만 갈아 끼우면
+    // 취소(ROOM_CANCELED)와 확정(ROOM_CONFIRMED)이 같은 쿼리를 쓴다.
+    //
+    // 벌크라서 직접 챙겨야 하는 것이 둘 있다.
+    //   - pendingMemberId 를 비우지 않으면 대기 유니크 자리가 잠긴 채 남아 재신청이 영영 막힌다.
+    //     엔티티의 accept/reject/withdraw 가 지는 책임을 여기서는 쿼리가 진다.
+    //   - updatedAt 은 @UpdateTimestamp 라 벌크에서 돌지 않으므로 set 절에 직접 넣는다.
+    //
+    // clearAutomatically 를 켜지 않는다 — 컨텍스트 전체가 비워지면 호출자가 잡고 있는 RoomEntity 가
+    // 준영속이 되어 상태 전이가 사라진다. 대신 호출 트랜잭션이 RoomApplicationEntity 를 로드하지 않는다는
+    // 것을 전제로 삼는다(RoomCancellationIT 가 이 전제를 지킨다).
+    @Modifying(flushAutomatically = true)
+    @Query(
+        """
+        update RoomApplicationEntity a
+           set a.status = :status,
+               a.pendingMemberId = null,
+               a.handledAt = :now,
+               a.updatedAt = :now
+         where a.roomId = :roomId
+           and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+           and a.deletedAt is null
+        """,
+    )
+    fun closeAllPending(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+        @Param("now") now: LocalDateTime,
+    ): Int
+
+    // closeAllPending 뒤에 부른다. 먼저 조회하면 그 사이 철회한 사람(철회는 룸 행을 잠그지 않는다)이 섞인다.
+    @Query(
+        """
+        select a.applicantMemberId
+          from RoomApplicationEntity a
+         where a.roomId = :roomId
+           and a.status = :status
+           and a.handledAt = :handledAt
+           and a.deletedAt is null
+        """,
+    )
+    fun findApplicantMemberIdsClosedAt(
+        @Param("roomId") roomId: UUID,
+        @Param("status") status: RoomApplicationStatus,
+        @Param("handledAt") handledAt: LocalDateTime,
+    ): List<UUID>
+
+    // set 절은 RoomApplicationEntity.withdraw 와 같게 유지한다.
+    @Modifying(flushAutomatically = true)
+    @Query(
+        """
+        update RoomApplicationEntity a
+           set a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.WITHDRAWN,
+               a.pendingMemberId = null,
+               a.handledAt = :now,
+               a.updatedAt = :now
+         where a.applicantMemberId = :applicantMemberId
+           and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+           and a.deletedAt is null
+        """,
+    )
+    fun withdrawAllPending(
+        @Param("applicantMemberId") applicantMemberId: UUID,
+        @Param("now") now: LocalDateTime,
+    ): Int
+
+    // 탐색 목록의 "신청 대기 수"(MOI-383 §4.1). 정렬에 쓰이지 않는 표시용이라 한 페이지 분량의 roomId 에만 IN 으로 건다.
+    @Query(
+        """
+        select new io.plady.moimyeon.storage.db.core.RoomCount(a.roomId, count(a))
+        from RoomApplicationEntity a
+        where a.roomId in :roomIds
+          and a.status = io.plady.moimyeon.core.enums.RoomApplicationStatus.PENDING
+          and a.deletedAt is null
+        group by a.roomId
+        """,
+    )
+    fun countPendingByRoomIds(@Param("roomIds") roomIds: Collection<UUID>): List<RoomCount>
+}

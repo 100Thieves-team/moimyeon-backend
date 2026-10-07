@@ -1,0 +1,57 @@
+package io.plady.moimyeon.core.domain.notification
+
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import io.plady.moimyeon.storage.db.core.WebPushRegistrationHash
+import io.plady.moimyeon.storage.db.core.WebPushSubscriptionEntity
+import io.plady.moimyeon.storage.db.core.WebPushSubscriptionRepository
+import org.junit.jupiter.api.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+
+class WebPushSubscriptionManagerTest {
+    private val webPushSubscriptionRepository = mockk<WebPushSubscriptionRepository>()
+    private val clock = Clock.fixed(Instant.parse("2026-08-10T10:00:00Z"), ZoneOffset.UTC)
+    private val webPushSubscriptionManager = WebPushSubscriptionManager(webPushSubscriptionRepository, clock)
+
+    @Test
+    fun `처음 업로드된 브라우저 등록을 회원에게 연결한다`() {
+        every { webPushSubscriptionRepository.upsertRegistration(any(), any(), any(), any()) } returns 1
+        every { webPushSubscriptionRepository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
+
+        webPushSubscriptionManager.register(MEMBER_A, REGISTRATION)
+
+        verify(exactly = 1) {
+            webPushSubscriptionRepository.upsertRegistration(
+                memberId = MEMBER_A,
+                registration = REGISTRATION.value,
+                registrationHash = WebPushRegistrationHash.of(REGISTRATION.value),
+                registeredAt = LocalDateTime.ofInstant(clock.instant(), clock.zone),
+            )
+        }
+    }
+
+    @Test
+    fun `자기 소유 기기 등록은 지우지 않는다`() {
+        every { webPushSubscriptionRepository.findByRegistrationHash(any()) } returns subscription(MEMBER_A)
+
+        webPushSubscriptionManager.unregisterIfOwnedByOther(MEMBER_A, REGISTRATION)
+
+        verify(exactly = 0) { webPushSubscriptionRepository.delete(any()) }
+    }
+
+    private fun subscription(memberId: UUID) = WebPushSubscriptionEntity(
+        memberId = memberId,
+        registration = REGISTRATION.value,
+        registrationHash = "hash",
+        registeredAt = LocalDateTime.of(2026, 8, 1, 0, 0),
+    )
+}
+
+private val MEMBER_A: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
+private val MEMBER_B: UUID = UUID.fromString("00000000-0000-0000-0000-000000000002")
+private val REGISTRATION = WebPushRegistration("fcm-registration-id")

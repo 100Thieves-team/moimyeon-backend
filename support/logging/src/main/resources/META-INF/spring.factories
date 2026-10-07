@@ -1,0 +1,4 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+io.plady.moimyeon.support.logging.LoggingEnvironmentPostProcessor
+org.springframework.context.ApplicationContextInitializer=\
+io.plady.moimyeon.support.logging.LoggingEnvironmentInitializer

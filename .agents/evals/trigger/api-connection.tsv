@@ -1,0 +1,12 @@
+p1	positive	yes	MOI-711 만들어둔 RoomService를 API에 연결해줘
+p2	positive	yes	MOI-712 모킹 걷어내고 실구현으로 연결하자
+p3	positive	yes	스펙이랑 서비스 다 있어. MOI-713 배선만 해줘
+p4	positive	yes	MOI-714 Facade 필요한지 보고 컨트롤러랑 서비스 이어줘
+p5	positive	yes	MOI-715 연결하고 도커로 실호출 확인까지 해줘
+n1	negative	no	MOI-716 API 스펙만 먼저 정의해줘
+n2	negative	no	MOI-717 요구사항 구현해줘
+n3	negative	no	HikariCP 커넥션 풀 설정 바꿔줘
+n4	negative	no	프론트가 CORS 에러 난대, 원인 봐줘
+n5	negative	no	RoomController 변경분 코드 리뷰해줘
+b1	boundary	boundary	MOI-718 화면 다 나왔어. 스펙부터 연결까지 한 번에 가자
+b2	boundary	boundary	MOI-719 연결하는데 서비스에 메서드 하나 없더라, 추가하면서 이어줘

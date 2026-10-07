@@ -1,0 +1,659 @@
+package io.plady.moimyeon.core.domain.room
+
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.member.MemberValidator
+import io.plady.moimyeon.core.domain.participation.JoinedParticipant
+import io.plady.moimyeon.core.domain.participation.ParticipationFinder
+import io.plady.moimyeon.core.domain.participation.ParticipationValidator
+import io.plady.moimyeon.core.domain.resume.ResumeFile
+import io.plady.moimyeon.core.enums.EventType
+import io.plady.moimyeon.core.enums.InterviewStage
+import io.plady.moimyeon.core.enums.InterviewType
+import io.plady.moimyeon.core.enums.MeetingType
+import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.ResumeSharingPolicy
+import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
+import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.storage.db.core.ParticipationRepository
+import io.plady.moimyeon.storage.db.core.ResumeSubmissionRepository
+import io.plady.moimyeon.storage.db.core.RoomApplicationRepository
+import io.plady.moimyeon.storage.db.core.RoomEntity
+import io.plady.moimyeon.storage.db.core.RoomRepository
+import io.plady.moimyeon.storage.db.core.RoomStatusLogRepository
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.dao.DataIntegrityViolationException
+import java.time.Clock
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.Optional
+import java.util.UUID
+
+class RoomManagerTest {
+    private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
+
+    private val roomRepository = mockk<RoomRepository>()
+    private val participationRepository = mockk<ParticipationRepository>()
+    private val roomApplicationRepository = mockk<RoomApplicationRepository>(relaxed = true)
+    private val resumeSubmissionRepository = mockk<ResumeSubmissionRepository>()
+    private val roomStatusLogRepository = mockk<RoomStatusLogRepository>(relaxed = true)
+    private val participationValidator = mockk<ParticipationValidator>(relaxed = true)
+    private val memberValidator = mockk<MemberValidator>(relaxed = true)
+    private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
+    private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
+    private val roomManager = RoomManager(
+        roomRepository,
+        participationRepository,
+        roomApplicationRepository,
+        resumeSubmissionRepository,
+        roomStatusLogRepository,
+        participationValidator,
+        memberValidator,
+        participationFinder,
+        outboxEventPublisher,
+        Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+    )
+
+    private val roomId = UUID.randomUUID()
+    private val hostId = UUID.randomUUID()
+    private val resumeId = UUID.randomUUID()
+
+    // relaxed mock 은 제네릭 save 의 반환을 Object 로 만들어 캐스팅에서 터진다. 저장한 것을 그대로 돌려준다.
+    @BeforeEach
+    fun stubStatusLogSave() {
+        every { roomStatusLogRepository.save(any()) } answers { firstArg() }
+        every {
+            participationRepository.findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+                any(),
+                ParticipationStatus.JOINED,
+            )
+        } returns emptyList()
+    }
+
+    // 수정 계약을 이 테스트가 들고 있다. 무엇이 바뀌고 무엇이 안 바뀌는지를 한자리에서 단언한다.
+    @Test
+    fun `모집 중인 룸은 편집 가능한 필드만 수정된다`() {
+        val room = givenRecruitingRoom()
+        givenHost()
+        givenParticipants(3)
+
+        roomManager.update(roomId, hostId, updateCommand(title = "다시 정한 백엔드 모의면접 준비 룸", min = 3, max = 5))
+
+        assertThat(room.title).isEqualTo("다시 정한 백엔드 모의면접 준비 룸")
+        assertThat(room.description).isNull()
+        assertThat(room.interviewStage).isEqualTo(InterviewStage.FIRST)
+        assertThat(room.interviewType).isEqualTo(InterviewType.JOB)
+        assertThat(room.meetingType).isEqualTo(MeetingType.ONLINE)
+        assertThat(room.sigunguId).isNull()
+        assertThat(room.minCapacity).isEqualTo(3)
+        assertThat(room.maxCapacity).isEqualTo(5)
+        assertThat(room.startAt).isEqualTo(now.plusDays(5))
+        assertThat(room.durationMinutes).isEqualTo(60)
+
+        // 식별 참조와 이력서 원본 공개 여부는 수정 대상이 아니다. 공고를 바꾸면 다른 룸이 된다.
+        assertThat(room.jobPostingId).isEqualTo(1L)
+        assertThat(room.jobRoleId).isEqualTo(2L)
+        assertThat(room.resumePublic).isFalse()
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    @Test
+    fun `최대 인원을 현재 참여 인원보다 작게 낮추면 E1417 을 던진다`() {
+        val room = givenRecruitingRoom()
+        givenHost()
+        givenParticipants(5)
+
+        assertFails(CoreErrorType.ROOM_CAPACITY_BELOW_PARTICIPANTS) { updateCommand(min = 2, max = 3) }
+        assertThat(room.maxCapacity).isEqualTo(6)
+    }
+
+    // 여기서 막으면 정원을 정확히 맞춘 방장이 갇힌다.
+    @Test
+    fun `최대 인원을 현재 참여 인원과 같게 낮추는 것은 허용된다`() {
+        val room = givenRecruitingRoom()
+        givenHost()
+        givenParticipants(3)
+
+        roomManager.update(roomId, hostId, updateCommand(min = 2, max = 3))
+
+        assertThat(room.maxCapacity).isEqualTo(3)
+    }
+
+    @Test
+    fun `최소 인원은 현재 참여 인원보다 크게 올릴 수 있다`() {
+        val room = givenRecruitingRoom()
+        givenHost()
+        givenParticipants(2)
+
+        roomManager.update(roomId, hostId, updateCommand(min = 5, max = 8))
+
+        assertThat(room.minCapacity).isEqualTo(5)
+    }
+
+    // 수락 쪽 정원 판정과 같은 기준을 써야 한다. 나간 사람의 자리는 비워진 것으로 본다.
+    @Test
+    fun `정원 판정은 참여 중인 인원만 센다`() {
+        givenRecruitingRoom()
+        givenHost()
+        givenParticipants(1)
+
+        roomManager.update(roomId, hostId, updateCommand(min = 2, max = 2))
+
+        verify {
+            participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
+        }
+    }
+
+    @Test
+    fun `확정된 룸을 수정하면 E1418 을 던진다`() {
+        givenRoomWithStatus(RoomStatus.CONFIRMED)
+        givenHost()
+
+        assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
+    }
+
+    @Test
+    fun `취소된 룸을 수정하면 E1418 을 던진다`() {
+        givenRoomWithStatus(RoomStatus.CANCELED)
+        givenHost()
+
+        assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
+    }
+
+    @Test
+    fun `끝난 룸을 수정하면 E1418 을 던진다`() {
+        givenRoomWithStatus(RoomStatus.COMPLETED)
+        givenHost()
+
+        assertFails(CoreErrorType.ROOM_NOT_EDITABLE) { updateCommand() }
+    }
+
+    @Test
+    fun `방장이 아니면 E1406 을 던진다`() {
+        val room = givenRecruitingRoom()
+        givenHost(isHost = false)
+
+        assertFails(CoreErrorType.ROOM_FORBIDDEN) { updateCommand() }
+        assertThat(room.title).isEqualTo("처음 정한 제목입니다")
+    }
+
+    @Test
+    fun `내려간 룸을 수정하면 E1405 를 던진다`() {
+        givenRecruitingRoom().delete(now)
+
+        assertFails(CoreErrorType.ROOM_NOT_FOUND) { updateCommand() }
+    }
+
+    @Test
+    fun `모집 중 룸은 취소되어 CANCELED 가 된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+
+        roomManager.cancel(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
+    }
+
+    @Test
+    fun `참여자가 있는 모집 중 룸도 폭파할 수 있다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+
+        roomManager.cancel(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CANCELED)
+    }
+
+    @Test
+    fun `모집 중이 아닌 룸을 취소하면 E1410 을 던진다`() {
+        listOf(RoomStatus.COMPLETED, RoomStatus.CANCELED)
+            .forEach { status ->
+                givenRoomForUpdateWithStatus(status)
+                givenHost()
+
+                assertCancelFails(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    @Test
+    fun `확정된 룸도 폭파할 수 있다`() {
+        val room = givenRoomForUpdateWithStatus(RoomStatus.CONFIRMED, canCancel = true)
+        givenHost()
+
+        roomManager.cancel(roomId, hostId)
+
+        verify(exactly = 1) { room.cancel() }
+    }
+
+    @Test
+    fun `방장이 아니면 룸을 취소할 수 없고 E1406 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost(isHost = false)
+
+        assertCancelFails(CoreErrorType.ROOM_FORBIDDEN)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    @Test
+    fun `내려간 룸을 취소하면 E1405 를 던진다`() {
+        givenRecruitingRoomForUpdate().delete(now)
+
+        assertCancelFails(CoreErrorType.ROOM_NOT_FOUND)
+    }
+
+    @Test
+    fun `시계가 나노초까지 내도 신청 종료와 종료된 신청 조회에 같은 마이크로초 시각을 쓴다`() {
+        val nanoNow = now.plusNanos(123_456_789)
+        val nanoManager = RoomManager(
+            roomRepository,
+            participationRepository,
+            roomApplicationRepository,
+            resumeSubmissionRepository,
+            roomStatusLogRepository,
+            participationValidator,
+            memberValidator,
+            participationFinder,
+            outboxEventPublisher,
+            Clock.fixed(nanoNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
+        )
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        nanoManager.cancel(roomId, hostId)
+
+        val handledAt = now.plusNanos(123_456_000)
+        verifyOrder {
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+            roomApplicationRepository.findApplicantMemberIdsClosedAt(roomId, RoomApplicationStatus.ROOM_CANCELED, handledAt)
+        }
+    }
+
+    @Test
+    fun `룸을 취소하면 이력을 남기고 대기 신청을 종료한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        roomManager.cancel(roomId, hostId)
+
+        verifyOrder {
+            roomStatusLogRepository.save(
+                match { it.roomId == roomId && it.transitionType == RoomStatus.CANCELED && it.handlerMemberId == hostId },
+            )
+            roomApplicationRepository.closeAllPending(roomId, RoomApplicationStatus.ROOM_CANCELED, now)
+        }
+    }
+
+    @Test
+    fun `룸을 폭파하면 취소한 방장과 참여 중인 전원을 담아 취소 사실을 발행한다`() {
+        val participantId = UUID.randomUUID()
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenJoinedMembers(hostId, participantId)
+
+        roomManager.cancel(roomId, hostId)
+
+        val canceled = slot<RoomCanceledEventPayload>()
+        verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CANCELED, capture(canceled)) }
+        assertThat(canceled.captured.canceledByMemberId).isEqualTo(hostId)
+        assertThat(canceled.captured.participantMemberIds).containsExactly(hostId, participantId)
+    }
+
+    // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
+    // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
+    @Test
+    fun `이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        every { roomStatusLogRepository.save(any()) } throws
+            DataIntegrityViolationException("uk_room_status_log_room_terminal_active")
+
+        assertThatThrownBy { roomManager.cancel(roomId, hostId) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    @Test
+    fun `인원과 일정이 조건을 충족하면 확정되어 CONFIRMED 가 된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(4)
+
+        roomManager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    // 경계를 `>` 로 쓰면 정원을 정확히 맞춘 방장이 확정하지 못하고 갇힌다.
+    @Test
+    fun `현재 인원이 최소 진행 인원과 같으면 확정된다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(2)
+
+        roomManager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
+    fun `룸을 확정하면 참여 중인 전원을 담아 확정 사실을 발행한다`() {
+        val participantId = UUID.randomUUID()
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(2)
+        givenJoinedMembers(hostId, participantId)
+
+        roomManager.confirm(roomId, hostId)
+
+        val confirmed = slot<RoomConfirmedEventPayload>()
+        verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CONFIRMED, capture(confirmed)) }
+        assertThat(confirmed.captured.participantMemberIds).containsExactly(hostId, participantId)
+    }
+
+    @Test
+    fun `인원이 최소 진행 인원보다 적으면 E1421 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(1)
+
+        assertConfirmFails(CoreErrorType.ROOM_BELOW_MIN_CAPACITY)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    // 시작 시각과 같아지는 순간부터 지난 것으로 본다(RoomConfirmation 과 같은 기준).
+    @Test
+    fun `일정이 지난 룸을 확정하면 E1422 를 던진다`() {
+        givenRoomForUpdateStartingAt(now)
+        givenHost()
+        givenParticipants(4)
+
+        assertConfirmFails(CoreErrorType.ROOM_SCHEDULE_PASSED_FOR_CONFIRMATION)
+    }
+
+    @Test
+    fun `확정 후 방장 위임으로 모집 재개된 룸은 일정이 지났어도 재확정할 수 있다`() {
+        val room = givenRoomForUpdateStartingAt(now.minusHours(1))
+        givenHost()
+        givenParticipants(4)
+        every {
+            roomStatusLogRepository.existsByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.CONFIRMED)
+        } returns true
+
+        roomManager.confirm(roomId, hostId)
+
+        assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+    }
+
+    @Test
+    fun `모집 중이 아닌 룸을 확정하면 E1410 을 던진다`() {
+        listOf(RoomStatus.CONFIRMED, RoomStatus.COMPLETED, RoomStatus.CANCELED)
+            .forEach { status ->
+                givenRoomForUpdateWithStatus(status)
+                givenHost()
+                givenParticipants(4)
+
+                assertConfirmFails(CoreErrorType.ROOM_NOT_RECRUITING)
+            }
+    }
+
+    @Test
+    fun `방장이 아니면 확정할 수 없고 E1406 을 던진다`() {
+        val room = givenRecruitingRoomForUpdate()
+        givenHost(isHost = false)
+
+        assertConfirmFails(CoreErrorType.ROOM_FORBIDDEN)
+        assertThat(room.status).isEqualTo(RoomStatus.RECRUITING)
+    }
+
+    // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
+    // 409 로 삼키지 않고 그대로 500 이 되게 둔다(오인 매핑 금지).
+    @Test
+    fun `확정 이력 저장의 무결성 위반은 도메인 에러로 오인하지 않고 전파한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(4)
+        every { roomStatusLogRepository.save(any()) } throws
+            DataIntegrityViolationException("room_status_log write failed")
+
+        assertThatThrownBy { roomManager.confirm(roomId, hostId) }
+            .isInstanceOf(DataIntegrityViolationException::class.java)
+    }
+
+    private fun assertConfirmFails(errorType: CoreErrorType) {
+        assertThatThrownBy { roomManager.confirm(roomId, hostId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
+    }
+
+    private fun assertCancelFails(errorType: CoreErrorType) {
+        assertThatThrownBy { roomManager.cancel(roomId, hostId) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
+    }
+
+    private fun assertFails(errorType: CoreErrorType, command: () -> RoomUpdateCommand) {
+        assertThatThrownBy { roomManager.update(roomId, hostId, command()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(errorType)
+            }
+    }
+
+    // 수정 전 값을 명령과 전부 다르게 둬야 "무엇이 바뀌었나"가 단언으로 드러난다.
+    private fun givenRecruitingRoom(): RoomEntity {
+        val room = RoomEntity(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 2L,
+            resumePublic = false,
+            sigunguId = 5L,
+            title = "처음 정한 제목입니다",
+            description = "처음 적은 설명입니다.",
+            interviewStage = InterviewStage.ETC,
+            interviewType = null,
+            meetingType = MeetingType.OFFLINE,
+            minCapacity = 2,
+            maxCapacity = 6,
+            startAt = now.plusDays(3),
+            durationMinutes = 30,
+        )
+        every { roomRepository.findById(roomId) } returns Optional.of(room)
+        return room
+    }
+
+    // 취소·확정은 룸 행을 잠그고 읽는다. 수정 경로와 조회 메서드가 다르므로 스텁도 갈린다.
+    private fun givenRecruitingRoomForUpdate(): RoomEntity {
+        val room = givenRecruitingRoom()
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    // 확정은 일정도 본다. 기본 픽스처는 3일 뒤라 일정 경과를 만들려면 시작 시각을 따로 준다.
+    private fun givenRoomForUpdateStartingAt(startAt: LocalDateTime): RoomEntity {
+        val room = RoomEntity(
+            id = roomId,
+            jobPostingId = 1L,
+            jobRoleId = 2L,
+            resumePublic = false,
+            sigunguId = 5L,
+            title = "처음 정한 제목입니다",
+            description = null,
+            interviewStage = InterviewStage.ETC,
+            interviewType = null,
+            meetingType = MeetingType.OFFLINE,
+            minCapacity = 2,
+            maxCapacity = 6,
+            startAt = startAt,
+            durationMinutes = 30,
+        )
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    // status 는 protected set 이고 RECRUITING 에서 출발하므로, 확정·완료 상태는 실제 엔티티로 만들 수 없다.
+    private fun givenRoomWithStatus(status: RoomStatus): RoomEntity {
+        val room = mockk<RoomEntity>(relaxed = true)
+        every { room.isActive() } returns true
+        every { room.status } returns status
+        every { roomRepository.findById(roomId) } returns Optional.of(room)
+        return room
+    }
+
+    private fun givenRoomForUpdateWithStatus(status: RoomStatus, canCancel: Boolean = false): RoomEntity {
+        val room = givenRoomWithStatus(status)
+        every { room.canCancel() } returns canCancel
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        return room
+    }
+
+    // 방장 판정은 ParticipationValidator 가 소유한다. 규칙 자체는 그쪽 테스트가 보고,
+    // 여기서는 도구가 던진 예외가 그대로 전파되는지만 본다(testing.md 레이어별 전략).
+    private fun givenHost(isHost: Boolean = true) {
+        if (isHost) {
+            every { participationValidator.validateHost(roomId, hostId) } returns Unit
+        } else {
+            every { participationValidator.validateHost(roomId, hostId) } throws
+                CoreException(CoreErrorType.ROOM_FORBIDDEN)
+        }
+    }
+
+    private fun givenParticipants(joined: Int) {
+        every {
+            participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED)
+        } returns joined.toLong()
+        every { participationFinder.getJoinedParticipants(roomId) } returns emptyList()
+    }
+
+    private fun givenJoinedMembers(vararg memberIds: UUID) {
+        every { participationFinder.getJoinedParticipants(roomId) } returns
+            memberIds.map { JoinedParticipant(memberId = it, isHost = it == hostId) }
+    }
+
+    // --- 생성 경로(MOI-331) --------------------------------------------------
+    //
+    // 동시 요청은 IT 로 재현하지 않는다(testing.md). 락이 걸리는 자리는 여기서만 관측된다.
+
+    // 잠금이 중복 확인보다 뒤면 두 요청이 같은 "없음"을 읽고 각자 룸을 만든다.
+    // 판정을 아무리 정확히 써도 순서가 틀리면 직렬화가 안 된다.
+    @Test
+    fun `방장 회원 행 잠금이 중복 확인보다 먼저다`() {
+        givenNoDuplicate()
+        givenActiveHostedRoomCount(0)
+        givenCreateWritesSucceed()
+
+        roomManager.create(newRoom(), hostId, resumeId, resumeFile())
+
+        verifyOrder {
+            memberValidator.validateActive(hostId)
+            roomRepository.findActiveHostedRooms(hostId, any(), any(), any(), any())
+        }
+    }
+
+    // 신청 경로는 막는데 생성 경로는 막지 않던 구멍이다(MOI-331 §0-3).
+    // 규칙 자체는 MemberValidatorTest 가 본다. 여기서는 생성 경로가 그 도구를 타는지만 본다.
+    @Test
+    fun `탈퇴한 회원은 룸을 만들 수 없다`() {
+        every { memberValidator.validateActive(hostId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        assertThatThrownBy { roomManager.create(newRoom(), hostId, resumeId, resumeFile()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_FOUND)
+            }
+        verify(exactly = 0) { roomRepository.save(any()) }
+    }
+
+    // Room.create 도 같은 규칙을 보지만 그쪽은 쓰기 트랜잭션 **밖**이다(RoomService).
+    // 요청을 받고 커밋하기까지 사이에 일정이 과거가 되는 경우가 완료 조건이라, 판정이 경계 안에도 있어야 한다.
+    // 밖의 검증만 남기면 이 테스트만 빨간불이 된다 — 다른 테스트로는 안팎을 구분할 수 없다.
+    @Test
+    fun `쓰기 트랜잭션 안에서 일정이 과거면 E1407 로 거부한다`() {
+        givenNoDuplicate()
+        givenActiveHostedRoomCount(0)
+
+        assertThatThrownBy { roomManager.create(pastRoom(), hostId, resumeId, resumeFile()) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.ROOM_START_AT_NOT_FUTURE)
+            }
+        verify(exactly = 0) { roomRepository.save(any()) }
+    }
+
+    private fun givenNoDuplicate() {
+        every { roomRepository.findActiveHostedRooms(hostId, any(), any(), any(), any()) } returns emptyList()
+    }
+
+    private fun givenActiveHostedRoomCount(count: Long) {
+        every { roomRepository.countActiveHostedRooms(hostId, any(), any(), any()) } returns count
+    }
+
+    // relaxed mock 은 제네릭 save 의 반환을 Object 로 만들어 캐스팅에서 터진다. 저장한 것을 그대로 돌려준다.
+    private fun givenCreateWritesSucceed() {
+        every { roomRepository.save(any()) } answers { firstArg() }
+        every { participationRepository.save(any()) } answers { firstArg() }
+        every { roomApplicationRepository.saveAndFlush(any()) } answers { firstArg() }
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+    }
+
+    private fun newRoom(startAt: LocalDateTime = now.plusDays(7)): Room = Room.create(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(startAt = startAt, durationMinutes = 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        now = now,
+    )
+
+    // Room.create 는 과거 일정으로는 만들어지지 않는다. 트랜잭션 밖에서 통과한 뒤 일정이 지나간 상태를
+    // 재현해야 해서 영속 룸 복원 경로로 만든다.
+    private fun pastRoom(): Room = Room.reconstitute(
+        id = UUID.randomUUID(),
+        jobPostingId = 1L,
+        jobRoleId = 1L,
+        title = RoomTitle("백엔드 모의면접 함께 준비해요"),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = 2, max = 6),
+        schedule = RoomSchedule(startAt = now.minusMinutes(1), durationMinutes = 60),
+        resumeSharingPolicy = ResumeSharingPolicy.AI_SUMMARY_ONLY,
+        status = RoomStatus.RECRUITING,
+    )
+
+    private fun resumeFile() = ResumeFile(
+        key = "resumes/$hostId/backend.pdf",
+        originalName = "backend.pdf",
+        sizeBytes = 1024L,
+        contentType = "application/pdf",
+    )
+
+    private fun updateCommand(
+        title: String = "백엔드 모의면접 함께 준비해요",
+        min: Int = 2,
+        max: Int = 6,
+    ) = RoomUpdateCommand(
+        title = RoomTitle(title),
+        description = null,
+        interviewStage = InterviewStage.FIRST,
+        interviewType = InterviewType.JOB,
+        meetingPlace = MeetingPlace.Online,
+        capacity = RoomCapacity(min = min, max = max),
+        schedule = RoomSchedule(startAt = now.plusDays(5), durationMinutes = 60),
+    )
+}

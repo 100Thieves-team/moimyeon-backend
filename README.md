@@ -2,6 +2,9 @@
 
 Spring Boot (Kotlin) 기반 멀티모듈 프로젝트.
 
+> 아키텍처·코드 컨벤션은 [docs/conventions](docs/conventions/README.md) 에서 관리한다.
+> 기능 변경 기록은 [MOI-541 MVP 룸 생명주기 변경 보고서](docs/changes/MOI-541-room-lifecycle.md)에서 확인한다.
+
 ## 기술 스택
 
 | 항목 | 내용 |
@@ -20,24 +23,25 @@ moimyeon/
 ├── admin/
 │   └── admin-api       어드민 API — core-api 런타임에 조립되는 비부트 모듈
 │
-├── batch/
-│   └── batch-app       배치 실행 모듈 (독립 bootJar)
-│
 ├── core/
+│   ├── core-batch      배치 실행 모듈 (독립 bootJar)
 │   ├── core-enum       공통 Enum 정의
-│   └── core-api        API 서버 실행 모듈 (bootJar) — admin-api 조립 호스트
+│   ├── core-worker     알림·룸 자동 완료 실행 모듈 (독립 bootJar)
+│   └── core-api        API 서버 실행 모듈 — 외부 연동 계약과 런타임 조립 소유
 │
 ├── security/
-│   └── security-core   인증/인가 — AuthUser 리졸버 · 소셜 로그인 예정
+│   └── security-core   인증/인가 — Google OAuth · JWT 세션 · 로그인 회원 주입
 │
 ├── storage/
-│   └── db-core         JPA/MySQL 영속성 — DataSource · JPA 설정 소유
+│   ├── db-core         JPA/MySQL 영속성 — DataSource · JPA 설정 소유
+│   └── object-storage  AWS SDK S3 객체 저장·조회
 │
 ├── support/
 │   ├── logging         환경별 Logback 설정 (OpenTelemetry · Sentry)
 │   └── monitoring      Actuator + Prometheus
 │
 ├── clients/
+│   ├── bedrock-client  Spring AI · Bedrock 모델 클라이언트
 │   └── client-example  OpenFeign 기반 외부 HTTP 클라이언트 예시
 │
 └── tests/
@@ -58,11 +62,12 @@ moimyeon/
 ### `core:core-api`
 API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한다.
 
-- 의존성 (compile): `core-enum`, `security/security-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
-- 의존성 (runtime): `storage/db-core`, `admin/admin-api`
-- 포함: Controller, Request/Response DTO, 도메인 서비스, `ApiControllerAdvice`, AsyncConfig
+- 의존성 (compile): `core-enum`, `security/security-core`, `storage/db-core`, `support/*`, `clients/client-example`, `spring-boot-starter-webmvc`
+- 의존성 (runtime): `admin/admin-api`, `clients/bedrock-client`, `storage/object-storage`
+- 포함: Controller, Request/Response DTO, 도메인 서비스, 이력서 영역의 외부 연동 계약, `ApiControllerAdvice`, AsyncConfig
+- 산출물: 실행용 `bootJar`와 저수준 모듈의 계약 참조용 plain `jar`
 
-> Storage 와 admin 모듈은 `runtimeOnly`로 선언되어 컴파일 시점에 서로의 구현이 노출되지 않는다. `ApiControllerAdvice`는 `basePackages = ["io.plady.moimyeon.core"]`로 범위를 제한해, 함께 조립되는 admin 컨트롤러의 예외를 가로채지 않는다.
+> admin 모듈은 `runtimeOnly`로 선언되어 core와 컴파일 시점에 격리된다. `ApiControllerAdvice`는 `basePackages = ["io.plady.moimyeon.core"]`로 범위를 제한해, 함께 조립되는 admin 컨트롤러의 예외를 가로채지 않는다.
 
 ---
 
@@ -83,7 +88,7 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 
 ---
 
-### `batch:batch-app`
+### `core:core-batch`
 스케줄 기반 배치 실행 모듈. core-api 와 별개의 독립 부트 앱이다.
 
 - 의존성: `support/*`, `storage/db-core` (implementation)
@@ -93,16 +98,32 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 
 ---
 
+### `core:core-worker`
+알림 전송을 실행하는 독립 부트 앱이다. 현재 Docker/ECS 배포 경로는 core-api와 core-worker를 배포한다.
+
+- 마이그레이션은 core-api가 먼저 실행하며 worker의 Flyway는 비활성이다.
+- 룸 자동 완료는 core-api가 실행한다(MOI-499). 수동 완료와 같은 완료 로직·완료 사실 발행을 쓰기 위해서다.
+  예정 시각 8시간이 지난 `CONFIRMED` 룸을 기본 10분마다 `COMPLETED`로 전환하고, 배포 프로파일에서 켜지며 local에서는 꺼진다.
+  `ROOM_AUTO_COMPLETE_ENABLED`, `ROOM_AUTO_COMPLETE_CRON`으로 제어한다. API 서버가 여러 대면 모두 실행하지만 룸 행을 잠그고
+  다시 판정하므로 한 룸은 한 번만 완료된다.
+
+---
+
 ### `security:security-core`
-인증/인가 담당 모듈. core-api 에 `implementation`으로 배선되어 있다. 필터체인은 아직 뼈대(permitAll)이고, 컨트롤러 인증 계약(`AuthUser`)과 부하테스트 인증 게이트는 세팅 완료.
+인증/인가 담당 모듈. core-api 에 `implementation`으로 배선되어 있다. Google OAuth 로그인, 자체 JWT 세션 인증,
+컨트롤러 인증 계약과 부하테스트 인증 게이트를 소유한다.
 
 - 의존성: `spring-boot-starter-security`, `spring-boot-starter-oauth2-client`, webmvc (compileOnly — 런타임은 core-api 공급)
-- 포함: `SecurityConfig`, `AuthUser` + `AuthUserArgumentResolver`, `PerfAuthenticationFilter` + `PerfAuthConfig`
-- 예정: 소셜 로그인(OAuth2 Client + JWT)은 security-core 에, 어드민 전용 필터체인(`securityMatcher("/admin/**")` + `@Order`)은 admin-api 에 둔다
+- 포함: `SecurityConfig`, `OAuth2LoginSuccessHandler`, JWT·쿠키 인증, `PerfAuthenticationFilter` + `PerfAuthConfig`
 
-> **컨트롤러 인증 계약.** 컨트롤러가 인증 결과로 받는 타입은 `AuthUser(id: Long)` 하나다 — spring-security import 가 없는 순수 DTO. `SecurityContextHolder` 접근은 `AuthUserArgumentResolver` 한 곳으로 격리되고, 계약은 `Authentication.name = 내부 userId 문자열`이다. provider ID(Google sub, Kakao id)는 인증 어댑터에서 내부 ID 로 번역을 끝내고, 컨트롤러·서비스에는 절대 노출하지 않는다. 테스트에서는 standalone MockMvc 에 가짜 리졸버만 끼우면 되므로 SecurityContext 세팅이 불필요하다.
+> **컨트롤러 인증 계약.** 컨트롤러는 `@LoginMember CurrentMember`를 받고, 표준
+> `Principal.name = 회원 UUID 문자열`만 해석한다. provider ID(Google sub)는 OAuth 어댑터에서 내부 회원 UUID로
+> 번역을 끝내고 컨트롤러·서비스에는 노출하지 않는다.
 
-> **부하테스트 인증.** `PerfAuthenticationFilter`는 `X-Test-User-Id` 헤더를 신뢰해 인증을 세팅한다 (k6/JMeter 용). 인증 우회 백도어이므로 `@Component` 자동 등록 없이 **perf 프로파일 + `security.perf-auth.enabled=true` 이중 게이트**를 통과해야만 빈이 생성되고, `SecurityConfig`가 명시적으로 체인에 넣는다.
+> **부하테스트 인증.** `PerfAuthenticationFilter`는 `X-Test-User-Id`의 회원 UUID를 신뢰해 인증을 세팅한다
+> (k6/JMeter 용). 인증 우회 백도어이므로 `@Component` 자동 등록 없이 **perf 프로파일 +
+> `security.perf-auth.enabled=true` 이중 게이트**를 통과해야만 빈이 생성된다. `live` 프로파일에서는 두 값을
+> 넣어도 등록되지 않는다. 별도 환경은 `SPRING_PROFILES_ACTIVE=dev,perf`로 실행한다.
 
 > **위치 선정 근거.** security 는 presentation 앞단의 횡단 관심사로, 요청을 가로채 동작을 바꾸는 능동적 컴포넌트다. 수동적 계측 인프라인 `support/*` 와 결이 달라 독립 top-level 그룹으로 둔다. 단방향 규칙: `core-api → security-core`, storage/domain 은 security 를 모르며, 서비스 레이어는 `userId`를 평범한 파라미터로 받는다.
 
@@ -137,9 +158,22 @@ Spring Actuator와 Prometheus 메트릭 엔드포인트를 제공한다.
 ---
 
 ### `clients:client-example`
-OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 클라이언트 모듈의 참고 템플릿.
+OpenFeign 기반 외부 HTTP 클라이언트 작성 예시. 새 HTTP 클라이언트 모듈의 참고 템플릿.
 
 - 의존성: `spring-cloud-starter-openfeign`, `feign-hc5`, `feign-micrometer`
+
+---
+
+### `clients:bedrock-client`
+`core-api`의 `ResumeSummaryGenerator`를 구현하는 Bedrock 전용 클라이언트. Spring AI를 통해
+서울 리전 Bedrock Converse 엔드포인트에서 Sonnet 5 글로벌 추론 프로필을 호출하며
+`core-api`에는 런타임으로만 조립된다.
+
+> 글로벌 추론은 PDF를 한국 외 AWS 상용 리전에서 처리할 수 있다. 운영 활성화 전에 개인정보 국외 처리 고지,
+> 적법한 처리 근거, 보존·삭제 기준과 조직 승인을 확정해야 하며, 승인 전에는 글로벌 프로필을 사용하지 않는다.
+
+- 의존성: `core-api`, `spring-ai-starter-model-bedrock-converse`, `pdfbox`
+- 참조 제한: `ResumeSummaryGenerator`와 `ResumeSummaryGenerationException`만 사용하며 빌드에서 검사한다.
 
 ---
 
@@ -155,21 +189,25 @@ Spring REST Docs 기반 API 문서화를 지원하는 테스트 전용 모듈.
 
 ```
 core-enum ──────────────── core-api (implementation)
+core-api ──────────────── bedrock-client (implementation, ResumeSummaryGenerator 계약만 참조)
+core-api ──────────────── object-storage (implementation, ResumeFileStore 계약만 참조)
 
 admin-api ──────────────── core-api (runtimeOnly)   # 컴파일 격리, 런타임 조립
-db-core   ──────────────── core-api (runtimeOnly)
-db-core   ──────────────── batch-app (implementation)
+bedrock-client ─────────── core-api (runtimeOnly)   # AI 계약 구현체 런타임 조립
+object-storage ─────────── core-api (runtimeOnly)   # S3 계약 구현체 런타임 조립
+db-core   ──────────────── core-api (implementation)
+db-core   ──────────────── core-batch (implementation)
 
 security-core ──────────── core-api (implementation)
 
-support/logging    ─────── core-api, batch-app (implementation)
-support/monitoring ─────── core-api, batch-app (implementation)
+support/logging    ─────── core-api, core-batch (implementation)
+support/monitoring ─────── core-api, core-batch (implementation)
 clients/client-example ─── core-api (implementation)
 tests/api-docs ─────────── core-api, admin-api (testImplementation)
 ```
 
 핵심 설계 원칙:
-- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트)와 `batch-app`(배치) 둘뿐이다.
+- 부트 가능한 모듈은 `core-api`(API 서버, admin 조립 호스트, 룸 자동 완료), `core-batch`(배치), `core-worker`(알림 전송)이다.
 - `admin ↔ core`는 컴파일 타임 완전 격리. 어드민은 도메인 객체·에러 체계·설정을 전부 자체 보유하고, 접점은 런타임 조립(컴포넌트 스캔 + split package 엔티티 스캔)뿐이다.
 - 배치는 시간 주도 워크로드라 조립하지 않고 독립 앱으로 둔다 (스케일 아웃 시 잡 중복 방지).
 - security 는 presentation 앞단 모듈로, 서비스 레이어에는 인증 컨텍스트가 아닌 평범한 값(`userId`)만 흘러 들어간다.
@@ -196,8 +234,10 @@ tests/api-docs ─────────── core-api, admin-api (testImplem
 
 | 변수/프로퍼티 | 사용 모듈 | 설명 |
 |------|-----------|------|
-| `SPRING_PROFILES_ACTIVE` | core-api, batch-app | 기본값 `local` (H2 부팅, 외부 의존 없음) |
+| `SPRING_PROFILES_ACTIVE` | core-api, core-batch | 기본값 `local` (H2 부팅, 외부 의존 없음) |
 | `storage.database.core-db.url` / `.username` / `.password` | storage/db-core | dev 이상 MySQL 접속 정보 (외부 설정 주입) |
-| `security.perf-auth.enabled` | security/security-core | perf 프로파일에서 `X-Test-User-Id` 헤더 인증 활성화 (이중 게이트) |
+| `security.perf-auth.enabled` | security/security-core | `dev,perf` 전용 환경에서 회원 UUID 기반 `X-Test-User-Id` 인증 활성화 (이중 게이트, live 차단) |
+| `OAUTH_FRONTEND_SUCCESS_REDIRECT_URI` | security/security-core | OAuth 성공 후 프론트 콜백 절대 URI (`live`: `https://moimyeon.plady.io/auth/callback`, `dev`: `https://dev.moimyeon.plady.io/auth/callback`) |
+| `OAUTH_FRONTEND_FAILURE_REDIRECT_URI` | security/security-core | OAuth 실패 후 프론트 화면 절대 URI (`live`: `https://moimyeon.plady.io/?authError=login_failed`, `dev`: `https://dev.moimyeon.plady.io/?authError=login_failed`) |
 
-> 소셜 로그인 자격증명(OAuth client-id/secret, JWT secret 등)은 구현 시 추가 예정.
+> Google OAuth client-id/secret과 JWT secret은 실행 환경에서 주입한다.

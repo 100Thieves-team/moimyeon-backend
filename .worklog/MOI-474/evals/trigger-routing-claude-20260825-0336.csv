@@ -1,0 +1,25 @@
+run_id,skill,prompt_id,expected,detected,duration_s
+# 라우팅 표 등재 후 재측정 (DR-004·008 확정용). claude N=1, 스킬당 p1·p2·n1
+20260825-0336,issue-context,p1,yes,yes,19
+20260825-0336,issue-context,p2,yes,yes,20
+20260825-0336,issue-context,n1,no,no,36
+20260825-0336,requirement-implementation,p1,yes,yes,24
+20260825-0336,requirement-implementation,p2,yes,yes,25
+20260825-0336,requirement-implementation,n1,no,no,32
+20260825-0336,api-spec-definition,p1,yes,yes,22
+20260825-0336,api-spec-definition,p2,yes,no,6
+20260825-0336,api-spec-definition,n1,no,no,5
+20260825-0336,api-connection,p1,yes,no,5
+20260825-0336,api-connection,p2,yes,no,5
+20260825-0336,api-connection,n1,no,no,4
+20260825-0336,entity-design,p1,yes,no,5
+20260825-0336,entity-design,p2,yes,no,4
+20260825-0336,entity-design,n1,no,no,5
+20260825-0336,ship-pr,p1,yes,no,5
+20260825-0336,ship-pr,p2,yes,no,5
+20260825-0336,ship-pr,n1,no,no,5
+20260825-0336,prompt-change,p1,yes,no,4
+20260825-0336,prompt-change,p2,yes,no,5
+20260825-0336,prompt-change,n1,no,no,6
+20260825-0336,infra-change,p1,yes,no,5
+20260825-0336,infra-change,p2,yes,no,5

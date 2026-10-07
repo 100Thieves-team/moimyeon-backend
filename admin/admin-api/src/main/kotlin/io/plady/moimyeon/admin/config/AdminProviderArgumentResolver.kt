@@ -6,6 +6,7 @@ import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
+import java.util.UUID
 
 class AdminProviderArgumentResolver : HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter): Boolean {
@@ -18,7 +19,7 @@ class AdminProviderArgumentResolver : HandlerMethodArgumentResolver {
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?,
     ): AdminProvider {
-        // TODO: security 연동 후 인증 컨텍스트에서 실제 어드민 정보를 조회한다
-        return AdminProvider(id = 0, name = "anonymous")
+        val principal = checkNotNull(webRequest.userPrincipal) { "인증된 관리자만 AdminProvider를 사용할 수 있습니다." }
+        return AdminProvider(memberId = UUID.fromString(principal.name))
     }
 }

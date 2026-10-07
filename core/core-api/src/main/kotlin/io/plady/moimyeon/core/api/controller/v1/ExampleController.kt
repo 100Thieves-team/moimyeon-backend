@@ -3,8 +3,8 @@ package io.plady.moimyeon.core.api.controller.v1
 import io.plady.moimyeon.core.api.controller.v1.request.DoExampleRequest
 import io.plady.moimyeon.core.api.controller.v1.response.ExampleItemResponseDto
 import io.plady.moimyeon.core.api.controller.v1.response.ExampleResponseDto
-import io.plady.moimyeon.core.domain.ExampleData
-import io.plady.moimyeon.core.domain.ExampleService
+import io.plady.moimyeon.core.domain.example.ExampleData
+import io.plady.moimyeon.core.domain.example.ExampleService
 import io.plady.moimyeon.core.support.response.ApiResponse
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

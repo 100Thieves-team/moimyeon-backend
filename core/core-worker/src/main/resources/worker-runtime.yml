@@ -1,0 +1,5 @@
+# 스키마 마이그레이션은 core-api가 소유한다. Worker가 함께 배포되더라도 두 번째 Flyway 실행 경로가 되지 않는다.
+spring.flyway.enabled: false
+
+# Worker는 작은 CPU로 외부 전송을 처리하므로 콜드 스타트의 MySQL 8.4 인증에 Core API보다 긴 시간을 허용한다.
+storage.datasource.core.connection-timeout: 10000

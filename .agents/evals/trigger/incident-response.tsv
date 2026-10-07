@@ -1,0 +1,8 @@
+p1	positive	yes	dev에서 방 목록 API가 500 떠. 봐줘
+p2	positive	yes	배포하고 나서 로그인이 안 된대
+p3	positive	yes	MOI-761 어젯밤부터 batch가 안 돌아
+n1	negative	no	이 쿼리 왜 느린지 봐줘
+n2	negative	no	MOI-762 구현해줘
+n3	negative	no	room 도메인 최근 커밋 이력 요약해줘
+b1	boundary	boundary	이력서 요약이 갑자기 빈 문자열만 반환해
+b2	boundary	boundary	dev 배포가 실패했어

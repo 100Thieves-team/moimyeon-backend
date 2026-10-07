@@ -1,0 +1,181 @@
+package io.plady.moimyeon.core.api.auth
+
+import io.plady.moimyeon.ContextTest
+import io.plady.moimyeon.core.enums.MemberRole
+import io.plady.moimyeon.security.auth.JwtTokenProvider
+import jakarta.servlet.Filter
+import jakarta.servlet.http.Cookie
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.http.HttpHeaders
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.context.WebApplicationContext
+import java.util.UUID
+
+@Import(AdminAuthorizationContextTest.TestConfig::class)
+class AdminAuthorizationContextTest(
+    private val webApplicationContext: WebApplicationContext,
+    @Qualifier("springSecurityFilterChain") private val securityFilterChain: Filter,
+    private val jwtTokenProvider: JwtTokenProvider,
+) : ContextTest() {
+    private lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setUp() {
+        val builder = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        builder.addFilters<DefaultMockMvcBuilder>(securityFilterChain)
+        mockMvc = builder.build()
+    }
+
+    @Test
+    fun `미인증 회원은 관리자 경로에 접근할 수 없다`() {
+        val response = mockMvc.perform(get("/admin/security-test")).andReturn().response
+
+        assertThat(response.status).isEqualTo(401)
+    }
+
+    @Test
+    fun `일반 회원은 관리자 경로에 접근할 수 없다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/admin/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(403)
+    }
+
+    @Test
+    fun `관리자는 관리자 경로에 접근할 수 있다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.ADMIN)
+
+        val response = mockMvc.perform(
+            get("/admin/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `미인증 요청은 기본 보호 경로에 접근할 수 없다`() {
+        val response = mockMvc.perform(get("/security-test")).andReturn().response
+
+        assertThat(response.status).isEqualTo(401)
+    }
+
+    @Test
+    fun `인증 회원은 기본 보호 경로에 접근할 수 있다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `만료 없는 개발 액세스 토큰은 Bearer 인증에 사용할 수 있다`() {
+        val accessToken = jwtTokenProvider.issueWithoutExpiration(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/security-test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `상태 확인 경로는 인증 없이 접근할 수 있다`() {
+        val response = mockMvc.perform(get("/health")).andReturn().response
+
+        assertThat(response.status).isEqualTo(200)
+    }
+
+    @Test
+    fun `dev 세션 발급 경로는 만료된 액세스 쿠키가 있어도 인증 필터를 통과한다`() {
+        val response = mockMvc.perform(
+            post("/v1/auth/dev-sessions")
+                .cookie(Cookie("ACCESS_TOKEN", "expired-access-token")),
+        ).andReturn().response
+
+        // test는 local을 포함하므로 컨트롤러까지 도달한 뒤 빈 요청 본문이 E400으로 닫혀야 한다.
+        assertThat(response.status).isEqualTo(400)
+    }
+
+    @Test
+    fun `공개 조회 API는 인증 필터를 통과한다`() {
+        val publicPaths =
+            listOf(
+                "/v1/terms",
+                "/v1/rooms",
+                "/v1/rooms/form-options",
+                "/v1/rooms/00000000-0000-0000-0000-000000000001",
+                "/v1/job-postings/search",
+                "/v1/companies",
+                "/v1/companies/1/job-postings",
+                "/v1/job-roles",
+                "/v1/job-roles/search",
+                "/v1/regions",
+                "/v1/members/00000000-0000-0000-0000-000000000001/profile",
+                "/v1/nicknames/suggestion",
+                "/v1/nicknames/availability",
+            )
+
+        publicPaths.forEach { path ->
+            val response = mockMvc.perform(get(path)).andReturn().response
+
+            assertThat(response.status)
+                .describedAs(path)
+                .isNotEqualTo(401)
+        }
+    }
+
+    @Test
+    fun `인증 회원도 prometheus 경로에 접근할 수 없다`() {
+        val accessToken = jwtTokenProvider.issue(UUID.randomUUID(), MemberRole.USER)
+
+        val response = mockMvc.perform(
+            get("/actuator/prometheus")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer $accessToken"),
+        ).andReturn().response
+
+        assertThat(response.status).isEqualTo(403)
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    class TestConfig {
+        @Bean
+        fun adminAuthorizationTestController() = AdminAuthorizationTestController()
+
+        @Bean
+        fun authorizationTestController() = AuthorizationTestController()
+    }
+
+    @RestController
+    class AdminAuthorizationTestController {
+        @GetMapping("/admin/security-test")
+        fun get(): String = "ok"
+    }
+
+    @RestController
+    class AuthorizationTestController {
+        @GetMapping("/security-test")
+        fun get(): String = "ok"
+    }
+}

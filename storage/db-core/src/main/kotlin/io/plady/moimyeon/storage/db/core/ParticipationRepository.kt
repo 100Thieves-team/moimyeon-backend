@@ -1,0 +1,190 @@
+package io.plady.moimyeon.storage.db.core
+
+import io.plady.moimyeon.core.enums.ParticipationRole
+import io.plady.moimyeon.core.enums.ParticipationStatus
+import io.plady.moimyeon.core.enums.RoomStatus
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.util.UUID
+
+interface ParticipationRepository : JpaRepository<ParticipationEntity, Long> {
+    fun findByMemberIdAndStatusAndDeletedAtIsNull(
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): List<ParticipationEntity>
+
+    fun existsByRoomIdAndMemberIdAndParticipationRoleAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        participationRole: ParticipationRole,
+    ): Boolean
+
+    // 룸 취소 가능 여부(MOI-396). 방장도 참여 행을 갖기 때문에 전체 인원으로 재면 "== 1" 을 비교하게 된다.
+    // 질문이 "몇 명인가"가 아니라 "있는가"이므로 세지 않고 첫 행에서 멈춘다.
+    fun existsByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): Boolean
+
+    // 탐색 목록의 표시용 일괄 집계(MOI-383 §4.1). 기준은 단건 조회·정원 확정과 같은 "활성 참여"다.
+    @Query(
+        """
+        select new io.plady.moimyeon.storage.db.core.RoomCount(p.roomId, count(p))
+        from ParticipationEntity p
+        where p.roomId in :roomIds
+          and p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+          and p.deletedAt is null
+        group by p.roomId
+        """,
+    )
+    fun countActiveByRoomIds(@Param("roomIds") roomIds: Collection<UUID>): List<RoomCount>
+
+    fun countByRoomIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        status: ParticipationStatus,
+    ): Long
+
+    // 뷰어 관계 일괄 조회(MOI-387). 한 페이지 분량의 roomId 에만 IN 으로 걸어 룸 수에 비례해
+    // 쿼리가 늘지 않게 한다. 기준은 탐색 목록의 집계와 같다.
+    //
+    // ⚠️ status·deletedAt 을 여기서 걸지 않는다. 호출자가 한 결과로 두 가지를 판정하기 때문이다 —
+    // 방장·참여 중은 JOINED + 미삭제로, 강퇴 이력은 LEFT 행의 leftByMemberId 로 본다
+    // (existsRemovalHistory 와 같은 술어). 여기서 걸러 버리면 한 축을 살리려다 다른 축이 죽는다.
+    fun findByMemberIdAndRoomIdIn(
+        memberId: UUID,
+        roomIds: Collection<UUID>,
+    ): List<ParticipationEntity>
+
+    // 참여 슬롯 사용량(「룸 참여」 §4.1, MOI-427). 룸 상태를 함께 봐야 한다 — 룸 취소는 참여 행을
+    // 나감으로 바꾸지 않으므로(RoomManager.cancelWithoutGuard) 참여만 세면 취소한 룸이 슬롯을 영구 점유한다.
+    // 어느 상태가 슬롯을 무는지는 도메인이 정해 넘긴다(ParticipationSlot) — 쿼리 문자열에 박으면 정의가 숨는다.
+    // 룸당 회원당 JOINED 는 1건이므로(uk_participation_room_member_joined) 행 수가 곧 룸 수다.
+    @Query(
+        """
+        select count(p)
+        from ParticipationEntity p, RoomEntity r
+        where p.memberId = :memberId
+          and r.id = p.roomId
+          and p.status = io.plady.moimyeon.core.enums.ParticipationStatus.JOINED
+          and p.deletedAt is null
+          and r.status in :roomStatuses
+          and r.deletedAt is null
+        """,
+    )
+    fun countOccupiedSlotsByMemberId(
+        @Param("memberId") memberId: UUID,
+        @Param("roomStatuses") roomStatuses: Collection<RoomStatus>,
+    ): Long
+
+    fun findByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
+
+    fun existsByRoomIdAndMemberIdAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        status: ParticipationStatus,
+    ): Boolean
+
+    // 아래 두 쿼리의 최신 CONFIRMED 선택 조건(필터·정렬·동률 해소)은 반드시 함께 변경한다.
+    // count와 명부가 서로 다른 확정 시점을 바라보면 출석 입력의 대상 검증이 어긋난다.
+    @Query(
+        value = """
+            select count(*)
+            from participation p
+            join room_status_log rsl on rsl.id = (
+                select latest.id
+                from room_status_log latest
+                where latest.room_id = p.room_id
+                  and latest.transition_type = 'CONFIRMED'
+                  and latest.deleted_at is null
+                order by latest.occurred_at desc, latest.id desc
+                limit 1
+            )
+            where p.room_id = :roomId
+              and p.member_id = :memberId
+              and p.deleted_at is null
+              and p.joined_at <= rsl.occurred_at
+              and (p.left_at is null or p.left_at > rsl.occurred_at)
+        """,
+        nativeQuery = true,
+    )
+    fun countAtRoomConfirmation(
+        @Param("roomId") roomId: UUID,
+        @Param("memberId") memberId: UUID,
+    ): Long
+
+    @Query(
+        value = """
+            select p.*
+            from participation p
+            join room_status_log rsl on rsl.id = (
+                select latest.id
+                from room_status_log latest
+                where latest.room_id = p.room_id
+                  and latest.transition_type = 'CONFIRMED'
+                  and latest.deleted_at is null
+                order by latest.occurred_at desc, latest.id desc
+                limit 1
+            )
+            where p.room_id = :roomId
+              and p.deleted_at is null
+              and p.joined_at <= rsl.occurred_at
+              and (p.left_at is null or p.left_at > rsl.occurred_at)
+            order by p.joined_at asc, p.id asc
+        """,
+        nativeQuery = true,
+    )
+    fun findAllAtRoomConfirmation(@Param("roomId") roomId: UUID): List<ParticipationEntity>
+
+    fun existsByRoomIdAndMemberIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        memberId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): Boolean
+
+    // LEFT 처리자가 본인이 아니면 방장에 의해 내보내진 이력이다.
+    @Query(
+        """
+        select case when count(p) > 0 then true else false end
+        from ParticipationEntity p
+        where p.roomId = :roomId
+          and p.memberId = :memberId
+          and p.status = io.plady.moimyeon.core.enums.ParticipationStatus.LEFT
+          and p.leftByMemberId is not null
+          and p.leftByMemberId <> p.memberId
+        """,
+    )
+    fun existsRemovalHistory(
+        @Param("roomId") roomId: UUID,
+        @Param("memberId") memberId: UUID,
+    ): Boolean
+
+    // 참여자 명부(「룸 참여」 §4.5). 참여 중인 사람만, 참여 순서로. 방장 우선은 호출부가 정렬한다
+    // (ParticipationRole 의 알파벳 순서에 기대면 값 이름을 바꿀 때 조용히 깨진다).
+    fun findByRoomIdAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+        roomId: UUID,
+        status: ParticipationStatus,
+    ): List<ParticipationEntity>
+
+    // 방장 자동 위임 대상(MOI-397).
+    fun findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNullOrderByJoinedAtAscIdAsc(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
+
+    // 방장 참여 행(방장 회원 식별자 조회용). 상태를 함께 봐야 한다 — 자동 위임(MOI-397)이 들어오면
+    // 전 방장의 LEFT + HOST 행이 남으므로, 역할만 보면 나간 사람이 방장으로 잡힌다.
+    // "룸당 HOST + JOINED 는 정확히 1명"이 불변식이라 정렬 없이 findFirst 로 충분하다.
+    fun findFirstByRoomIdAndParticipationRoleAndStatusAndDeletedAtIsNull(
+        roomId: UUID,
+        participationRole: ParticipationRole,
+        status: ParticipationStatus,
+    ): ParticipationEntity?
+}

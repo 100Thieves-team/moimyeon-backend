@@ -1,0 +1,40 @@
+// MOI-544 알림 수신 설정 — 논리 모델 (1단)
+// 근거: 회원 및 프로필 PRD §4.10 (R141~R166), 상태 SSOT P.notification.receive_setting
+// 타입은 논리 수준. MySQL 타입·인덱스 확정은 2단에서 한다.
+
+// 기본 엔티티 — 회원. 기존 컬럼은 생략하고 이번에 더하는 속성만 적는다.
+// 수신 설정은 회원과 1:1이고 생명주기가 같다(가입과 함께 생기고 탈퇴까지 간다).
+// 분리 명분(큰 컬럼·민감정보 격리·일부만 가짐·생명주기 다름)이 없어 회원에 합친다.
+Table member {
+  id uuid [pk]
+  // ... 기존 컬럼 (email, nickname, status, role, last_login_at, ...)
+
+  is_web_push_allowed boolean [not null, default: true, note: '웹 푸시 허용(끄지 않았는지). 사용자가 끄면 false, 다시 켜면 true. 실제 수신은 기기 등록이 있어야 한다(F.member.is_web_push_allowed)']
+  is_activity_email_enabled boolean [not null, default: true, note: '서비스 활동 알림 메일 수신(F.member.is_activity_email_enabled)']
+  is_marketing_email_agreed boolean [not null, default: false, note: '광고성 정보 수신 동의(F.member.is_marketing_email_agreed)']
+  marketing_email_agreed_at datetime [null, note: '광고성 정보 수신 마지막 동의 시각. 철회해도 지우지 않는다. 한 번도 동의하지 않았으면 null']
+}
+
+// 기존 테이블 — 구조 변경 없음. 쓰는 규칙만 바뀐다.
+// 행위 엔티티 성격: 회원당 기기 수만큼(수 개). 물리 삭제(해지 = 외부 등록 식별자 제거).
+Table web_push_subscription {
+  id bigint [pk]
+  member_id uuid [not null, note: '존재 종속. 회원당 0..N']
+  registration text [not null]
+  registration_hash char64 [not null, unique, note: '같은 브라우저 등록은 하나']
+  registered_at datetime [not null]
+
+  Note: '''
+  쓰기 규칙 (MOI-544)
+  - 웹 푸시 켜기: member.is_web_push_allowed = true + 이 기기 행 upsert (한 트랜잭션)
+  - 웹 푸시 끄기: member.is_web_push_allowed = false + member_id 의 모든 행 삭제 (한 트랜잭션)
+  - 토큰 갱신: member.is_web_push_allowed == true 일 때만 upsert
+  - 전달 불가 확인: 그 행만 삭제 (기존 worker 동작)
+  '''
+}
+
+Ref: web_push_subscription.member_id > member.id
+
+// 파생 (저장하지 않음)
+// D.member.can_receive_web_push = member.is_web_push_allowed and count(web_push_subscription) > 0
+//   worker 가 발송 직전에 계산한다.

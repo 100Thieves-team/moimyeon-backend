@@ -2,15 +2,21 @@ rootProject.name = "moimyeon"
 
 include(
     "admin:admin-api",
-    "batch:batch-app",
+    "core:core-batch",
     "core:core-enum",
+    "core:core-worker",
     "core:core-api",
     "storage:db-core",
+    "storage:redis-core",
     "security:security-core",
     "tests:api-docs",
     "support:logging",
     "support:monitoring",
-    "clients:client-example"
+    "clients:client-example",
+    "clients:bedrock-client",
+    "clients:email-client",
+    "clients:web-push-client",
+    "storage:object-storage"
 )
 
 pluginManagement {
@@ -19,6 +25,7 @@ pluginManagement {
     val springDependencyManagementVersion: String by settings
     val asciidoctorConvertVersion: String by settings
     val ktlintVersion: String by settings
+    val restdocsApiSpecVersion: String by settings
 
     resolutionStrategy {
         eachPlugin {
@@ -30,7 +37,11 @@ pluginManagement {
                 "io.spring.dependency-management" -> useVersion(springDependencyManagementVersion)
                 "org.asciidoctor.jvm.convert" -> useVersion(asciidoctorConvertVersion)
                 "org.jlleitschuh.gradle.ktlint" -> useVersion(ktlintVersion)
+                "com.epages.restdocs-api-spec" -> useVersion(restdocsApiSpecVersion)
             }
         }
+    }
+    plugins {
+        kotlin("kapt") version "2.3.21"
     }
 }

@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    bucket         = "moimyeon-terraform-state-781897847312-ap-northeast-2"
+    key            = "dev/terraform.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "moimyeon-terraform-locks"
+    encrypt        = true
+  }
+}

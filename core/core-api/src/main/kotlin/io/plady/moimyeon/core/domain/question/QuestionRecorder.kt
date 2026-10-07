@@ -1,0 +1,125 @@
+package io.plady.moimyeon.core.domain.question
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.enums.QuestionSource
+import io.plady.moimyeon.core.support.error.CoreErrorType
+import io.plady.moimyeon.core.support.error.requireBusiness
+import io.plady.moimyeon.core.support.error.requireFound
+import io.plady.moimyeon.storage.db.core.QuestionEntity
+import io.plady.moimyeon.storage.db.core.QuestionRepository
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.util.UUID
+
+private val log = KotlinLogging.logger {}
+
+@Component
+class QuestionRecorder(
+    private val questionRepository: QuestionRepository,
+) {
+    @Transactional
+    fun record(
+        roomId: UUID,
+        targetMemberId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long?,
+        content: String,
+        source: QuestionSource,
+    ): Long {
+        log.debug { "question.recorder.record roomId=$roomId targetMemberId=$targetMemberId authorMemberId=$authorMemberId parentQuestionId=$parentQuestionId source=$source" }
+        if (parentQuestionId != null) {
+            validateParent(roomId, targetMemberId, parentQuestionId)
+        }
+        return save(roomId, targetMemberId, authorMemberId, parentQuestionId, content, source)
+    }
+
+    @Transactional
+    fun recordFollowUp(
+        roomId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long,
+        content: String,
+        source: QuestionSource,
+    ): Long {
+        log.debug { "question.recorder.recordFollowUp roomId=$roomId authorMemberId=$authorMemberId parentQuestionId=$parentQuestionId source=$source" }
+        val parent = getOriginalQuestionForUpdate(roomId, parentQuestionId)
+        requireBusiness(
+            parent.targetMemberId != authorMemberId,
+            CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,
+        )
+        return save(roomId, parent.targetMemberId, authorMemberId, parentQuestionId, content, source)
+    }
+
+    private fun save(
+        roomId: UUID,
+        targetMemberId: UUID,
+        authorMemberId: UUID,
+        parentQuestionId: Long?,
+        content: String,
+        source: QuestionSource,
+    ): Long {
+        return questionRepository.save(
+            QuestionEntity(
+                roomId = roomId,
+                targetMemberId = targetMemberId,
+                authorMemberId = authorMemberId,
+                parentQuestionId = parentQuestionId,
+                content = content,
+                source = source,
+            ),
+        ).id
+    }
+
+    @Transactional
+    fun removeOwnedBy(
+        roomId: UUID,
+        questionId: Long,
+        authorMemberId: UUID,
+        deletedAt: LocalDateTime,
+    ) {
+        log.debug { "question.recorder.removeOwnedBy roomId=$roomId questionId=$questionId authorMemberId=$authorMemberId" }
+        val question = requireFound(
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, questionId),
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+        requireBusiness(
+            question.authorMemberId == authorMemberId,
+            CoreErrorType.QUESTION_PREPARATION_FORBIDDEN,
+        )
+        if (question.parentQuestionId == null) {
+            requireBusiness(
+                !questionRepository.existsByParentQuestionIdAndAuthorMemberIdNotAndDeletedAtIsNull(
+                    questionId,
+                    authorMemberId,
+                ),
+                CoreErrorType.QUESTION_HAS_OTHER_FOLLOW_UP,
+            )
+            questionRepository.findAllByParentQuestionIdAndAuthorMemberIdAndDeletedAtIsNull(
+                questionId,
+                authorMemberId,
+            ).forEach { it.delete(deletedAt) }
+        }
+        question.delete(deletedAt)
+    }
+
+    private fun validateParent(roomId: UUID, targetMemberId: UUID, parentQuestionId: Long) {
+        val parent = getOriginalQuestionForUpdate(roomId, parentQuestionId)
+        requireBusiness(
+            parent.targetMemberId == targetMemberId,
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+    }
+
+    private fun getOriginalQuestionForUpdate(roomId: UUID, questionId: Long): QuestionEntity {
+        val question = requireFound(
+            questionRepository.findForUpdateByRoomIdAndIdAndDeletedAtIsNull(roomId, questionId),
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+        requireBusiness(
+            question.parentQuestionId == null,
+            CoreErrorType.QUESTION_NOT_FOUND,
+        )
+        return question
+    }
+}

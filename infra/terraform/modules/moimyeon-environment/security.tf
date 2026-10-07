@@ -1,0 +1,232 @@
+# Least-privilege chain:  internet -> alb -> ecs_task -> rds
+# ecs_instance holds no inbound (tasks use their own ENIs in awsvpc mode).
+
+resource "aws_security_group" "alb" {
+  name        = "${local.name}-sg-alb"
+  description = var.alb_sg_description
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-alb-sg"
+  })
+}
+
+resource "aws_security_group" "ecs_instance" {
+  name        = "${local.name}-ecs-instance"
+  description = "ECS EC2 container instances"
+  vpc_id      = aws_vpc.this.id
+
+  egress {
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-ecs-instance-sg"
+  })
+}
+
+resource "aws_security_group" "ecs_task" {
+  name        = "${local.name}-ecs-task"
+  description = "ECS task ENIs (awsvpc)"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "ALB to container"
+    from_port       = var.container_port
+    to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-ecs-task-sg"
+  })
+}
+
+resource "aws_security_group" "notification_worker_task" {
+  name        = "${local.name}-notification-worker-task"
+  description = "Notification worker task ENIs"
+  vpc_id      = aws_vpc.this.id
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-worker-task-sg"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_rds" {
+  security_group_id            = aws_security_group.notification_worker_task.id
+  referenced_security_group_id = aws_security_group.rds.id
+  description                  = "Worker to MySQL"
+  ip_protocol                  = "tcp"
+  from_port                    = 3306
+  to_port                      = 3306
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_redis" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  security_group_id            = aws_security_group.notification_worker_task.id
+  referenced_security_group_id = aws_security_group.notification_redis[0].id
+  description                  = "Worker to notification Redis"
+  ip_protocol                  = "tcp"
+  from_port                    = 6379
+  to_port                      = 6379
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_https" {
+  security_group_id = aws_security_group.notification_worker_task.id
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Worker to SES and FCM HTTPS APIs"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_worker_gmail_smtp" {
+  security_group_id = aws_security_group.notification_worker_task.id
+  cidr_ipv4         = "0.0.0.0/0"
+  description       = "Worker to Gmail SMTP with STARTTLS"
+  ip_protocol       = "tcp"
+  from_port         = 587
+  to_port           = 587
+}
+
+resource "aws_security_group" "rds" {
+  name        = "${local.name}-sg-rds"
+  description = var.rds_sg_description
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "ECS tasks to MySQL"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
+  }
+
+  # Developer access via the SSM bastion (optional).
+  dynamic "ingress" {
+    for_each = var.enable_db_bastion ? [1] : []
+
+    content {
+      description     = "DB access bastion to MySQL"
+      from_port       = 3306
+      to_port         = 3306
+      protocol        = "tcp"
+      security_groups = [aws_security_group.db_bastion[0].id]
+    }
+  }
+
+  # Transitional: keep existing app-host / bastion SGs allowed during cutover so
+  # the currently-running container does not lose its DB connection. Remove after.
+  dynamic "ingress" {
+    for_each = toset(var.extra_rds_ingress_security_group_ids)
+
+    content {
+      description     = "Transitional existing SG to MySQL"
+      from_port       = 3306
+      to_port         = 3306
+      protocol        = "tcp"
+      security_groups = [ingress.value]
+    }
+  }
+
+  egress {
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-rds-sg"
+  })
+}
+
+resource "aws_security_group" "notification_redis" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis"
+  description = "Notification Redis ECS task access"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "API and worker tasks to notification Redis"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_task.id, aws_security_group.notification_worker_task.id]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-sg"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "notification_redis_efs" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  security_group_id            = aws_security_group.notification_redis[0].id
+  referenced_security_group_id = aws_security_group.notification_redis_efs[0].id
+  description                  = "Notification Redis to EFS"
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+}
+
+resource "aws_security_group" "notification_redis_efs" {
+  count = var.enable_notification_redis ? 1 : 0
+
+  name        = "${local.name}-notification-redis-efs"
+  description = "EFS mount access from notification Redis ECS task"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "Redis task to EFS over NFS"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.notification_redis[0].id]
+  }
+
+  tags = merge(local.tags, {
+    Name = "${local.name}-notification-redis-efs-sg"
+  })
+}

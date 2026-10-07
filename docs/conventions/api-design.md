@@ -1,0 +1,169 @@
+# API 설계
+
+[← 허브로](README.md)
+
+## URI
+
+- 형식: `/v{version}/{리소스}` (예: `/v1/members/me/profile`). `/api` 프리픽스는 쓰지 않는다.
+- 버저닝은 경로 기반(`/v1`). 리소스는 복수형, kebab-case(`/v1/job-roles`).
+- 인증 주체 자원은 `/v1/members/me/...`, 타인 조회는 `/v1/members/{memberId}/...`.
+- Parameter/Body 는 camelCase.
+- **포함 관계만 path 로 중첩한다.** 하위 개념이 상위에 수명 종속이면 중첩
+  (`/v1/rooms/{roomId}/questions`), 늘어날 수 있는 조회 조건이면 RequestParam
+  (`/v1/rooms?sigunguId=`). 판정 기준: 조건이 하나 추가될 때 path 가 그대로면 필터다.
+- **path 의 리소스 ID 는 1개까지** — `/a/{aId}/b/{bId}` 를 만들지 않는다. 상위 ID 가
+  있어야만 하위를 찾을 수 있다면 하위 ID 가 유니크하지 않다는 설계 신호다.
+  **신규 엔드포인트부터 적용한다.** 이 규칙 이전에 작성된 일부 엔드포인트
+  (`rooms/{roomId}/comments/{commentId}` 등)는 그대로 두고 별도 리팩토링
+  이슈로 정리한다 — 기존 패턴을 근거로 신규 설계를 정당화하지는 않는다.
+- **URI 는 호출 주체가 아니라 제공 정보를 표현한다.** `/summary`·`/detail` ○,
+  `/by-admin`·`/for-user` ✗ — 권한이 늘어도 URI 가 재사용되어야 한다.
+- **CRUD 로 표현되지 않는 도메인 행위는 동사를 쓰되 `/리소스/{id}/행위` 템플릿을
+  지킨다** (`POST /v1/rooms/{roomId}/participations/leave`). 삭제와 취소는 다른 행위다.
+
+## DTO
+
+위치: `core.api.controller.v1.request` / `response`. **`Dto` 접미사 금지.**
+
+| 대상 | 규칙 | 예시 |
+| --- | --- | --- |
+| 요청 | `[동사][대상]Request` | `CreateOrderRequest` |
+| 응답 | `[대상]Response` / `[대상][용도]Response` | `OrderResponse`, `ProductSearchResponse` |
+
+- DTO 는 파일당 하나. 단, 응답 구조상 강결합된 하위 DTO 는 같은 파일에 둘 수 있다
+  (`OrderResponse` + `OrderLineResponse`).
+
+### 변환 방향
+
+- **요청 → 도메인**: 요청 DTO 의 `toXxx()` 메서드. **변환 결과(행위 입력 값)는 인증 주체
+  식별자를 담지 않는다** — `currentMember.id`는 컨트롤러가 Service/Facade 호출 인자로 따로
+  넘긴다. 요청으로 선택한 `productIds` 같은 다른 개념의 참조 식별자는 행위 입력에 포함할 수 있다.
+  ```kotlin
+  data class CreateOrderRequest(val productIds: List<Long>, ...) {
+      fun toContent(): OrderContent = OrderContent(productIds = productIds, ...)
+  }
+  // 컨트롤러: orderService.place(currentMember.id, request.toContent())
+  // 단일 Service 호출이면 컨트롤러가 직접 부른다. Facade 는 여러 Service 결과를 조합할 때만.
+  ```
+- **도메인 → 응답**: 응답 DTO 의 `companion object` 정적 팩토리 `from(...)`/`of(...)`.
+  파라미터는 **도메인 객체 또는 풀어낸 필드**만 받는다. **Request 타입을 받지 않는다**
+  (응답이 요청 표현에 의존하면 안 됨).
+  ```kotlin
+  data class OrderResponse(...) {
+      companion object {
+          fun from(order: Order, products: List<Product>): OrderResponse { ... }
+      }
+  }
+  ```
+
+## 검증: 어디서 확정되는가
+
+> **경계를 넘는 순간 온전한 개념 객체여야 한다.**
+> 요청 DTO 는 API 스펙이고, `toXxx()` 가 그것을 개념 객체로 바꾸는 유일한 지점이다.
+> 그 전환이 끝나면 뒤쪽 레이어에는 스펙 검증이 남지 않는다.
+
+**Bean Validation 을 쓰지 않는다.** `@Valid`·`@field:Size`·`@Validated` 모두 금지이며
+`spring-boot-starter-validation` 의존성도 두지 않는다. 스펙을 애노테이션에 흩어놓으면
+개념 객체는 빈 그릇이 되고, 스펙이 어디까지인지가 테스트가 아니라 리플렉션에 숨는다.
+
+| 무엇 | 어디서 | 실패 응답 | 예 |
+| --- | --- | --- | --- |
+| **값 하나의 형식·범위** (API 스펙) | 요청 DTO 의 `toXxx()` / 컨트롤러 파라미터 | 400 `E400` (`CoreApiException`) | 메모 최대 500자, `query` 1~50자 |
+| **값의 도메인 규칙** | 값 객체 생성 시점 | 도메인 코드 (400 `E1005` 등) | 주문번호 형식, 금칙어 |
+| **개념 객체의 성립 조건** | 개념 객체 `init { require(...) }` | 도메인 코드 | 필드 간 정합, 참조 관계 불변식 (주문에 주문라인 최소 1개, 최소·최대 수량의 대소) |
+| **DB 를 봐야 하는 규칙** | 그 데이터를 다루는 쓰기 Implement 안 (다른 개념의 판정이면 그 개념의 `Validator`) | 도메인 코드 (409 등) | 값 중복은 그 쓰기 Manager 안, 다른 개념의 참조 유효성은 그 개념의 `Validator` |
+| 본문 해석·타입 불일치·파라미터 누락 | 프레임워크 → `ApiControllerAdvice` | 400 `E400` | 깨진 JSON, UUID 아닌 경로 변수 |
+
+```kotlin
+data class CreateOrderRequest(
+    val productIds: List<Long> = emptyList(),
+    val memo: String? = null,
+    ...
+) {
+    fun toContent(): OrderContent {
+        if (memo != null && memo.length > MEMO_MAX_LENGTH) throw CoreApiException(CoreApiErrorType.INVALID_REQUEST)
+
+        return OrderContent(...)
+    }
+}
+```
+
+- **값 하나면 프레젠테이션, 관계면 개념 객체, DB 를 봐야 하면 Implement.** 길이·형식처럼 그 값만 보면
+  판정되는 것은 API 스펙이므로 DTO 가 확정한다. 여러 필드의 관계나 객체 간 참조에서 나오는 규칙은 그
+  개념 객체 안에서 판정한다. 조회가 필요하면 그 데이터를 다루는 쓰기 Implement 가 Repository 를
+  직접 보고 검증하고, **다른 개념의 판정을 물어야 할 때만** 그 개념의 `Validator` 를 쓴다
+  ([layers.md](layers.md)).
+- **검증 실패는 `if (...) throw` 로 쓴다.** 별도 헬퍼를 만들지 않는다 — 스펙이 그대로 읽히는 것이 중요하다.
+- **개념 객체의 필드에 기본값을 두지 않는다.** 기본값은 "안 받는다"와 "빠뜨렸다"를 구분 불가능하게 만든다.
+  받지 않는 값은 `toXxx()` 에서 `emptyList()` 를 명시적으로 넘겨 의도를 남긴다.
+- **목킹 단계라 변환할 개념 객체가 아직 없으면** DTO 에 `validate()` 를 두고 컨트롤러가 호출한다.
+  도메인이 붙으면 `toXxx()` 안으로 옮긴다.
+- **스펙은 RestDocs 테스트가 문서로 만든다.** 값 규칙 위반 케이스를 컨트롤러 문서화 테스트에 두면
+  openapi3.yaml 의 4xx 예시로 나간다([api-docs.md](api-docs.md)). **요청 DTO 단위 테스트를 따로 만들지
+  않는다** — 같은 규칙을 두 층에서 검증하면서 문서에는 실리지 않는다.
+
+## 응답 포맷
+
+모든 응답은 `ApiResponse<T>` 로 감싼다 (`core.support.response`).
+
+```kotlin
+class ApiResponse<T> private constructor(
+    val result: ResultType,     // SUCCESS | ERROR
+    val data: T? = null,
+    val error: ErrorMessage? = null,
+)
+```
+
+- 생성자는 `private`, 팩토리는 `success()` / `success(data)` / `error(errorType, data)`.
+- 응답 body 는 최소 스펙(YAGNI). Boolean 에 null 금지, 제한 문자열은 Enum, 복수형 빈 값은 빈 배열.
+- id 참조 응답 원칙: FE 가 카탈로그 목록을 이미 갖고 있으면 id 만 내려준다(`jobRoleId`, `sigunguId`).
+  FE 가 목록을 갖고 있지 않은 검색 기반 데이터는 라벨을 함께 조립한다(`{companyId, name}`).
+
+## Enum
+
+- 도메인 전역 공유 Enum 은 `core:core-enum` (`io.plady.moimyeon.core.enums`)에 둔다
+  (예: 여러 모듈이 함께 쓰는 상태 enum).
+- 제한된 문자열 값은 항상 Enum 으로 표현하고 `@Enumerated(EnumType.STRING)` 으로 저장한다.
+
+## 모킹 API 패턴
+
+새 기능은 **API 계약(모킹)을 먼저 배포**하고 FE 와 병렬로 진행한다.
+
+- 모킹 컨트롤러에는 `@Profile("local", "local-dev", "dev")` 을 붙여 운영(live)에 빈 자체가
+  등록되지 않게 한다. 같은 기능에서 여러 컨트롤러가 공유할 때만 기능별 메타 어노테이션으로 묶는다.
+- 모킹은 **정적 목업 값**을 반환한다(figma 확정안 값). 실제처럼 동적으로 동작하게 만들지 않는다 —
+  모킹임이 드러나야 실구현과 혼동되지 않는다.
+- 실구현 전환 시 URI·응답 계약은 유지하고 모킹 스텁만 제거한다. RestDocs 문서/테스트는
+  실구현 기준으로 교체한다.
+- 일부만 실구현 가능한 API는 컨트롤러는 유지하되 목업 값 고정 반환 범위를 문서에 명시한다.
+
+## dev 전용 Test API (QA 플랫폼용)
+
+QA 플랫폼(qa.agent.plady.io)이 dev 서버의 테스트 데이터를 버튼 하나로 지우고 초기화할 수 있도록
+`/v1/dev/...` 아래에 **dev 전용 Test API** 를 둔다. 공개 API 에는 룸 하드 삭제·회원 초기화가 없고
+(룸 취소는 상태 전이, 신청은 철회뿐), 테스트 계정에 참여 중 룸이 쌓이면 참여 한도(E1425)에 걸려
+QA 가 막히기 때문이다. 플랫폼은 openapi3.yaml 을 읽어 폼과 버튼을 만들므로 성공·에러 예시가 전부
+RestDocs 테스트로 문서화되어야 한다.
+
+- **코드 위치**: `core.qa` 패키지 한 곳(컨트롤러·Service·Implement). 서비스 컨트롤러
+  (`core.api.controller.v1`) 사이에 QA 전용 메서드를 두지 않는다. 삭제·조회 쿼리는 db-core 의
+  `QaTestDataRepository` 한 클래스에 두고 운영 Repository 에 QA 전용 메서드를 섞지 않는다.
+- **게이트**: `POST /v1/auth/dev-sessions` 와 같은 `DEV_AUTH_PROFILE_EXPRESSION`(`local`·`local-dev`·`dev`,
+  staging·live 가 섞이면 제외)을 `core.qa` 의 모든 빈에 붙인다. 아키텍처 가드 테스트
+  (`QaPackageProfileGateTest`)가 패키지 안 스테레오타입 빈 전부의 게이트를 강제하고,
+  `QaTestApiProfileContextTest` 가 프로파일별 등록 여부를 고정한다. live 에서는 경로 자체가 없다(404).
+- **경로**: 전부 `/v1/dev/` 아래. QA 플랫폼이 이 접두로 "검증 대상 API 가 아님"을 가른다.
+  인증은 다른 API 와 같다(SecurityConfig 를 바꾸지 않는다).
+- **지울 수 있는 것**: 제목이 `[QA]` 로 시작하는 룸과 그 룸에 매인 행뿐이다. 접두 검사는 쓰기
+  Implement(`QaRoomEraser`) 안에서만 판정하고, 위반은 `E2201 QA_DATA_ONLY`(409)다. 회원 행은
+  지우지 않는다(테스트 계정 UUID 는 SSM 에 고정). 유일한 예외는 테스트 회원 생성 API 로 만든 QA 회원
+  (소셜 식별자 `qa-` + 이메일이 `qa.member.email-template` 형식 또는 `@qa.moimyeon.test`)이며, `DELETE /v1/dev/members/{memberId}` 와 일괄 삭제의
+  `includeMembers` 로만 지운다. 소프트 삭제가 아니라 행을 없앤다.
+- **삭제 순서**: 스키마에 FK 제약이 없으므로 순서를 코드가 지킨다(자식 → 부모). 룸 한 개의 그래프가
+  한 트랜잭션이며, 모든 호출은 결과 한 줄을 INFO 로 남긴다(`qa-test-data.<메서드>` 접두, 삭제는 테이블별 건수).
+  접두 원문은 자유 입력이라 로그에 넣지 않는다.
+- **시나리오 준비용 API 세 개**: 룸 시작 시각 변경(`POST /v1/dev/rooms/{roomId}/schedule`, `[QA]` 룸만),
+  테스트 회원 생성(`POST /v1/dev/members`, 실제 가입 경로 재사용 + dev 토큰 발급), 이력서 요약 완료 강제
+  (`POST /v1/dev/resumes/{resumeId}/summary`, 이름이 `[QA]` 인 이력서만, Bedrock 우회). 상태를 직접 덮어쓰는 API 는 두지 않는다 —
+  시작 시각만 옮기면 8시간 자동 완료와 완료 후 출석·후기를 실제 경로로 검증할 수 있어 room_status_log·출석이 일관된다.
+- **범위 밖**: QA 생성 회원이 아닌 회원의 삭제, 토큰·비밀번호 관련 변경, 공개 API 동작 변경.

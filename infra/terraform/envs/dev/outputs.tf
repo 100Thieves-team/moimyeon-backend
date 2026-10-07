@@ -1,0 +1,194 @@
+output "github_deploy_role_arn" {
+  description = "GitHub Actions role ARN for dev."
+  value       = module.dev.github_deploy_role_arn
+}
+
+output "aws_region" {
+  description = "AWS region."
+  value       = module.dev.aws_region
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL."
+  value       = module.dev.ecr_repository_url
+}
+
+output "notification_worker_ecr_repository_url" {
+  description = "ECR repository URL for core-worker."
+  value       = module.dev.notification_worker_ecr_repository_url
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name."
+  value       = module.dev.ecs_cluster_name
+}
+
+output "ecs_service_name" {
+  description = "ECS service name."
+  value       = module.dev.ecs_service_name
+}
+
+output "ecs_container_name" {
+  description = "ECS container name."
+  value       = module.dev.ecs_container_name
+}
+
+output "notification_worker_ecs_service_name" {
+  description = "Notification worker ECS service name."
+  value       = module.dev.notification_worker_ecs_service_name
+}
+
+output "notification_worker_ecs_container_name" {
+  description = "Notification worker ECS container name."
+  value       = module.dev.notification_worker_ecs_container_name
+}
+
+output "app_url" {
+  description = "Application URL."
+  value       = module.dev.app_url
+}
+
+output "alb_dns_name" {
+  description = "ALB DNS name."
+  value       = module.dev.alb_dns_name
+}
+
+output "alb_access_log_bucket_name" {
+  description = "S3 bucket receiving ALB access logs."
+  value       = module.dev.alb_access_log_bucket_name
+}
+
+output "waf_web_acl_arn" {
+  description = "Regional WAF web ACL associated with the ALB."
+  value       = module.dev.waf_web_acl_arn
+}
+
+output "waf_log_group_name" {
+  description = "CloudWatch Logs group receiving WAF request logs."
+  value       = module.dev.waf_log_group_name
+}
+
+output "rds_endpoint" {
+  description = "RDS endpoint address."
+  value       = module.dev.rds_endpoint
+}
+
+output "notification_redis_endpoint" {
+  description = "Private DNS name of the notification Redis ECS service."
+  value       = module.dev.notification_redis_endpoint
+}
+
+output "notification_redis_url_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the notification Redis URL."
+  value       = module.dev.notification_redis_url_parameter_name
+}
+
+output "notification_redis_password_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the notification Redis password."
+  value       = module.dev.notification_redis_password_parameter_name
+}
+
+output "jwt_secret_parameter_name" {
+  description = "Pre-created SSM SecureString name expected for the JWT signing secret."
+  value       = module.dev.jwt_secret_parameter_name
+}
+
+output "upload_bucket_name" {
+  description = "S3 upload bucket."
+  value       = module.dev.upload_bucket_name
+}
+
+output "image_uri_parameter_name" {
+  description = "SSM parameter updated by the deploy workflow."
+  value       = module.dev.image_uri_parameter_name
+}
+
+output "notification_worker_image_uri_parameter_name" {
+  description = "SSM parameter updated with the deployed core-worker image URI."
+  value       = module.dev.notification_worker_image_uri_parameter_name
+}
+
+output "deployment_bundle_parameter_prefix" {
+  description = "SSM prefix containing immutable dev deployment bundles."
+  value       = module.dev.deployment_bundle_parameter_prefix
+}
+
+output "firebase_service_account_parameter_name" {
+  description = "SSM SecureString name expected for Firebase service account JSON."
+  value       = module.dev.firebase_service_account_parameter_name
+}
+
+output "gmail_app_password_parameter_name" {
+  description = "SSM SecureString name expected for Gmail app password."
+  value       = module.dev.gmail_app_password_parameter_name
+}
+
+output "db_bastion_instance_id" {
+  description = "DB access bastion instance ID (SSM port-forward target)."
+  value       = module.dev.db_bastion_instance_id
+}
+
+output "external_dns_records" {
+  description = "Manual DNS records for dns_management = external."
+  value       = module.dev.external_dns_records
+}
+
+output "ecs_task_definition_arn" {
+  description = "Terraform-managed Core API task definition template ARN."
+  value       = module.dev.ecs_task_definition_arn
+}
+
+output "notification_worker_task_definition_arn" {
+  description = "Terraform-managed Notification Worker task definition template ARN."
+  value       = module.dev.notification_worker_task_definition_arn
+}
+
+output "monitoring_instance_id" {
+  description = "SSM port-forward target for private Grafana (port 3000)."
+  value       = module.dev.monitoring_instance_id
+}
+
+output "monitoring_otlp_metrics_url" {
+  description = "Private OTLP HTTP metrics receiver URL."
+  value       = module.dev.monitoring_otlp_metrics_url
+}
+
+output "monitoring_data_volume_id" {
+  description = "Retained encrypted monitoring data volume."
+  value       = module.dev.monitoring_data_volume_id
+}
+
+output "monitoring_grafana_password_parameter_name" {
+  description = "Pre-created Grafana SecureString expected by the monitoring host."
+  value       = module.dev.monitoring_grafana_password_parameter_name
+}
+
+output "monitoring_sentry_parameter_names" {
+  description = "Pre-created API and Worker Sentry DSN SecureStrings."
+  value       = module.dev.monitoring_sentry_parameter_names
+}
+
+output "github_pr_image_role_arn" {
+  description = "GitHub Actions role internal PR CI uses to push candidate images."
+  value       = module.dev.github_pr_image_role_arn
+}
+
+output "pr_image_candidate_repository_url" {
+  description = "Core API candidate ECR repository URL for PR-built images."
+  value       = module.dev.pr_image_candidate_repository_urls["core-api"]
+}
+
+output "pr_image_worker_candidate_repository_url" {
+  description = "Notification Worker candidate ECR repository URL for PR-built images."
+  value       = module.dev.pr_image_candidate_repository_urls["core-worker"]
+}
+
+output "deploy_config_parameter_name" {
+  description = "SSM parameter holding the non-secret dev deploy wiring."
+  value       = module.dev.deploy_config_parameter_name
+}
+
+output "terraform_applied_sha_parameter_name" {
+  description = "SSM parameter recording the last applied dev Terraform source SHA."
+  value       = module.dev.terraform_applied_sha_parameter_name
+}

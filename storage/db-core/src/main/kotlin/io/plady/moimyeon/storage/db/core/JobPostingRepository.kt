@@ -1,0 +1,72 @@
+package io.plady.moimyeon.storage.db.core
+
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+
+interface JobPostingRepository : JpaRepository<JobPostingEntity, Long> {
+    // 통합 검색 rank 0 — 회사명이 매치된 회사들의 공고(MOI-390).
+    // 잔여 검색어는 양방향으로 본다. 사용자가 공고명보다 길게 쳐도(오버타이핑) 결과가 사라지지 않아야 한다.
+    // 잔여가 없으면 호출자가 titlePattern 에 '%' 를 넘겨 그 회사의 공고 전체가 된다.
+    @Query(
+        """
+        SELECT p FROM JobPostingEntity p
+        WHERE p.companyId IN :companyIds
+          AND p.isOpen = true
+          AND p.deletedAt IS NULL
+          AND (p.title LIKE :titlePattern OR :remainder LIKE CONCAT('%', p.title, '%'))
+        ORDER BY p.postedAt DESC, p.id DESC
+        """,
+    )
+    fun searchByCompanyIds(
+        @Param("companyIds") companyIds: Collection<Long>,
+        @Param("titlePattern") titlePattern: String,
+        @Param("remainder") remainder: String,
+        pageable: Pageable,
+    ): List<JobPostingEntity>
+
+    // 통합 검색 rank 1 — 공고명 매치 폴백(MOI-390).
+    // 토큰을 AND 로 걸어 어순과 무관하게 찾는다. 없는 토큰 자리에는 호출자가 '%' 를 넘긴다.
+    // 절 개수가 고정이라 토큰 상한을 넘는 입력은 무시되는데, 결과가 넓어지는 방향이라 안전하다.
+    @Query(
+        """
+        SELECT p FROM JobPostingEntity p
+        WHERE p.companyId IS NOT NULL
+          AND p.isOpen = true
+          AND p.deletedAt IS NULL
+          AND p.title LIKE :token1
+          AND p.title LIKE :token2
+          AND p.title LIKE :token3
+        ORDER BY p.postedAt DESC, p.id DESC
+        """,
+    )
+    fun searchByTitleTokens(
+        @Param("token1") token1: String,
+        @Param("token2") token2: String,
+        @Param("token3") token3: String,
+        pageable: Pageable,
+    ): List<JobPostingEntity>
+
+    // verified 는 필터하지 않는다 — 룸 생성 목록에는 미검증(링크 생성분)도 노출하고, 탐색 필터에서만 숨긴다(BE-03).
+    fun findTop20ByCompanyIdAndTitleContainingAndIsOpenTrueAndDeletedAtIsNullOrderByPostedAtDesc(
+        companyId: Long,
+        title: String,
+    ): List<JobPostingEntity>
+
+    fun existsByIdAndCompanyIdAndIsOpenTrueAndDeletedAtIsNull(id: Long, companyId: Long): Boolean
+
+    // 링크 즉시 생성(BE-03)의 멱등키 조회. 앱이 URL 로 발급한 source_uid 가 이미 있으면 그 공고를 재사용한다.
+    fun findBySourceUidAndDeletedAtIsNull(sourceUid: String): JobPostingEntity?
+
+    fun findByIdAndDeletedAtIsNull(id: Long): JobPostingEntity?
+
+    fun findByIdInAndDeletedAtIsNull(ids: Collection<Long>): List<JobPostingEntity>
+
+    // 룸 탐색의 회사 필터(MOI-383). 룸은 회사를 직접 알지 못해(room → job_posting → company)
+    // 회사 id 를 공고 id 목록으로 바꿔 넘긴다.
+    // is_open 은 보지 않는다 — 공고가 닫혀도 그 공고로 만든 룸의 모집은 계속되고,
+    // 여기서 거르면 회사로 좁혔을 때만 그 룸이 사라져 조건 없는 목록과 어긋난다.
+    @Query("select p.id from JobPostingEntity p where p.companyId = :companyId and p.deletedAt is null")
+    fun findIdsByCompanyId(@Param("companyId") companyId: Long): List<Long>
+}

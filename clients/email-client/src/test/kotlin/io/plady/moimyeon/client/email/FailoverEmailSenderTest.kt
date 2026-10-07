@@ -1,0 +1,106 @@
+package io.plady.moimyeon.client.email
+
+import io.plady.moimyeon.core.enums.NotificationChannel
+import io.plady.moimyeon.core.enums.NotificationPolicy
+import io.plady.moimyeon.worker.notification.delivery.Notification
+import io.plady.moimyeon.worker.notification.delivery.NotificationContent
+import io.plady.moimyeon.worker.notification.delivery.NotificationRecipient
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.catchThrowable
+import org.junit.jupiter.api.Test
+import java.util.UUID
+
+class FailoverEmailSenderTest {
+    private val template = NotificationEmailTemplate()
+
+    @Test
+    fun `SES 전송에 성공하면 Gmail을 호출하지 않는다`() {
+        val ses = RecordingEmailDeliveryProvider()
+        val gmail = RecordingEmailDeliveryProvider()
+        val failoverEmailSender = FailoverEmailSender(ses, gmail, template)
+
+        failoverEmailSender.send(notification(), recipient())
+
+        assertThat(ses.messages).containsExactly(renderedMessage())
+        assertThat(gmail.messages).isEmpty()
+    }
+
+    @Test
+    fun `SES의 일시적 실패에는 Gmail로 전송한다`() {
+        val sesFailure = EmailProviderUnavailableException("SES unavailable")
+        val ses = RecordingEmailDeliveryProvider(sesFailure)
+        val gmail = RecordingEmailDeliveryProvider()
+        val failoverEmailSender = FailoverEmailSender(ses, gmail, template)
+
+        failoverEmailSender.send(notification(), recipient())
+
+        assertThat(gmail.messages).containsExactly(renderedMessage())
+    }
+
+    @Test
+    fun `SES의 영구 실패에는 Gmail로 전송하지 않는다`() {
+        val sesFailure = PermanentEmailDeliveryException("invalid recipient")
+        val gmail = RecordingEmailDeliveryProvider()
+        val failoverEmailSender = FailoverEmailSender(RecordingEmailDeliveryProvider(sesFailure), gmail, template)
+
+        assertThatThrownBy { failoverEmailSender.send(notification(), recipient()) }
+            .isSameAs(sesFailure)
+        assertThat(gmail.messages).isEmpty()
+    }
+
+    @Test
+    fun `SES의 일시적 실패 후 Gmail도 실패하면 두 실패 원인을 보존한다`() {
+        val sesFailure = EmailProviderUnavailableException("SES unavailable")
+        val gmailFailure = EmailDeliveryException("Gmail unavailable")
+        val failoverEmailSender = FailoverEmailSender(
+            RecordingEmailDeliveryProvider(sesFailure),
+            RecordingEmailDeliveryProvider(gmailFailure),
+            template,
+        )
+
+        val failure = catchThrowable { failoverEmailSender.send(notification(), recipient()) }
+
+        assertThat(failure).isSameAs(gmailFailure)
+        assertThat(failure.suppressed).containsExactly(sesFailure)
+    }
+
+    private fun notification() = Notification(
+        eventId = EVENT_ID,
+        eventType = "ROOM_APPLICATION_ACCEPTED",
+        channel = NotificationChannel.EMAIL,
+        policy = NotificationPolicy.PUSH_AND_EMAIL,
+        recipientMemberId = MEMBER_ID,
+        content = NotificationContent(
+            title = "참가 신청이 수락되었어요",
+            body = "모임에 참여할 수 있게 되었어요.",
+            actionUrl = "https://front.test/interviews/$ROOM_ID",
+        ),
+    )
+
+    private fun recipient() = NotificationRecipient(
+        email = "member@example.com",
+        webPushRegistrations = emptySet(),
+        isWebPushAllowed = true,
+        isActivityEmailEnabled = true,
+    )
+
+    // 렌더링 결과 자체는 NotificationEmailTemplateTest 가 본다. 여기서는 그 메시지가
+    // 어느 공급자로 갔는지만 확인한다.
+    private fun renderedMessage() = template.render("member@example.com", notification().content)
+}
+
+private class RecordingEmailDeliveryProvider(
+    private val failure: RuntimeException? = null,
+) : EmailDeliveryProvider {
+    val messages = mutableListOf<EmailMessage>()
+
+    override fun send(message: EmailMessage) {
+        failure?.let { throw it }
+        messages += message
+    }
+}
+
+private val EVENT_ID: UUID = UUID.fromString("01944e3f-4be2-7cc3-8ca4-dacc9c3f28ee")
+private val MEMBER_ID: UUID = UUID.fromString("01944e3f-4be2-7cc3-8ca4-dacc9c3f28ef")
+private val ROOM_ID: UUID = UUID.fromString("01944e3f-4be2-7cc3-8ca4-dacc9c3f28f0")

@@ -1,0 +1,59 @@
+package io.plady.moimyeon.core.domain.catalog
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.storage.db.core.JobGroupRepository
+import io.plady.moimyeon.storage.db.core.JobRoleRepository
+import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
+
+private val log = KotlinLogging.logger {}
+
+@Component
+class JobCatalogFinder(
+    private val jobGroupRepository: JobGroupRepository,
+    private val jobRoleRepository: JobRoleRepository,
+) {
+    @Transactional(readOnly = true)
+    fun getJobCatalog(): List<JobGroup> {
+        log.debug { "job-catalog.finder.getJobCatalog" }
+        val rolesByGroup = jobRoleRepository.findByDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc()
+            .groupBy { it.jobGroupId }
+        return jobGroupRepository.findByDeletedAtIsNullOrderBySortOrderAsc().map { group ->
+            JobGroup(
+                id = group.id,
+                code = group.code,
+                displayName = group.displayName,
+                roles = rolesByGroup[group.id].orEmpty().map { JobRole(it.id, it.code, it.displayName) },
+            )
+        }
+    }
+
+    // 폐기된 직무는 돌려주지 않고, 그 룸은 직무 없이 내려간다.
+    fun getJobRolesByIds(ids: Collection<Long>): List<JobRole> {
+        log.debug { "job-catalog.finder.getJobRolesByIds idsCount=${ids.size}" }
+        if (ids.isEmpty()) return emptyList()
+        return jobRoleRepository.findByIdInAndDeletedAtIsNull(ids).map { JobRole(it.id, it.code, it.displayName) }
+    }
+
+    @Transactional(readOnly = true)
+    fun searchJobRoles(query: String): List<JobRoleSearchResult> {
+        log.debug { "job-catalog.finder.searchJobRoles" }
+        val roles = jobRoleRepository.findTop20ByDisplayNameContainingAndDeletedAtIsNullOrderByJobGroupIdAscSortOrderAsc(query)
+        if (roles.isEmpty()) return emptyList()
+
+        val activeGroups = jobGroupRepository.findAllById(roles.map { it.jobGroupId }.toSet())
+            .filter { it.isActive() }
+            .associateBy { it.id }
+
+        return roles.mapNotNull { role ->
+            val group = activeGroups[role.jobGroupId] ?: return@mapNotNull null
+            JobRoleSearchResult(
+                id = role.id,
+                code = role.code,
+                displayName = role.displayName,
+                groupCode = group.code,
+                groupDisplayName = group.displayName,
+            )
+        }
+    }
+}

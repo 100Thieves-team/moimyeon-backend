@@ -1,0 +1,12 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known deterministic test-only placeholders"
+regexTarget = "secret"
+regexes = [
+  '''^ci-dummy-jwt-secret-[0-9a-f]{32}$''',
+  '''^ci-dummy-client-(id|secret)$''',
+  '''^test-google-(client|secret)$''',
+  '''^test-jwt-secret-key-with-at-least-32-bytes$''',
+]

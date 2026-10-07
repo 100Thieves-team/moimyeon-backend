@@ -1,0 +1,59 @@
+package io.plady.moimyeon.storage.db.core
+
+import jakarta.persistence.CollectionTable
+import jakarta.persistence.Column
+import jakarta.persistence.ElementCollection
+import jakarta.persistence.Entity
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
+import java.time.LocalDateTime
+import java.util.UUID
+
+@Entity
+@Table(
+    name = "review",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_review_room_author_target_active",
+            columnNames = ["room_id", "author_member_id", "target_member_id", "_active_check"],
+        ),
+    ],
+)
+class ReviewEntity(
+    @JdbcTypeCode(SqlTypes.BINARY)
+    val roomId: UUID,
+    @JdbcTypeCode(SqlTypes.BINARY)
+    val authorMemberId: UUID,
+    @JdbcTypeCode(SqlTypes.BINARY)
+    val targetMemberId: UUID,
+    content: String? = null,
+    val anonymous: Boolean,
+    val visibleAt: LocalDateTime,
+    val hiddenAt: LocalDateTime? = null,
+    val reportedAt: LocalDateTime? = null,
+    tags: Collection<String> = emptyList(),
+) : BaseEntity() {
+    final var content: String? = content
+        private set
+
+    @ElementCollection
+    @CollectionTable(name = "review_tag", joinColumns = [JoinColumn(name = "review_id")])
+    @Column(name = "tag")
+    private val tags: MutableSet<String> = tags.toMutableSet()
+
+    // ReviewRepository.markNotified 로만 쓴다. 엔티티 저장이 NULL 로 되돌리지 않게 JPA 쓰기에서 뺀다.
+    @Column(insertable = false, updatable = false)
+    final var notifiedAt: LocalDateTime? = null
+        private set
+
+    fun tags(): Set<String> = tags.toSet()
+
+    fun update(tags: Collection<String>, content: String?) {
+        this.tags.clear()
+        this.tags.addAll(tags)
+        this.content = content
+    }
+}

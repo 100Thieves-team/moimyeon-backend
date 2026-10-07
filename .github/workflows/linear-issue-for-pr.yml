@@ -1,0 +1,53 @@
+# Linear 이슈 없이 열린 PR에 대해 Linear 이슈를 자동 생성하고, PR 타이틀/본문에 이슈 키를 써넣는다.
+# - 열릴 때(드래프트 포함) 생성 → 머지 커밋/타이틀에 이슈 번호가 남음
+# - 본문의 닫힘 매직워드(Fixes)로 머지 시 Linear 네이티브 연동이 자동 Done 처리
+# 필요 secret: LINEAR_API_KEY (Settings → Secrets and variables → Actions → repository secret)
+# 수동 테스트: Actions 탭 → 이 워크플로 → Run workflow → PR 번호 입력
+name: Linear issue for PR
+
+on:
+  pull_request:
+    types: [opened, reopened] # opened 는 드래프트 PR 에도 발화 → 드래프트 포함
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "이슈를 생성할 PR 번호"
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: write # PR 타이틀/본문 수정 + 코멘트용
+
+jobs:
+  create-linear-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve PR fields
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isDispatch = context.eventName === 'workflow_dispatch';
+            const number = isDispatch
+              ? Number(context.payload.inputs.pr_number)
+              : context.payload.pull_request.number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: number,
+            });
+            core.exportVariable('PR_NUMBER', String(pr.number));
+            core.exportVariable('PR_TITLE', pr.title ?? '');
+            core.exportVariable('PR_BODY', pr.body ?? '');
+            core.exportVariable('PR_URL', pr.html_url);
+            core.exportVariable('PR_AUTHOR', pr.user.login);
+            core.exportVariable('PR_BRANCH', pr.head.ref ?? '');
+
+      - name: Checkout (스크립트 파일 사용)
+        uses: actions/checkout@v4
+
+      - name: Create Linear issue if untracked
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: node .github/scripts/create-linear-issue.mjs

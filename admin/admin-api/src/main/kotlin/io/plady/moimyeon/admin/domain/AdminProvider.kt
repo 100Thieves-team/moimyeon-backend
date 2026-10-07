@@ -1,6 +1,7 @@
 package io.plady.moimyeon.admin.domain
 
+import java.util.UUID
+
 data class AdminProvider(
-    val id: Long,
-    val name: String,
+    val memberId: UUID,
 )

@@ -1,0 +1,12 @@
+p1	positive	yes	MOI-501 구현해줘
+p2	positive	yes	이 이슈 요구사항 구현하자: MOI-502
+p3	positive	yes	모임 참여 취소 기능 만들어줘. 이슈는 MOI-503
+p4	positive	yes	MOI-504 티켓 처리해줘. PRD 보고 서비스 로직까지
+p5	positive	yes	요구사항대로 기능 붙여줘, 이슈 MOI-505
+n1	negative	no	프론트가 급하대. MOI-506 API 스펙만 먼저 정의해줘
+n2	negative	no	MOI-507: 만들어둔 서비스를 API에 연결해줘
+n3	negative	no	새 PRD 나왔어. 엔티티 모델링부터 하자
+n4	negative	no	RoomService 변경분 코드 리뷰해줘
+n5	negative	no	participation 도메인 구조가 어떻게 돼있는지 설명해줘
+b1	boundary	boundary	MOI-508 구현해줘. 화면이랑 요구사항 다 나와있어
+b2	boundary	boundary	MOI-509 서비스 테스트부터 짜줘

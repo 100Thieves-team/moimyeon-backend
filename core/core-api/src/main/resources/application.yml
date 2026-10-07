@@ -7,15 +7,46 @@ spring:
       - monitoring.yml
       - logging.yml
       - db-core.yml
+      - object-storage.yml
+      - redis-core.yml
+      - bedrock-client.yml
       - client-example.yml
+      - security-core.yml
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
   web.resources.add-mappings: false
 
 server:
+  # Behind ALB/reverse proxy: trust X-Forwarded-* so scheme/host/client-IP and
+  # generated redirect URLs are correct. Harmless locally (no such headers sent).
+  forward-headers-strategy: framework
   tomcat:
     max-connections: 20000
     threads:
       max: 600
       min-spare: 100
+
+notification.outbox.relay:
+  fixed-delay: ${NOTIFICATION_OUTBOX_RELAY_FIXED_DELAY:10s}
+  initial-delay: ${NOTIFICATION_OUTBOX_RELAY_INITIAL_DELAY:5s}
+  stale-after: ${NOTIFICATION_OUTBOX_RELAY_STALE_AFTER:10s}
+  batch-size: ${NOTIFICATION_OUTBOX_RELAY_BATCH_SIZE:100}
+  lease-duration: ${NOTIFICATION_OUTBOX_RELAY_LEASE_DURATION:5m}
+
+# outbox 재전달·후기 공개·자동 완료가 서로의 스케줄을 막지 않게 한다.
+spring.task.scheduling.pool.size: 3
+
+# QA 회원 메일 주소. 알림 메일을 받아 확인하려면 dev 에서 받을 수 있는 메일함 주소로 둔다.
+qa.member.email-template: ${QA_MEMBER_EMAIL_TEMPLATE:qa-{key}@qa.moimyeon.test}
+
+room.auto-complete:
+  enabled: false
+  cron: ${ROOM_AUTO_COMPLETE_CRON:0 */10 * * * *}
+
+management.endpoint.health.group.readiness:
+  include: readinessState,db
 
 ---
 spring.config.activate.on-profile: local
@@ -24,11 +55,26 @@ spring.config.activate.on-profile: local
 ---
 spring.config.activate.on-profile: local-dev
 
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
+# QA 플랫폼이 알림 메일을 받아 확인하는 메일함(Gmail 대체 발송 계정의 + 주소)
+qa.member.email-template: ${QA_MEMBER_EMAIL_TEMPLATE:100dodukteam+qa-{key}@gmail.com}
+
 
 ---
 spring.config.activate.on-profile: dev
+
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
+# QA 플랫폼이 알림 메일을 받아 확인하는 메일함(Gmail 대체 발송 계정의 + 주소)
+qa.member.email-template: ${QA_MEMBER_EMAIL_TEMPLATE:100dodukteam+qa-{key}@gmail.com}
+
+
+---
+spring.config.activate.on-profile: staging
+
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}
 
 
 ---
 spring.config.activate.on-profile: live
 
+room.auto-complete.enabled: ${ROOM_AUTO_COMPLETE_ENABLED:true}

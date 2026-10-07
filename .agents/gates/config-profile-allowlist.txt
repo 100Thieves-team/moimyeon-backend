@@ -1,0 +1,4 @@
+# 의도적으로 특정 배포 프로파일에만 두는 설정 키 (한 줄에 dotted key 하나)
+# 예: management.server.port
+# dev·local-dev 만: QA 회원 메일을 QA 플랫폼이 읽는 메일함으로 보낸다. 그 밖의 프로파일은 코드 기본값(qa-{key}@qa.moimyeon.test)
+qa.member.email-template

@@ -1,0 +1,10 @@
+package io.plady.moimyeon.storage.db.core
+
+import org.springframework.data.jpa.repository.JpaRepository
+import java.util.UUID
+
+interface TermsAgreementRepository : JpaRepository<TermsAgreementEntity, UUID> {
+    fun existsByMemberIdAndTermsIdAndDeletedAtIsNull(memberId: UUID, termsId: UUID): Boolean
+
+    fun findByMemberIdAndDeletedAtIsNull(memberId: UUID): List<TermsAgreementEntity>
+}
