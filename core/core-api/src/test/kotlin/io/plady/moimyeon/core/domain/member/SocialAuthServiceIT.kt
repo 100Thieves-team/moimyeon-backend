@@ -2,28 +2,36 @@ package io.plady.moimyeon.core.domain.member
 
 import io.plady.moimyeon.ContextTest
 import io.plady.moimyeon.core.enums.SocialLoginProvider
-import io.plady.moimyeon.core.enums.TermsStatus
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.TermsAgreementRepository
-import io.plady.moimyeon.storage.db.core.TermsRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
+import java.util.UUID
 
 @Transactional
+@Import(SocialAuthServiceIT.PublicationClockConfiguration::class)
 class SocialAuthServiceIT(
     private val socialAuthService: SocialAuthService,
     private val memberRepository: MemberRepository,
-    private val termsRepository: TermsRepository,
     private val termsAgreementRepository: TermsAgreementRepository,
 ) : ContextTest() {
     private val provider = SocialLoginProvider.GOOGLE
 
     @Test
     fun `신규 가입 시 현재 유효한 필수 약관 전부에 대한 동의가 버전(termsId)과 함께 기록된다`() {
-        // given — 시드로 등록된 현재 유효(ACTIVE) 필수 약관
-        val requiredTermsIds = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).filter { it.required }.map { it.id }
-        assertThat(requiredTermsIds).isNotEmpty()
+        // 시행 정각의 v1.1 두 건만 동의하고, 여전히 ACTIVE인 v1.0에는 동의하지 않는다.
+        val requiredTermsIds = listOf(
+            UUID.fromString("f614c0bb-87b5-44e8-baf1-2b8b2ad4c1b2"),
+            UUID.fromString("d91d5a8f-228a-4a56-874a-88dd532febe7"),
+        )
 
         // when
         val memberId = socialAuthService.authenticate(provider, "google-sub-terms", Email("user@example.com")).memberId
@@ -70,5 +78,12 @@ class SocialAuthServiceIT(
         // then
         val secondLoginAt = memberRepository.findById(memberId).get().lastLoginAt
         assertThat(secondLoginAt).isAfterOrEqualTo(firstLoginAt)
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    class PublicationClockConfiguration {
+        @Bean
+        @Primary
+        fun signupTermsPublicationClock(): Clock = Clock.fixed(Instant.parse("2026-10-07T15:00:00Z"), ZoneOffset.UTC)
     }
 }
