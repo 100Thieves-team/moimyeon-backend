@@ -57,6 +57,7 @@ Controller/API → 인증/인가 → Service/도메인 로직 → 트랜잭션
 
 ## 우리가 겪은 것
 
+- 2026-10-07: core-api 테스트에는 Jayway JSONPath가 없어 MockMvc의 `jsonPath()`를 호출하면 런타임에 `TypeRef` 누락으로 실패했다. 기존 Jackson 3의 `JsonMapper`로 응답 바이트를 읽어 검증하면 새 의존성 없이 확인할 수 있다.
 - 2026-09-11: 받은 후기 조회의 정상 문서에는 선택 파라미터가 선언됐지만, 기본값·오류 사례의
   `optional()` 누락으로 OpenAPI 병합 결과와 SDK에서 필수가 됐다(MOI-517). 같은 API의 파라미터
   descriptor를 공유하고, 개별 테스트뿐 아니라 최종 OpenAPI의 `required`와 설명도 확인한다.
