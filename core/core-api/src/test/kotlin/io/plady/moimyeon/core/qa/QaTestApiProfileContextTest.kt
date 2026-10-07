@@ -3,8 +3,11 @@ package io.plady.moimyeon.core.qa
 import io.mockk.mockk
 import io.plady.moimyeon.core.api.auth.DevAccessTokenIssuer
 import io.plady.moimyeon.core.domain.member.MemberFinder
+import io.plady.moimyeon.core.domain.member.MemberManager
 import io.plady.moimyeon.core.domain.member.MemberRegistrationManager
+import io.plady.moimyeon.core.domain.progress.RoomProgressManager
 import io.plady.moimyeon.core.qa.controller.QaTestDataController
+import io.plady.moimyeon.security.auth.SocialLoginLander
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ResumeRepository
 import io.plady.moimyeon.storage.db.core.qa.QaTestDataRepository
@@ -29,11 +32,17 @@ class QaTestApiProfileContextTest {
         QaRoomScheduler::class.java,
         QaMemberCreator::class.java,
         QaResumeSummaryCompleter::class.java,
+        QaSocialLogin::class.java,
+        QaMemberStatusChanger::class.java,
+        QaRoomAutoCompleter::class.java,
     )
 
     private val contextRunner = ApplicationContextRunner()
         .withBean(MemberFinder::class.java, { mockk() })
         .withBean(MemberRegistrationManager::class.java, { mockk() })
+        .withBean(MemberManager::class.java, { mockk() })
+        .withBean(RoomProgressManager::class.java, { mockk() })
+        .withBean(SocialLoginLander::class.java, { mockk() })
         .withBean(ResumeRepository::class.java, { mockk() })
         .withBean(MemberRepository::class.java, { mockk() })
         .withBean(Clock::class.java, { Clock.systemUTC() })

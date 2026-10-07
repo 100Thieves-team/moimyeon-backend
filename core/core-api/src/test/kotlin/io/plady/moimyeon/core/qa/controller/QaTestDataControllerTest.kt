@@ -5,24 +5,31 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.plady.moimyeon.core.api.auth.DevAccessTokenIssuer
 import io.plady.moimyeon.core.api.controller.ApiControllerAdvice
+import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.qa.QaData
 import io.plady.moimyeon.core.qa.QaDataCondition
 import io.plady.moimyeon.core.qa.QaDeletedRows
 import io.plady.moimyeon.core.qa.QaMember
+import io.plady.moimyeon.core.qa.QaMemberStatus
 import io.plady.moimyeon.core.qa.QaResumeSummary
 import io.plady.moimyeon.core.qa.QaRoom
+import io.plady.moimyeon.core.qa.QaRoomAutoCompletion
 import io.plady.moimyeon.core.qa.QaRoomSchedule
 import io.plady.moimyeon.core.qa.QaTestDataService
 import io.plady.moimyeon.core.qa.controller.request.CompleteQaResumeSummaryRequest
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
+import io.plady.moimyeon.security.auth.AuthCookieFactory
+import io.plady.moimyeon.security.auth.SocialLanding
 import io.plady.moimyeon.test.api.RestDocsTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseCookie
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post
@@ -34,6 +41,7 @@ import org.springframework.restdocs.request.RequestDocumentation.parameterWithNa
 import org.springframework.restdocs.request.RequestDocumentation.pathParameters
 import org.springframework.restdocs.request.RequestDocumentation.queryParameters
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -99,6 +107,29 @@ class QaTestDataControllerTest : RestDocsTest() {
         "[QA] 룸에서 받은/쓴 후기 삭제. 회원 행·프로필·이력서는 유지한다. " +
         "방장인 룸 중 [QA] 가 아닌 것이 있으면 409(E2201)로 전체 거절, 회원이 없거나 탈퇴했으면 404(E1006), " +
         "memberId 가 UUID 가 아니면 400(E400)."
+
+    private val socialLoginSummary = "[dev] QA 회원 소셜 로그인"
+    private val socialLoginDescription = devOnlyNote +
+        "Google 인증만 건너뛰고 OAuth2 로그인 성공 처리와 같은 코드로 QA 회원을 로그인시킨다. 응답 Set-Cookie 도 실제 로그인과 같다. " +
+        "회원이면 로그인 기록을 남기고 액세스·리프레시 쿠키를, 탈퇴한 회원이면 세션 없이 복구 확인 쿠키만 심는다(복구는 POST /v1/auth/restoration). " +
+        "리다이렉트하지 않고 이동할 화면을 redirectUri 로 돌려준다. 탈퇴한 QA 회원도 대상이다. " +
+        "QA 생성 회원이 아니면 409(E2201), 회원이 없으면 404(E1006), memberId 가 UUID 가 아니면 400(E400)."
+
+    private val socialSignUpSummary = "[dev] QA 회원 소셜 가입"
+    private val socialSignUpDescription = devOnlyNote +
+        "처음 보는 QA 소셜 계정(qa-{uuid})으로 OAuth2 로그인 성공 처리를 탄다. 실제 첫 로그인처럼 회원이 새로 생기고 로그인 쿠키가 심긴다. " +
+        "호출할 때마다 회원이 하나 늘어난다. 지우는 방법은 테스트 회원 생성과 같다."
+
+    private val memberStatusSummary = "[dev] QA 회원 상태 변경"
+    private val memberStatusDescription = devOnlyNote +
+        "QA 회원을 이용 제한(RESTRICTED) 또는 정상(ACTIVE)으로 바꾼다. 이미 그 상태면 그대로 두고 성공한다. " +
+        "QA 생성 회원이 아니면 409(E2201), 회원이 없거나 탈퇴했으면 404(E1006), status 가 없거나 값이 틀리면 400(E400)."
+
+    private val autoCompleteSummary = "[dev] QA 룸 자동 완료 지금 실행"
+    private val autoCompleteDescription = devOnlyNote +
+        "자동 완료 작업(10분 주기)이 룸 하나에 하는 일을 지금 한다. 확정 참여자 전원을 출석으로 기록하고 완료한다. " +
+        "조건(확정 상태, 시작 뒤 8시간 지남)은 그대로 판정하므로 조건이 안 되면 completed=false 로 바꾸지 않는다. 시작 시각은 QA 룸 시작 시각 변경으로 옮긴다. " +
+        "제목이 [QA] 로 시작하지 않으면 409(E2201), 룸이 없으면 404(E1405), roomId 가 UUID 가 아니면 400(E400)."
 
     @BeforeEach
     fun setUp() {
@@ -580,6 +611,160 @@ class QaTestDataControllerTest : RestDocsTest() {
             ),
     )
 
+    @Test
+    fun `QA 회원을 소셜 로그인시키고 로그인 쿠키를 심는다`() {
+        every { qaTestDataService.socialLogin(qaMemberId) } returns landing(SocialLanding.Outcome.LOGGED_IN, AuthCookieFactory.ACCESS_TOKEN, AuthCookieFactory.REFRESH_TOKEN)
+
+        mockMvc.perform(post(SOCIAL_LOGIN_PATH, qaMemberId))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.getHeaders(HttpHeaders.SET_COOKIE)).hasSize(2) }
+            .andDo(
+                documentApi(
+                    "socialLoginQaMember",
+                    socialLoginSummary,
+                    socialLoginDescription,
+                    pathParameters(parameterWithName("memberId").description("로그인할 QA 회원 id (UUID). 탈퇴한 QA 회원도 된다")),
+                    successResponseFields(*landingFields()),
+                ),
+            )
+    }
+
+    @Test
+    fun `탈퇴한 QA 회원이면 복구 확인 쿠키만 심는다`() {
+        every { qaTestDataService.socialLogin(qaMemberId) } returns landing(SocialLanding.Outcome.RESTORE_REQUIRED, AuthCookieFactory.RESTORE_TOKEN)
+
+        mockMvc.perform(post(SOCIAL_LOGIN_PATH, qaMemberId))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"outcome\":\"RESTORE_REQUIRED\"") }
+            .andDo(documentApi("socialLoginQaMember-restore", socialLoginSummary, socialLoginDescription, successResponseFields(*landingFields())))
+    }
+
+    @Test
+    fun `QA 생성 회원이 아니면 소셜 로그인을 E2201 로 거절한다`() {
+        every { qaTestDataService.socialLogin(qaMemberId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        mockMvc.perform(post(SOCIAL_LOGIN_PATH, qaMemberId))
+            .andExpect(status().isConflict)
+            .andExpect { assertThat(it.response.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty() }
+            .andDo(documentApi("socialLoginQaMember-e2201", socialLoginSummary, socialLoginDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `없는 회원을 소셜 로그인시키면 E1006 을 응답한다`() {
+        every { qaTestDataService.socialLogin(qaMemberId) } throws CoreException(CoreErrorType.MEMBER_NOT_FOUND)
+
+        mockMvc.perform(post(SOCIAL_LOGIN_PATH, qaMemberId))
+            .andExpect(status().isNotFound)
+            .andDo(documentApi("socialLoginQaMember-e1006", socialLoginSummary, socialLoginDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `처음 보는 QA 소셜 계정으로 가입하고 로그인 쿠키를 심는다`() {
+        every { qaTestDataService.socialSignUp() } returns landing(SocialLanding.Outcome.LOGGED_IN, AuthCookieFactory.ACCESS_TOKEN, AuthCookieFactory.REFRESH_TOKEN)
+
+        mockMvc.perform(post(SOCIAL_SIGNUP_PATH))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.getHeaders(HttpHeaders.SET_COOKIE)).hasSize(2) }
+            .andDo(documentApi("socialSignUpQaMember", socialSignUpSummary, socialSignUpDescription, successResponseFields(*landingFields())))
+    }
+
+    @Test
+    fun `QA 회원을 이용 제한 상태로 바꾼다`() {
+        every { qaTestDataService.changeMemberStatus(qaMemberId, MemberStatus.RESTRICTED) } returns
+            QaMemberStatus(qaMemberId, before = MemberStatus.ACTIVE, status = MemberStatus.RESTRICTED)
+
+        mockMvc.perform(post(MEMBER_STATUS_PATH, qaMemberId).contentType(MediaType.APPLICATION_JSON).content("""{"status":"RESTRICTED"}"""))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"status\":\"RESTRICTED\"") }
+            .andDo(
+                documentApi(
+                    "changeQaMemberStatus",
+                    memberStatusSummary,
+                    memberStatusDescription,
+                    pathParameters(parameterWithName("memberId").description("상태를 바꿀 QA 회원 id (UUID)")),
+                    requestFields(fieldWithPath("status").type(JsonFieldType.STRING).description("바꿀 상태 (RESTRICTED | ACTIVE)")),
+                    successResponseFields(
+                        fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("회원 id"),
+                        fieldWithPath("data.before").type(JsonFieldType.STRING).description("바꾸기 전 상태"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("바꾼 뒤 상태"),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `status 없이 상태 변경을 요청하면 E400 을 응답한다`() {
+        mockMvc.perform(post(MEMBER_STATUS_PATH, qaMemberId).contentType(MediaType.APPLICATION_JSON).content("{}"))
+            .andExpect(status().isBadRequest)
+            .andDo(documentApi("changeQaMemberStatus-e400", memberStatusSummary, memberStatusDescription, errorResponseFields()))
+
+        verify(exactly = 0) { qaTestDataService.changeMemberStatus(any(), any()) }
+    }
+
+    @Test
+    fun `QA 생성 회원이 아니면 상태 변경을 E2201 로 거절한다`() {
+        every { qaTestDataService.changeMemberStatus(qaMemberId, any()) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        mockMvc.perform(post(MEMBER_STATUS_PATH, qaMemberId).contentType(MediaType.APPLICATION_JSON).content("""{"status":"RESTRICTED"}"""))
+            .andExpect(status().isConflict)
+            .andDo(documentApi("changeQaMemberStatus-e2201", memberStatusSummary, memberStatusDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `QA 룸 자동 완료를 지금 실행하고 결과를 응답한다`() {
+        every { qaTestDataService.autoCompleteRoom(roomId) } returns QaRoomAutoCompletion(roomId, completed = true, status = RoomStatus.COMPLETED)
+
+        mockMvc.perform(post(AUTO_COMPLETE_PATH, roomId))
+            .andExpect(status().isOk)
+            .andExpect { assertThat(it.response.contentAsString).contains("\"completed\":true") }
+            .andDo(
+                documentApi(
+                    "autoCompleteQaRoom",
+                    autoCompleteSummary,
+                    autoCompleteDescription,
+                    pathParameters(parameterWithName("roomId").description("자동 완료할 [QA] 룸 id (UUID)")),
+                    successResponseFields(
+                        fieldWithPath("data.roomId").type(JsonFieldType.STRING).description("룸 id"),
+                        fieldWithPath("data.completed").type(JsonFieldType.BOOLEAN).description("이번 호출로 완료했는가. 조건이 안 되면 false"),
+                        fieldWithPath("data.status").type(JsonFieldType.STRING).description("호출 뒤 룸 상태"),
+                    ),
+                ),
+            )
+    }
+
+    @Test
+    fun `없는 룸을 자동 완료하면 E1405 를 응답한다`() {
+        every { qaTestDataService.autoCompleteRoom(roomId) } throws CoreException(CoreErrorType.ROOM_NOT_FOUND)
+
+        mockMvc.perform(post(AUTO_COMPLETE_PATH, roomId))
+            .andExpect(status().isNotFound)
+            .andDo(documentApi("autoCompleteQaRoom-e1405", autoCompleteSummary, autoCompleteDescription, errorResponseFields()))
+    }
+
+    @Test
+    fun `QA 마커가 없는 룸을 자동 완료하면 E2201 을 응답한다`() {
+        every { qaTestDataService.autoCompleteRoom(roomId) } throws CoreException(CoreErrorType.QA_DATA_ONLY)
+
+        mockMvc.perform(post(AUTO_COMPLETE_PATH, roomId))
+            .andExpect(status().isConflict)
+            .andDo(documentApi("autoCompleteQaRoom-e2201", autoCompleteSummary, autoCompleteDescription, errorResponseFields()))
+    }
+
+    private fun landing(outcome: SocialLanding.Outcome, vararg cookieNames: String) = SocialLanding(
+        memberId = qaMemberId,
+        outcome = outcome,
+        cookies = cookieNames.map { ResponseCookie.from(it, "value").httpOnly(true).path("/").build() },
+        redirectUri = URI.create(if (outcome == SocialLanding.Outcome.LOGGED_IN) "https://dev.moimyeon.plady.io/auth/callback" else "https://dev.moimyeon.plady.io/auth/restore"),
+    )
+
+    private fun landingFields(): Array<FieldDescriptor> = arrayOf(
+        fieldWithPath("data.memberId").type(JsonFieldType.STRING).description("로그인한 회원 id (가입이면 새로 생긴 회원)"),
+        fieldWithPath("data.outcome").type(JsonFieldType.STRING)
+            .description("LOGGED_IN(로그인 쿠키를 심음) | RESTORE_REQUIRED(탈퇴 회원, 복구 확인 쿠키만 심음)"),
+        fieldWithPath("data.redirectUri").type(JsonFieldType.STRING).description("실제 로그인이었다면 이동했을 화면"),
+        fieldWithPath("data.cookies").type(JsonFieldType.ARRAY).description("심은 쿠키 이름. 값은 Set-Cookie 헤더에만 있다"),
+    )
+
     private fun sampleDeleted(rooms: Int) = QaDeletedRows(
         guestbookPosts = 2,
         guestbooks = 1,
@@ -643,3 +828,7 @@ private const val SCHEDULE_PATH = "/v1/dev/rooms/{roomId}/schedule"
 private const val MEMBERS_PATH = "/v1/dev/members"
 private const val MEMBER_PATH = "/v1/dev/members/{memberId}"
 private const val RESUME_SUMMARY_PATH = "/v1/dev/resumes/{resumeId}/summary"
+private const val SOCIAL_LOGIN_PATH = "/v1/dev/members/{memberId}/social-login"
+private const val SOCIAL_SIGNUP_PATH = "/v1/dev/members/social-signup"
+private const val MEMBER_STATUS_PATH = "/v1/dev/members/{memberId}/status"
+private const val AUTO_COMPLETE_PATH = "/v1/dev/rooms/{roomId}/auto-complete"

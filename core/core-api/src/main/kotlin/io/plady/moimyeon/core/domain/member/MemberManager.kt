@@ -58,4 +58,12 @@ class MemberManager(
         requireBusiness(entity.canRestrict(), CoreErrorType.MEMBER_NOT_ACTIVE)
         entity.restrict()
     }
+
+    @Transactional
+    fun reactivate(memberId: UUID) {
+        log.debug { "member.manager.reactivate memberId=$memberId" }
+        val entity = requireFound(memberRepository.findByIdAndDeletedAtIsNull(memberId), CoreErrorType.MEMBER_NOT_FOUND)
+        requireBusiness(entity.canReactivate(), CoreErrorType.MEMBER_NOT_RESTRICTED)
+        entity.reactivate()
+    }
 }

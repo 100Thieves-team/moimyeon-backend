@@ -157,4 +157,46 @@ class MemberManagerTest {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_ACTIVE)
             }
     }
+
+    @Test
+    fun `reactivate 는 RESTRICTED 회원을 ACTIVE 로 되돌린다`() {
+        // given
+        val id = UUID.randomUUID()
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            nickname = "차분한 펭귄 12",
+            status = MemberStatus.RESTRICTED,
+            lastLoginAt = LocalDateTime.of(2026, 1, 1, 0, 0),
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
+        )
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+
+        // when
+        memberManager.reactivate(id)
+
+        // then
+        assertThat(entity.status).isEqualTo(MemberStatus.ACTIVE)
+    }
+
+    @Test
+    fun `reactivate 는 RESTRICTED 가 아니면 MEMBER_NOT_RESTRICTED 예외를 던진다`() {
+        // given
+        val id = UUID.randomUUID()
+        val entity = MemberEntity(
+            id = id,
+            email = "user@example.com",
+            nickname = "차분한 펭귄 12",
+            status = MemberStatus.ACTIVE,
+            lastLoginAt = LocalDateTime.of(2026, 1, 1, 0, 0),
+            socialAccounts = mutableListOf(SocialAccountEntity(provider, "sub-1", "user@example.com")),
+        )
+        every { memberRepository.findByIdAndDeletedAtIsNull(id) } returns entity
+
+        // when & then
+        assertThatThrownBy { memberManager.reactivate(id) }
+            .isInstanceOfSatisfying(CoreException::class.java) {
+                assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_NOT_RESTRICTED)
+            }
+    }
 }
