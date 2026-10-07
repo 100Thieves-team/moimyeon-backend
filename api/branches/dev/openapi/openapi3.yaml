@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -46,7 +46,7 @@ paths:
                       "data" : {
                         "result" : "BYE_GET",
                         "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T12:18:46.245487697",
+                        "datetime" : "2026-10-07T14:17:07.380890046",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -88,7 +88,7 @@ paths:
                       "data" : {
                         "result" : "BYE_POST",
                         "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T12:18:46.289979819",
+                        "datetime" : "2026-10-07T14:17:07.435804524",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -1858,12 +1858,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "0897dd99-31dd-4be1-82c0-941eafdf858c",
+                        "memberId" : "e60a7167-5c81-4668-9616-6244d703add4",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "0897dd99-31dd-4be1-82c0-941eafdf858c",
+                          "memberId" : "e60a7167-5c81-4668-9616-6244d703add4",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -2611,7 +2611,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-10-08T12:18:52.991978932",
+                          "startAt" : "2026-10-08T14:17:14.586746602",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2624,9 +2624,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "c61521ce-bc45-4d63-802a-43afcdb41211",
+                        "hostMemberId" : "3aaf2b21-a17b-4993-988a-5929d3671c30",
                         "participants" : [ {
-                          "memberId" : "c61521ce-bc45-4d63-802a-43afcdb41211",
+                          "memberId" : "3aaf2b21-a17b-4993-988a-5929d3671c30",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3431,7 +3431,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "39c8284b-5275-44f6-8705-4a53ecb049ce",
+                        "memberId" : "7a43bd3e-d897-4a8e-a227-20d73b3de6a4",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4200,19 +4200,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "34d5608b-f6cf-44b6-b414-7c4aa1ff5823",
+                    "resumeId" : "831cac42-2f89-4347-a016-9f199fa7a158",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "c4672327-abe3-44dc-aac8-51ad1572cce8",
+                    "resumeId" : "f67f993f-8ef5-45af-96c1-3610780d840e",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "75d2ca68-e645-459f-993e-744167d6c10a"
+                    "resumeId" : "3849546d-12fe-46a2-ba7e-06377ea1adc0"
                   }
       responses:
         "400":
@@ -6405,7 +6405,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "bfc8cb10-8154-4912-9d6d-3ce6857b5ff7",
+                          "resumeId" : "fde10d3e-4763-4040-add3-078d83d6f1b9",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7598,6 +7598,43 @@ components:
         url:
           type: string
           description: "메타데이터를 읽을 공고 링크 (필수, http/https, 최대 2000자)"
+    get-exampleValue191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+          nullable: true
     v1-rooms-roomId-comments1495367468:
       required:
       - result
@@ -7672,43 +7709,6 @@ components:
             writable:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
-          nullable: true
-    post191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
           nullable: true
     v1-terms2056106368:
       required:
