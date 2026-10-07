@@ -4,6 +4,11 @@
 
 ## 우리가 겪은 것
 
+- 2026-10-07: 후보 이미지 승격이 두 가지로 실패했다(MOI-565).
+  API: Spring Boot jar와 이미지 층이 재현 가능해서 같은 앱 코드의 재빌드가 이전과 같은 digest가 됐고,
+  ECR은 그 이미지의 push 시각을 처음 push한 때로 유지해 "CI 실행보다 오래된 이미지"로 오판했다. push 시각으로 출처를 판단하지 않는다.
+  Worker: `provenance: false`로 만든 단일 manifest를 `imagetools create`가 index로 다시 감싸 digest가 바뀌었다.
+  승격 복사 대상은 provenance 기본값(index)으로 빌드한다.
 - 2026-10-07: dev push 배포의 첫 실행이 "머지 PR 없음"으로 멈췄다(MOI-565).
   원인: GitHub REST API 버전 `2026-03-10`은 PR의 `merge_commit_sha`를 주지 않는다(`null`, `2022-11-28`에서는 채워짐).
   가짜 응답 테스트는 이 필드를 넣어 두어 통과했고, 재시도만 늘려서는 해결되지 않는다.

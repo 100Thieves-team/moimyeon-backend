@@ -401,6 +401,15 @@ jobs:
           fi
           [[ "${CANDIDATE_TAG}" =~ ^tree-[0-9a-f]{40}-run-[0-9]+-[0-9]+$ ]] || exit 1
 
+          # Candidates expire 14 days after push, and an expired tag name can be
+          # pushed again by another workflow. Trust only runs younger than that.
+          # (Push time cannot be used: an identical rebuild keeps the first push
+          # time, because Spring Boot jars and the image layers are reproducible.)
+          if [ $(( $(date -u +%s) - $(date -u -d "${CANDIDATE_NOT_BEFORE}" +%s) )) -gt $(( 13 * 24 * 3600 )) ]; then
+            echo "Candidate CI run started over 13 days ago; the images will be built here."
+            exit 0
+          fi
+
           promote() {
             local candidate="$1"
             local target="$2"
@@ -409,20 +418,8 @@ jobs:
               echo "Deploy image ${target} already exists; keeping it."
               return 0
             fi
-            local repository_url="${candidate%:*}"
-            local pushed_at
-            pushed_at="$(aws ecr describe-images \
-              --repository-name "${repository_url#*/}" \
-              --image-ids imageTag="${CANDIDATE_TAG}" \
-              --query 'imageDetails[0].imagePushedAt' \
-              --output text 2>/dev/null || true)"
-            if [ -z "${pushed_at}" ] || [ "${pushed_at}" = "None" ]; then
+            if ! docker buildx imagetools inspect "${candidate}" >/dev/null 2>&1; then
               echo "Candidate ${candidate} is missing; the image will be built here."
-              return 0
-            fi
-            # An expired tag can be pushed again later; trust only this run's push.
-            if [ "$(date -u -d "${pushed_at}" +%s)" -lt "$(date -u -d "${CANDIDATE_NOT_BEFORE}" +%s)" ]; then
-              echo "Candidate ${candidate} predates its CI run; the image will be built here."
               return 0
             fi
             bash infra/terraform/scripts/copy-image-by-digest.sh "${candidate}" "${target}" >/dev/null
