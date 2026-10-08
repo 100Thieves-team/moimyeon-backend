@@ -42,12 +42,14 @@ module "live" {
 
   vpc_cidr = var.vpc_cidr
 
-  # MOI-581: start with the same sizing as dev. API, Worker and Redis normally
-  # use three t3.small instances and one stays free so a blue/green or rolling
-  # replacement does not wait for a new instance; the maximum allows one more.
+  # MOI-581: steady state needs two t3.small instances (API alone on one,
+  # Worker and Redis on the other). Live deploys only on main merges, so no
+  # spare instance is kept: a blue/green deploy lets ECS managed scaling add one
+  # (about four minutes) and scales back in afterwards. Max 4 also covers a
+  # second API task.
   ecs_instance_type         = "t3.small"
-  ecs_min_size              = 4
-  ecs_max_size              = 5
+  ecs_min_size              = 2
+  ecs_max_size              = 4
   ecs_service_desired_count = 1
   ecs_service_min_count     = 1
   ecs_service_max_count     = 2
