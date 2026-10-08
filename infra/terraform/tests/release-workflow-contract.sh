@@ -123,7 +123,12 @@ ssm_line="$(line_of "${DEPLOY_SCRIPT}" 'if ! put_ssm_with_retry "\$\{image_uri\}
 if [ "${smoke_line}" -ge "${ssm_line}" ]; then
   fail "smoke 성공 뒤에만 SSM last deployed를 commit해야 한다."
 fi
-assert_contains "${DEPLOY_SCRIPT}" 'aws ecs wait services-stable' "ECS 안정화를 기다린 뒤 commit해야 한다."
+assert_contains "${DEPLOY_SCRIPT}" 'if ! wait_for_service_stable; then' "ECS 안정화를 기다린 뒤 commit해야 한다."
+# MOI-581: 내장 waiter는 10분에 포기해 live blue/green 정상 배포를 실패로 되돌렸다.
+assert_not_contains "${DEPLOY_SCRIPT}" 'aws ecs wait services-stable' "10분 상한 waiter 대신 기한을 지정한 안정화 대기를 써야 한다."
+assert_contains "${DEPLOY_SCRIPT}" 'source "\$\{script_dir\}/lib/ecs-stable-wait\.sh"' "안정화 대기는 테스트와 같은 공용 파일을 써야 한다."
+assert_contains "${ROOT_DIR}/infra/terraform/scripts/lib/ecs-stable-wait.sh" 'ECS_STABLE_TIMEOUT_SECONDS:-1800' "안정화 대기 기본 기한은 blue/green 배포 시간보다 길어야 한다."
+assert_not_contains "${ROOT_DIR}/infra/terraform/scripts/lib/ecs-stable-wait.sh" 'aws ecs wait services-stable' "공용 대기도 10분 상한 waiter를 쓰면 안 된다."
 assert_contains "${DEPLOY_SCRIPT}" 'SSM commit failed; restoring previous ECS and SSM state' "SSM 실패도 이전 ECS 상태로 보상해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'Automatic rollback update-service failed' "rollback update 실패를 명시적으로 진단해야 한다."
 assert_contains "${DEPLOY_SCRIPT}" 'Automatic rollback waiter failed' "rollback waiter 실패 뒤 PRIMARY/SSM 검증을 계속해야 한다."

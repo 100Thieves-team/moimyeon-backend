@@ -55,6 +55,13 @@ module "live" {
   ecs_service_max_count     = 2
   ecs_deployment_strategy   = "BLUE_GREEN"
 
+  # MOI-581: no deployment alarms are attached, so the bake window only waited.
+  # Keep a one-minute window and match dev's health check and drain timings;
+  # a promotion then takes about 5-7 minutes instead of 12-14.
+  ecs_blue_green_bake_time_in_minutes = 1
+  alb_health_check_interval_seconds   = 10
+  alb_deregistration_delay_seconds    = 10
+
   # Same as dev: the API task takes a whole t3.small so a cold JVM connects to
   # MySQL within the connection timeout.
   task_cpu    = 2048
