@@ -4,7 +4,7 @@ github_repository = "100Thieves-team/moimyeon-backend"
 # The live stack remains scaled to zero until DNS, secrets, and capacity are ready.
 app_domain_name             = "api.moimyeon.plady.io"
 dns_management              = "external"
-enable_https                = false
+enable_https                = true
 upload_cors_allowed_origins = ["https://moimyeon.plady.io"]
 
 vpc_cidr    = "10.30.0.0/16"
