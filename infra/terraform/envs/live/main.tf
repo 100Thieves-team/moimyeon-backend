@@ -40,17 +40,23 @@ module "live" {
 
   upload_cors_allowed_origins = var.upload_cors_allowed_origins
 
-  vpc_cidr          = var.vpc_cidr
-  ecs_instance_type = "t3.small"
+  vpc_cidr = var.vpc_cidr
 
-  # Provisioned but scaled to zero until live is intentionally brought up.
-  # Raise these (e.g. asg 2/2/3, service 2/2/4) when going live.
-  ecs_min_size              = 0
-  ecs_max_size              = 0
-  ecs_service_desired_count = 0
-  ecs_service_min_count     = 0
-  ecs_service_max_count     = 0
+  # MOI-581: start with the same sizing as dev. API, Worker and Redis normally
+  # use three t3.small instances and one stays free so a blue/green or rolling
+  # replacement does not wait for a new instance; the maximum allows one more.
+  ecs_instance_type         = "t3.small"
+  ecs_min_size              = 4
+  ecs_max_size              = 5
+  ecs_service_desired_count = 1
+  ecs_service_min_count     = 1
+  ecs_service_max_count     = 2
   ecs_deployment_strategy   = "BLUE_GREEN"
+
+  # Same as dev: the API task takes a whole t3.small so a cold JVM connects to
+  # MySQL within the connection timeout.
+  task_cpu    = 2048
+  task_memory = 1600
 
   rds_instance_class         = "db.t4g.micro"
   db_name                    = var.db_name
@@ -64,9 +70,9 @@ module "live" {
 
   enable_db_bastion = true
 
-  # Live is intentionally scaled to zero. Turn Redis on together with non-zero
-  # ECS capacity; the module rejects Redis without a place to run its task.
-  enable_notification_redis = false
+  # A single Redis task with AOF on EFS, as in dev. High availability
+  # (replication/Sentinel) is a later follow-up (MOI-581).
+  enable_notification_redis = true
 
   notification_worker_desired_count     = var.notification_worker_desired_count
   firebase_project_id                   = var.firebase_project_id
