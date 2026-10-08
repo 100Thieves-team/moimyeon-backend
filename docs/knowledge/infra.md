@@ -43,9 +43,11 @@
   인정된다 (DR-018·019). ECS에는 태그가 아니라 `repository@sha256:digest`만
   전달한다 (DR-016). 롤백 실행은 개발 플랫폼 actor 또는 break-glass
   dispatch — 에이전트가 만들 수 있는 우회 경로가 아니다 (DR-009).
-- **배포 컨트롤러는 ECS native** — Core API는 `BLUE_GREEN`, Worker(ALB
-  없음)는 `ROLLING`. **CodeDeploy 제어면을 새로 만들지 않는다** (DR-012).
-  수작업 폴링 bash도 다시 들이지 않는다.
+- **배포 컨트롤러는 ECS native** — live Core API는 `BLUE_GREEN`, dev Core API는
+  배포 속도를 위해 `ROLLING`, Worker(ALB 없음)는 `ROLLING`. **CodeDeploy 제어면을
+  새로 만들지 않는다** (DR-012). 수작업 폴링 bash도 다시 들이지 않는다. 단,
+  ECS 내장 안정화 waiter는 10분에 포기해 live blue/green(서버 증설·health grace·
+  bake)보다 짧으므로 승격·롤백 스크립트는 기한을 지정한 안정화 대기를 쓴다 (MOI-581).
 - **live 배포의 책임자는 main 머지자다** — required reviewer·Environment
   승인 게이트를 두지 않는다(DR-015, 초기 가정을 뒤집은 확정). 대신 계보·
   digest·marker 검증이 전부 fail-closed다: 검증을 약화하는 변경은 승인

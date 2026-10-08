@@ -129,6 +129,10 @@ put_ssm_with_retry() {
   return 1
 }
 
+# Deadline-based ECS stability wait shared with its test (MOI-581).
+# shellcheck source=lib/ecs-stable-wait.sh
+source "${script_dir}/lib/ecs-stable-wait.sh"
+
 restore_previous_state() {
   local restored_task_definition
   local rollback_stable=true
@@ -146,7 +150,7 @@ restore_previous_state() {
     echo "Automatic rollback update-service failed for ${service}." >&2
     return 1
   fi
-  if ! aws ecs wait services-stable --cluster "${cluster}" --services "${service}"; then
+  if ! wait_for_service_stable; then
     echo "Automatic rollback waiter failed for ${service}; checking the PRIMARY revision." >&2
     rollback_stable=false
   fi
@@ -236,7 +240,7 @@ if [ -n "${health_grace_seconds}" ]; then
 fi
 
 aws ecs update-service "${update_args[@]}" > "${work_dir}/service-update.json"
-if ! aws ecs wait services-stable --cluster "${cluster}" --services "${service}"; then
+if ! wait_for_service_stable; then
   echo "ECS did not stabilize; restoring previous ECS and SSM state." >&2
   if ! restore_previous_state; then
     echo "Forward deployment failed and automatic compensation also failed." >&2
