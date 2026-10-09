@@ -731,9 +731,11 @@ jobs:
               --deployment-configuration "${deployment_config}" \
               --force-new-deployment \
               > service-rollback.json
-            aws ecs wait services-stable \
-              --cluster "${cluster}" \
-              --services "${service}"
+            # Same health-aware stability check as live promotion and rollback; the
+            # 10-minute deadline keeps the old waiter's bound inside this step's budget.
+            # shellcheck disable=SC1091
+            ECS_STABLE_TIMEOUT_SECONDS=600 source infra/terraform/scripts/lib/ecs-stable-wait.sh
+            wait_for_service_stable
             restored_task_definition="$(aws ecs describe-services \
               --cluster "${cluster}" \
               --services "${service}" \
@@ -1078,9 +1080,12 @@ jobs:
               --task-definition "${{ steps.worker_deploy.outputs.previous_task_definition_arn }}" \
               --force-new-deployment \
               > worker-service-rollback.json
-            aws ecs wait services-stable \
-              --cluster "${{ steps.env.outputs.ecs_cluster }}" \
-              --services "${{ steps.env.outputs.worker_ecs_service }}"
+            # Same health-aware stability check as live promotion and rollback (10-minute deadline).
+            cluster="${{ steps.env.outputs.ecs_cluster }}"
+            service="${{ steps.env.outputs.worker_ecs_service }}"
+            # shellcheck disable=SC1091
+            ECS_STABLE_TIMEOUT_SECONDS=600 source infra/terraform/scripts/lib/ecs-stable-wait.sh
+            wait_for_service_stable
             restored_task_definition="$(aws ecs describe-services \
               --cluster "${{ steps.env.outputs.ecs_cluster }}" \
               --services "${{ steps.env.outputs.worker_ecs_service }}" \
