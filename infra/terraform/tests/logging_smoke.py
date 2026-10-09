@@ -12,6 +12,11 @@ import uuid
 ROOT = Path(__file__).resolve().parents[3]
 MODULE = ROOT / "infra/terraform/modules/application-logging"
 IMAGE = "public.ecr.aws/aws-observability/aws-for-fluent-bit:3.4.17@sha256:940eee58ec25fc5b92328da54e9c834c0bb4656c76320ceb24be7a8dd4063029"
+REVISION = re.search(r'active_revision = "(v\d+)"', (MODULE / "main.tf").read_text())[1]
+OPS_CODES = {"smoke.info", "smoke.warn", "smoke.error", "smoke.exact", "smoke.emoji", "smoke.nonstring", "smoke.oversize",
+             "logging.serialization_failed"}
+# 16384 bytes including the 3-byte ellipsis: 16381 bytes of input, cut back to a character boundary.
+OVERSIZE_MESSAGE = "\uac00" * 5460 + "\u2026"
 PYTHON = "python:3.13.7-alpine3.22@sha256:9ba6d8cbebf0fb6546ae71f2a1c14f6ffd2fdab83af7fa5669734ef30ad48844"
 
 
@@ -27,9 +32,37 @@ def cloudwatch_records(data):
     return batches, groups
 
 
+def cloudwatch_rows(batches):
+    return [json.loads(event["message"]) for batch in batches for event in batch["logEvents"]]
+
+
+def verify_messages(rows):
+    by_code = {}
+    for row in rows:
+        by_code.setdefault(row["eventCode"], []).append(row)
+    for level in ["TRACE", "DEBUG", "INFO", "WARN", "ERROR"]:
+        for row in by_code.get("smoke." + level.lower(), []):
+            assert row.get("message") == "smoke message " + level, f"Message must reach the destination: {row}"
+            assert row["exceptions"][0].get("message") == "smoke exception message", f"App exception message must reach the destination: {row}"
+            assert row["exceptions"][0]["frames"] == [{"class": "Test", "line": 1}], "Only allowlisted frame fields pass"
+    for row in by_code.get("smoke.warn", []):
+        assert row["category"] == "ops", "Only INFO may be classified as growth"
+    for row in by_code.get("smoke.oversize", []):
+        assert row.get("message") == OVERSIZE_MESSAGE, "Oversized messages are cut at a UTF-8 character boundary and marked"
+        assert row["exceptions"][0].get("message") == OVERSIZE_MESSAGE, "Oversized exception messages are cut the same way"
+    for row in by_code.get("smoke.exact", []):
+        assert row.get("message") == "a" * 16384, "A message at the limit passes unchanged"
+    for row in by_code.get("smoke.emoji", []):
+        assert row.get("message") == "ab" + "\U0001F600" * 4094 + "\u2026", "A 4-byte character across the limit is dropped whole"
+    for row in by_code.get("smoke.nonstring", []):
+        assert "message" not in row, "Non-string messages are not copied"
+    for row in by_code.get("logging.serialization_failed", []):
+        assert "message" not in row, "Only schemaVersion 1 records may carry a message"
+
+
 def cloudwatch_complete(data):
     _, groups = cloudwatch_records(data)
-    return (groups.get("test-ops") == {"smoke.info", "smoke.warn", "smoke.error", "logging.serialization_failed"}
+    return (groups.get("test-ops") == OPS_CODES
             and groups.get("test-debug") == {"smoke.trace", "smoke.debug"})
 
 
@@ -48,12 +81,15 @@ def verify(data):
             objects.append(record)
     archive_codes = {row["eventCode"] for row in objects}
     batches, groups = cloudwatch_records(data)
-    expected = {"smoke.info", "smoke.warn", "smoke.error", "smoke.growth", "logging.serialization_failed"}
+    expected = OPS_CODES | {"smoke.growth"}
     if archive_codes != expected or groups.get("test-ops") != expected - {"smoke.growth"} or groups.get("test-debug") != {"smoke.trace", "smoke.debug"}:
         return False
     assert int((data / "put-attempts").read_text()) > 2, "S3 failures must be retried"
     assert "SHOULD_NOT_LEAK" not in json.dumps(objects) + json.dumps(batches)
     assert all(row["service"] == "core-api" and row["environment"] == "test" for row in objects)
+    # Each destination is checked on its own: one dropping messages must not hide behind the other.
+    verify_messages(objects)
+    verify_messages(cloudwatch_rows(batches))
     for file in data.glob("*.key"):
         assert re.search(r"/env=test/service=core-api/retention=(ops|growth)/dt=\d{4}-\d{2}-\d{2}/hour=\d{2}/.+\.json\.gz", file.read_text())
     return True
@@ -77,12 +113,12 @@ def main():
         values = {
             "container_name": "core-api", "region": "ap-northeast-2", "bucket": "test-logs",
             "environment": "test", "service_name": "core-api", "ops_group": "test-ops", "debug_group": "test-debug",
-            "lua_code": (MODULE / "router/v1/sanitize.lua").read_text().strip().replace("\n", " "),
+            "lua_code": (MODULE / f"router/{REVISION}/sanitize.lua").read_text().strip().replace("\n", " "),
             "upload_timeout": "1s",
             "s3_endpoint_configuration": "endpoint http://mock-aws:4566\n    tls Off",
             "cloudwatch_endpoint_configuration": "endpoint mock-aws\n    port 4567\n    tls.verify Off",
         }
-        template = (MODULE / "router/v1/fluent-bit.conf.tftpl").read_text()
+        template = (MODULE / f"router/{REVISION}/fluent-bit.conf.tftpl").read_text()
         config = re.sub(r"\$\{([a-z0-9_]+)}", lambda match: values[match[1]], template)
         (root / "custom.conf").write_text(config)
         (root / "main.conf").write_text("""[INPUT]
@@ -117,7 +153,7 @@ def main():
                     docker("exec", router, "curl", "-fsS", "http://127.0.0.1:2020/")
                     log = docker("logs", router).stderr
                     assert "[error] [config]" not in log and "Failed to send events" not in log, log
-                    print("PASS: real Fluent Bit → gzip S3 objects; CW split; debug expiry; field filtering; 503 + killed router → disk recovery")
+                    print("PASS: real Fluent Bit → gzip S3 objects; CW split; debug expiry; field filtering; messages; reserved fields; partial reassembly; UTF-8 truncation; 503 + killed router → disk recovery")
                     print(docker("stats", "--no-stream", "--format", "{{.MemUsage}}", router).stdout.strip())
                     return
                 time.sleep(0.25)

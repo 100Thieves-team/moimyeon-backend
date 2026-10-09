@@ -136,7 +136,7 @@ class LogSanitizer(
         private val TRACE_ID = Regex("[0-9a-f]{32}")
         private val SPAN_ID = Regex("[0-9a-f]{16}")
 
-        // 출력 스키마와 Fluent Bit 라우터(router/v1/sanitize.lua)가 읽는 필드. MDC·key-value로 덮어쓰지 못한다.
+        // 출력 스키마와 Fluent Bit 라우터(application-logging 모듈의 active revision sanitize.lua)가 읽는 필드. MDC·key-value로 덮어쓰지 못한다.
         internal val RESERVED_FIELDS = setOf(
             "schemaVersion", "timestamp", "service", "environment", "release", "level", "logger", "thread", "eventCode", "message",
             "method", "route", "status", "durationMs", "errorCode", "requestId", "traceId", "spanId", "exceptions", "category", "impact",
