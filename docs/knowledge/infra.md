@@ -60,6 +60,15 @@
   게이트를 없애는 것과 같다. main 머지가 live 승격을 자동 생성한다 (DR-008).
 - **배포 순서**: API 안정화 후 Worker 배포. Worker 빌드는 API 안정화
   대기와 병렬 (DR-003).
+- **Worker는 이 커밋이 바꿀 수 있을 때만 교체한다** (MOI-590) — PR CI 후보를 승격했고,
+  실행 중인 Worker가 안정 상태이며, 이미지의 입력 해시 label(boot jar·Dockerfile)과
+  Terraform 원본 틀(이미지·`APP_RELEASE` 제외)이 실행 중인 것과 같으면 교체하지 않고
+  실행 중인 revision을 이 커밋의 배포 기록에 이어 적는다(이미지에 이 커밋의 표식 태그).
+  하나라도 확인할 수 없으면 교체한다. JRE 기반 이미지·AOT 캐시 변화만으로는 교체하지 않는다.
+  같은 커밋의 재시도는 그 커밋의 Worker 표식을 따른다: 표식이 이전 이미지면 실행 중 Worker가 그 이미지일 때만
+  유지하고, 아니면 바꾸기 전에 멈춘다. 유지한 Worker의 `APP_RELEASE`는 그 코드를 만든 이전 커밋이다.
+  태스크 정의에는 시크릿의 ARN만 있으므로 SSM·Secrets Manager의 **값만** 바꾸면 Worker는 다시 시작되지 않는다.
+  그때는 dev Worker 서비스를 `aws ecs update-service --force-new-deployment`로 재시작한다(사람이 실행).
 - **런타임과 무관한 커밋은 배포·승격하지 않는다** — 첫 부모 diff를 `.github/scripts/runtime-changes.sh`
   하나로 판정한다(DR-005를 MOI-592가 넓힘). 문서·하네스·작업 기록·테스트 코드·리뷰용 워크플로·CI 보조 스크립트·
   다른 환경의 Terraform 값·모니터링 호스트 설정이 빠지고, 목록에 없는 경로는 배포한다. 빌드·배포·승격에 쓰이는

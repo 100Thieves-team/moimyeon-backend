@@ -311,6 +311,54 @@ class EcsRegistrationTest(unittest.TestCase):
             self.assertNotIn("SENTRY_DSN", result.stderr)
 
 
+class RunningRevisionTest(unittest.TestCase):
+    """MOI-590: the Worker is left alone only when its running revision is the current template."""
+
+    def running(self, template, image="repo:dev-old", release="a" * 40):
+        return task_module.prepare(template, template["taskDefinitionArn"], "core-worker", image, release)
+
+    def test_same_when_only_image_and_release_differ(self):
+        template = task_template(worker=True)
+        running = self.running(template)
+        running["containerDefinitions"][0]["environment"].reverse()
+        self.assertTrue(task_module.same_runtime(template, WORKER_ARN, "core-worker", running))
+
+    def test_changed_environment_secret_or_size_is_not_same(self):
+        for change in (
+            lambda c: c["containerDefinitions"][0]["environment"].append({"name": "NEW", "value": "1"}),
+            lambda c: c["containerDefinitions"][0]["secrets"].clear(),
+            lambda c: c.update({"memory": "1024"}),
+            lambda c: c["containerDefinitions"][1].update({"image": "example/sidecar:new"}),
+        ):
+            with self.subTest(change=change):
+                template = task_template(worker=True)
+                running = self.running(template)
+                change(template)
+                self.assertFalse(task_module.same_runtime(template, WORKER_ARN, "core-worker", running))
+
+    def test_running_without_release_is_not_same(self):
+        template = task_template(worker=True)
+        running = self.running(template)
+        running["containerDefinitions"][0]["environment"] = [
+            item for item in running["containerDefinitions"][0]["environment"] if item["name"] != "APP_RELEASE"
+        ]
+        self.assertFalse(task_module.same_runtime(template, WORKER_ARN, "core-worker", running))
+
+    def test_cli_prints_comparison(self):
+        template = task_template(worker=True)
+        with tempfile.TemporaryDirectory() as directory:
+            template_file = Path(directory) / "template.json"
+            running_file = Path(directory) / "running.json"
+            template_file.write_text(json.dumps(template))
+            running_file.write_text(json.dumps(self.running(template)))
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "prepare_ecs_task.py"), "--file", str(template_file),
+                 "--expected-arn", WORKER_ARN, "--container", "core-worker", "--compare-running", str(running_file)],
+                capture_output=True, text=True, check=True,
+            )
+        self.assertEqual(result.stdout.strip(), "same=true")
+
+
 class WorkflowWiringTest(unittest.TestCase):
     def test_deploy_reads_terraform_published_config_not_mutable_template_variables(self):
         workflow = (ROOT / ".github/workflows/deploy-aws.yml").read_text()
@@ -318,7 +366,10 @@ class WorkflowWiringTest(unittest.TestCase):
         self.assertNotIn("vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_DEV", workflow)
         self.assertIn("vars.MOIMYEON_DEPLOY_CONFIG_PARAMETER_DEV", workflow)
         self.assertIn("deploy_config.py read", workflow)
+        # Two template validations and two registrations; the Worker comparison
+        # lives in decide-worker-change.sh (MOI-590).
         self.assertEqual(workflow.count("prepare_ecs_task.py"), 4)
+        self.assertIn("decide-worker-change.sh", workflow)
         self.assertLess(workflow.index("Wait for the Terraform boundary"), workflow.index("Load Terraform deployment config"))
         self.assertLess(workflow.index("Validate both Terraform task templates"), workflow.index("Build and push image"))
         for line in workflow.splitlines():

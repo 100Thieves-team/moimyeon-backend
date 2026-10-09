@@ -44,6 +44,28 @@ def prepare(template, expected_arn, container, image, release):
     return result
 
 
+def _comparable(definition):
+    result = copy.deepcopy({key: value for key, value in definition.items() if key in REGISTER_FIELDS})
+    for item in result.get("containerDefinitions", []):
+        for key in ("environment", "secrets"):
+            if item.get(key):
+                item[key] = sorted(item[key], key=lambda entry: entry["name"])
+    return result
+
+
+def same_runtime(template, expected_arn, container, running):
+    """True when the running revision is the template with only image and APP_RELEASE replaced (MOI-590)."""
+    validate_template(template, expected_arn, container)
+    target = next(item for item in running.get("containerDefinitions", []) if item.get("name") == container)
+    release = next(
+        (item["value"] for item in target.get("environment") or [] if item["name"] == "APP_RELEASE"), None
+    )
+    if release is None or not re.fullmatch(r"[0-9a-f]{40}", release):
+        return False
+    expected = prepare(template, expected_arn, container, target["image"], release)
+    return _comparable(expected) == _comparable(running)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--file", required=True)
@@ -52,11 +74,16 @@ def main():
     parser.add_argument("--image")
     parser.add_argument("--release")
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument("--compare-running", help="running task definition JSON; prints same=true|false")
     args = parser.parse_args()
     try:
         template = json.loads(Path(args.file).read_text())
         if args.validate_only:
             validate_template(template, args.expected_arn, args.container)
+        elif args.compare_running:
+            running = json.loads(Path(args.compare_running).read_text())
+            same = same_runtime(template, args.expected_arn, args.container, running)
+            print(f"same={'true' if same else 'false'}")
         else:
             if args.image is None or args.release is None:
                 raise ValueError("Image and release are required")
