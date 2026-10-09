@@ -203,4 +203,9 @@ if [ "${worker_ssm_commit_line}" -le "${worker_wait_line}" ]; then
   fail "Worker 이미지 SSM은 Worker 안정화가 끝난 뒤에만 갱신해야 한다."
 fi
 
+# dev 복원 단계도 10분 상한의 내장 대기 대신 기한 있는 공용 대기를 쓴다(MOI-584 후속).
+assert_not_contains "${WORKFLOW}" 'aws ecs wait services-stable' "복원 대기는 10분에 포기하는 내장 대기를 쓰면 안 된다."
+[ "$(grep -c 'ECS_STABLE_TIMEOUT_SECONDS=600 source infra/terraform/scripts/lib/ecs-stable-wait.sh' "${WORKFLOW}")" -eq 2 ] \
+  || fail "API·Worker 복원은 기한 있는 공용 대기를 써야 한다."
+
 echo "배포 워크플로 계약을 만족한다."
