@@ -85,7 +85,11 @@
 - apply 후 Variables sync가 별도 job으로 실행된다 — tf 출력과 GitHub
   variables의 드리프트를 만들지 않는다.
 - dev 배포 설정은 Terraform이 SSM `/moimyeon/dev/deploy/config`에 비민감
-  값만 게시하고, 배포는 그 값을 검증해 읽는다 (MOI-565).
+  값만 게시하고, 배포는 그 값을 검증해 읽는다 (MOI-565). live도
+  `/moimyeon/live/deploy/config`를 게시하고, 승격은 task definition 원본 틀을
+  여기서 읽는다. GitHub 변수는 workflow 실행이 시작될 때 값으로 고정되므로,
+  Terraform이 교체하는 원본 틀은 SSM에서 읽고 변수로 받는 나머지 배포 대상은
+  배포 전에 SSM 값과 대조해 다르면 멈춘다 (MOI-512).
 - 매일 드리프트 감지 plan이 돌고 변경이 있으면 실패한다 — 콘솔 수동
   변경은 드리프트로 잡힌다는 전제로, 지속 변경은 반드시 IaC로.
 - `infra/terraform/tests/*.sh` 계약 검사가 CI에서 위 불변식 일부를

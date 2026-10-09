@@ -433,14 +433,16 @@ data "aws_iam_policy_document" "github_deploy" {
   }
 
   dynamic "statement" {
-    for_each = var.enable_pr_image_candidates ? [1] : []
+    for_each = local.publish_deploy_config ? [1] : []
 
     content {
       actions = ["ssm:GetParameter"]
-      resources = [
-        aws_ssm_parameter.deploy_config[0].arn,
-        "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.terraform_applied_sha_parameter_name}",
-      ]
+      resources = concat(
+        [aws_ssm_parameter.deploy_config[0].arn],
+        var.enable_pr_image_candidates ? [
+          "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.terraform_applied_sha_parameter_name}",
+        ] : [],
+      )
     }
   }
 

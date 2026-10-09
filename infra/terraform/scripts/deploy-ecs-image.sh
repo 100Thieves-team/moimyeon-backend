@@ -184,6 +184,15 @@ aws ecs describe-task-definition \
   --query taskDefinition \
   > "${work_dir}/task-definition.json"
 
+# Terraform deregisters a replaced template. Copying it would deploy stale
+# settings (and the copied deregisteredAt fails CLI validation), so stop with
+# the cause instead (MOI-512, operations.md 2026-09-11).
+if [ -n "${template_task_definition}" ] \
+  && [ "$(jq -r '.status' "${work_dir}/task-definition.json")" != "ACTIVE" ]; then
+  echo "Task template ${template_task_definition} is not ACTIVE; Terraform has replaced it. Read the current template from the Terraform deployment config and retry." >&2
+  exit 1
+fi
+
 if ! jq -e --arg container "${container}" \
   '.containerDefinitions | any(.name == $container)' \
   "${work_dir}/task-definition.json" >/dev/null; then
