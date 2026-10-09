@@ -7,7 +7,7 @@ moimyeon/
 ├── admin/
 │   └── admin-api        어드민 API. core-api 런타임에 조립되는 비부트 모듈
 ├── core/
-│   ├── core-batch       배치 실행 모듈 (독립 bootJar)
+│   ├── core-batch       배치 실행 모듈 (독립 bootJar, 배포 경로 없음)
 │   ├── core-enum        도메인 전역 공유 Enum 만 격리 (최하위 모듈)
 │   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, notification·room 패키지)
 │   └── core-api         API 서버 실행 모듈. 도메인 + api + 영역이 소유하는 외부 연동 계약
@@ -32,7 +32,9 @@ moimyeon/
 
 ## 의존 규칙
 
-- 실행 가능한 산출물(bootJar)은 `core:core-api`, `core:core-batch`, `core:core-worker`이다. `core-api`와
+- 실행 가능한 산출물(bootJar)은 `core:core-api`, `core:core-batch`, `core:core-worker`이다. 이 중 배포되는 것은 `core-api`와
+  `core-worker`뿐이다. `core-batch`는 예제 잡만 있고 이미지·워크플로·Terraform 배포 경로가 없다(MOI-595). 배포하게 되면
+  Worker처럼 Flyway를 끄고(`worker-runtime.yml`) 스키마 마이그레이션 경로를 core-api 하나로 유지한다. `core-api`와
   `core-worker`는 외부 구현이 각 영역의 계약을 참조할 수 있도록 plain `jar`도 함께 만든다.
 - 컴파일 타임 의존 방향:
   - `core-api` → `core-enum`, `security:security-core`, `storage:db-core`, `clients:client-example`, `support:*`
