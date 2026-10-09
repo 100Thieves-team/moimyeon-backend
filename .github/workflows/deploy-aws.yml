@@ -421,7 +421,7 @@ jobs:
           echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
 
       # MOI-589: before any service changes, a recorded retry must still point
-      # at this run's images (repository or container renames would split them).
+      # at this run's Core API image (repository or container renames would split them).
       - name: Verify recorded task definitions match this run
         if: steps.freshness.outputs.current == 'true' && steps.recorded.outputs.recorded == 'true'
         shell: bash
@@ -429,9 +429,6 @@ jobs:
           API_TASK_DEFINITION: ${{ steps.recorded.outputs.api_task_definition_arn }}
           API_CONTAINER: ${{ steps.env.outputs.ecs_container }}
           API_IMAGE_URI: ${{ steps.image.outputs.image_uri }}
-          WORKER_TASK_DEFINITION: ${{ steps.recorded.outputs.worker_task_definition_arn }}
-          WORKER_CONTAINER: ${{ steps.env.outputs.worker_ecs_container }}
-          WORKER_IMAGE_URI: ${{ steps.worker_image.outputs.image_uri }}
         run: |
           set -euo pipefail
           check() {
@@ -444,9 +441,8 @@ jobs:
             fi
           }
           check "${API_TASK_DEFINITION}" "${API_CONTAINER}" "${API_IMAGE_URI}"
-          if [ -n "${WORKER_TASK_DEFINITION}" ]; then
-            check "${WORKER_TASK_DEFINITION}" "${WORKER_CONTAINER}" "${WORKER_IMAGE_URI}"
-          fi
+          # The Worker may be a carried-over older revision; "Decide whether the
+          # Notification Worker changes" handles it.
 
       - name: Set up Docker Buildx
         if: steps.freshness.outputs.current == 'true'
@@ -525,6 +521,37 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # MOI-590: leave the Worker alone when this commit cannot change it. Its
+      # running task must be settled, carry the same runtime input label as the
+      # promoted image (boot jar and image definition), and match the current
+      # Terraform template apart from image and APP_RELEASE. Anything else,
+      # including a fallback build, replaces it as before.
+      # A retry follows this commit's Worker marker, which an earlier attempt
+      # set before recording: it names the image this commit kept or deployed.
+      - name: Decide whether the Notification Worker changes
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
+        id: worker_scope
+        shell: bash
+        env:
+          WORKER_CANDIDATE: ${{ steps.candidate.outputs.worker }}
+          WORKER_IMAGE_URI: ${{ steps.worker_image.outputs.image_uri }}
+          WORKER_REPOSITORY: ${{ steps.env.outputs.worker_ecr_repository_url }}
+          CLUSTER: ${{ steps.env.outputs.ecs_cluster }}
+          WORKER_SERVICE: ${{ steps.env.outputs.worker_ecs_service }}
+          WORKER_CONTAINER: ${{ steps.env.outputs.worker_ecs_container }}
+          WORKER_TEMPLATE: ${{ steps.env.outputs.worker_ecs_task_definition }}
+        run: |
+          set -euo pipefail
+          decision="$(TEMPLATE_FILE="${RUNNER_TEMP}/worker-task-definition.json" WORK_DIR="${RUNNER_TEMP}" \
+            bash infra/terraform/scripts/decide-worker-change.sh)"
+          echo "${decision}" >> "$GITHUB_OUTPUT"
+          reason="$(sed -n 's/^reason=//p' <<< "${decision}")"
+          if grep -qx 'deploy=true' <<< "${decision}"; then
+            echo "Notification Worker: replaced (${reason})." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Notification Worker: unchanged (${reason})." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       # Fallback builds compile on this runner like PR CI (MOI-588). Only the
       # images that still have to be built get a bootJar. "Deploy ECS service"
       # builds the Worker image from this decision instead of looking again.
@@ -534,7 +561,7 @@ jobs:
         shell: bash
         env:
           API_IMAGE_EXISTS: ${{ steps.api_image_cache.outputs.exists }}
-          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_DEPLOY: ${{ steps.worker_scope.outputs.deploy }}
           WORKER_IMAGE_TAG: ${{ steps.worker_image.outputs.tags }}
         run: |
           set -euo pipefail
@@ -542,7 +569,7 @@ jobs:
           if [ "${API_IMAGE_EXISTS}" != "true" ]; then
             modules="core-api"
           fi
-          if [ "${WORKER_ENABLED}" = "true" ] \
+          if [ "${WORKER_DEPLOY}" = "true" ] \
             && ! docker buildx imagetools inspect "${WORKER_IMAGE_TAG}" >/dev/null 2>&1; then
             modules="${modules:+${modules} }core-worker"
           fi
@@ -563,6 +590,7 @@ jobs:
 
       - name: Build fallback bootJars
         if: steps.freshness.outputs.current == 'true' && steps.fallback_jars.outputs.modules != ''
+        id: fallback_build
         shell: bash
         env:
           JAR_MODULES: ${{ steps.fallback_jars.outputs.modules }}
@@ -570,6 +598,11 @@ jobs:
           set -euo pipefail
           read -r -a modules <<< "${JAR_MODULES}"
           bash infra/terraform/scripts/build-image-jars.sh build/image-jars "${modules[@]}"
+          # Same runtime input labels as PR CI candidates (MOI-590).
+          for module in "${modules[@]}"; do
+            input="$(bash .github/scripts/runtime-input.sh hash "build/image-jars/${module}.jar")"
+            echo "${module#core-}_input=${input}" >> "$GITHUB_OUTPUT"
+          done
 
       - name: Build and push image
         id: api_build
@@ -582,6 +615,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.image.outputs.tags }}
+          labels: org.moimyeon.runtime-input=${{ steps.fallback_build.outputs.api_input }}
           cache-from: type=gha,scope=deployment-images-core-api
           cache-to: type=gha,mode=min,scope=deployment-images-core-api
 
@@ -626,7 +660,8 @@ jobs:
           API_IMAGE_URI: ${{ steps.image.outputs.image_uri }}
           API_IMAGE_URI_PARAMETER: ${{ steps.env.outputs.image_uri_parameter }}
           APP_URL: ${{ steps.env.outputs.app_url }}
-          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_DEPLOY: ${{ steps.worker_scope.outputs.deploy }}
+          WORKER_RUNTIME_INPUT: ${{ steps.fallback_build.outputs.worker_input }}
           WORKER_IMAGE_TAG: ${{ steps.worker_image.outputs.tags }}
           FALLBACK_JAR_MODULES: ${{ steps.fallback_jars.outputs.modules }}
         run: |
@@ -742,7 +777,7 @@ jobs:
           # "Build fallback bootJars" staged its jar when it was missing. Assemble
           # and push the Worker target while ECS stabilizes the API. Worker
           # rollout still waits for both operations to succeed.
-          if [ "${WORKER_ENABLED}" = "true" ]; then
+          if [ "${WORKER_DEPLOY}" = "true" ]; then
             if [[ " ${FALLBACK_JAR_MODULES} " != *" core-worker "* ]]; then
               echo "Reusing existing immutable Worker image."
               worker_build_status="true"
@@ -752,6 +787,7 @@ jobs:
                 --platform linux/amd64 \
                 --file Dockerfile \
                 --tag "${WORKER_IMAGE_TAG}" \
+                --label "org.moimyeon.runtime-input=${WORKER_RUNTIME_INPUT}" \
                 --push \
                 build/image-jars &
               worker_build_pid=$!
@@ -867,14 +903,14 @@ jobs:
           echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
 
       - name: Fail when Notification Worker image build failed
-        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true' && steps.api_deploy.outputs.worker_build_succeeded != 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'true' && steps.api_deploy.outputs.worker_build_succeeded != 'true'
         shell: bash
         run: |
           echo "::error::Core API is stable, but the Notification Worker image build failed. Worker deployment was not started."
           exit 1
 
       - name: Register Notification Worker task definition revision
-        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'true'
         id: worker_task_def
         shell: bash
         env:
@@ -908,7 +944,7 @@ jobs:
 
       - name: Deploy Notification Worker ECS service
         id: worker_deploy
-        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'true'
         timeout-minutes: 30
         shell: bash
         run: |
@@ -1016,7 +1052,7 @@ jobs:
           done
 
       - name: Store Notification Worker image URI in SSM
-        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -1076,13 +1112,45 @@ jobs:
 
       - name: Mark Notification Worker deployment bundle
         id: worker_bundle
-        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'true'
         shell: bash
         run: |
           deployed_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
             "${{ steps.worker_image.outputs.image_uri }}" \
             "${{ steps.env.outputs.worker_ecr_repository_url }}:deployed-dev-${DEPLOY_SHA::12}")"
           echo "image_uri=${deployed_image}" >> "$GITHUB_OUTPUT"
+
+      # MOI-590: the unchanged Worker goes into this commit's bundle as it runs,
+      # with this commit's marker, so promotion and rollback accept it.
+      - name: Carry the unchanged Notification Worker into this commit
+        id: worker_carry
+        if: steps.freshness.outputs.current == 'true' && steps.worker_scope.outputs.deploy == 'false'
+        shell: bash
+        env:
+          RUNNING_IMAGE_URI: ${{ steps.worker_scope.outputs.running_image_uri }}
+          RUNNING_TASK_DEFINITION_ARN: ${{ steps.worker_scope.outputs.running_task_definition_arn }}
+          CLUSTER: ${{ steps.env.outputs.ecs_cluster }}
+          WORKER_SERVICE: ${{ steps.env.outputs.worker_ecs_service }}
+          WORKER_CONTAINER: ${{ steps.env.outputs.worker_ecs_container }}
+        run: |
+          set -euo pipefail
+          # The decision ran before the Core API rollout (up to 30 minutes). Record
+          # the Worker only if it is still exactly what was decided on.
+          running="$(bash infra/terraform/scripts/resolve-running-service.sh \
+            "${CLUSTER}" "${WORKER_SERVICE}" "${WORKER_CONTAINER}")" || {
+            echo "::error::The Notification Worker changed or is rolling out since it was kept; not recording a stale Worker."
+            exit 1
+          }
+          if [ "$(sed -n 's/^task_definition_arn=//p' <<< "${running}")" != "${RUNNING_TASK_DEFINITION_ARN}" ] \
+            || [ "$(sed -n 's/^image_uri=//p' <<< "${running}")" != "${RUNNING_IMAGE_URI}" ]; then
+            echo "::error::The Notification Worker changed since it was kept; not recording a stale Worker."
+            exit 1
+          fi
+          marked_image="$(bash infra/terraform/scripts/copy-image-by-digest.sh \
+            "${RUNNING_IMAGE_URI}" \
+            "${{ steps.env.outputs.worker_ecr_repository_url }}:deployed-dev-${DEPLOY_SHA::12}")"
+          echo "image_uri=${marked_image}" >> "$GITHUB_OUTPUT"
+          echo "task_definition_arn=${RUNNING_TASK_DEFINITION_ARN}" >> "$GITHUB_OUTPUT"
 
       - name: Record immutable dev deployment bundle
         if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.ledger_enabled == 'true'
@@ -1094,8 +1162,8 @@ jobs:
             "${DEPLOY_SHA}" \
             "${{ steps.api_bundle.outputs.image_uri }}" \
             "${{ steps.task_def.outputs.arn }}" \
-            "${{ steps.worker_bundle.outputs.image_uri }}" \
-            "${{ steps.worker_task_def.outputs.arn }}"
+            "${{ steps.worker_bundle.outputs.image_uri || steps.worker_carry.outputs.image_uri }}" \
+            "${{ steps.worker_task_def.outputs.arn || steps.worker_carry.outputs.task_definition_arn }}"
 
       - name: Print ECS diagnostics
         if: failure()
@@ -1204,6 +1272,7 @@ jobs:
           API_IMAGE_EXISTS: ${{ steps.api_image_cache.outputs.exists }}
           WORKER_STEP_RESULT: ${{ steps.worker_deploy.outcome }}
           WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_UNCHANGED: ${{ steps.worker_carry.outcome == 'success' }}
           WORKER_BUILD_SUCCEEDED: ${{ steps.api_deploy.outputs.worker_build_succeeded }}
           WORKER_CANDIDATE: ${{ steps.candidate.outputs.worker }}
           WORKER_IMAGE: ${{ steps.api_deploy.outputs.worker_image }}

@@ -37,7 +37,8 @@ reset_case() {
   unset SLACK_WEBHOOK_URL DEPLOY_STAGE IMAGE_SOURCE DEPLOY_REASON FAKE_CURL_EXIT \
     API_RESULT WORKER_RESULT SHARED_RESULT DEV_RESULT \
     CURRENT LATEST_SHA API_BUILD_RESULT API_CANDIDATE API_IMAGE_EXISTS WORKER_STEP_RESULT \
-    WORKER_ENABLED WORKER_BUILD_SUCCEEDED WORKER_CANDIDATE WORKER_IMAGE CANDIDATE_TAG REPOSITORY_URL
+    WORKER_ENABLED WORKER_BUILD_SUCCEEDED WORKER_CANDIDATE WORKER_IMAGE CANDIDATE_TAG REPOSITORY_URL \
+    WORKER_UNCHANGED
   export DEPLOY_ENVIRONMENT=dev
   export DEPLOY_KIND=deployment
   export DEPLOY_OUTCOME=success
@@ -142,6 +143,17 @@ bash "${DEV_NOTIFY_SCRIPT}" || fail "Worker 빌드 실패 알림 전송이 실�
 [ "$(field_value Worker)" = image-build-failed ] || fail "Worker 빌드 실패가 $(field_value Worker)로 표시됐다."
 [ "$(field_value Image)" = "Core API: built during deploy" ] \
   || fail "실패한 Worker 빌드를 이미지 출처로 표시했다: $(field_value Image)"
+
+# dev 배포(MOI-590): Worker 입력이 그대로면 교체하지 않고 실행 중인 revision을 유지했다고 알린다.
+reset_case
+export SLACK_WEBHOOK_URL=https://hooks.example.test/x CURRENT=true API_RESULT=success \
+  API_CANDIDATE=promoted API_IMAGE_EXISTS=true WORKER_STEP_RESULT=skipped WORKER_ENABLED=true \
+  WORKER_UNCHANGED=true WORKER_BUILD_SUCCEEDED= WORKER_CANDIDATE=promoted \
+  CANDIDATE_TAG="${candidate_tag}" REPOSITORY_URL=https://github.com/o/r
+bash "${DEV_NOTIFY_SCRIPT}" || fail "Worker 유지 알림 전송이 실패했다."
+[ "$(field_value Worker)" = unchanged ] || fail "유지한 Worker가 $(field_value Worker)로 표시됐다."
+[ "$(field_value Image)" = "Core API: ${expected_run}"$'\n'"Worker: unchanged, running revision kept" ] \
+  || fail "유지한 Worker의 이미지 출처 표시가 다르다: $(field_value Image)"
 
 # dev 배포: Core API 빌드 실패를 '빌드함'으로 표시하지 않는다.
 reset_case

@@ -150,6 +150,9 @@ jobs:
       - name: Check deployment bundle retry and carry-over
         run: bash infra/terraform/tests/deployment-bundle-test.sh
 
+      - name: Check Worker change decision
+        run: bash infra/terraform/tests/worker-scope-test.sh
+
       - name: Check release workflow contract
         run: bash infra/terraform/tests/release-workflow-contract.sh
 
@@ -262,6 +265,17 @@ jobs:
       - name: Build bootJars
         run: bash infra/terraform/scripts/build-image-jars.sh build/image-jars core-api core-worker
 
+      # MOI-590: the deploy compares this with the running Worker's label to
+      # decide whether the Worker needs a new task.
+      - name: Hash image runtime inputs
+        id: inputs
+        shell: bash
+        run: |
+          api="$(bash .github/scripts/runtime-input.sh hash build/image-jars/core-api.jar)"
+          worker="$(bash .github/scripts/runtime-input.sh hash build/image-jars/core-worker.jar)"
+          echo "api=${api}" >> "$GITHUB_OUTPUT"
+          echo "worker=${worker}" >> "$GITHUB_OUTPUT"
+
       - name: Resolve candidate image tags
         id: tags
         env:
@@ -300,6 +314,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.api }}
+          labels: org.moimyeon.runtime-input=${{ steps.inputs.outputs.api }}
           cache-from: type=gha,scope=deployment-images-core-api
           cache-to: type=gha,mode=min,scope=deployment-images-core-api
 
@@ -312,8 +327,22 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.worker }}
+          labels: org.moimyeon.runtime-input=${{ steps.inputs.outputs.worker }}
           cache-from: type=gha,scope=deployment-images-core-worker
           cache-to: type=gha,mode=min,scope=deployment-images-core-worker
+
+      # The deploy reads the label back the same way; fail here, not there.
+      - name: Read runtime input labels back from the candidates
+        shell: bash
+        env:
+          API_IMAGE: ${{ steps.tags.outputs.api }}
+          API_INPUT: ${{ steps.inputs.outputs.api }}
+          WORKER_IMAGE: ${{ steps.tags.outputs.worker }}
+          WORKER_INPUT: ${{ steps.inputs.outputs.worker }}
+        run: |
+          set -euo pipefail
+          [ "$(bash .github/scripts/runtime-input.sh read "${API_IMAGE}")" = "${API_INPUT}" ]
+          [ "$(bash .github/scripts/runtime-input.sh read "${WORKER_IMAGE}")" = "${WORKER_INPUT}" ]
 
   monitoring-smoke:
     if: github.event.action != 'edited' || github.event.changes.base != null
