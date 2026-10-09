@@ -11,6 +11,7 @@ private val log = KotlinLogging.logger {}
 class NotificationMessageWorker(
     private val messageConsumer: NotificationStreamConsumer,
     private val messageHandler: NotificationMessageHandler,
+    private val heartbeat: WorkerHeartbeat,
 ) {
     @Scheduled(
         fixedDelayString = "\${notification.worker.consumer.fixed-delay:1s}",
@@ -19,6 +20,8 @@ class NotificationMessageWorker(
     fun consumeMessages() {
         messageConsumer.recoverPending(::handle)
         messageConsumer.consumeNew(::handle)
+        // Redis 연결·Consumer Group이 살아 있어 한 주기가 끝까지 돌았을 때만 신호를 남긴다.
+        heartbeat.beat()
     }
 
     private fun handle(message: NotificationStreamMessage): NotificationStreamHandlingResult = try {

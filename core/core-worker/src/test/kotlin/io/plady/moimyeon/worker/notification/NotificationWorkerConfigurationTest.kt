@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
+import java.time.Clock
 
 class NotificationWorkerConfigurationTest {
     private val contextRunner = baseContextRunner()
@@ -20,6 +21,8 @@ class NotificationWorkerConfigurationTest {
     private fun baseContextRunner(includeEmailSender: Boolean = true): ApplicationContextRunner {
         var runner = ApplicationContextRunner()
             .withUserConfiguration(NotificationWorkerConfiguration::class.java)
+            .withPropertyValues("notification.worker.heartbeat-file=build/test-worker-heartbeat")
+            .withBean(Clock::class.java, { Clock.systemUTC() })
             .withBean(
                 JsonMapper::class.java,
                 { JsonMapper.builder().addModule(kotlinModule()).build() },
@@ -59,6 +62,7 @@ class NotificationWorkerConfigurationTest {
                 assertThat(context).hasNotFailed()
                 assertThat(context).hasSingleBean(NotificationMessageWorker::class.java)
                 assertThat(context).hasSingleBean(NotificationMessageHandler::class.java)
+                assertThat(context).hasSingleBean(WorkerHeartbeat::class.java)
             }
     }
 

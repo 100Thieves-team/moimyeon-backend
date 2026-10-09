@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import tools.jackson.databind.json.JsonMapper
+import java.nio.file.Path
+import java.time.Clock
 
 @ConditionalOnProperty(
     prefix = "notification.worker.consumer",
@@ -42,11 +44,22 @@ class NotificationWorkerConfiguration {
     )
 
     @Bean
+    fun workerHeartbeat(
+        @Value("\${notification.worker.heartbeat-file}") heartbeatFile: String,
+        clock: Clock,
+    ): WorkerHeartbeat = FileWorkerHeartbeat(
+        file = Path.of(heartbeatFile),
+        clock = clock,
+    )
+
+    @Bean
     fun notificationMessageWorker(
         messageConsumer: NotificationStreamConsumer,
         messageHandler: NotificationMessageHandler,
+        heartbeat: WorkerHeartbeat,
     ): NotificationMessageWorker = NotificationMessageWorker(
         messageConsumer = messageConsumer,
         messageHandler = messageHandler,
+        heartbeat = heartbeat,
     )
 }

@@ -7,6 +7,7 @@ import io.plady.moimyeon.storage.redis.NotificationStreamConsumer
 import io.plady.moimyeon.storage.redis.NotificationStreamHandlingResult
 import io.plady.moimyeon.storage.redis.NotificationStreamMessage
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -26,6 +27,7 @@ class NotificationMessageWorkerTest {
         val notificationMessageWorker = NotificationMessageWorker(
             messageConsumer = consumer,
             messageHandler = notificationMessageHandler,
+            heartbeat = {},
         )
 
         notificationMessageWorker.consumeMessages()
@@ -36,13 +38,37 @@ class NotificationMessageWorkerTest {
     }
 
     @Test
+    fun `소비 주기가 끝까지 돌면 하트비트를 남긴다`() {
+        val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message(eventId(35))))
+        val notificationMessageHandler = mockk<NotificationMessageHandler>(relaxed = true)
+        var beats = 0
+
+        NotificationMessageWorker(consumer, notificationMessageHandler) { beats++ }.consumeMessages()
+
+        assertThat(beats).isEqualTo(1)
+    }
+
+    @Test
+    fun `Redis 소비가 실패하면 하트비트를 남기지 않는다`() {
+        val consumer = mockk<NotificationStreamConsumer>()
+        every { consumer.recoverPending(any()) } returns 0
+        every { consumer.consumeNew(any()) } throws IllegalStateException("Redis 연결 실패")
+        var beats = 0
+
+        assertThatThrownBy {
+            NotificationMessageWorker(consumer, mockk(relaxed = true)) { beats++ }.consumeMessages()
+        }.isInstanceOf(IllegalStateException::class.java)
+        assertThat(beats).isZero()
+    }
+
+    @Test
     fun `영구 처리 오류를 영구 실패 결과로 변환한다`() {
         val message = message(eventId(33))
         val consumer = RecordingNotificationStreamConsumer(newMessages = listOf(message))
         val notificationMessageHandler = mockk<NotificationMessageHandler>()
         every { notificationMessageHandler.handle(message) } throws PermanentNotificationProcessingException("잘못된 메시지")
 
-        NotificationMessageWorker(consumer, notificationMessageHandler).consumeMessages()
+        NotificationMessageWorker(consumer, notificationMessageHandler) {}.consumeMessages()
 
         assertThat(consumer.results.single().isPermanentFailure).isTrue()
     }
@@ -54,7 +80,7 @@ class NotificationMessageWorkerTest {
         val notificationMessageHandler = mockk<NotificationMessageHandler>()
         every { notificationMessageHandler.handle(message) } throws RetryableNotificationProcessingException("일시 장애")
 
-        NotificationMessageWorker(consumer, notificationMessageHandler).consumeMessages()
+        NotificationMessageWorker(consumer, notificationMessageHandler) {}.consumeMessages()
 
         assertThat(consumer.results.single().isRetryableFailure).isTrue()
     }
