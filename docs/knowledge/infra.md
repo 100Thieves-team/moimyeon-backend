@@ -43,8 +43,11 @@
   성공한 배포마다 `/moimyeon/{env}/deployments/{sha12}` manifest(source
   SHA·API/Worker image digest·exact task definition ARN)가 기록되고,
   `deployed-{env}-{sha12}` ECR marker가 있는 이미지만 승격·롤백 입력으로
-  인정된다 (DR-018·019). ECS에는 태그가 아니라 `repository@sha256:digest`만
-  전달한다 (DR-016). 롤백 실행은 개발 플랫폼 actor 또는 break-glass
+  인정된다 (DR-018·019). dev 배포는 태스크 정의에 IMMUTABLE ECR의 커밋 태그(`dev-<sha12>`)를
+  넣는다. 아래의 "digest만 전달" 규칙은 live 승격·롤백에 해당한다. 같은 커밋을 다시 배포하면(재실행·중복 push) 새 태스크 정의를
+  등록하지 않고 기록된 revision을 그대로 다시 배포한다. 기록은 배포 전체가 성공했을 때만
+  남기므로, 일부만 성공한 배포의 롤백 대상은 직전 기록이다 (MOI-589). 승격·롤백은 ECS에 태그가 아니라
+  `repository@sha256:digest`만 전달한다 (DR-016). 롤백 실행은 개발 플랫폼 actor 또는 break-glass
   dispatch — 에이전트가 만들 수 있는 우회 경로가 아니다 (DR-009).
 - **배포 컨트롤러는 ECS native** — live Core API는 `BLUE_GREEN`, dev Core API는
   배포 속도를 위해 `ROLLING`, Worker(ALB 없음)는 `ROLLING`. **CodeDeploy 제어면을

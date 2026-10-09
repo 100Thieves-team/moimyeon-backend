@@ -329,6 +329,39 @@ jobs:
             echo "worker_enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # MOI-589: a retry of an already recorded commit redeploys exactly the
+      # recorded task definitions. New registrations would conflict with the
+      # immutable bundle that live promotion and rollback read.
+      - name: Find an already recorded deployment bundle
+        if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.ledger_enabled == 'true'
+        id: recorded
+        shell: bash
+        env:
+          BUNDLE_PARAMETER_PREFIX: ${{ steps.env.outputs.bundle_parameter_prefix }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+        run: |
+          set -euo pipefail
+          result="$(bash infra/terraform/scripts/find-deployment-bundle.sh \
+            "${BUNDLE_PARAMETER_PREFIX}" dev "${DEPLOY_SHA}")"
+          # The bundle cannot change, so a Worker toggle since it was recorded
+          # must stop here, before any image or service changes.
+          if grep -qx 'recorded=true' <<< "${result}"; then
+            if grep -qx 'worker_task_definition_arn=' <<< "${result}"; then
+              if [ "${WORKER_ENABLED}" = "true" ]; then
+                echo "::error::The recorded bundle for this commit has no Notification Worker, but the Worker is now enabled. Deploy a new commit."
+                exit 1
+              fi
+            elif [ "${WORKER_ENABLED}" != "true" ]; then
+              echo "::error::The recorded bundle for this commit includes a Notification Worker, but the Worker is now disabled. Deploy a new commit."
+              exit 1
+            fi
+          fi
+          echo "${result}" >> "$GITHUB_OUTPUT"
+          if grep -qx 'recorded=true' <<< "${result}"; then
+            echo "Deployment bundle for ${DEPLOY_SHA::12} already recorded; redeploying its task definitions." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Validate both Terraform task templates before image build
         if: steps.freshness.outputs.current == 'true'
         shell: bash
@@ -386,6 +419,34 @@ jobs:
 
           echo "image_uri=${image_uri}" >> "$GITHUB_OUTPUT"
           echo "tags=${image_uri}" >> "$GITHUB_OUTPUT"
+
+      # MOI-589: before any service changes, a recorded retry must still point
+      # at this run's images (repository or container renames would split them).
+      - name: Verify recorded task definitions match this run
+        if: steps.freshness.outputs.current == 'true' && steps.recorded.outputs.recorded == 'true'
+        shell: bash
+        env:
+          API_TASK_DEFINITION: ${{ steps.recorded.outputs.api_task_definition_arn }}
+          API_CONTAINER: ${{ steps.env.outputs.ecs_container }}
+          API_IMAGE_URI: ${{ steps.image.outputs.image_uri }}
+          WORKER_TASK_DEFINITION: ${{ steps.recorded.outputs.worker_task_definition_arn }}
+          WORKER_CONTAINER: ${{ steps.env.outputs.worker_ecs_container }}
+          WORKER_IMAGE_URI: ${{ steps.worker_image.outputs.image_uri }}
+        run: |
+          set -euo pipefail
+          check() {
+            local task_definition="$1" container="$2" expected="$3" recorded
+            recorded="$(aws ecs describe-task-definition --task-definition "${task_definition}" \
+              --query "taskDefinition.containerDefinitions[?name=='${container}'].image | [0]" --output text)"
+            if [ "${recorded}" != "${expected}" ]; then
+              echo "::error::Recorded task definition runs ${recorded}, not this run's ${expected}."
+              exit 1
+            fi
+          }
+          check "${API_TASK_DEFINITION}" "${API_CONTAINER}" "${API_IMAGE_URI}"
+          if [ -n "${WORKER_TASK_DEFINITION}" ]; then
+            check "${WORKER_TASK_DEFINITION}" "${WORKER_CONTAINER}" "${WORKER_IMAGE_URI}"
+          fi
 
       - name: Set up Docker Buildx
         if: steps.freshness.outputs.current == 'true'
@@ -528,12 +589,21 @@ jobs:
         if: steps.freshness.outputs.current == 'true'
         id: task_def
         shell: bash
+        env:
+          RECORDED_TASK_DEFINITION_ARN: ${{ steps.recorded.outputs.api_task_definition_arn }}
         run: |
           set -euo pipefail
 
           container="${{ steps.env.outputs.ecs_container }}"
           template_task_def_arn="${{ steps.env.outputs.ecs_task_definition }}"
           image_uri="${{ steps.image.outputs.image_uri }}"
+
+          # "Verify recorded task definitions match this run" checked the image.
+          if [ -n "${RECORDED_TASK_DEFINITION_ARN}" ]; then
+            echo "Reusing recorded Core API task definition ${RECORDED_TASK_DEFINITION_ARN}."
+            echo "arn=${RECORDED_TASK_DEFINITION_ARN}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           python3 infra/terraform/scripts/prepare_ecs_task.py \
             --file "${RUNNER_TEMP}/task-definition.json" --expected-arn "${template_task_def_arn}" \
@@ -807,12 +877,22 @@ jobs:
         if: steps.freshness.outputs.current == 'true' && steps.deployment_config.outputs.worker_enabled == 'true'
         id: worker_task_def
         shell: bash
+        env:
+          BUNDLE_RECORDED: ${{ steps.recorded.outputs.recorded }}
+          RECORDED_TASK_DEFINITION_ARN: ${{ steps.recorded.outputs.worker_task_definition_arn }}
         run: |
           set -euo pipefail
 
           container="${{ steps.env.outputs.worker_ecs_container }}"
           template_task_def_arn="${{ steps.env.outputs.worker_ecs_task_definition }}"
           image_uri="${{ steps.worker_image.outputs.image_uri }}"
+
+          # Earlier steps matched the Worker toggle and the recorded image.
+          if [ "${BUNDLE_RECORDED}" = "true" ]; then
+            echo "Reusing recorded Notification Worker task definition ${RECORDED_TASK_DEFINITION_ARN}."
+            echo "arn=${RECORDED_TASK_DEFINITION_ARN}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           python3 infra/terraform/scripts/prepare_ecs_task.py \
             --file "${RUNNER_TEMP}/worker-task-definition.json" --expected-arn "${template_task_def_arn}" \

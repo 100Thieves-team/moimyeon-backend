@@ -147,6 +147,9 @@ jobs:
       - name: Check runtime change rule
         run: bash infra/terraform/tests/runtime-changes-test.sh
 
+      - name: Check deployment bundle retry and carry-over
+        run: bash infra/terraform/tests/deployment-bundle-test.sh
+
       - name: Check release workflow contract
         run: bash infra/terraform/tests/release-workflow-contract.sh
 
