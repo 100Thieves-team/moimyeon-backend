@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T14:17:07.380890046",
+                        "date" : "2026-10-09",
+                        "datetime" : "2026-10-09T15:38:46.253686146",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T14:17:07.435804524",
+                        "date" : "2026-10-09",
+                        "datetime" : "2026-10-09T15:38:46.304685111",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -1858,12 +1858,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "e60a7167-5c81-4668-9616-6244d703add4",
+                        "memberId" : "5c7e7a3d-d606-419b-bff5-5efef7d57b2a",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "e60a7167-5c81-4668-9616-6244d703add4",
+                          "memberId" : "5c7e7a3d-d606-419b-bff5-5efef7d57b2a",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -2611,7 +2611,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-10-08T14:17:14.586746602",
+                          "startAt" : "2026-10-10T15:38:53.951410655",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2624,9 +2624,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "3aaf2b21-a17b-4993-988a-5929d3671c30",
+                        "hostMemberId" : "4edc3413-168b-4b93-bf38-2579cc18c221",
                         "participants" : [ {
-                          "memberId" : "3aaf2b21-a17b-4993-988a-5929d3671c30",
+                          "memberId" : "4edc3413-168b-4b93-bf38-2579cc18c221",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3431,7 +3431,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "7a43bd3e-d897-4a8e-a227-20d73b3de6a4",
+                        "memberId" : "3dbd1b0f-e8fc-478e-99ad-3d4c99f1dd08",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4200,19 +4200,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "831cac42-2f89-4347-a016-9f199fa7a158",
+                    "resumeId" : "a1cd91d0-203f-49f2-92bd-503a46b8f1aa",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "f67f993f-8ef5-45af-96c1-3610780d840e",
+                    "resumeId" : "3348bec5-cc95-41c9-a103-f5cfa5ece1cd",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "3849546d-12fe-46a2-ba7e-06377ea1adc0"
+                    "resumeId" : "390ce08e-e167-4447-85f7-95019d34fac1"
                   }
       responses:
         "400":
@@ -6405,7 +6405,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "fde10d3e-4763-4040-add3-078d83d6f1b9",
+                          "resumeId" : "4a66a08f-00c6-4140-bf1c-626fe5437b00",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7425,18 +7425,6 @@ paths:
                   type: string
 components:
   schemas:
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -7456,6 +7444,18 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-dev-rooms-roomId-schedule-1288597070:
       required:
       - result
@@ -7853,14 +7853,6 @@ components:
         status:
           type: string
           description: 바꿀 상태 (RESTRICTED | ACTIVE)
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-members-me-rooms-257716809:
       required:
       - result
@@ -8293,6 +8285,14 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
