@@ -18,8 +18,9 @@ poll_seconds="${TERRAFORM_BOUNDARY_POLL_SECONDS:-15}"
 [[ "${wait_seconds}" =~ ^[1-9][0-9]*$ ]] || exit 1
 [[ "${poll_seconds}" =~ ^[1-9][0-9]*$ ]] || exit 1
 
-# Same scope the Terraform Apply workflow uses to decide whether to run.
-terraform_paths=(infra/terraform ':(exclude)infra/terraform/tests' ':(exclude)infra/terraform/README.md')
+# Same scope the Terraform Apply workflow uses to decide whether to run. The
+# monitoring module reads infra/observability, so it is a Terraform input too (MOI-592).
+terraform_paths=(infra/terraform infra/observability ':(exclude)infra/terraform/tests' ':(exclude)infra/terraform/README.md' ':(exclude)infra/observability/tests' ':(exclude)infra/observability/README.md')
 
 deadline=$((SECONDS + wait_seconds))
 fetched=false
