@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the allowlisted, non-secret dev deploy wiring that Terraform publishes to SSM."""
+"""Validate the allowlisted, non-secret deploy wiring that Terraform publishes to SSM (dev deploy, live promotion)."""
 
 import argparse
 import json
@@ -27,16 +27,17 @@ OUTPUTS = {
     "worker_image_uri_parameter": "notification_worker_image_uri_parameter_name",
 }
 CANDIDATE_FAMILIES = ("core-api", "core-worker")
+ENVIRONMENTS = ("dev", "live")
 SAFE_VALUE = r"[A-Za-z0-9_./:@-]+"
 
 
-def validate(document, role_arn):
+def validate(document, role_arn, environment="dev"):
     if not isinstance(document, dict):
         raise ValueError("Deployment config must be an object")
     if set(document) != {"schema_version", "environment", "config", "candidate_repository_urls"}:
         raise ValueError("Unexpected deployment config fields")
-    if document["schema_version"] != 2 or document["environment"] != "dev":
-        raise ValueError("Deployment config is not the dev schema")
+    if document["schema_version"] != 2 or document["environment"] != environment:
+        raise ValueError(f"Deployment config is not the {environment} schema")
     config = document["config"]
     if not isinstance(config, dict) or set(config) != set(OUTPUTS):
         raise ValueError("Deployment config must contain exactly the non-secret output allowlist")
@@ -49,12 +50,14 @@ def validate(document, role_arn):
         # The workflow assumed role_arn to read this document; both must agree.
         raise ValueError("Deployment role ARN does not match the assumed role")
     for prefix, family in (("", "core-api"), ("worker_", "core-worker")):
-        arn_prefix = f"arn:aws:ecs:{config['aws_region']}:{role[1]}:task-definition/moimyeon-dev-{family}:"
+        arn_prefix = f"arn:aws:ecs:{config['aws_region']}:{role[1]}:task-definition/moimyeon-{environment}-{family}:"
         if not re.fullmatch(re.escape(arn_prefix) + r"[1-9][0-9]*", config[f"{prefix}ecs_task_definition"]):
-            raise ValueError("Task template must be an exact dev revision in the deployment account/region")
+            raise ValueError(f"Task template must be an exact {environment} revision in the deployment account/region")
     candidates = document["candidate_repository_urls"]
-    if not isinstance(candidates, dict) or set(candidates) != set(CANDIDATE_FAMILIES):
-        raise ValueError("Deployment config must name both candidate repositories")
+    # Only dev deploys PR-built candidates; live promotes from the dev deployment bundle.
+    expected_candidates = set(CANDIDATE_FAMILIES) if environment == "dev" else set()
+    if not isinstance(candidates, dict) or set(candidates) != expected_candidates:
+        raise ValueError("Deployment config candidate repositories do not match the environment")
     registry = config["ecr_repository_url"].split("/", 1)[0]
     for family, url in candidates.items():
         if not isinstance(url, str) or not re.fullmatch(re.escape(registry) + r"/[a-z0-9._/-]+-candidate", url):
@@ -67,15 +70,17 @@ def main():
     parser.add_argument("mode", choices=("read",))
     parser.add_argument("--file", required=True)
     parser.add_argument("--role-arn", required=True)
+    parser.add_argument("--environment", choices=ENVIRONMENTS, default="dev")
     args = parser.parse_args()
     try:
-        config, candidates = validate(json.loads(Path(args.file).read_text()), args.role_arn)
+        config, candidates = validate(json.loads(Path(args.file).read_text()), args.role_arn, args.environment)
         # Validate the entire document before emitting any Actions outputs.
         with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-            output.write("name=dev\necs_health_check_grace_seconds=240\n")
+            output.write(f"name={args.environment}\necs_health_check_grace_seconds=240\n")
             output.writelines(f"{key}={value}\n" for key, value in config.items())
-            output.write(f"candidate_repository_url={candidates['core-api']}\n")
-            output.write(f"worker_candidate_repository_url={candidates['core-worker']}\n")
+            if candidates:
+                output.write(f"candidate_repository_url={candidates['core-api']}\n")
+                output.write(f"worker_candidate_repository_url={candidates['core-worker']}\n")
     except (ValueError, KeyError, TypeError, OSError):
         # Do not echo file contents or untrusted field values.
         print("Invalid or unavailable Terraform deployment config; refusing deployment.", file=sys.stderr)

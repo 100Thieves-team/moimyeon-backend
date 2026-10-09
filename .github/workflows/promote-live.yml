@@ -197,7 +197,6 @@ jobs:
           LIVE_CLUSTER: ${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}
           LIVE_API_SERVICE: ${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}
           LIVE_API_CONTAINER: ${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}
-          LIVE_API_TASK_DEFINITION: ${{ vars.MOIMYEON_ECS_TASK_DEFINITION_LIVE }}
           LIVE_API_SSM: ${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}
           LIVE_APP_URL: ${{ vars.MOIMYEON_APP_URL_LIVE }}
           DEV_BUNDLE_PREFIX: ${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_DEV }}
@@ -206,7 +205,6 @@ jobs:
           LIVE_WORKER_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}
           LIVE_WORKER_SERVICE: ${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}
           LIVE_WORKER_CONTAINER: ${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}
-          LIVE_WORKER_TASK_DEFINITION: ${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_LIVE }}
           LIVE_WORKER_SSM: ${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}
         run: |
           set -euo pipefail
@@ -218,7 +216,6 @@ jobs:
             "${LIVE_CLUSTER}" \
             "${LIVE_API_SERVICE}" \
             "${LIVE_API_CONTAINER}" \
-            "${LIVE_API_TASK_DEFINITION}" \
             "${LIVE_API_SSM}" \
             "${LIVE_APP_URL}" \
             "${DEV_BUNDLE_PREFIX}" \
@@ -234,7 +231,6 @@ jobs:
             "${LIVE_WORKER_REPOSITORY}"
             "${LIVE_WORKER_SERVICE}"
             "${LIVE_WORKER_CONTAINER}"
-            "${LIVE_WORKER_TASK_DEFINITION}"
             "${LIVE_WORKER_SSM}"
           )
           configured_worker_values=0
@@ -257,6 +253,72 @@ jobs:
         with:
           role-to-assume: ${{ vars.MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE }}
           aws-region: ${{ vars.MOIMYEON_AWS_REGION_LIVE }}
+
+      # GitHub variables are fixed when this run starts, so a Terraform Apply that
+      # replaces the task templates meanwhile leaves them pointing at a deregistered
+      # revision. Read the templates Terraform published to SSM now, after the
+      # Terraform boundary, the same way the dev deploy does (MOI-512).
+      - name: Load Terraform deployment config
+        id: live_config
+        shell: bash
+        env:
+          ROLE_ARN: ${{ vars.MOIMYEON_AWS_PROMOTE_ROLE_TO_ASSUME_LIVE }}
+        run: |
+          set -euo pipefail
+          aws ssm get-parameter \
+            --name "/moimyeon/live/deploy/config" \
+            --query 'Parameter.Value' \
+            --output text > "${RUNNER_TEMP}/live-deploy-config.json"
+          python3 infra/terraform/scripts/deploy_config.py read --environment live \
+            --file "${RUNNER_TEMP}/live-deploy-config.json" --role-arn "${ROLE_ARN}"
+
+      - name: Check deployment config targets
+        shell: bash
+        env:
+          LIVE_CLUSTER: ${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}
+          LIVE_API_SERVICE: ${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}
+          LIVE_API_CONTAINER: ${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}
+          LIVE_WORKER_SERVICE: ${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}
+          LIVE_WORKER_CONTAINER: ${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}
+          LIVE_API_REPOSITORY: ${{ vars.MOIMYEON_ECR_REPOSITORY_URL_LIVE }}
+          LIVE_API_SSM: ${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}
+          LIVE_APP_URL: ${{ vars.MOIMYEON_APP_URL_LIVE }}
+          LIVE_BUNDLE_PREFIX: ${{ vars.MOIMYEON_DEPLOYMENT_BUNDLE_PARAMETER_PREFIX_LIVE }}
+          LIVE_WORKER_REPOSITORY: ${{ vars.MOIMYEON_WORKER_ECR_REPOSITORY_URL_LIVE }}
+          LIVE_WORKER_SSM: ${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}
+          WORKER_ENABLED: ${{ steps.config.outputs.worker_enabled }}
+          CONFIG_API_REPOSITORY: ${{ steps.live_config.outputs.ecr_repository_url }}
+          CONFIG_API_SSM: ${{ steps.live_config.outputs.image_uri_parameter }}
+          CONFIG_APP_URL: ${{ steps.live_config.outputs.app_url }}
+          CONFIG_BUNDLE_PREFIX: ${{ steps.live_config.outputs.bundle_parameter_prefix }}
+          CONFIG_WORKER_REPOSITORY: ${{ steps.live_config.outputs.worker_ecr_repository_url }}
+          CONFIG_WORKER_SSM: ${{ steps.live_config.outputs.worker_image_uri_parameter }}
+          CONFIG_CLUSTER: ${{ steps.live_config.outputs.ecs_cluster }}
+          CONFIG_API_SERVICE: ${{ steps.live_config.outputs.ecs_service }}
+          CONFIG_API_CONTAINER: ${{ steps.live_config.outputs.ecs_container }}
+          CONFIG_WORKER_SERVICE: ${{ steps.live_config.outputs.worker_ecs_service }}
+          CONFIG_WORKER_CONTAINER: ${{ steps.live_config.outputs.worker_ecs_container }}
+        run: |
+          set -euo pipefail
+          # Other targets still come from run-start variables; stop if Terraform changed any.
+          if [ "${CONFIG_CLUSTER}" != "${LIVE_CLUSTER}" ] \
+            || [ "${CONFIG_API_SERVICE}" != "${LIVE_API_SERVICE}" ] \
+            || [ "${CONFIG_API_CONTAINER}" != "${LIVE_API_CONTAINER}" ] \
+            || [ "${CONFIG_API_REPOSITORY}" != "${LIVE_API_REPOSITORY}" ] \
+            || [ "${CONFIG_API_SSM}" != "${LIVE_API_SSM}" ] \
+            || [ "${CONFIG_APP_URL}" != "${LIVE_APP_URL}" ] \
+            || [ "${CONFIG_BUNDLE_PREFIX}" != "${LIVE_BUNDLE_PREFIX}" ]; then
+            echo "::error::Terraform deployment config and live promotion variables name different Core API targets. Terraform changed them after this run started; rerun the promotion."
+            exit 1
+          fi
+          if [ "${WORKER_ENABLED}" = "true" ] \
+            && { [ "${CONFIG_WORKER_SERVICE}" != "${LIVE_WORKER_SERVICE}" ] \
+              || [ "${CONFIG_WORKER_CONTAINER}" != "${LIVE_WORKER_CONTAINER}" ] \
+              || [ "${CONFIG_WORKER_REPOSITORY}" != "${LIVE_WORKER_REPOSITORY}" ] \
+              || [ "${CONFIG_WORKER_SSM}" != "${LIVE_WORKER_SSM}" ]; }; then
+            echo "::error::Terraform deployment config and live promotion variables name different Worker targets. Terraform changed them after this run started; rerun the promotion."
+            exit 1
+          fi
 
       - name: Require active live service capacity
         shell: bash
@@ -453,7 +515,7 @@ jobs:
             --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
             --service "${{ vars.MOIMYEON_ECS_SERVICE_LIVE }}" \
             --container "${{ vars.MOIMYEON_ECS_CONTAINER_NAME_LIVE }}" \
-            --template-task-definition "${{ vars.MOIMYEON_ECS_TASK_DEFINITION_LIVE }}" \
+            --template-task-definition "${{ steps.live_config.outputs.ecs_task_definition }}" \
             --image-uri "${{ steps.api_image.outputs.uri }}" \
             --ssm-parameter "${{ vars.MOIMYEON_IMAGE_URI_PARAMETER_LIVE }}" \
             --health-grace-seconds 240 \
@@ -468,7 +530,7 @@ jobs:
             --cluster "${{ vars.MOIMYEON_ECS_CLUSTER_LIVE }}" \
             --service "${{ vars.MOIMYEON_WORKER_ECS_SERVICE_LIVE }}" \
             --container "${{ vars.MOIMYEON_WORKER_ECS_CONTAINER_NAME_LIVE }}" \
-            --template-task-definition "${{ vars.MOIMYEON_WORKER_ECS_TASK_DEFINITION_LIVE }}" \
+            --template-task-definition "${{ steps.live_config.outputs.worker_ecs_task_definition }}" \
             --image-uri "${{ steps.worker_image.outputs.uri }}" \
             --ssm-parameter "${{ vars.MOIMYEON_WORKER_IMAGE_URI_PARAMETER_LIVE }}"
 

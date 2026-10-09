@@ -79,6 +79,12 @@ variable "enable_pr_image_candidates" {
   default     = false
 }
 
+variable "publish_deploy_config" {
+  description = "Publish the non-secret deploy config to SSM without PR image candidates. Live promotion reads its task templates there at run time, because GitHub variables are fixed when a workflow run starts (MOI-512)."
+  type        = bool
+  default     = false
+}
+
 # ---------------------------------------------------------------------------
 # DNS / TLS
 # ---------------------------------------------------------------------------

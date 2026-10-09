@@ -17,6 +17,7 @@ locals {
   } : {}
 
   deploy_config_parameter_name = "/${var.project}/${var.environment}/deploy/config"
+  publish_deploy_config        = var.enable_pr_image_candidates || var.publish_deploy_config
   # Written by the Terraform Apply workflow (not Terraform) after each
   # successful dev apply: the source SHA whose infra/terraform tree is live.
   terraform_applied_sha_parameter_name = "/${var.project}/${var.environment}/deploy/terraform-applied-sha"
@@ -166,8 +167,10 @@ resource "aws_iam_role_policy" "github_pr_image" {
 
 # Same allowlist as the former per-run deploy-config artifact. Every value is a
 # non-secret identifier or URL; secrets stay in pre-created SecureStrings.
+# Live publishes it too (without candidates) so promotion reads task templates
+# after the Terraform boundary instead of the run-start GitHub variable snapshot.
 resource "aws_ssm_parameter" "deploy_config" {
-  count = var.enable_pr_image_candidates ? 1 : 0
+  count = local.publish_deploy_config ? 1 : 0
 
   name        = local.deploy_config_parameter_name
   description = "Non-secret ${local.name} deploy wiring for the GitHub deploy workflow"

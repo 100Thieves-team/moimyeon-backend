@@ -28,6 +28,8 @@ module "live" {
     "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${var.promotion_source_api_ecr_repository_name}",
     "arn:aws:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/${var.promotion_source_worker_ecr_repository_name}",
   ]
+  # MOI-512: promotion reads task templates from SSM after the Terraform boundary.
+  publish_deploy_config = true
   github_deploy_additional_ssm_read_parameter_arns = [
     "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/dev/deployments/*",
   ]
