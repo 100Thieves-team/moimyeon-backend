@@ -34,8 +34,10 @@
   (`wait-for-terraform-boundary.sh`). 두 판정의 경로 범위는 같아야 한다
   (MOI-565, DR-013 일부 대체).
 - **build once, promote** — live는 재빌드하지 않는다. dev에서 검증된
-  이미지 digest를 ECR 태그 승격으로 배포한다. 이미지 빌드는 Dockerfile
-  multi-target으로 API·Worker를 한 빌드에서 뽑는다.
+  이미지 digest를 ECR 태그 승격으로 배포한다. bootJar는 Gradle 캐시가
+  이어지는 러너에서 한 번에 만들고(`build-image-jars.sh`), Dockerfile
+  multi-target이 그 jar 디렉터리를 빌드 컨텍스트로 API·Worker 이미지를
+  조립한다. Docker 안에서 Gradle을 돌리지 않는다 (MOI-588).
 - **롤백 = SSM deployment bundle의 exact 복원** — 재빌드 없이 복귀한다.
   성공한 배포마다 `/moimyeon/{env}/deployments/{sha12}` manifest(source
   SHA·API/Worker image digest·exact task definition ARN)가 기록되고,

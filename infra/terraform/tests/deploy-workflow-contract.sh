@@ -9,6 +9,7 @@ CI_WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 TERRAFORM_APPLY_WORKFLOW="${ROOT_DIR}/.github/workflows/terraform-apply.yml"
 VERIFY_PR_CI="${ROOT_DIR}/infra/terraform/scripts/verify-pr-ci.sh"
 BOUNDARY_WAITER="${ROOT_DIR}/infra/terraform/scripts/wait-for-terraform-boundary.sh"
+IMAGE_JARS="${ROOT_DIR}/infra/terraform/scripts/build-image-jars.sh"
 
 fail() {
   echo "배포 워크플로 계약 위반: $1" >&2
@@ -107,8 +108,39 @@ fi
 
 assert_contains "${DOCKERFILE}" '^FROM .* AS core-api$' "Core API runtime target이 필요하다."
 assert_contains "${DOCKERFILE}" '^FROM .* AS core-worker$' "Worker runtime target이 필요하다."
-assert_contains "${DOCKERFILE}" ':core:core-api:bootJar' "공통 build가 Core API bootJar를 만들어야 한다."
-assert_contains "${DOCKERFILE}" ':core:core-worker:bootJar' "공통 build가 Worker bootJar를 만들어야 한다."
+# MOI-588: bootJar는 Gradle 캐시가 이어지는 러너에서 만들고, Docker는 고정 이름의 jar만 받는다.
+assert_contains "${IMAGE_JARS}" 'core-api\|core-worker\) tasks\+=\(":core:\$\{module\}:bootJar"\)' "이미지 jar 스크립트가 API·Worker bootJar를 만들어야 한다."
+assert_contains "${IMAGE_JARS}" '-ne 1' "모듈마다 bootJar가 정확히 하나여야 한다."
+assert_contains "${DOCKERFILE}" '^COPY core-api\.jar app\.jar$' "Core API jar는 추출 전에 app.jar로 정규화해야 한다."
+assert_contains "${DOCKERFILE}" '^COPY core-worker\.jar app\.jar$' "Worker jar는 추출 전에 app.jar로 정규화해야 한다."
+assert_not_contains "${DOCKERFILE}" 'gradlew' "Gradle 빌드는 Docker 밖 러너에서 해야 한다."
+assert_contains "${CI_WORKFLOW}" 'build-image-jars\.sh build/image-jars core-api core-worker' "PR CI는 두 이미지의 jar를 러너에서 만들어야 한다."
+assert_contains "${WORKFLOW}" 'build-image-jars\.sh build/image-jars' "fallback 빌드도 러너에서 jar를 만들어야 한다."
+if grep -E -- '^[[:space:]]+context:' "${CI_WORKFLOW}" "${WORKFLOW}" | grep -Evq -- 'context:[[:space:]]*build/image-jars$'; then
+  fail "이미지 빌드 컨텍스트는 저장소 루트가 아니라 jar 디렉터리여야 한다."
+fi
+assert_contains "${ROOT_DIR}/Dockerfile.dockerignore" '^\*$' "빌드 컨텍스트는 기본으로 모두 거부해야 한다."
+assert_contains "${ROOT_DIR}/Dockerfile.dockerignore" '^!core-api\.jar$' "빌드 컨텍스트는 jar만 받아야 한다."
+assert_contains "${IMAGE_JARS}" 'env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN' "Gradle은 AWS 자격증명 없이 실행해야 한다."
+assert_contains "${IMAGE_JARS}" '-u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL' "Gradle은 OIDC 토큰을 요청할 수 없어야 한다."
+assert_contains "${IMAGE_JARS}" 'DOCKER_CONFIG="\$\{docker_config\}"' "Gradle은 ECR 로그인 정보를 읽을 수 없어야 한다."
+ci_jars_line="$(line_of "${CI_WORKFLOW}" 'name: Build bootJars')"
+ci_credentials_line="$(line_of "${CI_WORKFLOW}" 'name: Configure AWS credentials')"
+ci_image_line="$(line_of "${CI_WORKFLOW}" 'name: Build and push Core API candidate')"
+if [ "${ci_jars_line}" -ge "${ci_credentials_line}" ] || [ "${ci_jars_line}" -ge "${ci_image_line}" ]; then
+  fail "PR CI는 AWS 자격증명과 이미지 빌드 전에 jar를 만들어야 한다."
+fi
+assert_contains "${WORKFLOW}" 'API_IMAGE_EXISTS: \$\{\{ steps\.api_image_cache\.outputs\.exists \}\}' "fallback jar 판단은 API 이미지 빌드와 같은 조회 결과를 써야 한다."
+assert_contains "${WORKFLOW}" 'FALLBACK_JAR_MODULES: \$\{\{ steps\.fallback_jars\.outputs\.modules \}\}' "Worker 빌드는 fallback jar 판단을 그대로 써야 한다."
+fallback_decide_line="$(line_of "${WORKFLOW}" 'name: Decide fallback bootJars')"
+fallback_jars_line="$(line_of "${WORKFLOW}" 'name: Build fallback bootJars')"
+api_image_build_line="$(line_of "${WORKFLOW}" 'name: Build and push image')"
+api_deploy_step_line="$(line_of "${WORKFLOW}" 'name: Deploy ECS service')"
+if [ "${fallback_decide_line}" -ge "${fallback_jars_line}" ] \
+  || [ "${fallback_jars_line}" -ge "${api_image_build_line}" ] \
+  || [ "${fallback_jars_line}" -ge "${api_deploy_step_line}" ]; then
+  fail "fallback jar는 판단 뒤, API·Worker 이미지 빌드 전에 만들어야 한다."
+fi
 # MOI-565: 학습 실행은 외부 연결 없는 local 프로필로만 하고, 운영 실행이 그 캐시를 읽어야 한다.
 aot_trainings="$(grep -c -- '-XX:AOTCacheOutput=app.aot' "${DOCKERFILE}")"
 aot_runtimes="$(grep -c -- '-XX:AOTCache=app.aot' "${DOCKERFILE}")"
@@ -120,6 +152,7 @@ assert_not_contains "${DOCKERFILE}" 'spring\.profiles\.active=(dev|live|staging)
 
 assert_contains "${WORKFLOW}" 'target:[[:space:]]*core-api' "API 이미지는 core-api target을 빌드해야 한다."
 assert_contains "${WORKFLOW}" 'docker buildx build.*--target core-worker' "Worker 이미지는 core-worker target을 빌드해야 한다."
+assert_contains "${WORKFLOW}" '^[[:space:]]+build/image-jars &$' "Worker fallback 빌드도 jar 디렉터리를 컨텍스트로 써야 한다."
 assert_contains "${WORKFLOW}" 'timeout --signal=TERM 900 docker buildx build' "Worker 빌드는 API 커밋을 무기한 막지 않도록 시간 상한이 있어야 한다."
 assert_contains "${WORKFLOW}" 'worker_build_succeeded' "Worker 빌드 실패를 Worker 배포 gate로 전달해야 한다."
 assert_contains "${WORKFLOW}" 'Reusing existing immutable Core API image' "immutable ECR tag가 있으면 동일 SHA 재빌드를 건너뛰어야 한다."
