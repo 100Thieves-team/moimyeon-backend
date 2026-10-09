@@ -79,6 +79,25 @@ fi
 assert_contains "${WORKFLOW}" 'TERRAFORM_BOUNDARY_WAIT_SECONDS: "1"' "lock 안에서는 boundary를 기다리지 않고 확인만 해야 한다."
 assert_contains "${VERIFY_PR_CI}" 'image_conclusion.*=.*"success"' "후보 이미지는 build와 같은 CI 실행 시도의 image job 성공에 묶어야 한다."
 assert_contains "${VERIFY_PR_CI}" 'candidate_tag="tree-\$\{deploy_tree\}-run-\$\{run_id\}-\$\{run_attempt\}"' "후보 태그는 검증한 트리와 CI 실행에 묶어야 한다."
+# MOI-593: 필수 체크 build는 PR 제목·본문 수정에서도 실제로 돌아야 한다. 건너뛴 job은 필수 체크 통과로 보인다.
+for job in build harness-gates; do
+  job_block="$(awk -v job="${job}" '$0 == "  " job ":" {f=1;next} f&&/^  [a-z-]+:$/{f=0} f' "${CI_WORKFLOW}")"
+  if grep -q -- "edited" <<< "${job_block}"; then
+    fail "${job}를 edited에서 건너뛰면 실패·미완료 결과가 PR 화면에서 통과로 보인다(필수 체크, 시크릿 검사)."
+  fi
+done
+image_block="$(awk '/^  image(-scope)?:$/{f=1;next} f&&/^  [a-z-]+:$/&&!/^  image(-scope)?:$/{f=0} f' "${CI_WORKFLOW}")"
+if grep -Eq -- "github.event.action != 'edited'" <<< "${image_block}"; then
+  fail "후보 이미지는 build와 같은 실행에서 만들어야 배포가 재빌드하지 않는다."
+fi
+for paths in 'docs/a.md' 'README.md' 'core/x/README.mdx'; do
+  [ "$(printf '%s\n' "${paths}" | bash "${ROOT_DIR}/.github/scripts/runtime-changes.sh")" = runtime=false ] \
+    || fail "문서 변경(${paths})은 런타임 변경이 아니다."
+done
+[ "$(printf 'docs/a.md\nDockerfile\n' | bash "${ROOT_DIR}/.github/scripts/runtime-changes.sh")" = runtime=true ] \
+  || fail "문서와 코드가 섞이면 런타임 변경이다."
+assert_contains "${CI_WORKFLOW}" 'needs: image-scope' "후보 이미지는 런타임 변경 판정 뒤에 만든다."
+assert_contains "${CI_WORKFLOW}" 'runtime-changes\.sh' "문서 전용 PR 판정은 공용 규칙을 써야 한다."
 assert_contains "${CI_WORKFLOW}" 'run-\$\{GITHUB_RUN_ID\}-\$\{GITHUB_RUN_ATTEMPT\}' "PR CI는 실행별 후보 태그로 push해야 한다."
 assert_not_contains "${CI_WORKFLOW}" 'Check for existing candidates' "다른 실행이 먼저 올린 후보 태그를 재사용하면 안 된다."
 assert_not_contains "${CI_WORKFLOW}" 'provenance:[[:space:]]*false' "후보는 index 이미지여야 승격 복사에서 digest가 유지된다."
