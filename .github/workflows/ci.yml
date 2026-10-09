@@ -5,7 +5,8 @@ on:
     branches: [ "main", "dev" ]
   pull_request:
     # 앞 작업 브랜치를 base로 하는 스택 PR도 검증한다. edited는 base 변경을 포함한다.
-    # title/body 편집도 edited이므로 코드 변경 없이 CI가 재실행될 수 있다.
+    # title/body 편집도 edited다. 필수 체크 build·후보 이미지·하네스 게이트(시크릿 검사)는 계속 실행해
+    # 화면과 배포 검증이 실제 결과만 보게 하고(build cache로 짧다), monitoring-smoke만 base가 바뀐 edited에서 돈다(MOI-593).
     types: [ opened, synchronize, reopened, edited, ready_for_review ]
 
 permissions:
@@ -201,6 +202,25 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ci-dummy-client-id
           GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
 
+  # Documentation-only PRs are never deployed (DR-005), so they get no candidate.
+  image-scope:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      runtime: ${{ steps.scope.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      # The checkout is the PR merge commit; its first parent is the base tip.
+      - name: Detect runtime changes
+        id: scope
+        shell: bash
+        run: git diff --name-only --no-renames HEAD^1 HEAD | bash .github/scripts/runtime-changes.sh >> "$GITHUB_OUTPUT"
+
   # MOI-565: build the deploy images once, here, for the PR merge tree. With
   # strict up-to-date merges the dev merge commit has the same tree, so Deploy
   # AWS promotes these digests instead of rebuilding. Tags carry this run ID and
@@ -208,7 +228,8 @@ jobs:
   # run attempt as `build`: a tag pushed first elsewhere fails this immutable
   # push. Fork PRs get no OIDC token and the deploy builds. Not a required check.
   image:
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
+    needs: image-scope
+    if: ${{ needs.image-scope.outputs.runtime == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -289,6 +310,7 @@ jobs:
           cache-to: type=gha,mode=min,scope=deployment-images-core-worker
 
   monitoring-smoke:
+    if: github.event.action != 'edited' || github.event.changes.base != null
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
