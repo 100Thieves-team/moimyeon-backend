@@ -40,6 +40,13 @@ run_wait() {
 run_wait $'2\t1\t1\n2\t2\t1\n1\t0\t1\n1\t1\t1' 30 2>/dev/null || fail "안정화된 서비스를 실패로 판정했다."
 [ "$(cat "${TEMP_DIR}/calls")" = 4 ] || fail "안정화 전에 대기를 끝냈다: $(cat "${TEMP_DIR}/calls")회 조회"
 
+# MOI-594: 태스크가 떠도 상태 검사 전(rollout IN_PROGRESS)이면 기다리고, COMPLETED가 되면 성공한다.
+run_wait $'1\t1\t1\tIN_PROGRESS\n1\t1\t1\tCOMPLETED' 30 2>/dev/null || fail "상태 검사를 통과한 서비스를 실패로 판정했다."
+[ "$(cat "${TEMP_DIR}/calls")" = 2 ] || fail "상태 검사 통과 전에 대기를 끝냈다: $(cat "${TEMP_DIR}/calls")회 조회"
+if run_wait $'1\t1\t1\tIN_PROGRESS' 3 2>/dev/null; then
+  fail "상태 검사를 통과하지 못한 배포를 성공으로 판정했다."
+fi
+
 # 기한 안에 안정되지 않으면 실패한다.
 if run_wait $'2\t1\t1' 3 2>/dev/null; then
   fail "기한이 지나도 안정되지 않은 서비스를 성공으로 판정했다."

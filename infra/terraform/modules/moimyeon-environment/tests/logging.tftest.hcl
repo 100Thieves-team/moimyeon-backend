@@ -170,6 +170,21 @@ run "app_containers_state_ecs_defaults" {
   }
 }
 
+# MOI-594: the worker is ready only after a completed consumption cycle, and the
+# health check reads the same file the worker writes.
+run "worker_health_check_reads_the_heartbeat" {
+  command = plan
+  variables { application_logging_mode = "enabled" }
+  assert {
+    condition = (
+      strcontains(jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].healthCheck.command[1], "/tmp/core-worker-heartbeat -mmin -5") &&
+      contains(jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].environment, { name = "NOTIFICATION_WORKER_HEARTBEAT_FILE", value = "/tmp/core-worker-heartbeat" }) &&
+      jsondecode(aws_ecs_task_definition.notification_worker.container_definitions)[0].healthCheck.startPeriod == 180
+    )
+    error_message = "The worker health check must read the heartbeat file the worker is told to write."
+  }
+}
+
 run "api_cpu_equal_to_router_is_rejected" {
   command = plan
   variables {

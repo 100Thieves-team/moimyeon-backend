@@ -144,7 +144,7 @@ class RoomApplicationAcceptedNotificationFlowIT {
             notificationSender = notificationSender,
             actionBaseUrl = FRONT_BASE_URL,
         )
-        return NotificationMessageWorker(consumer, notificationMessageHandler)
+        return NotificationMessageWorker(consumer, notificationMessageHandler) {}
     }
 
     private fun addMessage(

@@ -20,16 +20,19 @@ fi
 
 wait_for_service_stable() {
   local deadline=$((SECONDS + stable_timeout_seconds))
-  local state deployments running desired
+  local state deployments running desired rollout
 
   while [ "${SECONDS}" -lt "${deadline}" ]; do
+    # A container health check (the Worker's, MOI-594) holds the rollout below
+    # COMPLETED until tasks are HEALTHY; RUNNING alone is not ready.
     if state="$(aws ecs describe-services \
       --cluster "${cluster}" \
       --services "${service}" \
-      --query 'services[0].[length(deployments), runningCount, desiredCount]' \
+      --query "services[0].[length(deployments), runningCount, desiredCount, deployments[?status=='PRIMARY'] | [0].rolloutState]" \
       --output text)"; then
-      read -r deployments running desired <<< "${state}"
-      if [ "${deployments}" = "1" ] && [ "${running}" = "${desired}" ]; then
+      read -r deployments running desired rollout <<< "${state}"
+      if [ "${deployments}" = "1" ] && [ "${running}" = "${desired}" ] \
+        && { [ "${rollout:-None}" = "COMPLETED" ] || [ "${rollout:-None}" = "None" ]; }; then
         return 0
       fi
     fi

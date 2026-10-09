@@ -17,6 +17,9 @@ spring:
 # 환경 변수 이름의 WEB_PUSH 는 푸시 전용이던 시절의 흔적이다.
 notification.action-base-url: ${NOTIFICATION_WEB_PUSH_ACTION_BASE_URL}
 
+# 소비 주기가 끝날 때마다 수정 시각을 갱신한다. ECS 컨테이너 상태 검사가 이 파일로 준비 여부를 본다(MOI-594).
+notification.worker.heartbeat-file: ${NOTIFICATION_WORKER_HEARTBEAT_FILE:/tmp/core-worker-heartbeat}
+
 notification.worker.consumer:
   enabled: false
   fixed-delay: ${NOTIFICATION_WORKER_CONSUMER_FIXED_DELAY:1s}

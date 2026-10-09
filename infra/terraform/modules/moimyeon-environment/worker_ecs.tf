@@ -6,15 +6,20 @@ resource "aws_cloudwatch_log_group" "notification_worker" {
 }
 
 locals {
+  # The worker rewrites this file after every completed Redis Stream consumption
+  # cycle; the container health check treats a fresh file as ready (MOI-594).
+  notification_worker_heartbeat_file = "/tmp/core-worker-heartbeat"
+
   notification_worker_image_uri = "${aws_ecr_repository.notification_worker.repository_url}:${coalesce(var.notification_worker_image_tag, var.environment)}"
 
   notification_worker_environment_map = merge(
     {
-      SPRING_PROFILES_ACTIVE            = local.profile
-      STORAGE_DATABASE_CORE_DB_URL      = local.db_url
-      STORAGE_DATABASE_CORE_DB_USERNAME = var.db_username
-      AWS_REGION                        = data.aws_region.current.region
-      AWS_DEFAULT_REGION                = data.aws_region.current.region
+      SPRING_PROFILES_ACTIVE             = local.profile
+      STORAGE_DATABASE_CORE_DB_URL       = local.db_url
+      STORAGE_DATABASE_CORE_DB_USERNAME  = var.db_username
+      AWS_REGION                         = data.aws_region.current.region
+      AWS_DEFAULT_REGION                 = data.aws_region.current.region
+      NOTIFICATION_WORKER_HEARTBEAT_FILE = local.notification_worker_heartbeat_file
     },
     var.firebase_project_id == null ? {} : { FIREBASE_PROJECT_ID = var.firebase_project_id },
     var.notification_web_push_action_base_url == null ? {} : {
@@ -60,6 +65,21 @@ resource "aws_ecs_task_definition" "notification_worker" {
       memory      = var.notification_worker_task_memory
       environment = local.notification_worker_environment
       secrets     = local.notification_worker_secrets
+
+      # MOI-594: ready means a consumption cycle finished within five minutes.
+      # Five minutes must stay well above notification.worker.consumer
+      # fixed-delay and initial-delay (1s and 5s by default). All four timings
+      # are stated so the stored task definition matches (MOI-581).
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "test -n \"$(find ${local.notification_worker_heartbeat_file} -mmin -5 2>/dev/null)\"",
+        ]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 180
+      }
 
       # Defaults ECS stores on registration; see the log router output (MOI-581).
       portMappings   = []
