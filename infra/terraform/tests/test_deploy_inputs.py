@@ -79,18 +79,56 @@ def task_template(worker=False):
     }
 
 
+def live_config_document():
+    document = config_document()
+    document["environment"] = "live"
+    document["config"]["ecs_task_definition"] = API_ARN.replace("moimyeon-dev-", "moimyeon-live-")
+    document["config"]["worker_ecs_task_definition"] = WORKER_ARN.replace("moimyeon-dev-", "moimyeon-live-")
+    # Live promotes from the dev deployment bundle; it has no PR-built candidates.
+    document["candidate_repository_urls"] = {}
+    return document
+
+
 class DeploymentConfigTest(unittest.TestCase):
     def validate(self, document):
         return config_module.validate(document, ROLE_ARN)
 
-    def run_cli(self, document, directory):
+    def run_cli(self, document, directory, environment=None):
         path = Path(directory) / "config.json"
         output = Path(directory) / "output"
         path.write_text(json.dumps(document))
+        extra = ["--environment", environment] if environment else []
         result = subprocess.run([
-            sys.executable, str(SCRIPTS / "deploy_config.py"), "read", "--file", str(path), "--role-arn", ROLE_ARN,
+            sys.executable, str(SCRIPTS / "deploy_config.py"), "read", "--file", str(path), "--role-arn", ROLE_ARN, *extra,
         ], env=dict(os.environ, GITHUB_OUTPUT=str(output)), capture_output=True, text=True)
         return result, output
+
+    def test_valid_live_document(self):
+        config, candidates = config_module.validate(live_config_document(), ROLE_ARN, "live")
+        self.assertTrue(config["ecs_task_definition"].endswith("moimyeon-live-core-api:95"))
+        self.assertEqual(candidates, {})
+
+    def test_live_rejects_dev_document_candidates_or_dev_templates(self):
+        with_candidates = live_config_document()
+        with_candidates["candidate_repository_urls"] = config_document()["candidate_repository_urls"]
+        dev_template = live_config_document()
+        dev_template["config"]["ecs_task_definition"] = API_ARN
+        for name, document in [("dev document", config_document()), ("candidates", with_candidates),
+                               ("dev template", dev_template)]:
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                config_module.validate(document, ROLE_ARN, "live")
+        with self.assertRaises(ValueError):
+            self.validate(live_config_document())
+
+    def test_cli_emits_live_templates_without_candidates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result, output = self.run_cli(live_config_document(), directory, "live")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            text = output.read_text()
+            self.assertIn("name=live\n", text)
+            self.assertIn("ecs_task_definition=arn:aws:ecs:ap-northeast-2:123456789012:task-definition/moimyeon-live-core-api:95\n", text)
+            self.assertIn("worker_ecs_task_definition=arn:aws:ecs:ap-northeast-2:123456789012:task-definition/moimyeon-live-core-worker:50\n", text)
+            self.assertNotIn("candidate_repository_url", text)
 
     def test_valid_dev_document(self):
         config, candidates = self.validate(config_document())

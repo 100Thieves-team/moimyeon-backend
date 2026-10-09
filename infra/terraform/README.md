@@ -173,6 +173,18 @@ wiring and changes only the target image and `APP_RELEASE`, then emits the
 [RegisterTaskDefinition request fields](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RegisterTaskDefinition.html).
 Response-only metadata such as `deregisteredAt` never enters registration.
 
+Live publishes the same document to `/moimyeon/live/deploy/config` with no
+candidate repositories (`publish_deploy_config`). Promote Live waits for the
+main Terraform Apply, then reads its task templates there instead of from
+GitHub variables, which are fixed when the workflow run starts and can name a
+template that the concurrent apply has just deregistered (MOI-512). The other
+promotion targets still come from variables and must match the document.
+`MOIMYEON_ECS_TASK_DEFINITION_*` and `MOIMYEON_WORKER_ECS_TASK_DEFINITION_*` are
+still synced for reference, but no workflow deploys from them.
+`deploy-ecs-image.sh` refuses a template that is not ACTIVE before registering
+anything. An AccessDenied right after the apply that creates the parameter is
+IAM propagation; rerun the failed promote job.
+
 Failure/retry rules:
 
 - A missing, invalid or foreign-account config, inactive templates, a merge

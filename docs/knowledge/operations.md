@@ -4,6 +4,10 @@
 
 ## 우리가 겪은 것
 
+- 2026-10-09: 수집기 v2 릴리스의 첫 Promote Live가 Core API 등록에서 `deregisteredAt` 입력 오류로 실패했다(MOI-512).
+  원인: Terraform Apply가 live 원본 틀을 `:2`에서 `:6`으로 바꾸고 GitHub 변수를 갱신한 뒤에 promote job이 시작했지만,
+  workflow 실행이 시작될 때 고정된 변수 값 `:2`(비활성)를 읽었다. 2026-09-11 dev 사고와 같은 원인이며 그 수정은 dev에만 들어가 있었다.
+  재발 방지: 승격은 원본 틀을 Terraform이 게시한 SSM 배포 설정에서 읽고, 배포 스크립트는 비활성 원본 틀이면 등록 전에 멈춘다.
 - 2026-10-09: 로그 수집기에 메시지를 통과시키는 v2를 만들다가 16KiB 넘는 로그 줄이 v1에서도 통째로 유실되고 있었음을 확인했다(MOI-527).
   원인: Docker는 16KiB 넘는 stdout 줄을 조각(partial message)으로 나눠 FireLens에 넘기는데, 수집기가 조각을 합치지 않고 JSON으로 읽어 조각마다 파싱에 실패했다.
   재발 방지: 수집기 설정은 JSON 파서 앞에 `multiline`(`partial_message`) 필터를 둔다. forward로 큰 레코드를 직접 보내는 smoke는 Docker의 분할을 거치지 않으므로 조각으로 나눠 보내 검증한다.
