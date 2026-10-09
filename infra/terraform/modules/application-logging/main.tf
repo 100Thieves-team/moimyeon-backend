@@ -10,8 +10,8 @@ locals {
   services    = local.provisioned ? var.services : {}
   buckets     = local.provisioned ? toset(["logs", "config"]) : toset([])
   # Add a revision instead of editing a deployed revision. Old ECS revisions still read it.
-  revisions       = ["v1"]
-  active_revision = "v1"
+  revisions       = ["v1", "v2"]
+  active_revision = "v2"
   router_image    = "public.ecr.aws/aws-observability/aws-for-fluent-bit:3.4.17@sha256:940eee58ec25fc5b92328da54e9c834c0bb4656c76320ceb24be7a8dd4063029"
   router_cpu      = 64
   router_memory   = 128

@@ -32,6 +32,12 @@ run "disabled_has_no_resources" {
 run "enabled_retention_and_budgets" {
   command = plan
   variables { mode = "enabled" }
+  # Bucket ARNs are computed; fix them so the router's config path is known at plan.
+  override_resource {
+    target          = aws_s3_bucket.this
+    override_during = plan
+    values          = { arn = "arn:aws:s3:::moimyeon-test-app-config-123456789012" }
+  }
   assert {
     condition     = length(aws_s3_bucket.this) == 2 && length(aws_cloudwatch_log_group.this) == 8
     error_message = "Two independent buckets and per-service ops/debug/router/fallback groups are required."
@@ -67,8 +73,16 @@ run "enabled_retention_and_budgets" {
     error_message = "The router must state the defaults ECS stores, or every plan replaces the task definition (MOI-581)."
   }
   assert {
-    condition     = contains(keys(aws_s3_object.config), "api.v1") && contains(keys(aws_s3_object.config), "worker.v1")
-    error_message = "Versioned configuration objects must be retained for each service."
+    condition = alltrue([for service in ["api", "worker"] :
+      contains(keys(aws_s3_object.config), "${service}.v1") && contains(keys(aws_s3_object.config), "${service}.v2")
+    ])
+    error_message = "Versioned configuration objects must be retained for each service, so older task definitions can still start."
+  }
+  assert {
+    condition = alltrue([for service in ["api", "worker"] :
+      endswith(output.routers[service].firelensConfiguration.options.config-file-value, "/${aws_s3_object.config["${service}.v2"].key}")
+    ])
+    error_message = "New task definitions must read the v2 router, which forwards messages (MOI-527)."
   }
   assert {
     condition = alltrue([for bucket in aws_s3_bucket_public_access_block.this :
@@ -89,8 +103,8 @@ run "provision_retains_storage" {
   command = plan
   variables { mode = "provision" }
   assert {
-    condition     = length(aws_s3_object.config) == 2 && length(aws_iam_role_policy.execution) == 2
-    error_message = "Stopping routing must retain old configuration and read permissions for rollback."
+    condition     = length(aws_s3_object.config) == 4 && length(aws_iam_role_policy.execution) == 2
+    error_message = "Stopping routing must retain every router revision (v1, v2 per service) and read permissions for rollback."
   }
   assert {
     condition     = aws_cloudwatch_log_group.this["api.fallback"].retention_in_days == 3 && output.fallback_log_configurations["api"].options.mode == "non-blocking"
