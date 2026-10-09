@@ -44,7 +44,20 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      - name: Skip documentation-only main revisions
+      # MOI-592: the rule comes from this workflow's own revision. The workflow file
+      # is read from the default branch, while main may not carry the script yet.
+      - name: Load the runtime change rule
+        if: steps.gate.outputs.enabled == 'true'
+        shell: bash
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${WORKFLOW_SHA}" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          git fetch --no-tags origin "${WORKFLOW_SHA}"
+          git show "${WORKFLOW_SHA}:.github/scripts/runtime-changes.sh" > "${RUNNER_TEMP}/runtime-changes.sh"
+
+      - name: Skip main revisions without live runtime changes
         if: steps.gate.outputs.enabled == 'true'
         id: changes
         shell: bash
@@ -53,18 +66,9 @@ jobs:
         run: |
           set -euo pipefail
           first_parent="$(git rev-parse "${MAIN_SHA}^1")"
-          deploy_required=false
-          while IFS= read -r changed_file; do
-            case "${changed_file}" in
-              docs/*|*.md|*.mdx)
-                ;;
-              *)
-                deploy_required=true
-                break
-                ;;
-            esac
-          done < <(git diff --name-only --no-renames "${first_parent}" "${MAIN_SHA}")
-          echo "deploy_required=${deploy_required}" >> "$GITHUB_OUTPUT"
+          runtime="$(git diff --name-only --no-renames "${first_parent}" "${MAIN_SHA}" \
+            | bash "${RUNNER_TEMP}/runtime-changes.sh" live)"
+          echo "deploy_required=${runtime#runtime=}" >> "$GITHUB_OUTPUT"
 
   candidate:
     needs: select
@@ -84,6 +88,18 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+
+      # MOI-592: the rule comes from this workflow's own revision. The workflow file
+      # is read from the default branch, while main may not carry the script yet.
+      - name: Load the runtime change rule
+        shell: bash
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${WORKFLOW_SHA}" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          git fetch --no-tags origin "${WORKFLOW_SHA}"
+          git show "${WORKFLOW_SHA}:.github/scripts/runtime-changes.sh" > "${RUNNER_TEMP}/runtime-changes.sh"
 
       - name: Resolve Terraform-ready main release
         id: source
@@ -106,16 +122,11 @@ jobs:
             exit 1
           fi
 
-          while IFS= read -r changed_file; do
-            case "${changed_file}" in
-              docs/*|*.md|*.mdx)
-                ;;
-              *)
-                echo "::error::Main merge contains runtime changes not present in its dev source: ${changed_file}."
-                exit 1
-                ;;
-            esac
-          done < <(git diff --name-only --no-renames "${parent_two}" "${resolved_main}")
+          main_only_changes="$(git diff --name-only --no-renames "${parent_two}" "${resolved_main}")"
+          if [ "$(bash "${RUNNER_TEMP}/runtime-changes.sh" live <<< "${main_only_changes}")" != runtime=false ]; then
+            echo "::error::Main merge contains runtime changes not present in its dev source: $(tr '\n' ' ' <<< "${main_only_changes}")"
+            exit 1
+          fi
 
           bash infra/terraform/scripts/verify-release-source.sh "${parent_two}"
           bash infra/terraform/scripts/wait-for-terraform-apply.sh \
@@ -156,6 +167,18 @@ jobs:
           ref: ${{ needs.candidate.outputs.main_sha }}
           fetch-depth: 0
 
+      # MOI-592: the rule comes from this workflow's own revision. The workflow file
+      # is read from the default branch, while main may not carry the script yet.
+      - name: Load the runtime change rule
+        shell: bash
+        env:
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${WORKFLOW_SHA}" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          git fetch --no-tags origin "${WORKFLOW_SHA}"
+          git show "${WORKFLOW_SHA}:.github/scripts/runtime-changes.sh" > "${RUNNER_TEMP}/runtime-changes.sh"
+
       - name: Verify Terraform-ready main candidate freshness
         shell: bash
         env:
@@ -173,17 +196,12 @@ jobs:
               echo "::error::Resolved main revision is not a descendant of the Terraform-ready candidate."
               exit 1
             fi
-            while IFS= read -r changed_file; do
-              case "${changed_file}" in
-                docs/*|*.md|*.mdx)
-                  ;;
-                *)
-                  echo "::error::A newer runtime-changing main revision requires its own Terraform boundary: ${changed_file}."
-                  exit 1
-                  ;;
-              esac
-            done < <(git diff --name-only --no-renames "${CANDIDATE_MAIN_SHA}" "${resolved_main}")
-            echo "Allowing Terraform-ready main candidate across documentation-only successors."
+            successor_changes="$(git diff --name-only --no-renames "${CANDIDATE_MAIN_SHA}" "${resolved_main}")"
+            if [ "$(bash "${RUNNER_TEMP}/runtime-changes.sh" live <<< "${successor_changes}")" != runtime=false ]; then
+              echo "::error::A newer runtime-changing main revision requires its own Terraform boundary: $(tr '\n' ' ' <<< "${successor_changes}")"
+              exit 1
+            fi
+            echo "Allowing Terraform-ready main candidate across successors without runtime changes."
           fi
 
       - name: Validate promotion configuration
@@ -405,18 +423,10 @@ jobs:
           deploy_sha=""
           manifest=""
           while IFS= read -r revision; do
-            runtime_equivalent=true
-            while IFS= read -r changed_file; do
-              case "${changed_file}" in
-                docs/*|*.md|*.mdx)
-                  ;;
-                *)
-                  runtime_equivalent=false
-                  break
-                  ;;
-              esac
-            done < <(git diff --name-only --no-renames "${revision}" "${MAIN_SOURCE_SHA}")
-            if [ "${runtime_equivalent}" != "true" ]; then
+            # The dev rule: it decided which dev revisions were deployed. The diff
+            # is assigned first so a git failure stops the job instead of reading as "same".
+            revision_changes="$(git diff --name-only --no-renames "${revision}" "${MAIN_SOURCE_SHA}")"
+            if [ "$(bash "${RUNNER_TEMP}/runtime-changes.sh" dev <<< "${revision_changes}")" != runtime=false ]; then
               continue
             fi
 

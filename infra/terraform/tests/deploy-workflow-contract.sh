@@ -63,6 +63,10 @@ assert_contains "${WORKFLOW}" 'wait-for-terraform-boundary\.sh' "적용되지 �
 assert_contains "${BOUNDARY_WAITER}" 'git diff --quiet --no-renames "\$\{applied_sha\}" "\$\{deploy_sha\}"' "적용된 revision과 Terraform 소스를 rename-safe하게 비교해야 한다."
 assert_contains "${TERRAFORM_APPLY_WORKFLOW}" ":\(exclude\)infra/terraform/tests' ':\(exclude\)infra/terraform/README.md'" "Terraform 생략 범위는 boundary waiter와 같아야 한다."
 assert_contains "${BOUNDARY_WAITER}" ":\(exclude\)infra/terraform/tests' ':\(exclude\)infra/terraform/README.md'" "boundary waiter 범위는 Terraform 생략 범위와 같아야 한다."
+for scope_file in "${TERRAFORM_APPLY_WORKFLOW}" "${BOUNDARY_WAITER}"; do
+  assert_contains "${scope_file}" "infra/terraform infra/observability ':\(exclude\)" "모니터링 모듈이 읽는 infra/observability도 Terraform 입력이다: ${scope_file}"
+  assert_contains "${scope_file}" ":\(exclude\)infra/observability/tests' ':\(exclude\)infra/observability/README.md'" "Terraform이 읽지 않는 모니터링 테스트·README는 입력에서 뺀다: ${scope_file}"
+done
 assert_contains "${WORKFLOW}" 'Skip when a newer runtime revision is on dev' "mutation lock 뒤 더 오래된 revision이 최신 배포를 덮으면 안 된다."
 assert_contains "${WORKFLOW}" 'git diff --name-only --no-renames "\$\{DEPLOY_SHA\}" "\$\{latest_sha\}"' "후속 docs-only 커밋 때문에 배포를 건너뛰면 안 된다."
 assert_contains "${WORKFLOW}" 'deploy_required' "문서 전용 변경을 제외하는 gate가 있어야 한다."
@@ -90,14 +94,13 @@ image_block="$(awk '/^  image(-scope)?:$/{f=1;next} f&&/^  [a-z-]+:$/&&!/^  imag
 if grep -Eq -- "github.event.action != 'edited'" <<< "${image_block}"; then
   fail "후보 이미지는 build와 같은 실행에서 만들어야 배포가 재빌드하지 않는다."
 fi
-for paths in 'docs/a.md' 'README.md' 'core/x/README.mdx'; do
-  [ "$(printf '%s\n' "${paths}" | bash "${ROOT_DIR}/.github/scripts/runtime-changes.sh")" = runtime=false ] \
-    || fail "문서 변경(${paths})은 런타임 변경이 아니다."
-done
-[ "$(printf 'docs/a.md\nDockerfile\n' | bash "${ROOT_DIR}/.github/scripts/runtime-changes.sh")" = runtime=true ] \
-  || fail "문서와 코드가 섞이면 런타임 변경이다."
 assert_contains "${CI_WORKFLOW}" 'needs: image-scope' "후보 이미지는 런타임 변경 판정 뒤에 만든다."
-assert_contains "${CI_WORKFLOW}" 'runtime-changes\.sh' "문서 전용 PR 판정은 공용 규칙을 써야 한다."
+assert_contains "${CI_WORKFLOW}" 'runtime-changes\.sh dev' "후보 이미지 판정은 dev 배포와 같은 규칙을 써야 한다."
+# MOI-592: 배포·승격의 런타임 변경 판정은 한 스크립트만 쓴다.
+assert_contains "${WORKFLOW}" 'runtime-changes\.sh dev' "dev 배포 판정은 공용 규칙을 써야 한다."
+for workflow in "${WORKFLOW}" "${ROOT_DIR}/.github/workflows/promote-live.yml" "${CI_WORKFLOW}"; do
+  assert_not_contains "${workflow}" 'docs/\*\|\*\.md' "런타임 변경 판정을 워크플로에 따로 적으면 규칙이 갈라진다: ${workflow}"
+done
 assert_contains "${CI_WORKFLOW}" 'run-\$\{GITHUB_RUN_ID\}-\$\{GITHUB_RUN_ATTEMPT\}' "PR CI는 실행별 후보 태그로 push해야 한다."
 assert_not_contains "${CI_WORKFLOW}" 'Check for existing candidates' "다른 실행이 먼저 올린 후보 태그를 재사용하면 안 된다."
 assert_not_contains "${CI_WORKFLOW}" 'provenance:[[:space:]]*false' "후보는 index 이미지여야 승격 복사에서 digest가 유지된다."

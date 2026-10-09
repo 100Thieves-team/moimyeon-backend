@@ -55,9 +55,10 @@ jobs:
             && [[ "${APPLIED_SHA}" =~ ^[0-9a-f]{40}$ ]] \
             && git merge-base --is-ancestor "${APPLIED_SHA}" "${SOURCE_SHA}" 2>/dev/null \
             && git diff --quiet --no-renames "${APPLIED_SHA}" "${SOURCE_SHA}" -- \
-              infra/terraform ':(exclude)infra/terraform/tests' ':(exclude)infra/terraform/README.md'; then
+              infra/terraform infra/observability ':(exclude)infra/terraform/tests' ':(exclude)infra/terraform/README.md' \
+              ':(exclude)infra/observability/tests' ':(exclude)infra/observability/README.md'; then
             required=false
-            echo "infra/terraform is unchanged since applied dev revision ${APPLIED_SHA}; skipping Terraform." \
+            echo "Terraform inputs are unchanged since applied dev revision ${APPLIED_SHA}; skipping Terraform." \
               >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "terraform_required=${required}" >> "$GITHUB_OUTPUT"

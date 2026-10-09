@@ -144,6 +144,9 @@ jobs:
       - name: Check deployment workflow contract
         run: bash infra/terraform/tests/deploy-workflow-contract.sh
 
+      - name: Check runtime change rule
+        run: bash infra/terraform/tests/runtime-changes-test.sh
+
       - name: Check release workflow contract
         run: bash infra/terraform/tests/release-workflow-contract.sh
 
@@ -202,7 +205,7 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ci-dummy-client-id
           GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
 
-  # Documentation-only PRs are never deployed (DR-005), so they get no candidate.
+  # PRs without runtime changes are never deployed (MOI-592), so they get no candidate.
   image-scope:
     if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
     runs-on: ubuntu-latest
@@ -219,7 +222,7 @@ jobs:
       - name: Detect runtime changes
         id: scope
         shell: bash
-        run: git diff --name-only --no-renames HEAD^1 HEAD | bash .github/scripts/runtime-changes.sh >> "$GITHUB_OUTPUT"
+        run: git diff --name-only --no-renames HEAD^1 HEAD | bash .github/scripts/runtime-changes.sh dev >> "$GITHUB_OUTPUT"
 
   # MOI-565: build the deploy images once, here, for the PR merge tree. With
   # strict up-to-date merges the dev merge commit has the same tree, so Deploy

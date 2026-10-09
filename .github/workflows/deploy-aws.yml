@@ -48,19 +48,10 @@ jobs:
             exit 0
           fi
 
-          deploy_required=false
-          while IFS= read -r changed_file; do
-            case "${changed_file}" in
-              docs/*|*.md|*.mdx)
-                ;;
-              *)
-                deploy_required=true
-                break
-                ;;
-            esac
-          done < <(git diff --name-only --no-renames "${base_sha}" "${DEPLOY_SHA}")
-
-          echo "deploy_required=${deploy_required}" >> "$GITHUB_OUTPUT"
+          # MOI-592: one rule for what can change a running environment.
+          runtime="$(git diff --name-only --no-renames "${base_sha}" "${DEPLOY_SHA}" \
+            | bash .github/scripts/runtime-changes.sh dev)"
+          echo "deploy_required=${runtime#runtime=}" >> "$GITHUB_OUTPUT"
 
   # Runs outside the deploy lock: Terraform Apply and its variable sync take the
   # same deploy-aws-dev lock, so waiting for them while holding it would block
@@ -206,7 +197,7 @@ jobs:
           persist-credentials: false
 
       # Runs after the mutation lock: a queued older revision must not replace a
-      # newer one. Documentation-only successors do not supersede it.
+      # newer one. Successors without runtime changes do not supersede it.
       - name: Skip when a newer runtime revision is on dev
         id: freshness
         shell: bash
@@ -220,16 +211,11 @@ jobs:
               echo "::error::${DEPLOY_SHA} is not on the current dev history."
               exit 1
             fi
-            while IFS= read -r changed_file; do
-              case "${changed_file}" in
-                docs/*|*.md|*.mdx)
-                  ;;
-                *)
-                  current=false
-                  break
-                  ;;
-              esac
-            done < <(git diff --name-only --no-renames "${DEPLOY_SHA}" "${latest_sha}")
+            runtime="$(git diff --name-only --no-renames "${DEPLOY_SHA}" "${latest_sha}" \
+              | bash .github/scripts/runtime-changes.sh dev)"
+            if [ "${runtime}" = runtime=true ]; then
+              current=false
+            fi
           fi
           echo "current=${current}" >> "$GITHUB_OUTPUT"
           echo "latest_sha=${latest_sha}" >> "$GITHUB_OUTPUT"

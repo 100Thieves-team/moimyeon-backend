@@ -29,7 +29,8 @@
   `deploy-aws-dev` lock을 쓰므로 lock을 잡고 기다리면 서로 막힌다. lock 안에서는
   기다리지 않고 확인만 한다 (MOI-565).
 - **Terraform은 바뀐 커밋에서만, 배포는 적용 경계만 기다린다** — 마지막 적용
-  SHA 이후 `infra/terraform`이 그대로면 Terraform Apply를 생략하고, 배포는
+  SHA 이후 Terraform 입력(`infra/terraform`, 모니터링 모듈이 읽는 `infra/observability`)이
+  그대로면 Terraform Apply를 생략하고, 배포는
   적용되지 않은 Terraform 변경이 앞설 때만 기다린다
   (`wait-for-terraform-boundary.sh`). 두 판정의 경로 범위는 같아야 한다
   (MOI-565, DR-013 일부 대체).
@@ -56,7 +57,11 @@
   게이트를 없애는 것과 같다. main 머지가 live 승격을 자동 생성한다 (DR-008).
 - **배포 순서**: API 안정화 후 Worker 배포. Worker 빌드는 API 안정화
   대기와 병렬 (DR-003).
-- **문서만 바뀐 커밋은 배포하지 않는다** — 첫 부모 diff로 판정 (DR-005).
+- **런타임과 무관한 커밋은 배포·승격하지 않는다** — 첫 부모 diff를 `.github/scripts/runtime-changes.sh`
+  하나로 판정한다(DR-005를 MOI-592가 넓힘). 문서·하네스·작업 기록·테스트 코드·리뷰용 워크플로·CI 보조 스크립트·
+  다른 환경의 Terraform 값·모니터링 호스트 설정이 빠지고, 목록에 없는 경로는 배포한다. 빌드·배포·승격에 쓰이는
+  워크플로와 스크립트는 배포로 검증되도록 런타임 변경으로 둔다. CI 후보 이미지, dev 배포, live 승격, live가 찾는
+  dev 배포 기록이 모두 같은 규칙을 쓰고, 승격은 main이 아니라 workflow revision에서 규칙을 읽는다.
 - **배포 성공/실패/롤백은 Slack 알림 스텝을 유지한다** — dev/live webhook
   분리, `always()` 실행이되 알림 실패가 배포 결과를 덮지 않는다 (DR-010).
   webhook 미설정·전송 실패는 배포를 실패시키지 않고 실행 경고와 요약으로

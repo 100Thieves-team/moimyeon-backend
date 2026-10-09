@@ -104,6 +104,7 @@ app_only="$(commit core/app.kt app-2)"
 infra_test_only="$(commit infra/terraform/tests/check.sh test-only)"
 infra_change="$(commit infra/terraform/envs/dev/main.tf infra-2)"
 after_infra="$(commit core/app.kt app-3)"
+observability_change="$(commit infra/observability/prometheus.yaml monitoring-2)"
 
 # The PR head carries the same tree as the merge commit when branches are up to date.
 git checkout -q -b pr "${applied}"
@@ -184,6 +185,9 @@ FAKE_APPLIED_SHA="${after_infra}" bash "${WAITER}" "${app_only}" "${parameter}" 
 
 if FAKE_APPLIED_SHA="${applied}" bash "${WAITER}" "${after_infra}" "${parameter}" >/dev/null 2>&1; then
   fail "적용되지 않은 인프라 변경 뒤의 커밋은 기다려야 한다."
+fi
+if FAKE_APPLIED_SHA="${after_infra}" bash "${WAITER}" "${observability_change}" "${parameter}" >/dev/null 2>&1; then
+  fail "Terraform이 읽는 모니터링 설정 변경도 적용될 때까지 기다려야 한다(MOI-592)."
 fi
 if FAKE_APPLIED_SHA= bash "${WAITER}" "${app_only}" "${parameter}" >/dev/null 2>&1; then
   fail "적용 기록이 없으면 기다려야 한다."
