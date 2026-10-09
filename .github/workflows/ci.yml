@@ -219,6 +219,22 @@ jobs:
         with:
           persist-credentials: false
 
+      # MOI-588: compile on the runner, whose Gradle cache survives between
+      # runs (read-only on PRs; written by dev push CI). Docker only extracts
+      # the layers and trains the AOT cache from the staged jars. Gradle runs
+      # before the AWS credentials and the ECR login exist.
+      - name: Set up JDK
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Build bootJars
+        run: bash infra/terraform/scripts/build-image-jars.sh build/image-jars core-api core-worker
+
       - name: Resolve candidate image tags
         id: tags
         env:
@@ -245,29 +261,32 @@ jobs:
       # Keep the default provenance attestation: the image is then an index, and
       # copy-image-by-digest.sh preserves an index digest. A bare manifest was
       # re-wrapped into a new digest and failed promotion (MOI-565).
+      # Each target keeps its own cache scope. mode=min is enough: every
+      # intermediate stage is a cheap layer extraction, and the expensive AOT
+      # training sits in the final stage (MOI-588).
       - name: Build and push Core API candidate
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: build/image-jars
           file: Dockerfile
           target: core-api
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.api }}
-          cache-from: type=gha,scope=deployment-images
-          cache-to: type=gha,mode=max,scope=deployment-images
+          cache-from: type=gha,scope=deployment-images-core-api
+          cache-to: type=gha,mode=min,scope=deployment-images-core-api
 
-      # Shares the builder stage with the API target through the local builder.
       - name: Build and push Worker candidate
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: build/image-jars
           file: Dockerfile
           target: core-worker
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.worker }}
-          cache-from: type=gha,scope=deployment-images
+          cache-from: type=gha,scope=deployment-images-core-worker
+          cache-to: type=gha,mode=min,scope=deployment-images-core-worker
 
   monitoring-smoke:
     runs-on: ubuntu-latest

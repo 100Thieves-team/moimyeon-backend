@@ -1,0 +1,6 @@
+# The build context is the jar directory staged by
+# infra/terraform/scripts/build-image-jars.sh. Accept only the two jars, even
+# if someone points the build at the repository root (MOI-588).
+*
+!core-api.jar
+!core-worker.jar

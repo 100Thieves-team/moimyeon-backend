@@ -478,19 +478,65 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # Fallback builds compile on this runner like PR CI (MOI-588). Only the
+      # images that still have to be built get a bootJar. "Deploy ECS service"
+      # builds the Worker image from this decision instead of looking again.
+      - name: Decide fallback bootJars
+        if: steps.freshness.outputs.current == 'true'
+        id: fallback_jars
+        shell: bash
+        env:
+          API_IMAGE_EXISTS: ${{ steps.api_image_cache.outputs.exists }}
+          WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
+          WORKER_IMAGE_TAG: ${{ steps.worker_image.outputs.tags }}
+        run: |
+          set -euo pipefail
+          modules=""
+          if [ "${API_IMAGE_EXISTS}" != "true" ]; then
+            modules="core-api"
+          fi
+          if [ "${WORKER_ENABLED}" = "true" ] \
+            && ! docker buildx imagetools inspect "${WORKER_IMAGE_TAG}" >/dev/null 2>&1; then
+            modules="${modules:+${modules} }core-worker"
+          fi
+          echo "modules=${modules}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        if: steps.freshness.outputs.current == 'true' && steps.fallback_jars.outputs.modules != ''
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        if: steps.freshness.outputs.current == 'true' && steps.fallback_jars.outputs.modules != ''
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+        with:
+          cache-read-only: true
+
+      - name: Build fallback bootJars
+        if: steps.freshness.outputs.current == 'true' && steps.fallback_jars.outputs.modules != ''
+        shell: bash
+        env:
+          JAR_MODULES: ${{ steps.fallback_jars.outputs.modules }}
+        run: |
+          set -euo pipefail
+          read -r -a modules <<< "${JAR_MODULES}"
+          bash infra/terraform/scripts/build-image-jars.sh build/image-jars "${modules[@]}"
+
       - name: Build and push image
         id: api_build
         if: steps.freshness.outputs.current == 'true' && steps.api_image_cache.outputs.exists != 'true'
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: build/image-jars
           file: Dockerfile
           target: core-api
           platforms: linux/amd64
           push: true
           tags: ${{ steps.image.outputs.tags }}
-          cache-from: type=gha,scope=deployment-images
-          cache-to: type=gha,mode=max,scope=deployment-images
+          cache-from: type=gha,scope=deployment-images-core-api
+          cache-to: type=gha,mode=min,scope=deployment-images-core-api
 
       - name: Register task definition revision
         if: steps.freshness.outputs.current == 'true'
@@ -526,6 +572,7 @@ jobs:
           APP_URL: ${{ steps.env.outputs.app_url }}
           WORKER_ENABLED: ${{ steps.deployment_config.outputs.worker_enabled }}
           WORKER_IMAGE_TAG: ${{ steps.worker_image.outputs.tags }}
+          FALLBACK_JAR_MODULES: ${{ steps.fallback_jars.outputs.modules }}
         run: |
           set -euo pipefail
 
@@ -635,11 +682,12 @@ jobs:
             --force-new-deployment \
             > service-update.json
 
-          # The shared Docker builder already produced both bootJars for the API
-          # target. Assemble and push the Worker target while ECS stabilizes the
-          # API. Worker rollout still waits for both operations to succeed.
+          # "Decide fallback bootJars" already looked up the Worker image, and
+          # "Build fallback bootJars" staged its jar when it was missing. Assemble
+          # and push the Worker target while ECS stabilizes the API. Worker
+          # rollout still waits for both operations to succeed.
           if [ "${WORKER_ENABLED}" = "true" ]; then
-            if docker buildx imagetools inspect "${WORKER_IMAGE_TAG}" >/dev/null 2>&1; then
+            if [[ " ${FALLBACK_JAR_MODULES} " != *" core-worker "* ]]; then
               echo "Reusing existing immutable Worker image."
               worker_build_status="true"
               echo "worker_image=existing" >> "$GITHUB_OUTPUT"
@@ -649,7 +697,7 @@ jobs:
                 --file Dockerfile \
                 --tag "${WORKER_IMAGE_TAG}" \
                 --push \
-                . &
+                build/image-jars &
               worker_build_pid=$!
               echo "worker_image=built" >> "$GITHUB_OUTPUT"
             fi
