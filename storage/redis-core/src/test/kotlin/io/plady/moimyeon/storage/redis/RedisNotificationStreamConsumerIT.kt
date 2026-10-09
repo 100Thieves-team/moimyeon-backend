@@ -3,8 +3,6 @@ package io.plady.moimyeon.storage.redis
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.NotificationChannel
-import io.plady.moimyeon.core.enums.NotificationPolicy
-import io.plady.moimyeon.core.notification.OutgoingNotification
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -24,7 +22,6 @@ import java.util.UUID
 class RedisNotificationStreamConsumerIT {
     private lateinit var connectionFactory: LettuceConnectionFactory
     private lateinit var redisTemplate: StringRedisTemplate
-    private lateinit var redisNotificationMessagePublisher: RedisNotificationMessagePublisher
     private lateinit var meterRegistry: SimpleMeterRegistry
     private lateinit var metrics: NotificationStreamMetrics
 
@@ -45,10 +42,6 @@ class RedisNotificationStreamConsumerIT {
                 pendingMinIdle = Duration.ZERO,
             ),
         )
-        redisNotificationMessagePublisher = RedisNotificationMessagePublisher(
-            redisTemplate = redisTemplate,
-            properties = RedisNotificationStreamProperties(STREAM_KEY),
-        )
     }
 
     @AfterEach
@@ -63,7 +56,7 @@ class RedisNotificationStreamConsumerIT {
     @Test
     fun `새 메시지 처리가 성공한 뒤에만 ACK한다`() {
         val eventId = eventId(21)
-        redisNotificationMessagePublisher.publish(listOf(message(eventId)))
+        publishPushAndEmail(eventId)
         val handled = mutableListOf<NotificationStreamMessage>()
 
         consumer("worker-a").consumeNew {
@@ -84,7 +77,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `메시지 처리에 실패하면 ACK하지 않고 Pending에 남긴다`() {
-        redisNotificationMessagePublisher.publish(listOf(message(eventId(22))))
+        publishPushAndEmail(eventId(22))
 
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("ExternalFailure", "외부 전송 실패")
@@ -99,7 +92,7 @@ class RedisNotificationStreamConsumerIT {
     @Test
     fun `다른 워커의 Pending 메시지를 재선점해 처리하고 ACK한다`() {
         val eventId = eventId(23)
-        redisNotificationMessagePublisher.publish(listOf(message(eventId)))
+        publishPushAndEmail(eventId)
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("WorkerStopped", "worker-a 종료")
         }
@@ -120,7 +113,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `backoff 시간이 지나지 않은 Pending 메시지는 다시 처리하지 않는다`() {
-        redisNotificationMessagePublisher.publish(listOf(message(eventId(24))))
+        publishPushAndEmail(eventId(24))
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.retryableFailure("FcmUnavailable", "FCM 일시 장애")
         }
@@ -140,7 +133,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `영구 실패 메시지를 DLQ에 기록하고 원본을 ACK한다`() {
-        redisNotificationMessagePublisher.publish(listOf(message(eventId(25))))
+        publishPushAndEmail(eventId(25))
 
         consumer("worker-a").consumeNew {
             NotificationStreamHandlingResult.permanentFailure("InvalidPayload", "payload 불일치")
@@ -161,7 +154,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `재시도 상한에 도달한 메시지를 DLQ에 기록하고 원본을 ACK한다`() {
-        redisNotificationMessagePublisher.publish(listOf(message(eventId(26))))
+        publishPushAndEmail(eventId(26))
         val consumer = consumer(
             name = "worker-a",
             maxAttempts = 2,
@@ -185,7 +178,7 @@ class RedisNotificationStreamConsumerIT {
 
     @Test
     fun `DLQ 기록에 실패하면 원본 메시지를 ACK하지 않는다`() {
-        redisNotificationMessagePublisher.publish(listOf(message(eventId(27))))
+        publishPushAndEmail(eventId(27))
         redisTemplate.opsForValue().set(BROKEN_DEAD_LETTER_STREAM_KEY, "not-a-stream")
         val consumer = consumer(
             name = "worker-a",
@@ -242,12 +235,21 @@ class RedisNotificationStreamConsumerIT {
     private fun deadLetters() = redisTemplate.opsForStream<String, String>()
         .range(DEAD_LETTER_STREAM_KEY, org.springframework.data.domain.Range.unbounded<String>())
 
-    private fun message(eventId: UUID) = OutgoingNotification(
-        eventId = eventId,
-        eventType = EventType.ROOM_APPLICATION_ACCEPTED,
-        policy = NotificationPolicy.PUSH_AND_EMAIL,
-        payload = "{\"eventId\":\"$eventId\"}",
-    )
+    // redis-api-adapter의 발행기가 PUSH_AND_EMAIL 알림 하나를 기록하는 모양과 같다.
+    // 두 모듈의 필드 형식 일치는 redis-api-adapter의 RedisNotificationStreamContractIT가 확인한다.
+    private fun publishPushAndEmail(eventId: UUID) {
+        listOf(NotificationChannel.WEB_PUSH, NotificationChannel.EMAIL).forEach { channel ->
+            redisTemplate.opsForStream<String, String>().add(
+                STREAM_KEY,
+                mapOf(
+                    "eventId" to eventId.toString(),
+                    "eventType" to EventType.ROOM_APPLICATION_ACCEPTED.name,
+                    "channel" to channel.name,
+                    "payload" to "{\"eventId\":\"$eventId\"}",
+                ),
+            )
+        }
+    }
 
     private fun eventId(value: Long): UUID = UUID.fromString(
         "0198b4f4-2f00-7000-8000-${value.toString().padStart(12, '0')}",

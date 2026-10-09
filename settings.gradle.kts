@@ -8,6 +8,7 @@ include(
     "core:core-api",
     "storage:db-core",
     "storage:redis-core",
+    "storage:redis-api-adapter",
     "security:security-core",
     "tests:api-docs",
     "support:logging",
