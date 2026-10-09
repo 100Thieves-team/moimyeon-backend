@@ -26,7 +26,7 @@ DEBUG는 메모리에서 CloudWatch로만 간다. 원래 이벤트 시각을 유
 
 ## 안전한 출력과 권한
 
-개인정보를 제거하는 주체는 앱의 SafeLogFormatter다. 라우터는 JSON schemaVersion=1의 허용 필드만 재구성하며 message·body·예외 메시지·임의 MDC를 복사하지 않는다. 잘못된 JSON·일반 텍스트·알 수 없는 스키마는 버린다. 유일한 예외는 앱의 고정된 `logging.serialization_failed` 이벤트다. 필드 허용은 값의 개인정보 여부를 모두 판별하는 정규식 마스킹이 아니다. formatter를 우회하는 직접 stdout 출력은 허용하지 않는다.
+개인정보를 제거하는 주체는 앱의 LogSanitizer다(토큰 마스킹, 메시지 4096자 상한, `SafeLogMessage` 예외만 메시지 보존). 라우터는 JSON schemaVersion=1의 허용 필드만 재구성한다. v2부터 message와 예외 message를 복사하며, 각각 16384바이트를 넘으면 `…`(3바이트)를 포함해 16384바이트 안에 들도록 UTF-8 글자 경계에서 자른다(MOI-527). 앱 상한 안의 정상 출력은 자르지 않는다. Docker는 16KiB를 넘는 stdout 한 줄을 조각(partial message)으로 나눠 보내므로, v2는 JSON 파싱 전에 multiline 필터(`partial_message` 모드)로 조각을 다시 합친다. 마지막 조각이 2초 안에 오지 않으면 모인 조각만 내보내고, 그 레코드는 JSON이 아니어서 버려진다. message 복사는 schemaVersion=1 레코드로 한정하므로 고정 이벤트 `logging.serialization_failed`는 메시지를 싣지 않는다. body·예외 프레임의 허용 외 필드·임의 MDC는 복사하지 않는다. service·environment는 라우터 환경변수로 채우고 category는 INFO의 growth만 허용하므로 앱 레코드로 덮어쓸 수 없다. 잘못된 JSON·일반 텍스트·알 수 없는 스키마는 버린다. 유일한 예외는 앱의 고정된 `logging.serialization_failed` 이벤트다. 필드 허용은 값의 개인정보 여부를 모두 판별하는 정규식 마스킹이 아니다. formatter를 우회하는 직접 stdout 출력은 허용하지 않는다.
 
 로그와 설정은 별도 비공개 S3 버킷에 둔다. SSE-S3, public access block, BucketOwnerEnforced, TLS 강제 정책을 적용한다. 로그 버킷은 90일 만료, 설정 버킷은 versioning을 켜고 만료시키지 않는다.
 
@@ -40,11 +40,11 @@ Task runtime role에는 자기 서비스 S3 prefix의 PutObject와 해당 ops/de
 - `provision`: 저장소·설정·권한을 유지하고 새 task template은 라우터 없이 non-blocking awslogs로 fallback 그룹에 보낸다. DEBUG가 기존 30일 그룹에 남지 않도록 전 수준을 3일 보존한다. 이 비상 우회에서는 ops 7일·S3 보관을 제공하지 않는다.
 - `enabled`: 앱 task template에 FireLens를 연결한다.
 
-현재 dev는 enabled, live는 disabled다. dev/perf는 같은 dev ECS 저장 경로를 쓰며 앱 XML만 별도로 선택한다. staging에는 이 저장소에서 관리하는 별도 Terraform root가 없다. local·local-dev·test는 ECS 라우터를 사용하지 않는다.
+현재 dev와 live 모두 enabled다. dev/perf는 같은 dev ECS 저장 경로를 쓰며 앱 XML만 별도로 선택한다. staging에는 이 저장소에서 관리하는 별도 Terraform root가 없다. local·local-dev·test는 ECS 라우터를 사용하지 않는다.
 
 이미 도입한 환경을 disabled로 바꾸면 보존 자원의 prevent_destroy가 plan을 막는다. 라우팅을 끄려면 provision을 사용한다. 단, Terraform은 ECS service의 task_definition을 직접 바꾸지 않는다. 기존 배포 파이프라인이 새 template을 받아 앱 이미지를 넣고 배포해야 실제 경로가 바뀐다. 즉시 복귀는 기존 deployment bundle의 exact task definition 롤백 절차를 따른다. 도입 전 task ARN으로 복귀하면 당시 awslogs 그룹·수준·보존 정책도 복원된다. 새 3일 정책을 유지해야 하면 이 모듈의 provision template으로 재배포한다.
 
-설정 키는 revision·service·내용 hash를 포함하고 prevent_destroy로 보호한다. 배포한 `router/v1/`은 수정하지 않는다. 변경할 때 v2 디렉터리를 추가하고 `revisions`에 v1·v2를 유지한 채 `active_revision`만 바꾼다. **S3 versioning만으로는 삭제된 예전 키를 읽을 수 없다.** 이전 객체·이미지·GetObject 권한을 함께 남겨야 이전 task ARN으로 돌아갈 수 있다.
+설정 키는 revision·service·내용 hash를 포함하고 prevent_destroy로 보호한다. 배포한 revision 디렉터리는 수정하지 않는다. 변경할 때 다음 번호 디렉터리를 추가하고 `revisions`에 이전 revision을 유지한 채 `active_revision`만 바꾼다. v1은 MOI-411 최초 허용 목록, v2는 메시지 전달(MOI-527)이다. **S3 versioning만으로는 삭제된 예전 키를 읽을 수 없다.** 이전 객체·이미지·GetObject 권한을 함께 남겨야 이전 task ARN으로 돌아갈 수 있다.
 
 API task 메모리는 1600→1760MiB, Worker는 768→928MiB다. 앱 메모리는 유지하고 라우터 128MiB와 드라이버 여유 32MiB를 더했다. task CPU 총량은 유지하며 앱 shares 중 64를 라우터에 배분한다. 32MiB는 Docker/호스트가 자동으로 그만큼 예약하는 설정이 아니라 용량 계획의 여유다. 실제 EC2 registered/remaining memory·ENI·blue/green 동시 배치를 dev에서 확인해야 한다.
 
