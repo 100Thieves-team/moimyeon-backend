@@ -33,8 +33,15 @@ class LogSanitizer(
         } else {
             null
         }
+        // 라우터는 INFO growth만 분석 경로로 보낸다. 다른 수준이면 운영 로그에 가명 ID가 남지 않게 그로스로 처리하지 않는다.
+        val growth = if (event.message == GrowthEventEntry.MARKER && event.level == Level.INFO) {
+            event.keyValuePairs?.singleOrNull { it.key == GrowthEventEntry.PAYLOAD_KEY }?.value as? GrowthEventEntry
+        } else {
+            null
+        }
         val eventCode = when {
             request != null -> event.message
+            growth != null -> growth.eventCode
             event.message == SentryPrivacyFilter.SERVICE_READY -> SentryPrivacyFilter.SERVICE_READY
             event.level.isGreaterOrEqual(Level.ERROR) -> DEFAULT_ERROR_EVENT
             else -> DEFAULT_EVENT
@@ -52,6 +59,7 @@ class LogSanitizer(
             "message" to text(event.formattedMessage, MAX_MESSAGE_LENGTH, ""),
         )
         request?.let { fields.putAll(it.fields()) }
+        growth?.let { fields.putAll(it.fields()) }
         val context = event.mdcPropertyMap.orEmpty()
         if (!fields.containsKey("requestId")) {
             context["requestId"]?.takeIf(RequestLogEntry::isRequestId)?.let { fields["requestId"] = it }
@@ -64,6 +72,7 @@ class LogSanitizer(
         }
         event.keyValuePairs.orEmpty()
             .filter { request == null || it.key != RequestLogEntry.PAYLOAD_KEY }
+            .filter { it.value !is GrowthEventEntry }
             .forEach { pair -> put(fields, pair.key, pair.value) }
         context.forEach { (key, value) -> put(fields, key, value) }
         event.throwableProxy?.let { fields["exceptions"] = exceptions(it) }
@@ -136,10 +145,12 @@ class LogSanitizer(
         private val TRACE_ID = Regex("[0-9a-f]{32}")
         private val SPAN_ID = Regex("[0-9a-f]{16}")
 
-        // 출력 스키마와 Fluent Bit 라우터(application-logging 모듈의 active revision sanitize.lua)가 읽는 필드. MDC·key-value로 덮어쓰지 못한다.
+        // 출력 스키마와 Fluent Bit 라우터(application-logging 모듈의 sanitize.lua)가 읽는 필드. MDC·key-value로 덮어쓰지 못한다.
+        // eventId·analyticsId·properties는 그로스 경로용이며 이를 전달하는 라우터 revision과 함께 쓰인다.
         internal val RESERVED_FIELDS = setOf(
             "schemaVersion", "timestamp", "service", "environment", "release", "level", "logger", "thread", "eventCode", "message",
             "method", "route", "status", "durationMs", "errorCode", "requestId", "traceId", "spanId", "exceptions", "category", "impact",
+            "eventId", "analyticsId", "properties",
         )
     }
 }

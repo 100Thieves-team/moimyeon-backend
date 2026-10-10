@@ -9,4 +9,7 @@ import org.springframework.context.annotation.Bean
 class LoggingAutoConfiguration {
     @Bean
     fun requestLogWriter(properties: LoggingProperties): RequestLogWriter = RequestLogWriter(properties)
+
+    @Bean
+    fun growthEventWriter(): GrowthEventWriter = GrowthEventWriter()
 }
