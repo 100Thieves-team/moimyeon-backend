@@ -64,6 +64,24 @@ MDC·key-value의 키 이름은 영문자로 시작하는 `[A-Za-z0-9_.-]` 64자
 `LogSanitizer`는 Spring 환경 조회나 전송 없이 이벤트를 필드로 바꾼다. `SafeLogFormatter`는 그 결과를 JSON 또는 텍스트로
 출력한다. 이 이름은 MOI-411 당시의 allowlist 정책에서 왔고, 지금은 길이 상한과 토큰 마스킹만 담당한다.
 
+## 그로스 사건
+
+DB 커밋이 끝난 업무 사건은 `GrowthEventWriter.write(GrowthEventEntry(...))`로만 남긴다. 일반 `log.info`나 MDC·key-value로는
+그로스 사건을 만들 수 없다. `eventId`·`analyticsId`·`properties`는 예약 필드다.
+
+| 필드 | 내용 |
+| --- | --- |
+| `eventCode`·`message` | `대상.과거형동사` 소문자 스네이크 두 마디(예: `room_application.accepted`), 64자 이하 |
+| `category` | 항상 `growth`. 라우터가 INFO인 이 분류만 growth 경로로 보낸다 |
+| `eventId` | 사건 UUID. 재전송 시 중복 제거 기준 |
+| `analyticsId` | 32자리 소문자 16진수 가명 회원 식별자. 없으면 필드를 생략한다 |
+| `properties` | 최대 16개. 키는 영문자로 시작하는 영숫자·밑줄 64자 이하. 값은 Int·Long·Boolean·UUID·enum만 받는다(문자열 불가) |
+
+값 검증은 엔트리 생성 시점에 하고 속성 map은 복사해 둔다. 문자열은 형태 검사로 닉네임·전화번호를 거를 수 없어 받지 않는다.
+숫자 속성에 전화번호 같은 개인 식별 값을 넣지 않는 것은 호출 지점 리뷰에서 확인한다.
+표식이 없거나 INFO가 아닌 로그에 들어온 엔트리는 그로스로 처리하지 않고 그 key-value도 버린다. 공통 필드 `environment`로
+dev 사건을 분석 도구에서 걸러낸다. 결정 근거는 `.worklog/MOI-521-growth-logging/decisions.md`다.
+
 ## 요청 요약과 설정
 
 `LoggingProperties`는 `@ConfigurationProperties`로 바인딩하고 `RequestLogWriter`에 주입한다. Logback은 일반 Bean보다 먼저 시작하므로 초기 출력에 필요한 값은 같은 타입을 Binder로 먼저 읽는다. 잘못된 값은 안전한 기본값으로 로깅을 초기화한 뒤 시작을 거부한다.
