@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T15:20:20.229695982",
+                        "date" : "2026-10-10",
+                        "datetime" : "2026-10-10T08:31:57.412407941",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/post191457252"
+                $ref: "#/components/schemas/get-exampleValue191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-10-07",
-                        "datetime" : "2026-10-07T15:20:20.256486238",
+                        "date" : "2026-10-10",
+                        "datetime" : "2026-10-10T08:31:57.456230234",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -1858,12 +1858,12 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "b7e9a7cd-daf7-4cba-a929-11cc7520cdaa",
+                        "memberId" : "852c17ae-912e-45e8-9ad2-7ca137e00185",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "b7e9a7cd-daf7-4cba-a929-11cc7520cdaa",
+                          "memberId" : "852c17ae-912e-45e8-9ad2-7ca137e00185",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -2611,7 +2611,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-10-08T15:20:24.734685538",
+                          "startAt" : "2026-10-11T08:32:04.092904828",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2624,9 +2624,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "35cc5783-9055-40f9-90cb-ca3cb867957f",
+                        "hostMemberId" : "8982fb7f-3a32-497c-b804-a122ff6bf173",
                         "participants" : [ {
-                          "memberId" : "35cc5783-9055-40f9-90cb-ca3cb867957f",
+                          "memberId" : "8982fb7f-3a32-497c-b804-a122ff6bf173",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3431,7 +3431,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "be8d3871-72a1-4bde-a7a7-412a181b570f",
+                        "memberId" : "79af8e23-ef57-4dca-8845-b21e0f0dad26",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4200,19 +4200,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "6e640f19-f73e-4f8c-a59c-5fedd146b619",
+                    "resumeId" : "f322a25b-f68e-4c6e-94b4-03167bc8dd4a",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "d8723216-7b31-4767-92e2-ab54a7664c75",
+                    "resumeId" : "9b169d41-d318-4c2e-af13-90ff98edc4e5",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "44b3f9a1-c819-4785-8638-64421d2f37c1"
+                    "resumeId" : "a8e0bb5f-7dbd-4a08-8822-23e4b7379f3d"
                   }
       responses:
         "400":
@@ -6405,7 +6405,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "e2898533-7774-4b83-835f-e17bc499ef0f",
+                          "resumeId" : "4d90821a-95c6-4a5e-8502-9faafeaa6a86",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7425,18 +7425,6 @@ paths:
                   type: string
 components:
   schemas:
-    v1-rooms-roomId-applications240308819:
-      required:
-      - resumeId
-      type: object
-      properties:
-        note:
-          type: string
-          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
-          nullable: true
-        resumeId:
-          type: string
-          description: 제출할 본인 보관 이력서 id (UUID)
     v1-reviews-reviewId-292942325:
       required:
       - tags
@@ -7456,6 +7444,18 @@ components:
             - type: boolean
             - type: string
             - type: number
+    v1-rooms-roomId-applications240308819:
+      required:
+      - resumeId
+      type: object
+      properties:
+        note:
+          type: string
+          description: "방장에게 전할 말 (선택, 최대 300자, 미입력 시 빈 문자열)"
+          nullable: true
+        resumeId:
+          type: string
+          description: 제출할 본인 보관 이력서 id (UUID)
     v1-dev-rooms-roomId-schedule-1288597070:
       required:
       - result
@@ -7673,7 +7673,7 @@ components:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
           nullable: true
-    post191457252:
+    get-exampleValue191457252:
       required:
       - result
       type: object
@@ -7853,14 +7853,6 @@ components:
         status:
           type: string
           description: 바꿀 상태 (RESTRICTED | ACTIVE)
-    post-1780624183:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: string
-          description: ExampleBody Data Field
     v1-members-me-rooms-257716809:
       required:
       - result
@@ -8293,6 +8285,14 @@ components:
                         description: 시작 예정 시각
                     description: 완료된 룸 요약
           nullable: true
+    post-1780624183:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          type: string
+          description: ExampleBody Data Field
     v1-rooms-roomId-questions-282474051:
       required:
       - content
@@ -9830,6 +9830,47 @@ components:
               type: string
               description: 룸 상태 (RECRUITING)
           nullable: true
+    v1-dev-members-memberId-status1741079441:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - before
+          - memberId
+          - status
+          type: object
+          properties:
+            before:
+              type: string
+              description: 바꾸기 전 상태
+            status:
+              type: string
+              description: 바꾼 뒤 상태
+            memberId:
+              type: string
+              description: 회원 id
+          nullable: true
+    v1-job-postings-1848070641:
+      required:
+      - companyId
+      - postingName
+      - url
+      type: object
+      properties:
+        companyId:
+          type: number
+          description: "회사 id (필수, /v1/companies 검색 결과)"
+        postingName:
+          type: string
+          description: "확정한 공고명 (필수, 최대 100자)"
+        url:
+          type: string
+          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-rooms-roomId1114993826:
       required:
       - result
@@ -10071,47 +10112,6 @@ components:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
           nullable: true
-    v1-dev-members-memberId-status1741079441:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - before
-          - memberId
-          - status
-          type: object
-          properties:
-            before:
-              type: string
-              description: 바꾸기 전 상태
-            status:
-              type: string
-              description: 바꾼 뒤 상태
-            memberId:
-              type: string
-              description: 회원 id
-          nullable: true
-    v1-job-postings-1848070641:
-      required:
-      - companyId
-      - postingName
-      - url
-      type: object
-      properties:
-        companyId:
-          type: number
-          description: "회사 id (필수, /v1/companies 검색 결과)"
-        postingName:
-          type: string
-          description: "확정한 공고명 (필수, 최대 100자)"
-        url:
-          type: string
-          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-dev-resumes-resumeId-summary1029161103:
       type: object
       properties:
