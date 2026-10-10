@@ -69,6 +69,12 @@ subprojects {
         }
     }
 
+    // REST Docs 테스트는 캐시 출력으로 선언되지 않은 문서 조각(build/generated-snippets)을 만든다. 결과만 되살리면
+    // 조각이 없어 openapi3·asciidoctor가 빈 스펙을 만든다(2026-10-10 main API Docs Pages 실패). 매번 실행한다.
+    tasks.matching { it.name == "restDocsTest" }.configureEach {
+        outputs.doNotCacheIf("REST Docs 테스트의 문서 조각은 캐시가 되돌리지 않는다") { true }
+    }
+
     // Testcontainers 통합 테스트는 외부 컨테이너 상태에 의존하므로 결과를 재사용하지 않는다(MOI-593).
     // 직접 선언한 테스트 의존만 본다. 공용 테스트 모듈을 거쳐 Testcontainers를 가져오면 여기에 조건을 더한다.
     tasks.withType<Test>().configureEach {
