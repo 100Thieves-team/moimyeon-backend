@@ -28,8 +28,10 @@ jobs:
       - name: Skill lint
         run: python3 .agents/gates/lint_skills.py
 
+      # 릴리스 PR(dev → main)은 이미 PR마다 범위 검사를 통과한 커밋의 묶음이고 나눌 수 없다.
+      # 파일 수 상한은 기능 PR에만 적용하고, 뒤의 시크릿 검사 등은 릴리스 PR에서도 그대로 돈다.
       - name: PR file scope
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !(github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository)
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}

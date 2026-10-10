@@ -185,7 +185,12 @@ class WorkflowContractTest(unittest.TestCase):
         self.assertEqual(["main", "dev"], ci["on"]["push"]["branches"])
         scope = next(step for step in ci["jobs"]["harness-gates"]["steps"]
                      if step.get("name") == "PR file scope")
-        self.assertEqual("github.event_name == 'pull_request'", scope["if"])
+        # 릴리스 PR(같은 저장소의 dev → main)만 파일 수 검사를 건너뛴다. 다른 PR은 모두 검사한다.
+        self.assertTrue(scope["if"].startswith("github.event_name == 'pull_request' && !("))
+        for condition in ("github.event.pull_request.base.ref == 'main'",
+                          "github.event.pull_request.head.ref == 'dev'",
+                          "github.event.pull_request.head.repo.full_name == github.repository"):
+            self.assertIn(condition, scope["if"])
         self.assertEqual("${{ github.event.pull_request.base.sha }}", scope["env"]["PR_BASE_SHA"])
         self.assertEqual("${{ github.event.pull_request.head.sha }}", scope["env"]["PR_HEAD_SHA"])
         self.assertIn('--base "${PR_BASE_SHA}" --head "${PR_HEAD_SHA}"', scope["run"])
