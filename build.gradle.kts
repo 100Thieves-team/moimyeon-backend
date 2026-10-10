@@ -69,6 +69,15 @@ subprojects {
         }
     }
 
+    // Testcontainers 통합 테스트는 외부 컨테이너 상태에 의존하므로 결과를 재사용하지 않는다(MOI-593).
+    // 직접 선언한 테스트 의존만 본다. 공용 테스트 모듈을 거쳐 Testcontainers를 가져오면 여기에 조건을 더한다.
+    tasks.withType<Test>().configureEach {
+        outputs.doNotCacheIf("Testcontainers 통합 테스트는 외부 컨테이너 상태에 의존한다") {
+            project.configurations.getByName("testRuntimeClasspath").allDependencies
+                .any { it.group == "org.testcontainers" }
+        }
+    }
+
     testing {
         suites {
             named<JvmTestSuite>("test") {

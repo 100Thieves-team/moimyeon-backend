@@ -9,6 +9,7 @@ CI_WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 TERRAFORM_APPLY_WORKFLOW="${ROOT_DIR}/.github/workflows/terraform-apply.yml"
 VERIFY_PR_CI="${ROOT_DIR}/infra/terraform/scripts/verify-pr-ci.sh"
 BOUNDARY_WAITER="${ROOT_DIR}/infra/terraform/scripts/wait-for-terraform-boundary.sh"
+IMAGE_JARS="${ROOT_DIR}/infra/terraform/scripts/build-image-jars.sh"
 
 fail() {
   echo "배포 워크플로 계약 위반: $1" >&2
@@ -62,6 +63,10 @@ assert_contains "${WORKFLOW}" 'wait-for-terraform-boundary\.sh' "적용되지 �
 assert_contains "${BOUNDARY_WAITER}" 'git diff --quiet --no-renames "\$\{applied_sha\}" "\$\{deploy_sha\}"' "적용된 revision과 Terraform 소스를 rename-safe하게 비교해야 한다."
 assert_contains "${TERRAFORM_APPLY_WORKFLOW}" ":\(exclude\)infra/terraform/tests' ':\(exclude\)infra/terraform/README.md'" "Terraform 생략 범위는 boundary waiter와 같아야 한다."
 assert_contains "${BOUNDARY_WAITER}" ":\(exclude\)infra/terraform/tests' ':\(exclude\)infra/terraform/README.md'" "boundary waiter 범위는 Terraform 생략 범위와 같아야 한다."
+for scope_file in "${TERRAFORM_APPLY_WORKFLOW}" "${BOUNDARY_WAITER}"; do
+  assert_contains "${scope_file}" "infra/terraform infra/observability ':\(exclude\)" "모니터링 모듈이 읽는 infra/observability도 Terraform 입력이다: ${scope_file}"
+  assert_contains "${scope_file}" ":\(exclude\)infra/observability/tests' ':\(exclude\)infra/observability/README.md'" "Terraform이 읽지 않는 모니터링 테스트·README는 입력에서 뺀다: ${scope_file}"
+done
 assert_contains "${WORKFLOW}" 'Skip when a newer runtime revision is on dev' "mutation lock 뒤 더 오래된 revision이 최신 배포를 덮으면 안 된다."
 assert_contains "${WORKFLOW}" 'git diff --name-only --no-renames "\$\{DEPLOY_SHA\}" "\$\{latest_sha\}"' "후속 docs-only 커밋 때문에 배포를 건너뛰면 안 된다."
 assert_contains "${WORKFLOW}" 'deploy_required' "문서 전용 변경을 제외하는 gate가 있어야 한다."
@@ -78,6 +83,24 @@ fi
 assert_contains "${WORKFLOW}" 'TERRAFORM_BOUNDARY_WAIT_SECONDS: "1"' "lock 안에서는 boundary를 기다리지 않고 확인만 해야 한다."
 assert_contains "${VERIFY_PR_CI}" 'image_conclusion.*=.*"success"' "후보 이미지는 build와 같은 CI 실행 시도의 image job 성공에 묶어야 한다."
 assert_contains "${VERIFY_PR_CI}" 'candidate_tag="tree-\$\{deploy_tree\}-run-\$\{run_id\}-\$\{run_attempt\}"' "후보 태그는 검증한 트리와 CI 실행에 묶어야 한다."
+# MOI-593: 필수 체크 build는 PR 제목·본문 수정에서도 실제로 돌아야 한다. 건너뛴 job은 필수 체크 통과로 보인다.
+for job in build harness-gates; do
+  job_block="$(awk -v job="${job}" '$0 == "  " job ":" {f=1;next} f&&/^  [a-z-]+:$/{f=0} f' "${CI_WORKFLOW}")"
+  if grep -q -- "edited" <<< "${job_block}"; then
+    fail "${job}를 edited에서 건너뛰면 실패·미완료 결과가 PR 화면에서 통과로 보인다(필수 체크, 시크릿 검사)."
+  fi
+done
+image_block="$(awk '/^  image(-scope)?:$/{f=1;next} f&&/^  [a-z-]+:$/&&!/^  image(-scope)?:$/{f=0} f' "${CI_WORKFLOW}")"
+if grep -Eq -- "github.event.action != 'edited'" <<< "${image_block}"; then
+  fail "후보 이미지는 build와 같은 실행에서 만들어야 배포가 재빌드하지 않는다."
+fi
+assert_contains "${CI_WORKFLOW}" 'needs: image-scope' "후보 이미지는 런타임 변경 판정 뒤에 만든다."
+assert_contains "${CI_WORKFLOW}" 'runtime-changes\.sh dev' "후보 이미지 판정은 dev 배포와 같은 규칙을 써야 한다."
+# MOI-592: 배포·승격의 런타임 변경 판정은 한 스크립트만 쓴다.
+assert_contains "${WORKFLOW}" 'runtime-changes\.sh dev' "dev 배포 판정은 공용 규칙을 써야 한다."
+for workflow in "${WORKFLOW}" "${ROOT_DIR}/.github/workflows/promote-live.yml" "${CI_WORKFLOW}"; do
+  assert_not_contains "${workflow}" 'docs/\*\|\*\.md' "런타임 변경 판정을 워크플로에 따로 적으면 규칙이 갈라진다: ${workflow}"
+done
 assert_contains "${CI_WORKFLOW}" 'run-\$\{GITHUB_RUN_ID\}-\$\{GITHUB_RUN_ATTEMPT\}' "PR CI는 실행별 후보 태그로 push해야 한다."
 assert_not_contains "${CI_WORKFLOW}" 'Check for existing candidates' "다른 실행이 먼저 올린 후보 태그를 재사용하면 안 된다."
 assert_not_contains "${CI_WORKFLOW}" 'provenance:[[:space:]]*false' "후보는 index 이미지여야 승격 복사에서 digest가 유지된다."
@@ -107,8 +130,39 @@ fi
 
 assert_contains "${DOCKERFILE}" '^FROM .* AS core-api$' "Core API runtime target이 필요하다."
 assert_contains "${DOCKERFILE}" '^FROM .* AS core-worker$' "Worker runtime target이 필요하다."
-assert_contains "${DOCKERFILE}" ':core:core-api:bootJar' "공통 build가 Core API bootJar를 만들어야 한다."
-assert_contains "${DOCKERFILE}" ':core:core-worker:bootJar' "공통 build가 Worker bootJar를 만들어야 한다."
+# MOI-588: bootJar는 Gradle 캐시가 이어지는 러너에서 만들고, Docker는 고정 이름의 jar만 받는다.
+assert_contains "${IMAGE_JARS}" 'core-api\|core-worker\) tasks\+=\(":core:\$\{module\}:bootJar"\)' "이미지 jar 스크립트가 API·Worker bootJar를 만들어야 한다."
+assert_contains "${IMAGE_JARS}" '-ne 1' "모듈마다 bootJar가 정확히 하나여야 한다."
+assert_contains "${DOCKERFILE}" '^COPY core-api\.jar app\.jar$' "Core API jar는 추출 전에 app.jar로 정규화해야 한다."
+assert_contains "${DOCKERFILE}" '^COPY core-worker\.jar app\.jar$' "Worker jar는 추출 전에 app.jar로 정규화해야 한다."
+assert_not_contains "${DOCKERFILE}" 'gradlew' "Gradle 빌드는 Docker 밖 러너에서 해야 한다."
+assert_contains "${CI_WORKFLOW}" 'build-image-jars\.sh build/image-jars core-api core-worker' "PR CI는 두 이미지의 jar를 러너에서 만들어야 한다."
+assert_contains "${WORKFLOW}" 'build-image-jars\.sh build/image-jars' "fallback 빌드도 러너에서 jar를 만들어야 한다."
+if grep -E -- '^[[:space:]]+context:' "${CI_WORKFLOW}" "${WORKFLOW}" | grep -Evq -- 'context:[[:space:]]*build/image-jars$'; then
+  fail "이미지 빌드 컨텍스트는 저장소 루트가 아니라 jar 디렉터리여야 한다."
+fi
+assert_contains "${ROOT_DIR}/Dockerfile.dockerignore" '^\*$' "빌드 컨텍스트는 기본으로 모두 거부해야 한다."
+assert_contains "${ROOT_DIR}/Dockerfile.dockerignore" '^!core-api\.jar$' "빌드 컨텍스트는 jar만 받아야 한다."
+assert_contains "${IMAGE_JARS}" 'env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY -u AWS_SESSION_TOKEN' "Gradle은 AWS 자격증명 없이 실행해야 한다."
+assert_contains "${IMAGE_JARS}" '-u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL' "Gradle은 OIDC 토큰을 요청할 수 없어야 한다."
+assert_contains "${IMAGE_JARS}" 'DOCKER_CONFIG="\$\{docker_config\}"' "Gradle은 ECR 로그인 정보를 읽을 수 없어야 한다."
+ci_jars_line="$(line_of "${CI_WORKFLOW}" 'name: Build bootJars')"
+ci_credentials_line="$(line_of "${CI_WORKFLOW}" 'name: Configure AWS credentials')"
+ci_image_line="$(line_of "${CI_WORKFLOW}" 'name: Build and push Core API candidate')"
+if [ "${ci_jars_line}" -ge "${ci_credentials_line}" ] || [ "${ci_jars_line}" -ge "${ci_image_line}" ]; then
+  fail "PR CI는 AWS 자격증명과 이미지 빌드 전에 jar를 만들어야 한다."
+fi
+assert_contains "${WORKFLOW}" 'API_IMAGE_EXISTS: \$\{\{ steps\.api_image_cache\.outputs\.exists \}\}' "fallback jar 판단은 API 이미지 빌드와 같은 조회 결과를 써야 한다."
+assert_contains "${WORKFLOW}" 'FALLBACK_JAR_MODULES: \$\{\{ steps\.fallback_jars\.outputs\.modules \}\}' "Worker 빌드는 fallback jar 판단을 그대로 써야 한다."
+fallback_decide_line="$(line_of "${WORKFLOW}" 'name: Decide fallback bootJars')"
+fallback_jars_line="$(line_of "${WORKFLOW}" 'name: Build fallback bootJars')"
+api_image_build_line="$(line_of "${WORKFLOW}" 'name: Build and push image')"
+api_deploy_step_line="$(line_of "${WORKFLOW}" 'name: Deploy ECS service')"
+if [ "${fallback_decide_line}" -ge "${fallback_jars_line}" ] \
+  || [ "${fallback_jars_line}" -ge "${api_image_build_line}" ] \
+  || [ "${fallback_jars_line}" -ge "${api_deploy_step_line}" ]; then
+  fail "fallback jar는 판단 뒤, API·Worker 이미지 빌드 전에 만들어야 한다."
+fi
 # MOI-565: 학습 실행은 외부 연결 없는 local 프로필로만 하고, 운영 실행이 그 캐시를 읽어야 한다.
 aot_trainings="$(grep -c -- '-XX:AOTCacheOutput=app.aot' "${DOCKERFILE}")"
 aot_runtimes="$(grep -c -- '-XX:AOTCache=app.aot' "${DOCKERFILE}")"
@@ -120,6 +174,7 @@ assert_not_contains "${DOCKERFILE}" 'spring\.profiles\.active=(dev|live|staging)
 
 assert_contains "${WORKFLOW}" 'target:[[:space:]]*core-api' "API 이미지는 core-api target을 빌드해야 한다."
 assert_contains "${WORKFLOW}" 'docker buildx build.*--target core-worker' "Worker 이미지는 core-worker target을 빌드해야 한다."
+assert_contains "${WORKFLOW}" '^[[:space:]]+build/image-jars &$' "Worker fallback 빌드도 jar 디렉터리를 컨텍스트로 써야 한다."
 assert_contains "${WORKFLOW}" 'timeout --signal=TERM 900 docker buildx build' "Worker 빌드는 API 커밋을 무기한 막지 않도록 시간 상한이 있어야 한다."
 assert_contains "${WORKFLOW}" 'worker_build_succeeded' "Worker 빌드 실패를 Worker 배포 gate로 전달해야 한다."
 assert_contains "${WORKFLOW}" 'Reusing existing immutable Core API image' "immutable ECR tag가 있으면 동일 SHA 재빌드를 건너뛰어야 한다."
@@ -147,5 +202,10 @@ fi
 if [ "${worker_ssm_commit_line}" -le "${worker_wait_line}" ]; then
   fail "Worker 이미지 SSM은 Worker 안정화가 끝난 뒤에만 갱신해야 한다."
 fi
+
+# dev 복원 단계도 10분 상한의 내장 대기 대신 기한 있는 공용 대기를 쓴다(MOI-584 후속).
+assert_not_contains "${WORKFLOW}" 'aws ecs wait services-stable' "복원 대기는 10분에 포기하는 내장 대기를 쓰면 안 된다."
+[ "$(grep -c 'ECS_STABLE_TIMEOUT_SECONDS=600 source infra/terraform/scripts/lib/ecs-stable-wait.sh' "${WORKFLOW}")" -eq 2 ] \
+  || fail "API·Worker 복원은 기한 있는 공용 대기를 써야 한다."
 
 echo "배포 워크플로 계약을 만족한다."

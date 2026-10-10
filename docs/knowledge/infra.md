@@ -29,19 +29,25 @@
   `deploy-aws-dev` lock을 쓰므로 lock을 잡고 기다리면 서로 막힌다. lock 안에서는
   기다리지 않고 확인만 한다 (MOI-565).
 - **Terraform은 바뀐 커밋에서만, 배포는 적용 경계만 기다린다** — 마지막 적용
-  SHA 이후 `infra/terraform`이 그대로면 Terraform Apply를 생략하고, 배포는
+  SHA 이후 Terraform 입력(`infra/terraform`, 모니터링 모듈이 읽는 `infra/observability`)이
+  그대로면 Terraform Apply를 생략하고, 배포는
   적용되지 않은 Terraform 변경이 앞설 때만 기다린다
   (`wait-for-terraform-boundary.sh`). 두 판정의 경로 범위는 같아야 한다
   (MOI-565, DR-013 일부 대체).
 - **build once, promote** — live는 재빌드하지 않는다. dev에서 검증된
-  이미지 digest를 ECR 태그 승격으로 배포한다. 이미지 빌드는 Dockerfile
-  multi-target으로 API·Worker를 한 빌드에서 뽑는다.
+  이미지 digest를 ECR 태그 승격으로 배포한다. bootJar는 Gradle 캐시가
+  이어지는 러너에서 한 번에 만들고(`build-image-jars.sh`), Dockerfile
+  multi-target이 그 jar 디렉터리를 빌드 컨텍스트로 API·Worker 이미지를
+  조립한다. Docker 안에서 Gradle을 돌리지 않는다 (MOI-588).
 - **롤백 = SSM deployment bundle의 exact 복원** — 재빌드 없이 복귀한다.
   성공한 배포마다 `/moimyeon/{env}/deployments/{sha12}` manifest(source
   SHA·API/Worker image digest·exact task definition ARN)가 기록되고,
   `deployed-{env}-{sha12}` ECR marker가 있는 이미지만 승격·롤백 입력으로
-  인정된다 (DR-018·019). ECS에는 태그가 아니라 `repository@sha256:digest`만
-  전달한다 (DR-016). 롤백 실행은 개발 플랫폼 actor 또는 break-glass
+  인정된다 (DR-018·019). dev 배포는 태스크 정의에 IMMUTABLE ECR의 커밋 태그(`dev-<sha12>`)를
+  넣는다. 아래의 "digest만 전달" 규칙은 live 승격·롤백에 해당한다. 같은 커밋을 다시 배포하면(재실행·중복 push) 새 태스크 정의를
+  등록하지 않고 기록된 revision을 그대로 다시 배포한다. 기록은 배포 전체가 성공했을 때만
+  남기므로, 일부만 성공한 배포의 롤백 대상은 직전 기록이다 (MOI-589). 승격·롤백은 ECS에 태그가 아니라
+  `repository@sha256:digest`만 전달한다 (DR-016). 롤백 실행은 개발 플랫폼 actor 또는 break-glass
   dispatch — 에이전트가 만들 수 있는 우회 경로가 아니다 (DR-009).
 - **배포 컨트롤러는 ECS native** — live Core API는 `BLUE_GREEN`, dev Core API는
   배포 속도를 위해 `ROLLING`, Worker(ALB 없음)는 `ROLLING`. **CodeDeploy 제어면을
@@ -54,7 +60,20 @@
   게이트를 없애는 것과 같다. main 머지가 live 승격을 자동 생성한다 (DR-008).
 - **배포 순서**: API 안정화 후 Worker 배포. Worker 빌드는 API 안정화
   대기와 병렬 (DR-003).
-- **문서만 바뀐 커밋은 배포하지 않는다** — 첫 부모 diff로 판정 (DR-005).
+- **Worker는 이 커밋이 바꿀 수 있을 때만 교체한다** (MOI-590) — PR CI 후보를 승격했고,
+  실행 중인 Worker가 안정 상태이며, 이미지의 입력 해시 label(boot jar·Dockerfile)과
+  Terraform 원본 틀(이미지·`APP_RELEASE` 제외)이 실행 중인 것과 같으면 교체하지 않고
+  실행 중인 revision을 이 커밋의 배포 기록에 이어 적는다(이미지에 이 커밋의 표식 태그).
+  하나라도 확인할 수 없으면 교체한다. JRE 기반 이미지·AOT 캐시 변화만으로는 교체하지 않는다.
+  같은 커밋의 재시도는 그 커밋의 Worker 표식을 따른다: 표식이 이전 이미지면 실행 중 Worker가 그 이미지일 때만
+  유지하고, 아니면 바꾸기 전에 멈춘다. 유지한 Worker의 `APP_RELEASE`는 그 코드를 만든 이전 커밋이다.
+  태스크 정의에는 시크릿의 ARN만 있으므로 SSM·Secrets Manager의 **값만** 바꾸면 Worker는 다시 시작되지 않는다.
+  그때는 dev Worker 서비스를 `aws ecs update-service --force-new-deployment`로 재시작한다(사람이 실행).
+- **런타임과 무관한 커밋은 배포·승격하지 않는다** — 첫 부모 diff를 `.github/scripts/runtime-changes.sh`
+  하나로 판정한다(DR-005를 MOI-592가 넓힘). 문서·하네스·작업 기록·테스트 코드·리뷰용 워크플로·CI 보조 스크립트·
+  다른 환경의 Terraform 값·모니터링 호스트 설정이 빠지고, 목록에 없는 경로는 배포한다. 빌드·배포·승격에 쓰이는
+  워크플로와 스크립트는 배포로 검증되도록 런타임 변경으로 둔다. CI 후보 이미지, dev 배포, live 승격, live가 찾는
+  dev 배포 기록이 모두 같은 규칙을 쓰고, 승격은 main이 아니라 workflow revision에서 규칙을 읽는다.
 - **배포 성공/실패/롤백은 Slack 알림 스텝을 유지한다** — dev/live webhook
   분리, `always()` 실행이되 알림 실패가 배포 결과를 덮지 않는다 (DR-010).
   webhook 미설정·전송 실패는 배포를 실패시키지 않고 실행 경고와 요약으로
@@ -63,6 +82,17 @@
 - **blocking smoke를 유지한다** — `/actuator/health/readiness` +
   `/v1/terms`, 호출당 5초·최대 3회·전체 60초. live는 전환 전 실패 시 전환
   금지, 전환 후 실패는 자동 롤백 신호다 (DR-011).
+
+- **배포 표식이 있는 이미지는 지우지 않는다** — `deployed-{env}-{sha12}` 표식 이미지는 배포 기록이 가리키는 롤백·승격 대상이다.
+  배포 저장소의 수명 규칙은 지금 태그 없는 이미지 만료(7일)뿐이다. 실패·대체된 배포의 `{env}-{sha12}` 이미지를 만료하려면
+  표식 보호 규칙을 더 높은 우선순위에 두고, **AWS 권한이 있는 사람이 ECR lifecycle preview로 표식 이미지가 대상에 없음을 확인한 뒤** 넣는다.
+  ECR 문서는 "상위 규칙의 태그 조건에 맞는 이미지는 하위 규칙이 만료할 수 없다"고 하지만, 개수 기준 보호 규칙에 그대로 적용되는지는
+  문서만으로 보장되지 않는다(MOI-595).
+- **dev 배포는 워크플로 안의 스크립트, live 승격·롤백은 공용 스크립트(`deploy-ecs-image.sh`)를 쓴다** — dev에만 있는 단계
+  (API 안정화와 병렬인 Worker 대체 빌드, ALB 대상 진단, SSM 복원, Worker 선택 교체)를 live 경로와 합치면 live 회귀 위험이 커서
+  합치지 않았다(MOI-595). 두 경로가 함께 써야 하는 판단은 스크립트로 뺐다: 런타임 변경(`runtime-changes.sh`, dev·live),
+  배포 기록 쓰기(`record-deployment-bundle.sh`, dev·live). 기록 찾기(`find-…`)는 dev만, 기록 읽기(`read-…`)와 기한 있는
+  안정 대기(`lib/ecs-stable-wait.sh`)는 live 승격·롤백만 쓴다. dev의 복원 단계는 아직 10분 상한의 `services-stable` 대기를 쓴다.
 
 ## Terraform 운영 불변식 (팀 결정)
 

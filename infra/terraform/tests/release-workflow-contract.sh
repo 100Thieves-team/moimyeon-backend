@@ -57,7 +57,16 @@ assert_contains "${PROMOTE_WORKFLOW}" 'read-deployment-bundle\.sh' "main source�
 assert_contains "${PROMOTE_WORKFLOW}" 'wait-for-terraform-apply\.sh' "live promotion은 같은 main CI SHA의 Terraform boundary 성공을 기다려야 한다."
 assert_contains "${PROMOTE_WORKFLOW}" 'main[[:space:]]+"\$\{resolved_main\}"' "promotion waiter는 trigger가 아니라 실제 resolved main SHA를 확인해야 한다."
 assert_contains "${PROMOTE_WORKFLOW}" 'Verify Terraform-ready main candidate freshness' "live mutation lock 뒤 더 최신 main을 Terraform보다 먼저 승격하면 안 된다."
-assert_contains "${PROMOTE_WORKFLOW}" 'documentation-only successors' "후속 docs-only main 때문에 이미 검증된 runtime 승격을 영구 누락하면 안 된다."
+assert_contains "${PROMOTE_WORKFLOW}" 'successors without runtime changes' "후속 비런타임 main 때문에 이미 검증된 runtime 승격을 영구 누락하면 안 된다."
+# MOI-592: 승격 판정은 workflow 자신의 revision에서 읽은 공용 규칙을 쓴다. dev bundle 탐색은 dev 배포와 같은 dev 규칙이다.
+assert_contains "${PROMOTE_WORKFLOW}" 'git show "\$\{WORKFLOW_SHA\}:\.github/scripts/runtime-changes\.sh"' "승격 규칙은 workflow revision에서 읽어야 main에 스크립트가 없어도 동작한다."
+[ "$(grep -c 'runtime-changes\.sh" live' "${PROMOTE_WORKFLOW}")" -eq 3 ] \
+  || fail "main 승격·main 전용 변경·후속 main 확인 세 곳은 live 규칙을 써야 한다."
+[ "$(grep -c 'runtime-changes\.sh" dev' "${PROMOTE_WORKFLOW}")" -eq 1 ] \
+  || fail "dev bundle 탐색 한 곳만 dev 배포를 결정한 dev 규칙을 써야 한다."
+assert_contains "${PROMOTE_WORKFLOW}" 'revision_changes="\$\(git diff' "dev bundle 탐색의 git diff 실패가 '같은 런타임'으로 읽히면 안 된다."
+[ "$(grep -c 'WORKFLOW_SHA}" =~ \^\[0-9a-f\]{40}\$' "${PROMOTE_WORKFLOW}")" -eq 3 ] \
+  || fail "규칙을 읽을 workflow SHA는 형식을 검사해야 한다(비면 index를 읽는다)."
 assert_contains "${PROMOTE_WORKFLOW}" 'git diff --name-only --no-renames "\$\{CANDIDATE_MAIN_SHA\}" "\$\{resolved_main\}"' "promotion candidate 이후 runtime-equivalence를 rename-safe하게 확인해야 한다."
 assert_contains "${PROMOTE_WORKFLOW}" 'deployed-dev-\$\{deploy_sha12\}' "live 승격은 dev 배포 성공 marker를 조회해야 한다."
 assert_contains "${PROMOTE_WORKFLOW}" 'deployment ledger and marker digest disagree' "live 승격은 dev ledger와 marker digest 일치를 강제해야 한다."

@@ -7,7 +7,7 @@ moimyeon/
 ├── admin/
 │   └── admin-api        어드민 API. core-api 런타임에 조립되는 비부트 모듈
 ├── core/
-│   ├── core-batch       배치 실행 모듈 (독립 bootJar)
+│   ├── core-batch       배치 실행 모듈 (독립 bootJar, 배포 경로 없음)
 │   ├── core-enum        도메인 전역 공유 Enum 만 격리 (최하위 모듈)
 │   ├── core-worker      백그라운드 작업 실행 모듈 (독립 bootJar, notification·room 패키지)
 │   └── core-api         API 서버 실행 모듈. 도메인 + api + 영역이 소유하는 외부 연동 계약
@@ -16,7 +16,8 @@ moimyeon/
 ├── storage/
 │   ├── db-core          JPA Entity / Repository / schema.sql (RDB 접근)
 │   ├── object-storage   AWS SDK S3 객체 저장·조회 격벽
-│   └── redis-core       Redis 기반 저장·동기화 기술 격벽
+│   ├── redis-core       Redis 기반 저장·동기화 기술 격벽. 공유 설정과 Worker의 알림 Stream 소비
+│   └── redis-api-adapter  core-api·admin-api 계약의 Redis 구현(알림 발행·재전달 잠금·운영 조회)
 ├── clients/
 │   ├── bedrock-client   PDF 텍스트 전처리 · Spring AI · Bedrock 외부 모델 클라이언트
 │   ├── client-example   외부 HTTP 클라이언트 (HTTP Interface)
@@ -31,17 +32,20 @@ moimyeon/
 
 ## 의존 규칙
 
-- 실행 가능한 산출물(bootJar)은 `core:core-api`, `core:core-batch`, `core:core-worker`이다. `core-api`와
+- 실행 가능한 산출물(bootJar)은 `core:core-api`, `core:core-batch`, `core:core-worker`이다. 이 중 배포되는 것은 `core-api`와
+  `core-worker`뿐이다. `core-batch`는 예제 잡만 있고 이미지·워크플로·Terraform 배포 경로가 없다(MOI-595). 배포하게 되면
+  Worker처럼 Flyway를 끄고(`worker-runtime.yml`) 스키마 마이그레이션 경로를 core-api 하나로 유지한다. `core-api`와
   `core-worker`는 외부 구현이 각 영역의 계약을 참조할 수 있도록 plain `jar`도 함께 만든다.
 - 컴파일 타임 의존 방향:
   - `core-api` → `core-enum`, `security:security-core`, `storage:db-core`, `clients:client-example`, `support:*`
   - `core-worker` → `core-enum`, `storage:db-core`, `storage:redis-core`, `support:monitoring`, `support:logging`
-  - `core-api` → `admin:admin-api`, `clients:bedrock-client`, `storage:object-storage`, `storage:redis-core` 는 **`runtimeOnly`**
+  - `core-api` → `admin:admin-api`, `clients:bedrock-client`, `storage:object-storage`, `storage:redis-api-adapter` 는 **`runtimeOnly`**
   - `core-worker` → `clients:email-client`, `clients:web-push-client` 는 **`runtimeOnly`**
   - `clients:bedrock-client`, `storage:object-storage` → `core-api`: 이력서 영역 계약 구현
   - `clients:email-client` → `core-worker`, `core-enum`: 이메일 발송 계약과 알림 메시지 구현
   - `clients:web-push-client` → `core-worker`, `core-enum`: 웹 푸시 발송 계약과 알림 메시지 구현
-  - `storage:redis-core` → `core-api`, `admin-api`, `core-enum`: 알림 Relay·운영 조회 계약과 이벤트 카탈로그 구현
+  - `storage:redis-core` → `core-enum`: core-api·admin-api에 의존하지 않는다. 그래서 core-api만 바꾼 변경은 Worker 산출물을 바꾸지 않는다(MOI-591)
+  - `storage:redis-api-adapter` → `storage:redis-core`, `core-api`, `admin-api`, `core-enum`: 알림 Relay·운영 조회 계약 구현
   - `storage:db-core` → `core-enum`
   - `security:security-core` → `core-enum`
 - `storage:db-core` 는 JPA starter 를 노출해 core-api 의 Implement 레이어가 Repository 인터페이스를
@@ -70,7 +74,7 @@ moimyeon/
   live `https://moimyeon.plady.io`). 주소를 정하지 않은 프로필은 환경 변수 `NOTIFICATION_WEB_PUSH_ACTION_BASE_URL` 없이 시작하지 않는다.
 - 전송 정책(`NotificationPolicy`: `PUSH_ONLY`, `EMAIL_ONLY`, `PUSH_AND_EMAIL`, `PUSH_ELSE_EMAIL`)은 이벤트가 아니라 알림 한 건에
   붙는다. 받는 사람·정책·문구는 core-api의 `NotificationComposer` 한 곳이 정한다(확정 한 건이 참여자와 닫힌 대기 신청자에게
-  서로 다른 정책의 알림을 만든다). `redis-core`가 정책의 채널 집합을 채널별 Stream 메시지로 확장하므로 `PUSH_AND_EMAIL`의
+  서로 다른 정책의 알림을 만든다). `redis-api-adapter`가 정책의 채널 집합을 채널별 Stream 메시지로 확장하므로 `PUSH_AND_EMAIL`의
   두 채널은 독립적으로 ACK·재처리된다.
 - `PUSH_ELSE_EMAIL`은 WEB_PUSH 메시지 하나만 만든다. `ChannelNotificationSender`가 푸시 결과가 "전달 안 됨"(등록 기기 없음,
   또는 성공한 기기 없이 만료·거절뿐)이면 같은 처리 안에서 메일을 보낸다. 푸시가 재시도 오류면 메일을 보내지 않고 예외로
@@ -210,21 +214,11 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 
 ## storage:redis-core: Redis 기반 저장·동기화 기술 격벽
 
-- Spring Data Redis와 Redis 연결 설정을 소유하고 core-api의 `NotificationMessagePublisher` 계약을 구현한다.
-- core-api의 `OutboxRelayCoordinator` 계약도 구현해 여러 API 인스턴스 중 한 곳만 미처리 Outbox 재전달 폴링을 시작하게 한다.
-  Redis 락은 동일한 DB 스캔을 줄이는 실행 조정 수단이며 Outbox 전달 정확성의 최종 기준으로 사용하지 않는다.
-- `local`, `local-dev`, `dev`, `staging`, `live`에서는 Redis 구현체가 조정 계약을 담당하고,
-  `test`에서만 core-api의 `DirectOutboxRelayCoordinator`가 재전달을 바로 실행한다. `test` 프로파일이 `local`을 상속하므로
-  Redis 구현체는 `local & !test` 조건으로 테스트에서 제외한다. 스케줄러는 환경과 무관하게 계약을 필수로 주입받는다.
-- 한 사실에서 나온 알림(`OutgoingNotification`)들을 각 정책의 채널별 메시지로 확장해 `eventId`, `eventType`, `channel`, `payload`
-  필드로 `notification-events` Stream에 추가한다. 여러 채널의 `XADD`는 한 Lua 스크립트에서 실행해 일부 채널만
-  저장되는 상태를 만들지 않는다.
-- Redis 명령과 직렬화 형식은 이 모듈 밖으로 노출하지 않는다.
-- Redis 저장 실패는 삼키지 않고 호출자에게 전달한다. 생산자 `OutboxRelay`가 이 실패를 기준으로 Outbox를 보존한다.
-- 모든 채널 메시지 저장 후 Outbox 완료 기록 전에 프로세스가 종료되면 같은 채널 메시지들이 다시 발행될 수 있다.
-  유실 방지를 우선해 이 잔여 중복 가능성과 타협한다.
-- 재전달 실행 권한은 TTL이 있는 소유자 토큰으로 획득하고, 해제할 때 현재 토큰이 일치하는 락만 삭제한다.
-- `core-api`에는 `runtimeOnly`로 조립한다. 실제 어댑터 빈은 `local`, `local-dev`, `dev`, `staging`, `live` 프로파일에서 활성화한다.
+- Spring Data Redis와 `redis-core.yml`을 소유한다. 이 파일은 연결·Stream 이름·소비자 설정과, `redis-api-adapter`가 읽는
+  재전달 잠금 설정까지 함께 가진다. core-api·admin-api에 의존하지 않는다.
+  Worker는 Redis 모듈 중 이 모듈만 조립하므로 core-api만 바꾼 변경이 Worker 산출물을 바꾸지 않는다(MOI-591).
+- 소비자 동작(ACK·재시도·DLQ·메트릭) 통합 테스트는 Stream에 직접 기록한 메시지로 이 모듈 안에서 돈다.
+- Redis 명령과 직렬화 형식은 이 모듈과 `redis-api-adapter` 밖으로 노출하지 않는다.
 - Consumer Group을 만들고 신규 채널 메시지를 Worker별로 분배한다. 성공 메시지만 ACK하고 재시도 가능 실패는 Pending에 남긴다.
 - Pending delivery count와 마지막 전달 후 경과 시간을 사용해 지수 backoff를 적용한다. 기본값은 최초 1분, 최대 15분,
   전체 처리 시도 5회다. 후보 100개 중 처리 가능한 메시지를 배치당 10개까지 `XCLAIM`한다.
@@ -237,9 +231,29 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
   `UNKNOWN`으로 합쳐 Prometheus 라벨 카디널리티 증가를 막는다.
 - `notification.worker.pending.messages` Gauge는 한 소비 주기의 마지막에 Consumer Group의 `XPENDING` 요약값으로
   갱신한다. 여러 Worker 인스턴스가 같은 Group 전체 값을 노출하므로 Grafana에서는 합계가 아닌 `max by (consumer_group)`로 조회한다.
+- DLQ re-drive, 보존 길이와 운영 알람 임계치는 아직 확정 범위가 아니다.
+
+## storage:redis-api-adapter: core-api·admin-api 계약의 Redis 구현
+
+- core-api의 `NotificationMessagePublisher` 계약을 구현한다. 한 사실에서 나온 알림(`OutgoingNotification`)들을 각 정책의
+  채널별 메시지로 확장해 `eventId`, `eventType`, `channel`, `payload` 필드로 `notification-events` Stream에 추가한다.
+  여러 채널의 `XADD`는 한 Lua 스크립트에서 실행해 일부 채널만 저장되는 상태를 만들지 않는다.
+- 발행 필드는 `redis-core` 소비자가 읽는 형식과, 운영 조회가 읽는 DLQ 필드는 `redis-core` 소비자가 기록하는 형식과 같아야 한다.
+  두 경계를 실제로 거치는 `RedisNotificationStreamContractIT`가 이 모듈에 있다.
+- Redis 저장 실패는 삼키지 않고 호출자에게 전달한다. 생산자 `OutboxRelay`가 이 실패를 기준으로 Outbox를 보존한다.
+- 모든 채널 메시지 저장 후 Outbox 완료 기록 전에 프로세스가 종료되면 같은 채널 메시지들이 다시 발행될 수 있다.
+  유실 방지를 우선해 이 잔여 중복 가능성과 타협한다.
+- core-api의 `OutboxRelayCoordinator` 계약도 구현해 여러 API 인스턴스 중 한 곳만 미처리 Outbox 재전달 폴링을 시작하게 한다.
+  Redis 락은 동일한 DB 스캔을 줄이는 실행 조정 수단이며 Outbox 전달 정확성의 최종 기준으로 사용하지 않는다.
+  재전달 실행 권한은 TTL이 있는 소유자 토큰으로 획득하고, 해제할 때 현재 토큰이 일치하는 락만 삭제한다.
+- Redis 구현체는 `@Profile("!test")`라 `test` 프로필이 켜지면 다른 프로필과 함께여도 등록되지 않는다. 그때는
+  core-api의 `DirectOutboxRelayCoordinator`가 재전달을 바로 실행한다(`RedisNotificationProfileTest`). 스케줄러는 환경과 무관하게
+  계약을 필수로 주입받는다.
 - admin-api의 `AdminNotificationOperationsReader`를 구현해 Consumer Group Pending 수, DLQ 전체 건수와 최신 메시지를 조회한다.
   Redis Stream 필드는 Admin 전용 읽기 모델로 변환하며 Admin Controller에 Redis 타입을 노출하지 않는다.
-- DLQ re-drive, 보존 길이와 운영 알람 임계치는 아직 확정 범위가 아니다.
+- `core-api`에는 `runtimeOnly`로 조립한다. `redis-core`는 이 모듈을 거쳐 함께 조립된다.
+- 패키지는 `redis-core`와 같은 `io.plady.moimyeon.storage.redis`다. 모듈 경계는 Gradle 의존으로 지키고, Worker의
+  클래스패스에는 이 모듈이 없다.
 
 ## support:monitoring: 운영 관측 격벽
 

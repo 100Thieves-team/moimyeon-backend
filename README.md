@@ -24,7 +24,7 @@ moimyeon/
 │   └── admin-api       어드민 API — core-api 런타임에 조립되는 비부트 모듈
 │
 ├── core/
-│   ├── core-batch      배치 실행 모듈 (독립 bootJar)
+│   ├── core-batch      배치 실행 모듈 (독립 bootJar, 배포 경로 없음)
 │   ├── core-enum       공통 Enum 정의
 │   ├── core-worker     알림·룸 자동 완료 실행 모듈 (독립 bootJar)
 │   └── core-api        API 서버 실행 모듈 — 외부 연동 계약과 런타임 조립 소유
@@ -89,7 +89,8 @@ API 서버 실행 모듈. REST API 레이어와 도메인 서비스를 담당한
 ---
 
 ### `core:core-batch`
-스케줄 기반 배치 실행 모듈. core-api 와 별개의 독립 부트 앱이다.
+스케줄 기반 배치 실행 모듈. core-api 와 별개의 독립 부트 앱이다. 아직 예제 잡만 있고 배포 경로(이미지·워크플로·Terraform)가 없다.
+실제 잡이 생길 때 배포 경로를 만들고, 그때 Flyway를 꺼 마이그레이션을 core-api에만 둔다.
 
 - 의존성: `support/*`, `storage/db-core` (implementation)
 - 포함: `BatchApplication`, `@EnableScheduling` 설정, `batch.job.*` 잡 클래스 (`Batch` 접두사 컨벤션)

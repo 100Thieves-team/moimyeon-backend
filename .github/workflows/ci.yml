@@ -5,7 +5,8 @@ on:
     branches: [ "main", "dev" ]
   pull_request:
     # 앞 작업 브랜치를 base로 하는 스택 PR도 검증한다. edited는 base 변경을 포함한다.
-    # title/body 편집도 edited이므로 코드 변경 없이 CI가 재실행될 수 있다.
+    # title/body 편집도 edited다. 필수 체크 build·후보 이미지·하네스 게이트(시크릿 검사)는 계속 실행해
+    # 화면과 배포 검증이 실제 결과만 보게 하고(build cache로 짧다), monitoring-smoke만 base가 바뀐 edited에서 돈다(MOI-593).
     types: [ opened, synchronize, reopened, edited, ready_for_review ]
 
 permissions:
@@ -27,8 +28,10 @@ jobs:
       - name: Skill lint
         run: python3 .agents/gates/lint_skills.py
 
+      # 릴리스 PR(dev → main)은 이미 PR마다 범위 검사를 통과한 커밋의 묶음이고 나눌 수 없다.
+      # 파일 수 상한은 기능 PR에만 적용하고, 뒤의 시크릿 검사 등은 릴리스 PR에서도 그대로 돈다.
       - name: PR file scope
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !(github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository)
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -143,6 +146,15 @@ jobs:
       - name: Check deployment workflow contract
         run: bash infra/terraform/tests/deploy-workflow-contract.sh
 
+      - name: Check runtime change rule
+        run: bash infra/terraform/tests/runtime-changes-test.sh
+
+      - name: Check deployment bundle retry and carry-over
+        run: bash infra/terraform/tests/deployment-bundle-test.sh
+
+      - name: Check Worker change decision
+        run: bash infra/terraform/tests/worker-scope-test.sh
+
       - name: Check release workflow contract
         run: bash infra/terraform/tests/release-workflow-contract.sh
 
@@ -201,6 +213,25 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ci-dummy-client-id
           GOOGLE_OAUTH_CLIENT_SECRET: ci-dummy-client-secret
 
+  # PRs without runtime changes are never deployed (MOI-592), so they get no candidate.
+  image-scope:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      runtime: ${{ steps.scope.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      # The checkout is the PR merge commit; its first parent is the base tip.
+      - name: Detect runtime changes
+        id: scope
+        shell: bash
+        run: git diff --name-only --no-renames HEAD^1 HEAD | bash .github/scripts/runtime-changes.sh dev >> "$GITHUB_OUTPUT"
+
   # MOI-565: build the deploy images once, here, for the PR merge tree. With
   # strict up-to-date merges the dev merge commit has the same tree, so Deploy
   # AWS promotes these digests instead of rebuilding. Tags carry this run ID and
@@ -208,7 +239,8 @@ jobs:
   # run attempt as `build`: a tag pushed first elsewhere fails this immutable
   # push. Fork PRs get no OIDC token and the deploy builds. Not a required check.
   image:
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'dev' && github.actor != 'dependabot[bot]' && vars.MOIMYEON_PR_IMAGE_ROLE_TO_ASSUME_DEV != '' }}
+    needs: image-scope
+    if: ${{ needs.image-scope.outputs.runtime == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -218,6 +250,33 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+
+      # MOI-588: compile on the runner, whose Gradle cache survives between
+      # runs (read-only on PRs; written by dev push CI). Docker only extracts
+      # the layers and trains the AOT cache from the staged jars. Gradle runs
+      # before the AWS credentials and the ECR login exist.
+      - name: Set up JDK
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
+
+      - name: Build bootJars
+        run: bash infra/terraform/scripts/build-image-jars.sh build/image-jars core-api core-worker
+
+      # MOI-590: the deploy compares this with the running Worker's label to
+      # decide whether the Worker needs a new task.
+      - name: Hash image runtime inputs
+        id: inputs
+        shell: bash
+        run: |
+          api="$(bash .github/scripts/runtime-input.sh hash build/image-jars/core-api.jar)"
+          worker="$(bash .github/scripts/runtime-input.sh hash build/image-jars/core-worker.jar)"
+          echo "api=${api}" >> "$GITHUB_OUTPUT"
+          echo "worker=${worker}" >> "$GITHUB_OUTPUT"
 
       - name: Resolve candidate image tags
         id: tags
@@ -245,31 +304,50 @@ jobs:
       # Keep the default provenance attestation: the image is then an index, and
       # copy-image-by-digest.sh preserves an index digest. A bare manifest was
       # re-wrapped into a new digest and failed promotion (MOI-565).
+      # Each target keeps its own cache scope. mode=min is enough: every
+      # intermediate stage is a cheap layer extraction, and the expensive AOT
+      # training sits in the final stage (MOI-588).
       - name: Build and push Core API candidate
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: build/image-jars
           file: Dockerfile
           target: core-api
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.api }}
-          cache-from: type=gha,scope=deployment-images
-          cache-to: type=gha,mode=max,scope=deployment-images
+          labels: org.moimyeon.runtime-input=${{ steps.inputs.outputs.api }}
+          cache-from: type=gha,scope=deployment-images-core-api
+          cache-to: type=gha,mode=min,scope=deployment-images-core-api
 
-      # Shares the builder stage with the API target through the local builder.
       - name: Build and push Worker candidate
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          context: .
+          context: build/image-jars
           file: Dockerfile
           target: core-worker
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.worker }}
-          cache-from: type=gha,scope=deployment-images
+          labels: org.moimyeon.runtime-input=${{ steps.inputs.outputs.worker }}
+          cache-from: type=gha,scope=deployment-images-core-worker
+          cache-to: type=gha,mode=min,scope=deployment-images-core-worker
+
+      # The deploy reads the label back the same way; fail here, not there.
+      - name: Read runtime input labels back from the candidates
+        shell: bash
+        env:
+          API_IMAGE: ${{ steps.tags.outputs.api }}
+          API_INPUT: ${{ steps.inputs.outputs.api }}
+          WORKER_IMAGE: ${{ steps.tags.outputs.worker }}
+          WORKER_INPUT: ${{ steps.inputs.outputs.worker }}
+        run: |
+          set -euo pipefail
+          [ "$(bash .github/scripts/runtime-input.sh read "${API_IMAGE}")" = "${API_INPUT}" ]
+          [ "$(bash .github/scripts/runtime-input.sh read "${WORKER_IMAGE}")" = "${WORKER_INPUT}" ]
 
   monitoring-smoke:
+    if: github.event.action != 'edited' || github.event.changes.base != null
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

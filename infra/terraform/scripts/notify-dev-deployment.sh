@@ -19,6 +19,7 @@ worker_enabled="${WORKER_ENABLED:-}"
 worker_build_succeeded="${WORKER_BUILD_SUCCEEDED:-}"
 worker_candidate="${WORKER_CANDIDATE:-}"
 worker_image="${WORKER_IMAGE:-}"
+worker_unchanged="${WORKER_UNCHANGED:-}"
 candidate_tag="${CANDIDATE_TAG:-}"
 repository_url="${REPOSITORY_URL:-}"
 
@@ -33,6 +34,9 @@ fi
 worker_result="${worker_step_result}"
 if [ "${worker_enabled}" = false ]; then
   worker_result=disabled
+elif [ "${worker_unchanged}" = true ]; then
+  # MOI-590: this commit cannot change the Worker; the running one is kept.
+  worker_result=unchanged
 elif [ "${worker_enabled}" = true ] && [ "${api_result}" = success ] \
   && [ "${worker_build_succeeded}" != true ]; then
   worker_result=image-build-failed
@@ -59,7 +63,9 @@ if [ -n "${api_image_exists}" ]; then
   fi
   image_source="Core API: ${api_source}"
 
-  if [ "${worker_enabled}" = true ] && [ "${worker_build_succeeded}" = true ]; then
+  if [ "${worker_unchanged}" = true ]; then
+    image_source="${image_source}"$'\n'"Worker: unchanged, running revision kept"
+  elif [ "${worker_enabled}" = true ] && [ "${worker_build_succeeded}" = true ]; then
     if [ "${worker_candidate}" = promoted ]; then
       worker_source="$(pr_ci_run)"
     elif [ "${worker_image}" = built ]; then
