@@ -12,15 +12,17 @@ data class MemberMeResponse(
     val nickname: String,
     val status: MemberStatus,
     val profile: ProfileResponse,
+    val analyticsId: String?,
 ) {
     companion object {
-        fun of(member: Member, profile: MemberProfile, interestCompanies: List<Company>): MemberMeResponse {
+        fun of(member: Member, profile: MemberProfile, interestCompanies: List<Company>, analyticsId: String?): MemberMeResponse {
             return MemberMeResponse(
                 memberId = member.id,
                 email = member.email.value,
                 nickname = member.nickname.value,
                 status = member.status,
                 profile = ProfileResponse.from(profile, interestCompanies),
+                analyticsId = analyticsId,
             )
         }
     }
