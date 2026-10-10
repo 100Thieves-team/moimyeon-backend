@@ -35,6 +35,8 @@ notification.outbox.relay:
   batch-size: ${NOTIFICATION_OUTBOX_RELAY_BATCH_SIZE:100}
   lease-duration: ${NOTIFICATION_OUTBOX_RELAY_LEASE_DURATION:5m}
 
+moimyeon.analytics.id-hmac-key: ${ANALYTICS_ID_HMAC_KEY:}
+
 # outbox 재전달·후기 공개·자동 완료가 서로의 스케줄을 막지 않게 한다.
 spring.task.scheduling.pool.size: 3
 
