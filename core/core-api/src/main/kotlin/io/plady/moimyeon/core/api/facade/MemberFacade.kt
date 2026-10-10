@@ -17,6 +17,6 @@ class MemberFacade(
         val member = memberService.getMember(memberId)
         val profile = profileService.getProfile(memberId)
         val interestCompanies = companyService.getCompanies(profile.interestCompanyIds)
-        return MemberMeResponse.of(member, profile, interestCompanies)
+        return MemberMeResponse.of(member, profile, interestCompanies, memberService.getAnalyticsId(memberId))
     }
 }

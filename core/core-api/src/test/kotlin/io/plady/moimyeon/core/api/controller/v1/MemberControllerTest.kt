@@ -111,6 +111,7 @@ class MemberControllerTest : RestDocsTest() {
     fun memberMe() {
         every { memberService.getMember(memberId) } returns member
         every { profileService.getProfile(memberId) } returns profile
+        every { memberService.getAnalyticsId(memberId) } returns "0123456789abcdef0123456789abcdef"
         every { companyService.getCompanies(listOf(1L, 2L)) } returns listOf(
             Company(1L, "달빛페이"),
             Company(2L, "한빛커머스"),
@@ -125,6 +126,7 @@ class MemberControllerTest : RestDocsTest() {
                     .doesNotContain("\"meetingPreference\"")
                     .doesNotContain("\"sigunguId\"")
                     .doesNotContain("\"interviewStage\"")
+                    .contains("\"analyticsId\":\"0123456789abcdef0123456789abcdef\"")
             }
             .andDo(
                 documentApi(
@@ -144,6 +146,8 @@ class MemberControllerTest : RestDocsTest() {
                         fieldWithPath("data.profile.interestCompanies").type(JsonFieldType.ARRAY).description("관심 회사 목록 (미지정이면 빈 배열)"),
                         fieldWithPath("data.profile.interestCompanies[].companyId").type(JsonFieldType.NUMBER).description("회사 id"),
                         fieldWithPath("data.profile.interestCompanies[].name").type(JsonFieldType.STRING).description("회사명"),
+                        fieldWithPath("data.analyticsId").type(JsonFieldType.STRING).optional()
+                            .description("분석 도구(PostHog) identify 에 쓰는 가명 회원 식별자. 32자리 소문자 16진수. 서버에 키가 없으면 null"),
                         fieldWithPath("error").type(JsonFieldType.NULL).ignored(),
                     ),
                 ),

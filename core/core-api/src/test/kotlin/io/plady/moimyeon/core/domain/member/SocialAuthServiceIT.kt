@@ -27,10 +27,11 @@ class SocialAuthServiceIT(
 
     @Test
     fun `신규 가입 시 현재 유효한 필수 약관 전부에 대한 동의가 버전(termsId)과 함께 기록된다`() {
-        // 시행 정각의 v1.1 두 건만 동의하고, 여전히 ACTIVE인 v1.0에는 동의하지 않는다.
+        // 시행 정각의 v1.1 두 건과 국외 이전 v1.0만 동의하고, 여전히 ACTIVE인 v1.0에는 동의하지 않는다.
         val requiredTermsIds = listOf(
             UUID.fromString("f614c0bb-87b5-44e8-baf1-2b8b2ad4c1b2"),
             UUID.fromString("d91d5a8f-228a-4a56-874a-88dd532febe7"),
+            UUID.fromString("0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e721"),
         )
 
         // when

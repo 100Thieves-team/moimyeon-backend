@@ -56,11 +56,12 @@ class TermsHttpContextTest(
     fun `비로그인으로 기존 목록과 시행된 본문을 DB에서 조회한다`() {
         mockMvc.perform(get("/v1/terms"))
             .andExpect(status().isOk)
-            .andExpect { assertThat(JsonMapper.shared().readTree(it.response.contentAsByteArray).path("data").path("terms").size()).isEqualTo(2) }
+            .andExpect { assertThat(JsonMapper.shared().readTree(it.response.contentAsByteArray).path("data").path("terms").size()).isEqualTo(3) }
             .andExpect {
                 val terms = JsonMapper.shared().readTree(it.response.contentAsByteArray).path("data").path("terms")
                 assertThat(terms.path(0).path("version").asString()).isEqualTo("v1.1")
                 assertThat(terms.path(1).path("version").asString()).isEqualTo("v1.1")
+                assertThat(terms.path(2).path("type").asString()).isEqualTo("OVERSEAS_TRANSFER")
             }
 
         val terms = termsRepository.findByStatusAndDeletedAtIsNull(TermsStatus.ACTIVE).first { it.version == "v1.0" }
@@ -93,7 +94,7 @@ class TermsHttpContextTest(
         ).forEachIndexed { index, (instant, version) ->
             val clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC)
             val current = TermsService(TermsFinder(termsRepository, clock)).getActiveTerms()
-            assertThat(current.map { it.version }).containsExactly(version, version)
+            assertThat(current.map { it.version }).containsExactly(version, version, "v1.0")
             val member = memberRepository.saveAndFlush(
                 MemberEntity(
                     id = UUID.randomUUID(),

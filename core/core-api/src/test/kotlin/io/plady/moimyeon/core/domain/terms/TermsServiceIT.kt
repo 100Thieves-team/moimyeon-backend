@@ -38,6 +38,7 @@ class TermsServiceIT(
         termsRepository.flush()
         persistTerms(TermsType.SERVICE, "v1.0", effectiveAt.minusDays(1))
         persistTerms(TermsType.PRIVACY, "v1.0", effectiveAt.minusDays(1))
+        persistTerms(TermsType.OVERSEAS_TRANSFER, "v1.0", effectiveAt.minusDays(1))
     }
 
     @Test
@@ -51,9 +52,9 @@ class TermsServiceIT(
 
         val terms = termsService.getActiveTerms()
 
-        assertThat(terms.map { it.type }).containsExactly(TermsType.SERVICE, TermsType.PRIVACY)
+        assertThat(terms.map { it.type }).containsExactly(TermsType.SERVICE, TermsType.PRIVACY, TermsType.OVERSEAS_TRANSFER)
         assertThat(terms.map { it.id }).contains(latest.id).doesNotContain(deleted.id)
-        assertThat(terms.map { it.version }).containsExactly("v1.1", "v1.0")
+        assertThat(terms.map { it.version }).containsExactly("v1.1", "v1.0", "v1.0")
     }
 
     @Test
@@ -62,7 +63,7 @@ class TermsServiceIT(
         val before = Clock.offset(clock, java.time.Duration.ofNanos(-1))
         val beforeService = TermsService(TermsFinder(termsRepository, before))
 
-        assertThat(beforeService.getActiveTerms().map { it.version }).containsExactly("v1.0", "v1.0")
+        assertThat(beforeService.getActiveTerms().map { it.version }).containsExactly("v1.0", "v1.0", "v1.0")
     }
 
     @Test
@@ -87,7 +88,7 @@ class TermsServiceIT(
         termsAgreementManager.agreeRequired(memberId, effectiveAt)
 
         val agreements = termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)
-        assertThat(agreements).hasSize(1)
+        assertThat(agreements).hasSize(2)
         assertThat(agreements.map { it.termsId }).doesNotContain(optional.id)
         assertThat(termsAgreementFinder.hasAgreedAllRequiredActive(memberId)).isTrue()
     }

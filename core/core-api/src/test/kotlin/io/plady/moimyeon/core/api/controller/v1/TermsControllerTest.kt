@@ -30,7 +30,7 @@ class TermsControllerTest : RestDocsTest() {
     private val listSummary = "현재 유효 약관 목록 조회"
     private val listDescription =
         "비로그인으로 종류별 최신 시행 문서를 본문 포함으로 조회한다. ACTIVE·미삭제 문서 중 한국 시각(Asia/Seoul)으로 시행일이 된 " +
-            "문서를 선택하며 SERVICE, PRIVACY 순서로 반환한다. DRAFT와 미래 시행 문서는 제외한다. " +
+            "문서를 선택하며 SERVICE, PRIVACY, OVERSEAS_TRANSFER 순서로 반환한다. DRAFT와 미래 시행 문서는 제외한다. " +
             "필요한 문서 종류가 없거나 같은 종류의 최신 시행시각이 중복되면 503(E1203)을 반환한다."
     private val detailSummary = "약관 버전 상세 조회"
     private val detailDescription =
@@ -62,6 +62,12 @@ class TermsControllerTest : RestDocsTest() {
                 type = TermsType.PRIVACY,
                 title = "개인정보 처리방침",
                 content = "모이면은 회원 가입과 서비스 제공을 위해 최소한의 개인정보를 수집·이용합니다.",
+            ),
+            terms.copy(
+                id = UUID.fromString("0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e721"),
+                type = TermsType.OVERSEAS_TRANSFER,
+                title = "개인정보 국외 이전 동의",
+                content = "모이면은 서비스 이용 행태를 분석해 서비스를 개선하기 위해 개인정보를 국외로 이전합니다.",
             ),
         )
 
@@ -150,7 +156,7 @@ class TermsControllerTest : RestDocsTest() {
 
     private fun termsFields(prefix: String): Array<FieldDescriptor> = arrayOf(
         fieldWithPath("$prefix.termsId").type(JsonFieldType.STRING).description("약관 버전 식별자 (UUID)"),
-        fieldWithPath("$prefix.type").type(JsonFieldType.STRING).description("약관 종류 (SERVICE | PRIVACY)"),
+        fieldWithPath("$prefix.type").type(JsonFieldType.STRING).description("약관 종류 (SERVICE | PRIVACY | OVERSEAS_TRANSFER)"),
         fieldWithPath("$prefix.version").type(JsonFieldType.STRING).description("약관 버전"),
         fieldWithPath("$prefix.title").type(JsonFieldType.STRING).description("약관 제목"),
         fieldWithPath("$prefix.content").type(JsonFieldType.STRING).description("약관 전문 (Markdown, HTML 출력 시 안전한 렌더링 필요)"),

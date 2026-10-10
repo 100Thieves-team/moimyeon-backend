@@ -39,11 +39,11 @@ class ProfileServiceIT(
 
     @Test
     fun `가입하면 필수 약관 동의와 빈 프로필이 함께 만들어진다`() {
-        // when — 시드 필수 약관 2건: SERVICE·PRIVACY v1.0
+        // when — 시드 필수 약관 3건: SERVICE·PRIVACY·OVERSEAS_TRANSFER
         val memberId = signUp("google-sub-p1")
 
         // then — 프로필은 회원당 항상 하나 존재한다
-        assertThat(termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)).hasSize(2)
+        assertThat(termsAgreementRepository.findByMemberIdAndDeletedAtIsNull(memberId)).hasSize(3)
         val profile = profileService.getProfile(memberId)
         assertThat(profile.bio).isEmpty()
         assertThat(profile.interestJobRoleIds).isEmpty()
