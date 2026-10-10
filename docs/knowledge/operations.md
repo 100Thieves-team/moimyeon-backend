@@ -4,6 +4,9 @@
 
 ## 우리가 겪은 것
 
+- 2026-10-10: main API Docs Pages가 `openapi3` 보정 단계에서 "error.data 보정 대상을 스펙에서 찾지 못했다"로 실패했다(MOI-593 build cache).
+  원인: `restDocsTest`가 FROM-CACHE로 건너뛰어졌는데, 그 테스트가 만드는 문서 조각(`build/generated-snippets`)은 캐시 출력이 아니라 되살아나지 않았다.
+  재발 방지: 선언되지 않은 파일을 만드는 테스트 태스크는 build cache에서 뺀다(루트 `build.gradle.kts`). 캐시를 켤 때는 그 결과를 읽는 다음 태스크까지 확인한다.
 - 2026-10-09: 수집기 v2 릴리스의 첫 Promote Live가 Core API 등록에서 `deregisteredAt` 입력 오류로 실패했다(MOI-512).
   원인: Terraform Apply가 live 원본 틀을 `:2`에서 `:6`으로 바꾸고 GitHub 변수를 갱신한 뒤에 promote job이 시작했지만,
   workflow 실행이 시작될 때 고정된 변수 값 `:2`(비활성)를 읽었다. 2026-09-11 dev 사고와 같은 원인이며 그 수정은 dev에만 들어가 있었다.
