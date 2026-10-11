@@ -75,3 +75,9 @@ PRD·`policy/_src/`는 바꾸지 않았다. 제품 상태·전이 규칙 변경�
 - 정정: 처리방침을 한 줄 문구로 잘못 적은 부분을 `sources/s-moimyeon-growth-logging-decisions`·`topics/t-모니터링-로깅-인프라`에서 바로잡았다(v1.1 시행 중, PostHog 반영 v1.2 필요).
 - 구현 대조(PR 2): R180(가입 시 국외 이전 필수 동의, 다른 필수 약관과 함께) ↔ `TermsType.OVERSEAS_TRANSFER`, V36·seed 필수 ACTIVE 행,
   `SocialAuthServiceIT` 가입 시 세 약관 동의 기록. R181(필수 정보) ↔ `/v1/terms` 목록 세 종류(`TermsHttpContextTest`, RestDocs). 불일치 없음.
+
+## 6단계(PR 3) 구현 대조
+
+- 대조: 결정 D3(사건 16개)·plan 6단계 사건표 ↔ `core/event/growth`와 Manager 11곳의 발행 지점·속성·제외 경우, 단위·IT 테스트.
+- 갱신: 로깅 가이드 topic에 "서버가 남기는 사건" 표(주체·속성·남기지 않는 경우) 추가, 결정 요약 source "구현 진행"에 계획 대비 속성 변경(I19·I20·I23) 기록.
+- 재조회: 로깅 가이드의 새 표 확인. 제품 PRD 변경은 없다(분석 사건은 PRD §8 지표의 측정 수단).
