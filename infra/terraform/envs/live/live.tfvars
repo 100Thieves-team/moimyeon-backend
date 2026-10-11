@@ -24,3 +24,7 @@ notification_email_ses_from_address   = "no-reply@moimyeon.plady.io"
 notification_email_gmail_address      = "100dodukteam@gmail.com"
 
 application_logging_mode = "enabled"
+
+# Off until privacy policy v1.2 takes effect and legal review closes (D10).
+# Growth events still reach the S3 growth archive without analyticsId.
+growth_analytics_enabled = false

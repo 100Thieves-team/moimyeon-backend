@@ -61,6 +61,7 @@ common_keys=(
   enable_https
   firebase_project_id
   github_repository
+  growth_analytics_enabled
   notification_email_gmail_address
   notification_email_ses_from_address
   notification_web_push_action_base_url

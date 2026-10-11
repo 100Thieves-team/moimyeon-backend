@@ -31,3 +31,7 @@ monitoring_data_volume_size = 20
 monitoring_ami_id = "ami-0fad23d064f9e8330"
 
 application_logging_mode = "enabled"
+
+# Growth events to PostHog (D17). Pre-create the analytics ID HMAC key and the
+# PostHog project token SecureStrings before apply.
+growth_analytics_enabled = true
