@@ -188,6 +188,15 @@ core-api 는 security-core 를 의존하지만, **api 패키지에는 spring-sec
 - 재전달 설정 키는 이전 패키지 이름을 따른 `notification.outbox.relay.*` 그대로다(배포 설정과 얽혀 있어 바꾸지 않았다).
 - 지금 소비자는 알림(`NotificationOutboxEventConsumer`) 하나다. 통계·알림함 같은 소비자는 같은 사실에 소비자를 더해 붙인다.
 
+## core-api: 그로스 사건 (MOI-521)
+
+- 분석용 사건은 outbox 를 쓰지 않는다. 쓰기 Implement 가 `GrowthEventPublisher.publish(GrowthEvent)`로 발행하고,
+  `GrowthEventListener`가 커밋 뒤 같은 스레드에서 `GrowthEventWriter`(support:logging)로 로그 한 줄을 남긴다. 롤백되면 남기지 않는다.
+- outbox 발행과 반대로 트랜잭션 밖 발행도 허용한다(`fallbackExecution`). 저장이 이미 커밋된 뒤라 바로 기록한다.
+- 기록 실패는 WARN 한 줄로 삼킨다. 이미 커밋된 업무 요청을 분석 로그 때문에 실패시키지 않는다. 정확한 건수는 DB와 대조한다.
+- 속성 값은 Int·Long·Boolean·UUID·enum 만 넣는다(`GrowthEventEntry` 계약). 계약을 어기면 커밋 뒤 WARN 으로만 드러나므로
+  발행 지점 테스트에서 속성 값을 그대로 단언한다.
+
 ## storage:db-core: Outbox 전달 생명주기
 
 - Outbox는 `PENDING`, `PROCESSING`, 선점 토큰과 lease 만료 시각을 저장한다. 이 값은 알림 도메인 상태가 아니라
