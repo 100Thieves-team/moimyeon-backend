@@ -4,6 +4,12 @@
 
 ## 우리가 겪은 것
 
+- 2026-10-11: dev 배포가 "Confirm the Terraform boundary under the deploy lock"에서 `Timed out waiting for Terraform Apply`로
+  실패했다. 같은 실행의 prepare 단계는 같은 적용 SHA로 통과했고, 실패 단계는 8ms 만에 아무 확인 없이 끝났다.
+  원인: lock 안의 확인은 대기 1초로 `wait-for-terraform-boundary.sh`를 부르는데, 스크립트가 마감(`SECONDS + 1`)을 계산한 뒤
+  초 경계를 넘으면 `while [ SECONDS -lt deadline ]`가 처음부터 거짓이라 한 번도 확인하지 않았다. 재실행으로 복구했다.
+  재발 방지: 마감과 관계없이 먼저 한 번 확인하고 나서 마감을 본다. 계약 테스트는 DEBUG trap으로 매 명령마다 `SECONDS`를
+  올려 이 경계를 결정적으로 재현한다. 짧은 대기 예산을 받는 반복문은 "최소 1회 시도"를 구조로 보장한다.
 - 2026-10-10: main API Docs Pages가 `openapi3` 보정 단계에서 "error.data 보정 대상을 스펙에서 찾지 못했다"로 실패했다(MOI-593 build cache).
   원인: `restDocsTest`가 FROM-CACHE로 건너뛰어졌는데, 그 테스트가 만드는 문서 조각(`build/generated-snippets`)은 캐시 출력이 아니라 되살아나지 않았다.
   재발 방지: 선언되지 않은 파일을 만드는 테스트 태스크는 build cache에서 뺀다(루트 `build.gradle.kts`). 캐시를 켤 때는 그 결과를 읽는 다음 태스크까지 확인한다.

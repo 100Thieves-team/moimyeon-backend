@@ -183,6 +183,19 @@ FAKE_APPLIED_SHA="${infra_change}" bash "${WAITER}" "${after_infra}" "${paramete
 FAKE_APPLIED_SHA="${after_infra}" bash "${WAITER}" "${app_only}" "${parameter}" >/dev/null \
   || fail "더 새로운 인프라가 이미 적용됐으면 기다리지 않아야 한다."
 
+# Each command advances SECONDS, so the deadline passes before the first check.
+# A 1-second confirmation must still look once (dev deploy 2026-10-11 timed out here).
+printf '%s\n' "trap 'SECONDS=\$((SECONDS + 1))' DEBUG" > "${TEMP_DIR}/tick-clock.sh"
+FAKE_APPLIED_SHA="${applied}" BASH_ENV="${TEMP_DIR}/tick-clock.sh" bash "${WAITER}" "${app_only}" "${parameter}" >/dev/null \
+  || fail "마감이 지나도 첫 확인은 해야 한다."
+if FAKE_APPLIED_SHA="${applied}" BASH_ENV="${TEMP_DIR}/tick-clock.sh" bash "${WAITER}" "${after_infra}" "${parameter}" \
+  >"${TEMP_DIR}/late.out" 2>"${TEMP_DIR}/late.err"; then
+  fail "마감이 지난 뒤에는 첫 확인 후 기다리지 않고 실패해야 한다."
+fi
+[ "$(grep -c "Waiting for Terraform Apply to cover" "${TEMP_DIR}/late.out")" = 1 ] \
+  || fail "마감이 지난 뒤에도 확인은 정확히 한 번 해야 한다."
+grep -q "Timed out waiting for Terraform Apply" "${TEMP_DIR}/late.err" || fail "확인 후 시간 초과로 끝나야 한다."
+
 if FAKE_APPLIED_SHA="${applied}" bash "${WAITER}" "${after_infra}" "${parameter}" >/dev/null 2>&1; then
   fail "적용되지 않은 인프라 변경 뒤의 커밋은 기다려야 한다."
 fi
