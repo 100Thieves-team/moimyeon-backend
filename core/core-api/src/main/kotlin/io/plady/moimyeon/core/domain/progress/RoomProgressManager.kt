@@ -7,6 +7,10 @@ import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
+import io.plady.moimyeon.core.event.growth.RoomCompletionTrigger
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -33,6 +37,7 @@ class RoomProgressManager(
     private val attendanceRepository: AttendanceRepository,
     private val roomStatusLogRepository: RoomStatusLogRepository,
     private val outboxEventPublisher: OutboxEventPublisher,
+    private val growthEventPublisher: GrowthEventPublisher,
 ) {
     @Transactional
     fun complete(command: RoomProgressCompletionCommand): RoomProgressCompletionResult {
@@ -133,6 +138,18 @@ class RoomProgressManager(
                 completedByMemberId = completedByMemberId,
                 confirmedParticipantMemberIds = confirmedParticipantIds,
                 attendedMemberIds = attendances.filter { it.status == AttendanceStatus.ATTENDED }.map { it.memberId },
+            ),
+        )
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_COMPLETED,
+                recorderMemberId,
+                mapOf(
+                    "roomId" to room.id,
+                    "completedBy" to if (completedByMemberId == null) RoomCompletionTrigger.SYSTEM else RoomCompletionTrigger.HOST,
+                    "confirmedCount" to confirmedParticipantIds.size,
+                    "attendedCount" to attendances.count { it.status == AttendanceStatus.ATTENDED },
+                ),
             ),
         )
     }

@@ -4,6 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.storage.db.core.ReviewSkipEntity
 import io.plady.moimyeon.storage.db.core.ReviewSkipRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -17,7 +20,8 @@ import java.util.UUID
 
 class ReviewSkipRecorderTest {
     private val skipRepository = mockk<ReviewSkipRepository>()
-    private val reviewSkipRecorder = ReviewSkipRecorder(skipRepository)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
+    private val reviewSkipRecorder = ReviewSkipRecorder(skipRepository, growthEventPublisher)
     private val command = ReviewSkipCommand(
         roomId = UUID.randomUUID(),
         authorMemberId = UUID.randomUUID(),
@@ -48,6 +52,17 @@ class ReviewSkipRecorderTest {
     }
 
     @Test
+    fun `처음 건너뛰면 작성자 주체로 review_skipped 사건을 발행한다`() {
+        every { skipRepository.saveAndFlush(any()) } answers { firstArg() }
+
+        reviewSkipRecorder.record(command)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(GrowthEvent(GrowthEventCode.REVIEW_SKIPPED, command.authorMemberId, mapOf("roomId" to command.roomId)))
+        }
+    }
+
+    @Test
     fun `이미 기록한 대상의 건너뛰기는 추가 저장하지 않는다`() {
         every {
             skipRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberId(
@@ -60,6 +75,7 @@ class ReviewSkipRecorderTest {
         reviewSkipRecorder.record(command)
 
         verify(exactly = 0) { skipRepository.saveAndFlush(any()) }
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test
@@ -70,6 +86,7 @@ class ReviewSkipRecorderTest {
         )
 
         assertThatCode { reviewSkipRecorder.record(command) }.doesNotThrowAnyException()
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test

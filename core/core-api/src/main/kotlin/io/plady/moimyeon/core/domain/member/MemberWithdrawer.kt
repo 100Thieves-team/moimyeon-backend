@@ -5,6 +5,9 @@ import io.plady.moimyeon.core.domain.notification.WebPushSubscriptionManager
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionManager
 import io.plady.moimyeon.core.domain.session.SessionManager
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireFound
 import io.plady.moimyeon.storage.db.core.MemberRepository
@@ -23,6 +26,7 @@ class MemberWithdrawer(
     private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
     private val sessionManager: SessionManager,
     private val webPushSubscriptionManager: WebPushSubscriptionManager,
+    private val growthEventPublisher: GrowthEventPublisher,
 ) {
     // 회원을 먼저 잠근다(회원 → 신청, 참가 신청 제출과 같은 순서). 잠근 뒤에는 이 회원이 새 룸을 만들거나 신청할 수 없다.
     // 대기 신청을 새 참여 확인보다 먼저 닫는다 — 방장이 수락 중인 신청이면 그 신청 행 잠금을 기다리므로, 뒤이은 확인이
@@ -38,6 +42,7 @@ class MemberWithdrawer(
         sessionManager.closeAll(memberId, now)
         webPushSubscriptionManager.unregisterAll(memberId)
         member.delete(now)
+        growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_WITHDREW, memberId))
         return true
     }
 }

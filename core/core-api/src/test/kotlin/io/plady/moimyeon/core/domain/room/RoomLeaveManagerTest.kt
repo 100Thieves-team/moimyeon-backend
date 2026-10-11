@@ -14,6 +14,10 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
+import io.plady.moimyeon.core.event.growth.RecruitingReopenReason
 import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -46,6 +50,7 @@ class RoomLeaveManagerTest {
     private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val roomManager = mockk<RoomManager>(relaxed = true)
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val roomLeaveManager = RoomLeaveManager(
         roomRepository,
         participationRepository,
@@ -55,6 +60,7 @@ class RoomLeaveManagerTest {
         participationFinder,
         roomManager,
         outboxEventPublisher,
+        growthEventPublisher,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 
@@ -97,6 +103,42 @@ class RoomLeaveManagerTest {
         verify(exactly = 1) { roomStatusLogRepository.save(match { it.transitionType == RoomStatus.RECRUITING }) }
         verify(exactly = 1) {
             outboxEventPublisher.publish(EventType.ROOM_RECRUITING_REOPENED, any<RoomRecruitingReopenedEventPayload>())
+        }
+    }
+
+    @Test
+    fun `참여자가 나가면 나간 회원 주체로 room_participant_left 사건을 발행한다`() {
+        givenRoom(RoomStatus.RECRUITING)
+        givenParticipant()
+
+        roomLeaveManager.leave(roomId, memberId)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.ROOM_PARTICIPANT_LEFT,
+                    memberId,
+                    mapOf("roomId" to roomId, "role" to ParticipationRole.PARTICIPANT, "roomStatus" to RoomStatus.RECRUITING, "byWithdrawal" to false),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `참여자 이탈로 최소 인원 밑이 되면 방장 주체로 PARTICIPANT_LEFT 재개 사건을 발행한다`() {
+        givenRoom(RoomStatus.CONFIRMED, minCapacity = 3)
+        givenParticipant(currentParticipants = 3)
+
+        roomLeaveManager.leave(roomId, memberId)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.ROOM_RECRUITING_REOPENED,
+                    hostMemberId,
+                    mapOf("roomId" to roomId, "reason" to RecruitingReopenReason.PARTICIPANT_LEFT),
+                ),
+            )
         }
     }
 
@@ -191,6 +233,18 @@ class RoomLeaveManagerTest {
         }
     }
 
+    @Test
+    fun `탈퇴로 나가면 byWithdrawal 을 담아 room_participant_left 사건을 발행한다`() {
+        givenRoom(RoomStatus.RECRUITING)
+        givenParticipant()
+
+        roomLeaveManager.leaveOnWithdrawal(roomId, memberId, now)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(match { it.code == GrowthEventCode.ROOM_PARTICIPANT_LEFT && it.properties["byWithdrawal"] == true })
+        }
+    }
+
     // 예정 시각과 같은 순간도 지난 것으로 본다(RoomSchedule.isPassed). 면접이 열렸을 수 있어 남긴다(R170).
     @Test
     fun `탈퇴해도 진행 예정 시각이 지난 확정 룸에서는 나가지 않는다`() {
@@ -202,6 +256,7 @@ class RoomLeaveManagerTest {
         assertThat(participation.status).isEqualTo(ParticipationStatus.JOINED)
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
         assertNothingRecorded()
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test

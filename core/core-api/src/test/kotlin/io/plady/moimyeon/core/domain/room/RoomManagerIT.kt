@@ -9,6 +9,8 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
 import io.plady.moimyeon.storage.db.core.MemberRepository
 import io.plady.moimyeon.storage.db.core.ParticipationRepository
 import io.plady.moimyeon.storage.db.core.ResumeEntity
@@ -23,12 +25,16 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.ApplicationEventsHolder
+import org.springframework.test.context.event.RecordApplicationEvents
 import java.util.UUID
 
 // 룸 생성은 쓰기 넷(룸·방장 참여·방장 신청·이력서 제출)이 한 커밋이다.
 // 바깥 테스트 트랜잭션을 두지 않는다(testing.md) — 두면 프록시 경계와 커밋 시점이 가려져
 // 원자성 단언이 아무것도 보증하지 않게 된다.
 @Import(FixedClockTestConfiguration::class)
+@RecordApplicationEvents
 class RoomManagerIT(
     private val roomManager: RoomManager,
     private val roomRepository: RoomRepository,
@@ -38,6 +44,10 @@ class RoomManagerIT(
     private val resumeRepository: ResumeRepository,
     private val memberRepository: MemberRepository,
 ) : ContextTest() {
+    // ApplicationEvents 는 생성자로 주입되지 않는다.
+    private val applicationEvents: ApplicationEvents
+        get() = ApplicationEventsHolder.getRequiredApplicationEvents()
+
     private val hostMemberId = UUID.randomUUID()
     private val resumeId = UUID.randomUUID()
     private val createdRoomIds = mutableListOf<UUID>()
@@ -92,6 +102,35 @@ class RoomManagerIT(
         assertThat(submission.originalName).isEqualTo("backend.pdf")
         assertThat(submission.sizeBytes).isEqualTo(1024L)
         assertThat(submission.contentType).isEqualTo("application/pdf")
+    }
+
+    @Test
+    fun `룸을 만들면 방장 주체로 룸 정보를 담은 room_created 사건을 발행한다`() {
+        persistResume("backend.pdf")
+        val room = newRoom()
+
+        roomManager.create(room, hostMemberId, resumeId, resumeFile())
+
+        val event = applicationEvents.stream(GrowthEvent::class.java).toList().single { it.code == GrowthEventCode.ROOM_CREATED }
+        assertThat(event.memberId).isEqualTo(hostMemberId)
+        assertThat(event.properties).containsEntry("roomId", room.id)
+            .containsEntry("jobPostingId", 1L)
+            .containsEntry("jobRoleId", 1L)
+            .containsEntry("interviewStage", InterviewStage.FIRST)
+            .containsEntry("minParticipants", 2)
+            .containsEntry("maxParticipants", 6)
+            .containsEntry("daysUntilStart", 7L)
+    }
+
+    @Test
+    fun `같은 룸 생성 요청이 다시 오면 room_created 사건을 다시 발행하지 않는다`() {
+        persistResume("backend.pdf")
+        val room = newRoom()
+
+        roomManager.create(room, hostMemberId, resumeId, resumeFile())
+        roomManager.create(room, hostMemberId, resumeId, resumeFile())
+
+        assertThat(applicationEvents.stream(GrowthEvent::class.java).filter { it.code == GrowthEventCode.ROOM_CREATED }.count()).isEqualTo(1)
     }
 
     // 넷이 같은 순간이라는 것이 곧 명세다. 자리마다 now() 를 찍으면 여기가 깨진다.

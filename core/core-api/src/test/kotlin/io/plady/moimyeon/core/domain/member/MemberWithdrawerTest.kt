@@ -10,6 +10,9 @@ import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionMa
 import io.plady.moimyeon.core.domain.session.SessionManager
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberEntity
@@ -29,12 +32,14 @@ class MemberWithdrawerTest {
     private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>(relaxed = true)
     private val sessionManager = mockk<SessionManager>(relaxed = true)
     private val webPushSubscriptionManager = mockk<WebPushSubscriptionManager>(relaxed = true)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val withdrawer = MemberWithdrawer(
         memberRepository,
         participationFinder,
         roomApplicationSubmissionManager,
         sessionManager,
         webPushSubscriptionManager,
+        growthEventPublisher,
     )
     private val memberId = UUID.randomUUID()
     private val now = LocalDateTime.of(2026, 1, 1, 0, 0)
@@ -61,6 +66,18 @@ class MemberWithdrawerTest {
     }
 
     @Test
+    fun `실제로 탈퇴하면 member_withdrew 사건을 발행한다`() {
+        val leftRoomId = UUID.randomUUID()
+        every { memberRepository.findForUpdateById(memberId) } returns member()
+
+        withdrawer.withdraw(memberId, now, setOf(leftRoomId))
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_WITHDREW, memberId))
+        }
+    }
+
+    @Test
     fun `없는 회원이면 E1006 을 던지고 아무것도 정리하지 않는다`() {
         every { memberRepository.findForUpdateById(memberId) } returns null
 
@@ -81,6 +98,7 @@ class MemberWithdrawerTest {
 
         verify(exactly = 0) { roomApplicationSubmissionManager.withdrawAllPending(any(), any()) }
         verify(exactly = 0) { sessionManager.closeAll(any(), any()) }
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     // 회원을 잠근 뒤에는 새 참여가 생길 수 없으니, 나간 룸 밖의 참여가 보이면 그 사이 생긴 것이다.
@@ -102,6 +120,7 @@ class MemberWithdrawerTest {
         assertThat(member.isDeleted()).isFalse()
         verify(exactly = 0) { sessionManager.closeAll(any(), any()) }
         verify(exactly = 0) { webPushSubscriptionManager.unregisterAll(any()) }
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test

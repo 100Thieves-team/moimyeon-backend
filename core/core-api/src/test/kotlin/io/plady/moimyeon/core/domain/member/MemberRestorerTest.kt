@@ -2,8 +2,12 @@ package io.plady.moimyeon.core.domain.member
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberEntity
@@ -17,7 +21,8 @@ import java.util.UUID
 
 class MemberRestorerTest {
     private val memberRepository = mockk<MemberRepository>()
-    private val restorer = MemberRestorer(memberRepository)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
+    private val restorer = MemberRestorer(memberRepository, growthEventPublisher)
     private val memberId = UUID.randomUUID()
     private val withdrawnAt = LocalDateTime.of(2026, 9, 1, 12, 0)
     private val now = LocalDateTime.of(2026, 10, 2, 12, 0)
@@ -31,6 +36,7 @@ class MemberRestorerTest {
 
         assertThat(member.isDeleted()).isFalse()
         assertThat(member.lastLoginAt).isEqualTo(now)
+        verify(exactly = 1) { growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_RESTORED, memberId)) }
     }
 
     // 이용 제한과 탈퇴는 따로 움직이는 값이다 — 탈퇴했다가 복구하는 것으로 제한이 풀리면 안 된다(R178).
@@ -53,6 +59,7 @@ class MemberRestorerTest {
 
         assertThat(member.isDeleted()).isFalse()
         assertThat(member.lastLoginAt).isEqualTo(now)
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test

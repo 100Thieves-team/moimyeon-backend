@@ -6,8 +6,8 @@
 - [x] 2. 팀 결정: 지표·도구·식별 방식 — D1~D17(`decisions.md`). 남은 것(처리방침 법률 검토·전체 내용)은 `tbd.md`, live 전까지
 - [x] 3. Wiki 반영 (`wiki-sync.md`)
 - [x] 4. 로깅 계약 확장 (PR 1 #198, `support:logging`). 머지(2026-10-10)
-- [ ] 5. 사건 기록 준비 (PR 2 #200, `core-api`): `analyticsId` 생성기·내 정보 응답, 처리방침 v1.2(PostHog 국외 이전 고지, D19로 별도 약관에서 변경). 아래 5단계 상세. 체크포인트 A 승인(2026-10-10, 초안 약관 내용 포함). PRD R180·R181·SSOT 갱신 완료. 체크포인트 B 승인(2026-10-10). 구현·리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-10). ship-pr 진행
-- [ ] 6. 사건 16개 기록 (PR 3, `core-api`): 아래 6단계 상세. 테스트 프로필은 그로스 INFO를 거르므로 writer를 주입해 검증(PR 1 QA 참고 4). 숫자 속성에 개인 식별 값 금지를 호출 지점 리뷰로 확인
+- [x] 5. 사건 기록 준비 (PR 2 #200, `core-api`) 머지(2026-10-11): `analyticsId` 생성기·내 정보 응답, 처리방침 v1.2(PostHog 국외 이전 고지, D19로 별도 약관에서 변경). 아래 5단계 상세. 체크포인트 A 승인(2026-10-10, 초안 약관 내용 포함). PRD R180·R181·SSOT 갱신 완료. 체크포인트 B 승인(2026-10-10). 구현·리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-10). ship-pr 진행
+- [ ] 6. 사건 16개 기록 (PR 3, `core-api`): 아래 6단계 상세. 체크포인트 A 승인(2026-10-11). 체크포인트 B 승인(2026-10-11). 구현·컨벤션 리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-11). ship-pr 진행. 테스트 프로필은 그로스 INFO를 거르므로 writer를 주입해 검증(PR 1 QA 참고 4). 숫자 속성에 개인 식별 값 금지를 호출 지점 리뷰로 확인
 - [ ] 7. 전송 (PR 4, infra): `ANALYTICS_ID_HMAC_KEY` 주입, 라우터 v3(그로스 필드 허용 + PostHog HTTP 출력), dev 전송 켜고 끄는 변수. Terraform plan까지. growth 줄은 예약 필드 외 MDC 키가 붙을 수 있으니 v3 허용 목록에서 거른다(4단계 리뷰 참고 4). `analyticsId`가 없는 줄의 PostHog `distinct_id` 처리와, 속성이 PostHog 예약 이름(`token`·`distinct_id` 등)을 덮지 않게 변환(PR 1 QA 참고 5)
 - [ ] 8. 탈퇴 회원 PostHog 삭제 배치 (PR 5, D8)
 - [ ] 9. dev에서 DB 대조와 퍼널 확인
@@ -60,14 +60,61 @@
 
 ## 6단계 상세: 사건 16개 기록 (PR 3)
 
-PR 2 머지 후 이 절을 구체화해 다시 승인받는다. 현재 방향:
+### 구조
 
-- Manager가 커밋 단위 안에서 `GrowthEvent`(사건 코드 enum, 주체 회원 ID, 속성)를 Spring 이벤트로 발행하고,
-  `GrowthEventListener`(`@TransactionalEventListener(AFTER_COMMIT)`)가 `analyticsId`를 계산해 `GrowthEventWriter`로 기록한다. outbox는 쓰지 않는다(recommendation 3.1).
-- 사건의 주체(analyticsId 대상): 신청 수락·반려는 신청자, 룸 확정·완료·취소·재개는 방장, 이탈은 나간 회원.
-- 제외: 탈퇴 시 대기 신청 일괄 철회(건별 정보 없음), 방장 이탈 시 대기 신청자 승격(수락 메서드를 거치지 않음), 슬롯 초과 종료.
-- `ReviewSkipRecorder`는 트랜잭션이 없어 AFTER_COMMIT이 돌지 않으므로 `@Transactional`을 붙인다.
-- 중복·멱등 분기(룸 생성 중복, 완료 재전송, 탈퇴·복구 멱등)에서는 기록하지 않는다.
+```text
+Manager(@Transactional) ── growthEventPublisher.publish(GrowthEvent) ──▶ Spring ApplicationEvent
+                                                                          │ 커밋 후(AFTER_COMMIT, 같은 스레드)
+                                                                          ▼
+                                       GrowthEventListener ── analyticsIdGenerator.generate(memberId)
+                                                           └─ GrowthEventWriter.write(GrowthEventEntry)
+```
+
+- `core/event/growth` 패키지(outbox 옆): `GrowthEvent`(사건 코드 enum, 주체 회원 ID, 속성), `GrowthEventCode`(16개, `대상.과거형동사` 값),
+  `GrowthEventPublisher`(`ApplicationEventPublisher` 감싸기), `GrowthEventListener`.
+- 롤백되면 기록하지 않는다(AFTER_COMMIT). 커밋 직후 프로세스가 죽으면 빠질 수 있다(D-21, DB와 대조).
+- 리스너는 예외를 삼키고 WARN 한 줄(`growth-event.listener.failed code=...`)을 남긴다. 커밋된 업무 요청을 로그 실패로 실패시키지 않는다.
+- outbox는 쓰지 않는다(recommendation 3.1). `eventId`는 리스너에서 새 UUID.
+- (변경, I18) `ReviewSkipRecorder`에는 `@Transactional`을 붙이지 않고, 리스너가 트랜잭션 밖 발행을 바로 기록한다(`fallbackExecution`).
+
+### 사건표
+
+주체는 `analyticsId`를 계산할 회원이다(그 사람의 퍼널에 남는다). 속성 값은 ID·숫자·enum·Boolean만(PR 1 계약).
+
+| # | 사건 | 기록 지점 | 주체 | 속성 |
+| --- | --- | --- | --- | --- |
+| 1 | `member.signed_up` | `MemberRegistrar.register` | 신규 회원 | provider |
+| 2 | `member.withdrew` | `MemberWithdrawer.withdraw` 실제 삭제 분기 | 탈퇴 회원 | — (탈퇴로 나간 룸은 `room_participant.left` byWithdrawal로 센다, 리뷰 반영) |
+| 3 | `member.restored` | `MemberRestorer.restore` 실제 복구 분기 | 복구 회원 | — |
+| 4 | `resume.registered` | `ResumeRegistrar` | 소유 회원 | resumeId, activeResumeCount(I19) |
+| 5 | `room.created` | `RoomManager.create` 중복 반환 이후 | 방장 | roomId, jobPostingId, jobRoleId, interviewStage, minParticipants, maxParticipants, daysUntilStart |
+| 6 | `room_application.submitted` | `RoomApplicationSubmissionManager` 제출 | 신청자 | roomId, applicationId |
+| 7 | `room_application.withdrawn` | 같은 파일 철회 | 신청자 | roomId, applicationId |
+| 8 | `room_application.accepted` | `RoomApplicationManager` 수락(슬롯 초과 종료 제외) | 신청자 | roomId, applicationId, minutesSinceSubmitted |
+| 9 | `room_application.rejected` | 같은 파일 반려 | 신청자 | roomId, applicationId, rejectReason(있을 때, I20) |
+| 10 | `room.confirmed` | `RoomManager` 확정 | 방장 | roomId, participantCount, hoursSinceCreated, reconfirmed(리뷰 반영) |
+| 11 | `room.completed` | `RoomProgressManager` 수동·자동 공통 완료(재전송 제외) | 방장 | roomId, completedBy(HOST/SYSTEM), confirmedCount, attendedCount |
+| 12 | `room.canceled` | `RoomManager.cancelWithoutGuard` | 방장 | roomId |
+| 13 | `room.recruiting_reopened` | `RoomLeaveManager` 재개 공통 지점(참여자 이탈·방장 위임 둘 다) | 방장(재개 시점) | roomId, reason(PARTICIPANT_LEFT/HOST_LEFT) |
+| 14 | `room_participant.left` | `RoomLeaveManager` 실제 나간 경우 | 나간 회원 | roomId, role, roomStatus, byWithdrawal |
+| 15 | `review.submitted` | `ReviewSubmissionManager` | 작성자 | roomId, reviewId, anonymous(I20) |
+| 16 | `review.skipped` | `ReviewSkipRecorder` 신규 기록 분기 | 작성자 | roomId |
+
+기록하지 않는 경우: 룸 생성 중복 반환, 완료 재전송, 탈퇴·복구 멱등 반환, 슬롯 초과 종료, 후기 건너뛰기 중복,
+탈퇴 시 대기 신청 일괄 철회(건별 정보 없음, `member.withdrew`로 대신), 방장 이탈 시 대기 신청자 승격(수락 메서드를 거치지 않음).
+탈퇴 흐름은 단계별 커밋이라 `room_participant.left`·`room.recruiting_reopened`가 `member.withdrew`보다 먼저, 회원 삭제가 실패해도 남는다.
+
+### 만들 테스트
+
+1. `GrowthEventListener`(단위): 사건을 `GrowthEventEntry`로 바꿔 쓴다(코드·analyticsId·속성), 키가 없으면 analyticsId 없이 쓴다, writer 예외를 삼킨다
+2. 커밋·롤백(ContextTest IT, 바깥 트랜잭션 없음): 커밋되면 한 번 기록, 롤백되면 기록 없음, 트랜잭션 밖이면 바로 기록(실제 writer logger 캡처, I22)
+3. Manager별(단위, MockK): 16개 사건마다 기록 지점에서 맞는 코드·주체·속성으로 발행, 위 "기록하지 않는 경우"마다 발행 안 함
+4. `ReviewSkipRecorder`: 트랜잭션 밖 발행이 바로 기록된다(IT 2의 세 번째 테스트)
+
+### 영향
+
+- API 변화 없음. 로그 출력만 늘어난다(라우터 v2는 그로스 필드를 버리므로 PR 4 전까지 S3에는 사건명만).
+- 생성자 변경으로 Manager 단위 테스트 다수의 조립부가 바뀐다(relaxed mock 추가). 예상 파일 수 35개 안팎(상한 50).
 
 ## 4단계 상세: 로깅 계약 확장
 

@@ -4,6 +4,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.domain.profile.ProfileManager
 import io.plady.moimyeon.core.domain.terms.TermsAgreementManager
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.storage.db.core.MemberRepository
@@ -19,6 +22,7 @@ class MemberRegistrar(
     private val memberRepository: MemberRepository,
     private val termsAgreementManager: TermsAgreementManager,
     private val profileManager: ProfileManager,
+    private val growthEventPublisher: GrowthEventPublisher,
 ) {
     @Transactional
     fun register(
@@ -41,6 +45,7 @@ class MemberRegistrar(
         val memberId = memberRepository.saveAndFlush(MemberMapper.toEntity(member)).id
         termsAgreementManager.agreeRequired(memberId, registeredAt)
         profileManager.createEmpty(memberId)
+        growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_SIGNED_UP, memberId, mapOf("provider" to provider)))
         return memberId
     }
 }

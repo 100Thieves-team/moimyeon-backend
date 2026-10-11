@@ -8,6 +8,8 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.OutboxRepository
@@ -24,14 +26,19 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.ApplicationEventsHolder
+import org.springframework.test.context.event.RecordApplicationEvents
 import tools.jackson.databind.json.JsonMapper
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 // 수락·반려는 각 매니저 호출이 자체 트랜잭션을 가지므로 클래스 레벨 @Transactional 없이 트랜잭션 밖에서 호출한다.
 // 슬롯 초과 종료(MOI-427)는 예외를 던지지 않고 커밋되어야 하므로, 바깥 트랜잭션이 없다는 것이 특히 중요하다 —
 // 테스트 트랜잭션 안에서 보면 롤백으로 사라지는 구현도 초록으로 보인다.
 @Import(FixedClockTestConfiguration::class)
+@RecordApplicationEvents
 class RoomApplicationManagerIT(
     val roomApplicationManager: RoomApplicationManager,
     val roomRepository: RoomRepository,
@@ -41,6 +48,10 @@ class RoomApplicationManagerIT(
     val jdbcTemplate: JdbcTemplate,
     val jsonMapper: JsonMapper,
 ) : ContextTest() {
+    // ApplicationEvents 는 생성자로 주입되지 않는다.
+    private val applicationEvents: ApplicationEvents
+        get() = ApplicationEventsHolder.getRequiredApplicationEvents()
+
     private val roomId: UUID = UUID.randomUUID()
     private val hostId: UUID = UUID.randomUUID()
     private val applicantId: UUID = UUID.randomUUID()
@@ -223,6 +234,51 @@ class RoomApplicationManagerIT(
     }
 
     @Test
+    fun `수락하면 신청자 주체로 신청 후 걸린 분을 담아 room_application_accepted 사건을 발행한다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        val event = growthEvents().single()
+        assertThat(event.code).isEqualTo(GrowthEventCode.ROOM_APPLICATION_ACCEPTED)
+        assertThat(event.memberId).isEqualTo(applicantId)
+        assertThat(event.properties).containsEntry("roomId", roomId)
+            .containsEntry("applicationId", applicationId)
+            .containsEntry("minutesSinceSubmitted", ChronoUnit.MINUTES.between(now, FIXED_NOW))
+    }
+
+    @Test
+    fun `슬롯 초과로 끝난 신청은 수락 사건을 발행하지 않는다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        occupyApplicantSlots(3)
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.accept(roomId, applicationId, hostId)
+
+        assertThat(growthEvents()).isEmpty()
+    }
+
+    @Test
+    fun `반려하면 신청자 주체로 반려 사유를 담아 room_application_rejected 사건을 발행한다`() {
+        seedRoom(maxCapacity = 6)
+        seedHost()
+        val applicationId = seedPendingApplication()
+
+        roomApplicationManager.reject(roomId, applicationId, hostId, RejectReason.ROLE_MISMATCH)
+
+        assertThat(growthEvents()).containsExactly(
+            GrowthEvent(
+                GrowthEventCode.ROOM_APPLICATION_REJECTED,
+                applicantId,
+                mapOf("roomId" to roomId, "applicationId" to applicationId, "rejectReason" to RejectReason.ROLE_MISMATCH),
+            ),
+        )
+    }
+
+    @Test
     fun `참여 중인 룸이 둘이면 수락되어 참여자가 된다`() {
         seedRoom(maxCapacity = 6)
         seedHost()
@@ -292,6 +348,8 @@ class RoomApplicationManagerIT(
         val payload = outboxRepository.findAll().single().payload
         assertThat(payload).doesNotContain("ROLE_MISMATCH").doesNotContain("직무")
     }
+
+    private fun growthEvents(): List<GrowthEvent> = applicationEvents.stream(GrowthEvent::class.java).toList()
 
     private fun seedRoom(maxCapacity: Int) {
         roomRepository.save(

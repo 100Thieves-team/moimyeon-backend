@@ -59,6 +59,17 @@ D17 진행(2026-10-10): PostHog 프로젝트 설정 Customization → "Filter ou
 | I16 | (D19) V36은 처리방침 v1.2 한 행만 넣고, `seed.sql`에도 같은 행(시행 2026-10-10)을 둔다. 이전 v1.1과 동의 기록은 바꾸지 않는다 | 기존 약관 종류만 쓰므로 롤링 배포 중 이전 서버도 새 행을 읽을 수 있고, 고정 시각 테스트도 v1.1을 그대로 고른다 |
 | I17 | (CodeRabbit 반영) 키는 빈 문자열만 미설정으로 보고, 공백뿐인 값은 기동을 거부한다 | 공백 키가 조용히 analyticsId를 끄지 않게 한다 |
 
+## 구현 결정 (6단계, PR 3)
+
+| # | 결정 | 이유 |
+| --- | --- | --- |
+| I18 | 리스너는 `@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`. 발행기는 트랜잭션을 요구하지 않는다. `ReviewSkipRecorder`에 `@Transactional`을 붙이지 않는다(계획 변경) | 이 클래스는 동시 중복의 유니크 충돌을 삼키는데, 트랜잭션 안에서는 저장소 예외가 rollback-only를 걸어 커밋이 `UnexpectedRollbackException`으로 깨진다. 트랜잭션 밖 발행은 저장이 이미 커밋된 뒤라 바로 기록해도 맞다 |
+| I19 | `resume.registered`는 `firstResume` 대신 `activeResumeCount`(등록 후 활성 이력서 수) | 삭제 후 다시 올린 이력서를 "첫 이력서"로 잘못 셀 수 있다. 숫자는 사실 그대로다 |
+| I20 | `room_application.rejected`에 반려 사유(`rejectReason`, enum)가 있으면 담는다. `review.submitted`에 `anonymous`를 담는다 | 둘 다 enum·Boolean이라 PR 1 계약 안이고 이탈 원인 분석에 쓴다 |
+| I21 | 완료 주체·재개 사유는 `RoomCompletionTrigger`(HOST/SYSTEM)·`RecruitingReopenReason`(PARTICIPANT_LEFT/HOST_LEFT) enum으로 `event/growth`에 둔다 | 문자열 속성은 받지 않으므로 분류 값은 enum이어야 한다 |
+| I22 | 커밋·롤백 IT는 `@Import` 없이 실제 `GrowthEventWriter` logger만 INFO로 올려 캡처한다 | 별도 컨텍스트 하나가 늘자 테스트 JVM이 컨텍스트 캐시로 OutOfMemoryError가 나 전체 실행이 멈췄다 |
+| I23 | (리뷰 필수) `member.withdrew`에서 `leftRoomCount` 제거, `room.confirmed`에 `reconfirmed` 추가 | 넘겨받는 룸 ID 목록은 실제로 나간 룸이 아니었다(완료·취소·일정 지난 룸 포함). 재확정과 첫 확정을 구분하지 않으면 확정이 두 번 셀 수 있다 |
+
 참고(D19 이전 설계에서 남긴 주의, 출시 후 같은 일을 할 때 적용):
 
 - 시행 중인 처리방침 v1.1 §12는 "별도 동의가 필요한 새로운 수집·이용·제공은 공지만으로 동의를 대신하지 않는다"고 적는다. 별도 동의가 필요하다는 법률 검토가 나오면 일괄 동의로 대신하지 않는다.

@@ -2,6 +2,9 @@ package io.plady.moimyeon.core.domain.resume
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -20,6 +23,7 @@ private val log = KotlinLogging.logger {}
 class ResumeRegistrar(
     private val memberRepository: MemberRepository,
     private val resumeRepository: ResumeRepository,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     fun validateCapacity(memberId: UUID) {
@@ -63,6 +67,13 @@ class ResumeRegistrar(
             ),
         ).id
 
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.RESUME_REGISTERED,
+                memberId,
+                mapOf("resumeId" to resumeId, "activeResumeCount" to resumeCount + 1),
+            ),
+        )
         return resumeId
     }
 

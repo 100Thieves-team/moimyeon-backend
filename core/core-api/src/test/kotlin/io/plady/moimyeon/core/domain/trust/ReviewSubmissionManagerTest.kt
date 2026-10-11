@@ -7,6 +7,9 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.RoomStatus
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.AttendanceEntity
@@ -33,11 +36,13 @@ class ReviewSubmissionManagerTest {
     private val attendanceRepository = mockk<AttendanceRepository>()
     private val eligibilityValidator = mockk<ReviewEligibilityValidator>()
     private val clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneOffset.UTC)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val reviewSubmissionManager = ReviewSubmissionManager(
         reviewRepository,
         roomRepository,
         attendanceRepository,
         eligibilityValidator,
+        growthEventPublisher,
         clock,
     )
     private val roomId = UUID.randomUUID()
@@ -140,6 +145,7 @@ class ReviewSubmissionManagerTest {
             reviewRepository.existsByRoomIdAndAuthorMemberIdAndTargetMemberIdAndDeletedAtIsNull(any(), any(), any())
             reviewRepository.saveAndFlush(any())
         }
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test
@@ -152,6 +158,24 @@ class ReviewSubmissionManagerTest {
 
         assertThat(reviewSlot.captured.tags()).isEmpty()
         assertThat(reviewSlot.captured.content).isEmpty()
+    }
+
+    @Test
+    fun `후기를 제출하면 작성자 주체로 review_submitted 사건을 발행한다`() {
+        val savedReview = mockk<ReviewEntity> { every { id } returns 1L }
+        every { reviewRepository.saveAndFlush(any()) } returns savedReview
+
+        reviewSubmissionManager.submit(command)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.REVIEW_SUBMITTED,
+                    authorMemberId,
+                    mapOf("roomId" to roomId, "reviewId" to 1L, "anonymous" to command.anonymous),
+                ),
+            )
+        }
     }
 
     @Test
