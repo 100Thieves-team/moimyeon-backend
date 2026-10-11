@@ -70,6 +70,16 @@ D17 진행(2026-10-10): PostHog 프로젝트 설정 Customization → "Filter ou
 | I22 | 커밋·롤백 IT는 `@Import` 없이 실제 `GrowthEventWriter` logger만 INFO로 올려 캡처한다 | 별도 컨텍스트 하나가 늘자 테스트 JVM이 컨텍스트 캐시로 OutOfMemoryError가 나 전체 실행이 멈췄다 |
 | I23 | (리뷰 필수) `member.withdrew`에서 `leftRoomCount` 제거, `room.confirmed`에 `reconfirmed` 추가 | 넘겨받는 룸 ID 목록은 실제로 나간 룸이 아니었다(완료·취소·일정 지난 룸 포함). 재확정과 첫 확정을 구분하지 않으면 확정이 두 번 셀 수 있다 |
 
+## 구현 결정 (7단계, PR 4)
+
+| # | 결정 | 이유 |
+| --- | --- | --- |
+| I24 | 전송 스위치는 환경 변수 하나(`growth_analytics_enabled`)다. 켜면 core-api에 키를 넣고 api 라우터만 PostHog로 보낸다. 모듈에는 계획의 `posthog.enabled` 대신 서비스별 `posthog_enabled`를 둔다 | 키만 넣고 전송을 끄거나 그 반대인 조합은 쓸 일이 없다. worker는 그로스 사건을 쓰지 않으니 토큰을 받지 않게 한다 |
+| I25 | PostHog 구간은 별도 파일(`router/v3/posthog.conf.tftpl`)을 렌더링해 본 템플릿의 `${posthog_configuration}` 자리에 넣는다. 끈 서비스에는 빈 문자열이다 | smoke 테스트가 정규식으로 템플릿을 채우므로 Terraform 조건 문법을 쓸 수 없다. 끈 환경(live)의 설정에는 전송 구간이 아예 없다 |
+| I26 | 라우터 `secrets`는 PostHog를 켠 서비스에만 붙이고, 끈 서비스에는 키 자체를 두지 않는다 | 빈 `secrets`를 두면 ECS가 저장한 정의와 달라져 plan마다 task 정의가 바뀔 수 있다(MOI-581과 같은 종류) |
+| I27 | PostHog HTTP 출력에는 디스크 버퍼를 두지 않는다(재시도 3회) | 라우터 메모리 128MiB 안에서 운영 경로를 우선한다. 빠진 사건은 S3 growth와 DB 대조(9단계)로 센다 |
+| I28 | `properties`의 앱 값 `environment`·`service`·`release`는 라우터 값으로 덮는다. S3 growth에는 앱 값이 남는다 | 분석 필터(`environment`)를 앱 속성이 흐리지 못하게 한다. 앱 계약상 문자열 속성은 UUID·enum뿐이라 S3에 남아도 개인정보가 아니다 |
+
 참고(D19 이전 설계에서 남긴 주의, 출시 후 같은 일을 할 때 적용):
 
 - 시행 중인 처리방침 v1.1 §12는 "별도 동의가 필요한 새로운 수집·이용·제공은 공지만으로 동의를 대신하지 않는다"고 적는다. 별도 동의가 필요하다는 법률 검토가 나오면 일괄 동의로 대신하지 않는다.
