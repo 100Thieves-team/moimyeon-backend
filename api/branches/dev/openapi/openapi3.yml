@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 exampleGet:
                   value: |-
@@ -45,8 +45,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_GET",
-                        "date" : "2026-10-10",
-                        "datetime" : "2026-10-10T07:51:42.551408487",
+                        "date" : "2026-10-11",
+                        "datetime" : "2026-10-11T09:27:53.432469663",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/get-exampleValue191457252"
+                $ref: "#/components/schemas/post191457252"
               examples:
                 examplePost:
                   value: |-
@@ -87,8 +87,8 @@ paths:
                       "result" : "SUCCESS",
                       "data" : {
                         "result" : "BYE_POST",
-                        "date" : "2026-10-10",
-                        "datetime" : "2026-10-10T07:51:42.595431405",
+                        "date" : "2026-10-11",
+                        "datetime" : "2026-10-11T09:27:53.467592816",
                         "items" : [ {
                           "key" : "1"
                         }, {
@@ -1851,19 +1851,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/v1-members-me1349704155"
+                $ref: "#/components/schemas/v1-members-me-755968770"
               examples:
                 memberMe:
                   value: |-
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "a70d8a45-c30e-42a0-bfba-b8469fc2220e",
+                        "memberId" : "b6e5e2a8-d607-4d7d-b3ca-822bfec78a8e",
                         "email" : "user@example.com",
                         "nickname" : "차분한 펭귄 12",
                         "status" : "ACTIVE",
                         "profile" : {
-                          "memberId" : "a70d8a45-c30e-42a0-bfba-b8469fc2220e",
+                          "memberId" : "b6e5e2a8-d607-4d7d-b3ca-822bfec78a8e",
                           "interestJobRoleIds" : [ 1, 2 ],
                           "bio" : "",
                           "interestCompanies" : [ {
@@ -1873,7 +1873,8 @@ paths:
                             "companyId" : 2,
                             "name" : "한빛커머스"
                           } ]
-                        }
+                        },
+                        "analyticsId" : "0123456789abcdef0123456789abcdef"
                       },
                       "error" : null
                     }
@@ -2611,7 +2612,7 @@ paths:
                           "label" : "서울 강남구"
                         },
                         "schedule" : {
-                          "startAt" : "2026-10-11T07:51:49.397303046",
+                          "startAt" : "2026-10-12T09:27:58.977842326",
                           "durationMinutes" : 90
                         },
                         "recruit" : {
@@ -2624,9 +2625,9 @@ paths:
                         },
                         "resumePublic" : false,
                         "previouslyConfirmed" : false,
-                        "hostMemberId" : "8a9bf66f-f31f-409a-8656-1b7d1c9fbbdc",
+                        "hostMemberId" : "3eacd48a-0bcc-4966-a86a-71e21f6653f0",
                         "participants" : [ {
-                          "memberId" : "8a9bf66f-f31f-409a-8656-1b7d1c9fbbdc",
+                          "memberId" : "3eacd48a-0bcc-4966-a86a-71e21f6653f0",
                           "nickname" : "영리한 부엉이 86"
                         } ],
                         "viewer" : {
@@ -3431,7 +3432,7 @@ paths:
                     {
                       "result" : "SUCCESS",
                       "data" : {
-                        "memberId" : "28a90dee-3e98-454d-99e5-02aea5a88055",
+                        "memberId" : "3afd2a4b-47f4-47d0-bcd7-dc1efb9b4c9d",
                         "interestJobRoleIds" : [ 1, 2 ],
                         "bio" : "실전처럼 압박 질문을 주고받는 걸 좋아해요.",
                         "interestCompanies" : [ {
@@ -4200,19 +4201,19 @@ paths:
               submitRoomApplication-e400-note-length:
                 value: |-
                   {
-                    "resumeId" : "9fc4135d-740f-40ab-908b-90d532e1271c",
+                    "resumeId" : "b7e5be22-e2a9-4125-8b60-8a2d45491368",
                     "note" : "가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가가"
                   }
               submitRoomApplication:
                 value: |-
                   {
-                    "resumeId" : "76d93ee6-03bb-4fd0-b0a7-ef2352b84840",
+                    "resumeId" : "f7f4ccec-9c21-4f1c-8c58-7a6c081043b7",
                     "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요."
                   }
               submitRoomApplication-e1010:
                 value: |-
                   {
-                    "resumeId" : "49c58eaf-3120-41a5-b614-7d0aa3cba137"
+                    "resumeId" : "98054a62-01bb-43aa-bd3c-1eb3f927dd36"
                   }
       responses:
         "400":
@@ -6405,7 +6406,7 @@ paths:
                         "roomId" : "01920000-0000-7000-8000-000000000001",
                         "note" : "결제 도메인 면접을 실전처럼 준비하고 싶어요.",
                         "resume" : {
-                          "resumeId" : "4d4fa873-b419-4d52-a705-0f5222b5178b",
+                          "resumeId" : "331f6ffd-ad43-4864-8021-54321673490c",
                           "file" : {
                             "originalName" : "backend.pdf",
                             "sizeBytes" : 2048,
@@ -7673,43 +7674,6 @@ components:
               type: boolean
               description: 작성 가능 여부. false 면 읽기 전용
           nullable: true
-    get-exampleValue191457252:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: ResultType
-        data:
-          required:
-          - date
-          - datetime
-          - items
-          - result
-          type: object
-          properties:
-            date:
-              type: string
-              description: Result Date
-            result:
-              type: string
-              description: Result Data
-            datetime:
-              type: string
-              description: Result Datetime
-            items:
-              type: array
-              description: Result Items
-              items:
-                required:
-                - key
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: Result Item
-          nullable: true
     v1-terms2056106368:
       required:
       - result
@@ -7759,6 +7723,43 @@ components:
                     type: string
                     description: "약관 전문 (Markdown, HTML 출력 시 안전한 렌더링 필요)"
           nullable: true
+    post191457252:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: ResultType
+        data:
+          required:
+          - date
+          - datetime
+          - items
+          - result
+          type: object
+          properties:
+            date:
+              type: string
+              description: Result Date
+            result:
+              type: string
+              description: Result Data
+            datetime:
+              type: string
+              description: Result Datetime
+            items:
+              type: array
+              description: Result Items
+              items:
+                required:
+                - key
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: Result Item
+          nullable: true
     v1-auth-logout198252895:
       required:
       - result
@@ -7767,6 +7768,76 @@ components:
         result:
           type: string
           description: 처리 결과 (SUCCESS)
+    v1-members-me-755968770:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - email
+          - memberId
+          - nickname
+          - profile
+          - status
+          type: object
+          properties:
+            profile:
+              required:
+              - bio
+              - interestCompanies
+              - interestJobRoleIds
+              - memberId
+              type: object
+              properties:
+                interestCompanies:
+                  type: array
+                  description: 관심 회사 목록 (미지정이면 빈 배열)
+                  items:
+                    required:
+                    - companyId
+                    - name
+                    type: object
+                    properties:
+                      companyId:
+                        type: number
+                        description: 회사 id
+                      name:
+                        type: string
+                        description: 회사명
+                bio:
+                  type: string
+                  description: 한 줄 소개 (미지정이면 빈 문자열)
+                interestJobRoleIds:
+                  type: array
+                  description: 관심 직무 id 목록 (미지정이면 빈 배열)
+                  items:
+                    type: number
+                memberId:
+                  type: string
+                  description: 회원 식별자 (UUID)
+              description: 프로필 (프로필 수정 응답의 data 와 동일 모양)
+            nickname:
+              type: string
+              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
+            analyticsId:
+              type: string
+              description: 분석 도구(PostHog) identify 에 쓰는 가명 회원 식별자. 32자리 소문자 16진수.
+                서버에 키가 없으면 null
+              nullable: true
+            email:
+              type: string
+              description: 대표 이메일
+            status:
+              type: string
+              description: 회원 상태 (ACTIVE | RESTRICTED)
+            memberId:
+              type: string
+              description: 회원 식별자 (UUID)
+          nullable: true
     v1-terms-termsId277003276:
       required:
       - result
@@ -8911,71 +8982,6 @@ components:
                     description: 대표 직무명 (선택)
                     nullable: true
           nullable: true
-    v1-members-me1349704155:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - email
-          - memberId
-          - nickname
-          - profile
-          - status
-          type: object
-          properties:
-            profile:
-              required:
-              - bio
-              - interestCompanies
-              - interestJobRoleIds
-              - memberId
-              type: object
-              properties:
-                interestCompanies:
-                  type: array
-                  description: 관심 회사 목록 (미지정이면 빈 배열)
-                  items:
-                    required:
-                    - companyId
-                    - name
-                    type: object
-                    properties:
-                      companyId:
-                        type: number
-                        description: 회사 id
-                      name:
-                        type: string
-                        description: 회사명
-                bio:
-                  type: string
-                  description: 한 줄 소개 (미지정이면 빈 문자열)
-                interestJobRoleIds:
-                  type: array
-                  description: 관심 직무 id 목록 (미지정이면 빈 배열)
-                  items:
-                    type: number
-                memberId:
-                  type: string
-                  description: 회원 식별자 (UUID)
-              description: 프로필 (프로필 수정 응답의 data 와 동일 모양)
-            nickname:
-              type: string
-              description: "닉네임 (가입 시 자동 부여, 변경 가능)"
-            email:
-              type: string
-              description: 대표 이메일
-            status:
-              type: string
-              description: 회원 상태 (ACTIVE | RESTRICTED)
-            memberId:
-              type: string
-              description: 회원 식별자 (UUID)
-          nullable: true
     v1-dev-members-social-signup1384519471:
       required:
       - result
@@ -9830,47 +9836,6 @@ components:
               type: string
               description: 룸 상태 (RECRUITING)
           nullable: true
-    v1-dev-members-memberId-status1741079441:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - before
-          - memberId
-          - status
-          type: object
-          properties:
-            before:
-              type: string
-              description: 바꾸기 전 상태
-            status:
-              type: string
-              description: 바꾼 뒤 상태
-            memberId:
-              type: string
-              description: 회원 id
-          nullable: true
-    v1-job-postings-1848070641:
-      required:
-      - companyId
-      - postingName
-      - url
-      type: object
-      properties:
-        companyId:
-          type: number
-          description: "회사 id (필수, /v1/companies 검색 결과)"
-        postingName:
-          type: string
-          description: "확정한 공고명 (필수, 최대 100자)"
-        url:
-          type: string
-          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-rooms-roomId1114993826:
       required:
       - result
@@ -10112,6 +10077,47 @@ components:
               type: string
               description: 룸 상태 (RECRUITING | CONFIRMED | COMPLETED | CANCELED)
           nullable: true
+    v1-dev-members-memberId-status1741079441:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - before
+          - memberId
+          - status
+          type: object
+          properties:
+            before:
+              type: string
+              description: 바꾸기 전 상태
+            status:
+              type: string
+              description: 바꾼 뒤 상태
+            memberId:
+              type: string
+              description: 회원 id
+          nullable: true
+    v1-job-postings-1848070641:
+      required:
+      - companyId
+      - postingName
+      - url
+      type: object
+      properties:
+        companyId:
+          type: number
+          description: "회사 id (필수, /v1/companies 검색 결과)"
+        postingName:
+          type: string
+          description: "확정한 공고명 (필수, 최대 100자)"
+        url:
+          type: string
+          description: "원본 공고 링크 (필수, http/https, 최대 2000자)"
     v1-dev-resumes-resumeId-summary1029161103:
       type: object
       properties:
@@ -10549,31 +10555,6 @@ components:
                           type: number
                           description: 직무 id (프로필 저장에 사용)
           nullable: true
-    v1-rooms-roomId-applications1651584797:
-      required:
-      - result
-      type: object
-      properties:
-        result:
-          type: string
-          description: 처리 결과 (SUCCESS)
-        data:
-          required:
-          - applicationId
-          - status
-          - statusLabel
-          type: object
-          properties:
-            applicationId:
-              type: number
-              description: 생성된 참가 신청 id
-            statusLabel:
-              type: string
-              description: 신청 상태 표시명 (대기 중)
-            status:
-              type: string
-              description: 신청 상태 (PENDING)
-          nullable: true
     v1-rooms-roomId-applications1094172635:
       required:
       - result
@@ -10661,6 +10642,31 @@ components:
                         type: string
                         description: 신청자 회원 식별자 (UUID)
                     nullable: true
+          nullable: true
+    v1-rooms-roomId-applications1651584797:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          type: string
+          description: 처리 결과 (SUCCESS)
+        data:
+          required:
+          - applicationId
+          - status
+          - statusLabel
+          type: object
+          properties:
+            applicationId:
+              type: number
+              description: 생성된 참가 신청 id
+            statusLabel:
+              type: string
+              description: 신청 상태 표시명 (대기 중)
+            status:
+              type: string
+              description: 신청 상태 (PENDING)
           nullable: true
     v1-rooms501055666:
       required:
