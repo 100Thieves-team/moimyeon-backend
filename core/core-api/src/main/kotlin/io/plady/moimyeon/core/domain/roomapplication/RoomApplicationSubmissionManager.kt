@@ -9,6 +9,9 @@ import io.plady.moimyeon.core.domain.room.RoomValidator
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomApplicationSubmittedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -39,6 +42,7 @@ class RoomApplicationSubmissionManager(
     private val roomFinder: RoomFinder,
     private val participationFinder: ParticipationFinder,
     private val outboxEventPublisher: OutboxEventPublisher,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     @Transactional
@@ -74,6 +78,13 @@ class RoomApplicationSubmissionManager(
             ),
         )
         publishSubmitted(application.id, roomId, applicantMemberId)
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_APPLICATION_SUBMITTED,
+                applicantMemberId,
+                mapOf("roomId" to roomId, "applicationId" to application.id),
+            ),
+        )
         return application.id
     }
 
@@ -91,6 +102,13 @@ class RoomApplicationSubmissionManager(
         requireBusiness(application.isPending(), CoreErrorType.APPLICATION_ALREADY_HANDLED)
 
         application.withdraw(LocalDateTime.now(clock))
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_APPLICATION_WITHDRAWN,
+                applicantMemberId,
+                mapOf("roomId" to roomId, "applicationId" to application.id),
+            ),
+        )
     }
 
     private fun publishSubmitted(applicationId: Long, roomId: UUID, applicantMemberId: UUID) {

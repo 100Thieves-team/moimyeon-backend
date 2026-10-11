@@ -5,6 +5,9 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import io.plady.moimyeon.core.enums.ResumeSummaryStatus
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberEntity
@@ -24,7 +27,8 @@ class ResumeRegistrarTest {
     private val memberRepository = mockk<MemberRepository>()
     private val resumeRepository = mockk<ResumeRepository>()
     private val clock = Clock.fixed(Instant.parse("2026-08-03T12:00:00Z"), ZoneOffset.UTC)
-    private val resumeRegistrar = ResumeRegistrar(memberRepository, resumeRepository, clock)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
+    private val resumeRegistrar = ResumeRegistrar(memberRepository, resumeRepository, growthEventPublisher, clock)
 
     private val memberId = UUID.randomUUID()
     private val file = ResumeFile(
@@ -91,5 +95,21 @@ class ResumeRegistrarTest {
 
         assertThat(savedResume.captured.isDefault).isFalse()
         verify(exactly = 1) { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) }
+    }
+
+    @Test
+    fun `이력서를 등록하면 등록 후 활성 이력서 수와 함께 resume_registered 사건을 발행한다`() {
+        val savedResume = slot<ResumeEntity>()
+        every { memberRepository.findForUpdateByIdAndDeletedAtIsNull(memberId) } returns mockk<MemberEntity>()
+        every { resumeRepository.countByMemberIdAndDeletedAtIsNull(memberId) } returns 1
+        every { resumeRepository.save(capture(savedResume)) } answers { savedResume.captured }
+
+        val resumeId = resumeRegistrar.register(memberId, newResume)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(GrowthEventCode.RESUME_REGISTERED, memberId, mapOf("resumeId" to resumeId, "activeResumeCount" to 2L)),
+            )
+        }
     }
 }

@@ -9,6 +9,10 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
+import io.plady.moimyeon.core.event.growth.RecruitingReopenReason
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomRecruitingReopenedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -41,6 +45,7 @@ class RoomLeaveManager(
     private val participationFinder: ParticipationFinder,
     private val roomManager: RoomManager,
     private val outboxEventPublisher: OutboxEventPublisher,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     // 룸 행 잠금이 나가기끼리를 직렬화한다.
@@ -60,7 +65,7 @@ class RoomLeaveManager(
             ),
             CoreErrorType.ROOM_PARTICIPANT_FORBIDDEN,
         )
-        leaveLocked(room, participation, memberId, LocalDateTime.now(clock))
+        leaveLocked(room, participation, memberId, LocalDateTime.now(clock), byWithdrawal = false)
     }
 
     // 회원 탈퇴(「회원 및 프로필」 R169·R170). 룸 하나를 나가기와 같은 규칙으로 빠진다 — 탈퇴는 룸마다 이 메서드를
@@ -76,7 +81,7 @@ class RoomLeaveManager(
             memberId,
             ParticipationStatus.JOINED,
         ) ?: return
-        leaveLocked(room, participation, memberId, now)
+        leaveLocked(room, participation, memberId, now, byWithdrawal = true)
     }
 
     private fun leaveLocked(
@@ -84,11 +89,24 @@ class RoomLeaveManager(
         participation: ParticipationEntity,
         memberId: UUID,
         now: LocalDateTime,
+        byWithdrawal: Boolean,
     ) {
         val headcountBeforeLeave = participationRepository
             .countByRoomIdAndStatusAndDeletedAtIsNull(room.id, ParticipationStatus.JOINED)
         val wasConfirmed = room.status == RoomStatus.CONFIRMED
         participation.leave(now, memberId)
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_PARTICIPANT_LEFT,
+                memberId,
+                mapOf(
+                    "roomId" to room.id,
+                    "role" to participation.participationRole,
+                    "roomStatus" to room.status,
+                    "byWithdrawal" to byWithdrawal,
+                ),
+            ),
+        )
         if (participation.participationRole == ParticipationRole.HOST) {
             delegateOrCancel(room, memberId, now, wasConfirmed)
         } else {
@@ -112,6 +130,7 @@ class RoomLeaveManager(
         }
         if (wasConfirmed) {
             reopenRecruiting(room, leavingHostId, now)
+            publishReopened(room.id, newHostId, RecruitingReopenReason.HOST_LEFT)
         }
         outboxEventPublisher.publish(
             EventType.ROOM_HOST_DELEGATED,
@@ -180,14 +199,22 @@ class RoomLeaveManager(
 
         reopenRecruiting(room, leavingMemberId, now)
         val remaining = participationFinder.getJoinedParticipants(room.id)
+        val hostMemberId = remaining.single { it.isHost }.memberId
         outboxEventPublisher.publish(
             EventType.ROOM_RECRUITING_REOPENED,
             RoomRecruitingReopenedEventPayload(
                 roomId = room.id,
                 roomTitle = room.title,
-                hostMemberId = remaining.single { it.isHost }.memberId,
+                hostMemberId = hostMemberId,
                 participantMemberIds = remaining.map { it.memberId },
             ),
+        )
+        publishReopened(room.id, hostMemberId, RecruitingReopenReason.PARTICIPANT_LEFT)
+    }
+
+    private fun publishReopened(roomId: UUID, hostMemberId: UUID, reason: RecruitingReopenReason) {
+        growthEventPublisher.publish(
+            GrowthEvent(GrowthEventCode.ROOM_RECRUITING_REOPENED, hostMemberId, mapOf("roomId" to roomId, "reason" to reason)),
         )
     }
 

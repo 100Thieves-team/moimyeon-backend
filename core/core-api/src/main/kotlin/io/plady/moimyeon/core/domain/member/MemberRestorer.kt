@@ -1,6 +1,9 @@
 package io.plady.moimyeon.core.domain.member
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.requireBusiness
 import io.plady.moimyeon.core.support.error.requireFound
@@ -17,6 +20,7 @@ private val log = KotlinLogging.logger {}
 @Component
 class MemberRestorer(
     private val memberRepository: MemberRepository,
+    private val growthEventPublisher: GrowthEventPublisher,
 ) {
     // confirmedAt 은 복구 확인 토큰을 발급한 시각이다. 그보다 뒤에 다시 탈퇴했다면 그 토큰은 지난 탈퇴의 것이라
     // 쓸 수 없다 — "복구 → 다시 탈퇴" 뒤 남은 토큰으로 되살리지 못하게 한다. 토큰 시각이 초 단위라 1초 여유를 둔다.
@@ -26,7 +30,10 @@ class MemberRestorer(
         val member = requireFound(memberRepository.findForUpdateById(memberId), CoreErrorType.MEMBER_NOT_FOUND)
         requireBusiness(!member.isDeletedAfter(confirmedAt.plusSeconds(1)), CoreErrorType.RESTORATION_EXPIRED)
         // 멱등이다(SSOT C.member.restore). 복구를 두 번 눌러도 두 번째는 로그인만 다시 된다.
-        if (member.isDeleted()) member.active()
+        if (member.isDeleted()) {
+            member.active()
+            growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_RESTORED, memberId))
+        }
         member.loggedIn(now)
     }
 }

@@ -8,6 +8,9 @@ import io.plady.moimyeon.core.enums.ParticipationRole
 import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomApplicationAcceptedEventPayload
 import io.plady.moimyeon.core.event.payload.RoomApplicationRejectedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -35,6 +39,7 @@ class RoomApplicationManager(
     private val participationValidator: ParticipationValidator,
     private val participationFinder: ParticipationFinder,
     private val outboxEventPublisher: OutboxEventPublisher,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     // 룸 행에 쓰기 잠금을 걸어 동시 수락을 직렬화한다(마지막 자리 1건만 성공, §4.4).
@@ -88,6 +93,17 @@ class RoomApplicationManager(
                 applicantMemberId = application.applicantMemberId,
             ),
         )
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_APPLICATION_ACCEPTED,
+                application.applicantMemberId,
+                mapOf(
+                    "roomId" to roomId,
+                    "applicationId" to application.id,
+                    "minutesSinceSubmitted" to ChronoUnit.MINUTES.between(application.appliedAt, now),
+                ),
+            ),
+        )
 
         return ApplicationDecision(
             applicationId = application.id,
@@ -113,6 +129,17 @@ class RoomApplicationManager(
                 roomId = roomId,
                 roomTitle = room.title,
                 applicantMemberId = application.applicantMemberId,
+            ),
+        )
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_APPLICATION_REJECTED,
+                application.applicantMemberId,
+                buildMap {
+                    put("roomId", roomId)
+                    put("applicationId", application.id)
+                    reason?.let { put("rejectReason", it) }
+                },
             ),
         )
 

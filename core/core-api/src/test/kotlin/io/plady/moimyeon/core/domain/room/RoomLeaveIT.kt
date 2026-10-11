@@ -11,6 +11,9 @@ import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
 import io.plady.moimyeon.core.event.OutboxEvent
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.RecruitingReopenReason
 import io.plady.moimyeon.core.event.payload.EventPayload
 import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
 import io.plady.moimyeon.core.event.payload.RoomHostDelegatedEventPayload
@@ -179,6 +182,20 @@ class RoomLeaveIT(
         assertThat(
             roomStatusLogRepository.findByRoomIdAndTransitionTypeAndDeletedAtIsNull(roomId, RoomStatus.RECRUITING),
         ).isNotNull()
+    }
+
+    @Test
+    fun `확정 룸에서 방장이 나가 모집이 재개되면 새 방장 주체로 HOST_LEFT 재개 사건을 발행한다`() {
+        seedRoom()
+        val successor = seedParticipant(joinedAt = createdAt.plusHours(1))
+        roomManager.confirm(roomId, hostMemberId)
+
+        roomLeaveManager.leave(roomId, hostMemberId)
+
+        val reopened = applicationEvents.stream(GrowthEvent::class.java).toList()
+            .single { it.code == GrowthEventCode.ROOM_RECRUITING_REOPENED }
+        assertThat(reopened.memberId).isEqualTo(successor)
+        assertThat(reopened.properties).containsEntry("reason", RecruitingReopenReason.HOST_LEFT)
     }
 
     @Test

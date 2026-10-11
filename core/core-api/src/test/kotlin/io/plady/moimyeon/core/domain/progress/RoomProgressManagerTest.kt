@@ -13,6 +13,10 @@ import io.plady.moimyeon.core.enums.AttendanceStatus
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
+import io.plady.moimyeon.core.event.growth.RoomCompletionTrigger
 import io.plady.moimyeon.core.event.payload.RoomCompletedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -34,6 +38,7 @@ class RoomProgressManagerTest {
     private val attendanceRepository = mockk<AttendanceRepository>()
     private val logRepository = mockk<RoomStatusLogRepository>()
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val roomProgressManager = RoomProgressManager(
         roomRepository,
         participantFinder,
@@ -41,6 +46,7 @@ class RoomProgressManagerTest {
         attendanceRepository,
         logRepository,
         outboxEventPublisher,
+        growthEventPublisher,
     )
     private val roomId = UUID.randomUUID()
     private val hostId = UUID.randomUUID()
@@ -72,6 +78,65 @@ class RoomProgressManagerTest {
                 RoomCompletedEventPayload(roomId, TITLE, hostId, listOf(hostId, participantId), listOf(hostId)),
             )
         }
+    }
+
+    @Test
+    fun `방장이 완료하면 방장 주체로 확정·출석 인원을 담아 room_completed 사건을 발행한다`() {
+        every { roomRepository.findByIdForUpdate(roomId) } returns completableRoom()
+        every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
+        every { logRepository.save(any()) } answers { firstArg() }
+        every { attendanceRepository.saveAllAndFlush(any<List<AttendanceEntity>>()) } answers { firstArg() }
+        val attendances = listOf(Attendance(hostId, AttendanceStatus.ATTENDED), Attendance(participantId, AttendanceStatus.ABSENT))
+
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, attendances, now))
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.ROOM_COMPLETED,
+                    hostId,
+                    mapOf("roomId" to roomId, "completedBy" to RoomCompletionTrigger.HOST, "confirmedCount" to 2, "attendedCount" to 1),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `일정이 지나 자동 완료되면 현재 방장 주체로 SYSTEM 완료 사건을 발행한다`() {
+        val room = completableRoom()
+        every { room.isAutoCompletable(now) } returns true
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        every { participantFinder.getConfirmedParticipantIds(roomId) } returns listOf(hostId, participantId)
+        every { participantFinder.getHostMemberId(roomId) } returns hostId
+        every { logRepository.save(any()) } answers { firstArg() }
+        every { attendanceRepository.saveAllAndFlush(any<List<AttendanceEntity>>()) } answers { firstArg() }
+
+        roomProgressManager.completeOverdue(roomId, now)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.ROOM_COMPLETED,
+                    hostId,
+                    mapOf("roomId" to roomId, "completedBy" to RoomCompletionTrigger.SYSTEM, "confirmedCount" to 2, "attendedCount" to 2),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `이미 완료된 룸에 같은 출석으로 다시 완료를 보내면 완료 사건을 다시 발행하지 않는다`() {
+        val room = completableRoom()
+        every { room.status } returns RoomStatus.COMPLETED
+        every { roomRepository.findByIdForUpdate(roomId) } returns room
+        val attendances = listOf(Attendance(hostId, AttendanceStatus.ATTENDED))
+        every { attendanceRepository.findAllByRoomIdAndDeletedAtIsNullOrderByIdAsc(roomId) } returns listOf(
+            AttendanceEntity(roomId = roomId, memberId = hostId, status = AttendanceStatus.ATTENDED, recorderMemberId = hostId, recordedAt = now),
+        )
+
+        roomProgressManager.complete(RoomProgressCompletionCommand(roomId, hostId, attendances, now))
+
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
     }
 
     @Test

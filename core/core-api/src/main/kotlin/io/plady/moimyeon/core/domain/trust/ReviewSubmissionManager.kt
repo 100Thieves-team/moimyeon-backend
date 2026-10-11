@@ -1,6 +1,9 @@
 package io.plady.moimyeon.core.domain.trust
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.core.support.error.requireBusiness
@@ -26,6 +29,7 @@ class ReviewSubmissionManager(
     private val roomRepository: RoomRepository,
     private val attendanceRepository: AttendanceRepository,
     private val eligibilityValidator: ReviewEligibilityValidator,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     @Transactional
@@ -54,7 +58,15 @@ class ReviewSubmissionManager(
             CoreErrorType.REVIEW_DUPLICATED,
         )
 
-        return save(command, LocalDateTime.now(clock)).id
+        val reviewId = save(command, LocalDateTime.now(clock)).id
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.REVIEW_SUBMITTED,
+                command.authorMemberId,
+                mapOf("roomId" to command.roomId, "reviewId" to reviewId, "anonymous" to command.anonymous),
+            ),
+        )
+        return reviewId
     }
 
     private fun lockRoom(command: ReviewSubmissionCommand) = requireFound(

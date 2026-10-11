@@ -12,6 +12,9 @@ import io.plady.moimyeon.core.enums.ParticipationStatus
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -48,6 +51,7 @@ class RoomManager(
     private val memberValidator: MemberValidator,
     private val participationFinder: ParticipationFinder,
     private val outboxEventPublisher: OutboxEventPublisher,
+    private val growthEventPublisher: GrowthEventPublisher,
     private val clock: Clock,
 ) {
     // 쓰기 넷이 한 커밋이다. 방장의 이력서는 신청 행을 거쳐 제출로 보존되므로(MOI-333)
@@ -123,6 +127,21 @@ class RoomManager(
         // 방명록(room_guestbook)은 여기서 만들지 않는다 — 첫 글 작성 때 lazy 생성한다(MOI-461 D8).
         // room_status_log 의 생성 전이는 만들지 않는다(MOI-397). 최초 방장은 participation.role=HOST 가
         // 보존하고, 멱등용으로 되살려도 room_id 를 매번 새로 뽑는 이상 중복 생성을 막지 못한다(MOI-331).
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_CREATED,
+                hostMemberId,
+                mapOf(
+                    "roomId" to room.id,
+                    "jobPostingId" to room.jobPostingId,
+                    "jobRoleId" to room.jobRoleId,
+                    "interviewStage" to room.interviewStage,
+                    "minParticipants" to room.capacity.min,
+                    "maxParticipants" to room.capacity.max,
+                    "daysUntilStart" to ChronoUnit.DAYS.between(now.toLocalDate(), room.schedule.startAt.toLocalDate()),
+                ),
+            ),
+        )
         return RoomCreationResult(room.id, room.status)
     }
 
@@ -190,6 +209,7 @@ class RoomManager(
                 closedApplicantMemberIds = closedApplicantMemberIds,
             ),
         )
+        growthEventPublisher.publish(GrowthEvent(GrowthEventCode.ROOM_CANCELED, handlerMemberId, mapOf("roomId" to room.id)))
     }
 
     // 확정부터 참여자·정보가 고정되고(§4.2) MOI-394 가 깔아 둔 수정·신청·수락 게이트가 발효한다.
@@ -204,13 +224,14 @@ class RoomManager(
             participationRepository.countByRoomIdAndStatusAndDeletedAtIsNull(roomId, ParticipationStatus.JOINED).toInt()
 
         val now = LocalDateTime.now(clock)
+        val previouslyConfirmed = roomStatusLogRepository.wasPreviouslyConfirmed(roomId)
         RoomConfirmation.of(
             status = entity.status,
             startAt = entity.startAt,
             minCapacity = entity.minCapacity.toInt(),
             currentParticipants = currentParticipants,
             now = now,
-            previouslyConfirmed = roomStatusLogRepository.wasPreviouslyConfirmed(roomId),
+            previouslyConfirmed = previouslyConfirmed,
         ).blockReason?.let { throw CoreException(it.toErrorType()) }
 
         entity.confirm()
@@ -231,6 +252,18 @@ class RoomManager(
                 hostMemberId = hostMemberId,
                 participantMemberIds = participationFinder.getJoinedParticipants(roomId).map { it.memberId },
                 closedApplicantMemberIds = closedApplicantMemberIds,
+            ),
+        )
+        growthEventPublisher.publish(
+            GrowthEvent(
+                GrowthEventCode.ROOM_CONFIRMED,
+                hostMemberId,
+                mapOf(
+                    "roomId" to roomId,
+                    "participantCount" to currentParticipants,
+                    "hoursSinceCreated" to ChronoUnit.HOURS.between(entity.createdAt, now),
+                    "reconfirmed" to previouslyConfirmed,
+                ),
             ),
         )
     }

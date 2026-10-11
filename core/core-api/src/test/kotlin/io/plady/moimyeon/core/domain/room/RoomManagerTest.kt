@@ -19,6 +19,9 @@ import io.plady.moimyeon.core.enums.ResumeSharingPolicy
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.enums.RoomStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomCanceledEventPayload
 import io.plady.moimyeon.core.event.payload.RoomConfirmedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
@@ -52,6 +55,7 @@ class RoomManagerTest {
     private val memberValidator = mockk<MemberValidator>(relaxed = true)
     private val participationFinder = mockk<ParticipationFinder>(relaxed = true)
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val roomManager = RoomManager(
         roomRepository,
         participationRepository,
@@ -62,6 +66,7 @@ class RoomManagerTest {
         memberValidator,
         participationFinder,
         outboxEventPublisher,
+        growthEventPublisher,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
     )
 
@@ -265,6 +270,7 @@ class RoomManagerTest {
             memberValidator,
             participationFinder,
             outboxEventPublisher,
+            growthEventPublisher,
             Clock.fixed(nanoNow.toInstant(ZoneOffset.UTC), ZoneOffset.UTC),
         )
         givenRecruitingRoomForUpdate()
@@ -307,6 +313,16 @@ class RoomManagerTest {
         verify(exactly = 1) { outboxEventPublisher.publish(EventType.ROOM_CANCELED, capture(canceled)) }
         assertThat(canceled.captured.canceledByMemberId).isEqualTo(hostId)
         assertThat(canceled.captured.participantMemberIds).containsExactly(hostId, participantId)
+    }
+
+    @Test
+    fun `룸을 폭파하면 방장 주체로 room_canceled 사건을 발행한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+
+        roomManager.cancel(roomId, hostId)
+
+        verify(exactly = 1) { growthEventPublisher.publish(GrowthEvent(GrowthEventCode.ROOM_CANCELED, hostId, mapOf("roomId" to roomId))) }
     }
 
     // 룸 행 잠금이 있으면 정상 경로에서는 나지 않는다. 났다는 것은 잠금이 뚫렸다는 뜻이므로
@@ -361,6 +377,38 @@ class RoomManagerTest {
     }
 
     @Test
+    fun `룸을 확정하면 방장 주체로 참여 인원을 담아 room_confirmed 사건을 발행한다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(3)
+
+        roomManager.confirm(roomId, hostId)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                match {
+                    it.code == GrowthEventCode.ROOM_CONFIRMED &&
+                        it.memberId == hostId &&
+                        it.properties["roomId"] == roomId &&
+                        it.properties["participantCount"] == 3 &&
+                        it.properties.containsKey("hoursSinceCreated")
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `확정 조건을 채우지 못하면 room_confirmed 사건을 발행하지 않는다`() {
+        givenRecruitingRoomForUpdate()
+        givenHost()
+        givenParticipants(1)
+
+        assertThatThrownBy { roomManager.confirm(roomId, hostId) }.isInstanceOf(CoreException::class.java)
+
+        verify(exactly = 0) { growthEventPublisher.publish(any()) }
+    }
+
+    @Test
     fun `인원이 최소 진행 인원보다 적으면 E1421 을 던진다`() {
         val room = givenRecruitingRoomForUpdate()
         givenHost()
@@ -392,6 +440,7 @@ class RoomManagerTest {
         roomManager.confirm(roomId, hostId)
 
         assertThat(room.status).isEqualTo(RoomStatus.CONFIRMED)
+        verify(exactly = 1) { growthEventPublisher.publish(match { it.code == GrowthEventCode.ROOM_CONFIRMED && it.properties["reconfirmed"] == true }) }
     }
 
     @Test

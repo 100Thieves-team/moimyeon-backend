@@ -10,6 +10,9 @@ import io.plady.moimyeon.core.domain.profile.ProfileManager
 import io.plady.moimyeon.core.domain.terms.TermsAgreementManager
 import io.plady.moimyeon.core.enums.MemberStatus
 import io.plady.moimyeon.core.enums.SocialLoginProvider
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
 import io.plady.moimyeon.storage.db.core.MemberEntity
@@ -24,7 +27,8 @@ class MemberRegistrarTest {
     private val memberRepository = mockk<MemberRepository>()
     private val termsAgreementManager = mockk<TermsAgreementManager>()
     private val profileManager = mockk<ProfileManager>()
-    private val memberRegistrar = MemberRegistrar(memberRepository, termsAgreementManager, profileManager)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
+    private val memberRegistrar = MemberRegistrar(memberRepository, termsAgreementManager, profileManager, growthEventPublisher)
 
     private val provider = SocialLoginProvider.GOOGLE
     private val email = Email("user@example.com")
@@ -62,6 +66,23 @@ class MemberRegistrarTest {
         assertThat(socialAccount.linkedEmail).isEqualTo("user@example.com")
         verify(exactly = 1) { termsAgreementManager.agreeRequired(memberId, registeredAt) }
         verify(exactly = 1) { profileManager.createEmpty(memberId) }
+    }
+
+    @Test
+    fun `가입하면 신규 회원 주체로 member_signed_up 사건을 발행한다`() {
+        val saved = slot<MemberEntity>()
+        every {
+            memberRepository.existsBySocialAccountsProviderAndSocialAccountsProviderIdAndDeletedAtIsNotNull(provider, "sub-2")
+        } returns false
+        every { memberRepository.saveAndFlush(capture(saved)) } answers { saved.captured }
+        every { termsAgreementManager.agreeRequired(any(), registeredAt) } just Runs
+        every { profileManager.createEmpty(any()) } returns UUID.randomUUID()
+
+        val memberId = memberRegistrar.register(provider, "sub-2", email, nickname, registeredAt)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(GrowthEvent(GrowthEventCode.MEMBER_SIGNED_UP, memberId, mapOf("provider" to provider)))
+        }
     }
 
     @Test

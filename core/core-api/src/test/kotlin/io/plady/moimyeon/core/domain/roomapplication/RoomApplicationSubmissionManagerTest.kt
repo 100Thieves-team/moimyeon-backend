@@ -17,6 +17,9 @@ import io.plady.moimyeon.core.domain.room.RoomValidator
 import io.plady.moimyeon.core.enums.EventType
 import io.plady.moimyeon.core.enums.RoomApplicationStatus
 import io.plady.moimyeon.core.event.OutboxEventPublisher
+import io.plady.moimyeon.core.event.growth.GrowthEvent
+import io.plady.moimyeon.core.event.growth.GrowthEventCode
+import io.plady.moimyeon.core.event.growth.GrowthEventPublisher
 import io.plady.moimyeon.core.event.payload.RoomApplicationSubmittedEventPayload
 import io.plady.moimyeon.core.support.error.CoreErrorType
 import io.plady.moimyeon.core.support.error.CoreException
@@ -46,6 +49,7 @@ class RoomApplicationSubmissionManagerTest {
     private val participationFinder = mockk<ParticipationFinder>()
     private val outboxEventPublisher = mockk<OutboxEventPublisher>(relaxed = true)
     private val clock = Clock.fixed(Instant.parse("2026-08-04T12:00:00Z"), ZoneOffset.UTC)
+    private val growthEventPublisher = mockk<GrowthEventPublisher>(relaxed = true)
     private val roomApplicationSubmissionManager = RoomApplicationSubmissionManager(
         memberValidator,
         roomValidator,
@@ -55,6 +59,7 @@ class RoomApplicationSubmissionManagerTest {
         roomFinder,
         participationFinder,
         outboxEventPublisher,
+        growthEventPublisher,
         clock,
     )
 
@@ -296,6 +301,27 @@ class RoomApplicationSubmissionManagerTest {
     }
 
     @Test
+    fun `신청을 철회하면 신청자 주체로 room_application_withdrawn 사건을 발행한다`() {
+        val application = application(RoomApplicationStatus.PENDING)
+        every {
+            roomApplicationRepository
+                .findFirstForUpdateByRoomIdAndApplicantMemberIdAndDeletedAtIsNullOrderByAppliedAtDescIdDesc(roomId, applicantMemberId)
+        } returns application
+
+        roomApplicationSubmissionManager.withdraw(applicantMemberId, roomId)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(
+                    GrowthEventCode.ROOM_APPLICATION_WITHDRAWN,
+                    applicantMemberId,
+                    mapOf("roomId" to roomId, "applicationId" to application.id),
+                ),
+            )
+        }
+    }
+
+    @Test
     fun `해당 룸에 본인의 신청이 없으면 APPLICATION_NOT_FOUND를 던진다`() {
         every {
             roomApplicationRepository
@@ -345,6 +371,21 @@ class RoomApplicationSubmissionManagerTest {
                     hostMemberId = hostMemberId,
                     applicantMemberId = applicantMemberId,
                 ),
+            )
+        }
+    }
+
+    @Test
+    fun `신청서를 제출하면 신청자 주체로 room_application_submitted 사건을 발행한다`() {
+        val savedApplication = mockk<RoomApplicationEntity> { every { id } returns 1L }
+        every { roomApplicationRepository.saveAndFlush(any()) } returns savedApplication
+        every { resumeSubmissionRepository.save(any()) } answers { firstArg() }
+
+        roomApplicationSubmissionManager.submit(applicantMemberId, roomId, applicationForm.note, resumeSubmission)
+
+        verify(exactly = 1) {
+            growthEventPublisher.publish(
+                GrowthEvent(GrowthEventCode.ROOM_APPLICATION_SUBMITTED, applicantMemberId, mapOf("roomId" to roomId, "applicationId" to 1L)),
             )
         }
     }
