@@ -1,6 +1,7 @@
 package io.plady.moimyeon.core.domain.member
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.plady.moimyeon.core.domain.analytics.AnalyticsIdGenerator
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.RoomLeaveManager
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionManager
@@ -23,11 +24,14 @@ class MemberService(
     private val roomApplicationSubmissionManager: RoomApplicationSubmissionManager,
     private val participationFinder: ParticipationFinder,
     private val roomLeaveManager: RoomLeaveManager,
+    private val analyticsIdGenerator: AnalyticsIdGenerator,
     private val clock: Clock,
 ) {
     fun getMember(memberId: UUID): Member = memberFinder.getById(memberId)
 
     fun getMembers(memberIds: Collection<UUID>): List<Member> = memberFinder.getAllByIds(memberIds)
+
+    fun getAnalyticsId(memberId: UUID): String? = analyticsIdGenerator.generate(memberId)
 
     fun suggestNickname(): Nickname = nicknameGenerator.generateUnique()
 

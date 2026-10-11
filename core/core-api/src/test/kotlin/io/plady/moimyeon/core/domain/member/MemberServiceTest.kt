@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import io.plady.moimyeon.core.domain.analytics.AnalyticsIdGenerator
 import io.plady.moimyeon.core.domain.participation.ParticipationFinder
 import io.plady.moimyeon.core.domain.room.RoomLeaveManager
 import io.plady.moimyeon.core.domain.roomapplication.RoomApplicationSubmissionManager
@@ -24,6 +25,7 @@ class MemberServiceTest {
     private val roomApplicationSubmissionManager = mockk<RoomApplicationSubmissionManager>(relaxed = true)
     private val participationFinder = mockk<ParticipationFinder>()
     private val roomLeaveManager = mockk<RoomLeaveManager>(relaxed = true)
+    private val analyticsIdGenerator = mockk<AnalyticsIdGenerator>()
     private val memberService = MemberService(
         memberFinder,
         nicknameGenerator,
@@ -32,6 +34,7 @@ class MemberServiceTest {
         roomApplicationSubmissionManager,
         participationFinder,
         roomLeaveManager,
+        analyticsIdGenerator,
         Clock.fixed(Instant.parse("2026-10-02T03:00:00Z"), ZoneOffset.UTC),
     )
 
@@ -99,5 +102,13 @@ class MemberServiceTest {
                 assertThat(it.errorType).isEqualTo(CoreErrorType.MEMBER_WITHDRAWAL_INTERRUPTED)
             }
         verify(exactly = 3) { memberWithdrawer.withdraw(memberId, any(), any()) }
+    }
+
+    @Test
+    fun `내 정보용 analyticsId는 회원 ID로 생성기에서 받는다`() {
+        val memberId = UUID.randomUUID()
+        every { analyticsIdGenerator.generate(memberId) } returns "0123456789abcdef0123456789abcdef"
+
+        assertThat(memberService.getAnalyticsId(memberId)).isEqualTo("0123456789abcdef0123456789abcdef")
     }
 }

@@ -63,3 +63,15 @@ PRD·`policy/_src/`는 바꾸지 않았다. 제품 상태·전이 규칙 변경�
   `sources/s-moimyeon-growth-logging-decisions`에 구현 진행 절 추가.
 - 재조회: 로깅 가이드의 새 절을 다시 읽어 확인했다.
 - 남은 불일치: 없음. 라우터 v3 전달은 6단계에서 같은 절을 갱신한다.
+
+## 5단계(PR 2) 구현 전 명세 갱신
+
+- 확인: `raw/product/회원-및-프로필` §4.1 R21·R22, §4.2 R29. 가입 시 동의는 이용약관·개인정보 처리방침뿐이었다. 국외 이전 필수 동의(D13)는 새 요구사항.
+- 갱신(PRD): R180(§4.1 국외 이전 동의 필수, 다른 필수 약관과 함께 처리), R181(§4.2 필수 정보), 변경 배너, `next_req` 182.
+- 갱신(SSOT): `상태/회원.yaml` `F.member.terms_agreed_at`(이름·출처·note), `기능/회원-및-프로필.yaml` `G.member.signup` terms-agreed 확인 문구·출처,
+  `C.member.signup`·`T.member.signup` 출처에 R180, `index.yaml` 기준_문서 회원 및 프로필 2026-10-10.
+- 재조회: PRD에 R180·R181, 조립된 `상태-SSOT.yaml`에 R180 인용 5곳, 기준_문서 날짜 확인. 렌더러가 정책 페이지를 다시 만들었다.
+- 남은 것: 구현 후 코드·테스트와 대조.
+- 정정: 처리방침을 한 줄 문구로 잘못 적은 부분을 `sources/s-moimyeon-growth-logging-decisions`·`topics/t-모니터링-로깅-인프라`에서 바로잡았다(v1.1 시행 중, PostHog 반영 v1.2 필요).
+- 구현 대조(PR 2): R180(가입 시 국외 이전 필수 동의, 다른 필수 약관과 함께) ↔ `TermsType.OVERSEAS_TRANSFER`, V36·seed 필수 ACTIVE 행,
+  `SocialAuthServiceIT` 가입 시 세 약관 동의 기록. R181(필수 정보) ↔ `/v1/terms` 목록 세 종류(`TermsHttpContextTest`, RestDocs). 불일치 없음.
