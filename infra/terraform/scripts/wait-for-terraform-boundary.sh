@@ -24,7 +24,11 @@ terraform_paths=(infra/terraform infra/observability ':(exclude)infra/terraform/
 
 deadline=$((SECONDS + wait_seconds))
 fetched=false
-while [ "${SECONDS}" -lt "${deadline}" ]; do
+first_check=true
+# The first check runs even past the deadline: the lock-held confirmation has a
+# 1-second budget, and SECONDS can tick past the deadline before it starts.
+while [ "${first_check}" = true ] || [ "${SECONDS}" -lt "${deadline}" ]; do
+  first_check=false
   applied_sha="$(aws ssm get-parameter \
     --name "${parameter_name}" \
     --query 'Parameter.Value' \
@@ -50,6 +54,8 @@ while [ "${SECONDS}" -lt "${deadline}" ]; do
     echo "Waiting for the first applied dev Terraform revision in ${parameter_name}."
   fi
 
+  # Do not sleep once the deadline has passed; the loop condition then ends polling.
+  [ "${SECONDS}" -lt "${deadline}" ] || break
   sleep "${poll_seconds}"
   fetched=false
 done
