@@ -1,0 +1,26 @@
+[FILTER]
+    Name                  rewrite_tag
+    Match                 growth.*
+    Rule                  $category ^growth$ posthog.$TAG true
+    Emitter_Name          posthog_emitter
+    Emitter_Storage.type  memory
+    Emitter_Mem_Buf_Limit  1M
+
+[FILTER]
+    Name          lua
+    Match         posthog.*
+    call          posthog
+    code          ${lua_code}
+    time_as_table On
+
+[OUTPUT]
+    Name          http
+    Match         posthog.*
+    Host          ${posthog_host}
+    Port          ${posthog_port}
+    URI           /i/v0/e/
+    Format        json
+    json_date_key false
+    compress      gzip
+    Retry_Limit   3
+    ${posthog_tls_configuration}

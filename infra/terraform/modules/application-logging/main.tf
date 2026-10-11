@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     aws = { source = "hashicorp/aws", version = "~> 6.57" }
   }
@@ -10,8 +10,8 @@ locals {
   services    = local.provisioned ? var.services : {}
   buckets     = local.provisioned ? toset(["logs", "config"]) : toset([])
   # Add a revision instead of editing a deployed revision. Old ECS revisions still read it.
-  revisions       = ["v1", "v2"]
-  active_revision = "v2"
+  revisions       = ["v1", "v2", "v3"]
+  active_revision = "v3"
   router_image    = "public.ecr.aws/aws-observability/aws-for-fluent-bit:3.4.17@sha256:940eee58ec25fc5b92328da54e9c834c0bb4656c76320ceb24be7a8dd4063029"
   router_cpu      = 64
   router_memory   = 128
@@ -41,6 +41,13 @@ locals {
           upload_timeout                    = "1m"
           s3_endpoint_configuration         = ""
           cloudwatch_endpoint_configuration = ""
+          # Revisions before v3 have no PostHog path and ignore this value.
+          posthog_configuration = service.posthog_enabled && fileexists("${path.module}/router/${revision}/posthog.conf.tftpl") ? templatefile("${path.module}/router/${revision}/posthog.conf.tftpl", {
+            lua_code                  = replace(trimspace(file("${path.module}/router/${revision}/sanitize.lua")), "\n", " ")
+            posthog_host              = var.posthog.host
+            posthog_port              = 443
+            posthog_tls_configuration = "tls On\n    tls.verify On"
+          }) : ""
         })
       }
     }
