@@ -1,0 +1,84 @@
+name: pr-change-brief
+
+# Only trusted default-branch code executes. PR commits are fetched as diff/log data.
+on:
+  pull_request:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-change-brief-${{ github.event_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout PR for isolated tests
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test change brief generator
+        run: PYTHONDONTWRITEBYTECODE=1 python3 .github/scripts/test_pr_brief.py
+
+  report:
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      vars.PR_CHANGE_BRIEF_ENABLED == 'true' &&
+      contains(fromJSON('["bebeis", "dbwp031", "2wndrhs"]'), github.event.pull_request.user.login) &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 10
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Fetch PR commits as data
+        run: git fetch --no-tags origin "$PR_BASE_SHA" "$PR_HEAD_SHA"
+
+      - name: Generate report from PR diff and commits
+        env:
+          HERMES_API_KEY: ${{ secrets.HERMES_PR_BRIEF_API_KEY }}
+        run: python3 .github/scripts/pr_brief.py generate
+
+      - name: Save standalone HTML
+        id: html
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pr-change-brief-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/pr-brief.html
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Publish or update PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_URL: ${{ steps.html.outputs.artifact-url }}
+        run: python3 .github/scripts/pr_brief.py publish
+
+      - name: Remove temporary report data
+        if: always()
+        run: rm -f "$RUNNER_TEMP/pr-brief-data.json" "$RUNNER_TEMP/pr-brief.html"
