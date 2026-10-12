@@ -17,6 +17,8 @@ OPS_CODES = {"smoke.info", "smoke.warn", "smoke.error", "smoke.exact", "smoke.em
              "logging.serialization_failed"}
 # 16384 bytes including the 3-byte ellipsis: 16381 bytes of input, cut back to a character boundary.
 OVERSIZE_MESSAGE = "\uac00" * 5460 + "\u2026"
+GROWTH_CODES = {"smoke.growth", "smoke.growth_anonymous"}
+POSTHOG_TOKEN = "phc_smoke_test_token"
 PYTHON = "python:3.13.7-alpine3.22@sha256:9ba6d8cbebf0fb6546ae71f2a1c14f6ffd2fdab83af7fa5669734ef30ad48844"
 
 
@@ -66,6 +68,28 @@ def cloudwatch_complete(data):
             and groups.get("test-debug") == {"smoke.trace", "smoke.debug"})
 
 
+def verify_growth(objects, data):
+    growth = {row["eventCode"]: row for row in objects if row["category"] == "growth"}
+    assert growth["smoke.growth"]["eventId"] == "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e721"
+    assert growth["smoke.growth"]["analyticsId"] == "0123456789abcdef0123456789abcdef"
+    assert growth["smoke.growth"]["properties"] == {"roomId": "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e722", "participantCount": 3,
+                                                    "reconfirmed": True, "distinct_id": "app-value",
+                                                    "environment": "app-value"}, growth["smoke.growth"]
+    anonymous = growth["smoke.growth_anonymous"]
+    assert "eventId" not in anonymous and "analyticsId" not in anonymous, "Malformed identifiers are dropped"
+    assert len(anonymous["properties"]) == 16, "At most 16 properties are kept"
+    requests = [json.loads(line) for line in (data / "posthog.jsonl").read_text().splitlines()]
+    assert all(request["encoding"] == "gzip" for request in requests), "PostHog requests must be gzip"
+    events = [event for request in requests for event in request["events"]]
+    assert events == [{
+        "api_key": POSTHOG_TOKEN, "event": "smoke.growth", "distinct_id": "0123456789abcdef0123456789abcdef",
+        "uuid": "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e721", "timestamp": growth["smoke.growth"]["timestamp"],
+        "properties": {"roomId": "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e722", "participantCount": 3, "reconfirmed": True,
+                       "environment": "test", "service": "core-api"},
+    }], events
+    return json.dumps(events)
+
+
 def verify(data):
     assert not (data / "unexpected-action").exists(), "Router attempted an ungranted CloudWatch API"
     objects = []
@@ -81,11 +105,15 @@ def verify(data):
             objects.append(record)
     archive_codes = {row["eventCode"] for row in objects}
     batches, groups = cloudwatch_records(data)
-    expected = OPS_CODES | {"smoke.growth"}
-    if archive_codes != expected or groups.get("test-ops") != expected - {"smoke.growth"} or groups.get("test-debug") != {"smoke.trace", "smoke.debug"}:
+    expected = OPS_CODES | GROWTH_CODES
+    if archive_codes != expected or groups.get("test-ops") != OPS_CODES or groups.get("test-debug") != {"smoke.trace", "smoke.debug"}:
+        return False
+    if not (data / "posthog.jsonl").exists():
         return False
     assert int((data / "put-attempts").read_text()) > 2, "S3 failures must be retried"
-    assert "SHOULD_NOT_LEAK" not in json.dumps(objects) + json.dumps(batches)
+    posthog = verify_growth(objects, data)
+    assert "SHOULD_NOT_LEAK" not in json.dumps(objects) + json.dumps(batches) + posthog
+    assert POSTHOG_TOKEN not in json.dumps(objects) + json.dumps(batches), "The PostHog token must stay on the PostHog output"
     assert all(row["service"] == "core-api" and row["environment"] == "test" for row in objects)
     # Each destination is checked on its own: one dropping messages must not hide behind the other.
     verify_messages(objects)
@@ -118,6 +146,10 @@ def main():
             "s3_endpoint_configuration": "endpoint http://mock-aws:4566\n    tls Off",
             "cloudwatch_endpoint_configuration": "endpoint mock-aws\n    port 4567\n    tls.verify Off",
         }
+        posthog = (MODULE / f"router/{REVISION}/posthog.conf.tftpl").read_text()
+        values["posthog_configuration"] = re.sub(r"\$\{([a-z0-9_]+)}", lambda match: {
+            **values, "posthog_host": "mock-aws", "posthog_port": "4567", "posthog_tls_configuration": "tls On\n    tls.verify Off",
+        }[match[1]], posthog)
         template = (MODULE / f"router/{REVISION}/fluent-bit.conf.tftpl").read_text()
         config = re.sub(r"\$\{([a-z0-9_]+)}", lambda match: values[match[1]], template)
         (root / "custom.conf").write_text(config)
@@ -135,7 +167,7 @@ def main():
             docker("run", "-d", "--name", sink, "--network", name, "--network-alias", "mock-aws", "-v", f"{data}:/data", "-v", f"{root}:/tls:ro", "-v", f"{Path(__file__).parent}:/src:ro", PYTHON, "python", "/src/logging_mock_aws.py")
             docker("run", "-d", "--name", router, "--network", name, "--network-alias", "router", "--memory", "128m", "--cpus", "0.0625",
                    "-e", "AWS_ACCESS_KEY_ID=test", "-e", "AWS_SECRET_ACCESS_KEY=test", "-e", "AWS_EC2_METADATA_DISABLED=true",
-                   "-e", "LOG_SERVICE_NAME=core-api", "-e", "LOG_ENVIRONMENT=test", "-e", "TZ=UTC",
+                   "-e", "LOG_SERVICE_NAME=core-api", "-e", "LOG_ENVIRONMENT=test", "-e", f"POSTHOG_PROJECT_TOKEN={POSTHOG_TOKEN}", "-e", "TZ=UTC",
                    "-v", f"{root}:/config:ro", "-v", f"{root / 'buffers'}:/buffers", "--entrypoint", "/fluent-bit/bin/fluent-bit", IMAGE, "-c", "/config/main.conf")
             docker("exec", sink, "python", "/src/logging_send_records.py")
             deadline = time.monotonic() + 50
@@ -153,7 +185,7 @@ def main():
                     docker("exec", router, "curl", "-fsS", "http://127.0.0.1:2020/")
                     log = docker("logs", router).stderr
                     assert "[error] [config]" not in log and "Failed to send events" not in log, log
-                    print("PASS: real Fluent Bit → gzip S3 objects; CW split; debug expiry; field filtering; messages; reserved fields; partial reassembly; UTF-8 truncation; 503 + killed router → disk recovery")
+                    print("PASS: real Fluent Bit → gzip S3 objects; CW split; debug expiry; field filtering; messages; reserved fields; partial reassembly; UTF-8 truncation; 503 + killed router → disk recovery; growth fields → PostHog")
                     print(docker("stats", "--no-stream", "--format", "{{.MemUsage}}", router).stdout.strip())
                     return
                 time.sleep(0.25)

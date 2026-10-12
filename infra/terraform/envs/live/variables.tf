@@ -139,3 +139,9 @@ variable "application_logging_mode" {
     error_message = "Application logging mode must be disabled, provision, or enabled."
   }
 }
+
+variable "growth_analytics_enabled" {
+  description = "Inject the analytics ID HMAC key into core-api and send growth events to PostHog."
+  type        = bool
+  default     = false
+}

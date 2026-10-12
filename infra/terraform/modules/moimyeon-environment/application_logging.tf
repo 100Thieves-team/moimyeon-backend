@@ -8,6 +8,12 @@ variable "application_logging_mode" {
   }
 }
 
+variable "growth_analytics_enabled" {
+  description = "Inject the analytics ID HMAC key into core-api and send growth events to PostHog. Pre-create both documented SSM SecureStrings first."
+  type        = bool
+  default     = false
+}
+
 locals {
   log_routing_enabled = var.application_logging_mode == "enabled"
   logging_task_inputs = {
@@ -58,12 +64,17 @@ module "application_logging" {
   region      = data.aws_region.current.region
   account_id  = data.aws_caller_identity.current.account_id
   tags        = local.tags
+  posthog = {
+    project_token_parameter_arn = local.posthog_project_token_parameter_arn
+  }
   services = {
     api = {
       container_name      = var.container_name
       service_name        = "core-api"
       runtime_role_name   = aws_iam_role.task.name
       execution_role_name = aws_iam_role.task_execution.name
+      # Only core-api writes growth events.
+      posthog_enabled = var.growth_analytics_enabled
     }
     worker = {
       container_name      = var.notification_worker_container_name

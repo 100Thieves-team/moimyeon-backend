@@ -19,7 +19,7 @@ output "app_log_configurations" {
 # ECS fills these defaults on registration (FireLens also forces user "0" on the router). Stating them keeps the
 # task definition equal to what ECS stores, so Terraform does not replace it on every plan (MOI-581).
 output "routers" {
-  value = { for key, service in local.services : key => {
+  value = { for key, service in local.services : key => merge({
     name           = "log-router"
     image          = local.router_image
     essential      = false
@@ -62,7 +62,12 @@ output "routers" {
         max-buffer-size       = "1m"
       }
     }
-  } }
+    },
+    # Only PostHog delivery adds secrets, so other routers keep the task definition ECS already stores.
+    service.posthog_enabled ? {
+      secrets = [{ name = "POSTHOG_PROJECT_TOKEN", valueFrom = var.posthog.project_token_parameter_arn }]
+    } : {},
+  ) }
   depends_on = [aws_iam_role_policy.execution, aws_iam_role_policy.runtime]
 }
 

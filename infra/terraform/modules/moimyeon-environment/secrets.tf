@@ -84,6 +84,12 @@ locals {
   sentry_api_parameter_arn     = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.sentry_api_parameter_name}"
   sentry_worker_parameter_arn  = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.sentry_worker_parameter_name}"
 
+  # Growth analytics only references pre-created SecureStrings, like monitoring.
+  analytics_id_hmac_key_parameter_name = "/${var.project}/${var.environment}/core-api/ANALYTICS_ID_HMAC_KEY"
+  analytics_id_hmac_key_parameter_arn  = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.analytics_id_hmac_key_parameter_name}"
+  posthog_project_token_parameter_name = "/${var.project}/${var.environment}/log-router/POSTHOG_PROJECT_TOKEN"
+  posthog_project_token_parameter_arn  = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${local.posthog_project_token_parameter_name}"
+
   # Injected into the container as `secrets` (valueFrom SSM). The `name` is the
   # runtime env var the app reads; these match moimyeon's config contract.
   container_secrets = concat(
@@ -113,6 +119,12 @@ locals {
         valueFrom = local.sentry_api_parameter_arn
       },
     ] : [],
+    var.growth_analytics_enabled ? [
+      {
+        name      = "ANALYTICS_ID_HMAC_KEY"
+        valueFrom = local.analytics_id_hmac_key_parameter_arn
+      },
+    ] : [],
   )
 
   ssm_parameter_arns = concat(
@@ -123,6 +135,9 @@ locals {
     ],
     var.enable_notification_redis ? [local.notification_redis_url_ssm_arn] : [],
     var.enable_monitoring ? [local.sentry_api_parameter_arn] : [],
+    var.growth_analytics_enabled ? [local.analytics_id_hmac_key_parameter_arn] : [],
+    # The api log router reads the PostHog token with the same execution role.
+    var.growth_analytics_enabled && local.log_routing_enabled ? [local.posthog_project_token_parameter_arn] : [],
   )
 
 

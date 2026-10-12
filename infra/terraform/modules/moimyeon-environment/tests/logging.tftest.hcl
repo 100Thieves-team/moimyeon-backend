@@ -215,3 +215,53 @@ run "provision_does_not_require_router_cpu" {
     error_message = "Router CPU must not be reserved when provision removes the router."
   }
 }
+
+run "growth_analytics_injects_key_and_router_token_by_arn" {
+  command = plan
+  variables {
+    application_logging_mode = "enabled"
+    growth_analytics_enabled = true
+  }
+  assert {
+    condition = contains(jsondecode(aws_ecs_task_definition.app.container_definitions)[0].secrets, {
+      name      = "ANALYTICS_ID_HMAC_KEY"
+      valueFrom = "arn:aws:ssm:ap-northeast-2:123456789012:parameter/moimyeon/dev/core-api/ANALYTICS_ID_HMAC_KEY"
+    })
+    error_message = "core-api must receive the analytics ID key from its pre-created SSM parameter."
+  }
+  assert {
+    condition = alltrue([for name in ["core-api/ANALYTICS_ID_HMAC_KEY", "log-router/POSTHOG_PROJECT_TOKEN"] :
+      contains(one([for statement in data.aws_iam_policy_document.task_execution_ssm.statement : statement.resources if contains(statement.actions, "ssm:GetParameters")]),
+      "arn:aws:ssm:ap-northeast-2:123456789012:parameter/moimyeon/dev/${name}")
+    ])
+    error_message = "The api execution role must read only the two growth parameters it injects."
+  }
+  assert {
+    condition = length([for resource in flatten([for statement in data.aws_iam_policy_document.task_execution_ssm.statement : statement.resources]) :
+    resource if strcontains(resource, "ANALYTICS") || strcontains(resource, "POSTHOG")]) == 2
+    error_message = "Growth analytics must add exactly two parameter ARNs to the api execution role."
+  }
+  assert {
+    condition     = !anytrue([for resource in flatten([for statement in data.aws_iam_policy_document.task_execution_ssm.statement : statement.resources if contains(statement.actions, "ssm:GetParameters")]) : strcontains(resource, "*")])
+    error_message = "The api execution role must not read SSM parameters by wildcard."
+  }
+  assert {
+    condition     = !strcontains(aws_ecs_task_definition.notification_worker.container_definitions, "ANALYTICS_ID_HMAC_KEY")
+    error_message = "The worker writes no growth events and must not receive the key."
+  }
+}
+
+run "growth_analytics_off_by_default" {
+  command = plan
+  variables { application_logging_mode = "enabled" }
+  assert {
+    condition     = !strcontains(aws_ecs_task_definition.app.container_definitions, "ANALYTICS_ID_HMAC_KEY")
+    error_message = "Without growth analytics, core-api must start without the key parameter."
+  }
+  assert {
+    condition = !anytrue([for statement in data.aws_iam_policy_document.task_execution_ssm.statement :
+      anytrue([for resource in statement.resources : strcontains(resource, "POSTHOG") || strcontains(resource, "ANALYTICS")])
+    ])
+    error_message = "Without growth analytics, the execution role must not read growth parameters."
+  }
+}

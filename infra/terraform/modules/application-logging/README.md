@@ -6,13 +6,25 @@
 | --- | --- | --- |
 | TRACE·DEBUG | 서비스별 CloudWatch debug | 3일 |
 | INFO·WARN·ERROR | CloudWatch ops + S3 ops | 각각 7일·90일 |
-| INFO + category=growth | S3 growth | 90일 |
+| INFO + category=growth | S3 growth (+ 켠 서비스는 PostHog) | 90일 (PostHog는 PostHog 보존 정책) |
 | 라우터 자체 진단 | CloudWatch router | 7일 |
 | provision 우회 모드의 모든 로그 | CloudWatch fallback | 3일 |
 
 S3에는 gzip NDJSON을 10MiB 또는 1분 기준으로 묶어 PutObject 한다. 키는 `env=dev/service=core-api/retention=ops/dt=YYYY-MM-DD/hour=HH/<uuid>.json.gz` 형태다. 시간 파티션은 이벤트 시간 기준이다. 재시도·혼잡 때 1분보다 늦을 수 있고, 하나의 파일에 인접한 시간대 이벤트가 섞일 수 있다. 조회는 인접 파티션을 함께 읽고 JSON의 timestamp로 거른다. 보존 정책은 저장소의 만료 설정이며 정확히 해당 시각에 물리 삭제된다는 보장은 아니다.
 
-현재 앱에는 그로스 이벤트 발행기가 없다. growth 분기는 목적지만 준비한다. 운영 로그도 감사 원장으로 사용하지 않는다.
+core-api는 DB에 커밋된 업무 사건을 그로스 사건으로 남긴다(MOI-521, `support/logging` README의 "그로스 사건"). 운영 로그와 그로스 사건 모두 감사 원장으로 사용하지 않는다.
+
+### PostHog 전송 (v3)
+
+`services.<key>.posthog_enabled`를 켠 서비스의 라우터만 growth 레코드를 복사해 PostHog US 수집 주소(`us.i.posthog.com/i/v0/e/`)로 보낸다. 환경에서는 `growth_analytics_enabled`가 core-api에만 켠다(현재 dev만).
+
+- 복사본은 별도 rewrite emitter(1MiB)를 거쳐 Lua `posthog` 함수로 PostHog 사건 형태(`event`·`distinct_id`=analyticsId·`uuid`=eventId·`timestamp`·`properties`)가 된다. `uuid`가 같으면 PostHog가 중복으로 처리한다.
+- `analyticsId`나 `eventId`가 없으면 보내지 않는다. S3 growth에는 그대로 남는다.
+- `properties`에는 라우터가 `environment`·`service`·`release`를 덮어쓴다. 앱 속성의 `distinct_id`·`token`·`api_key`는 뺀다.
+- 프로젝트 토큰은 사전 생성한 SSM SecureString(`/moimyeon/{env}/log-router/POSTHOG_PROJECT_TOKEN`)을 라우터 컨테이너 `secrets`로 받는다. 설정 객체·Terraform state에는 ARN만 있다. 읽기 권한은 그 서비스의 task execution role에 붙는다.
+- HTTP 출력은 gzip·TLS 검증·재시도 3회다. 디스크 버퍼를 쓰지 않으므로 PostHog 장애가 길면 사건이 빠진다. 빠진 사건은 S3 growth와 DB에서 셀 수 있다.
+- 끌 때는 `growth_analytics_enabled = false`를 apply하고 배포를 마친 뒤에 SSM 파라미터를 정리한다. 실행 중인 v3 task가 토큰을 못 읽으면 새 task가 뜨지 못한다. 라우터를 되돌릴 때는 `active_revision`만 이전 값으로 바꾸고 `revisions`에서 v3를 빼지 않는다(prevent_destroy).
+- 실제 PostHog가 이 요청 형식(배열·gzip)을 받는지는 dev 배포 뒤 PostHog 사건 화면과 라우터 로그 그룹의 `output:http` 경고로 확인한다. PostHog 장애 때 ops·S3 경로가 유지되는지는 아직 smoke로 검사하지 않았다. live에서 켜기 전에 확보한다.
 
 ## 장애가 요청 처리로 번지지 않게 한다
 
@@ -26,7 +38,7 @@ DEBUG는 메모리에서 CloudWatch로만 간다. 원래 이벤트 시각을 유
 
 ## 안전한 출력과 권한
 
-개인정보를 제거하는 주체는 앱의 LogSanitizer다(토큰 마스킹, 메시지 4096자 상한, `SafeLogMessage` 예외만 메시지 보존). 라우터는 JSON schemaVersion=1의 허용 필드만 재구성한다. v2부터 message와 예외 message를 복사하며, 각각 16384바이트를 넘으면 `…`(3바이트)를 포함해 16384바이트 안에 들도록 UTF-8 글자 경계에서 자른다(MOI-527). 앱 상한 안의 정상 출력은 자르지 않는다. Docker는 16KiB를 넘는 stdout 한 줄을 조각(partial message)으로 나눠 보내므로, v2는 JSON 파싱 전에 multiline 필터(`partial_message` 모드)로 조각을 다시 합친다. 마지막 조각이 2초 안에 오지 않으면 모인 조각만 내보내고, 그 레코드는 JSON이 아니어서 버려진다. message 복사는 schemaVersion=1 레코드로 한정하므로 고정 이벤트 `logging.serialization_failed`는 메시지를 싣지 않는다. body·예외 프레임의 허용 외 필드·임의 MDC는 복사하지 않는다. service·environment는 라우터 환경변수로 채우고 category는 INFO의 growth만 허용하므로 앱 레코드로 덮어쓸 수 없다. 잘못된 JSON·일반 텍스트·알 수 없는 스키마는 버린다. 유일한 예외는 앱의 고정된 `logging.serialization_failed` 이벤트다. 필드 허용은 값의 개인정보 여부를 모두 판별하는 정규식 마스킹이 아니다. formatter를 우회하는 직접 stdout 출력은 허용하지 않는다.
+개인정보를 제거하는 주체는 앱의 LogSanitizer다(토큰 마스킹, 메시지 4096자 상한, `SafeLogMessage` 예외만 메시지 보존). 라우터는 JSON schemaVersion=1의 허용 필드만 재구성한다. v2부터 message와 예외 message를 복사하며, 각각 16384바이트를 넘으면 `…`(3바이트)를 포함해 16384바이트 안에 들도록 UTF-8 글자 경계에서 자른다(MOI-527). 앱 상한 안의 정상 출력은 자르지 않는다. Docker는 16KiB를 넘는 stdout 한 줄을 조각(partial message)으로 나눠 보내므로, v2는 JSON 파싱 전에 multiline 필터(`partial_message` 모드)로 조각을 다시 합친다. 마지막 조각이 2초 안에 오지 않으면 모인 조각만 내보내고, 그 레코드는 JSON이 아니어서 버려진다. message 복사는 schemaVersion=1 레코드로 한정하므로 고정 이벤트 `logging.serialization_failed`는 메시지를 싣지 않는다. body·예외 프레임의 허용 외 필드·임의 MDC는 복사하지 않는다. service·environment는 라우터 환경변수로 채우고 category는 INFO의 growth만 허용하므로 앱 레코드로 덮어쓸 수 없다. v3는 growth 레코드에 한해 `eventId`(UUID 형식), `analyticsId`(32자리 소문자 16진수), `properties`(키는 영문자로 시작하는 영숫자·밑줄 64자 이하, 값은 숫자·참거짓·128바이트 이하 문자열, 최대 16개)를 복사한다. 형식이 맞지 않으면 그 필드만 버린다. 잘못된 JSON·일반 텍스트·알 수 없는 스키마는 버린다. 유일한 예외는 앱의 고정된 `logging.serialization_failed` 이벤트다. 필드 허용은 값의 개인정보 여부를 모두 판별하는 정규식 마스킹이 아니다. formatter를 우회하는 직접 stdout 출력은 허용하지 않는다.
 
 로그와 설정은 별도 비공개 S3 버킷에 둔다. SSE-S3, public access block, BucketOwnerEnforced, TLS 강제 정책을 적용한다. 로그 버킷은 90일 만료, 설정 버킷은 versioning을 켜고 만료시키지 않는다.
 
@@ -44,7 +56,7 @@ Task runtime role에는 자기 서비스 S3 prefix의 PutObject와 해당 ops/de
 
 이미 도입한 환경을 disabled로 바꾸면 보존 자원의 prevent_destroy가 plan을 막는다. 라우팅을 끄려면 provision을 사용한다. 단, Terraform은 ECS service의 task_definition을 직접 바꾸지 않는다. 기존 배포 파이프라인이 새 template을 받아 앱 이미지를 넣고 배포해야 실제 경로가 바뀐다. 즉시 복귀는 기존 deployment bundle의 exact task definition 롤백 절차를 따른다. 도입 전 task ARN으로 복귀하면 당시 awslogs 그룹·수준·보존 정책도 복원된다. 새 3일 정책을 유지해야 하면 이 모듈의 provision template으로 재배포한다.
 
-설정 키는 revision·service·내용 hash를 포함하고 prevent_destroy로 보호한다. 배포한 revision 디렉터리는 수정하지 않는다. 변경할 때 다음 번호 디렉터리를 추가하고 `revisions`에 이전 revision을 유지한 채 `active_revision`만 바꾼다. v1은 MOI-411 최초 허용 목록, v2는 메시지 전달(MOI-527)이다. **S3 versioning만으로는 삭제된 예전 키를 읽을 수 없다.** 이전 객체·이미지·GetObject 권한을 함께 남겨야 이전 task ARN으로 돌아갈 수 있다.
+설정 키는 revision·service·내용 hash를 포함하고 prevent_destroy로 보호한다. 배포한 revision 디렉터리는 수정하지 않는다. 변경할 때 다음 번호 디렉터리를 추가하고 `revisions`에 이전 revision을 유지한 채 `active_revision`만 바꾼다. v1은 MOI-411 최초 허용 목록, v2는 메시지 전달(MOI-527), v3는 그로스 필드 전달과 PostHog 경로(MOI-521)다. **S3 versioning만으로는 삭제된 예전 키를 읽을 수 없다.** 이전 객체·이미지·GetObject 권한을 함께 남겨야 이전 task ARN으로 돌아갈 수 있다.
 
 API task 메모리는 1600→1760MiB, Worker는 768→928MiB다. 앱 메모리는 유지하고 라우터 128MiB와 드라이버 여유 32MiB를 더했다. task CPU 총량은 유지하며 앱 shares 중 64를 라우터에 배분한다. 32MiB는 Docker/호스트가 자동으로 그만큼 예약하는 설정이 아니라 용량 계획의 여유다. 실제 EC2 registered/remaining memory·ENI·blue/green 동시 배치를 dev에서 확인해야 한다.
 
@@ -63,7 +75,7 @@ terraform -chdir=infra/terraform/modules/moimyeon-environment init -backend=fals
 terraform -chdir=infra/terraform/modules/moimyeon-environment test
 ```
 
-수집 모듈의 native Terraform test는 mock provider plan으로 보존·자원·모드 계약을 검사한다. 환경 모듈의 소비 측 테스트는 다른 라우터 예산을 주입하고 API·Worker task JSON의 예산·목적지·의존성·볼륨과 CPU 부족 거부를 확인한다. Docker smoke는 운영과 동일 digest의 Fluent Bit과 네트워크가 격리된 S3/CloudWatch 대역을 사용한다. 실제 gzip 객체, 로그 분류, 만료된 debug 제거, 비허용 필드 차단, S3 503 뒤 라우터 강제 종료와 같은 볼륨에서의 재시작 복구, task health check 명령을 검사한다. timeout만 1초로 줄이며 테스트용 TLS 인증서와 엔드포인트는 운영 설정에 들어가지 않는다.
+수집 모듈의 native Terraform test는 mock provider plan으로 보존·자원·모드 계약을 검사한다. 환경 모듈의 소비 측 테스트는 다른 라우터 예산을 주입하고 API·Worker task JSON의 예산·목적지·의존성·볼륨과 CPU 부족 거부를 확인한다. Docker smoke는 운영과 동일 digest의 Fluent Bit과 네트워크가 격리된 S3/CloudWatch 대역을 사용한다. 실제 gzip 객체, 로그 분류, 만료된 debug 제거, 비허용 필드 차단, S3 503 뒤 라우터 강제 종료와 같은 볼륨에서의 재시작 복구, task health check 명령, growth 필드 거름과 PostHog 대역으로 가는 gzip 사건 형태를 검사한다. timeout만 1초로 줄이며 테스트용 TLS 인증서와 엔드포인트는 운영 설정에 들어가지 않는다.
 
 이 검증은 ECS agent의 S3 설정 다운로드·IAM·실제 AWS 수신·EC2 배치 여유를 증명하지 않는다. PR CI의 sanitized plan을 먼저 판독한다. Shared의 plan refresh 권한이 dev보다 먼저 적용돼야 하며, 기존 파이프라인은 shared 적용 뒤 dev plan을 만든다. 에이전트는 apply하지 않으며, 이 저장소는 머지 후 자동 apply하므로 머지가 적용 승인이다.
 

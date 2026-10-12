@@ -91,6 +91,11 @@ reading or owning the value.
 - `/moimyeon/{env}/core-worker/FIREBASE_SERVICE_ACCOUNT_JSON`
 - `/moimyeon/{env}/core-worker/NOTIFICATION_EMAIL_GMAIL_APP_PASSWORD`
 
+When `growth_analytics_enabled = true`, also create:
+
+- `/moimyeon/{env}/core-api/ANALYTICS_ID_HMAC_KEY` (at least 32 bytes; core-api refuses to start otherwise; rotation changes every analytics ID)
+- `/moimyeon/{env}/log-router/POSTHOG_PROJECT_TOKEN` (PostHog project token for the api log router)
+
 On the very first apply, ECS cannot start a task until the first image is pushed
 to ECR. After the first successful `dev` CI run, the deploy workflow registers a
 task definition revision with the built image and updates the service.
@@ -323,6 +328,7 @@ notification Redis is enabled:
 | `JWT_SECRET` | Pre-created SSM SecureString → `/moimyeon/{env}/core-api/JWT_SECRET` | Manual; rotation invalidates sessions |
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Pre-created SSM SecureString → `/moimyeon/{env}/core-api/GOOGLE_OAUTH_CLIENT_SECRET` | Manual |
 | `STORAGE_REDIS_URL` | Pre-created private Redis URL → `/moimyeon/{env}/shared/STORAGE_REDIS_URL` | Manual |
+| `ANALYTICS_ID_HMAC_KEY` | Pre-created SSM SecureString → `/moimyeon/{env}/core-api/ANALYTICS_ID_HMAC_KEY`, only with `growth_analytics_enabled` | Manual; rotation changes every analytics ID |
 
 Before enabling Redis, create its password and URL without passing either value
 through Terraform:

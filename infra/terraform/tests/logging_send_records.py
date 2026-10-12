@@ -37,7 +37,16 @@ stamp = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.exact", "message": "a" * 16384, "timestamp": stamp})
 rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.emoji", "message": "ab" + "\U0001F600" * 4096, "timestamp": stamp})
 rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.nonstring", "message": 123, "timestamp": stamp})
-rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.growth", "category": "growth", "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ")})
+growth_stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.growth", "category": "growth", "timestamp": growth_stamp,
+             "eventId": "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e721", "analyticsId": "0123456789abcdef0123456789abcdef",
+             "properties": {"roomId": "0199cd6e-3c0c-7a2e-9f41-b5d6a8c3e722", "participantCount": 3, "reconfirmed": True,
+                            "distinct_id": "app-value", "environment": "app-value",
+                            "1bad": "SHOULD_NOT_LEAK", "nested": {"value": "SHOULD_NOT_LEAK"}, "long": "SHOULD_NOT_LEAK" * 9}})
+# Without an analytics ID the event stays in the archive and is not sent to PostHog.
+rows.append({"schemaVersion": 1, "level": "INFO", "eventCode": "smoke.growth_anonymous", "category": "growth", "timestamp": growth_stamp,
+             "eventId": "not-a-uuid", "analyticsId": "SHOULD_NOT_LEAK",
+             "properties": {f"count{index}": index for index in range(20)}})
 rows.append({"schemaVersion": 1, "level": "DEBUG", "eventCode": "smoke.expired", "timestamp": (now - timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%SZ")})
 rows.append({"level": "ERROR", "eventCode": "logging.serialization_failed", "message": "SHOULD_NOT_LEAK"})
 # Docker splits stdout lines over 16 KiB into partial messages. This 3-byte-per-character

@@ -508,6 +508,8 @@ data "aws_iam_policy_document" "terraform_plan" {
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/shared/STORAGE_REDIS_URL",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-api/SENTRY_DSN",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-worker/SENTRY_DSN",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/core-api/ANALYTICS_ID_HMAC_KEY",
+      "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/log-router/POSTHOG_PROJECT_TOKEN",
       "arn:aws:ssm:*:${data.aws_caller_identity.current.account_id}:parameter/${var.project}/*/monitoring/GRAFANA_ADMIN_PASSWORD",
     ]
   }

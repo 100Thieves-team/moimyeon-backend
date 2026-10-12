@@ -74,15 +74,21 @@ run "enabled_retention_and_budgets" {
   }
   assert {
     condition = alltrue([for service in ["api", "worker"] :
-      contains(keys(aws_s3_object.config), "${service}.v1") && contains(keys(aws_s3_object.config), "${service}.v2")
+      alltrue([for revision in ["v1", "v2", "v3"] : contains(keys(aws_s3_object.config), "${service}.${revision}")])
     ])
     error_message = "Versioned configuration objects must be retained for each service, so older task definitions can still start."
   }
   assert {
     condition = alltrue([for service in ["api", "worker"] :
-      endswith(output.routers[service].firelensConfiguration.options.config-file-value, "/${aws_s3_object.config["${service}.v2"].key}")
+      endswith(output.routers[service].firelensConfiguration.options.config-file-value, "/${aws_s3_object.config["${service}.v3"].key}")
     ])
-    error_message = "New task definitions must read the v2 router, which forwards messages (MOI-527)."
+    error_message = "New task definitions must read the v3 router, which forwards growth fields (MOI-521)."
+  }
+  assert {
+    condition = alltrue([for key, router in output.routers :
+      !contains(keys(router), "secrets") && !strcontains(aws_s3_object.config["${key}.v3"].content, "/i/v0/e/")
+    ])
+    error_message = "Without PostHog delivery the router must not receive a token or send anywhere new."
   }
   assert {
     condition = alltrue([for bucket in aws_s3_bucket_public_access_block.this :
@@ -103,14 +109,75 @@ run "provision_retains_storage" {
   command = plan
   variables { mode = "provision" }
   assert {
-    condition     = length(aws_s3_object.config) == 4 && length(aws_iam_role_policy.execution) == 2
-    error_message = "Stopping routing must retain every router revision (v1, v2 per service) and read permissions for rollback."
+    condition     = length(aws_s3_object.config) == 6 && length(aws_iam_role_policy.execution) == 2
+    error_message = "Stopping routing must retain every router revision (v1, v2, v3 per service) and read permissions for rollback."
   }
   assert {
     condition     = aws_cloudwatch_log_group.this["api.fallback"].retention_in_days == 3 && output.fallback_log_configurations["api"].options.mode == "non-blocking"
     error_message = "Stopping the router must not send debug to legacy 30-day groups or block stdout."
   }
 
+}
+
+run "posthog_delivery_only_for_enabled_service" {
+  command = plan
+  variables {
+    mode    = "enabled"
+    posthog = { project_token_parameter_arn = "arn:aws:ssm:ap-northeast-2:123456789012:parameter/moimyeon/dev/log-router/POSTHOG_PROJECT_TOKEN" }
+    services = {
+      api = {
+        container_name    = "core-api", service_name = "core-api"
+        runtime_role_name = "api-runtime", execution_role_name = "api-execution"
+        posthog_enabled   = true
+      }
+      worker = {
+        container_name    = "core-worker", service_name = "core-worker"
+        runtime_role_name = "worker-runtime", execution_role_name = "worker-execution"
+      }
+    }
+  }
+  override_resource {
+    target          = aws_s3_bucket.this
+    override_during = plan
+    values          = { arn = "arn:aws:s3:::moimyeon-test-app-config-123456789012" }
+  }
+  assert {
+    condition     = output.routers["api"].secrets == [{ name = "POSTHOG_PROJECT_TOKEN", valueFrom = "arn:aws:ssm:ap-northeast-2:123456789012:parameter/moimyeon/dev/log-router/POSTHOG_PROJECT_TOKEN" }]
+    error_message = "The api router must read the PostHog token from SSM by ARN."
+  }
+  assert {
+    condition     = !contains(keys(output.routers["worker"]), "secrets") && !strcontains(aws_s3_object.config["worker.v3"].content, "/i/v0/e/")
+    error_message = "Only the service that writes growth events may send to PostHog."
+  }
+  assert {
+    condition = alltrue([for fragment in ["Match         posthog.*", "Host          us.i.posthog.com", "Port          443", "URI           /i/v0/e/", "tls.verify On", "call          posthog"] :
+      strcontains(aws_s3_object.config["api.v3"].content, fragment)
+    ])
+    error_message = "The api v3 router must send growth copies to the PostHog US capture endpoint over verified TLS."
+  }
+  assert {
+    condition     = !strcontains(aws_s3_object.config["api.v3"].content, "parameter/moimyeon")
+    error_message = "The router configuration must not carry the token parameter; the container receives it as a secret."
+  }
+  assert {
+    condition     = alltrue([for revision in ["v1", "v2"] : !strcontains(aws_s3_object.config["api.${revision}"].content, "/i/v0/e/")])
+    error_message = "Deployed revisions must not change when PostHog is enabled."
+  }
+}
+
+run "posthog_service_requires_settings" {
+  command = plan
+  variables {
+    mode = "enabled"
+    services = {
+      api = {
+        container_name    = "core-api", service_name = "core-api"
+        runtime_role_name = "api-runtime", execution_role_name = "api-execution"
+        posthog_enabled   = true
+      }
+    }
+  }
+  expect_failures = [var.services]
 }
 
 run "invalid_mode" {

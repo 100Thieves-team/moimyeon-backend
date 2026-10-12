@@ -7,10 +7,51 @@
 - [x] 3. Wiki 반영 (`wiki-sync.md`)
 - [x] 4. 로깅 계약 확장 (PR 1 #198, `support:logging`). 머지(2026-10-10)
 - [x] 5. 사건 기록 준비 (PR 2 #200, `core-api`) 머지(2026-10-11): `analyticsId` 생성기·내 정보 응답, 처리방침 v1.2(PostHog 국외 이전 고지, D19로 별도 약관에서 변경). 아래 5단계 상세. 체크포인트 A 승인(2026-10-10, 초안 약관 내용 포함). PRD R180·R181·SSOT 갱신 완료. 체크포인트 B 승인(2026-10-10). 구현·리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-10). ship-pr 진행
-- [ ] 6. 사건 16개 기록 (PR 3, `core-api`): 아래 6단계 상세. 체크포인트 A 승인(2026-10-11). 체크포인트 B 승인(2026-10-11). 구현·컨벤션 리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-11). ship-pr 진행. 테스트 프로필은 그로스 INFO를 거르므로 writer를 주입해 검증(PR 1 QA 참고 4). 숫자 속성에 개인 식별 값 금지를 호출 지점 리뷰로 확인
-- [ ] 7. 전송 (PR 4, infra): `ANALYTICS_ID_HMAC_KEY` 주입, 라우터 v3(그로스 필드 허용 + PostHog HTTP 출력), dev 전송 켜고 끄는 변수. Terraform plan까지. growth 줄은 예약 필드 외 MDC 키가 붙을 수 있으니 v3 허용 목록에서 거른다(4단계 리뷰 참고 4). `analyticsId`가 없는 줄의 PostHog `distinct_id` 처리와, 속성이 PostHog 예약 이름(`token`·`distinct_id` 등)을 덮지 않게 변환(PR 1 QA 참고 5)
+- [x] 6. 사건 16개 기록 (PR 3 #202, `core-api`) 머지(2026-10-11): 아래 6단계 상세. 체크포인트 A 승인(2026-10-11). 체크포인트 B 승인(2026-10-11). 구현·컨벤션 리뷰 반영·전체 검증 완료. 체크포인트 C 승인(2026-10-11). ship-pr 진행. 테스트 프로필은 그로스 INFO를 거르므로 writer를 주입해 검증(PR 1 QA 참고 4). 숫자 속성에 개인 식별 값 금지를 호출 지점 리뷰로 확인
+- [ ] 7. 전송 (PR 4, infra): 계획 승인(2026-10-12, live는 S3 growth 필드 저장·전송 끔, dev 전송 켬)(아래 7단계 상세). 구현·로컬 검증 완료(2026-10-12): fmt·validate·모듈 test 2개·smoke·계약 스크립트 15개·deploy 입력 test. CI plan 판독 전. `ANALYTICS_ID_HMAC_KEY` 주입, 라우터 v3(그로스 필드 허용 + PostHog HTTP 출력), dev 전송 켜고 끄는 변수. Terraform plan까지. growth 줄은 예약 필드 외 MDC 키가 붙을 수 있으니 v3 허용 목록에서 거른다(4단계 리뷰 참고 4). `analyticsId`가 없는 줄의 PostHog `distinct_id` 처리와, 속성이 PostHog 예약 이름(`token`·`distinct_id` 등)을 덮지 않게 변환(PR 1 QA 참고 5)
 - [ ] 8. 탈퇴 회원 PostHog 삭제 배치 (PR 5, D8)
 - [ ] 9. dev에서 DB 대조와 퍼널 확인
+
+## 7단계 상세: 전송 (PR 4, infra)
+
+영향 환경: dev(전송 켬), live(키·전송 끔, D10). shared는 CI plan 역할의 SSM 읽기 거부 목록만.
+
+### A. `analyticsId` 키 주입 (`moimyeon-environment`)
+
+- `secrets.tf`: `/moimyeon/{env}/core-api/ANALYTICS_ID_HMAC_KEY`(D14, 사전 생성) ARN을 core-api 컨테이너 `secrets`(`ANALYTICS_ID_HMAC_KEY`)와
+  `ssm_parameter_arns`(실행 역할 ssm:GetParameters)에 조건부로 추가한다. 조건은 새 변수 `growth_analytics_enabled`(env tfvars, dev true·live false).
+  파라미터가 없는 live에 주입하면 태스크가 뜨지 않으므로 반드시 변수 뒤에 둔다.
+- `shared-foundation/terraform_ci.tf` 앱 SecureString 읽기 거부 목록에 새 ARN 추가.
+- tfvars 키 allowlist 계약(`terraform-config-contract.sh`)과 README 사전 생성 목록에 반영.
+
+### B. 라우터 v3 (`application-logging/router/v3`, v1·v2는 그대로)
+
+- `sanitize.lua`: `category=growth`·INFO 레코드에서만 `eventId`(UUID)·`analyticsId`(32 hex)·`properties`를 복사한다.
+  properties는 키 `[A-Za-z][A-Za-z0-9_]*` 16개 이하, 값은 숫자·Boolean·128자 이하 문자열만(앱이 UUID·enum을 문자열로 낸다).
+  그 밖의 필드(예약 외 MDC 키 포함)는 지금처럼 버린다.
+- PostHog 경로(전송을 켠 환경만 템플릿에 포함):
+  1. growth 레코드를 `rewrite_tag`로 `posthog.*`에 복제(S3 growth 원본은 유지).
+  2. Lua로 PostHog 이벤트 모양으로 바꾼다: `{api_key, event=eventCode, distinct_id=analyticsId, uuid=eventId, timestamp,
+     properties+{environment, service, release}}`. `analyticsId`가 없으면 PostHog로 보내지 않는다(S3에는 남음).
+     properties의 `distinct_id`·`token`·`api_key` 같은 이름은 버린다.
+  3. `http` 출력: `us.i.posthog.com:443/i/v0/e/`, `format json`(배열), TLS, gzip, Retry_Limit 3.
+- 프로젝트 토큰은 `/moimyeon/{env}/log-router/POSTHOG_PROJECT_TOKEN`(D14) ARN을 라우터 컨테이너 `secrets`로 주입하고
+  Lua가 `os.getenv`로 읽는다. 실행 역할 GetParameters에 그 ARN을 추가한다(전송을 켠 환경만).
+- 모듈 변수: `posthog = { enabled, host, project_token_parameter_arn }`. 템플릿에 host·port·tls 자리를 두어 smoke에서 가짜 서버로 바꾼다.
+- `revisions = ["v1","v2","v3"]`, `active_revision = "v3"`.
+
+### C. 검증
+
+- `terraform fmt -check`, 모듈 `terraform test`(tftest: v3 설정 객체, 라우터 secrets 유무, live에서 PostHog 경로 없음).
+- `logging_smoke.py`: 실제 Fluent Bit 이미지로 growth 필드 전달, PostHog 가짜 서버 수신(배열·api_key·distinct_id·uuid·environment),
+  analyticsId 없는 레코드 미전송, 금지 속성 이름 제거.
+- 계약 테스트(`terraform-config-contract.sh`, `terraform-ci-contract.sh` 등) 통과.
+- PR CI plan 판독(체크포인트): 예상 변경은 설정 객체 v3 추가, 실행 역할 정책 확대(SSM 2개), 태스크 정의 틀 교체. replacement·데이터 저장소 변경 없음.
+
+### 영향
+
+- dev: 다음 배포부터 `analyticsId` 생성, growth 필드가 S3에 남고 PostHog로 전송된다.
+- live: 설정 객체 v3로 바뀌지만 PostHog 경로·키 주입은 꺼져 있다. growth 필드는 S3 growth에 남는다(처리방침 v1.2 고지 범위, 해외 전송 없음).
 
 ## 5단계 상세: 사건 기록 준비 (PR 2)
 

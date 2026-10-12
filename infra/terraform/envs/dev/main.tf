@@ -6,6 +6,7 @@ module "dev" {
   source = "../../modules/moimyeon-environment"
 
   application_logging_mode = var.application_logging_mode
+  growth_analytics_enabled = var.growth_analytics_enabled
 
   project                  = var.project
   environment              = "dev"

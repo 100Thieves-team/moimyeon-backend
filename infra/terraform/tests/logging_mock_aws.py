@@ -51,6 +51,14 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, b"", "application/xml")
 
     def do_POST(self):
+        if self.path == "/i/v0/e/":
+            with LOCK:
+                path = DATA / "posthog.jsonl"
+                previous = path.read_bytes() if path.exists() else b""
+                entry = {"encoding": self.headers.get("Content-Encoding"), "events": json.loads(self.read_body())}
+                atomic_write(path, previous + (json.dumps(entry) + "\n").encode())
+            self.reply(200, b'{"status":"Ok"}')
+            return
         payload = json.loads(self.read_body())
         action = self.headers.get("X-Amz-Target", "").rsplit(".", 1)[-1]
         if action not in {"CreateLogStream", "PutLogEvents"}:
